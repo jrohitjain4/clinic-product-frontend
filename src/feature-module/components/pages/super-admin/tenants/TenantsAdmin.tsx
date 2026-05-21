@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { apiUrl } from "../../../../../core/config/api";
 
 interface Tenant {

@@ -4,101 +4,167 @@ import { Link, useNavigate } from "react-router";
 import { all_routes } from "../../../routes/all_routes";
 import { apiUrl } from "../../../../core/config/api";
 
-type PasswordField = "password" | "confirmPassword";
-
 interface ClinicOption {
   id: string;
   name: string;
   subdomain: string;
 }
 
+interface PackageOption {
+  id: string;
+  name: string;
+  price: number;
+  durationInDays: number;
+  maxDoctors: number;
+  maxPatients: number;
+  maxAppointments: number;
+}
+
 const RegisterBasic = () => {
   const navigate = useNavigate();
+  const [step, setStep] = useState(1);
   const [role, setRole] = useState("DOCTOR");
+
+  // Step 1: Personal
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [dob, setDob] = useState("");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("Male");
 
-  // Doctor/Patient/Porter: link to existing clinic
-  const [clinicId, setClinicId] = useState("");
+  // Patient specific: Join existing clinic
+  const [selectedClinicId, setSelectedClinicId] = useState("");
   const [clinics, setClinics] = useState<ClinicOption[]>([]);
 
-  const [passwordVisibility, setPasswordVisibility] = useState({
-    password: false,
-    confirmPassword: false,
-  });
+  // Step 2: Business (Admin/Doctor)
+  const [clinicName, setClinicName] = useState("");
+  const [gstNo, setGstNo] = useState("");
+  const [clinicAddress, setClinicAddress] = useState("");
+
+  // Step 3: Plan (Admin/Doctor)
+  const [selectedPackageId, setSelectedPackageId] = useState("");
+  const [packages, setPackages] = useState<PackageOption[]>([]);
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [draftUserId, setDraftUserId] = useState<string | null>(null);
 
-  // Fetch clinics list for role mapping
   useEffect(() => {
-    const fetchClinics = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/auth/clinics");
-        if (res.ok) {
-          const data = await res.json();
-          setClinics(data);
-          if (data.length > 0) {
-            setClinicId(data[0].id);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load clinics", err);
-      }
-    };
-    fetchClinics();
-  }, []);
-
-  const togglePasswordVisibility = (field: PasswordField) => {
-    setPasswordVisibility((prevState) => ({
-      ...prevState,
-      [field]: !prevState[field],
-    }));
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const payload = {
-        email,
-        password,
-        fullName,
-        role,
-        clinicId,
-      };
-
-      const response = await fetch(apiUrl("/api/auth/register"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+    // Load clinics for patients
+    fetch(apiUrl("/api/auth/clinics"))
+      .then(res => res.json())
+      .then(data => {
+        setClinics(data);
+        if (data.length > 0) setSelectedClinicId(data[0].id);
       });
 
-      const data = await response.json();
+    // Load packages for step 3
+    fetch(apiUrl("/api/auth/packages"))
+      .then(res => res.json())
+      .then(data => {
+        setPackages(data);
+        if (data.length > 0) setSelectedPackageId(data[0].id);
+      });
+  }, []);
 
-      if (!response.ok) {
-        throw new Error(data.message || "Registration failed");
+  const calculateAge = (birthDate: string) => {
+    if (!birthDate) return "";
+    const birth = new Date(birthDate);
+    const now = new Date();
+    let years = now.getFullYear() - birth.getFullYear();
+    const monthDiff = now.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) {
+      years--;
+    }
+    return years >= 0 ? years.toString() : "0";
+  };
+
+  const handleDobChange = (value: string) => {
+    setDob(value);
+    setAge(calculateAge(value));
+  };
+
+  const handleNext = async () => {
+    setError("");
+    if (step === 1) {
+      if (!fullName || !email || !password || !dob || !gender) {
+        setError("Please fill all fields.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError("Passwords do not match.");
+        return;
+      }
+
+      if (role === "PATIENT") {
+        submitRegistration();
+        return;
+      }
+      setStep(2);
+    } else if (step === 2) {
+      if (!clinicName) {
+        setError("Clinic name is required.");
+        return;
+      }
+
+      // Step 2 Finished -> CREATE DRAFT IN BACKEND
+      setLoading(true);
+      try {
+        const response = await fetch(apiUrl("/api/auth/register-draft"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email, password, fullName, role, dob, age, gender,
+            clinicInfo: { name: clinicName, gstNo, address: clinicAddress }
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Failed to save progress");
+
+        setDraftUserId(data.userId);
+        setStep(3);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const submitRegistration = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      if (role === "PATIENT") {
+        const response = await fetch(apiUrl("/api/auth/register"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email, password, fullName, dob, age, gender, role,
+            clinicId: selectedClinicId
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Registration failed");
+      } else {
+        // ADMIN/DOCTOR: Use the draft completion endpoint
+        const response = await fetch(apiUrl("/api/auth/complete-registration"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: draftUserId,
+            packageId: selectedPackageId
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Plan activation failed");
       }
 
       setSuccess("Account registered successfully! Redirecting to login...");
-      
-      // Navigate to login basic screen after 2 seconds
-      setTimeout(() => {
-        navigate(all_routes.login);
-      }, 2000);
-
+      setTimeout(() => navigate(all_routes.login), 2000);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -106,271 +172,172 @@ const RegisterBasic = () => {
     }
   };
 
-  return (
-    <>
-      {/* Start Content */}
-      <div className="container-fuild position-relative z-1">
-        <div className="w-100 overflow-hidden position-relative flex-wrap d-block vh-100">
-          {/* start row */}
-          <div className="row justify-content-center align-items-center vh-100 overflow-auto flex-wrap py-3">
-            <div className="col-lg-4 mx-auto">
-              <form onSubmit={handleRegister} className="d-flex justify-content-center align-items-center">
-                <div className="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill">
-                  <div className=" mx-auto mb-4 text-center">
-                    <ImageWithBasePath
-                      src="assets/img/logo.svg"
-                      className="img-fluid"
-                      alt="Logo"
-                    />
-                  </div>
-                  <div className="card border-1 p-lg-3 shadow-md rounded-3 mb-4">
-                    <div className="card-body">
-                      <div className="text-center mb-3">
-                        <h5 className="mb-1 fs-20 fw-bold">Register Account</h5>
-                        <p className="mb-0">
-                          Create your profile in our SaaS platform
-                        </p>
-                      </div>
-
-                      {/* Role Selector Tabs */}
-                      <div className="mb-3">
-                        <label className="form-label d-block text-center fw-semibold text-secondary mb-2" style={{ fontSize: "13px" }}>
-                          Choose Registration Role
-                        </label>
-                        <div className="d-flex flex-wrap gap-1 justify-content-center bg-light p-1.5 rounded-3 mb-3">
-                          {[
-                            { value: "DOCTOR", label: "Doctor" },
-                            { value: "PATIENT", label: "Patient" },
-                            { value: "PORTER", label: "Porter" },
-                          ].map((r) => (
-                            <button
-                              key={r.value}
-                              type="button"
-                              onClick={() => {
-                                setRole(r.value);
-                                setError("");
-                              }}
-                              className={`btn btn-sm px-2.5 py-1.5 rounded-pill border-0 transition-all ${
-                                role === r.value
-                                  ? "btn-primary shadow-sm text-white"
-                                  : "bg-transparent text-dark hover-bg-light"
-                              }`}
-                              style={{ fontSize: "11px", fontWeight: "600" }}
-                            >
-                              {r.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Status Alerts */}
-                      {error && (
-                        <div className="alert alert-danger p-2 mb-3 rounded" role="alert" style={{ fontSize: "13px" }}>
-                          <i className="ti ti-alert-triangle me-1"></i> {error}
-                        </div>
-                      )}
-                      {success && (
-                        <div className="alert alert-success p-2 mb-3 rounded" role="alert" style={{ fontSize: "13px" }}>
-                          <i className="ti ti-circle-check me-1"></i> {success}
-                        </div>
-                      )}
-
-                      <div className="mb-3">
-                        <label className="form-label">Full Name</label>
-                        <div className="input-group">
-                          <span className="input-group-text border-end-0 bg-white">
-                            <i className="ti ti-user fs-14 text-dark" />
-                          </span>
-                          <input
-                            type="text"
-                            required
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
-                            className="form-control border-start-0 ps-0"
-                            placeholder="Enter Name"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="mb-3">
-                        <label className="form-label">Email Address</label>
-                        <div className="input-group">
-                          <span className="input-group-text border-end-0 bg-white">
-                            <i className="ti ti-mail fs-14 text-dark" />
-                          </span>
-                          <input
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="form-control border-start-0 ps-0"
-                            placeholder="Enter Email Address"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="mb-3">
-                        <label className="form-label">Select Associated Clinic</label>
-                        <div className="input-group">
-                          <span className="input-group-text border-end-0 bg-white">
-                            <i className="ti ti-building fs-14 text-dark" />
-                          </span>
-                          <select
-                            required
-                            value={clinicId}
-                            onChange={(e) => setClinicId(e.target.value)}
-                            className="form-select border-start-0 ps-0"
-                          >
-                            {clinics.length > 0 ? (
-                              clinics.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                  {c.name} ({c.subdomain})
-                                </option>
-                              ))
-                            ) : (
-                              <option value="" disabled>No clinics available. Contact your clinic administrator.</option>
-                            )}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="mb-3">
-                        <label className="form-label">Password</label>
-                        <div className="position-relative">
-                          <div className="pass-group input-group position-relative border rounded">
-                            <span className="input-group-text bg-white border-0">
-                              <i className="ti ti-lock text-dark fs-14" />
-                            </span>
-                            <input
-                              type={passwordVisibility.password ? "text" : "password"}
-                              required
-                              value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              className="pass-input form-control border-start-0 ps-0"
-                              placeholder="****************"
-                            />
-                            <span
-                              className={`ti toggle-password text-dark fs-14 cursor-pointer ${
-                                passwordVisibility.password ? "ti-eye" : "ti-eye-off"
-                              }`}
-                              style={{ cursor: "pointer" }}
-                              onClick={() => togglePasswordVisibility("password")}
-                            ></span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mb-3">
-                        <label className="form-label">Confirm Password</label>
-                        <div className="position-relative">
-                          <div className="pass-group input-group position-relative border rounded">
-                            <span className="input-group-text bg-white border-0">
-                              <i className="ti ti-lock text-dark fs-14" />
-                            </span>
-                            <input
-                              type={passwordVisibility.confirmPassword ? "text" : "password"}
-                              required
-                              value={confirmPassword}
-                              onChange={(e) => setConfirmPassword(e.target.value)}
-                              className="pass-input form-control border-start-0 ps-0"
-                              placeholder="****************"
-                            />
-                            <span
-                              className={`ti toggle-password text-dark fs-14 cursor-pointer ${
-                                passwordVisibility.confirmPassword ? "ti-eye" : "ti-eye-off"
-                              }`}
-                              style={{ cursor: "pointer" }}
-                              onClick={() => togglePasswordVisibility("confirmPassword")}
-                            ></span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mb-3">
-                        <button
-                          type="submit"
-                          disabled={loading || clinics.length === 0}
-                          className="btn bg-primary text-white w-100 py-2 fw-semibold d-flex align-items-center justify-content-center"
-                        >
-                          {loading ? (
-                            <>
-                              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                              Registering Account...
-                            </>
-                          ) : (
-                            "Register"
-                          )}
-                        </button>
-                      </div>
-
-                      <div className="login-or position-relative mb-3">
-                        <span className="span-or">OR</span>
-                      </div>
-                      <div className="mb-3">
-                        <div className="d-flex align-items-center justify-content-center flex-wrap">
-                          <div className="text-center me-2 flex-fill">
-                            <Link
-                              to="#"
-                              className="br-10 p-1 btn btn-outline-light border d-flex align-items-center justify-content-center"
-                            >
-                              <ImageWithBasePath
-                                className="img-fluid m-1"
-                                src="assets/img/icons/facebook-logo.svg"
-                                alt="Facebook"
-                              />
-                            </Link>
-                          </div>
-                          <div className="text-center me-2 flex-fill">
-                            <Link
-                              to="#"
-                              className="br-10 p-1 btn btn-outline-light border d-flex align-items-center justify-content-center"
-                            >
-                              <ImageWithBasePath
-                                className="img-fluid m-1"
-                                src="assets/img/icons/google-logo.svg"
-                                alt="Google"
-                              />
-                            </Link>
-                          </div>
-                          <div className="text-center me-2 flex-fill">
-                            <Link
-                              to="#"
-                              className="br-10 p-1 btn btn-outline-light border d-flex align-items-center justify-content-center"
-                            >
-                              <ImageWithBasePath
-                                className="img-fluid m-1"
-                                src="assets/img/icons/apple-logo.svg"
-                                alt="apple"
-                              />
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <h6 className="fw-normal fs-14 text-dark mb-0">
-                          Already have an account?
-                          <Link to={all_routes.login} className="hover-a text-primary ms-1">
-                            Login
-                          </Link>
-                        </h6>
-                      </div>
-                    </div>
-                    {/* end card body */}
-                  </div>
-                  {/* end card */}
-                </div>
-              </form>
-              <p className="text-dark text-center">
-                Copyright © 2025 - Preclinic.
-              </p>
+  const renderStepIndicator = () => {
+    if (role === "PATIENT") return null;
+    return (
+      <div className="d-flex justify-content-center mb-4">
+        {[1, 2, 3].map(s => (
+          <div key={s} className="d-flex align-items-center">
+            <div className={`rounded-circle d-flex align-items-center justify-content-center fw-bold ${step === s ? 'bg-primary text-white' : (step > s ? 'bg-success text-white' : 'bg-light text-muted')}`} style={{ width: '30px', height: '30px', fontSize: '14px' }}>
+              {step > s ? <i className="ti ti-check" /> : s}
             </div>
-            {/* end col */}
+            {s < 3 && <div className={`mx-2 ${step > s ? 'bg-success' : 'bg-light'}`} style={{ height: '2px', width: '30px' }} />}
           </div>
-          {/* end row */}
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="container-fuild position-relative z-1 overflow-auto vh-100 py-5">
+      <div className="row justify-content-center align-items-center">
+        <div className="col-lg-5 col-md-8 px-4">
+          <div className="text-center mb-4">
+            <ImageWithBasePath src="assets/img/logo.svg" className="img-fluid mb-3" alt="Logo" />
+            <h4 className="fw-bold">Create Your Account</h4>
+            <p className="text-muted">Step {step}: {step === 1 ? 'Personal Details' : (step === 2 ? 'Business Information' : 'Select Plan')}</p>
+          </div>
+
+          <div className="card shadow-lg border-0 rounded-4">
+            <div className="card-body p-4">
+              {renderStepIndicator()}
+
+              {error && <div className="alert alert-danger mb-3 py-2 fs-13"><i className="ti ti-alert-triangle me-2" />{error}</div>}
+              {success && <div className="alert alert-success mb-3 py-2 fs-13"><i className="ti ti-circle-check me-2" />{success}</div>}
+
+              {step === 1 && (
+                <div>
+                  <div className="mb-4">
+                    <label className="form-label text-center d-block fw-bold text-muted mb-2">Register As</label>
+                    <div className="d-flex gap-2 justify-content-center bg-light p-1 rounded-pill">
+                      {[{ v: "ADMIN", l: "Clinic Owner" }, { v: "DOCTOR", l: "Doctor" }, { v: "PATIENT", l: "Patient" }].map(r => (
+                        <button key={r.v} type="button" onClick={() => setRole(r.v)} className={`btn btn-sm rounded-pill transition-all fs-12 px-3 ${role === r.v ? 'btn-primary text-white shadow-sm' : 'btn-light text-dark'}`}>
+                          {r.l}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="row">
+                    <div className="col-md-12 mb-3">
+                      <label className="form-label">Full Name</label>
+                      <input type="text" className="form-control" placeholder="Enter your full name" value={fullName} onChange={e => setFullName(e.target.value)} />
+                    </div>
+                    <div className="col-md-12 mb-3">
+                      <label className="form-label">Email Address</label>
+                      <input type="email" className="form-control" placeholder="name@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+                    </div>
+                  </div>
+
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Date of Birth</label>
+                      <input type="date" className="form-control" value={dob} onChange={e => handleDobChange(e.target.value)} />
+                    </div>
+                    <div className="col-md-3 mb-3">
+                      <label className="form-label">Age</label>
+                      <input type="text" className="form-control" value={age} disabled placeholder="-" />
+                    </div>
+                    <div className="col-md-3 mb-3">
+                      <label className="form-label">Gender</label>
+                      <select className="form-select px-2" value={gender} onChange={e => setGender(e.target.value)}>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {role === "PATIENT" && (
+                    <div className="mb-3">
+                      <label className="form-label">Select Your Clinic</label>
+                      <select className="form-select" value={selectedClinicId} onChange={e => setSelectedClinicId(e.target.value)}>
+                        {clinics.map(c => <option key={c.id} value={c.id}>{c.name} ({c.subdomain})</option>)}
+                      </select>
+                    </div>
+                  )}
+
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Password</label>
+                      <input type="password" title="password" className="form-control" placeholder="********" value={password} onChange={e => setPassword(e.target.value)} />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Confirm Password</label>
+                      <input type="password" title="confirm-password" className="form-control" placeholder="********" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                    </div>
+                  </div>
+
+                  <button type="button" onClick={handleNext} className="btn btn-primary w-100 py-2 fw-bold mt-2">
+                    {role === "PATIENT" ? (loading ? 'Registering...' : 'Complete Registration') : 'Next: Business Details'}
+                  </button>
+                </div>
+              )}
+
+              {step === 2 && (
+                <div>
+                  <div className="mb-3">
+                    <label className="form-label">Clinic Name</label>
+                    <input type="text" className="form-control" placeholder="e.g. HealthCare Center" value={clinicName} onChange={e => setClinicName(e.target.value)} />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">GST Number</label>
+                    <input type="text" className="form-control" placeholder="Enter GSTIN Number" value={gstNo} onChange={e => setGstNo(e.target.value)} />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Clinic Address</label>
+                    <textarea className="form-control" rows={3} placeholder="Full address of your clinic" value={clinicAddress} onChange={e => setClinicAddress(e.target.value)} />
+                  </div>
+                  <div className="d-flex gap-2">
+                    <button type="button" onClick={() => setStep(1)} className="btn btn-light flex-fill py-2">Back</button>
+                    <button type="button" onClick={handleNext} className="btn btn-primary flex-fill py-2">Next: Select Plan</button>
+                  </div>
+                </div>
+              )}
+
+              {step === 3 && (
+                <div>
+                  <label className="form-label fw-bold mb-3">Available Subscription Plans</label>
+                  <div className="row g-3 mb-4">
+                    {packages.map(p => (
+                      <div key={p.id} className="col-md-6">
+                        <div className={`card cursor-pointer h-100 transition-all border-2 ${selectedPackageId === p.id ? 'border-primary bg-primary-subtle' : 'border-light shadow-none'}`} onClick={() => setSelectedPackageId(p.id)} style={{ cursor: 'pointer' }}>
+                          <div className="card-body p-3">
+                            <div className="d-flex justify-content-between align-items-center">
+                              <div>
+                                <h6 className="mb-0 fw-bold">{p.name}</h6>
+                                <small className="text-muted">{p.durationInDays} Days Trial</small>
+                              </div>
+                              <div className="text-end">
+                                <h6 className="mb-0 text-primary fw-bold">{p.price === 0 ? 'FREE' : `$${p.price}`}</h6>
+                                <div className="form-check m-0 d-inline-block">
+                                  <input className="form-check-input" type="radio" checked={selectedPackageId === p.id} readOnly />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="d-flex gap-2">
+                    <button type="button" onClick={() => setStep(2)} className="btn btn-light flex-fill py-2">Back</button>
+                    <button type="button" onClick={submitRegistration} disabled={loading} className="btn btn-success flex-fill py-2 fw-bold">
+                      {loading ? 'Activating Plan...' : 'Activate & Finish'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="text-center mt-4 pt-3 border-top">
+                <p className="fs-14 mb-0">Already have an account? <Link to={all_routes.login} className="text-primary fw-bold">Sign In</Link></p>
+              </div>
+            </div>
+          </div>
+          <p className="text-center text-muted mt-4 fs-12">Copyright © 2025 - Preclinic SaaS Platform</p>
         </div>
       </div>
-      {/* End Content */}
-    </>
+    </div>
   );
 };
 

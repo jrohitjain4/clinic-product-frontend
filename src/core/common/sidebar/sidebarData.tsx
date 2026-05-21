@@ -4,6 +4,36 @@ const routes = all_routes;
 
 export const SidebarData = [
   {
+    tittle: "Super Admin",
+    icon: "shield-lock",
+    showAsTab: true,
+    separateRoute: false,
+    submenuItems: [
+      {
+        label: "Packages",
+        link: routes.packages,
+        submenu: false,
+        showSubRoute: false,
+        icon: "package",
+        base: "packages",
+        materialicons: "start",
+        dot: true,
+        submenuItems: [],
+      },
+      {
+        label: "Enterprise",
+        link: routes.tenants,
+        submenu: false,
+        showSubRoute: false,
+        icon: "building-hospital",
+        base: "tenants",
+        materialicons: "start",
+        dot: true,
+        submenuItems: [],
+      }
+    ],
+  },
+  {
     tittle: "Main Menu",
     icon: "airplay",
     showAsTab: true,

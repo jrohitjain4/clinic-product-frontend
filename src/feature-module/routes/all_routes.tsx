@@ -1,4 +1,5 @@
 export const all_routes = {
+  home: "/",
   //Auth routes
   login: "/login",
   loginCover: "/login-cover",
@@ -65,6 +66,7 @@ export const all_routes = {
   subscriptions: "/super-admin/subscriptions",
   packages: "/super-admin/packages",
   packagesGrid: "/super-admin/packages-grid",
+  tenants: "/super-admin/tenants",
   domain: "/super-admin/domain",
   purchaseTransaction: "/super-admin/purchase-transaction",
 
@@ -90,7 +92,7 @@ export const all_routes = {
   searchList: "/application/search-list",
   invoiceDetails: "/application/invoice-details",
   addInvoice: "/add-invoice",
-  notifications:"/notifications",
+  notifications: "/notifications",
 
   //Layout Routes
   layoutDefault: "/layout-default",

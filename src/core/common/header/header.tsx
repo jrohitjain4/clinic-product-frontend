@@ -1,16 +1,33 @@
 /* eslint-disable */
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ImageWithBasePath from "../../imageWithBasePath";
 import { useEffect, useState } from "react";
 import { updateTheme } from "../../redux/themeSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { setMobileSidebar } from "../../redux/sidebarSlice";
 import { all_routes } from "../../../feature-module/routes/all_routes";
+import TrialCountdown from "../../../feature-module/components/common/TrialCountdown";
 
 const Header = () => {
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const themeSettings = useSelector((state: any) => state.theme.themeSettings);
+
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate(all_routes.login);
+  };
   const [isHiddenLayoutActive, setIsHiddenLayoutActive] = useState(() => {
     const saved = localStorage.getItem("hiddenLayoutActive");
     return saved ? JSON.parse(saved) : false;
@@ -140,6 +157,9 @@ const Header = () => {
                 <i className="ti ti-search fs-16" />
               </button>
             </div>
+            {/* Trial Countdown */}
+            <TrialCountdown />
+
             {/* AI Assistance */}
             <Link
               to="#"
@@ -172,9 +192,8 @@ const Header = () => {
               <Link
                 to="#"
                 id="dark-mode-toggle"
-                className={`topbar-link btn btn-icon topbar-link header-togglebtn ${
-                  themeSettings["data-bs-theme"] === "dark" ? "activate" : ""
-                }`}
+                className={`topbar-link btn btn-icon topbar-link header-togglebtn ${themeSettings["data-bs-theme"] === "dark" ? "activate" : ""
+                  }`}
                 onClick={() => handleUpdateTheme("data-bs-theme", "light")}
               >
                 <i className="ti ti-sun fs-16" />
@@ -183,9 +202,8 @@ const Header = () => {
               <Link
                 to="#"
                 id="light-mode-toggle"
-                className={`topbar-link btn btn-icon topbar-link header-togglebtn ${
-                  themeSettings["data-bs-theme"] === "light" ? "activate" : ""
-                }`}
+                className={`topbar-link btn btn-icon topbar-link header-togglebtn ${themeSettings["data-bs-theme"] === "light" ? "activate" : ""
+                  }`}
                 onClick={() => handleUpdateTheme("data-bs-theme", "dark")}
               >
                 <i className="ti ti-moon fs-16" />
@@ -213,7 +231,7 @@ const Header = () => {
                     <div className="row align-items-center">
                       <div className="col">
                         <h6 className="m-0 fs-16 fw-semibold">
-                          
+
                           Notifications
                         </h6>
                       </div>
@@ -454,9 +472,9 @@ const Header = () => {
                     height={42}
                     alt=""
                   />
-                  <div className="ms-2">
-                    <p className="fw-medium text-dark mb-0">Jimmy Anderson</p>
-                    <span className="d-block fs-13">Administrator</span>
+                  <div className="ms-2 text-truncate" style={{ maxWidth: '150px' }}>
+                    <p className="fw-medium text-dark mb-0 text-truncate">{user?.fullName || "Admin"}</p>
+                    <span className="d-block fs-13 text-muted">{user?.role?.replace('_', ' ')?.toLowerCase() || "Administrator"}</span>
                   </div>
                 </div>
                 {/* Item*/}
@@ -489,7 +507,7 @@ const Header = () => {
                 </Link>
                 {/* Item*/}
                 <div className="pt-2 mt-2 border-top">
-                  <Link to={all_routes.login}className="dropdown-item text-danger">
+                  <Link to="#" onClick={handleLogout} className="dropdown-item text-danger">
                     <i className="ti ti-logout me-1 fs-17 align-middle" />
                     <span className="align-middle">Log Out</span>
                   </Link>

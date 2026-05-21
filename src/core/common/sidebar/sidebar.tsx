@@ -15,6 +15,14 @@ const Sidebar = () => {
   const [subOpen, setSubopen] = useState<any>("");
   const [subsidebar, setSubsidebar] = useState("");
   const dispatch = useDispatch();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
 
   const toggleSidebar = (title: any) => {
     localStorage.setItem("menuOpened", title);
@@ -96,9 +104,9 @@ const Sidebar = () => {
   const mobileSidebar = useSelector(
     (state: any) => state.sidebarSlice.mobileSidebar
   );
-   const toggleMobileSidebar = () => {
-      dispatch(setMobileSidebar(!mobileSidebar));
-    };
+  const toggleMobileSidebar = () => {
+    dispatch(setMobileSidebar(!mobileSidebar));
+  };
   useEffect(() => {
     const rootElement: any = document.documentElement;
     Object.entries(themeSettings).forEach(([key, value]) => {
@@ -111,7 +119,7 @@ const Sidebar = () => {
     }
   }, [themeSettings]);
 
-  
+
 
   return (
     <>
@@ -146,7 +154,7 @@ const Sidebar = () => {
             <i className="ti ti-arrow-left" />
           </button>
           {/* Sidebar Menu Close */}
-          <button className="sidebar-close"  onClick={toggleMobileSidebar}>
+          <button className="sidebar-close" onClick={toggleMobileSidebar}>
             <i className="ti ti-x align-middle" />
           </button>
         </div>
@@ -172,11 +180,11 @@ const Sidebar = () => {
                         alt="img"
                       />
                     </span>
-                    <div className="ms-2">
-                      <h6 className="fs-14 fw-semibold mb-0">
-                        Trustcare Clinic
+                    <div className="ms-2 text-truncate" style={{ maxWidth: '120px' }}>
+                      <h6 className="fs-14 fw-semibold mb-0 text-truncate">
+                        {user?.clinic?.name || "Preclinic"}
                       </h6>
-                      <p className="fs-13 mb-0">Lasvegas</p>
+                      <p className="fs-13 mb-0 text-muted">@{user?.clinic?.subdomain || "default"}</p>
                     </div>
                   </div>
                   <i className="ti ti-arrows-transfer-up" />
@@ -268,7 +276,13 @@ const Sidebar = () => {
               </div>
             </div>
             <ul>
-              {SidebarData?.map((mainLabel, index) => (
+              {SidebarData?.filter(section => {
+                // Only show Super Admin section to SUPER_ADMIN role
+                if (section.tittle === "Super Admin") {
+                  return user?.role === "SUPER_ADMIN";
+                }
+                return true;
+              }).map((mainLabel, index) => (
                 <React.Fragment key={`main-${index}`}>
                   <li className="menu-title">
                     <span>{mainLabel?.tittle}</span>
@@ -300,17 +314,15 @@ const Sidebar = () => {
                                   handleLayoutClick(title?.label);
                                 }
                               }}
-                              className={`${
-                                subOpen === title?.label ||
+                              className={`${subOpen === title?.label ||
                                 title?.links?.includes(Location.pathname)
-                                  ? "subdrop"
-                                  : ""
-                              } ${
-                                title?.links?.includes(Location.pathname) ||
-                                title?.link === Location.pathname
+                                ? "subdrop"
+                                : ""
+                                } ${title?.links?.includes(Location.pathname) ||
+                                  title?.link === Location.pathname
                                   ? "active"
                                   : ""
-                              }`}
+                                }`}
                             >
                               <i className={`ti ti-${title.icon}`}></i>
                               <span>{title?.label}</span>
@@ -330,7 +342,7 @@ const Sidebar = () => {
                                 style={{
                                   display:
                                     subOpen === title?.label ||
-                                    title?.links?.includes(Location.pathname)
+                                      title?.links?.includes(Location.pathname)
                                       ? "block"
                                       : "none",
                                 }}
@@ -345,22 +357,19 @@ const Sidebar = () => {
 
                                     return (
                                       <li
-                                        className={`${
-                                          item?.submenuItems
-                                            ? "submenu submenu-two"
-                                            : ""
-                                        } `}
+                                        className={`${item?.submenuItems
+                                          ? "submenu submenu-two"
+                                          : ""
+                                          } `}
                                         key={`item-${j}`}
                                       >
                                         <Link
                                           to={item?.submenu ? "#" : item?.link}
-                                          className={`${
-                                            isSubActive ? "active subdrop" : ""
-                                          } ${
-                                            subsidebar === item?.label
+                                          className={`${isSubActive ? "active subdrop" : ""
+                                            } ${subsidebar === item?.label
                                               ? "subdrop"
                                               : ""
-                                          }`}
+                                            }`}
                                           onClick={() => {
                                             toggleSubsidebar(item?.label);
                                             if (title?.label === "Layouts") {
@@ -373,8 +382,8 @@ const Sidebar = () => {
                                           {item?.label}
                                           {(item?.submenu ||
                                             item?.customSubmenuTwo) && (
-                                            <span className="menu-arrow"></span>
-                                          )}
+                                              <span className="menu-arrow"></span>
+                                            )}
                                         </Link>
                                         {item?.submenuItems ? (
                                           <ul
@@ -396,7 +405,7 @@ const Sidebar = () => {
                                                       Location.pathname
                                                     ) ||
                                                   items?.link ===
-                                                    Location.pathname;
+                                                  Location.pathname;
 
                                                 return (
                                                   <li key={`submenu-item-${k}`}>
@@ -406,11 +415,10 @@ const Sidebar = () => {
                                                           ? "#"
                                                           : items?.link
                                                       }
-                                                      className={`${
-                                                        isSubSubActive
-                                                          ? "active"
-                                                          : ""
-                                                      }`}
+                                                      className={`${isSubSubActive
+                                                        ? "active"
+                                                        : ""
+                                                        }`}
                                                     >
                                                       {items?.label}
                                                     </Link>

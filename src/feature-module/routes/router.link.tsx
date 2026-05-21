@@ -8,6 +8,7 @@ import ForgotPasswordBasic from "../components/auth/forgot-password/forgotPasswo
 import ForgotPasswordCover from "../components/auth/forgot-password/forgotPasswordCover";
 import ForgotPasswordIllustration from "../components/auth/forgot-password/forgotPasswordIllustration";
 import LockScreen from "../components/auth/lock-screen/lockScreen";
+import HomePage from "../components/pages/home/homePage";
 import Login from "../components/auth/login/login";
 import LoginBasic from "../components/auth/login/loginBasic";
 import LoginCover from "../components/auth/login/loginCover";
@@ -29,6 +30,8 @@ import ProfitAndLoss from "../components/pages/administration-modules/reports/pr
 import DeleteAccountRequest from "../components/pages/administration-modules/users/delete-account-request/deleteAccountRequest";
 import Permissions from "../components/pages/administration-modules/users/permissions/permissions";
 import RolesAndPermissions from "../components/pages/administration-modules/users/roles-and-permissions/rolesAndPermissions";
+import PackagesAdmin from "../components/pages/super-admin/packages/PackagesAdmin";
+import TenantsAdmin from "../components/pages/super-admin/tenants/TenantsAdmin";
 import Calendars from "../components/pages/application-modules/application/calendar/calendar";
 import CallHistory from "../components/pages/application-modules/application/calls/callHistory";
 import IncomingCall from "../components/pages/application-modules/application/calls/incomingCall";
@@ -247,8 +250,23 @@ const routes = all_routes;
 
 export const publicRoutes = [
   {
-    path: "*", // ✅ Catch-all route for 404s
-    element: <Navigate to={routes.dashboard} />,
+    path: "*",
+    element: <Navigate to={routes.home} />,
+    route: Route,
+  },
+  {
+    path: routes.home,
+    element: <HomePage />,
+    route: Route,
+  },
+  {
+    path: routes.packages,
+    element: <PackagesAdmin />,
+    route: Route,
+  },
+  {
+    path: routes.tenants,
+    element: <TenantsAdmin />,
     route: Route,
   },
   {
@@ -1384,6 +1402,11 @@ export const publicRoutes = [
   },
 ];
 export const authRoutes = [
+  {
+    path: routes.home,
+    element: <HomePage />,
+    route: Route,
+  },
   {
     path: routes.login,
     element: <Login />,

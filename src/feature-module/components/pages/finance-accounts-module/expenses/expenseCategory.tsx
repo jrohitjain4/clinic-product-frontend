@@ -1,28 +1,37 @@
-
+import { useState } from "react";
 import { Link } from "react-router";
-import { expenseCategoryData } from "../../../../../core/json/expenseCategoryData";
 import Datatable from "../../../../../core/common/dataTable";
 import ExpenseCategoryModal from "../modal/expenseCategoryModal";
+import { useExpenseCategories } from "../../../../../core/hooks/useExpenseCategories";
 
 const ExpenseCategory = () => {
-  const data = expenseCategoryData;
+  const { categories, refetch } = useExpenseCategories();
+  const [selectedCategory, setSelectedCategory] = useState<any>(null);
+
+  const data = categories.map((cat: any) => ({
+    key: cat.id,
+    id: cat.id,
+    Category: cat.name,
+    Status: cat.status,
+    raw: cat,
+  }));
+
   const columns = [
     {
       title: "Category",
       dataIndex: "Category",
-      render: (text: any) => <Link to="">{text}</Link>,
+      render: (text: string) => <div className="text-dark fw-medium">{text}</div>,
       sorter: (a: any, b: any) => a.Category.length - b.Category.length,
     },
     {
       title: "Status",
       dataIndex: "Status",
-      render: (text: any) => (
+      render: (text: string) => (
         <span
-          className={`badge border ${
-            text === "Active"
+          className={`badge border ${text === "Active"
               ? "badge-soft-success border-success text-success"
               : "badge-soft-danger border-danger text-danger"
-          } rounded fw-medium fs-13`}
+            } rounded fw-medium fs-13`}
         >
           {text}
         </span>
@@ -31,7 +40,7 @@ const ExpenseCategory = () => {
     },
     {
       title: "",
-      render: () => (
+      render: (_: string, record: any) => (
         <div className="action-item p-2">
           <Link to="#" data-bs-toggle="dropdown">
             <i className="ti ti-dots-vertical" />
@@ -42,7 +51,8 @@ const ExpenseCategory = () => {
                 to="#"
                 className="dropdown-item d-flex align-items-center"
                 data-bs-toggle="modal"
-                data-bs-target="#edit_new_category"
+                data-bs-target="#edit_expense_category"
+                onClick={() => setSelectedCategory(record.raw)}
               >
                 Edit
               </Link>
@@ -52,7 +62,8 @@ const ExpenseCategory = () => {
                 to="#"
                 className="dropdown-item d-flex align-items-center"
                 data-bs-toggle="modal"
-                data-bs-target="#delete_modal"
+                data-bs-target="#delete_expense_category"
+                onClick={() => setSelectedCategory(record.raw)}
               >
                 Delete
               </Link>
@@ -63,16 +74,10 @@ const ExpenseCategory = () => {
     },
   ];
 
-
   return (
     <>
-      {/* ========================
-			Start Page Content
-		========================= */}
       <div className="page-wrapper">
-        {/* Start Content */}
         <div className="content">
-          {/* Start Page Header */}
           <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
             <div className="flex-grow-1">
               <h4 className="fw-bold mb-0"> Expense Category </h4>
@@ -82,15 +87,14 @@ const ExpenseCategory = () => {
                 to="#"
                 className="btn btn-primary ms-2 fs-13 btn-md"
                 data-bs-toggle="modal"
-                data-bs-target="#add_new_category"
+                data-bs-target="#add_expense_category"
+                onClick={() => setSelectedCategory(null)}
               >
                 <i className="ti ti-plus me-1" />
                 Add Category
               </Link>
             </div>
           </div>
-          {/* End Page Header */}
-          {/*  Start Table */}
           <div className="table-responsive">
             <Datatable
               columns={columns}
@@ -99,26 +103,9 @@ const ExpenseCategory = () => {
               searchText={""}
             />
           </div>
-          {/*  End Table */}
         </div>
-        {/* End Content */}
-        {/* Footer Start */}
-        <div className="footer text-center bg-white p-2 border-top">
-          <p className="text-dark mb-0">
-            2025 ©{" "}
-            <Link to="#" className="link-primary">
-              Preclinic
-            </Link>
-            , All Rights Reserved
-          </p>
-        </div>
-        {/* Footer End */}
       </div>
-      {/* ========================
-			End Page Content
-		========================= */}
-
-      <ExpenseCategoryModal />
+      <ExpenseCategoryModal selectedCategory={selectedCategory} refetch={refetch} />
     </>
   );
 };

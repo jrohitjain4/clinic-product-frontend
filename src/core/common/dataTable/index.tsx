@@ -41,6 +41,7 @@ const Datatable: React.FC<DatatableProps> = ({
   return (
     <Table
       className="table table-nowrap datatable"
+      rowKey={(record) => record.key ?? record.id ?? String(record.Name_Designation)}
       rowSelection={Selections ? rowSelection : undefined}
       columns={columns}
       rowHoverable={false}

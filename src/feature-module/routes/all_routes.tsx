@@ -1,3 +1,6 @@
+export const doctorDetailsPath = (id: string) => `/doctor-details/${id}`;
+export const editDoctorPath = (id: string) => `/edit-doctors/${id}`;
+
 export const all_routes = {
   home: "/",
   //Auth routes
@@ -106,17 +109,18 @@ export const all_routes = {
   //Clinic Pages
   doctors: "/doctors",
   doctorsList: "/doctors-list",
-  doctorsDetails: "/doctor-details",
+  doctorsDetails: "/doctor-details/:id",
   addDoctors: "/add-doctor",
-  editDoctors: "/edit-doctors",
+  editDoctors: "/edit-doctors/:id",
   doctorScheduleClini: "/doctor-schedule",
   patients: "/patients",
   patientsGrid: "/patients-grid",
-  editPatient: "/edit-patient",
-  patientDetails: "/patient-details",
+  editPatient: "/edit-patient/:id",
+  patientDetails: "/patient-details/:id",
   createPatient: "/create-patient",
   appointments: "/appointments",
   newAppointment: "/new-appointment",
+  editAppointment: "/edit-appointment/:id",
   appointmentCalendar: "/appointment-calendar",
   locations: "/locations",
   services: "/services",

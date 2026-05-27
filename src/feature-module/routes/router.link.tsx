@@ -67,6 +67,7 @@ import EditPatient from "../components/pages/clinic-modules/edit-patient/editPat
 import Locations from "../components/pages/clinic-modules/locations/locations";
 import Messages from "../components/pages/clinic-modules/messages/messages";
 import NewAppointment from "../components/pages/clinic-modules/new-appointment/newAppointment";
+import EditAppointment from "../components/pages/clinic-modules/edit-appointment/editAppointment";
 import PatientDetails from "../components/pages/clinic-modules/patient-details/patientDetails";
 import PatientsGrid from "../components/pages/clinic-modules/patients-grid/patientsGrid";
 import Patients from "../components/pages/clinic-modules/patients/patients";
@@ -249,16 +250,6 @@ import { Navigate, Route } from "react-router";
 const routes = all_routes;
 
 export const publicRoutes = [
-  {
-    path: "*",
-    element: <Navigate to={routes.home} />,
-    route: Route,
-  },
-  {
-    path: routes.home,
-    element: <HomePage />,
-    route: Route,
-  },
   {
     path: routes.packages,
     element: <PackagesAdmin />,
@@ -1330,6 +1321,11 @@ export const publicRoutes = [
     route: Route,
   },
   {
+    path: routes.editAppointment,
+    element: <EditAppointment />,
+    route: Route,
+  },
+  {
     path: routes.appointmentCalendar,
     element: <AppointmentCalendar />,
     route: Route,
@@ -1398,6 +1394,11 @@ export const publicRoutes = [
   {
     path: routes.banipaddresssettings,
     element: <BanIpAddressSettings />,
+    route: Route,
+  },
+  {
+    path: "*",
+    element: <Navigate to={routes.dashboard} replace />,
     route: Route,
   },
 ];

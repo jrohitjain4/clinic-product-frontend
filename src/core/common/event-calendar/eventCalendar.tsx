@@ -6,33 +6,38 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import ImageWithBasePath from "../../imageWithBasePath";
 
-const EventCalendar = () => {
+export interface CalendarEventInput {
+  id?: string;
+  title?: string;
+  start: string;
+  end?: string;
+  extendedProps?: {
+    image?: string;
+    appointmentId?: string;
+    doctorName?: string;
+    status?: string;
+    mode?: string;
+  };
+}
+
+interface EventCalendarProps {
+  events?: CalendarEventInput[];
+}
+
+const EventCalendar = ({ events: externalEvents }: EventCalendarProps) => {
   const calendarRef = useRef(null);
   const [selectedEvent, setSelectedEvent] = useState<EventApi | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const events = [
+  const fallbackEvents: CalendarEventInput[] = [
     {
-      image: "assets/img/users/user-01.jpg",
-      start: new Date(Date.now() - 168000000).toISOString().slice(0, 10),
-    },
-    {
-      image: "assets/img/users/user-02.jpg",
-      start: new Date(Date.now() + 338000000).toISOString().slice(0, 10),
-    },
-    {
-      image: "assets/img/users/user-03.jpg",
-      start: new Date(Date.now() - 338000000).toISOString().slice(0, 10),
-    },
-    {
-      image: "assets/img/users/user-04.jpg",
-      start: new Date(Date.now() + 68000000).toISOString().slice(0, 10),
-    },
-    {
-      image: "assets/img/users/user-05.jpg",
-      start: new Date(Date.now() + 88000000).toISOString().slice(0, 10),
+      title: "Sample",
+      start: new Date().toISOString(),
+      extendedProps: { image: "assets/img/users/user-01.jpg" },
     },
   ];
+
+  const events = externalEvents?.length ? externalEvents : fallbackEvents;
 
   const renderEventContent = (eventInfo: any) => {
     const { image } = eventInfo.event.extendedProps;
@@ -95,7 +100,7 @@ const EventCalendar = () => {
             <div className="modal-content">
               <div className="modal-header bg-dark modal-bg">
                 <h5 className="modal-title text-white">
-                  {selectedEvent.title || "Team B"}
+                  {selectedEvent.title || "Appointment"}
                 </h5>
                 <button
                   type="button"
@@ -107,20 +112,19 @@ const EventCalendar = () => {
               <div className="modal-body">
                 <p className="d-flex align-items-center fw-medium text-black mb-3">
                   <i className="ti ti-calendar-check text-default me-2" />
-                  26 Jul,2024 to 31 Jul,2024
+                  {selectedEvent.start?.toLocaleString() || "—"}
                 </p>
                 <p className="d-flex align-items-center fw-medium text-black mb-3">
-                  <i className="ti ti-calendar-check text-default me-2" />
-                  11:00 AM to 12:15 PM
+                  <i className="ti ti-user text-default me-2" />
+                  Doctor:{" "}
+                  {(selectedEvent.extendedProps as { doctorName?: string })
+                    ?.doctorName || "—"}
                 </p>
                 <p className="d-flex align-items-center fw-medium text-black mb-3">
-                  <i className="ti ti-map-pin-bolt text-default me-2" />
-                  Las Vegas, US
-                </p>
-                <p className="d-flex align-items-center fw-medium text-black mb-0">
-                  <i className="ti ti-calendar-check text-default me-2" />A
-                  recurring or repeating event is simply any event that you will
-                  occur more than once on your calendar.
+                  <i className="ti ti-info-circle text-default me-2" />
+                  Status:{" "}
+                  {(selectedEvent.extendedProps as { status?: string })?.status ||
+                    "—"}
                 </p>
               </div>
             </div>

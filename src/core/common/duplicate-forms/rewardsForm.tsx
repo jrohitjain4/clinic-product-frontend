@@ -1,40 +1,42 @@
-import { DatePicker } from "antd";
-import dayjs, { Dayjs } from "dayjs";
 import { Link } from "react-router";
-import { Session } from "../selectOption";
 import { useState } from "react";
+import type { AwardEntry } from "../../types/doctorProfile";
 
-type RowType = {
-  id: number;
-  session: string;
-  from: Dayjs | null;
-  to: Dayjs | null;
-};
-
-const createRow = (row?: RowType): RowType => ({
+const emptyRow = (): AwardEntry => ({
   id: Date.now() + Math.random(),
-  session: row ? row.session : Session[0]?.value || "",
-  from: row ? row.from : dayjs("00:00:00", "HH:mm:ss"),
-  to: row ? row.to : dayjs("00:00:00", "HH:mm:ss"),
+  name: "",
+  description: "",
+  year: "",
 });
 
-const RewardsForms = () => {
-  const [rows, setRows] = useState<RowType[]>([createRow()]);
+interface RewardsFormsProps {
+  initialRows?: AwardEntry[];
+  onChange?: (rows: AwardEntry[]) => void;
+}
 
-  const handleAddRow = (row: RowType) => {
+const RewardsForms = ({ initialRows, onChange }: RewardsFormsProps) => {
+  const [rows, setRows] = useState<AwardEntry[]>(
+    initialRows?.length ? initialRows : [emptyRow()]
+  );
+
+  const emit = (next: AwardEntry[]) => {
+    setRows(next);
+    onChange?.(next);
+  };
+
+  const updateRow = (id: number, field: keyof AwardEntry, value: string) => {
+    emit(rows.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+  };
+
+  const handleAddRow = (row: AwardEntry) => {
     const idx = rows.findIndex((r) => r.id === row.id);
-    const newRows = [...rows];
-    newRows.splice(idx + 1, 0, createRow(row));
-    setRows(newRows);
+    const next = [...rows];
+    next.splice(idx + 1, 0, emptyRow());
+    emit(next);
   };
 
   const handleDeleteRow = (id: number) => {
-    setRows(rows.filter((row) => row.id !== id));
-  };
-
-  const getModalContainer = () => {
-    const modalElement = document.getElementById("modal-datepicker");
-    return modalElement ? modalElement : document.body; // Fallback to document.body if modalElement is null
+    emit(rows.filter((r) => r.id !== id));
   };
 
   return (
@@ -43,30 +45,40 @@ const RewardsForms = () => {
         <div className="row align-items-end" key={row.id}>
           <div className="col-lg-11">
             <div className="row">
-              <div className="col-lg-6">
+              <div className="col-lg-5">
                 <div className="mb-3">
                   <label className="form-label">Name</label>
-                  <input type="text" className="form-control" />
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={row.name}
+                    onChange={(e) => updateRow(row.id, "name", e.target.value)}
+                    placeholder="Award or certification title"
+                  />
                 </div>
               </div>
-              <div className="col-lg-6">
+              <div className="col-lg-2">
                 <div className="mb-3">
-                  <label className="form-label">From</label>
-                  <div className="input-icon-end position-relative">
-                    <DatePicker
-                      className="form-control datetimepicker"
-                      format={{
-                        format: "DD-MM-YYYY",
-                        type: "mask",
-                      }}
-                      getPopupContainer={getModalContainer}
-                      placeholder="DD-MM-YYYY"
-                      suffixIcon={null}
-                    />
-                    <span className="input-icon-addon">
-                      <i className="ti ti-calendar" />
-                    </span>
-                  </div>
+                  <label className="form-label">Year</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={row.year}
+                    onChange={(e) => updateRow(row.id, "year", e.target.value)}
+                    placeholder="2024"
+                  />
+                </div>
+              </div>
+              <div className="col-lg-5">
+                <div className="mb-3">
+                  <label className="form-label">Description</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={row.description}
+                    onChange={(e) => updateRow(row.id, "description", e.target.value)}
+                    placeholder="Short description"
+                  />
                 </div>
               </div>
             </div>
@@ -75,7 +87,10 @@ const RewardsForms = () => {
             <div className="mb-3 d-flex">
               <Link
                 to="#"
-                onClick={() => handleAddRow(row)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleAddRow(row);
+                }}
                 className="add-schedule-btn p-2 bg-light btn-icon text-dark rounded d-flex align-items-center justify-content-center"
                 style={{ marginRight: 8 }}
               >
@@ -84,7 +99,10 @@ const RewardsForms = () => {
               {rows.length > 1 && (
                 <Link
                   to="#"
-                  onClick={() => handleDeleteRow(row.id)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDeleteRow(row.id);
+                  }}
                   className="remove-schedule-btn p-2 bg-soft-danger btn-icon text-danger rounded d-flex align-items-center justify-content-center"
                 >
                   <i className="ti ti-trash fs-16" />

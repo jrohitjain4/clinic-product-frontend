@@ -1,27 +1,419 @@
+import { useEffect, useState } from "react";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { Link } from "react-router";
-import { all_routes } from "../../../../routes/all_routes";
 import { DatePicker } from "antd";
+import dayjs, { Dayjs } from "dayjs";
 import {
   Blood_Group,
   City,
   Country,
   Gender,
-  StaffsDesignation,
-  StaffsRole,
   State,
 } from "../../../../../core/common/selectOption";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
+import StaffProfileUpload from "../../../../../core/common/staff-profile-upload/StaffProfileUpload";
+import { apiUrl } from "../../../../../core/config/api";
+import type { ClinicStaff } from "../../../../../core/types/clinicStaff";
+import {
+  ROLE_OPTIONS,
+  STAFF_STATUS_OPTIONS,
+  emptyStaffForm,
+  formatStaffDate,
+  closeBootstrapModal,
+  statusToLabel,
+} from "../../../../../core/utils/staffForm";
+import { findSelectOption } from "../../../../../core/utils/doctorSchedule";
 
-const StaffsModal = () => {
-  const getModalContainer = () => {
-    const modalElement = document.getElementById("modal-datepicker");
-    return modalElement ? modalElement : document.body; // Fallback to document.body if modalElement is null
+interface DesigOption {
+  id: string;
+  name: string;
+}
+
+interface StaffsModalProps {
+  selected: ClinicStaff | null;
+  onSelect: (staff: ClinicStaff | null) => void;
+  onSaved: () => void;
+}
+
+const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
+  const getModalContainer = () =>
+    document.getElementById("modal-datepicker") || document.body;
+
+  const [designations, setDesignations] = useState<DesigOption[]>([]);
+  const [form, setForm] = useState(emptyStaffForm());
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch(apiUrl("/api/designations?type=Staff"), {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((r) => r.json())
+      .then((data: DesigOption[]) => setDesignations(Array.isArray(data) ? data : []))
+      .catch(console.error);
+  }, []);
+
+  const desigOptions = designations.map((d) => ({ value: d.id, label: d.name }));
+
+  const resetAddForm = () => {
+    setForm(emptyStaffForm());
+    setFormError(null);
   };
+
+  const loadEditForm = (s: ClinicStaff) => {
+    setForm({
+      fullName: s.fullName || "",
+      role: s.role || "",
+      status: s.status === "Inactive" ? "Inactive" : "Active",
+      designationId: s.designationId || "",
+      profileImage: s.profileImage || null,
+      phone: s.phone || "",
+      email: s.email || "",
+      dob: s.dob ? dayjs(s.dob) : null,
+      gender: s.gender || "",
+      bloodGroup: s.bloodGroup || "",
+      address1: s.address1 || "",
+      address2: s.address2 || "",
+      country: s.country || "",
+      state: s.state || "",
+      city: s.city || "",
+      pincode: s.pincode || "",
+    });
+    setFormError(null);
+  };
+
+  useEffect(() => {
+    if (selected?.id) {
+      loadEditForm(selected);
+    }
+  }, [selected?.id]);
+
+  const buildPayload = () => ({
+    fullName: form.fullName.trim(),
+    role: form.role,
+    designationId: form.designationId || null,
+    profileImage: form.profileImage,
+    phone: form.phone || null,
+    email: form.email || null,
+    dob: form.dob ? form.dob.toISOString() : null,
+    gender: form.gender || null,
+    bloodGroup: form.bloodGroup || null,
+    address1: form.address1 || null,
+    address2: form.address2 || null,
+    country: form.country || null,
+    state: form.state || null,
+    city: form.city || null,
+    pincode: form.pincode || null,
+    status: form.status || "Active",
+  });
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.fullName.trim()) {
+      setFormError("Name is required.");
+      return;
+    }
+    if (!form.role) {
+      setFormError("Role is required.");
+      return;
+    }
+    if (!form.designationId) {
+      setFormError("Designation is required.");
+      return;
+    }
+
+    setSubmitting(true);
+    setFormError(null);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(apiUrl("/api/staffs"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(buildPayload()),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to add staff");
+      }
+      closeBootstrapModal("add_staff");
+      resetAddForm();
+      onSaved();
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : "Failed to add staff");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selected?.id) return;
+    if (!form.fullName.trim()) {
+      setFormError("Name is required.");
+      return;
+    }
+
+    setSubmitting(true);
+    setFormError(null);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(apiUrl(`/api/staffs/${selected.id}`), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(buildPayload()),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to update staff");
+      }
+      closeBootstrapModal("edit_staff");
+      onSaved();
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : "Failed to update staff");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selected?.id) return;
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(apiUrl(`/api/staffs/${selected.id}`), {
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to delete");
+      }
+      closeBootstrapModal("delete_staff");
+      onSelect(null);
+      onSaved();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Delete failed");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const profileSrc =
+    selected?.profileImage || "assets/img/users/user-08.jpg";
+  const statusLabel = selected ? statusToLabel(selected.status) : "";
+
+  const renderFormFields = (opts?: { showStatus?: boolean }) => (
+    <>
+      {formError && (
+        <div className="alert alert-danger py-2 fs-13 mb-3">{formError}</div>
+      )}
+      <h6 className="fw-bold mb-3">Staff Information</h6>
+      <div className="mb-3 d-flex align-items-center">
+        <label className="form-label">Profile Image</label>
+        <StaffProfileUpload
+          value={form.profileImage}
+          onChange={(url) => setForm((f) => ({ ...f, profileImage: url }))}
+        />
+      </div>
+      <div className="mb-3">
+        <label className="form-label">
+          Name <span className="text-danger">*</span>
+        </label>
+        <input
+          type="text"
+          className="form-control"
+          value={form.fullName}
+          onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
+        />
+      </div>
+      <div className="row mb-3 border-bottom">
+        <div className="col-lg-6">
+          <div className="mb-3">
+            <label className="form-label">
+              Role<span className="text-danger ms-1">*</span>
+            </label>
+            <CommonSelect
+              options={ROLE_OPTIONS}
+              className="select"
+              value={findSelectOption(ROLE_OPTIONS, form.role)}
+              placeholder="Select role"
+              onChange={(opt) => setForm((f) => ({ ...f, role: opt?.value || "" }))}
+            />
+          </div>
+        </div>
+        <div className="col-lg-6">
+          <div className="mb-3">
+            <label className="form-label">
+              Designation<span className="text-danger ms-1">*</span>
+            </label>
+            {desigOptions.length > 0 ? (
+              <CommonSelect
+                options={desigOptions}
+                className="select"
+                value={findSelectOption(desigOptions, form.designationId)}
+                placeholder="Select designation"
+                onChange={(opt) =>
+                  setForm((f) => ({ ...f, designationId: opt?.value || "" }))
+                }
+              />
+            ) : (
+              <div className="form-control text-muted py-2 fs-13">
+                No staff designations — add one in Designation (type: Staff)
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      {opts?.showStatus && (
+        <div className="mb-3">
+          <label className="form-label">
+            Status<span className="text-danger ms-1">*</span>
+          </label>
+          <CommonSelect
+            options={STAFF_STATUS_OPTIONS}
+            className="select"
+            value={findSelectOption(STAFF_STATUS_OPTIONS, form.status)}
+            placeholder="Select status"
+            onChange={(opt) =>
+              setForm((f) => ({ ...f, status: opt?.value || "Active" }))
+            }
+          />
+        </div>
+      )}
+      <h6 className="fw-bold mb-3">Contact Information</h6>
+      <div className="row row-gap-2">
+        <div className="col-md-6">
+          <label className="form-label">
+            Phone Number<span className="text-danger ms-1">*</span>
+          </label>
+          <input
+            type="text"
+            className="form-control"
+            value={form.phone}
+            onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+          />
+        </div>
+        <div className="col-md-6">
+          <label className="form-label">
+            Email<span className="text-danger ms-1">*</span>
+          </label>
+          <input
+            type="email"
+            className="form-control"
+            value={form.email}
+            onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+          />
+        </div>
+        <div className="col-md-6">
+          <label className="form-label">
+            DOB<span className="text-danger ms-1">*</span>
+          </label>
+          <div className="input-icon-end position-relative">
+            <DatePicker
+              className="form-control datetimepicker w-100"
+              format={{ format: "DD-MM-YYYY", type: "mask" }}
+              getPopupContainer={getModalContainer}
+              placeholder="DD-MM-YYYY"
+              suffixIcon={null}
+              value={form.dob}
+              onChange={(d: Dayjs | null) => setForm((f) => ({ ...f, dob: d }))}
+            />
+            <span className="input-icon-addon">
+              <i className="ti ti-calendar" />
+            </span>
+          </div>
+        </div>
+        <div className="col-md-6">
+          <label className="form-label">
+            Gender<span className="text-danger ms-1">*</span>
+          </label>
+          <CommonSelect
+            options={Gender}
+            className="select"
+            value={findSelectOption(Gender, form.gender) || Gender[0]}
+            onChange={(opt) => setForm((f) => ({ ...f, gender: opt?.value || "" }))}
+          />
+        </div>
+        <div className="col-md-12">
+          <label className="form-label">
+            Blood Group<span className="text-danger ms-1">*</span>
+          </label>
+          <CommonSelect
+            options={Blood_Group}
+            className="select"
+            value={findSelectOption(Blood_Group, form.bloodGroup) || Blood_Group[0]}
+            onChange={(opt) => setForm((f) => ({ ...f, bloodGroup: opt?.value || "" }))}
+          />
+        </div>
+        <div className="col-md-6">
+          <label className="form-label">Address 1</label>
+          <input
+            type="text"
+            className="form-control"
+            value={form.address1}
+            onChange={(e) => setForm((f) => ({ ...f, address1: e.target.value }))}
+          />
+        </div>
+        <div className="col-md-6">
+          <label className="form-label">Address 2</label>
+          <input
+            type="text"
+            className="form-control"
+            value={form.address2}
+            onChange={(e) => setForm((f) => ({ ...f, address2: e.target.value }))}
+          />
+        </div>
+        <div className="col-md-6">
+          <label className="form-label">Country</label>
+          <CommonSelect
+            options={Country}
+            className="select"
+            value={findSelectOption(Country, form.country) || Country[0]}
+            onChange={(opt) => setForm((f) => ({ ...f, country: opt?.value || "" }))}
+          />
+        </div>
+        <div className="col-md-6">
+          <label className="form-label">State</label>
+          <CommonSelect
+            options={State}
+            className="select"
+            value={findSelectOption(State, form.state) || State[0]}
+            onChange={(opt) => setForm((f) => ({ ...f, state: opt?.value || "" }))}
+          />
+        </div>
+        <div className="col-md-6">
+          <label className="form-label">City</label>
+          <CommonSelect
+            options={City}
+            className="select"
+            value={findSelectOption(City, form.city) || City[0]}
+            onChange={(opt) => setForm((f) => ({ ...f, city: opt?.value || "" }))}
+          />
+        </div>
+        <div className="col-md-6">
+          <label className="form-label">Pincode</label>
+          <input
+            type="text"
+            className="form-control"
+            value={form.pincode}
+            onChange={(e) => setForm((f) => ({ ...f, pincode: e.target.value }))}
+          />
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <>
-      {/* Start Add Modal */}
+      {/* View */}
       <div id="view_staff" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
@@ -37,375 +429,87 @@ const StaffsModal = () => {
               </button>
             </div>
             <div className="modal-body">
-              <div className="card bg-light">
-                <div className="card-body">
-                  <div className="d-flex align-items-center">
-                    <div className="me-2">
-                      <ImageWithBasePath
-                        src="assets/img/users/user-08.jpg"
-                        alt="img"
-                        className="img-fluid avatar avatar-xxl rounded"
-                      />
-                    </div>
-                    <div>
-                      <span className="text-primary mb-1">#STF020</span>
-                      <div className="d-flex align-items-center mb-1">
-                        <h5 className="fw-bold mb-0 me-2">James Allaire</h5>
-                        <span className="badge badge-soft-success border border-success fw-medium fs-13">
-                          Available
-                        </span>
+              {selected ? (
+                <>
+                  <div className="card bg-light">
+                    <div className="card-body">
+                      <div className="d-flex align-items-center">
+                        <div className="me-2">
+                          <ImageWithBasePath
+                            src={profileSrc}
+                            alt="img"
+                            className="img-fluid avatar avatar-xxl rounded"
+                          />
+                        </div>
+                        <div>
+                          {selected.staffCode && (
+                            <span className="text-primary mb-1 d-block">
+                              #{selected.staffCode}
+                            </span>
+                          )}
+                          <div className="d-flex align-items-center mb-1">
+                            <h5 className="fw-bold mb-0 me-2">{selected.fullName}</h5>
+                            <span
+                              className={`badge fw-medium fs-13 ${
+                                statusLabel === "Available"
+                                  ? "badge-soft-success border border-success"
+                                  : "badge-soft-danger border border-danger"
+                              }`}
+                            >
+                              {statusLabel}
+                            </span>
+                          </div>
+                          <p className="mb-0">
+                            {selected.designation?.name || "—"} · {selected.role}
+                          </p>
+                        </div>
                       </div>
-                      <p>Front Office Executive</p>
                     </div>
                   </div>
-                </div>
-              </div>
-              {/* end card */}
-              <ul className="nav nav-tabs nav-bordered mb-3">
-                <li className="nav-item">
-                  <Link
-                    className="nav-link active"
-                    to="#"
-                    data-bs-toggle="tab"
-                    data-bs-target="#tab1"
-                  >
-                    Basic Info
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link
-                    className="nav-link"
-                    to="#"
-                    data-bs-toggle="tab"
-                    data-bs-target="#tab2"
-                  >
-                    Salary Info
-                  </Link>
-                </li>
-              </ul>
-              <div className="tab-content">
-                <div
-                  className="tab-pane active"
-                  id="tab1"
-                  role="tabpanel"
-                  tabIndex={0}
-                >
-                  {/* start row */}
-                  <div className="row row-gap-2">
+                  <div className="row row-gap-2 mt-3">
                     <div className="col-md-4">
                       <p className="text-dark fs-13 fw-medium mb-0">Gender</p>
-                      <p className="fs-13">Male</p>
+                      <p className="fs-13">{selected.gender || "—"}</p>
                     </div>
-                    {/* end col */}
                     <div className="col-md-4">
-                      <p className="text-dark fs-13 fw-medium mb-0">
-                        Phone Number
-                      </p>
-                      <p className="fs-13">+1 54546 45648</p>
+                      <p className="text-dark fs-13 fw-medium mb-0">Phone</p>
+                      <p className="fs-13">{selected.phone || "—"}</p>
                     </div>
-                    {/* end col */}
                     <div className="col-md-4">
                       <p className="text-dark fs-13 fw-medium mb-0">Email</p>
-                      <p className="fs-13">james@example.com</p>
+                      <p className="fs-13">{selected.email || "—"}</p>
                     </div>
-                    {/* end col */}
                     <div className="col-md-4">
-                      <p className="text-dark fs-13 fw-medium mb-0">
-                        Date of Joining
-                      </p>
-                      <p className="fs-13">12 Dec 2024</p>
+                      <p className="text-dark fs-13 fw-medium mb-0">DOB</p>
+                      <p className="fs-13">{formatStaffDate(selected.dob)}</p>
                     </div>
-                    {/* end col */}
                     <div className="col-md-4">
-                      <p className="text-dark fs-13 fw-medium mb-0">Email</p>
-                      <p className="fs-13">james@example.com</p>
+                      <p className="text-dark fs-13 fw-medium mb-0">Date of Joining</p>
+                      <p className="fs-13">{formatStaffDate(selected.dateOfJoining)}</p>
                     </div>
-                    {/* end col */}
                     <div className="col-md-4">
-                      <p className="text-dark fs-13 fw-medium mb-0">
-                        Staff Type
-                      </p>
-                      <p className="fs-13">Permanent</p>
+                      <p className="text-dark fs-13 fw-medium mb-0">Blood Group</p>
+                      <p className="fs-13">{selected.bloodGroup || "—"}</p>
                     </div>
-                    {/* end col */}
                     <div className="col-md-12">
-                      <p className="text-dark fs-13 fw-medium mb-0">Addresss</p>
+                      <p className="text-dark fs-13 fw-medium mb-0">Address</p>
                       <p className="fs-13">
-                        10 Elizabethtown Plaza, Downers Grove, Elizabeth UK07202
+                        {[selected.address1, selected.address2, selected.city, selected.state, selected.country, selected.pincode]
+                          .filter(Boolean)
+                          .join(", ") || "—"}
                       </p>
                     </div>
-                    {/* end col */}
                   </div>
-                  {/* end row */}
-                </div>
-                <div
-                  className="tab-pane"
-                  id="tab2"
-                  role="tabpanel"
-                  tabIndex={0}
-                >
-                  {/* Table List */}
-                  <div className="table-responsive border bg-white">
-                    <table className="table table-nowrap">
-                      <thead>
-                        <tr>
-                          <th>Credit Date</th>
-                          <th>Amount</th>
-                          <th>Salary for</th>
-                          <th />
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>13 Jul 2025</td>
-                          <td>$4800</td>
-                          <td>Jun 2025</td>
-                          <td>
-                            <div className="action-item">
-                              <Link to="#" data-bs-toggle="dropdown">
-                                <i className="ti ti-dots-vertical" />
-                              </Link>
-                              <ul className="dropdown-menu p-2">
-                                <li>
-                                  <Link
-                                    to="#"
-                                    className="dropdown-item d-flex align-items-center"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#edit"
-                                  >
-                                    Edit
-                                  </Link>
-                                </li>
-                                <li>
-                                  <Link
-                                    to="#"
-                                    className="dropdown-item d-flex align-items-center"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#delete"
-                                  >
-                                    Delete
-                                  </Link>
-                                </li>
-                              </ul>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>12 Jun 2025</td>
-                          <td>$4800</td>
-                          <td>May 2025</td>
-                          <td>
-                            <div className="action-item">
-                              <Link to="#" data-bs-toggle="dropdown">
-                                <i className="ti ti-dots-vertical" />
-                              </Link>
-                              <ul className="dropdown-menu p-2">
-                                <li>
-                                  <Link
-                                    to="#"
-                                    className="dropdown-item d-flex align-items-center"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#edit"
-                                  >
-                                    Edit
-                                  </Link>
-                                </li>
-                                <li>
-                                  <Link
-                                    to="#"
-                                    className="dropdown-item d-flex align-items-center"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#delete"
-                                  >
-                                    Delete
-                                  </Link>
-                                </li>
-                              </ul>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>15 May 2025</td>
-                          <td>$4800</td>
-                          <td>Apr 2025</td>
-                          <td>
-                            <div className="action-item">
-                              <Link to="#" data-bs-toggle="dropdown">
-                                <i className="ti ti-dots-vertical" />
-                              </Link>
-                              <ul className="dropdown-menu p-2">
-                                <li>
-                                  <Link
-                                    to="#"
-                                    className="dropdown-item d-flex align-items-center"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#edit"
-                                  >
-                                    Edit
-                                  </Link>
-                                </li>
-                                <li>
-                                  <Link
-                                    to="#"
-                                    className="dropdown-item d-flex align-items-center"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#delete"
-                                  >
-                                    Delete
-                                  </Link>
-                                </li>
-                              </ul>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>14 Apr 2025</td>
-                          <td>$4800</td>
-                          <td>Mar 2025</td>
-                          <td>
-                            <div className="action-item">
-                              <Link to="#" data-bs-toggle="dropdown">
-                                <i className="ti ti-dots-vertical" />
-                              </Link>
-                              <ul className="dropdown-menu p-2">
-                                <li>
-                                  <Link
-                                    to="#"
-                                    className="dropdown-item d-flex align-items-center"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#edit"
-                                  >
-                                    Edit
-                                  </Link>
-                                </li>
-                                <li>
-                                  <Link
-                                    to="#"
-                                    className="dropdown-item d-flex align-items-center"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#delete"
-                                  >
-                                    Delete
-                                  </Link>
-                                </li>
-                              </ul>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>13 Mar 2025</td>
-                          <td>$4800</td>
-                          <td>Feb 2025</td>
-                          <td>
-                            <div className="action-item">
-                              <Link to="#" data-bs-toggle="dropdown">
-                                <i className="ti ti-dots-vertical" />
-                              </Link>
-                              <ul className="dropdown-menu p-2">
-                                <li>
-                                  <Link
-                                    to="#"
-                                    className="dropdown-item d-flex align-items-center"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#edit"
-                                  >
-                                    Edit
-                                  </Link>
-                                </li>
-                                <li>
-                                  <Link
-                                    to="#"
-                                    className="dropdown-item d-flex align-items-center"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#delete"
-                                  >
-                                    Delete
-                                  </Link>
-                                </li>
-                              </ul>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>14 Feb 2025</td>
-                          <td>$4800</td>
-                          <td>Jan 2025</td>
-                          <td>
-                            <div className="action-item">
-                              <Link to="#" data-bs-toggle="dropdown">
-                                <i className="ti ti-dots-vertical" />
-                              </Link>
-                              <ul className="dropdown-menu p-2">
-                                <li>
-                                  <Link
-                                    to="#"
-                                    className="dropdown-item d-flex align-items-center"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#edit"
-                                  >
-                                    Edit
-                                  </Link>
-                                </li>
-                                <li>
-                                  <Link
-                                    to="#"
-                                    className="dropdown-item d-flex align-items-center"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#delete"
-                                  >
-                                    Delete
-                                  </Link>
-                                </li>
-                              </ul>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>12 Jan 2025</td>
-                          <td>$4800</td>
-                          <td>Dec 2024</td>
-                          <td>
-                            <div className="action-item">
-                              <Link to="#" data-bs-toggle="dropdown">
-                                <i className="ti ti-dots-vertical" />
-                              </Link>
-                              <ul className="dropdown-menu p-2">
-                                <li>
-                                  <Link
-                                    to="#"
-                                    className="dropdown-item d-flex align-items-center"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#edit"
-                                  >
-                                    Edit
-                                  </Link>
-                                </li>
-                                <li>
-                                  <Link
-                                    to="#"
-                                    className="dropdown-item d-flex align-items-center"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#delete"
-                                  >
-                                    Delete
-                                  </Link>
-                                </li>
-                              </ul>
-                            </div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  {/* /Table List */}
-                </div>
-              </div>
+                </>
+              ) : (
+                <p className="text-muted mb-0">Select a staff member from the list.</p>
+              )}
             </div>
           </div>
         </div>
       </div>
-      {/* End Add Modal */}
-      {/* Start Add Modal */}
+
+      {/* Add */}
       <div id="add_staff" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
@@ -420,191 +524,13 @@ const StaffsModal = () => {
                 <i className="ti ti-x" />
               </button>
             </div>
-            <form>
-              <div className="modal-body">
-                <h6 className="fw-bold mb-3">Staff Information</h6>
-                <div className="mb-3 d-flex align-items-center">
-                  <label className="form-label">Profile Image</label>
-                  <div className="drag-upload-btn avatar avatar-xxl rounded-circle bg-light text-muted position-relative overflow-hidden z-1 mb-2 ms-4 p-0">
-                    <i className="ti ti-user-plus fs-16" />
-                    <input
-                      type="file"
-                      className="form-control image-sign"
-                      multiple
-                    />
-                    <div className="position-absolute bottom-0 end-0 star-0 w-100 h-25 bg-dark d-flex align-items-center justify-content-center z-n1">
-                      <Link
-                        to="#"
-                        className="text-white d-flex align-items-center justify-content-center"
-                      >
-                        <i className="ti ti-photo fs-14" />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">
-                    Name <span className="text-danger">*</span>
-                  </label>
-                  <input type="text" className="form-control" />
-                </div>
-                {/* start row */}
-                <div className="row mb-3 border-bottom">
-                  <div className="col-lg-6">
-                    <div className="mb-3">
-                      <label className="form-label">
-                        Role<span className="text-danger ms-1">*</span>
-                      </label>
-                      <CommonSelect
-                        options={StaffsRole}
-                        className="select"
-                        defaultValue={StaffsRole[0]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-3">
-                      <label className="form-label">
-                        Designation<span className="text-danger ms-1">*</span>
-                      </label>
-                      <CommonSelect
-                        options={StaffsDesignation}
-                        className="select"
-                        defaultValue={StaffsDesignation[0]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                </div>
-                {/* end row */}
-                <h6 className="fw-bold mb-3">Contact Information</h6>
-                {/* start row */}
-                <div className="row row-gap-2">
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">
-                        Phone Number<span className="text-danger ms-1">*</span>
-                      </label>
-                      <input type="text" className="form-control" />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">
-                        Email<span className="text-danger ms-1">*</span>
-                      </label>
-                      <input type="text" className="form-control" />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">
-                        DOB<span className="text-danger ms-1">*</span>
-                      </label>
-                      <div className="input-icon-end position-relative">
-                        <DatePicker
-                          className="form-control datetimepicker"
-                          format={{
-                            format: "DD-MM-YYYY",
-                            type: "mask",
-                          }}
-                          getPopupContainer={getModalContainer}
-                          placeholder="DD-MM-YYYY"
-                          suffixIcon={null}
-                        />
-                        <span className="input-icon-addon">
-                          <i className="ti ti-calendar" />
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">
-                        Gender<span className="text-danger ms-1">*</span>
-                      </label>
-                      <CommonSelect
-                        options={Gender}
-                        className="select"
-                        defaultValue={Gender[0]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-12">
-                    <div className="mb-0">
-                      <label className="form-label">
-                        Blood Group<span className="text-danger ms-1">*</span>
-                      </label>
-                      <CommonSelect
-                        options={Blood_Group}
-                        className="select"
-                        defaultValue={Blood_Group[0]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">Address 1</label>
-                      <input type="text" className="form-control" />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">Address 2</label>
-                      <input type="text" className="form-control" />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">Country</label>
-                      <CommonSelect
-                        options={Country}
-                        className="select"
-                        defaultValue={Country[0]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">State</label>
-                      <CommonSelect
-                        options={State}
-                        className="select"
-                        defaultValue={State[0]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">City</label>
-                      <CommonSelect
-                        options={City}
-                        className="select"
-                        defaultValue={City[0]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">Pincode</label>
-                      <input type="text" className="form-control" />
-                    </div>
-                  </div>
-                  {/* end col */}
-                </div>
-                {/* end row */}
-              </div>
+            <form
+              onSubmit={handleAdd}
+              onFocus={() => {
+                if (!form.fullName && !form.role) resetAddForm();
+              }}
+            >
+              <div className="modal-body">{renderFormFields()}</div>
               <div className="modal-footer d-flex align-items-center gap-1">
                 <button
                   type="button"
@@ -613,16 +539,21 @@ const StaffsModal = () => {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary">
-                  Add Staff
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={submitting}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {submitting ? "Saving…" : "Add Staff"}
                 </button>
               </div>
             </form>
           </div>
         </div>
       </div>
-      {/* End Add Modal */}
-      {/* Start Edit Modal */}
+
+      {/* Edit */}
       <div id="edit_staff" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
@@ -637,215 +568,8 @@ const StaffsModal = () => {
                 <i className="ti ti-x" />
               </button>
             </div>
-            <form>
-              <div className="modal-body">
-                <h6 className="fw-bold mb-3">Staff Information</h6>
-                <div className="mb-3 d-flex align-items-center">
-                  <label className="form-label me-3">Profile Image</label>
-                  <div className="profile-container">
-                    <ImageWithBasePath
-                      src="assets/img/users/user-08.jpg"
-                      alt="Profile"
-                    />
-                    <div className="overlay-btn">
-                      <Link to="#" className="text-white" id="uploadTrigger">
-                        <i className="ti ti-photo fs-10" />
-                      </Link>
-                    </div>
-                    <input
-                      type="file"
-                      id="profileUpload"
-                      style={{ display: "none" }}
-                    />
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">
-                    Name <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    defaultValue="James Adair"
-                  />
-                </div>
-                {/* start row */}
-                <div className="row mb-3 border-bottom">
-                  <div className="col-lg-6">
-                    <div className="mb-3">
-                      <label className="form-label">
-                        Role<span className="text-danger ms-1">*</span>
-                      </label>
-                      <CommonSelect
-                        options={StaffsRole}
-                        className="select"
-                        defaultValue={StaffsRole[1]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-3">
-                      <label className="form-label">
-                        Designation<span className="text-danger ms-1">*</span>
-                      </label>
-                      <CommonSelect
-                        options={StaffsDesignation}
-                        className="select"
-                        defaultValue={StaffsDesignation[1]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                </div>
-                {/* end row */}
-                <h6 className="fw-bold mb-3">Contact Information</h6>
-                {/* start row */}
-                <div className="row row-gap-2">
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">
-                        Phone Number<span className="text-danger ms-1">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        defaultValue="+1 5258 25874"
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">
-                        Email<span className="text-danger ms-1">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        defaultValue="james@gmail.com"
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">
-                        DOB<span className="text-danger ms-1">*</span>
-                      </label>
-                      <div className="input-icon-end position-relative">
-                        <DatePicker
-                          className="form-control datetimepicker"
-                          format={{
-                            format: "DD-MM-YYYY",
-                            type: "mask",
-                          }}
-                          getPopupContainer={getModalContainer}
-                          placeholder="DD-MM-YYYY"
-                          suffixIcon={null}
-                        />
-                        <span className="input-icon-addon">
-                          <i className="ti ti-calendar" />
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">
-                        Gender<span className="text-danger ms-1">*</span>
-                      </label>
-                      <CommonSelect
-                        options={Gender}
-                        className="select"
-                        defaultValue={Gender[1]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-12">
-                    <div className="mb-0">
-                      <label className="form-label">
-                        Blood Group<span className="text-danger ms-1">*</span>
-                      </label>
-                      <CommonSelect
-                        options={Blood_Group}
-                        className="select"
-                        defaultValue={Blood_Group[1]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">Address 1</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        defaultValue="3-174,"
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">Address 2</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        defaultValue="3-/174,"
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">Country</label>
-                      <CommonSelect
-                        options={Country}
-                        className="select"
-                        defaultValue={Country[1]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">State</label>
-                      <CommonSelect
-                        options={State}
-                        className="select"
-                        defaultValue={State[1]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">City</label>
-                      <CommonSelect
-                        options={City}
-                        className="select"
-                        defaultValue={City[1]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">Pincode</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        defaultValue="IN 46625"
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                </div>
-                {/* end row */}
-              </div>
+            <form onSubmit={handleEdit}>
+              <div className="modal-body">{renderFormFields({ showStatus: true })}</div>
               <div className="modal-footer d-flex align-items-center gap-1">
                 <button
                   type="button"
@@ -854,16 +578,21 @@ const StaffsModal = () => {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary">
-                  Save Changes
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={submitting}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {submitting ? "Saving…" : "Save Changes"}
                 </button>
               </div>
             </form>
           </div>
         </div>
       </div>
-      {/* End Edit Modal */}
-      {/* Start Delete Modal  */}
+
+      {/* Delete */}
       <div className="modal fade" id="delete_staff">
         <div className="modal-dialog modal-dialog-centered modal-sm">
           <div className="modal-content">
@@ -884,27 +613,30 @@ const StaffsModal = () => {
                 </span>
               </div>
               <h5 className="fw-bold mb-1">Delete Confirmation</h5>
-              <p className="mb-3">Are you sure want to delete?</p>
+              <p className="mb-3">
+                Delete <strong>{selected?.fullName}</strong>?
+              </p>
               <div className="d-flex justify-content-center">
-                <Link
-                  to="#"
+                <button
+                  type="button"
                   className="btn btn-light position-relative z-1 me-3"
                   data-bs-dismiss="modal"
                 >
                   Cancel
-                </Link>
-                <Link
-                  to={all_routes.staffs}
+                </button>
+                <button
+                  type="button"
                   className="btn btn-danger position-relative z-1"
+                  disabled={deleting}
+                  onClick={handleDelete}
                 >
-                  Yes, Delete
-                </Link>
+                  {deleting ? "Deleting…" : "Yes, Delete"}
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
-      {/* End Delete Modal  */}
     </>
   );
 };

@@ -1,8 +1,88 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { all_routes } from "../../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
+import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
+import { StatusActive } from "../../../../../../core/common/selectOption";
+import { apiPost, apiPut, apiDelete } from "../../../../../../core/utils/apiClient";
 
-const Modals = () => {
+interface ModalsProps {
+  selectedSpecialization?: any;
+  refetch?: () => void;
+}
+
+const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
+  // Add Specialization
+  const [addName, setAddName] = useState("");
+  const [addDesc, setAddDesc] = useState("");
+
+  const handleAddSubmit = async (e: any) => {
+    e.preventDefault();
+    if (!addName) return;
+    try {
+      await apiPost("/api/specializations", {
+        name: addName,
+        description: addDesc,
+        status: "Active"
+      });
+      refetch?.();
+      setAddName("");
+      setAddDesc("");
+      document.getElementById("close-add-modal")?.click();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Edit Specialization
+  const [editName, setEditName] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [editStatus, setEditStatus] = useState<any>(null);
+
+  useEffect(() => {
+    if (selectedSpecialization) {
+      setEditName(selectedSpecialization.name);
+      setEditDesc(selectedSpecialization.description || "");
+      if (selectedSpecialization.status) {
+        setEditStatus({
+          value: selectedSpecialization.status,
+          label: selectedSpecialization.status,
+        });
+      } else {
+        setEditStatus(null);
+      }
+    }
+  }, [selectedSpecialization]);
+
+  const handleEditSubmit = async (e: any) => {
+    e.preventDefault();
+    if (!selectedSpecialization || !editName || !editStatus) return;
+    try {
+      await apiPut(`/api/specializations/${selectedSpecialization.id}`, {
+        name: editName,
+        description: editDesc,
+        status: editStatus?.value || "Active",
+      });
+      refetch?.();
+      document.getElementById("close-edit-modal")?.click();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Delete Specialization
+  const handleDelete = async (e: any) => {
+    e.preventDefault();
+    if (!selectedSpecialization) return;
+    try {
+      await apiDelete(`/api/specializations/${selectedSpecialization.id}`);
+      refetch?.();
+      document.getElementById("close-delete-modal")?.click();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <>
       {/* Start Add Modal */}
@@ -17,25 +97,33 @@ const Modals = () => {
                 type="button"
                 className="btn-close btn-close-modal custom-btn-close"
                 data-bs-dismiss="modal"
+                id="close-add-modal"
                 aria-label="Close"
               >
                 <i className="ti ti-x" />
               </button>
             </div>
-            <form>
+            <form onSubmit={handleAddSubmit}>
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label">
                     Specialization<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={addName}
+                    onChange={(e) => setAddName(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">Description</label>
                   <textarea
                     className="form-control"
                     rows={3}
-                    defaultValue={""}
+                    value={addDesc}
+                    onChange={(e) => setAddDesc(e.target.value)}
                   />
                 </div>
               </div>
@@ -56,7 +144,8 @@ const Modals = () => {
         </div>
       </div>
       {/* End Add Modal */}
-      {/* Start Add Modal */}
+
+      {/* Start Edit Modal */}
       <div id="edit_specialization" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
@@ -68,12 +157,13 @@ const Modals = () => {
                 type="button"
                 className="btn-close btn-close-modal custom-btn-close"
                 data-bs-dismiss="modal"
+                id="close-edit-modal"
                 aria-label="Close"
               >
                 <i className="ti ti-x" />
               </button>
             </div>
-            <form>
+            <form onSubmit={handleEditSubmit}>
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label">
@@ -82,15 +172,29 @@ const Modals = () => {
                   <input
                     type="text"
                     className="form-control"
-                    defaultValue="Cardiologist"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    required
                   />
                 </div>
-                <div className="mb-0">
+                <div className="mb-3">
                   <label className="form-label">Description</label>
                   <textarea
                     className="form-control"
                     rows={3}
-                    defaultValue={"Focuses on heart conditions in children."}
+                    value={editDesc}
+                    onChange={(e) => setEditDesc(e.target.value)}
+                  />
+                </div>
+                <div className="mb-0">
+                  <label className="form-label">
+                    Status<span className="text-danger ms-1">*</span>
+                  </label>
+                  <CommonSelect
+                    options={StatusActive}
+                    className="select"
+                    value={editStatus}
+                    onChange={(val) => setEditStatus(val)}
                   />
                 </div>
               </div>
@@ -110,7 +214,8 @@ const Modals = () => {
           </div>
         </div>
       </div>
-      {/* End Add Modal */}
+      {/* End Edit Modal */}
+
       {/* Start Delete Modal  */}
       <div className="modal fade" id="delete_specialization">
         <div className="modal-dialog modal-dialog-centered modal-sm">
@@ -134,19 +239,21 @@ const Modals = () => {
               <h5 className="fw-bold mb-1">Delete Confirmation</h5>
               <p className="mb-3">Are you sure want to delete?</p>
               <div className="d-flex justify-content-center">
-                <Link
-                  to="#"
+                <button
+                  type="button"
                   className="btn btn-light position-relative z-1 me-3"
                   data-bs-dismiss="modal"
+                  id="close-delete-modal"
                 >
                   Cancel
-                </Link>
-                <Link
-                  to={all_routes.specializations}
+                </button>
+                <button
+                  type="button"
                   className="btn btn-danger position-relative z-1"
+                  onClick={handleDelete}
                 >
                   Yes, Delete
-                </Link>
+                </button>
               </div>
             </div>
           </div>

@@ -89,6 +89,7 @@ export const Session = [
 export const Location = [{ value: "Select", label: "Select" }];
 export const Country = [
   { value: "Select", label: "Select" },
+  { value: "India", label: "India" },
   { value: "USA", label: "USA" },
   { value: "Canada", label: "Canada" },
   { value: "UK", label: "UK" },
@@ -96,17 +97,19 @@ export const Country = [
 ];
 export const State = [
   { value: "Select", label: "Select" },
-  { value: "California", label: "California" },
-  { value: "Ontario", label: "Ontario" },
-  { value: "England", label: "England" },
-  { value: "Bavaria", label: "Bavaria" },
+  { value: "Maharashtra", label: "Maharashtra" },
+  { value: "Karnataka", label: "Karnataka" },
+  { value: "Delhi", label: "Delhi" },
+  { value: "Gujarat", label: "Gujarat" },
+  { value: "Tamil Nadu", label: "Tamil Nadu" },
 ];
 export const City = [
   { value: "Select", label: "Select" },
-  { value: "Los Angeles", label: "Los Angeles" },
-  { value: "Toronto", label: "Toronto" },
-  { value: "London", label: "London" },
-  { value: "Munich", label: "Bavaria" },
+  { value: "Mumbai", label: "Mumbai" },
+  { value: "Bengaluru", label: "Bengaluru" },
+  { value: "New Delhi", label: "New Delhi" },
+  { value: "Ahmedabad", label: "Ahmedabad" },
+  { value: "Chennai", label: "Chennai" },
 ];
 export const StatusActive = [
   { value: "Select", label: "Select" },
@@ -186,6 +189,8 @@ export const Gender = [
 export const Appointment_Type = [
   { value: "Select", label: "Select" },
   { value: "Online Consultation", label: "Online Consultation" },
+  { value: "Offline Consultation", label: "Offline Consultation" },
+  { value: "Both", label: "Both" },
 ];
 export const Primary_Doctor = [
   { value: "Select", label: "Select" },
@@ -358,7 +363,7 @@ export const TicketStatus = [
 ];
 export const StaffsRole = [
   { value: "Select", label: "Select" },
-  { value: "Admin", label: "Admin" },
+  { value: "Front Desk", label: "Front Desk" },
   { value: "Reception", label: "Reception" },
   { value: "Nurse", label: "Nurse" },
   { value: "Nurse Practitioner", label: "Nurse Practitioner" },

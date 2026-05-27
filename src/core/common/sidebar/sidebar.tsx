@@ -281,6 +281,15 @@ const Sidebar = () => {
                 if (section.tittle === "Super Admin") {
                   return user?.role === "SUPER_ADMIN";
                 }
+                // Hide demo-only sections for admin users
+                if (
+                  section.tittle === "UI Interface" ||
+                  section.tittle === "Help" ||
+                  section.tittle === "Authentication" ||
+                  section.tittle === "Content"
+                ) {
+                  return user?.role !== "ADMIN" && user?.role !== "SUPER_ADMIN";
+                }
                 return true;
               }).map((mainLabel, index) => (
                 <React.Fragment key={`main-${index}`}>
@@ -347,7 +356,16 @@ const Sidebar = () => {
                                       : "none",
                                 }}
                               >
-                                {title?.submenuItems?.map(
+                                {title?.submenuItems?.filter((item: any) => {
+                                  if (user?.role === "ADMIN" || user?.role === "SUPER_ADMIN") {
+                                    if (item.label === "Doctor Dashboard" || item.label === "Patient Dashboard") return false;
+                                  } else if (user?.role === "DOCTOR") {
+                                    if (item.label === "Admin Dashboard" || item.label === "Patient Dashboard") return false;
+                                  } else if (user?.role === "PATIENT") {
+                                    if (item.label === "Admin Dashboard" || item.label === "Doctor Dashboard") return false;
+                                  }
+                                  return true;
+                                }).map(
                                   (item: any, j: any) => {
                                     const isSubActive =
                                       item?.submenuItems

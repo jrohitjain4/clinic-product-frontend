@@ -287,7 +287,6 @@ export const SidebarData = [
         dot: true,
         submenuItems: [
           { label: "Doctors", link: routes.doctors },
-          { label: "Doctor Details", link: routes.doctorsDetails },
           { label: "Add Doctor", link: routes.addDoctors },
           { label: "Doctor Schedule", link: routes.doctorScheduleClini },
         ],
@@ -303,7 +302,6 @@ export const SidebarData = [
         dot: true,
         submenuItems: [
           { label: "Patients", link: routes.patients },
-          { label: "Patient Details", link: routes.patientDetails },
           { label: "Create Patient", link: routes.createPatient },
         ],
       },

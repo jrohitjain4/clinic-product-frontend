@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { useState, useEffect } from "react";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import Modals from "./modals/modals";
 import SCol20Chart from "./charts/scol20";
@@ -6,8 +7,44 @@ import SCol5Chart from "./charts/scol5";
 import SCol6Chart from "./charts/scol6";
 import SCol7Chart from "./charts/scol7";
 import CircleChart2 from "./charts/circleChart2";
+import { apiPost, apiGet } from "../../../../../core/utils/apiClient";
 
 const DoctorDahboard = () => {
+  const [marking, setMarking] = useState(false);
+  const [marked, setMarked] = useState(false);
+  const [markedByAdmin, setMarkedByAdmin] = useState(false);
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const res = await apiGet("/api/attendance/today-status") as any;
+        if (res && res.status) {
+          setMarked(true);
+          if (res.markedBy === "ADMIN") {
+            setMarkedByAdmin(true);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch today's attendance status", err);
+      }
+    };
+    fetchStatus();
+  }, []);
+
+  const handleMarkAttendance = async () => {
+    setMarking(true);
+    try {
+      const res: any = await apiPost("/api/attendance/mark-self", {});
+      if (res.updated || res.created || res.message.includes("already marked")) {
+        setMarked(true);
+      }
+    } catch (err: any) {
+      console.error("Failed to mark attendance", err);
+      alert(err.message || "Failed to mark attendance");
+    } finally {
+      setMarking(false);
+    }
+  };
   return (
     <>
       {/* ========================
@@ -22,6 +59,19 @@ const DoctorDahboard = () => {
               <h4 className="fw-bold mb-0">Doctor Dashboard</h4>
             </div>
             <div className="d-flex align-items-center flex-wrap gap-2">
+              <button
+                type="button"
+                className={`btn btn-${marked ? 'success' : 'info'} d-inline-flex align-items-center text-white`}
+                onClick={handleMarkAttendance}
+                disabled={marking || marked}
+              >
+                {marking ? (
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                ) : (
+                  <i className={`ti ti-${marked ? 'check' : 'hand-click'} me-1`} />
+                )}
+                {marked ? (markedByAdmin ? 'Admin Marked' : 'Attendance Marked') : 'Mark Today\'s Attendance'}
+              </button>
               <Link
                 to="#"
                 className="btn btn-primary d-inline-flex align-items-center"

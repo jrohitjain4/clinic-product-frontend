@@ -1,104 +1,138 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
 import Datatable from "../../../../../core/common/dataTable";
-import { useState } from "react";
+import { useClinicPatients } from "../../../../../core/hooks/useClinicPatients";
+import type { ClinicPatient } from "../../../../../core/types/clinicPatient";
+import { patientToTableRow } from "../../../../../core/utils/patientForm";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
-import { PatientListData } from "../../../../../core/json/patientListData";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
+import PatientsDeleteModal from "./patientsDeleteModal";
 
 const Patients = () => {
-  const data = PatientListData;
+  const { patients, loading, error, refetch, reload } = useClinicPatients();
+  const [searchText, setSearchText] = useState("");
+  const [selected, setSelected] = useState<ClinicPatient | null>(null);
+
+  const tableData = useMemo(
+    () => patients.map((p, i) => patientToTableRow(p, i)),
+    [patients]
+  );
+
+  const patientDetailsPath = (id: string) =>
+    all_routes.patientDetails.replace(":id", id);
+
+  const editPatientPath = (id: string) =>
+    all_routes.editPatient.replace(":id", id);
+
   const columns = [
     {
       title: "Patient",
       dataIndex: "Patient",
-      render: (text: any, render: any) => (
+      render: (text: string, record: (typeof tableData)[0]) => (
         <div className="d-flex align-items-center">
           <Link
-            to={all_routes.patientDetails}
-            className="avatar avatar-md me-2"
+            to={patientDetailsPath(record._raw.id)}
+            className="avatar me-2"
           >
             <ImageWithBasePath
-              src={`assets/img/users/${render.Patient_img}`}
-              alt="product"
+              src={record.Patient_img}
+              alt="Patient"
               className="rounded-circle"
             />
           </Link>
-          <Link
-            to={all_routes.patientDetails}
-            className="text-dark fw-semibold"
-          >
-            {text}
+          <div>
+            <h6 className="mb-1 fs-14 fw-semibold">
+              <Link
+                to={patientDetailsPath(record._raw.id)}
+                className="text-dark"
+              >
+                {text}
+              </Link>
+            </h6>
             <span className="text-body fs-13 fw-normal d-block">
-              {render.Gender}
+              {record.Gender}
             </span>
-          </Link>
+          </div>
         </div>
       ),
-      sorter: (a: any, b: any) => a.Patient.length - b.Patient.length,
+      sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+        a.Patient.localeCompare(b.Patient),
     },
     {
       title: "Phone",
       dataIndex: "Phone",
-      sorter: (a: any, b: any) => a.Patient.length - b.Patient.length,
+      sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+        a.Phone.localeCompare(b.Phone),
     },
     {
       title: "Doctor",
       dataIndex: "Doctor",
-      render: (text: any, render: any) => (
+      render: (text: string, record: (typeof tableData)[0]) => (
         <div className="d-flex align-items-center">
           <Link
-            to={all_routes.doctorsDetails}
+            to={
+              record._raw.primaryDoctor?.id
+                ? all_routes.doctorsDetails.replace(
+                    ":id",
+                    record._raw.primaryDoctor.id
+                  )
+                : "#"
+            }
             className="avatar me-2 flex-shrink-0"
+            onClick={(e) => {
+              if (!record._raw.primaryDoctor?.id) e.preventDefault();
+            }}
           >
             <ImageWithBasePath
-              src={`assets/img/doctors/${render.Doctor_img}`}
-              alt="img"
+              src={record.Doctor_img}
+              alt="Doctor"
               className="rounded-circle"
             />
           </Link>
           <div>
             <h6 className="fs-14 mb-1">
-              <Link to={all_routes.doctorsDetails} className="fw-semibold">
-                {text}
-              </Link>
+              <span className="fw-semibold">{text}</span>
             </h6>
-            <p className="mb-0 fs-13">{render.Role}</p>
+            <p className="mb-0 fs-13">{record.Role}</p>
           </div>
         </div>
       ),
-      sorter: (a: any, b: any) => a.Doctor.length - b.Doctor.length,
+      sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+        a.Doctor.localeCompare(b.Doctor),
     },
     {
       title: "Address",
       dataIndex: "Address",
-      sorter: (a: any, b: any) => a.Address.length - b.Address.length,
+      sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+        a.Address.localeCompare(b.Address),
     },
     {
       title: "Last Visit",
       dataIndex: "Last_Visit",
-      sorter: (a: any, b: any) => a.Last_Visit.length - b.Last_Visit.length,
+      sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+        a.Last_Visit.localeCompare(b.Last_Visit),
     },
     {
       title: "Status",
       dataIndex: "Status",
-      render: (text: any) => (
+      render: (text: string) => (
         <span
-          className={`badge rounded fs-13 fw-medium 
-    ${
-      text === "Available"
-        ? "badge-soft-success text-success border-success border"
-        : "badge-soft-danger text-danger border-danger border"
-    }`}
+          className={`badge rounded fs-13 fw-medium border ${
+            text === "Available"
+              ? "badge-soft-success text-success border-success"
+              : "badge-soft-danger text-danger border-danger"
+          }`}
         >
           {text}
         </span>
       ),
-      sorter: (a: any, b: any) => a.Status.length - b.Status.length,
+      sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+        a.Status.localeCompare(b.Status),
     },
     {
       title: "",
-      render: () => (
+      render: (_: unknown, record: (typeof tableData)[0]) => (
         <div className="d-flex align-items-center gap-1">
           <Link
             to={all_routes.appointments}
@@ -106,101 +140,68 @@ const Patients = () => {
           >
             <i className="ti ti-calendar-cog" />
           </Link>
-          <Link
-            to="#"
-            className="shadow-sm fs-14 d-inline-flex border rounded-2 p-1 me-1"
-            data-bs-toggle="dropdown"
-          >
-            <i className="ti ti-dots-vertical" />
-          </Link>
-          <ul className="dropdown-menu p-2">
-            <li>
-              <Link
-                to={all_routes.editPatient}
-                className="dropdown-item d-flex align-items-center"
-              >
-                Edit
-              </Link>
-            </li>
-            <li>
-              <Link
-                to={all_routes.patientDetails}
-                className="dropdown-item d-flex align-items-center"
-              >
-                View
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="#"
-                className="dropdown-item d-flex align-items-center"
-                data-bs-toggle="modal"
-                data-bs-target="#delete_modal"
-              >
-                Delete
-              </Link>
-            </li>
-          </ul>
+          <div className="action-item">
+            <button
+              type="button"
+              className="btn btn-link p-0 shadow-sm fs-14 border rounded-2"
+              data-bs-toggle="dropdown"
+              aria-label="Actions"
+            >
+              <i className="ti ti-dots-vertical" />
+            </button>
+            <ul className="dropdown-menu p-2">
+              <li>
+                <Link
+                  to={editPatientPath(record._raw.id)}
+                  className="dropdown-item d-flex align-items-center"
+                >
+                  Edit
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to={patientDetailsPath(record._raw.id)}
+                  className="dropdown-item d-flex align-items-center"
+                >
+                  View
+                </Link>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  className="dropdown-item d-flex align-items-center"
+                  data-bs-toggle="modal"
+                  data-bs-target="#delete_patient_modal"
+                  onClick={() => setSelected(record._raw)}
+                >
+                  Delete
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       ),
-      sorter: (a: any, b: any) => a.Status.length - b.Status.length,
     },
   ];
-  const [searchText, setSearchText] = useState<string>("");
-
-  const handleSearch = (value: string) => {
-    setSearchText(value);
-  };
 
   return (
     <>
-      {/* ========================
-			Start Page Content
-		========================= */}
       <div className="page-wrapper">
-        {/* Start Content */}
         <div className="content">
-          {/* Start Page Header */}
           <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
             <div className="flex-grow-1">
               <h4 className="fw-bold mb-0">
                 Patients List
                 <span className="badge badge-soft-primary fw-medium border py-1 px-2 border-primary fs-13 ms-1">
-                  Total Patients : 565
+                  Total Patients : {loading ? "…" : patients.length}
                 </span>
               </h4>
             </div>
             <div className="text-end d-flex">
-              {/* dropdown*/}
-              <div className="dropdown me-1">
-                <Link
-                  to="#"
-                  className="btn btn-md fs-14 fw-normal border bg-white rounded text-dark d-inline-flex align-items-center"
-                  data-bs-toggle="dropdown"
-                >
-                  Export
-                  <i className="ti ti-chevron-down ms-2" />
-                </Link>
-                <ul className="dropdown-menu p-2">
-                  <li>
-                    <Link className="dropdown-item" to="#">
-                      Download as PDF
-                    </Link>
-                  </li>
-                  <li>
-                    <Link className="dropdown-item" to="#">
-                      Download as Excel
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center">
-                <Link
-                  to={all_routes.patients}
-                  className="bg-light rounded p-1 d-flex align-items-center justify-content-center"
-                >
+              <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center me-2">
+                <span className="bg-light rounded p-1 d-flex align-items-center justify-content-center">
                   <i className="ti ti-list fs-14 text-dark" />
-                </Link>
+                </span>
                 <Link
                   to={all_routes.patientsGrid}
                   className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
@@ -217,573 +218,64 @@ const Patients = () => {
               </Link>
             </div>
           </div>
-          {/* End Page Header */}
-          {/*  Start Filter */}
-          <div className=" d-flex align-items-center justify-content-between flex-wrap">
-            <div>
-              <div className="search-set mb-3">
-                <div className="d-flex align-items-center flex-wrap gap-2">
-                  <div className="table-search d-flex align-items-center mb-0">
-                    <div className="search-input">
-                      <SearchInput value={searchText} onChange={handleSearch} />
-                    </div>
-                  </div>
-                </div>
-              </div>
+
+          {error && (
+            <div className="alert alert-danger d-flex align-items-center justify-content-between mb-3">
+              <span>{error}</span>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-danger"
+                onClick={reload}
+              >
+                Retry
+              </button>
             </div>
-            <div className="d-flex table-dropdown mb-3 right-content align-items-center flex-wrap row-gap-3">
-              <div className="dropdown me-2">
-                <Link
-                  to="#"
-                  className="bg-white border rounded btn btn-md text-dark fs-14 py-1 align-items-center d-flex fw-normal"
-                  data-bs-toggle="dropdown"
-                  data-bs-auto-close="outside"
-                >
-                  <i className="ti ti-filter text-gray-5 me-1" />
-                  Filters
-                </Link>
-                <div
-                  className="dropdown-menu dropdown-lg dropdown-menu-end filter-dropdown p-0"
-                  id="filter-dropdown"
-                >
-                  <div className="d-flex align-items-center justify-content-between border-bottom filter-header">
-                    <h4 className="mb-0 fw-bold">Filter</h4>
-                    <div className="d-flex align-items-center">
-                      <Link
-                        to="#"
-                        className="link-danger text-decoration-underline"
-                      >
-                        Clear All
-                      </Link>
-                    </div>
-                  </div>
-                  <form action="#">
-                    <div className="filter-body pb-0">
-                      <div className="mb-3">
-                        <div className="d-flex align-items-center justify-content-between">
-                          <label className="form-label">Patient</label>
-                          <Link to="#" className="link-primary mb-1">
-                            Reset
-                          </Link>
-                        </div>
-                        <div className="dropdown">
-                          <Link
-                            to="#"
-                            className="dropdown-toggle btn bg-white  d-flex align-items-center justify-content-start fs-13 p-2 fw-normal border"
-                            data-bs-toggle="dropdown"
-                            data-bs-auto-close="outside"
-                            aria-expanded="true"
-                          >
-                            Select <i className="ti ti-chevron-down ms-auto" />
-                          </Link>
-                          <div className="dropdown-menu shadow-lg w-100 dropdown-info p-3">
-                            <div className="mb-3">
-                              <div className="input-icon-start input-icon position-relative">
-                                <span className="input-icon-addon fs-12">
-                                  <i className="ti ti-search" />
-                                </span>
-                                <input
-                                  type="text"
-                                  className="form-control form-control-md"
-                                  placeholder="Search"
-                                />
-                              </div>
-                            </div>
-                            <ul className="mb-3">
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  <span className="avatar avatar-xs rounded-circle me-2">
-                                    <ImageWithBasePath
-                                      src="assets/img/users/user-33.jpg"
-                                      className="flex-shrink-0 rounded-circle"
-                                      alt="img"
-                                    />
-                                  </span>
-                                  Alberto Ripley
-                                </label>
-                              </li>
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  <span className="avatar avatar-xs rounded-circle me-2">
-                                    <ImageWithBasePath
-                                      src="assets/img/users/user-12.jpg"
-                                      className="flex-shrink-0 rounded-circle"
-                                      alt="img"
-                                    />
-                                  </span>
-                                  Bernard Griffith
-                                </label>
-                              </li>
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  <span className="avatar avatar-xs rounded-circle me-2">
-                                    <ImageWithBasePath
-                                      src="assets/img/users/user-02.jpg"
-                                      className="flex-shrink-0 rounded-circle"
-                                      alt="img"
-                                    />
-                                  </span>
-                                  Carol Lam
-                                </label>
-                              </li>
-                              <li>
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  <span className="avatar avatar-xs rounded-circle me-2">
-                                    <ImageWithBasePath
-                                      src="assets/img/users/user-08.jpg"
-                                      className="flex-shrink-0 rounded-circle"
-                                      alt="img"
-                                    />
-                                  </span>
-                                  Ezra Belcher
-                                </label>
-                              </li>
-                            </ul>
-                            <div className="row g-2">
-                              <div className="col-6">
-                                <Link
-                                  to="#"
-                                  className="btn btn-outline-white w-100 close-filter"
-                                >
-                                  Cancel
-                                </Link>
-                              </div>
-                              <div className="col-6">
-                                <Link to="#" className="btn btn-primary w-100">
-                                  Select
-                                </Link>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <div className="d-flex align-items-center justify-content-between">
-                          <label className="form-label">Doctor</label>
-                          <Link to="#" className="link-primary mb-1">
-                            Reset
-                          </Link>
-                        </div>
-                        <div className="dropdown">
-                          <Link
-                            to="#"
-                            className="dropdown-toggle btn bg-white  d-flex align-items-center justify-content-start fs-13 p-2 fw-normal border"
-                            data-bs-toggle="dropdown"
-                            data-bs-auto-close="outside"
-                            aria-expanded="true"
-                          >
-                            Select <i className="ti ti-chevron-down ms-auto" />
-                          </Link>
-                          <div className="dropdown-menu shadow-lg w-100 dropdown-info p-3">
-                            <div className="mb-3">
-                              <div className="input-icon-start input-icon position-relative">
-                                <span className="input-icon-addon fs-12">
-                                  <i className="ti ti-search" />
-                                </span>
-                                <input
-                                  type="text"
-                                  className="form-control form-control-md"
-                                  placeholder="Search"
-                                />
-                              </div>
-                            </div>
-                            <ul className="mb-3">
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  <span className="avatar avatar-xs rounded-circle me-2">
-                                    <ImageWithBasePath
-                                      src="assets/img/doctors/doctor-01.jpg"
-                                      className="flex-shrink-0 rounded-circle"
-                                      alt="img"
-                                    />
-                                  </span>
-                                  Dr. Mick Thompson
-                                </label>
-                              </li>
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  <span className="avatar avatar-xs rounded-circle me-2">
-                                    <ImageWithBasePath
-                                      src="assets/img/doctors/doctor-02.jpg"
-                                      className="flex-shrink-0 rounded-circle"
-                                      alt="img"
-                                    />
-                                  </span>
-                                  Dr. Sarah Johnson
-                                </label>
-                              </li>
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  <span className="avatar avatar-xs rounded-circle me-2">
-                                    <ImageWithBasePath
-                                      src="assets/img/doctors/doctor-03.jpg"
-                                      className="flex-shrink-0 rounded-circle"
-                                      alt="img"
-                                    />
-                                  </span>
-                                  Dr. Emily Carter
-                                </label>
-                              </li>
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  <span className="avatar avatar-xs rounded-circle me-2">
-                                    <ImageWithBasePath
-                                      src="assets/img/doctors/doctor-04.jpg"
-                                      className="flex-shrink-0 rounded-circle"
-                                      alt="img"
-                                    />
-                                  </span>
-                                  Dr. David Lee
-                                </label>
-                              </li>
-                              <li className="mb-0">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  <span className="avatar avatar-xs rounded-circle me-2">
-                                    <ImageWithBasePath
-                                      src="assets/img/doctors/doctor-05.jpg"
-                                      className="flex-shrink-0 rounded-circle"
-                                      alt="img"
-                                    />
-                                  </span>
-                                  Dr. Anna Kim
-                                </label>
-                              </li>
-                            </ul>
-                            <div className="row g-2">
-                              <div className="col-6">
-                                <Link
-                                  to="#"
-                                  className="btn btn-outline-white w-100 close-filter"
-                                >
-                                  Cancel
-                                </Link>
-                              </div>
-                              <div className="col-6">
-                                <Link to="#" className="btn btn-primary w-100">
-                                  Select
-                                </Link>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <div className="d-flex align-items-center justify-content-between">
-                          <label className="form-label">Designation</label>
-                          <Link to="#" className="link-primary mb-1">
-                            Reset
-                          </Link>
-                        </div>
-                        <div className="dropdown">
-                          <Link
-                            to="#"
-                            className="dropdown-toggle btn bg-white  d-flex align-items-center justify-content-start fs-13 p-2 fw-normal border"
-                            data-bs-toggle="dropdown"
-                            data-bs-auto-close="outside"
-                            aria-expanded="true"
-                          >
-                            Select <i className="ti ti-chevron-down ms-auto" />
-                          </Link>
-                          <div className="dropdown-menu shadow-lg w-100 dropdown-info p-3">
-                            <div className="mb-3">
-                              <div className="input-icon-start input-icon position-relative">
-                                <span className="input-icon-addon fs-12">
-                                  <i className="ti ti-search" />
-                                </span>
-                                <input
-                                  type="text"
-                                  className="form-control form-control-md"
-                                  placeholder="Search"
-                                />
-                              </div>
-                            </div>
-                            <ul className="mb-3">
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  Cardiologist
-                                </label>
-                              </li>
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  Orthopedic Surgeon
-                                </label>
-                              </li>
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  Pediatrician
-                                </label>
-                              </li>
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  Gynecologist
-                                </label>
-                              </li>
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  Psychiatrist
-                                </label>
-                              </li>
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  Neurosurgeon
-                                </label>
-                              </li>
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  Oncologist
-                                </label>
-                              </li>
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  Pulmonologist
-                                </label>
-                              </li>
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  Urologist
-                                </label>
-                              </li>
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  Dermatologist
-                                </label>
-                              </li>
-                            </ul>
-                            <div className="row g-2">
-                              <div className="col-6">
-                                <Link
-                                  to="#"
-                                  className="btn btn-outline-white w-100 close-filter"
-                                >
-                                  Cancel
-                                </Link>
-                              </div>
-                              <div className="col-6">
-                                <Link to="#" className="btn btn-primary w-100">
-                                  Select
-                                </Link>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                          Date<span className="text-danger">*</span>
-                        </label>
-                        <div className="input-icon-end position-relative">
-                          <input
-                            type="text"
-                            className="form-control bookingrange"
-                            placeholder="dd/mm/yyyy"
-                          />
-                          <span className="input-icon-addon">
-                            <i className="ti ti-calendar" />
-                          </span>
-                        </div>
-                      </div>
-                      <div className="mb-3">
-                        <div className="d-flex align-items-center justify-content-between">
-                          <label className="form-label">Status</label>
-                          <Link to="#" className="link-primary mb-1">
-                            Reset
-                          </Link>
-                        </div>
-                        <div className="dropdown">
-                          <Link
-                            to="#"
-                            className="dropdown-toggle btn bg-white  d-flex align-items-center justify-content-start fs-13 p-2 fw-normal border"
-                            data-bs-toggle="dropdown"
-                            data-bs-auto-close="outside"
-                            aria-expanded="true"
-                          >
-                            Select <i className="ti ti-chevron-down ms-auto" />
-                          </Link>
-                          <div className="dropdown-menu shadow-lg w-100 dropdown-info p-3">
-                            <ul className="mb-3">
-                              <li className="mb-1">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  Available
-                                </label>
-                              </li>
-                              <li className="mb-0">
-                                <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                                  <input
-                                    className="form-check-input m-0 me-2"
-                                    type="checkbox"
-                                  />
-                                  Unavailable
-                                </label>
-                              </li>
-                            </ul>
-                            <div className="row g-2">
-                              <div className="col-6">
-                                <Link
-                                  to="#"
-                                  className="btn btn-outline-white w-100 close-filter"
-                                >
-                                  Cancel
-                                </Link>
-                              </div>
-                              <div className="col-6">
-                                <Link to="#" className="btn btn-primary w-100">
-                                  Select
-                                </Link>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="filter-footer d-flex align-items-center justify-content-end border-top">
-                      <Link
-                        to="#"
-                        className="btn btn-light btn-md me-2 fw-medium"
-                        id="close-filter"
-                      >
-                        Close
-                      </Link>
-                      <button
-                        type="submit"
-                        className="btn btn-primary btn-md fw-medium"
-                      >
-                        Filter
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-              <div className="dropdown">
-                <Link
-                  to="#"
-                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
-                  data-bs-toggle="dropdown"
-                >
-                  <span className="me-1"> Sort By : </span> Recent
-                </Link>
-                <ul className="dropdown-menu  dropdown-menu-end p-2">
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Recent
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Oldest
-                    </Link>
-                  </li>
-                </ul>
+          )}
+
+          <div className="search-set mb-3">
+            <div className="table-search d-flex align-items-center mb-0">
+              <div className="search-input">
+                <SearchInput value={searchText} onChange={setSearchText} />
               </div>
             </div>
           </div>
-          {/*  End Filter */}
-          {/*  Start Table */}
-          <div className="table-responsive">
-            <Datatable
-              columns={columns}
-              dataSource={data}
-              Selection={false}
-              searchText={searchText}
-            />
-          </div>
-          {/*  End Table */}
+
+          {loading ? (
+            <div className="text-center py-5">
+              <span className="spinner-border text-primary" role="status" />
+              <p className="text-muted mt-2 mb-0">Loading patients…</p>
+            </div>
+          ) : patients.length === 0 && !error ? (
+            <div className="text-center py-5 border rounded bg-white">
+              <i className="ti ti-users fs-1 text-muted d-block mb-2" />
+              <h6 className="fw-bold">No patients yet</h6>
+              <p className="text-muted mb-3">Add your first patient.</p>
+              <Link to={all_routes.createPatient} className="btn btn-primary">
+                <i className="ti ti-plus me-1" />
+                New Patient
+              </Link>
+            </div>
+          ) : (
+            <div className="table-responsive">
+              <Datatable
+                columns={columns}
+                dataSource={tableData}
+                Selection={false}
+                searchText={searchText}
+              />
+            </div>
+          )}
         </div>
-        {/* End Content */}
-        {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
-          <p className="text-dark mb-0">
-            2025 ©
-            <Link to="#" className="link-primary">
-              Preclinic
-            </Link>
-            , All Rights Reserved
-          </p>
+          <p className="text-dark mb-0">2025 © Preclinic, All Rights Reserved</p>
         </div>
-        {/* Footer End */}
       </div>
-      {/* ========================
-			End Page Content
-		========================= */}
+
+      <PatientsDeleteModal
+        patient={selected}
+        onClear={() => setSelected(null)}
+        onDeleted={refetch}
+      />
     </>
   );
 };

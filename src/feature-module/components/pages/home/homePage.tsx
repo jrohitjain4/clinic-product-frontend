@@ -71,7 +71,7 @@ const HomePage = () => {
             <li><a href="#footer">Contact</a></li>
           </ul>
           <div className="landing-nav-actions d-none d-sm-flex">
-            <Link to={all_routes.login} className="btn-landing-outline btn-anim">Login</Link>
+            <Link to={all_routes.login} replace className="btn-landing-outline btn-anim">Login</Link>
             <Link to={all_routes.registerbasic} className="btn-landing-primary btn-anim">Start Free Trial</Link>
           </div>
         </div>

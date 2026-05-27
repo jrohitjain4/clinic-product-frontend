@@ -1,16 +1,103 @@
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
-import { all_routes } from "../../../../routes/all_routes";
-import { DatePicker } from "antd";
+import { DatePicker, Spin } from "antd";
+import { useState, useEffect } from "react";
+import { apiPost, apiPut, apiDelete } from "../../../../../core/utils/apiClient";
+import dayjs from "dayjs";
 
-const HolidaysModal = () => {
+interface HolidaysModalProps {
+  selectedHoliday?: any;
+  refetch: () => void;
+}
+
+const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch }) => {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [date, setDate] = useState<dayjs.Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<dayjs.Dayjs | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (selectedHoliday) {
+      setTitle(selectedHoliday.title || "");
+      setDescription(selectedHoliday.description || "");
+      setDate(selectedHoliday.date ? dayjs(selectedHoliday.date) : null);
+      setEndDate(selectedHoliday.endDate ? dayjs(selectedHoliday.endDate) : null);
+    } else {
+      setTitle("");
+      setDescription("");
+      setDate(null);
+      setEndDate(null);
+    }
+  }, [selectedHoliday]);
+
+  const resetForm = () => {
+    setTitle("");
+    setDescription("");
+    setDate(null);
+    setEndDate(null);
+  };
+
+  const handleAdd = async (e: any) => {
+    e.preventDefault();
+    if (!title || !date) return;
+    setLoading(true);
+    try {
+      await apiPost("/api/holidays", {
+        title,
+        description,
+        date: date.format("YYYY-MM-DD"),
+        endDate: endDate ? endDate.format("YYYY-MM-DD") : undefined
+      });
+      refetch();
+      resetForm();
+      document.querySelector<HTMLElement>("#add_holiday .btn-close")?.click();
+    } catch (err) {
+      console.error(err);
+    }
+    setLoading(false);
+  };
+
+  const handleEdit = async (e: any) => {
+    e.preventDefault();
+    if (!selectedHoliday || !title || !date) return;
+    setLoading(true);
+    try {
+      await apiPut(`/api/holidays/${selectedHoliday.id}`, {
+        title,
+        description,
+        date: date.format("YYYY-MM-DD"),
+        endDate: endDate ? endDate.format("YYYY-MM-DD") : undefined
+      });
+      refetch();
+      document.querySelector<HTMLElement>("#edit_holiday .btn-close")?.click();
+    } catch (err) {
+      console.error(err);
+    }
+    setLoading(false);
+  };
+
+  const handleDelete = async (e: any) => {
+    e.preventDefault();
+    if (!selectedHoliday) return;
+    setLoading(true);
+    try {
+      await apiDelete(`/api/holidays/${selectedHoliday.id}`);
+      refetch();
+      document.querySelector<HTMLElement>("#delete_holiday .btn-close")?.click();
+    } catch (err) {
+      console.error(err);
+    }
+    setLoading(false);
+  };
+
   const getModalContainer = () => {
     const modalElement = document.getElementById("modal-datepicker");
-    return modalElement ? modalElement : document.body; // Fallback to document.body if modalElement is null
+    return modalElement ? modalElement : document.body;
   };
+
   return (
     <>
-      {/* Start Add Categories */}
       <div id="add_holiday" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
@@ -25,40 +112,64 @@ const HolidaysModal = () => {
                 <i className="fa-solid fa-x" />
               </button>
             </div>
-            <form>
+            <form onSubmit={handleAdd}>
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label">
                     Title<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <input type="text" className="form-control" value={title} onChange={(e) => setTitle(e.target.value)} required />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Description</label>
                   <textarea
                     className="form-control"
                     rows={3}
-                    defaultValue={""}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                   />
                 </div>
-                <div className="mb-0">
-                  <label className="form-label">
-                    Date<span className="text-danger ms-1">*</span>
-                  </label>
-                  <div className="input-icon-end position-relative">
-                    <DatePicker
-                      className="form-control datetimepicker"
-                      format={{
-                        format: "DD-MM-YYYY",
-                        type: "mask",
-                      }}
-                      getPopupContainer={getModalContainer}
-                      placeholder="DD-MM-YYYY"
-                      suffixIcon={null}
-                    />
-                    <span className="input-icon-addon">
-                      <i className="ti ti-calendar" />
-                    </span>
+                <div className="row mb-0">
+                  <div className="col-6">
+                    <label className="form-label">
+                      Start Date<span className="text-danger ms-1">*</span>
+                    </label>
+                    <div className="input-icon-end position-relative">
+                      <DatePicker
+                        className="form-control datetimepicker"
+                        format="DD-MM-YYYY"
+                        getPopupContainer={getModalContainer}
+                        placeholder="DD-MM-YYYY"
+                        suffixIcon={null}
+                        value={date}
+                        onChange={(val) => setDate(val)}
+                      />
+                      <span className="input-icon-addon">
+                        <i className="ti ti-calendar" />
+                      </span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label">
+                      End Date
+                    </label>
+                    <div className="input-icon-end position-relative">
+                      <DatePicker
+                        className="form-control datetimepicker"
+                        format="DD-MM-YYYY"
+                        getPopupContainer={getModalContainer}
+                        placeholder="DD-MM-YYYY (Optional)"
+                        suffixIcon={null}
+                        value={endDate}
+                        onChange={(val) => setEndDate(val)}
+                        disabledDate={(current) => {
+                          return date ? current && current < date.startOf('day') : false;
+                        }}
+                      />
+                      <span className="input-icon-addon">
+                        <i className="ti ti-calendar" />
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -70,16 +181,14 @@ const HolidaysModal = () => {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary">
-                  Add Holiday
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  {loading ? <Spin size="small" /> : 'Add Holiday'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       </div>
-      {/* End Add Categories */}
-      {/* Start Edit Categories */}
       <div id="edit_holiday" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
@@ -94,7 +203,7 @@ const HolidaysModal = () => {
                 <i className="fa-solid fa-x" />
               </button>
             </div>
-            <form>
+            <form onSubmit={handleEdit}>
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label">
@@ -103,7 +212,9 @@ const HolidaysModal = () => {
                   <input
                     type="text"
                     className="form-control"
-                    defaultValue=" Mosquito Awareness Week "
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
                   />
                 </div>
                 <div className="mb-3">
@@ -111,29 +222,51 @@ const HolidaysModal = () => {
                   <textarea
                     className="form-control"
                     rows={3}
-                    defaultValue={
-                      "Encourage communities to eliminate mosquito breeding sites, especially standing water."
-                    }
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                   />
                 </div>
-                <div className="mb-0">
-                  <label className="form-label">
-                    Date<span className="text-danger ms-1">*</span>
-                  </label>
-                  <div className="input-icon-end position-relative">
-                    <DatePicker
-                      className="form-control datetimepicker"
-                      format={{
-                        format: "DD-MM-YYYY",
-                        type: "mask",
-                      }}
-                      getPopupContainer={getModalContainer}
-                      placeholder="DD-MM-YYYY"
-                      suffixIcon={null}
-                    />
-                    <span className="input-icon-addon">
-                      <i className="ti ti-calendar" />
-                    </span>
+                <div className="row mb-0">
+                  <div className="col-6">
+                    <label className="form-label">
+                      Start Date<span className="text-danger ms-1">*</span>
+                    </label>
+                    <div className="input-icon-end position-relative">
+                      <DatePicker
+                        className="form-control datetimepicker"
+                        format="DD-MM-YYYY"
+                        getPopupContainer={getModalContainer}
+                        placeholder="DD-MM-YYYY"
+                        suffixIcon={null}
+                        value={date}
+                        onChange={(val) => setDate(val)}
+                      />
+                      <span className="input-icon-addon">
+                        <i className="ti ti-calendar" />
+                      </span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label">
+                      End Date
+                    </label>
+                    <div className="input-icon-end position-relative">
+                      <DatePicker
+                        className="form-control datetimepicker"
+                        format="DD-MM-YYYY"
+                        getPopupContainer={getModalContainer}
+                        placeholder="DD-MM-YYYY (Optional)"
+                        suffixIcon={null}
+                        value={endDate}
+                        onChange={(val) => setEndDate(val)}
+                        disabledDate={(current) => {
+                          return date ? current && current < date.startOf('day') : false;
+                        }}
+                      />
+                      <span className="input-icon-addon">
+                        <i className="ti ti-calendar" />
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -145,16 +278,14 @@ const HolidaysModal = () => {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary">
-                  Save Changes
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  {loading ? <Spin size="small" /> : 'Save Changes'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       </div>
-      {/* End Edit Categories */}
-      {/* Start Delete Modal  */}
       <div className="modal fade" id="delete_holiday">
         <div className="modal-dialog modal-dialog-centered modal-sm">
           <div className="modal-content">
@@ -185,17 +316,17 @@ const HolidaysModal = () => {
                   Cancel
                 </Link>
                 <Link
-                  to={all_routes.holidays}
+                  to="#"
+                  onClick={handleDelete}
                   className="btn btn-danger position-relative z-1"
                 >
-                  Yes, Delete
+                  {loading ? <Spin size="small" /> : 'Yes, Delete'}
                 </Link>
               </div>
             </div>
           </div>
         </div>
       </div>
-      {/* End Delete Modal  */}
     </>
   );
 };

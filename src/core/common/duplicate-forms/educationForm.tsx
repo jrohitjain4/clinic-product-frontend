@@ -1,58 +1,80 @@
-import { DatePicker} from "antd";
+import { DatePicker } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import { Link } from "react-router";
-import { Session } from "../selectOption";
 import { useState } from "react";
+import type { EducationEntry } from "../../types/doctorProfile";
 
-type RowType = {
-  id: number;
-  session: string;
-  from: Dayjs | null;
-  to: Dayjs | null;
-};
-
-const createRow = (row?: RowType): RowType => ({
+const emptyRow = (): EducationEntry => ({
   id: Date.now() + Math.random(),
-  session: row ? row.session : Session[0]?.value || "",
-  from: row ? row.from : dayjs("00:00:00", "HH:mm:ss"),
-  to: row ? row.to : dayjs("00:00:00", "HH:mm:ss"),
+  degree: "",
+  university: "",
+  from: "",
+  to: "",
 });
 
-const EducationForms = () => {
-  const [rows, setRows] = useState<RowType[]>([createRow()]);
+interface EducationFormsProps {
+  initialRows?: EducationEntry[];
+  onChange?: (rows: EducationEntry[]) => void;
+}
 
-  const handleAddRow = (row: RowType) => {
+const EducationForms = ({ initialRows, onChange }: EducationFormsProps) => {
+  const [rows, setRows] = useState<EducationEntry[]>(
+    initialRows?.length ? initialRows : [emptyRow()]
+  );
+
+  const emit = (next: EducationEntry[]) => {
+    setRows(next);
+    onChange?.(next);
+  };
+
+  const updateRow = (id: number, field: keyof EducationEntry, value: string) => {
+    emit(rows.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+  };
+
+  const handleAddRow = (row: EducationEntry) => {
     const idx = rows.findIndex((r) => r.id === row.id);
-    const newRows = [...rows];
-    newRows.splice(idx + 1, 0, createRow(row));
-    setRows(newRows);
+    const next = [...rows];
+    next.splice(idx + 1, 0, { ...emptyRow() });
+    emit(next);
   };
 
   const handleDeleteRow = (id: number) => {
-    setRows(rows.filter((row) => row.id !== id));
+    emit(rows.filter((r) => r.id !== id));
   };
 
-  const getModalContainer = () => {
-    const modalElement = document.getElementById("modal-datepicker");
-    return modalElement ? modalElement : document.body; // Fallback to document.body if modalElement is null
-  };
+  const getModalContainer = () =>
+    document.getElementById("modal-datepicker") || document.body;
+
+  const parseDate = (s: string) => (s ? dayjs(s) : null);
 
   return (
     <div>
       {rows.map((row) => (
-        <div className="row align-items-end " key={row.id}>
+        <div className="row align-items-end" key={row.id}>
           <div className="col-lg-11">
             <div className="row">
               <div className="col-lg-3">
                 <div className="mb-3">
                   <label className="form-label">Educational Degree</label>
-                  <input type="text" className="form-control" />
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={row.degree}
+                    onChange={(e) => updateRow(row.id, "degree", e.target.value)}
+                    placeholder="e.g. MD"
+                  />
                 </div>
               </div>
               <div className="col-lg-3">
                 <div className="mb-3">
                   <label className="form-label">University</label>
-                  <input type="text" className="form-control" />
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={row.university}
+                    onChange={(e) => updateRow(row.id, "university", e.target.value)}
+                    placeholder="e.g. Harvard Medical School"
+                  />
                 </div>
               </div>
               <div className="col-lg-3">
@@ -60,14 +82,14 @@ const EducationForms = () => {
                   <label className="form-label">From</label>
                   <div className="input-icon-end position-relative">
                     <DatePicker
-                      className="form-control datetimepicker"
-                      format={{
-                        format: "DD-MM-YYYY",
-                        type: "mask",
-                      }}
+                      className="form-control datetimepicker w-100"
+                      format="DD MMM YYYY"
+                      value={parseDate(row.from)}
+                      onChange={(d: Dayjs | null) =>
+                        updateRow(row.id, "from", d ? d.format("YYYY-MM-DD") : "")
+                      }
                       getPopupContainer={getModalContainer}
                       placeholder="DD-MM-YYYY"
-                      suffixIcon={null}
                     />
                     <span className="input-icon-addon">
                       <i className="ti ti-calendar" />
@@ -80,14 +102,14 @@ const EducationForms = () => {
                   <label className="form-label">To</label>
                   <div className="input-icon-end position-relative">
                     <DatePicker
-                      className="form-control datetimepicker"
-                      format={{
-                        format: "DD-MM-YYYY",
-                        type: "mask",
-                      }}
+                      className="form-control datetimepicker w-100"
+                      format="DD MMM YYYY"
+                      value={parseDate(row.to)}
+                      onChange={(d: Dayjs | null) =>
+                        updateRow(row.id, "to", d ? d.format("YYYY-MM-DD") : "")
+                      }
                       getPopupContainer={getModalContainer}
                       placeholder="DD-MM-YYYY"
-                      suffixIcon={null}
                     />
                     <span className="input-icon-addon">
                       <i className="ti ti-calendar" />
@@ -101,7 +123,10 @@ const EducationForms = () => {
             <div className="mb-3 d-flex">
               <Link
                 to="#"
-                onClick={() => handleAddRow(row)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleAddRow(row);
+                }}
                 className="add-schedule-btn p-2 bg-light btn-icon text-dark rounded d-flex align-items-center justify-content-center"
                 style={{ marginRight: 8 }}
               >
@@ -110,7 +135,10 @@ const EducationForms = () => {
               {rows.length > 1 && (
                 <Link
                   to="#"
-                  onClick={() => handleDeleteRow(row.id)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDeleteRow(row.id);
+                  }}
                   className="remove-schedule-btn p-2 bg-soft-danger btn-icon text-danger rounded d-flex align-items-center justify-content-center"
                 >
                   <i className="ti ti-trash fs-16" />

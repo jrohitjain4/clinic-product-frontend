@@ -23,10 +23,11 @@ const Header = () => {
     }
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate(all_routes.login);
+    window.location.href = all_routes.login;
   };
   const [isHiddenLayoutActive, setIsHiddenLayoutActive] = useState(() => {
     const saved = localStorage.getItem("hiddenLayoutActive");

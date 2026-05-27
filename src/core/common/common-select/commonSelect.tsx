@@ -9,11 +9,25 @@ export type Option = {
 export interface SelectProps {
   options: Option[];
   defaultValue?: Option;
+  /** Controlled value — use with onChange for dependent dropdowns */
+  value?: Option | null;
   className?: string;
-  styles?: any; 
+  styles?: any;
+  placeholder?: string;
+  isDisabled?: boolean;
+  onChange?: (option: Option | null) => void;
 }
 
-const CommonSelect: React.FC<SelectProps> = ({ options, defaultValue, className }) => {
+const CommonSelect: React.FC<SelectProps> = ({
+  options,
+  defaultValue,
+  value,
+  className,
+  placeholder = "Select",
+  isDisabled = false,
+  onChange,
+}) => {
+  const isControlled = value !== undefined;
   const [selectedOption, setSelectedOption] = useState<Option | undefined>(defaultValue);
 
   const customStyles = {
@@ -31,20 +45,28 @@ const CommonSelect: React.FC<SelectProps> = ({ options, defaultValue, className 
 
   const handleChange = (option: Option | null) => {
     setSelectedOption(option || undefined);
+    if (onChange) onChange(option);
   };
+
   useEffect(() => {
-    setSelectedOption(defaultValue || undefined);
-  }, [defaultValue])
-  
+    if (!isControlled) {
+      setSelectedOption(defaultValue || undefined);
+    }
+  }, [defaultValue, isControlled]);
+
+  const displayValue = isControlled ? value : selectedOption;
+
   return (
     <Select
-     classNamePrefix="react-select"
+      classNamePrefix="react-select"
       className={className}
       styles={customStyles}
       options={options}
-      value={selectedOption}
+      value={displayValue}
       onChange={handleChange}
-      placeholder="Select"
+      placeholder={placeholder}
+      isDisabled={isDisabled}
+      isClearable
     />
   );
 };

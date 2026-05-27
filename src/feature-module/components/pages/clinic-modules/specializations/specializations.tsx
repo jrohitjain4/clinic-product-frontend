@@ -2,41 +2,62 @@ import { useState } from "react";
 import Modals from "./modals/modals";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import Datatable from "../../../../../core/common/dataTable";
-import { SpecializationsListData } from "../../../../../core/json/specializationListData";
 import { Link } from "react-router";
+import { useClinicSpecializations } from "../../../../../core/hooks/useClinicSpecializations";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { DatePicker, Select } from "antd";
 import { Specialization, StatusActive } from "../../../../../core/common/selectOption";
 
 const Specializations = () => {
-  const data = SpecializationsListData;
+  const { specializations, refetch } = useClinicSpecializations();
+  const [selectedSpecialization, setSelectedSpecialization] = useState<any>(null);
+
+  const data = specializations.map((spec) => ({
+    key: spec.id,
+    id: spec.id,
+    img: spec.image || "specialization-01.jpg",
+    Specialization: spec.name,
+    CreatedDate: new Date(spec.createdAt).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
+    NoofDoctor: String(spec.noOfDoctor || 0),
+    Status: spec.status,
+    raw: spec,
+  }));
+
   const columns = [
     {
       title: "Specialization",
       dataIndex: "Specialization",
-      render: (text: any, render: any) => (
-        <div className="d-flex align-items-center">
-          <Link
-            to="#"
-            className="avatar me-2"
-            data-bs-toggle="modal"
-            data-bs-target="#view_staff"
-          >
-            <ImageWithBasePath
-              src={`assets/img/doctors/${render.img}`}
-              alt="Doctor"
-              className="rounded-circle"
-            />
-          </Link>
-          <div>
-            <h6 className="mb-0 fs-14 fw-semibold">
-              <Link to="#" data-bs-toggle="modal" data-bs-target="#view_staff">
-                {text}
-              </Link>
-            </h6>
+      render: (text: any, render: any) => {
+        const imageSrc = render.img.startsWith("http") || render.img.startsWith("/uploads")
+          ? render.img
+          : `assets/img/doctors/${render.img}`;
+
+        return (
+          <div className="d-flex align-items-center">
+            <Link
+              to="#"
+              className="avatar me-2"
+            >
+              <ImageWithBasePath
+                src={imageSrc}
+                alt="Doctor"
+                className="rounded-circle"
+              />
+            </Link>
+            <div>
+              <h6 className="mb-0 fs-14 fw-semibold">
+                <Link to="#">
+                  {text}
+                </Link>
+              </h6>
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
       sorter: (a: any, b: any) =>
         a.Specialization.length - b.Specialization.length,
     },
@@ -55,11 +76,10 @@ const Specializations = () => {
       dataIndex: "Status",
       render: (text: string) => (
         <span
-          className={`badge ${
-            text === "Active"
-              ? "badge-soft-success border-success"
-              : "badge-soft-danger border-danger"
-          }  border  px-2 py-1 fs-13 fw-medium`}
+          className={`badge ${text === "Active"
+            ? "badge-soft-success border-success"
+            : "badge-soft-danger border-danger"
+            }  border  px-2 py-1 fs-13 fw-medium`}
         >
           {text}
         </span>
@@ -68,7 +88,7 @@ const Specializations = () => {
     },
     {
       title: "",
-      render: () => (
+      render: (text: string, render: any) => (
         <div className="action-item">
           <Link to="#" data-bs-toggle="dropdown">
             <i className="ti ti-dots-vertical" />
@@ -80,6 +100,7 @@ const Specializations = () => {
                 className="dropdown-item d-flex align-items-center"
                 data-bs-toggle="modal"
                 data-bs-target="#edit_specialization"
+                onClick={() => setSelectedSpecialization(render.raw)}
               >
                 Edit
               </Link>
@@ -90,6 +111,7 @@ const Specializations = () => {
                 className="dropdown-item d-flex align-items-center"
                 data-bs-toggle="modal"
                 data-bs-target="#delete_specialization"
+                onClick={() => setSelectedSpecialization(render.raw)}
               >
                 Delete
               </Link>
@@ -105,7 +127,7 @@ const Specializations = () => {
   const handleSearch = (value: string) => {
     setSearchText(value);
   };
-   const getModalContainer = () => {
+  const getModalContainer = () => {
     const modalElement = document.getElementById("modal-datepicker");
     return modalElement ? modalElement : document.body; // Fallback to document.body if modalElement is null
   };
@@ -182,7 +204,7 @@ const Specializations = () => {
                         <div className="d-flex align-items-center justify-content-between">
                           <label className="form-label">Specialization</label>
                         </div>
-                         <Select
+                        <Select
                           mode="multiple"
                           allowClear
                           style={{ width: "100%" }}
@@ -197,15 +219,15 @@ const Specializations = () => {
                         </label>
                         <div className="input-icon-end position-relative">
                           <DatePicker
-                          className="form-control datetimepicker"
-                          format={{
-                            format: "DD-MM-YYYY",
-                            type: "mask",
-                          }}
-                          getPopupContainer={getModalContainer}
-                          placeholder="DD-MM-YYYY"
-                          suffixIcon={null} 
-                        />
+                            className="form-control datetimepicker"
+                            format={{
+                              format: "DD-MM-YYYY",
+                              type: "mask",
+                            }}
+                            getPopupContainer={getModalContainer}
+                            placeholder="DD-MM-YYYY"
+                            suffixIcon={null}
+                          />
                           <span className="input-icon-addon">
                             <i className="ti ti-calendar" />
                           </span>
@@ -215,7 +237,7 @@ const Specializations = () => {
                         <div className="d-flex align-items-center justify-content-between">
                           <label className="form-label">Status</label>
                         </div>
-                         <Select
+                        <Select
                           mode="multiple"
                           allowClear
                           style={{ width: "100%" }}
@@ -288,7 +310,7 @@ const Specializations = () => {
       {/* ========================
 			End Page Content
 		========================= */}
-      <Modals />
+      <Modals selectedSpecialization={selectedSpecialization} refetch={refetch} />
     </>
   );
 };

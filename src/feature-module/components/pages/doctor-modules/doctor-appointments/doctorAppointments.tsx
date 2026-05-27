@@ -12,30 +12,42 @@ import {
   Doctor,
   Status,
 } from "../../../../../core/common/selectOption";
-import { DoctorAppoinmentsData } from "../../../../../core/json/doctorAppointmentsData";
 import { all_routes } from "../../../../routes/all_routes";
+import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppointments";
 import Modal from "./modal/modals";
 
 const DoctorAppointments = () => {
-  const data = DoctorAppoinmentsData;
+  const { appointments, loading } = useClinicAppointments();
+
+  const data = appointments.map((app) => ({
+    key: app.id,
+    id: app.id,
+    Date_Time: app.dateTimeLabel,
+    Patient: app.patientName,
+    img: app.patient?.profileImage || "assets/img/users/user-08.jpg",
+    phone_number: app.patient?.phone || "—",
+    Mode: app.mode,
+    Status: app.status,
+  }));
+
   const columns = [
     {
       title: "Date & Time",
       dataIndex: "Date_Time",
-      sorter: (a: any, b: any) => a.Date_Time.length - b.Date_Time.length,
+      sorter: (a: any, b: any) => a.Date_Time.localeCompare(b.Date_Time),
     },
     {
       title: "Patient",
       dataIndex: "Patient",
-      render: (text: any, render: any) => (
+      render: (text: string, render: any) => (
         <div className="d-flex align-items-center">
           <Link
             to={all_routes.doctorspatientdetails}
             className="avatar avatar-md me-2"
           >
             <ImageWithBasePath
-              src={`assets/img/users/${render.img}`}
-              alt="product"
+              src={render.img.replace("assets/img/users/", "")}
+              alt="patient"
               className="rounded-circle"
             />
           </Link>
@@ -47,48 +59,46 @@ const DoctorAppointments = () => {
           </Link>
         </div>
       ),
-      sorter: (a: any, b: any) => a.Patient.length - b.Patient.length,
+      sorter: (a: any, b: any) => a.Patient.localeCompare(b.Patient),
     },
     {
       title: "Mode",
       dataIndex: "Mode",
-      sorter: (a: any, b: any) => a.Mode.length - b.Mode.length,
+      sorter: (a: any, b: any) => a.Mode.localeCompare(b.Mode),
     },
     {
       title: "Status",
       dataIndex: "Status",
       render: (text: string) => (
         <span
-          className={`badge ${
-            text === "Checked Out"
-              ? "badge-soft-primary "
-              : text === "Checked In"
+          className={`badge ${text === "Checked Out"
+            ? "badge-soft-primary "
+            : text === "Checked In"
               ? "badge-soft-warning"
               : text === "Confirmed"
-              ? "badge-soft-success"
-              : text === "Schedule"
-              ? "badge-soft-info"
-              : "badge-soft-danger"
-          } rounded ${
-            text === "Checked Out"
+                ? "badge-soft-success"
+                : text === "Schedule"
+                  ? "badge-soft-info"
+                  : "badge-soft-danger"
+            } rounded ${text === "Checked Out"
               ? "text-primary"
               : text === "Checked In"
-              ? "text-warning"
-              : text === "Confirmed"
-              ? "text-success"
-              : text === "Schedule"
-              ? "text-info"
-              : "text-danger"
-          }  fw-medium fs-13`}
+                ? "text-warning"
+                : text === "Confirmed"
+                  ? "text-success"
+                  : text === "Schedule"
+                    ? "text-info"
+                    : "text-danger"
+            }  fw-medium fs-13`}
         >
           {text}
         </span>
       ),
-      sorter: (a: any, b: any) => a.Status.length - b.Status.length,
+      sorter: (a: any, b: any) => a.Status.localeCompare(b.Status),
     },
     {
       title: "",
-      render: () => (
+      render: (text: string, record: any) => (
         <div className="action-item">
           <>
             <Link to="#" data-bs-toggle="dropdown">
@@ -129,7 +139,6 @@ const DoctorAppointments = () => {
           </>
         </div>
       ),
-      sorter: (a: any, b: any) => a.Status.length - b.Status.length,
     },
   ];
   const [searchText, setSearchText] = useState<string>("");

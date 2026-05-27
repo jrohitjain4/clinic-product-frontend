@@ -7,9 +7,22 @@ import { ServiceListData } from "../../../../../core/json/servicesData";
 import { Department, Service_Name, StatusActive } from "../../../../../core/common/selectOption";
 import { Select } from "antd";
 import Slider from "rc-slider";
+import { useClinicServices } from "../../../../../core/hooks/useClinicServices";
 
 const Services = () => {
-  const data = ServiceListData;
+  const { services, loading, refetch } = useClinicServices();
+  const [selectedService, setSelectedService] = useState<any>(null);
+
+  const data = services.map(s => ({
+    key: s.id,
+    id: s.id,
+    originalService: s,
+    ServiceName: s.serviceName,
+    Department: s.department?.name || "Unknown",
+    Price: "$" + s.price,
+    Status: s.status
+  }));
+
   const columns = [
     {
       title: "Service Name",
@@ -31,11 +44,10 @@ const Services = () => {
       dataIndex: "Status",
       render: (text: string) => (
         <span
-          className={`badge ${
-            text === "Active"
+          className={`badge ${text === "Active"
               ? "badge-soft-success border-success"
               : "badge-soft-danger border-danger"
-          }  border  px-2 py-1 fs-13 fw-medium`}
+            }  border  px-2 py-1 fs-13 fw-medium`}
         >
           {text}
         </span>
@@ -44,7 +56,7 @@ const Services = () => {
     },
     {
       title: "",
-      render: () => (
+      render: (text: string, record: any) => (
         <div className="action-item">
           <Link to="#" data-bs-toggle="dropdown">
             <i className="ti ti-dots-vertical" />
@@ -56,6 +68,7 @@ const Services = () => {
                 className="dropdown-item d-flex align-items-center"
                 data-bs-toggle="modal"
                 data-bs-target="#edit_service"
+                onClick={() => setSelectedService(record.originalService)}
               >
                 Edit
               </Link>
@@ -66,6 +79,7 @@ const Services = () => {
                 className="dropdown-item d-flex align-items-center"
                 data-bs-toggle="modal"
                 data-bs-target="#delete_service"
+                onClick={() => setSelectedService(record.originalService)}
               >
                 Delete
               </Link>
@@ -83,7 +97,7 @@ const Services = () => {
   };
 
   const [sliderValueDefault, setSliderValueDefault] = useState(0);
-   const handleChangeDefault = (value: any) => {
+  const handleChangeDefault = (value: any) => {
     setSliderValueDefault(value);
   };
 
@@ -190,14 +204,14 @@ const Services = () => {
                               Reset
                             </a>
                           </div>
-                           <Select
-                          mode="multiple"
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Please select"
-                          defaultValue={[]}
-                          options={Service_Name}
-                        />
+                          <Select
+                            mode="multiple"
+                            allowClear
+                            style={{ width: "100%" }}
+                            placeholder="Please select"
+                            defaultValue={[]}
+                            options={Service_Name}
+                          />
                         </div>
                         <div className="mb-3">
                           <div className="d-flex align-items-center justify-content-between">
@@ -209,14 +223,14 @@ const Services = () => {
                               Reset
                             </a>
                           </div>
-                           <Select
-                          mode="multiple"
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Please select"
-                          defaultValue={[]}
-                          options={Department}
-                        />
+                          <Select
+                            mode="multiple"
+                            allowClear
+                            style={{ width: "100%" }}
+                            placeholder="Please select"
+                            defaultValue={[]}
+                            options={Department}
+                          />
                         </div>
                         <div className="mb-3">
                           <label className="form-label">Amount</label>
@@ -233,12 +247,12 @@ const Services = () => {
                             <div className="dropdown-menu shadow-lg w-100 dropdown-info">
                               <div className="filter-range">
                                 <Slider
-                    min={0}
-                    max={100}
-                    value={sliderValueDefault}
-                    defaultValue={[0, 50]}
-                    onChange={handleChangeDefault}
-                  />
+                                  min={0}
+                                  max={100}
+                                  value={sliderValueDefault}
+                                  defaultValue={[0, 50]}
+                                  onChange={handleChangeDefault}
+                                />
                                 <p>
                                   Range :{" "}
                                   <span className="text-gray-9">
@@ -259,14 +273,14 @@ const Services = () => {
                               Reset
                             </a>
                           </div>
-                           <Select
-                          mode="multiple"
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Please select"
-                          defaultValue={[]}
-                          options={StatusActive}
-                        />
+                          <Select
+                            mode="multiple"
+                            allowClear
+                            style={{ width: "100%" }}
+                            placeholder="Please select"
+                            defaultValue={[]}
+                            options={StatusActive}
+                          />
                         </div>
                       </div>
                       <div className="filter-footer d-flex align-items-center justify-content-end border-top">
@@ -337,7 +351,7 @@ const Services = () => {
 		========================= */}
       </>
 
-      <Modals />
+      <Modals selectedService={selectedService} refetch={refetch} />
     </>
   );
 };

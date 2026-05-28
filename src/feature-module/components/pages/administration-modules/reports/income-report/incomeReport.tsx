@@ -1,58 +1,58 @@
 import { Link } from "react-router";
-import { IcomeReportData } from "../../../../../../core/json/incomeReportData";
 import Datatable from "../../../../../../core/common/dataTable";
 import PredefinedDatePicker from "../../../../../../core/common/datePicker";
 import { Received_From } from "../../../../../../core/common/selectOption";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import { useState } from "react";
 import TagInput from "../../../../../../core/common/Taginput";
+import { useSuperAdminAnalytics } from "../../../../../../core/hooks/useSuperAdminAnalytics";
 
 const IncomeReport = () => {
-  const data = IcomeReportData;
+  const { analytics, loading } = useSuperAdminAnalytics();
   const columns = [
     {
-      title: "Income",
-      dataIndex: "Income",
-      sorter: (a: any, b: any) => a.Income.length - b.Income.length,
+      title: "Clinic",
+      dataIndex: "clinicName",
+      sorter: (a: any, b: any) => a.clinicName.localeCompare(b.clinicName),
     },
     {
       title: "Amount",
-      dataIndex: "Amount",
-      render: (text: any) => <p className="text-dark fw-medium">{text}</p>,
-      sorter: (a: any, b: any) => a.Amount.length - b.Amount.length,
+      dataIndex: "amount",
+      render: (text: any) => <p className="text-dark fw-medium">${text}</p>,
+      sorter: (a: any, b: any) => a.amount - b.amount,
     },
     {
       title: "Date",
-      dataIndex: "Date",
-      sorter: (a: any, b: any) => a.Date.length - b.Date.length,
+      dataIndex: "date",
+      render: (text: string) => <p>{new Date(text).toLocaleDateString()}</p>,
+      sorter: (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime(),
     },
     {
-      title: "Received From",
-      dataIndex: "ReceivedFrom",
+      title: "Package",
+      dataIndex: "packageInfo",
       render: (text: any) => <p className="text-dark fw-medium">{text}</p>,
-      sorter: (a: any, b: any) => a.ReceivedFrom.length - b.ReceivedFrom.length,
+      sorter: (a: any, b: any) => a.packageInfo.localeCompare(b.packageInfo),
     },
     {
       title: "Payment Method",
-      dataIndex: "PaymentMethod",
+      dataIndex: "paymentMethod",
       sorter: (a: any, b: any) =>
-        a.PaymentMethod.length - b.PaymentMethod.length,
+        a.paymentMethod.localeCompare(b.paymentMethod),
     },
     {
       title: "Status",
-      dataIndex: "Status",
+      dataIndex: "status",
       render: (text: string) => (
         <span
-          className={`badge ${
-            text === "Received"
+          className={`badge ${text === "Received"
               ? "badge-soft-success border-success"
               : "border-warning badge-soft-warning"
-          }  border  px-2 py-1 fs-13 fw-medium`}
+            }  border  px-2 py-1 fs-13 fw-medium`}
         >
           {text}
         </span>
       ),
-      sorter: (a: any, b: any) => a.Status.length - b.Status.length,
+      sorter: (a: any, b: any) => a.status.localeCompare(b.status),
     },
   ];
 
@@ -76,7 +76,7 @@ const IncomeReport = () => {
           {/* Start Page Header */}
           <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
             <div className="flex-grow-1">
-              <h4 className="fw-bold mb-0">Income Report</h4>
+              <h4 className="fw-bold mb-0">Superadmin Analytics</h4>
             </div>
             <div className="text-end d-flex">
               {/* dropdown*/}
@@ -113,8 +113,8 @@ const IncomeReport = () => {
                 <div className="card-body">
                   <div className="d-flex justify-content-between mb-2">
                     <div>
-                      <p className="mb-1 text-truncate">Total Clinic Income</p>
-                      <h6 className="mb-0 fw-bold">$18,750</h6>
+                      <p className="mb-1 text-truncate">Total Revenue</p>
+                      <h6 className="mb-0 fw-bold">${analytics.totalRevenue.toLocaleString()}</h6>
                     </div>
                     <span className="avatar avatar-lg bg-soft-primary text-primary rounded-circle flex-shrink-0">
                       <i className="ti ti-currency-dollar fs-24" />
@@ -148,9 +148,9 @@ const IncomeReport = () => {
                   <div className="d-flex justify-content-between mb-2">
                     <div>
                       <p className="mb-1 text-truncate">
-                        Doctor Fees Collected
+                        Active Subscriptions
                       </p>
-                      <h6 className="mb-0 fw-bold">$7,000</h6>
+                      <h6 className="mb-0 fw-bold">{analytics.activeSubscriptions}</h6>
                     </div>
                     <span className="avatar avatar-lg bg-soft-success text-success rounded-circle flex-shrink-0">
                       <i className="ti ti-stethoscope fs-24" />
@@ -183,8 +183,8 @@ const IncomeReport = () => {
                 <div className="card-body">
                   <div className="d-flex justify-content-between mb-2">
                     <div>
-                      <p className="mb-1 text-truncate">Medicine Sales</p>
-                      <h6 className="mb-0 fw-bold">$6,250</h6>
+                      <p className="mb-1 text-truncate">Total Clinics</p>
+                      <h6 className="mb-0 fw-bold">{analytics.totalClinics}</h6>
                     </div>
                     <span className="avatar avatar-lg bg-soft-warning text-warning rounded-circle flex-shrink-0">
                       <i className="ti ti-pill fs-24" />
@@ -217,8 +217,8 @@ const IncomeReport = () => {
                 <div className="card-body">
                   <div className="d-flex justify-content-between mb-2">
                     <div>
-                      <p className="mb-1 text-truncate">Lab Revenue</p>
-                      <h6 className="mb-0 fw-bold">$5,500</h6>
+                      <p className="mb-1 text-truncate">Pending Renewals</p>
+                      <h6 className="mb-0 fw-bold">{analytics.pendingRenewals}</h6>
                     </div>
                     <span className="avatar avatar-lg bg-soft-danger text-danger rounded-circle flex-shrink-0">
                       <i className="ti ti-flask fs-24" />
@@ -312,7 +312,7 @@ const IncomeReport = () => {
           <div className="table-responsive">
             <Datatable
               columns={columns}
-              dataSource={data}
+              dataSource={analytics.transactionHistory}
               Selection={false}
               searchText={""}
             />

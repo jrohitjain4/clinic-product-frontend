@@ -10,8 +10,10 @@ import SCol19Chart from "./chats/scol19";
 import CircleChart from "./chats/circleChart";
 import { Calendar, type CalendarProps } from "antd";
 import type { Dayjs } from "dayjs";
+import { useDashboardStats } from "../../../../core/hooks/useDashboardStats";
 
 const Dashboard = () => {
+  const { stats, loading } = useDashboardStats();
   const [sColChart] = useState<any>({
     chart: {
       width: 80,
@@ -117,7 +119,7 @@ const Dashboard = () => {
                   <div className="d-flex align-items-center justify-content-between">
                     <div>
                       <p className="mb-1">Doctors</p>
-                      <h3 className="fw-bold mb-0">247</h3>
+                      <h3 className="fw-bold mb-0">{stats.doctorsCount}</h3>
                     </div>
                     <div>
                       <div id="s-col" className="chart-set">
@@ -157,7 +159,7 @@ const Dashboard = () => {
                   <div className="d-flex align-items-center justify-content-between">
                     <div>
                       <p className="mb-1">Patients</p>
-                      <h3 className="fw-bold mb-0">4178</h3>
+                      <h3 className="fw-bold mb-0">{stats.patientsCount}</h3>
                     </div>
                     <div>
                       <div id="s-col-2" className="chart-set">
@@ -191,7 +193,7 @@ const Dashboard = () => {
                   <div className="d-flex align-items-center justify-content-between">
                     <div>
                       <p className="mb-1">Appointment</p>
-                      <h3 className="fw-bold mb-0">12178</h3>
+                      <h3 className="fw-bold mb-0">{stats.appointmentsCount}</h3>
                     </div>
                     <div>
                       <div id="s-col-3" className="chart-set">
@@ -225,7 +227,7 @@ const Dashboard = () => {
                   <div className="d-flex align-items-center justify-content-between overflow-hidden">
                     <div>
                       <p className="mb-1">Revenue</p>
-                      <h3 className="fw-bold mb-0 text-truncate">$55,1240</h3>
+                      <h3 className="fw-bold mb-0 text-truncate">${stats.revenue.toLocaleString()}</h3>
                     </div>
                     <div>
                       <div id="s-col-4" className="chart-set">
@@ -282,7 +284,7 @@ const Dashboard = () => {
                           <i className="ti ti-point-filled me-1 text-primary" />
                           All Appointments
                         </p>
-                        <h5 className="fw-bold mb-0">6314</h5>
+                        <h5 className="fw-bold mb-0">{stats.appointmentStats.total}</h5>
                       </div>
                     </div>
                     <div className="col-md-3 col-sm-6">
@@ -291,7 +293,7 @@ const Dashboard = () => {
                           <i className="ti ti-point-filled me-1 text-danger" />
                           Cancelled
                         </p>
-                        <h5 className="fw-bold mb-0">456</h5>
+                        <h5 className="fw-bold mb-0">{stats.appointmentStats.cancelled}</h5>
                       </div>
                     </div>
                     <div className="col-md-3 col-sm-6">
@@ -300,7 +302,7 @@ const Dashboard = () => {
                           <i className="ti ti-point-filled me-1 text-warning" />
                           Reschedule
                         </p>
-                        <h5 className="fw-bold mb-0">745</h5>
+                        <h5 className="fw-bold mb-0">{stats.appointmentStats.rescheduled}</h5>
                       </div>
                     </div>
                     <div className="col-md-3 col-sm-6">
@@ -309,7 +311,7 @@ const Dashboard = () => {
                           <i className="ti ti-point-filled me-1 text-success" />
                           Completed
                         </p>
-                        <h5 className="fw-bold mb-0">4578</h5>
+                        <h5 className="fw-bold mb-0">{stats.appointmentStats.completed}</h5>
                       </div>
                     </div>
                   </div>

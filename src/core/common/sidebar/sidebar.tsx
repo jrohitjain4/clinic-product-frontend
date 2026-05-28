@@ -178,9 +178,14 @@ const Sidebar = () => {
           <div id="sidebar-menu" className="sidebar-menu">
             <ul>
               {SidebarData?.filter(section => {
-                // Only show Super Admin section to SUPER_ADMIN role
+                // Only show Super Admin section to SUPER_ADMIN role, and hide EVERYTHING else
+                if (user?.role === "SUPER_ADMIN") {
+                  return section.tittle === "Super Admin";
+                }
+
+                // For other roles, don't show the Super Admin section
                 if (section.tittle === "Super Admin") {
-                  return user?.role === "SUPER_ADMIN";
+                  return false;
                 }
                 // Hide demo-only sections for admin users
                 if (

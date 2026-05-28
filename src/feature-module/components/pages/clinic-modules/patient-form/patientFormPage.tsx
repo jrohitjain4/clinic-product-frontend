@@ -39,6 +39,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
   const [doctors, setDoctors] = useState<DoctorOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [phoneWarning, setPhoneWarning] = useState<string | null>(null);
 
   const getModalContainer = () =>
     document.getElementById("modal-datepicker") || document.body;
@@ -77,6 +78,34 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
       });
     }
   }, [mode, patient?.id]);
+
+  // ── Phone Duplicate Check ──────────────────────────────────────
+  useEffect(() => {
+    if (!form.phone || form.phone.length < 5) {
+      setPhoneWarning(null);
+      return;
+    }
+    const token = localStorage.getItem("token");
+    fetch(apiUrl(`/api/patients?search=${form.phone}`), {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          const isDuplicate = mode === "edit"
+            ? data.some((p: any) => p.id !== id && p.phone === form.phone)
+            : data.some((p: any) => p.phone === form.phone);
+          if (isDuplicate) {
+            setPhoneWarning("Warning: This phone number is already registered for another patient.");
+          } else {
+            setPhoneWarning(null);
+          }
+        } else {
+          setPhoneWarning(null);
+        }
+      })
+      .catch(() => setPhoneWarning(null));
+  }, [form.phone, mode, id]);
 
   const doctorOptions = doctors.map((d) => ({
     value: d.id,
@@ -231,6 +260,12 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                             setForm((f) => ({ ...f, phone: v || "" }))
                           }
                         />
+                        {phoneWarning && (
+                          <div className="text-warning fs-12 mt-1">
+                            <i className="ti ti-alert-triangle me-1" />
+                            {phoneWarning}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="col-md-6">

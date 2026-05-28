@@ -146,7 +146,7 @@ export const all_routes = {
   expenseCategory: "/expense-category",
   income: "/income",
   invoices: "/invoices",
-  invoicesDetails: "/invoices-details",
+  invoicesDetails: "/invoices-details/:id",
   addInvoices: "/add-invoices",
   editInvoices: "/edit-invoices",
   payments: "/payments",

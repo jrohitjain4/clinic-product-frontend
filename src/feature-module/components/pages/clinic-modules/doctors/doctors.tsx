@@ -11,6 +11,7 @@ import Modals from "./modals/modals";
 import { all_routes } from "../../../../routes/all_routes";
 import { useClinicDoctors } from "../../../../../core/hooks/useClinicDoctors";
 import DoctorsGrid from "./doctorsGrid";
+import { HasPermission } from "../../../../../core/utils/staffPermissions";
 
 const Doctors = () => {
   const { doctors, loading, error, refetch } = useClinicDoctors();
@@ -195,13 +196,15 @@ const Doctors = () => {
                   <i className="ti ti-layout-grid fs-14 text-body" />
                 </Link>
               </div>
-              <Link
-                to={all_routes.addDoctors}
-                className="btn btn-primary ms-2 fs-13 btn-md"
-              >
-                <i className="ti ti-plus me-1" />
-                New Doctor
-              </Link>
+              <HasPermission module="Doctors" action="CREATE">
+                <Link
+                  to={all_routes.addDoctors}
+                  className="btn btn-primary ms-2 fs-13 btn-md"
+                >
+                  <i className="ti ti-plus me-1" />
+                  New Doctor
+                </Link>
+              </HasPermission>
             </div>
           </div>
           {/* End Page Header */}

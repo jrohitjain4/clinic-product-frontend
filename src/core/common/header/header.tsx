@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import ImageWithBasePath from "../../imageWithBasePath";
 import { useEffect, useState } from "react";
 import { updateTheme } from "../../redux/themeSlice";
@@ -11,7 +11,6 @@ import TrialCountdown from "../../../feature-module/components/common/TrialCount
 const Header = () => {
 
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const themeSettings = useSelector((state: any) => state.theme.themeSettings);
 
   const [user, setUser] = useState<any>(null);
@@ -92,12 +91,13 @@ const Header = () => {
               {/* Logo Normal */}
               <span className="logo-light">
                 <span className="logo-lg">
-                  <ImageWithBasePath src="assets/img/logo.svg" alt="logo" />
+                  <ImageWithBasePath src="sidebar-logo.png" alt="logo" style={{ height: '60px', width: 'auto' }} />
                 </span>
                 <span className="logo-sm">
                   <ImageWithBasePath
-                    src="assets/img/logo-small.svg"
+                    src="sidebar-logo.png"
                     alt="small logo"
+                    style={{ height: '45px', width: 'auto' }}
                   />
                 </span>
               </span>
@@ -105,8 +105,16 @@ const Header = () => {
               <span className="logo-dark">
                 <span className="logo-lg">
                   <ImageWithBasePath
-                    src="assets/img/logo-white.svg"
+                    src="sidebar-logo.png"
                     alt="dark logo"
+                    style={{ height: '60px', width: 'auto' }}
+                  />
+                </span>
+                <span className="logo-sm">
+                  <ImageWithBasePath
+                    src="sidebar-logo.png"
+                    alt="small logo"
+                    style={{ height: '45px', width: 'auto' }}
                   />
                 </span>
               </span>
@@ -161,15 +169,8 @@ const Header = () => {
             {/* Trial Countdown */}
             <TrialCountdown />
 
-            {/* AI Assistance */}
-            <Link
-              to="#"
-              className="btn btn-liner-gradient me-3 d-lg-flex d-none"
-            >
-              AI Assistance
-              <i className="ti ti-chart-bubble-filled ms-1" />
-            </Link>
-            {/* AI Assistance */}
+            {/* AI Assistance and Premium Plan removed as requested */}
+
             {/* Appointment */}
             <div className="header-item">
               <div className="dropdown me-2">

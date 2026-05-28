@@ -161,6 +161,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   // UI state
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [phoneWarning, setPhoneWarning] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   // ── Load doctor for edit ─────────────────────────────────────────
@@ -246,6 +247,34 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
       .finally(() => setLoadingDoctor(false));
   }, [isEdit, doctorId]);
 
+  // ── Phone Duplicate Check ──────────────────────────────────────
+  useEffect(() => {
+    if (!phone || phone.length < 5) {
+      setPhoneWarning(null);
+      return;
+    }
+    const token = localStorage.getItem("token");
+    fetch(apiUrl(`/api/doctors?search=${phone}`), {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          const isDuplicate = isEdit
+            ? data.some((d: any) => d.id !== doctorId && d.phone === phone)
+            : data.some((d: any) => d.phone === phone);
+          if (isDuplicate) {
+            setPhoneWarning("Warning: This phone number is already registered for another doctor.");
+          } else {
+            setPhoneWarning(null);
+          }
+        } else {
+          setPhoneWarning(null);
+        }
+      })
+      .catch(() => setPhoneWarning(null));
+  }, [phone, isEdit, doctorId]);
+
   // ── Fetch departments on mount ─────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -318,6 +347,15 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
     if (!fullName.trim()) {
       setError("Doctor name is required.");
       return;
+    }
+
+    if (dob) {
+      const age = dayjs().diff(dob, 'year');
+      if (age < 18) {
+        setError("Doctor must be at least 18 years old.");
+        window.scrollTo(0, 0);
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -513,6 +551,12 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                   value={phone}
                                   onChange={setPhone}
                                 />
+                                {phoneWarning && (
+                                  <div className="text-warning fs-12 mt-1">
+                                    <i className="ti ti-alert-triangle me-1" />
+                                    {phoneWarning}
+                                  </div>
+                                )}
                               </div>
                             </div>
                             <div className="col-lg-6">

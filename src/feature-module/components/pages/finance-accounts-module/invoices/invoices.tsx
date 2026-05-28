@@ -1,20 +1,31 @@
-import  { useState } from "react";
-import { Link } from "react-router";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import FilterIndex from "../../../../../core/common/filter/filterIndex";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import { all_routes } from "../../../../routes/all_routes";
-import { InvoicesData } from "../../../../../core/json/invoicesData";
+import { useClinicInvoices } from "../../../../../core/hooks/useClinicInvoices";
 import Datatable from "../../../../../core/common/dataTable";
+import dayjs from "dayjs";
 
 const InvoicesList = () => {
-  const data = InvoicesData;
+  const { invoices } = useClinicInvoices();
+  const data = invoices.map(inv => ({
+    id: inv.id,
+    InvoiceID: inv.invoiceCode,
+    Patient: inv.patient ? `${inv.patient.firstName} ${inv.patient.lastName}` : "Unknown",
+    Image: inv.patient?.profileImage || "avatar-01.jpg",
+    CreatedDate: dayjs(inv.invoiceDate).format("DD MMM YYYY"),
+    DueDate: dayjs(inv.dueDate).format("DD MMM YYYY"),
+    Amount: `$${inv.totalAmount.toFixed(2)}`,
+    Status: inv.paymentStatus
+  }));
   const columns = [
     {
       title: "Invoice ID",
       dataIndex: "InvoiceID",
-      render: (text: any) => (
-        <Link to={all_routes.invoicesDetails}>{text}</Link>
+      render: (text: string, record: any) => (
+        <Link to={all_routes.invoicesDetails.replace(":id", record.id)}>{text}</Link>
       ),
       sorter: (a: any, b: any) => a.InvoiceID.length - b.InvoiceID.length,
     },
@@ -62,13 +73,12 @@ const InvoicesList = () => {
       dataIndex: "Status",
       render: (text: any) => (
         <span
-          className={`badge border ${
-            text === "Paid"
-              ? "badge-soft-success border-success text-success"
-              : text === "Partially Paid"
+          className={`badge border ${text === "Paid"
+            ? "badge-soft-success border-success text-success"
+            : text === "Partially Paid"
               ? "badge-soft-warning border-warning text-warning"
               : "badge-soft-danger border-danger text-danger"
-          } rounded fw-medium`}
+            } rounded fw-medium`}
         >
           {text}
         </span>
@@ -77,7 +87,7 @@ const InvoicesList = () => {
     },
     {
       title: "",
-      render: () => (
+      render: (_: any, record: any) => (
         <div className="action-item p-2">
           <Link to="#" data-bs-toggle="dropdown">
             <i className="ti ti-dots-vertical" />
@@ -85,7 +95,7 @@ const InvoicesList = () => {
           <ul className="dropdown-menu p-2">
             <li>
               <Link
-                to={all_routes.invoicesDetails}
+                to={all_routes.invoicesDetails.replace(":id", record.id)}
                 className="dropdown-item d-flex align-items-center"
               >
                 View details
@@ -107,16 +117,6 @@ const InvoicesList = () => {
                 data-bs-target="#delete_modal"
               >
                 Delete
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="#"
-                className="dropdown-item d-flex align-items-center"
-                data-bs-toggle="modal"
-                data-bs-target="#edit_new_payment"
-              >
-                Download
               </Link>
             </li>
           </ul>

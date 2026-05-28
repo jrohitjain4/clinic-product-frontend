@@ -17,6 +17,7 @@ import {
 } from "../../../../../core/utils/appointmentForm";
 import { authHeaders } from "../../../../../core/utils/apiClient";
 import { findSelectOption } from "../../../../../core/utils/doctorSchedule";
+import AddPatientModal from "../appointments/modals/addPatientModal";
 
 interface AppointmentFormPageProps {
   mode: "create" | "edit";
@@ -54,6 +55,7 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
   const [form, setForm] = useState(emptyAppointmentForm);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [showAddPatient, setShowAddPatient] = useState(false);
 
   const loadError = patientsError || doctorsError || deptsError;
   const optionsLoading = loadingPatients || loadingDoctors || loadingDepts;
@@ -251,9 +253,20 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                   <div className="row">
                     <div className="col-md-6">
                       <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">
-                          Patient<span className="text-danger ms-1">*</span>
-                        </label>
+                        <div className="d-flex align-items-center justify-content-between mb-1">
+                          <label className="form-label mb-0 fw-medium">
+                            Patient<span className="text-danger ms-1">*</span>
+                          </label>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-primary py-0 px-2 fs-12"
+                            style={{ height: '22px' }}
+                            onClick={() => setShowAddPatient(true)}
+                          >
+                            <i className="ti ti-plus me-1" />
+                            Add New
+                          </button>
+                        </div>
                         <CommonSelect
                           key={`patient-${patientOptions.length}`}
                           options={patientOptions}
@@ -461,6 +474,14 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
           </div>
         </div>
       </div>
+      <AddPatientModal
+        show={showAddPatient}
+        onHide={() => setShowAddPatient(false)}
+        onSuccess={(newPatient) => {
+          reloadPatients();
+          setForm((f) => ({ ...f, patientId: newPatient.id }));
+        }}
+      />
     </div>
   );
 };

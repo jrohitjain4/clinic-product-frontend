@@ -15,7 +15,6 @@ import StaffProfileUpload from "../../../../../core/common/staff-profile-upload/
 import { apiUrl } from "../../../../../core/config/api";
 import type { ClinicStaff } from "../../../../../core/types/clinicStaff";
 import {
-  ROLE_OPTIONS,
   STAFF_STATUS_OPTIONS,
   emptyStaffForm,
   formatStaffDate,
@@ -40,6 +39,7 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
     document.getElementById("modal-datepicker") || document.body;
 
   const [designations, setDesignations] = useState<DesigOption[]>([]);
+  const [clinicRoles, setClinicRoles] = useState<{ id: string; name: string }[]>([]);
   const [form, setForm] = useState(emptyStaffForm());
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -47,15 +47,21 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch(apiUrl("/api/designations?type=Staff"), {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
+    fetch(apiUrl("/api/designations?type=Staff"), { headers })
       .then((r) => r.json())
       .then((data: DesigOption[]) => setDesignations(Array.isArray(data) ? data : []))
+      .catch(console.error);
+
+    fetch(apiUrl("/api/clinic-roles"), { headers })
+      .then(r => r.json())
+      .then(data => setClinicRoles(Array.isArray(data) ? data : []))
       .catch(console.error);
   }, []);
 
   const desigOptions = designations.map((d) => ({ value: d.id, label: d.name }));
+  const dynamicRoleOptions = clinicRoles.map(r => ({ value: r.name, label: r.name })); // using name to match existing DB scheme or ID if preferred. Let's use name since role column is string.
 
   const resetAddForm = () => {
     setForm(emptyStaffForm());
@@ -241,9 +247,9 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
               Role<span className="text-danger ms-1">*</span>
             </label>
             <CommonSelect
-              options={ROLE_OPTIONS}
+              options={dynamicRoleOptions}
               className="select"
-              value={findSelectOption(ROLE_OPTIONS, form.role)}
+              value={findSelectOption(dynamicRoleOptions, form.role)}
               placeholder="Select role"
               onChange={(opt) => setForm((f) => ({ ...f, role: opt?.value || "" }))}
             />
@@ -450,11 +456,10 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
                           <div className="d-flex align-items-center mb-1">
                             <h5 className="fw-bold mb-0 me-2">{selected.fullName}</h5>
                             <span
-                              className={`badge fw-medium fs-13 ${
-                                statusLabel === "Available"
-                                  ? "badge-soft-success border border-success"
-                                  : "badge-soft-danger border border-danger"
-                              }`}
+                              className={`badge fw-medium fs-13 ${statusLabel === "Available"
+                                ? "badge-soft-success border border-success"
+                                : "badge-soft-danger border border-danger"
+                                }`}
                             >
                               {statusLabel}
                             </span>

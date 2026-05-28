@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 const TrialCountdown = () => {
     const [timeLeft, setTimeLeft] = useState<string>("");
     const [isExpired, setIsExpired] = useState(false);
+    const [isPremium, setIsPremium] = useState(false);
+    const [packageName, setPackageName] = useState("");
 
     useEffect(() => {
         const calculateTimeLeft = () => {
@@ -10,6 +12,20 @@ const TrialCountdown = () => {
             if (!userStr) return;
 
             const user = JSON.parse(userStr);
+            const status = user?.clinic?.status;
+
+            if (status && status !== 'TRIAL') {
+                setIsPremium(true);
+                // Try different common paths where package name might be stored, fallback to default text
+                setPackageName(
+                    user?.subscription?.package?.name ||
+                    user?.clinic?.Package?.name ||
+                    user?.clinic?.package?.name ||
+                    "Premium Plan"
+                );
+                return;
+            }
+
             const expiresAt = user?.clinic?.packageExpiresAt;
 
             if (!expiresAt) return;
@@ -38,6 +54,15 @@ const TrialCountdown = () => {
 
         return () => clearInterval(timer);
     }, []);
+
+    if (isPremium) {
+        return (
+            <div className="d-flex align-items-center px-3 py-1.5 rounded-pill me-3 shadow-sm border bg-success-subtle border-success text-success-emphasis" style={{ fontSize: '13px', fontWeight: 'bold' }}>
+                <i className="ti ti-rosette-discount-check-filled me-2" style={{ fontSize: '16px' }} />
+                <span>{packageName.toUpperCase()}</span>
+            </div>
+        );
+    }
 
     if (!timeLeft) return null;
 

@@ -1,31 +1,46 @@
+import { useState } from "react";
 import { Link } from "react-router";
-import { RoleandPermissionData } from "../../../../../../core/json/roleandPermissionData";
 import Datatable from "../../../../../../core/common/dataTable";
 import { all_routes } from "../../../../../routes/all_routes";
 
+import { useClinicRoles } from "../../../../../../core/hooks/useClinicRoles";
+import dayjs from "dayjs";
+import { RoleModal } from "./RoleModal";
+
 const RolesAndPermissions = () => {
-  const data = RoleandPermissionData;
+  const { roles, createRole, updateRole, deleteRole } = useClinicRoles();
+  const [showModal, setShowModal] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<any>(null);
+
+  const handleAddRole = () => {
+    setSelectedRole(null);
+    setShowModal(true);
+  };
+
+  const handleEditRole = (role: any) => {
+    setSelectedRole(role);
+    setShowModal(true);
+  };
   const columns = [
     {
       title: "Role",
-      dataIndex: "Role",
-      sorter: (a: any, b: any) => a.Role.length - b.Role.length,
+      dataIndex: "name",
+      sorter: (a: any, b: any) => a.name.localeCompare(b.name),
     },
     {
       title: "Created On",
-      dataIndex: "Created_On",
-      sorter: (a: any, b: any) => a.Created_On.length - b.Created_On.length,
+      dataIndex: "createdAt",
+      render: (text: string) => dayjs(text).format("DD MMM YYYY"),
+      sorter: (a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     },
     {
       title: "Status",
       dataIndex: "Status",
       render: (text: string) => (
         <span
-          className={`badge ${
-            text === "Active" ? "badge-soft-success" : "badge-soft-danger"
-          }  border ${
-            text === "Active" ? "border-success" : "border-danger"
-          } border-success px-2 py-1 fs-13 fw-medium`}
+          className={`badge ${text === "Active" ? "badge-soft-success" : "badge-soft-danger"
+            }  border ${text === "Active" ? "border-success" : "border-danger"
+            } border-success px-2 py-1 fs-13 fw-medium`}
         >
           {text}
         </span>
@@ -34,49 +49,47 @@ const RolesAndPermissions = () => {
     },
     {
       title: "",
-      render: () => (
+      render: (role: any) => (
         <Link
-          to={all_routes.permissions}
+          to={`${all_routes.permissions}?id=${role.id}`}
           className="btn btn-white border text-dark"
         >
           <i className="ti ti-shield-half me-1" />
           Permissions
         </Link>
       ),
-      sorter: (a: any, b: any) => a.Status.length - b.Status.length,
     },
     {
       title: "",
-      render: () => (
+      render: (role: any) => (
         <div className="action-item">
           <Link to="#" data-bs-toggle="dropdown">
             <i className="ti ti-dots-vertical" />
           </Link>
           <ul className="dropdown-menu p-2">
             <li>
-              <Link
-                to="#"
+              <button
                 className="dropdown-item d-flex align-items-center"
-                data-bs-toggle="modal"
-                data-bs-target="#edit_role"
+                onClick={() => handleEditRole(role)}
               >
                 Edit
-              </Link>
+              </button>
             </li>
             <li>
-              <Link
-                to="#"
+              <button
                 className="dropdown-item d-flex align-items-center"
-                data-bs-toggle="modal"
-                data-bs-target="#delete_role"
+                onClick={() => {
+                  if (window.confirm("Are you sure?")) {
+                    deleteRole(role.id);
+                  }
+                }}
               >
                 Delete
-              </Link>
+              </button>
             </li>
           </ul>
         </div>
       ),
-      sorter: (a: any, b: any) => a.Status.length - b.Status.length,
     },
   ];
 
@@ -94,22 +107,20 @@ const RolesAndPermissions = () => {
               <h4 className="fw-bold mb-0">Roles</h4>
             </div>
             <div className="text-end d-flex">
-              <Link
-                to="#"
+              <button
                 className="btn btn-primary ms-2 fs-13 btn-md"
-                data-bs-toggle="modal"
-                data-bs-target="#add_role"
+                onClick={handleAddRole}
               >
                 <i className="ti ti-plus me-1" />
                 New Role
-              </Link>
+              </button>
             </div>
           </div>
           {/* End Page Header */}
           <div className="table-responsive">
             <Datatable
               columns={columns}
-              dataSource={data}
+              dataSource={roles}
               Selection={false}
               searchText={""}
             />
@@ -131,6 +142,18 @@ const RolesAndPermissions = () => {
       {/* ========================
 			End Page Content
 		========================= */}
+      <RoleModal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+        initialData={selectedRole}
+        onSubmit={async (data) => {
+          if (selectedRole) {
+            await updateRole(selectedRole.id, data);
+          } else {
+            await createRole(data);
+          }
+        }}
+      />
     </>
   );
 };

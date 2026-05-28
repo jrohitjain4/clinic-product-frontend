@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setExpandMenu, setMobileSidebar } from "../../redux/sidebarSlice";
 import { updateTheme } from "../../redux/themeSlice";
 import { all_routes } from "../../../feature-module/routes/all_routes";
+import { canSeeSection, canSeeMenuItem } from "../../utils/staffPermissions";
 
 
 const Sidebar = () => {
@@ -18,10 +19,23 @@ const Sidebar = () => {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    const updateUser = () => {
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+    };
+    updateUser();
+
+    // Re-check when someone updates localStorage (e.g. from Feature profile sync)
+    window.addEventListener("storage", updateUser);
+    // Also re-check on focus to capture changes made in other tabs
+    window.addEventListener("focus", updateUser);
+
+    return () => {
+      window.removeEventListener("storage", updateUser);
+      window.removeEventListener("focus", updateUser);
+    };
   }, []);
 
   const toggleSidebar = (title: any) => {
@@ -135,15 +149,15 @@ const Sidebar = () => {
           <div>
             {/* Logo Normal */}
             <Link to={all_routes.dashboard} className="logo logo-normal">
-              <ImageWithBasePath src="assets/img/logo.svg" alt="Logo" />
+              <ImageWithBasePath src="sidebar-logo.png" alt="Logo" style={{ height: '60px', width: 'auto' }} />
             </Link>
             {/* Logo Small */}
             <Link to={all_routes.dashboard} className="logo-small">
-              <ImageWithBasePath src="assets/img/logo-small.svg" alt="Logo" />
+              <ImageWithBasePath src="sidebar-logo.png" alt="Logo" style={{ height: '45px', width: 'auto' }} />
             </Link>
             {/* Logo Dark */}
             <Link to={all_routes.dashboard} className="dark-logo">
-              <ImageWithBasePath src="assets/img/logo-white.svg" alt="Logo" />
+              <ImageWithBasePath src="sidebar-logo.png" alt="Logo" style={{ height: '60px', width: 'auto' }} />
             </Link>
           </div>
           <button
@@ -162,119 +176,6 @@ const Sidebar = () => {
         {/* Sidenav Menu */}
         <div className="sidebar-inner" data-simplebar="">
           <div id="sidebar-menu" className="sidebar-menu">
-            <div className="sidebar-top shadow-sm p-2 rounded-1 mb-3 dropend">
-              <Link
-                to="#"
-                className="drop-arrow-none"
-                data-bs-toggle="dropdown"
-                data-bs-auto-close="outside"
-                data-bs-offset="0,22"
-                aria-haspopup="false"
-                aria-expanded="false"
-              >
-                <div className="d-flex justify-content-between align-items-center">
-                  <div className="d-flex align-items-center">
-                    <span className="avatar rounded-circle flex-shrink-0 p-2">
-                      <ImageWithBasePath
-                        src="./assets/img/icons/trustcare.svg"
-                        alt="img"
-                      />
-                    </span>
-                    <div className="ms-2 text-truncate" style={{ maxWidth: '120px' }}>
-                      <h6 className="fs-14 fw-semibold mb-0 text-truncate">
-                        {user?.clinic?.name || "Preclinic"}
-                      </h6>
-                      <p className="fs-13 mb-0 text-muted">@{user?.clinic?.subdomain || "default"}</p>
-                    </div>
-                  </div>
-                  <i className="ti ti-arrows-transfer-up" />
-                </div>
-              </Link>
-              <div className="dropdown-menu dropdown-menu-lg">
-                <div className="p-2">
-                  <label className="dropdown-item d-flex align-items-center justify-content-between p-1">
-                    <span className="d-flex align-items-center">
-                      <span className="me-2">
-                        <ImageWithBasePath
-                          src="assets/img/icons/clinic-01.svg"
-                          alt=""
-                        />
-                      </span>
-                      <span className="fw-semibold text-dark">
-                        CureWell Medical Hub
-                        <small className="d-block text-muted fw-normal fs-13">
-                          Ohio
-                        </small>
-                      </span>
-                    </span>
-                    <input
-                      className="form-check-input m-0 me-2"
-                      type="checkbox"
-                    />
-                  </label>
-                  <label className="dropdown-item d-flex align-items-center justify-content-between p-1">
-                    <span className="d-flex align-items-center">
-                      <span className="me-2">
-                        <ImageWithBasePath
-                          src="assets/img/icons/clinic-02.svg"
-                          alt=""
-                        />
-                      </span>
-                      <span className="fw-semibold text-dark">
-                        Trustcare Clinic
-                        <small className="d-block text-muted fw-normal fs-13">
-                          Lasvegas
-                        </small>
-                      </span>
-                    </span>
-                    <input
-                      className="form-check-input m-0 me-2"
-                      type="checkbox"
-                    />
-                  </label>
-                  <label className="dropdown-item d-flex align-items-center justify-content-between p-1">
-                    <span className="d-flex align-items-center">
-                      <span className="me-2">
-                        <ImageWithBasePath
-                          src="assets/img/icons/clinic-03.svg"
-                          alt=""
-                        />
-                      </span>
-                      <span className="fw-semibold text-dark">
-                        NovaCare Medical
-                        <small className="d-block text-muted fw-normal fs-13">
-                          Washington
-                        </small>
-                      </span>
-                    </span>
-                    <input
-                      className="form-check-input m-0 me-2"
-                      type="checkbox"
-                    />
-                  </label>
-                  <label className="dropdown-item d-flex align-items-center justify-content-between p-1">
-                    <span className="d-flex align-items-center">
-                      <span className="me-2">
-                        <ImageWithBasePath
-                          src="assets/img/icons/clinic-04.svg"
-                          alt=""
-                        />
-                      </span>
-                      <span className="fw-semibold text-dark">
-                        Greeny Medical Clinic
-                        <small className="d-block text-muted fw-normal fs-13">
-                          Illinios
-                        </small>
-                      </span>
-                    </span>
-                    <input
-                      className="form-check-input m-0 me-2"
-                      type="checkbox"
-                    />
-                  </label>
-                </div>
-              </div>
-            </div>
             <ul>
               {SidebarData?.filter(section => {
                 // Only show Super Admin section to SUPER_ADMIN role
@@ -290,199 +191,190 @@ const Sidebar = () => {
                 ) {
                   return user?.role !== "ADMIN" && user?.role !== "SUPER_ADMIN";
                 }
+                // ── STAFF permission filtering ──
+                if (user?.role === "STAFF") {
+                  return canSeeSection(section.tittle);
+                }
                 return true;
-              }).map((mainLabel, index) => (
-                <React.Fragment key={`main-${index}`}>
-                  <li className="menu-title">
-                    <span>{mainLabel?.tittle}</span>
-                  </li>
-                  <li>
-                    <ul>
-                      {mainLabel?.submenuItems?.map((title: any, i) => {
-                        let link_array: any = [];
-                        if ("submenuItems" in title) {
-                          title.submenuItems?.forEach((link: any) => {
-                            link_array.push(link?.link);
-                            if (link?.submenu && "submenuItems" in link) {
-                              link.submenuItems?.forEach((item: any) => {
-                                link_array.push(item?.link);
-                              });
-                            }
-                          });
-                        }
-                        title.links = link_array;
+              }).map((mainLabel, index) => {
+                // Filter submenu items by staff permissions
+                const filteredItems = user?.role === "STAFF"
+                  ? mainLabel?.submenuItems?.filter((title: any) => canSeeMenuItem(title?.label))
+                  : mainLabel?.submenuItems;
 
-                        return (
-                          <li className="submenu" key={`title-${i}`}>
-                            <Link
-                              to={title?.submenu ? "#" : title?.link}
-                              onClick={() => {
-                                handleClick(title?.label);
+                // Skip rendering if no items left after filter
+                if (!filteredItems || filteredItems.length === 0) return null;
 
-                                if (mainLabel?.tittle === "Layout") {
-                                  handleLayoutClick(title?.label);
-                                }
-                              }}
-                              className={`${subOpen === title?.label ||
-                                title?.links?.includes(Location.pathname)
-                                ? "subdrop"
-                                : ""
-                                } ${title?.links?.includes(Location.pathname) ||
-                                  title?.link === Location.pathname
-                                  ? "active"
-                                  : ""
-                                }`}
-                            >
-                              <i className={`ti ti-${title.icon}`}></i>
-                              <span>{title?.label}</span>
-                              {(title?.submenu || title?.customSubmenuTwo) && (
-                                <span className="menu-arrow"></span>
-                              )}
-                              {title?.submenu === false &&
-                                title?.version === "v1.6.7" && (
-                                  <span className="badge bg-danger ms-2 rounded-2 badge-md fs-12 fw-medium">
-                                    v1.6.7
-                                  </span>
-                                )}
-                            </Link>
+                return (
+                  <React.Fragment key={`main-${index}`}>
+                    <li className="menu-title">
+                      <span>{mainLabel?.tittle}</span>
+                    </li>
+                    <li>
+                      <ul>
+                        {filteredItems?.map((title: any, i: number) => {
+                          let link_array: any = [];
+                          if ("submenuItems" in title) {
+                            title.submenuItems?.forEach((link: any) => {
+                              link_array.push(link?.link);
+                              if (link?.submenu && "submenuItems" in link) {
+                                link.submenuItems?.forEach((item: any) => {
+                                  link_array.push(item?.link);
+                                });
+                              }
+                            });
+                          }
+                          title.links = link_array;
 
-                            {title?.submenu !== false && (
-                              <ul
-                                style={{
-                                  display:
-                                    subOpen === title?.label ||
-                                      title?.links?.includes(Location.pathname)
-                                      ? "block"
-                                      : "none",
+                          return (
+                            <li className="submenu" key={`title-${i}`}>
+                              <Link
+                                to={title?.submenu ? "#" : title?.link}
+                                onClick={() => {
+                                  handleClick(title?.label);
+
+                                  if (mainLabel?.tittle === "Layout") {
+                                    handleLayoutClick(title?.label);
+                                  }
                                 }}
+                                className={`${subOpen === title?.label ||
+                                  title?.links?.includes(Location.pathname)
+                                  ? "subdrop"
+                                  : ""
+                                  } ${title?.links?.includes(Location.pathname) ||
+                                    title?.link === Location.pathname
+                                    ? "active"
+                                    : ""
+                                  }`}
                               >
-                                {title?.submenuItems?.filter((item: any) => {
-                                  if (user?.role === "ADMIN" || user?.role === "SUPER_ADMIN") {
-                                    if (item.label === "Doctor Dashboard" || item.label === "Patient Dashboard") return false;
-                                  } else if (user?.role === "DOCTOR") {
-                                    if (item.label === "Admin Dashboard" || item.label === "Patient Dashboard") return false;
-                                  } else if (user?.role === "PATIENT") {
-                                    if (item.label === "Admin Dashboard" || item.label === "Doctor Dashboard") return false;
-                                  }
-                                  return true;
-                                }).map(
-                                  (item: any, j: any) => {
-                                    const isSubActive =
-                                      item?.submenuItems
-                                        ?.map((link: any) => link?.link)
-                                        .includes(Location.pathname) ||
-                                      item?.link === Location.pathname;
-
-                                    return (
-                                      <li
-                                        className={`${item?.submenuItems
-                                          ? "submenu submenu-two"
-                                          : ""
-                                          } `}
-                                        key={`item-${j}`}
-                                      >
-                                        <Link
-                                          to={item?.submenu ? "#" : item?.link}
-                                          className={`${isSubActive ? "active subdrop" : ""
-                                            } ${subsidebar === item?.label
-                                              ? "subdrop"
-                                              : ""
-                                            }`}
-                                          onClick={() => {
-                                            toggleSubsidebar(item?.label);
-                                            if (title?.label === "Layouts") {
-                                              handleLayoutClick(item?.label);
-                                            }
-                                          }}
-
-
-                                        >
-                                          {item?.label}
-                                          {(item?.submenu ||
-                                            item?.customSubmenuTwo) && (
-                                              <span className="menu-arrow"></span>
-                                            )}
-                                        </Link>
-                                        {item?.submenuItems ? (
-                                          <ul
-                                            style={{
-                                              display:
-                                                subsidebar === item?.label
-                                                  ? "block"
-                                                  : "none",
-                                            }}
-                                          >
-                                            {item?.submenuItems?.map(
-                                              (items: any, k: any) => {
-                                                const isSubSubActive =
-                                                  items?.submenuItems
-                                                    ?.map(
-                                                      (link: any) => link.link
-                                                    )
-                                                    .includes(
-                                                      Location.pathname
-                                                    ) ||
-                                                  items?.link ===
-                                                  Location.pathname;
-
-                                                return (
-                                                  <li key={`submenu-item-${k}`}>
-                                                    <Link
-                                                      to={
-                                                        items?.submenu
-                                                          ? "#"
-                                                          : items?.link
-                                                      }
-                                                      className={`${isSubSubActive
-                                                        ? "active"
-                                                        : ""
-                                                        }`}
-                                                    >
-                                                      {items?.label}
-                                                    </Link>
-                                                  </li>
-                                                );
-                                              }
-                                            )}
-                                          </ul>
-                                        ) : null}
-                                      </li>
-                                    );
-                                  }
+                                <i className={`ti ti-${title.icon}`}></i>
+                                <span>{title?.label}</span>
+                                {(title?.submenu || title?.customSubmenuTwo) && (
+                                  <span className="menu-arrow"></span>
                                 )}
-                              </ul>
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </li>
-                </React.Fragment>
-              ))}
-            </ul>
-          </div>
-          <div className="sidebar-footer border-top mt-3">
-            <div className="trial-item mt-0 p-3 text-center">
-              <div className="trial-item-icon rounded-4 mb-3 p-2 text-center shadow-sm d-inline-flex">
-                <ImageWithBasePath
-                  src="./assets/img/icons/sidebar-icon.svg"
-                  alt="img"
-                />
-              </div>
-              <div>
-                <h6 className="fs-14 fw-semibold mb-1">Upgrade To Pro</h6>
-                <p className="fs-13 mb-0">
-                  Check 1 min video and begin use Preclinic like a pro
-                </p>
-              </div>
-              <Link
-                to="#"
-                className="close-icon shadow-sm"
+                                {title?.submenu === false &&
+                                  title?.version === "v1.6.7" && (
+                                    <span className="badge bg-danger ms-2 rounded-2 badge-md fs-12 fw-medium">
+                                      v1.6.7
+                                    </span>
+                                  )}
+                              </Link>
 
-              >
-                <i className="ti ti-x" />
-              </Link>
-            </div>
+                              {title?.submenu !== false && (
+                                <ul
+                                  style={{
+                                    display:
+                                      subOpen === title?.label ||
+                                        title?.links?.includes(Location.pathname)
+                                        ? "block"
+                                        : "none",
+                                  }}
+                                >
+                                  {title?.submenuItems?.filter((item: any) => {
+                                    if (user?.role === "ADMIN" || user?.role === "SUPER_ADMIN") {
+                                      if (item.label === "Doctor Dashboard" || item.label === "Patient Dashboard") return false;
+                                    } else if (user?.role === "DOCTOR") {
+                                      if (item.label === "Admin Dashboard" || item.label === "Patient Dashboard") return false;
+                                    } else if (user?.role === "PATIENT") {
+                                      if (item.label === "Admin Dashboard" || item.label === "Doctor Dashboard") return false;
+                                    }
+                                    return true;
+                                  }).map(
+                                    (item: any, j: any) => {
+                                      const isSubActive =
+                                        item?.submenuItems
+                                          ?.map((link: any) => link?.link)
+                                          .includes(Location.pathname) ||
+                                        item?.link === Location.pathname;
+
+                                      return (
+                                        <li
+                                          className={`${item?.submenuItems
+                                            ? "submenu submenu-two"
+                                            : ""
+                                            } `}
+                                          key={`item-${j}`}
+                                        >
+                                          <Link
+                                            to={item?.submenu ? "#" : item?.link}
+                                            className={`${isSubActive ? "active subdrop" : ""
+                                              } ${subsidebar === item?.label
+                                                ? "subdrop"
+                                                : ""
+                                              }`}
+                                            onClick={() => {
+                                              toggleSubsidebar(item?.label);
+                                              if (title?.label === "Layouts") {
+                                                handleLayoutClick(item?.label);
+                                              }
+                                            }}
+
+
+                                          >
+                                            {item?.label}
+                                            {(item?.submenu ||
+                                              item?.customSubmenuTwo) && (
+                                                <span className="menu-arrow"></span>
+                                              )}
+                                          </Link>
+                                          {item?.submenuItems ? (
+                                            <ul
+                                              style={{
+                                                display:
+                                                  subsidebar === item?.label
+                                                    ? "block"
+                                                    : "none",
+                                              }}
+                                            >
+                                              {item?.submenuItems?.map(
+                                                (items: any, k: any) => {
+                                                  const isSubSubActive =
+                                                    items?.submenuItems
+                                                      ?.map(
+                                                        (link: any) => link.link
+                                                      )
+                                                      .includes(
+                                                        Location.pathname
+                                                      ) ||
+                                                    items?.link ===
+                                                    Location.pathname;
+
+                                                  return (
+                                                    <li key={`submenu-item-${k}`}>
+                                                      <Link
+                                                        to={
+                                                          items?.submenu
+                                                            ? "#"
+                                                            : items?.link
+                                                        }
+                                                        className={`${isSubSubActive
+                                                          ? "active"
+                                                          : ""
+                                                          }`}
+                                                      >
+                                                        {items?.label}
+                                                      </Link>
+                                                    </li>
+                                                  );
+                                                }
+                                              )}
+                                            </ul>
+                                          ) : null}
+                                        </li>
+                                      );
+                                    }
+                                  )}
+                                </ul>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </li>
+                  </React.Fragment>
+                );
+              })}
+            </ul>
           </div>
         </div>
       </div>

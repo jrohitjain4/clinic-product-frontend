@@ -8,6 +8,7 @@ import { patientToTableRow } from "../../../../../core/utils/patientForm";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import PatientsDeleteModal from "./patientsDeleteModal";
+import { HasPermission } from "../../../../../core/utils/staffPermissions";
 
 const Patients = () => {
   const { patients, loading, error, refetch, reload } = useClinicPatients();
@@ -74,9 +75,9 @@ const Patients = () => {
             to={
               record._raw.primaryDoctor?.id
                 ? all_routes.doctorsDetails.replace(
-                    ":id",
-                    record._raw.primaryDoctor.id
-                  )
+                  ":id",
+                  record._raw.primaryDoctor.id
+                )
                 : "#"
             }
             className="avatar me-2 flex-shrink-0"
@@ -118,11 +119,10 @@ const Patients = () => {
       dataIndex: "Status",
       render: (text: string) => (
         <span
-          className={`badge rounded fs-13 fw-medium border ${
-            text === "Available"
+          className={`badge rounded fs-13 fw-medium border ${text === "Available"
               ? "badge-soft-success text-success border-success"
               : "badge-soft-danger text-danger border-danger"
-          }`}
+            }`}
         >
           {text}
         </span>
@@ -150,14 +150,16 @@ const Patients = () => {
               <i className="ti ti-dots-vertical" />
             </button>
             <ul className="dropdown-menu p-2">
-              <li>
-                <Link
-                  to={editPatientPath(record._raw.id)}
-                  className="dropdown-item d-flex align-items-center"
-                >
-                  Edit
-                </Link>
-              </li>
+              <HasPermission module="Patients" action="EDIT">
+                <li>
+                  <Link
+                    to={editPatientPath(record._raw.id)}
+                    className="dropdown-item d-flex align-items-center"
+                  >
+                    Edit
+                  </Link>
+                </li>
+              </HasPermission>
               <li>
                 <Link
                   to={patientDetailsPath(record._raw.id)}
@@ -166,17 +168,19 @@ const Patients = () => {
                   View
                 </Link>
               </li>
-              <li>
-                <button
-                  type="button"
-                  className="dropdown-item d-flex align-items-center"
-                  data-bs-toggle="modal"
-                  data-bs-target="#delete_patient_modal"
-                  onClick={() => setSelected(record._raw)}
-                >
-                  Delete
-                </button>
-              </li>
+              <HasPermission module="Patients" action="DELETE">
+                <li>
+                  <button
+                    type="button"
+                    className="dropdown-item d-flex align-items-center"
+                    data-bs-toggle="modal"
+                    data-bs-target="#delete_patient_modal"
+                    onClick={() => setSelected(record._raw)}
+                  >
+                    Delete
+                  </button>
+                </li>
+              </HasPermission>
             </ul>
           </div>
         </div>
@@ -209,13 +213,15 @@ const Patients = () => {
                   <i className="ti ti-layout-grid fs-14 text-body" />
                 </Link>
               </div>
-              <Link
-                to={all_routes.createPatient}
-                className="btn btn-primary ms-2 fs-13 btn-md"
-              >
-                <i className="ti ti-plus me-1" />
-                New Patient
-              </Link>
+              <HasPermission module="Patients" action="CREATE">
+                <Link
+                  to={all_routes.createPatient}
+                  className="btn btn-primary ms-2 fs-13 btn-md"
+                >
+                  <i className="ti ti-plus me-1" />
+                  New Patient
+                </Link>
+              </HasPermission>
             </div>
           </div>
 
@@ -250,10 +256,12 @@ const Patients = () => {
               <i className="ti ti-users fs-1 text-muted d-block mb-2" />
               <h6 className="fw-bold">No patients yet</h6>
               <p className="text-muted mb-3">Add your first patient.</p>
-              <Link to={all_routes.createPatient} className="btn btn-primary">
-                <i className="ti ti-plus me-1" />
-                New Patient
-              </Link>
+              <HasPermission module="Patients" action="CREATE">
+                <Link to={all_routes.createPatient} className="btn btn-primary">
+                  <i className="ti ti-plus me-1" />
+                  New Patient
+                </Link>
+              </HasPermission>
             </div>
           ) : (
             <div className="table-responsive">

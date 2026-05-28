@@ -5,6 +5,7 @@ import { all_routes } from "../../../../routes/all_routes";
 import { useClinicPatients } from "../../../../../core/hooks/useClinicPatients";
 import type { ClinicPatient } from "../../../../../core/types/clinicPatient";
 import PatientsDeleteModal from "../patients/patientsDeleteModal";
+import { HasPermission } from "../../../../../core/utils/staffPermissions";
 
 const PatientsGrid = () => {
   const { patients, loading, error, refetch, reload } = useClinicPatients();
@@ -48,13 +49,15 @@ const PatientsGrid = () => {
                   <i className="ti ti-layout-grid fs-14 text-dark" />
                 </span>
               </div>
-              <Link
-                to={all_routes.createPatient}
-                className="btn btn-primary ms-2 fs-13 btn-md"
-              >
-                <i className="ti ti-plus me-1" />
-                New Patient
-              </Link>
+              <HasPermission module="Patients" action="CREATE">
+                <Link
+                  to={all_routes.createPatient}
+                  className="btn btn-primary ms-2 fs-13 btn-md"
+                >
+                  <i className="ti ti-plus me-1" />
+                  New Patient
+                </Link>
+              </HasPermission>
             </div>
           </div>
 
@@ -116,25 +119,29 @@ const PatientsGrid = () => {
                               <i className="ti ti-dots-vertical" />
                             </button>
                             <ul className="dropdown-menu p-2">
-                              <li>
-                                <Link
-                                  to={editPatientPath(p.id)}
-                                  className="dropdown-item"
-                                >
-                                  Edit
-                                </Link>
-                              </li>
-                              <li>
-                                <button
-                                  type="button"
-                                  className="dropdown-item"
-                                  data-bs-toggle="modal"
-                                  data-bs-target="#delete_patient_modal"
-                                  onClick={() => setSelected(p)}
-                                >
-                                  Delete
-                                </button>
-                              </li>
+                              <HasPermission module="Patients" action="EDIT">
+                                <li>
+                                  <Link
+                                    to={editPatientPath(p.id)}
+                                    className="dropdown-item"
+                                  >
+                                    Edit
+                                  </Link>
+                                </li>
+                              </HasPermission>
+                              <HasPermission module="Patients" action="DELETE">
+                                <li>
+                                  <button
+                                    type="button"
+                                    className="dropdown-item"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#delete_patient_modal"
+                                    onClick={() => setSelected(p)}
+                                  >
+                                    Delete
+                                  </button>
+                                </li>
+                              </HasPermission>
                               <li>
                                 <Link
                                   to={all_routes.appointments}
@@ -165,9 +172,11 @@ const PatientsGrid = () => {
           {!loading && patients.length === 0 && !error && (
             <div className="text-center py-5">
               <p className="text-muted mb-3">No patients found.</p>
-              <Link to={all_routes.createPatient} className="btn btn-primary">
-                New Patient
-              </Link>
+              <HasPermission module="Patients" action="CREATE">
+                <Link to={all_routes.createPatient} className="btn btn-primary">
+                  New Patient
+                </Link>
+              </HasPermission>
             </div>
           )}
         </div>

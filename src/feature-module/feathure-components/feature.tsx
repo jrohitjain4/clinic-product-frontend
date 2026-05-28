@@ -7,11 +7,29 @@ import Sidebar from "../../core/common/sidebar/sidebar";
 import SidebarTwo from "../../core/common/sidebar-two/sidebarTwo";
 import Sidebarthree from "../../core/common/sidebarthree/sidebarthree";
 
+import { apiUrl } from "../../core/config/api";
+
 const Feature = () => {
   const locations = useLocation();
   const path = locations.pathname;
   const token = localStorage.getItem("token");
   const [isExpired, setIsExpired] = useState(false);
+
+  useEffect(() => {
+    // Refresh user profile and permissions from backend automatically
+    if (token) {
+      fetch(apiUrl("/api/auth/me"), {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.id) {
+            localStorage.setItem("user", JSON.stringify(data));
+          }
+        })
+        .catch(err => console.error("Profile refresh failed", err));
+    }
+  }, [token]);
 
   useEffect(() => {
     // Initial check

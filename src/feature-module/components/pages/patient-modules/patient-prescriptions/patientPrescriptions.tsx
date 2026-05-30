@@ -8,9 +8,9 @@ import {
 } from "../../../../../core/common/selectOption";
 import { DatePicker, Select } from "antd";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
-import { all_routes } from "../../../../routes/all_routes";
+import { all_routes, doctorDetailsPath } from "../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
-import { PatientPescriptionsData } from "../../../../../core/json/patientPrescriptionsData";
+import { usePrescriptions } from "../../../../../core/hooks/usePrescriptions";
 import { useState } from "react";
 import Datatable from "../../../../../core/common/dataTable";
 import Modals from "./modals/modals";
@@ -21,13 +21,27 @@ const PatientPrescriptions = () => {
     return modalElement ? modalElement : document.body; // Fallback to document.body if modalElement is null
   };
 
-  const data = PatientPescriptionsData;
+  const { prescriptions } = usePrescriptions();
+  const data = prescriptions.map((pres: any) => ({
+    id: pres.id,
+    Prescription_ID: pres.prescriptionId || `#PRES-${pres.id.slice(-4)}`,
+    Doctor_Name: pres.doctorName || (pres.doctor?.fullName ? `Dr. ${pres.doctor.fullName}` : "Doctor"),
+    img: pres.doctor?.profileImage || "doctor-01.jpg",
+    role: pres.doctorRole || pres.doctor?.designation?.name || "Doctor",
+    Prescribed_On: pres.dateLabel || (pres.createdAt ? new Date(pres.createdAt).toLocaleDateString() : "—"),
+    doctorId: pres.doctorId,
+  }));
   const columns = [
     {
       title: " Prescription ID",
       dataIndex: "Prescription_ID",
       sorter: (a: any, b: any) =>
         a.Prescription_ID.length - b.Prescription_ID.length,
+      render: (text: string) => (
+        <Link to={all_routes.patientprescriptiondetails} className="text-primary hover-underline">
+          {text}
+        </Link>
+      ),
     },
     {
       title: "Doctor Name",
@@ -35,17 +49,17 @@ const PatientPrescriptions = () => {
       render: (text: any, render: any) => (
         <div className="d-flex align-items-center">
           <Link
-            to={all_routes.patientappointmentdetails}
+            to={render.doctorId ? doctorDetailsPath(render.doctorId) : "#"}
             className="avatar avatar-md me-2"
           >
             <ImageWithBasePath
-              src={`assets/img/doctors/${render.img}`}
-              alt="product"
+              src={render.img.startsWith('assets') || render.img.startsWith('/uploads') || render.img.startsWith('http') ? render.img : `assets/img/doctors/${render.img}`}
+              alt="doctor"
               className="rounded-circle"
             />
           </Link>
           <Link
-            to={all_routes.patientappointmentdetails}
+            to={render.doctorId ? doctorDetailsPath(render.doctorId) : "#"}
             className="text-dark fw-semibold"
           >
             {text}
@@ -352,7 +366,7 @@ const PatientPrescriptions = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyori
             </Link>
             , All Rights Reserved
           </p>

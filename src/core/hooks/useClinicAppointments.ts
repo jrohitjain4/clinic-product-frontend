@@ -54,5 +54,23 @@ export const useClinicAppointments = (params?: {
     [fetchAppointments]
   );
 
-  return { appointments, loading, error, refetch, reload: fetchAppointments };
+  const createAppointment = async (payload: { patientId: string; doctorId: string; scheduledAt: string; departmentId?: string; appointmentType?: string; status?: string; reason?: string; mode?: string }) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(apiUrl("/api/appointments"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to create appointment");
+    }
+    await refetch();
+    return data;
+  };
+
+  return { appointments, loading, error, refetch, reload: fetchAppointments, createAppointment };
 };

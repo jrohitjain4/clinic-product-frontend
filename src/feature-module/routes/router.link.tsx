@@ -136,6 +136,7 @@ import PatientPasswordSettings from "../components/pages/patient-modules/patient
 import PatientPrescriptionDetails from "../components/pages/patient-modules/patient-prescription-details/patientPrescriptionDetails";
 import PatientPrescriptions from "../components/pages/patient-modules/patient-prescriptions/patientPrescriptions";
 import PatientProfileSettings from "../components/pages/patient-modules/patient-profile-settings/patientProfileSettings";
+import PatientClinics from "../components/pages/patient-modules/patient-clinics/patientClinics";
 import IntegrationsSettings from "../components/pages/settings-modules/account-settings/integrations-settings/integrationsSettings";
 import NotificationsSettings from "../components/pages/settings-modules/account-settings/notifications-settings/notificationsSettings";
 import ProfileSettings from "../components/pages/settings-modules/account-settings/profile-settings/profileSettings";
@@ -413,6 +414,16 @@ export const publicRoutes = [
   {
     path: routes.patientnotificationssettings,
     element: <PatientNotificationsSettings />,
+    route: Route,
+  },
+  {
+    path: routes.patientclinics,
+    element: <PatientClinics />,
+    route: Route,
+  },
+  {
+    path: routes.patientdoctordetails,
+    element: <DoctorDetails />,
     route: Route,
   },
   {

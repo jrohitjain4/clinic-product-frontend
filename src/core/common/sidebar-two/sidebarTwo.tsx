@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import ImageWithBasePath from "../../imageWithBasePath";
 import { all_routes } from "../../../feature-module/routes/all_routes";
-import  { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { updateTheme } from "../../redux/themeSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { setExpandMenu, setMobileSidebar } from "../../redux/sidebarSlice";
@@ -19,12 +19,12 @@ const SidebarTwo = () => {
   // Helper to check if any submenu child is active
   const isAnyActive = (paths: string[]) => paths.some(isActive);
 
-   const mobileSidebar = useSelector(
-      (state: any) => state.sidebarSlice.mobileSidebar
-    );
-     const toggleMobileSidebar = () => {
-        dispatch(setMobileSidebar(!mobileSidebar));
-      };
+  const mobileSidebar = useSelector(
+    (state: any) => state.sidebarSlice.mobileSidebar
+  );
+  const toggleMobileSidebar = () => {
+    dispatch(setMobileSidebar(!mobileSidebar));
+  };
 
   // Open submenu if a child route is active
   useEffect(() => {
@@ -52,35 +52,35 @@ const SidebarTwo = () => {
   };
 
 
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-   const handleMiniSidebar = () => {
-      const rootElement = document.documentElement;
-      const isMini = rootElement.getAttribute("data-layout") === "mini";
-      const updatedLayout = isMini ? "default" : "mini";
-      dispatch(
-        updateTheme({
-          "data-layout": updatedLayout,
-        })
-      );
-      if (isMini) {
-        rootElement.classList.remove("mini-sidebar");
-      } else {
-        rootElement.classList.add("mini-sidebar");
-      }
-    };
-    const onMouseEnter = () => {
-      dispatch(setExpandMenu(true));
-    };
-    const onMouseLeave = () => {
-      dispatch(setExpandMenu(false));
-    };
+  const handleMiniSidebar = () => {
+    const rootElement = document.documentElement;
+    const isMini = rootElement.getAttribute("data-layout") === "mini";
+    const updatedLayout = isMini ? "default" : "mini";
+    dispatch(
+      updateTheme({
+        "data-layout": updatedLayout,
+      })
+    );
+    if (isMini) {
+      rootElement.classList.remove("mini-sidebar");
+    } else {
+      rootElement.classList.add("mini-sidebar");
+    }
+  };
+  const onMouseEnter = () => {
+    dispatch(setExpandMenu(true));
+  };
+  const onMouseLeave = () => {
+    dispatch(setExpandMenu(false));
+  };
 
   return (
     <>
       {/* Sidenav Menu Start */}
       <div className="sidebar doctor-sidebar" id="sidebar"
-       onMouseEnter={onMouseEnter}
+        onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}>
         {/* Start Logo */}
         <div className="sidebar-logo">
@@ -98,7 +98,7 @@ const SidebarTwo = () => {
               <ImageWithBasePath src="assets/img/logo-white.svg" alt="Logo" />
             </Link>
           </div>
-         <button
+          <button
             className="sidenav-toggle-btn btn border-0 p-0 active"
             id="toggle_btn"
             onClick={handleMiniSidebar}
@@ -132,9 +132,8 @@ const SidebarTwo = () => {
                   </li>
                   {/* Appointments Submenu */}
                   <li
-                    className={`submenu${
-                      openSubmenus.appointments ? " active" : ""
-                    }`}
+                    className={`submenu${openSubmenus.appointments ? " active" : ""
+                      }`}
                   >
                     <Link
                       to="#"
@@ -165,7 +164,7 @@ const SidebarTwo = () => {
                           to={all_routes.doctorsappointments}
                           className={
                             isActive(all_routes.doctorsappointments) ||
-                            isActive(all_routes.doctorsappointmentdetails)
+                              isActive(all_routes.doctorsappointmentdetails)
                               ? "active"
                               : ""
                           }
@@ -202,8 +201,8 @@ const SidebarTwo = () => {
                       isActive(all_routes.doctorsprescriptions)
                         ? "active"
                         : isActive(all_routes.doctorsprescriptiondetails)
-                        ? "active"
-                        : ""
+                          ? "active"
+                          : ""
                     }
                   >
                     <Link to={all_routes.doctorsprescriptions}>
@@ -233,9 +232,8 @@ const SidebarTwo = () => {
                   </li>
                   {/* Settings Submenu */}
                   <li
-                    className={`submenu${
-                      openSubmenus.settings ? " active" : ""
-                    }`}
+                    className={`submenu${openSubmenus.settings ? " active" : ""
+                      }`}
                   >
                     <Link
                       to="#"
@@ -302,25 +300,6 @@ const SidebarTwo = () => {
                 </ul>
               </li>
             </ul>
-          </div>
-          <div className="sidebar-footer border-top mt-3">
-            <div className="trial-item mt-0 p-3 text-center">
-              <div className="trial-item-icon rounded-4 mb-3 p-2 text-center shadow-sm d-inline-flex">
-                <ImageWithBasePath
-                  src="./assets/img/icons/sidebar-icon.svg"
-                  alt="img"
-                />
-              </div>
-              <div>
-                <h6 className="fs-14 fw-semibold mb-1">Upgrade To Pro</h6>
-                <p className="fs-13 mb-0">
-                  Check 1 min video and begin use Preclinic like a pro
-                </p>
-              </div>
-              <Link to="#" className="close-icon shadow-sm">
-                <i className="ti ti-x" />
-              </Link>
-            </div>
           </div>
         </div>
       </div>

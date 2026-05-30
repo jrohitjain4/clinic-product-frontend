@@ -4,7 +4,7 @@ import type { ClinicDoctor } from "../types/clinicDoctor";
 
 export type { ClinicDoctor } from "../types/clinicDoctor";
 
-export const useClinicDoctors = () => {
+export const useClinicDoctors = (clinicId?: string) => {
   const [doctors, setDoctors] = useState<ClinicDoctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,7 +14,8 @@ export const useClinicDoctors = () => {
     setError(null);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(apiUrl("/api/doctors"), {
+      const url = clinicId ? apiUrl(`/api/doctors?clinicId=${clinicId}`) : apiUrl("/api/doctors");
+      const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) {

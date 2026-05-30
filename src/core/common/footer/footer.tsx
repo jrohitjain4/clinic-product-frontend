@@ -6,11 +6,7 @@ const Footer = () => {
   {/* Footer Start */}
   <div className="footer text-center bg-white p-2 border-top">
     <p className="text-dark mb-0">
-      2025 ©
-      <Link to="#" className="link-primary">
-        Preclinic
-      </Link>
-      , All Rights Reserved
+      2025 ©Docyari, All Rights Reserved
     </p>
   </div>
   {/* Footer End */}

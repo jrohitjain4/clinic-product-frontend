@@ -10,6 +10,7 @@ const Datatable: React.FC<DatatableProps> = ({
   dataSource,
   Selection,
   searchText,
+  loading,
 }) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
   const [Selections, setSelections] = useState<any>(true);
@@ -46,6 +47,7 @@ const Datatable: React.FC<DatatableProps> = ({
       columns={columns}
       rowHoverable={false}
       dataSource={filteredDataSource}
+      loading={loading}
       pagination={{
         showSizeChanger: false,
         pageSize,

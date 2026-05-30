@@ -85,7 +85,6 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
         appointmentType: appointment.appointmentType || "Offline Consultation",
         status: appointment.status,
         reason: appointment.reason || "",
-        location: appointment.location || "",
       });
     }
   }, [mode, appointment?.id]);
@@ -168,7 +167,6 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
           appointmentType: form.appointmentType,
           status: form.status,
           reason: form.reason,
-          location: form.location || null,
         }),
       });
       if (!res.ok) {
@@ -424,18 +422,7 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                       }
                     />
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label mb-1 fw-medium">Location</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={form.location}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, location: e.target.value }))
-                      }
-                      placeholder="City, Country"
-                    />
-                  </div>
+
                   <div className="mb-0">
                     <label className="form-label mb-1 fw-medium">
                       Status<span className="text-danger ms-1">*</span>

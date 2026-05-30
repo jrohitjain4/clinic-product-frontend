@@ -1,5 +1,20 @@
-export const doctorDetailsPath = (id: string) => `/doctor-details/${id}`;
+export const doctorDetailsPath = (id: string) => {
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : {};
+  if (user?.role === 'PATIENT') {
+    return `/patient/doctor-details/${id}`;
+  }
+  return `/doctor-details/${id}`;
+};
 export const editDoctorPath = (id: string) => `/edit-doctors/${id}`;
+export const doctorsListPath = () => {
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : {};
+  if (user?.role === 'PATIENT') {
+    return "/patient/patient-doctors";
+  }
+  return "/doctors";
+};
 
 export const all_routes = {
   home: "/",
@@ -47,6 +62,8 @@ export const all_routes = {
   patientnotificationssettings: "/patient/patient-notifications-settings",
   patientprescriptiondetails: "/patient/patient-prescription-details",
   patientinvoicedetails: "/patient/patient-invoice-details",
+  patientclinics: "/patient/patient-clinics",
+  patientdoctordetails: "/patient/doctor-details/:id",
 
   //Doctor
   doctorschedule: "/doctor/doctor-schedule",
@@ -148,7 +165,7 @@ export const all_routes = {
   invoices: "/invoices",
   invoicesDetails: "/invoices-details/:id",
   addInvoices: "/add-invoices",
-  editInvoices: "/edit-invoices",
+  editInvoices: "/edit-invoices/:id",
   payments: "/payments",
   transactions: "/transactions",
 

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import FilterIndex from "../../../../../core/common/filter/filterIndex";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import { all_routes } from "../../../../routes/all_routes";
@@ -35,10 +34,15 @@ const InvoicesList = () => {
       render: (text: any, record: any) => (
         <div className="d-flex align-items-center">
           <Link to="#" className="avatar avatar-md me-2">
-            <ImageWithBasePath
-              src={`assets/img/users/${record.Image}`}
-              alt="product"
+            <img
+              src={
+                record.Image && record.Image !== "avatar-01.jpg"
+                  ? record.Image
+                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(record.Patient)}&background=4f46e5&color=fff&rounded=true&size=64`
+              }
+              alt={record.Patient}
               className="rounded-circle"
+              style={{ width: 36, height: 36, objectFit: "cover" }}
             />
           </Link>
           <Link to="#" className="text-dark fw-semibold">
@@ -103,7 +107,7 @@ const InvoicesList = () => {
             </li>
             <li>
               <Link
-                to={all_routes.editInvoices}
+                to={all_routes.editInvoices.replace(":id", record.id)}
                 className="dropdown-item d-flex align-items-center"
               >
                 Edit

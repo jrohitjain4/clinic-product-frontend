@@ -29,11 +29,17 @@ const Modals = () => {
               data-bs-dismiss="offcanvas"
               aria-label="Close"
             >
-             
+
             </button>
           </div>
         </div>
         <div className="offcanvas-body pt-3">
+          <div className="alert alert-warning border-warning border-1 d-flex align-items-center mb-3" role="alert">
+            <i className="ti ti-info-circle fs-16 me-2"></i>
+            <div className="fs-13">
+              Contact clinic owner for appointment confirmation & payment.
+            </div>
+          </div>
           <form action="#">
             {/* start row*/}
             <div className="row">
@@ -446,10 +452,6 @@ const Modals = () => {
             <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
               Time
               <span className="text-body fw-normal">09:00 AM - 11:00 AM</span>
-            </p>
-            <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-              Location
-              <span className="text-body fw-normal">Newyork , USA </span>
             </p>
             <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
               Appointment Type

@@ -239,7 +239,7 @@ const Modals = () => {
               <div className="col-lg-6">
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    
+
                     Date of Appointment <span className="text-danger">*</span>
                   </label>
                   <div className="input-icon-end position-relative">
@@ -263,7 +263,7 @@ const Modals = () => {
               <div className="col-lg-6">
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    
+
                     Time <span className="text-danger">*</span>
                   </label>
                   <div className="input-icon-end position-relative">
@@ -288,7 +288,7 @@ const Modals = () => {
                     <textarea
                       rows={4}
                       className="form-control rounded"
-                   
+
                     />
                   </div>
                 </div>
@@ -409,7 +409,7 @@ const Modals = () => {
         </div>
         <div className="offcanvas-body pt-0 px-0">
           <h6 className="bg-light py-2 px-3 text-dark fw-bold">
-            
+
             When &amp; Where
           </h6>
           <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 bg-light mx-3 p-3 rounded my-3">
@@ -422,10 +422,10 @@ const Modals = () => {
                 />
               </div>
               <h6 className="fs-14 fw-semibold m-0">
-                
+
                 Dr. Emily Carter
                 <span className="d-block fs-13 fw-normal text-body pt-1">
-                  
+
                   Pediatrician
                 </span>
               </h6>
@@ -435,51 +435,47 @@ const Modals = () => {
                 to=""
                 className="bg-white d-flex align-items-center justify-content-center p-1 border rounded"
               >
-                
+
                 <i className="ti ti-brand-hipchat fs-13" />
               </Link>
               <Link
                 to=""
                 className="bg-white d-flex align-items-center justify-content-center p-1 border rounded"
               >
-                
+
                 <i className="ti ti-video fs-13" />
               </Link>
             </div>
           </div>
           <div className="px-3 my-4">
             <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-              
+
               Appointment On
               <span className="text-body fw-normal">
-                
+
                 Saturday, 25 Apr 2025
               </span>
             </p>
             <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-              
+
               Time
               <span className="text-body fw-normal">
-                
+
                 09:00 AM - 11:00 AM
               </span>
             </p>
+
             <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-              
-              Location
-              <span className="text-body fw-normal">Newyork , USA </span>
-            </p>
-            <p className="text-dark mb-3 fw-semibold d-flex align-items-center justify-content-between">
-              
+
               Appointment Type
               <span className="text-body fw-normal">
-                
+
                 Online Consultation
               </span>
             </p>
           </div>
           <h6 className="bg-light py-2 px-3 text-dark fw-bold">
-            
+
             Appointment Details
           </h6>
           <div className="px-3 my-3">
@@ -495,12 +491,12 @@ const Modals = () => {
                 </label>
               </div>
               <div>
-                
+
                 <Link
                   to={all_routes.onlineconsultations}
                   className="btn-primary btn btn-sm rounded d-flex align-items-center"
                 >
-                  
+
                   <i className="ti ti-video me-1 fs-13" /> Start
                 </Link>
               </div>
@@ -805,7 +801,7 @@ const Modals = () => {
               <div className="col-lg-6">
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    
+
                     Date of Appointment <span className="text-danger">*</span>
                   </label>
                   <div className="input-icon-end position-relative">
@@ -829,7 +825,7 @@ const Modals = () => {
               <div className="col-lg-6">
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    
+
                     Time <span className="text-danger">*</span>
                   </label>
                   <div className="input-icon-end position-relative">

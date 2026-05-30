@@ -1,5 +1,5 @@
 import { DatePicker, Select } from "antd";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import {
   Amount,
   Department,
@@ -8,20 +8,32 @@ import {
   Status,
 } from "../../../../../core/common/selectOption";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
-import { all_routes } from "../../../../routes/all_routes";
+import { all_routes, doctorDetailsPath } from "../../../../routes/all_routes";
 import { useState } from "react";
-import { PatientDoctorsData } from "../../../../../core/json/patientDoctorsData";
+import { useClinicDoctors } from "../../../../../core/hooks/useClinicDoctors";
 import Datatable from "../../../../../core/common/dataTable";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import Modals from "./modals/modals";
 
 const PatientDoctors = () => {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const clinicId = queryParams.get("clinicId") || undefined;
+
   const getModalContainer = () => {
     const modalElement = document.getElementById("modal-datepicker");
     return modalElement ? modalElement : document.body; // Fallback to document.body if modalElement is null
   };
 
-  const data = PatientDoctorsData;
+  const { doctors, loading } = useClinicDoctors(clinicId);
+  const data = doctors.map((doctor) => ({
+    id: doctor.id,
+    Doctor_Name: doctor.fullName,
+    img: doctor.profileImage || "doctor-01.jpg",
+    role: doctor.designation?.name || doctor.department?.name || "Doctor",
+    Phone: doctor.phone || "—",
+    Last_Visit: "No visits yet", // Placeholder as visit history is not in the basic doctor object
+  }));
   const columns = [
     {
       title: "Doctor Name",
@@ -29,17 +41,17 @@ const PatientDoctors = () => {
       render: (text: any, render: any) => (
         <div className="d-flex align-items-center">
           <Link
-            to={all_routes.patientappointmentdetails}
+            to={doctorDetailsPath(render.id)}
             className="avatar avatar-md me-2"
           >
             <ImageWithBasePath
-              src={`assets/img/doctors/${render.img}`}
-              alt="product"
+              src={render.img.startsWith('assets') || render.img.startsWith('/uploads') || render.img.startsWith('http') ? render.img : `assets/img/doctors/${render.img}`}
+              alt="doctor"
               className="rounded-circle"
             />
           </Link>
           <Link
-            to={all_routes.patientappointmentdetails}
+            to={doctorDetailsPath(render.id)}
             className="text-dark fw-semibold"
           >
             {text}
@@ -354,6 +366,7 @@ const PatientDoctors = () => {
               dataSource={data}
               Selection={false}
               searchText={searchText}
+              loading={loading}
             />
           </div>
         </div>
@@ -363,7 +376,7 @@ const PatientDoctors = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyori
             </Link>
             , All Rights Reserved
           </p>
@@ -373,7 +386,7 @@ const PatientDoctors = () => {
       {/* ========================
 			End Page Content
 		========================= */}
-        <Modals/>
+      <Modals />
     </>
   );
 };

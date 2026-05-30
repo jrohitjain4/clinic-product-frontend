@@ -1,7 +1,8 @@
 import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
 import { useState } from "react";
-import { PatientAppoinmentsData } from "../../../../../core/json/patientAppointmentsData";
+
+import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppointments";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import PredefinedDatePicker from "../../../../../core/common/datePicker";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
@@ -17,7 +18,16 @@ import Datatable from "../../../../../core/common/dataTable";
 import Modals from "./modals/modals";
 
 const PatientAppointments = () => {
-  const data = PatientAppoinmentsData;
+  const { appointments: rawData, loading } = useClinicAppointments();
+  const data = rawData?.map((app: any) => ({
+    Key: app.id,
+    Date_Time: app.dateTimeLabel || app.scheduledAt,
+    Doctor_Name: app.doctorName,
+    img: app.doctor?.profileImage || "assets/img/doctors/doctor-01.jpg",
+    role: app.doctorRole,
+    Mode: app.mode,
+    Status: app.status,
+  })) || [];
   const columns = [
     {
       title: "Date & Time",
@@ -34,8 +44,8 @@ const PatientAppointments = () => {
             className="avatar avatar-md me-2"
           >
             <ImageWithBasePath
-              src={`assets/img/doctors/${render.img}`}
-              alt="product"
+              src={render.img.startsWith('assets') || render.img.startsWith('/uploads') || render.img.startsWith('http') ? render.img : `assets/img/doctors/${render.img}`}
+              alt="doctor"
               className="rounded-circle"
             />
           </Link>
@@ -62,27 +72,25 @@ const PatientAppointments = () => {
       dataIndex: "Status",
       render: (text: string) => (
         <span
-          className={`badge ${
-            text === "Checked Out"
-              ? "badge-soft-primary "
-              : text === "Checked In"
+          className={`badge ${text === "Checked Out"
+            ? "badge-soft-primary "
+            : text === "Checked In"
               ? "badge-soft-warning"
               : text === "Confirmed"
-              ? "badge-soft-success"
-              : text === "Schedule"
-              ? "badge-soft-info"
-              : "badge-soft-danger"
-          } rounded ${
-            text === "Checked Out"
+                ? "badge-soft-success"
+                : text === "Schedule"
+                  ? "badge-soft-info"
+                  : "badge-soft-danger"
+            } rounded ${text === "Checked Out"
               ? "text-primary"
               : text === "Checked In"
-              ? "text-warning"
-              : text === "Confirmed"
-              ? "text-success"
-              : text === "Schedule"
-              ? "text-info"
-              : "text-danger"
-          }  fw-medium fs-13`}
+                ? "text-warning"
+                : text === "Confirmed"
+                  ? "text-success"
+                  : text === "Schedule"
+                    ? "text-info"
+                    : "text-danger"
+            }  fw-medium fs-13`}
         >
           {text}
         </span>
@@ -188,14 +196,14 @@ const PatientAppointments = () => {
                   to={all_routes.patientappointments}
                   className="bg-light rounded p-1 d-flex align-items-center justify-content-center"
                 >
-                  
+
                   <i className="ti ti-list fs-14 text-dark" />
                 </Link>
                 <Link
                   to={all_routes.patientappointmentdetails}
                   className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
                 >
-                  
+
                   <i className="ti ti-calendar-event fs-14 text-body" />
                 </Link>
               </div>

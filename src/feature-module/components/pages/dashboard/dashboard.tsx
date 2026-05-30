@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, Navigate } from "react-router";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { all_routes } from "../../../routes/all_routes";
 import { useState } from "react";
@@ -13,7 +13,15 @@ import type { Dayjs } from "dayjs";
 import { useDashboardStats } from "../../../../core/hooks/useDashboardStats";
 
 const Dashboard = () => {
-  const { stats, loading } = useDashboardStats();
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  if (user?.role === 'PATIENT') {
+    return <Navigate to="/patient/patient-dashboard" replace />;
+  }
+  if (user?.role === 'DOCTOR') {
+    return <Navigate to="/doctor/doctor-dashboard" replace />;
+  }
+
+  const { stats } = useDashboardStats();
   const [sColChart] = useState<any>({
     chart: {
       width: 80,

@@ -54,28 +54,10 @@ const Feature = () => {
   }
 
   // Protect Super Admin routes
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
   if (path.startsWith("/super-admin")) {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (user?.role !== "SUPER_ADMIN") {
       return <Navigate to="/dashboard" replace />;
-    }
-  }
-
-  // Prevent Patients from accessing non-patient management routes
-  if (user?.role === 'PATIENT') {
-    const isPublicPath = path === "/" || path === "/login" || path === "/register";
-    const isPatientPath = path.startsWith("/patient/");
-    if (!isPublicPath && !isPatientPath && path !== "/patient/patient-dashboard") {
-      return <Navigate to="/patient/patient-dashboard" replace />;
-    }
-  }
-
-  // Prevent Doctors from accessing non-doctor management routes
-  if (user?.role === 'DOCTOR') {
-    const isPublicPath = path === "/" || path === "/login" || path === "/register";
-    const isDoctorPath = path.startsWith("/doctor/");
-    if (!isPublicPath && !isDoctorPath && path !== "/doctor/doctor-dashboard") {
-      return <Navigate to="/doctor/doctor-dashboard" replace />;
     }
   }
 

@@ -3,34 +3,62 @@ import Modals from "./modals/modals";
 import { useState } from "react";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import Datatable from "../../../../../core/common/dataTable";
-import { ServiceListData } from "../../../../../core/json/servicesData";
-import { Department, Service_Name, StatusActive } from "../../../../../core/common/selectOption";
-import { Select } from "antd";
-import Slider from "rc-slider";
 import { useClinicServices } from "../../../../../core/hooks/useClinicServices";
+import { useClinicProducts } from "../../../../../core/hooks/useClinicProducts";
 
 const Services = () => {
-  const { services, loading, refetch } = useClinicServices();
+  const { services, refetch: refetchServices } = useClinicServices();
+  const { products, refetch: refetchProducts } = useClinicProducts();
   const [selectedService, setSelectedService] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
-  const data = services.map(s => ({
-    key: s.id,
-    id: s.id,
-    originalService: s,
-    ServiceName: s.serviceName,
-    Department: s.department?.name || "Unknown",
-    Price: "$" + s.price,
-    Status: s.status
-  }));
+  const refetchAll = () => {
+    refetchServices();
+    refetchProducts();
+  };
+
+  // Merge services and products into one table
+  const data = [
+    ...services.map(s => ({
+      key: "service-" + s.id,
+      id: s.id,
+      Type: "Service",
+      originalService: s,
+      ServiceName: s.serviceName,
+      Department: s.department?.name || "—",
+      Price: "$" + s.price,
+      Status: s.status || "Active",
+    })),
+    ...products.map(p => ({
+      key: "product-" + p.id,
+      id: p.id,
+      Type: "Product",
+      originalService: p,
+      ServiceName: p.name,
+      Department: p.key || "—",
+      Price: "$" + p.price,
+      Status: "Active",
+    })),
+  ];
 
   const columns = [
     {
-      title: "Service Name",
+      title: "Name",
       dataIndex: "ServiceName",
+      render: (text: string, record: any) => (
+        <div className="d-flex align-items-center">
+          <span className="fw-medium">{text}</span>
+          {record.Type === "Product" ? (
+            <span className="badge badge-soft-info border border-info ms-2 px-2 py-1 fs-11">Product</span>
+          ) : (
+            <span className="badge badge-soft-primary border border-primary ms-2 px-2 py-1 fs-11">Service</span>
+          )}
+        </div>
+      ),
       sorter: (a: any, b: any) => a.ServiceName.length - b.ServiceName.length,
     },
     {
-      title: "Department",
+      title: "Dept / Key",
       dataIndex: "Department",
       sorter: (a: any, b: any) => a.Department.length - b.Department.length,
     },
@@ -45,9 +73,9 @@ const Services = () => {
       render: (text: string) => (
         <span
           className={`badge ${text === "Active"
-              ? "badge-soft-success border-success"
-              : "badge-soft-danger border-danger"
-            }  border  px-2 py-1 fs-13 fw-medium`}
+            ? "badge-soft-success border-success"
+            : "badge-soft-danger border-danger"
+            } border px-2 py-1 fs-13 fw-medium`}
         >
           {text}
         </span>
@@ -56,7 +84,7 @@ const Services = () => {
     },
     {
       title: "",
-      render: (text: string, record: any) => (
+      render: (_text: string, record: any) => (
         <div className="action-item">
           <Link to="#" data-bs-toggle="dropdown">
             <i className="ti ti-dots-vertical" />
@@ -67,8 +95,11 @@ const Services = () => {
                 to="#"
                 className="dropdown-item d-flex align-items-center"
                 data-bs-toggle="modal"
-                data-bs-target="#edit_service"
-                onClick={() => setSelectedService(record.originalService)}
+                data-bs-target={record.Type === "Service" ? "#edit_service" : "#edit_product"}
+                onClick={() => {
+                  if (record.Type === "Service") setSelectedService(record.originalService);
+                  else setSelectedProduct(record.originalService);
+                }}
               >
                 Edit
               </Link>
@@ -78,8 +109,11 @@ const Services = () => {
                 to="#"
                 className="dropdown-item d-flex align-items-center"
                 data-bs-toggle="modal"
-                data-bs-target="#delete_service"
-                onClick={() => setSelectedService(record.originalService)}
+                data-bs-target={record.Type === "Service" ? "#delete_service" : "#delete_product"}
+                onClick={() => {
+                  if (record.Type === "Service") setSelectedService(record.originalService);
+                  else setSelectedProduct(record.originalService);
+                }}
               >
                 Delete
               </Link>
@@ -87,26 +121,17 @@ const Services = () => {
           </ul>
         </div>
       ),
-      sorter: (a: any, b: any) => a.Status.length - b.Status.length,
     },
   ];
+
   const [searchText, setSearchText] = useState<string>("");
-
-  const handleSearch = (value: string) => {
-    setSearchText(value);
-  };
-
-  const [sliderValueDefault, setSliderValueDefault] = useState(0);
-  const handleChangeDefault = (value: any) => {
-    setSliderValueDefault(value);
-  };
 
   return (
     <>
       <>
         {/* ========================
-			Start Page Content
-		========================= */}
+				Start Page Content
+			========================= */}
         <div className="page-wrapper">
           {/* Start Content */}
           <div className="content">
@@ -114,216 +139,48 @@ const Services = () => {
             <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
               <div className="flex-grow-1">
                 <h4 className="fw-bold mb-0">
-                  Services
+                  Services and Products
                   <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                    Total Services : 565
+                    Total: {data.length}
                   </span>
                 </h4>
               </div>
-              <div className="text-end d-flex">
-                {/* dropdown*/}
-                <div className="dropdown me-1">
-                  <Link
-                    to="#"
-                    className="btn btn-md fs-14 fw-normal border bg-white rounded text-dark d-inline-flex align-items-center"
-                    data-bs-toggle="dropdown"
-                  >
-                    Export
-                    <i className="ti ti-chevron-down ms-2" />
-                  </Link>
-                  <ul className="dropdown-menu p-2">
-                    <li>
-                      <Link className="dropdown-item" to="#">
-                        Download as PDF
-                      </Link>
-                    </li>
-                    <li>
-                      <Link className="dropdown-item" to="#">
-                        Download as Excel
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
+              <div className="text-end d-flex gap-2">
                 <Link
                   to="#"
-                  className="btn btn-primary ms-2 fs-13 btn-md"
                   data-bs-toggle="modal"
                   data-bs-target="#add_service"
+                  className="btn btn-primary btn-md fs-13"
                 >
                   <i className="ti ti-plus me-1" />
-                  New Services
+                  New Service
+                </Link>
+                <Link
+                  to="#"
+                  data-bs-toggle="modal"
+                  data-bs-target="#add_product"
+                  className="btn btn-info btn-md fs-13"
+                >
+                  <i className="ti ti-plus me-1" />
+                  New Product
                 </Link>
               </div>
             </div>
             {/* End Page Header */}
-            <div className=" d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-              <div className="search-set mb-3">
+            {/* Start Filter */}
+            <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
+              <div className="search-set">
                 <div className="d-flex align-items-center flex-wrap gap-2">
                   <div className="table-search d-flex align-items-center mb-0">
                     <div className="search-input">
-                      <SearchInput value={searchText} onChange={handleSearch} />
+                      <SearchInput value={searchText} onChange={setSearchText} />
                     </div>
                   </div>
-                </div>
-              </div>
-              <div className="d-flex table-dropdown mb-3 pb-1 right-content align-items-center flex-wrap row-gap-3">
-                <div className="dropdown me-2">
-                  <Link
-                    to="#"
-                    className="btn btn-white bg-white fs-14 py-1 border d-inline-flex text-dark align-items-center"
-                    data-bs-toggle="dropdown"
-                    data-bs-auto-close="outside"
-                  >
-                    <i className="ti ti-filter text-gray-5 me-1" />
-                    Filters
-                  </Link>
-                  <div
-                    className="dropdown-menu dropdown-lg dropdown-menu-end filter-dropdown p-0"
-                    id="filter-dropdown"
-                  >
-                    <div className="d-flex align-items-center justify-content-between border-bottom filter-header">
-                      <h5 className="mb-0 fw-bold">Filter</h5>
-                      <div className="d-flex align-items-center">
-                        <Link
-                          to="#"
-                          className="link-danger text-decoration-underline"
-                        >
-                          Clear All
-                        </Link>
-                      </div>
-                    </div>
-                    <form action="#">
-                      <div className="filter-body pb-0">
-                        <div className="mb-3">
-                          <div className="d-flex align-items-center justify-content-between">
-                            <label className="form-label">Service Name</label>
-                            <a
-                              href="#"
-                              className="link-primary mb-1"
-                            >
-                              Reset
-                            </a>
-                          </div>
-                          <Select
-                            mode="multiple"
-                            allowClear
-                            style={{ width: "100%" }}
-                            placeholder="Please select"
-                            defaultValue={[]}
-                            options={Service_Name}
-                          />
-                        </div>
-                        <div className="mb-3">
-                          <div className="d-flex align-items-center justify-content-between">
-                            <label className="form-label">Department</label>
-                            <a
-                              href="#"
-                              className="link-primary mb-1"
-                            >
-                              Reset
-                            </a>
-                          </div>
-                          <Select
-                            mode="multiple"
-                            allowClear
-                            style={{ width: "100%" }}
-                            placeholder="Please select"
-                            defaultValue={[]}
-                            options={Department}
-                          />
-                        </div>
-                        <div className="mb-3">
-                          <label className="form-label">Amount</label>
-                          <div className="dropdown">
-                            <a
-                              href="#"
-                              className="dropdown-toggle form-control"
-                              data-bs-toggle="dropdown"
-                              data-bs-auto-close="outside"
-                              aria-expanded="true"
-                            >
-                              Select
-                            </a>
-                            <div className="dropdown-menu shadow-lg w-100 dropdown-info">
-                              <div className="filter-range">
-                                <Slider
-                                  min={0}
-                                  max={100}
-                                  value={sliderValueDefault}
-                                  defaultValue={[0, 50]}
-                                  onChange={handleChangeDefault}
-                                />
-                                <p>
-                                  Range :{" "}
-                                  <span className="text-gray-9">
-                                    $200 - $5695
-                                  </span>
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="mb-3">
-                          <div className="d-flex align-items-center justify-content-between">
-                            <label className="form-label">Status</label>
-                            <a
-                              href="#"
-                              className="link-primary mb-1"
-                            >
-                              Reset
-                            </a>
-                          </div>
-                          <Select
-                            mode="multiple"
-                            allowClear
-                            style={{ width: "100%" }}
-                            placeholder="Please select"
-                            defaultValue={[]}
-                            options={StatusActive}
-                          />
-                        </div>
-                      </div>
-                      <div className="filter-footer d-flex align-items-center justify-content-end border-top">
-                        <a
-                          href="#"
-                          className="btn btn-light btn-md me-2"
-                          id="close-filter"
-                        >
-                          Close
-                        </a>
-                        <button
-                          type="submit"
-                          className="btn btn-primary btn-md"
-                        >
-                          Filter
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-                <div className="dropdown">
-                  <Link
-                    to="#"
-                    className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
-                    data-bs-toggle="dropdown"
-                  >
-                    <span className="me-1"> Sort By : </span> Recent
-                  </Link>
-                  <ul className="dropdown-menu  dropdown-menu-end p-2">
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        Recent
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        Oldest
-                      </Link>
-                    </li>
-                  </ul>
                 </div>
               </div>
             </div>
+            {/* End Filter */}
+            {/* Start Table */}
             <div className="table-responsive">
               <Datatable
                 columns={columns}
@@ -332,26 +189,28 @@ const Services = () => {
                 searchText={searchText}
               />
             </div>
+            {/* End Table */}
           </div>
           {/* End Content */}
-          {/* Footer Start */}
+          {/* Footer */}
           <div className="footer text-center bg-white p-2 border-top">
             <p className="text-dark mb-0">
-              2025 ©
+              2025 ©{" "}
               <Link to="#" className="link-primary">
                 Preclinic
               </Link>
               , All Rights Reserved
             </p>
           </div>
-          {/* Footer End */}
         </div>
+
         {/* ========================
-			End Page Content
-		========================= */}
+				End Page Content
+			========================= */}
+
       </>
 
-      <Modals selectedService={selectedService} refetch={refetch} />
+      <Modals selectedService={selectedService} selectedProduct={selectedProduct} refetch={refetchAll} />
     </>
   );
 };

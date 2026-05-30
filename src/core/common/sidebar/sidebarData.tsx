@@ -207,7 +207,7 @@ export const SidebarData = [
         ],
       },
       {
-        label: "Services and Assets",
+        label: "Services and Products",
         link: routes.services,
         submenu: false,
         showSubRoute: false,

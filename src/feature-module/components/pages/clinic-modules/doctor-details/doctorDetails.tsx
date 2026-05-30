@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import { all_routes } from "../../../../routes/all_routes";
+import { all_routes, doctorsListPath } from "../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { apiUrl } from "../../../../../core/config/api";
 import {
@@ -177,7 +177,7 @@ const DoctorDetails = () => {
     return (
       <div className="page-wrapper">
         <div className="content">
-          <Link to={all_routes.doctors} className="btn btn-light mb-3">
+          <Link to={doctorsListPath()} className="btn btn-light mb-3">
             <i className="ti ti-chevron-left me-1" />
             Back to Doctors
           </Link>
@@ -192,7 +192,7 @@ const DoctorDetails = () => {
       <div className="content pb-0">
         <div className="mb-3">
           <h6 className="fw-semibold fs-14 mb-0">
-            <Link to={all_routes.doctors}>
+            <Link to={doctorsListPath()}>
               <i className="ti ti-chevron-left me-1" />
               Doctors
             </Link>
@@ -227,16 +227,14 @@ const DoctorDetails = () => {
                     Clinic : {doctor.clinic?.name || "—"}
                   </p>
                   <span
-                    className={`badge fw-medium ${
-                      statusLabel === "Available"
-                        ? "badge-soft-success"
-                        : "badge-soft-danger"
-                    }`}
+                    className={`badge fw-medium ${statusLabel === "Available"
+                      ? "badge-soft-success"
+                      : "badge-soft-danger"
+                      }`}
                   >
                     <i
-                      className={`ti ti-point-filled me-1 ${
-                        statusLabel === "Available" ? "text-success" : "text-danger"
-                      }`}
+                      className={`ti ti-point-filled me-1 ${statusLabel === "Available" ? "text-success" : "text-danger"
+                        }`}
                     />
                     {statusLabel}
                   </span>
@@ -252,7 +250,10 @@ const DoctorDetails = () => {
                   / {doctor.appointmentDuration ?? 30} Min
                 </span>
               </h6>
-              <Link to={all_routes.appointmentCalendar} className="btn btn-primary">
+              <Link
+                to={JSON.parse(localStorage.getItem("user") || "{}")?.role === 'PATIENT' ? all_routes.patientappointments : all_routes.appointmentCalendar}
+                className="btn btn-primary"
+              >
                 <i className="ti ti-calendar-event me-1" />
                 Book Appointment
               </Link>
@@ -272,9 +273,8 @@ const DoctorDetails = () => {
                         <li key={day} className="nav-item flex-fill">
                           <button
                             type="button"
-                            className={`nav-link text-center w-100 fw-semibold ${
-                              activeDay === day ? "active" : ""
-                            }`}
+                            className={`nav-link text-center w-100 fw-semibold ${activeDay === day ? "active" : ""
+                              }`}
                             onClick={() => setActiveDay(day)}
                           >
                             {day}
@@ -426,7 +426,7 @@ const DoctorDetails = () => {
 
       <div className="footer text-center bg-white p-2 border-top">
         <p className="text-dark mb-0">
-          2025 © <Link to="#">Preclinic</Link>, All Rights Reserved
+          2025 © <Link to="#" className="link-primary">Docyori</Link>, All Rights Reserved
         </p>
       </div>
     </div>

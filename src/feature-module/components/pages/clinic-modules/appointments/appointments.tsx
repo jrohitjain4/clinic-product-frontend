@@ -17,10 +17,34 @@ const Appointments = () => {
   const [searchText, setSearchText] = useState("");
   const [selected, setSelected] = useState<ClinicAppointment | null>(null);
 
+  // Filters
+  const [filterPatient, setFilterPatient] = useState("");
+  const [filterDoctor, setFilterDoctor] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+
   const tableData = useMemo(
     () => appointments.map((a, i) => appointmentToTableRow(a, i)),
     [appointments]
   );
+
+  const filteredData = useMemo(() => {
+    return tableData.filter((row) => {
+      const matchPatient = filterPatient
+        ? row.Patient.toLowerCase().includes(filterPatient.toLowerCase())
+        : true;
+      const matchDoctor = filterDoctor
+        ? row.Doctor.toLowerCase().includes(filterDoctor.toLowerCase())
+        : true;
+      const matchStatus = filterStatus
+        ? row.Status.toLowerCase() === filterStatus.toLowerCase()
+        : true;
+      const matchDate = filterDate
+        ? row.Date_Time.includes(filterDate)
+        : true;
+      return matchPatient && matchDoctor && matchStatus && matchDate;
+    });
+  }, [tableData, filterPatient, filterDoctor, filterStatus, filterDate]);
 
   const patientPath = (id: string) =>
     all_routes.patientDetails.replace(":id", id);
@@ -194,12 +218,60 @@ const Appointments = () => {
             </div>
           )}
 
-          <div className="search-set mb-3">
-            <div className="table-search d-flex align-items-center mb-0">
-              <div className="search-input">
-                <SearchInput value={searchText} onChange={setSearchText} />
-              </div>
+          {/* Filters Row */}
+          <div className="d-flex align-items-center gap-2 mb-3 flex-wrap">
+            <div className="search-input">
+              <SearchInput value={searchText} onChange={setSearchText} />
             </div>
+            <input
+              type="text"
+              className="form-control"
+              style={{ maxWidth: 180 }}
+              placeholder="Filter by Patient"
+              value={filterPatient}
+              onChange={(e) => setFilterPatient(e.target.value)}
+            />
+            <input
+              type="text"
+              className="form-control"
+              style={{ maxWidth: 180 }}
+              placeholder="Filter by Doctor"
+              value={filterDoctor}
+              onChange={(e) => setFilterDoctor(e.target.value)}
+            />
+            <select
+              className="form-select"
+              style={{ maxWidth: 180 }}
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="">All Status</option>
+              <option value="Schedule">Schedule</option>
+              <option value="Confirmed">Confirmed</option>
+              <option value="Checked In">Checked In</option>
+              <option value="Checked Out">Checked Out</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+            <input
+              type="date"
+              className="form-control"
+              style={{ maxWidth: 180 }}
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+            />
+            {(filterPatient || filterDoctor || filterStatus || filterDate) && (
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => {
+                  setFilterPatient("");
+                  setFilterDoctor("");
+                  setFilterStatus("");
+                  setFilterDate("");
+                }}
+              >
+                Clear
+              </button>
+            )}
           </div>
 
           {loading ? (
@@ -207,19 +279,16 @@ const Appointments = () => {
               <span className="spinner-border text-primary" role="status" />
               <p className="text-muted mt-2 mb-0">Loading appointments…</p>
             </div>
-          ) : appointments.length === 0 && !error ? (
+          ) : filteredData.length === 0 && !error ? (
             <div className="text-center py-5 border rounded bg-white">
-              <h6 className="fw-bold">No appointments yet</h6>
-              <p className="text-muted mb-3">Schedule your first appointment.</p>
-              <Link to={all_routes.newAppointment} className="btn btn-primary">
-                <i className="ti ti-plus me-1" /> New Appointment
-              </Link>
+              <h6 className="fw-bold">No appointments found</h6>
+              <p className="text-muted mb-3">Try adjusting your filters.</p>
             </div>
           ) : (
             <div className="table-responsive">
               <Datatable
                 columns={columns}
-                dataSource={tableData}
+                dataSource={filteredData}
                 Selection={false}
                 searchText={searchText}
               />

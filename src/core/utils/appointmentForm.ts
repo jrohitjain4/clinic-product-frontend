@@ -68,7 +68,6 @@ export const emptyAppointmentForm = () => ({
   appointmentType: "Offline Consultation",
   status: "Schedule",
   reason: "",
-  location: "",
 });
 
 export const formatAppointmentDate = (iso?: string | null) => {

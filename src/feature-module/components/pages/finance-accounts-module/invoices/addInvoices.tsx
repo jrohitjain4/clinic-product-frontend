@@ -5,6 +5,7 @@ import CommonSelect from "../../../../../core/common/common-select/commonSelect"
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useClinicServices } from "../../../../../core/hooks/useClinicServices";
+import { useClinicProducts } from "../../../../../core/hooks/useClinicProducts";
 import { useClinicPatients } from "../../../../../core/hooks/useClinicPatients";
 import Modals from "../../clinic-modules/services/modals/modals";
 import { apiUrl } from "../../../../../core/config/api";
@@ -25,10 +26,30 @@ const AddInvoices = () => {
   };
 
   const { services, refetch: refetchServices } = useClinicServices();
+  const { products, refetch: refetchProducts } = useClinicProducts();
   const { patients } = useClinicPatients();
 
-  const serviceOptions = services.map(s => ({ value: s.id, label: s.serviceName, price: s.price, description: s.serviceName }));
-  const patientOptions = patients.map(p => ({ value: p.id, label: `${p.firstName} ${p.lastName}`, email: p.email || "" }));
+  const serviceOptions = services.map(s => ({
+    type: "service",
+    value: s.id,
+    label: s.serviceName,
+    price: s.price,
+    description: s.serviceName,
+  }));
+  const productOptions = products.map(p => ({
+    type: "product",
+    value: p.id,
+    label: p.name,
+    price: p.price,
+    description: `${p.name} (Key: ${p.key})`,
+  }));
+  const allItemOptions = [...serviceOptions, ...productOptions];
+
+  const patientOptions = patients.map(p => ({
+    value: p.id,
+    label: `${p.firstName} ${p.lastName}`,
+    email: p.email || "",
+  }));
 
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [selectedTax, setSelectedTax] = useState<any>(null);
@@ -55,16 +76,10 @@ const AddInvoices = () => {
     e.preventDefault();
     setInvoices([
       ...invoices,
-      {
-        id: Date.now(),
-        serviceId: null,
-        description: "",
-        quantity: 1,
-        price: 0,
-        amount: 0,
-      },
+      { id: Date.now(), serviceId: null, description: "", quantity: 1, price: 0, amount: 0 },
     ]);
   };
+
   const handleRemoveInvoice = (id: number) => {
     if (invoices.length === 1) return;
     setInvoices(invoices.filter((inv) => inv.id !== id));
@@ -74,13 +89,11 @@ const AddInvoices = () => {
     setInvoices(invoices.map(inv => {
       if (inv.id !== id) return inv;
       let updated = { ...inv, [field]: value };
-
       if (field === "serviceId" && value) {
         updated.price = value.price || 0;
         updated.description = value.description || "";
       }
-
-      if (['quantity', 'price', 'serviceId'].includes(field)) {
+      if (["quantity", "price", "serviceId"].includes(field)) {
         updated.amount = (Number(updated.quantity) || 0) * (Number(updated.price) || 0);
       }
       return updated;
@@ -95,11 +108,7 @@ const AddInvoices = () => {
   }, [invoices, selectedTax]);
 
   const handleSave = async () => {
-    if (!selectedPatient) {
-      alert("Please select a patient");
-      return;
-    }
-
+    if (!selectedPatient) { alert("Please select a patient"); return; }
     setSaving(true);
     try {
       const token = localStorage.getItem("token");
@@ -107,7 +116,7 @@ const AddInvoices = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           patientId: selectedPatient.value,
@@ -117,22 +126,19 @@ const AddInvoices = () => {
           discount: 0,
           subTotal: totals.amount,
           totalAmount: totals.total,
-          paymentMethod: paymentMethod?.value || 'Cash',
+          paymentMethod: paymentMethod?.value || "Cash",
           otherInfo: otherInfo,
           items: invoices.filter(inv => inv.serviceId).map(inv => ({
-            serviceId: inv.serviceId?.value,
+            serviceId: inv.serviceId?.type === "service" ? inv.serviceId?.value : null,
             description: inv.description,
             quantity: inv.quantity,
             price: inv.price,
-            amount: inv.amount
-          }))
-        })
+            amount: inv.amount,
+          })),
+        }),
       });
-      if (res.ok) {
-        navigate(all_routes.invoices);
-      } else {
-        alert("Failed to save invoice");
-      }
+      if (res.ok) navigate(all_routes.invoices);
+      else alert("Failed to save invoice");
     } catch (e) {
       console.error(e);
       alert("Error saving invoice");
@@ -167,12 +173,7 @@ const AddInvoices = () => {
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">
                         Patient Name <span className="text-danger">*</span>
                       </label>
-                      <CommonSelect
-                        options={patientOptions}
-                        value={selectedPatient}
-                        onChange={setSelectedPatient}
-                        className="select"
-                      />
+                      <CommonSelect options={patientOptions} value={selectedPatient} onChange={setSelectedPatient} className="select" />
                     </div>
                   </div>
                   <div className="col-lg-6 col-md-6">
@@ -181,12 +182,7 @@ const AddInvoices = () => {
                         Email <span className="text-danger">*</span>
                       </label>
                       <div className="input-group">
-                        <input
-                          type="text"
-                          className="form-control"
-                          value={selectedPatient ? selectedPatient.email : ""}
-                          readOnly
-                        />
+                        <input type="text" className="form-control" value={selectedPatient ? selectedPatient.email : ""} readOnly />
                       </div>
                     </div>
                   </div>
@@ -195,12 +191,7 @@ const AddInvoices = () => {
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">
                         Tax <span className="text-danger">*</span>
                       </label>
-                      <CommonSelect
-                        options={taxOptions}
-                        value={selectedTax}
-                        onChange={setSelectedTax}
-                        className="select"
-                      />
+                      <CommonSelect options={taxOptions} value={selectedTax} onChange={setSelectedTax} className="select" />
                     </div>
                   </div>
                   <div className="col-lg-6 col-md-6">
@@ -210,9 +201,9 @@ const AddInvoices = () => {
                       </label>
                       <CommonSelect
                         options={[
-                          { value: 'Cash', label: 'Cash' },
-                          { value: 'Card', label: 'Credit/Debit Card' },
-                          { value: 'UPI', label: 'UPI' }
+                          { value: "Cash", label: "Cash" },
+                          { value: "Card", label: "Credit/Debit Card" },
+                          { value: "UPI", label: "UPI" },
                         ]}
                         value={paymentMethod}
                         onChange={setPaymentMethod}
@@ -226,18 +217,8 @@ const AddInvoices = () => {
                         Invoice Date <span className="text-danger">*</span>
                       </label>
                       <div className="input-icon-end position-relative">
-                        <DatePicker
-                          className="form-control datetimepicker"
-                          format="DD-MM-YYYY"
-                          getPopupContainer={getModalContainer}
-                          placeholder="DD-MM-YYYY"
-                          suffixIcon={null}
-                          value={invoiceDate}
-                          onChange={setInvoiceDate}
-                        />
-                        <span className="input-icon-addon">
-                          <i className="ti ti-calendar" />
-                        </span>
+                        <DatePicker className="form-control datetimepicker" format="DD-MM-YYYY" getPopupContainer={getModalContainer} placeholder="DD-MM-YYYY" suffixIcon={null} value={invoiceDate} onChange={setInvoiceDate} />
+                        <span className="input-icon-addon"><i className="ti ti-calendar" /></span>
                       </div>
                     </div>
                   </div>
@@ -247,18 +228,8 @@ const AddInvoices = () => {
                         Due Date <span className="text-danger">*</span>
                       </label>
                       <div className="input-icon-end position-relative">
-                        <DatePicker
-                          className="form-control datetimepicker"
-                          format="DD-MM-YYYY"
-                          getPopupContainer={getModalContainer}
-                          placeholder="DD-MM-YYYY"
-                          suffixIcon={null}
-                          value={dueDate}
-                          onChange={setDueDate}
-                        />
-                        <span className="input-icon-addon">
-                          <i className="ti ti-calendar" />
-                        </span>
+                        <DatePicker className="form-control datetimepicker" format="DD-MM-YYYY" getPopupContainer={getModalContainer} placeholder="DD-MM-YYYY" suffixIcon={null} value={dueDate} onChange={setDueDate} />
+                        <span className="input-icon-addon"><i className="ti ti-calendar" /></span>
                       </div>
                     </div>
                   </div>
@@ -267,11 +238,11 @@ const AddInvoices = () => {
                       <table className="table invoice-table border">
                         <thead>
                           <tr>
-                            <th style={{ minWidth: '300px' }}>Item (Service)</th>
-                            <th style={{ minWidth: '200px' }}>Description</th>
-                            <th style={{ width: '150px' }}>Unit Cost</th>
-                            <th style={{ width: '120px' }}>Qty</th>
-                            <th style={{ width: '150px' }}>Amount</th>
+                            <th style={{ minWidth: "300px" }}>Item (Service / Product)</th>
+                            <th style={{ minWidth: "200px" }}>Description</th>
+                            <th style={{ width: "150px" }}>Unit Cost</th>
+                            <th style={{ width: "120px" }}>Qty</th>
+                            <th style={{ width: "150px" }}>Amount</th>
                             <th />
                           </tr>
                         </thead>
@@ -280,11 +251,11 @@ const AddInvoices = () => {
                             <tr key={invoice.id} className="invoices-list-item">
                               <td>
                                 <div className="d-flex align-items-center gap-2">
-                                  <div style={{ flex: 1, minWidth: '200px' }}>
+                                  <div style={{ flex: 1, minWidth: "200px" }}>
                                     <CommonSelect
-                                      options={serviceOptions}
+                                      options={allItemOptions}
                                       value={invoice.serviceId}
-                                      onChange={(val) => handleItemUpdate(invoice.id, 'serviceId', val)}
+                                      onChange={(val) => handleItemUpdate(invoice.id, "serviceId", val)}
                                       className="select"
                                     />
                                   </div>
@@ -293,36 +264,35 @@ const AddInvoices = () => {
                                     data-bs-toggle="modal"
                                     data-bs-target="#add_service"
                                     className="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
+                                    title="Add Service"
                                   >
-                                    <i className="ti ti-plus" />
+                                    <i className="ti ti-briefcase" />
+                                  </Link>
+                                  <Link
+                                    to="#"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#add_product"
+                                    className="btn btn-info btn-sm d-flex align-items-center justify-content-center"
+                                    title="Add Product"
+                                  >
+                                    <i className="ti ti-box" />
                                   </Link>
                                 </div>
                               </td>
                               <td>
-                                <input type="text" className="form-control" value={invoice.description} onChange={(e) => handleItemUpdate(invoice.id, 'description', e.target.value)} />
+                                <input type="text" className="form-control" value={invoice.description} onChange={(e) => handleItemUpdate(invoice.id, "description", e.target.value)} />
                               </td>
                               <td>
-                                <input type="number" className="form-control" value={invoice.price} onChange={(e) => handleItemUpdate(invoice.id, 'price', e.target.value)} />
+                                <input type="number" className="form-control" value={invoice.price} onChange={(e) => handleItemUpdate(invoice.id, "price", e.target.value)} />
                               </td>
                               <td>
-                                <input type="number" className="form-control" value={invoice.quantity} onChange={(e) => handleItemUpdate(invoice.id, 'quantity', e.target.value)} />
+                                <input type="number" className="form-control" value={invoice.quantity} onChange={(e) => handleItemUpdate(invoice.id, "quantity", e.target.value)} />
                               </td>
                               <td>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  readOnly
-                                  value={`$${invoice.amount.toFixed(2)}`}
-                                />
+                                <input type="text" className="form-control" readOnly value={`$${invoice.amount.toFixed(2)}`} />
                               </td>
                               <td>
-                                <button
-                                  type="button"
-                                  className="btn remove-invoices btn-sm border shadow-sm p-2 d-flex align-items-center justify-content-center rounded fs-14"
-                                  onClick={() =>
-                                    handleRemoveInvoice(invoice.id)
-                                  }
-                                >
+                                <button type="button" className="btn remove-invoices btn-sm border shadow-sm p-2 d-flex align-items-center justify-content-center rounded fs-14" onClick={() => handleRemoveInvoice(invoice.id)}>
                                   <i className="ti ti-trash" />
                                 </button>
                               </td>
@@ -330,10 +300,7 @@ const AddInvoices = () => {
                           ))}
                           <tr>
                             <td>
-                              <button
-                                onClick={handleAddInvoice}
-                                className="btn add-invoices border-0 text-dark d-flex align-items-center fs-14 bg-transparent shadow-none"
-                              >
+                              <button onClick={handleAddInvoice} className="btn add-invoices border-0 text-dark d-flex align-items-center fs-14 bg-transparent shadow-none">
                                 <i className="ti ti-circle-plus text-primary me-1" />
                                 Add Item
                               </button>
@@ -367,12 +334,7 @@ const AddInvoices = () => {
                         Other Information <span className="text-danger">*</span>
                       </label>
                       <div className="input-group">
-                        <textarea
-                          rows={3}
-                          className="form-control "
-                          value={otherInfo}
-                          onChange={e => setOtherInfo(e.target.value)}
-                        />
+                        <textarea rows={3} className="form-control" value={otherInfo} onChange={e => setOtherInfo(e.target.value)} />
                       </div>
                     </div>
                   </div>
@@ -381,18 +343,8 @@ const AddInvoices = () => {
             </div>
             <div className="card-footer">
               <div className="d-flex gap-2 align-items-center justify-content-end mb-0">
-                <Link
-                  to={all_routes.invoices}
-                  className="btn btn-md bg-light text-dark fs-13 fw-medium rounded"
-                >
-                  Cancel
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="btn btn-md btn-primary fs-13 fw-medium rounded"
-                >
+                <Link to={all_routes.invoices} className="btn btn-md bg-light text-dark fs-13 fw-medium rounded">Cancel</Link>
+                <button type="button" onClick={handleSave} disabled={saving} className="btn btn-md btn-primary fs-13 fw-medium rounded">
                   {saving ? "Saving..." : "Save Invoice"}
                 </button>
               </div>
@@ -400,7 +352,7 @@ const AddInvoices = () => {
           </div>
         </div>
       </div>
-      <Modals refetch={refetchServices} />
+      <Modals refetch={() => { refetchServices(); refetchProducts(); }} />
     </>
   );
 };

@@ -28,7 +28,9 @@ const Sidebarthree = () => {
     }));
   }, [location.pathname, routes]);
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string, prefix?: string) =>
+    location.pathname === path || (prefix ? location.pathname.startsWith(prefix) : false);
+
 
   const handleToggle = (menu: string) => {
     setOpenSubmenus((prev) => ({
@@ -129,7 +131,7 @@ const Sidebarthree = () => {
                   <li
                     className={
                       isActive(routes.patientappointments) ||
-                      isActive(routes.patientappointmentdetails)
+                        isActive(routes.patientappointmentdetails)
                         ? "active"
                         : ""
                     }
@@ -140,7 +142,15 @@ const Sidebarthree = () => {
                     </Link>
                   </li>
                   <li
-                    className={isActive(routes.patientdoctors) ? "active" : ""}
+                    className={isActive(routes.patientclinics) ? "active" : ""}
+                  >
+                    <Link to={routes.patientclinics}>
+                      <i className="ti ti-building" />
+                      <span>Clinics</span>
+                    </Link>
+                  </li>
+                  <li
+                    className={isActive(routes.patientdoctors, "/patient/doctor-details/") ? "active" : ""}
                   >
                     <Link to={routes.patientdoctors}>
                       <i className="ti ti-stethoscope" />
@@ -150,7 +160,7 @@ const Sidebarthree = () => {
                   <li
                     className={
                       isActive(routes.patientPrescriptions) ||
-                      isActive(routes.patientprescriptiondetails)
+                        isActive(routes.patientprescriptiondetails)
                         ? "active"
                         : ""
                     }
@@ -163,7 +173,7 @@ const Sidebarthree = () => {
                   <li
                     className={
                       isActive(routes.patientinvoices) ||
-                      isActive(routes.patientinvoicedetails)
+                        isActive(routes.patientinvoicedetails)
                         ? "active"
                         : ""
                     }
@@ -174,9 +184,8 @@ const Sidebarthree = () => {
                     </Link>
                   </li>
                   <li
-                    className={`submenu${
-                      openSubmenus.settings ? " active" : ""
-                    }`}
+                    className={`submenu${openSubmenus.settings ? " active" : ""
+                      }`}
                   >
                     <Link
                       to="#"
@@ -243,25 +252,6 @@ const Sidebarthree = () => {
                 </ul>
               </li>
             </ul>
-          </div>
-          <div className="sidebar-footer border-top mt-3">
-            <div className="trial-item mt-0 p-3 text-center">
-              <div className="trial-item-icon rounded-4 mb-3 p-2 text-center shadow-sm d-inline-flex">
-                <ImageWithBasePath
-                  src="./assets/img/icons/sidebar-icon.svg"
-                  alt="img"
-                />
-              </div>
-              <div>
-                <h6 className="fs-14 fw-semibold mb-1">Upgrade To Pro</h6>
-                <p className="fs-13 mb-0">
-                  Check 1 min video and begin use Preclinic like a pro
-                </p>
-              </div>
-              <Link to="#" className="close-icon shadow-sm">
-                <i className="ti ti-x" />
-              </Link>
-            </div>
           </div>
         </div>
       </div>

@@ -14,7 +14,7 @@ const TrialCountdown = () => {
             const user = JSON.parse(userStr);
             const status = user?.clinic?.status;
 
-            if (status && status !== 'TRIAL') {
+            if (status && !['TRIAL', 'TRIAL_EXPIRED', 'TRIAL_COMPLETED_NOT_UPGRADED'].includes(status)) {
                 setIsPremium(true);
                 // Try different common paths where package name might be stored, fallback to default text
                 setPackageName(

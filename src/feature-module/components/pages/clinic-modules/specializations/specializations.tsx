@@ -88,7 +88,7 @@ const Specializations = () => {
     },
     {
       title: "",
-      render: (text: string, render: any) => (
+      render: (_text: string, render: any) => (
         <div className="action-item">
           <Link to="#" data-bs-toggle="dropdown">
             <i className="ti ti-dots-vertical" />

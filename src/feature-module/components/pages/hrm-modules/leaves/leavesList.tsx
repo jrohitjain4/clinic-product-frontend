@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import Datatable from "../../../../../core/common/dataTable";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
@@ -7,7 +6,7 @@ import { useLeaves } from "../../../../../core/hooks/useLeaves";
 import dayjs from "dayjs";
 
 const LeavesList = () => {
-  const { leaves, loading, updateStatus } = useLeaves();
+  const { leaves, updateStatus } = useLeaves();
   const [searchText, setSearchText] = useState("");
 
   const handleSearch = (v: string) => setSearchText(v);

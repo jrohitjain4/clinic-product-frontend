@@ -17,7 +17,7 @@ import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppoin
 import Modal from "./modal/modals";
 
 const DoctorAppointments = () => {
-  const { appointments, loading } = useClinicAppointments();
+  const { appointments } = useClinicAppointments();
 
   const data = appointments.map((app) => ({
     key: app.id,
@@ -98,7 +98,7 @@ const DoctorAppointments = () => {
     },
     {
       title: "",
-      render: (text: string, record: any) => (
+      render: (_text: string, _record: any) => (
         <div className="action-item">
           <>
             <Link to="#" data-bs-toggle="dropdown">

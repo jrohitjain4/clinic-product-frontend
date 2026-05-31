@@ -86,11 +86,10 @@ const StaffsList = () => {
       dataIndex: "Status",
       render: (text: string) => (
         <span
-          className={`badge border ${
-            text === "Available"
+          className={`badge border ${text === "Available"
               ? "badge-soft-success border-success"
               : "badge-soft-danger border-danger"
-          }`}
+            }`}
         >
           {text}
         </span>
@@ -202,7 +201,7 @@ const StaffsList = () => {
           {error && (
             <div className="alert alert-danger d-flex align-items-center justify-content-between mb-3">
               <span>{error}</span>
-              <button type="button" className="btn btn-sm btn-outline-danger" onClick={reload}>
+              <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => reload()}>
                 Retry
               </button>
             </div>

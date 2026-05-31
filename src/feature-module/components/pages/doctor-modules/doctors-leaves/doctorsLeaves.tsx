@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 import { DatePicker } from "antd";
 
 const DoctorsLeaves = () => {
-  const { leaves, loading, applyLeave, deleteLeave } = useLeaves();
+  const { leaves, applyLeave, deleteLeave } = useLeaves();
   const { leaveTypes } = useLeaveTypes();
   const [searchText, setSearchText] = useState("");
 

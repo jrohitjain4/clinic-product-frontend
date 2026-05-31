@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router";
-import { all_routes } from "../../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import { StatusActive } from "../../../../../../core/common/selectOption";

@@ -211,7 +211,7 @@ const Appointments = () => {
               <button
                 type="button"
                 className="btn btn-sm btn-outline-danger"
-                onClick={reload}
+                onClick={() => reload()}
               >
                 Retry
               </button>

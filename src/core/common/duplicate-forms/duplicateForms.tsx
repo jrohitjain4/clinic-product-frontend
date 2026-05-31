@@ -1,5 +1,6 @@
 import { TimePicker } from "antd";
 import dayjs from "dayjs";
+import type { Dayjs } from "dayjs";
 import { Link } from "react-router";
 import CommonSelect from "../common-select/commonSelect";
 import { Session } from "../selectOption";

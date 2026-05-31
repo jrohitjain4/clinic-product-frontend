@@ -1,4 +1,4 @@
-import dayjs, { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import type { RowType } from "../common/duplicate-forms/duplicateForms.types";
 
 type ScheduleSlot = { session?: string; from: string; to: string };

@@ -7,7 +7,7 @@ import type { LeaveType as LeaveTypeModel } from "../../../../../core/hooks/useL
 import dayjs from "dayjs";
 
 const LeaveType = () => {
-  const { leaveTypes, loading, createLeaveType, updateLeaveType, deleteLeaveType } = useLeaveTypes();
+  const { leaveTypes, createLeaveType, updateLeaveType, deleteLeaveType } = useLeaveTypes();
   const [currentRecord, setCurrentRecord] = useState<LeaveTypeModel | null>(null);
 
   const data = leaveTypes.map((item) => ({
@@ -52,7 +52,7 @@ const LeaveType = () => {
     },
     {
       title: "",
-      render: (text: any, record: any) => (
+      render: (_text: any, record: any) => (
         <div className="action-item p-2">
           <Link
             to="#"

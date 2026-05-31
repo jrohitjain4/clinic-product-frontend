@@ -9,7 +9,7 @@ export const useExpenses = () => {
         setLoading(true);
         try {
             const data = await apiGet("/api/expenses");
-            setExpenses(data || []);
+            setExpenses(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error("Failed to fetch expenses:", error);
         } finally {

@@ -64,7 +64,7 @@ const PatientsGrid = () => {
           {error && (
             <div className="alert alert-danger d-flex justify-content-between mb-3">
               <span>{error}</span>
-              <button type="button" className="btn btn-sm btn-outline-danger" onClick={reload}>
+              <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => reload()}>
                 Retry
               </button>
             </div>

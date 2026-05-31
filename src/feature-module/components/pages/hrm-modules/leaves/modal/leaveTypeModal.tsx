@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import { StatusActive } from "../../../../../../core/common/selectOption";
-import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 
 type Props = {
   currentRecord: any;

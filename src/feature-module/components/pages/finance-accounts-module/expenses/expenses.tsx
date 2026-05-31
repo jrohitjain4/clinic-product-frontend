@@ -51,7 +51,7 @@ const ExpensesList = () => {
     {
       title: "Purchased By",
       dataIndex: "PurchasedBy",
-      render: (text: string, record: any) => (
+      render: (text: string, _record: any) => (
         <div className="d-flex align-items-center">
           <span
             className="avatar avatar-md rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-semibold me-2"
@@ -78,12 +78,12 @@ const ExpensesList = () => {
       render: (text: string) => (
         <span
           className={`badge border ${text === "Approved"
-              ? "badge-soft-success border-success text-success"
-              : text === "Pending"
-                ? "badge-soft-warning border-warning text-warning"
-                : text === "New"
-                  ? "badge-soft-primary border-primary text-primary"
-                  : "badge-soft-danger border-danger text-danger"
+            ? "badge-soft-success border-success text-success"
+            : text === "Pending"
+              ? "badge-soft-warning border-warning text-warning"
+              : text === "New"
+                ? "badge-soft-primary border-primary text-primary"
+                : "badge-soft-danger border-danger text-danger"
             } rounded fw-medium`}
         >
           {text}

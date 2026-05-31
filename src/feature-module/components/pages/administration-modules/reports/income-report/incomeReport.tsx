@@ -8,7 +8,7 @@ import TagInput from "../../../../../../core/common/Taginput";
 import { useSuperAdminAnalytics } from "../../../../../../core/hooks/useSuperAdminAnalytics";
 
 const IncomeReport = () => {
-  const { analytics, loading } = useSuperAdminAnalytics();
+  const { analytics } = useSuperAdminAnalytics();
   const columns = [
     {
       title: "Clinic",
@@ -45,8 +45,8 @@ const IncomeReport = () => {
       render: (text: string) => (
         <span
           className={`badge ${text === "Received"
-              ? "badge-soft-success border-success"
-              : "border-warning badge-soft-warning"
+            ? "badge-soft-success border-success"
+            : "border-warning badge-soft-warning"
             }  border  px-2 py-1 fs-13 fw-medium`}
         >
           {text}

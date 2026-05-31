@@ -18,7 +18,7 @@ import Datatable from "../../../../../core/common/dataTable";
 import Modals from "./modals/modals";
 
 const PatientAppointments = () => {
-  const { appointments: rawData, loading } = useClinicAppointments();
+  const { appointments: rawData } = useClinicAppointments();
   const data = rawData?.map((app: any) => ({
     Key: app.id,
     Date_Time: app.dateTimeLabel || app.scheduledAt,

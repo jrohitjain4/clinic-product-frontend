@@ -120,8 +120,8 @@ const Patients = () => {
       render: (text: string) => (
         <span
           className={`badge rounded fs-13 fw-medium border ${text === "Available"
-              ? "badge-soft-success text-success border-success"
-              : "badge-soft-danger text-danger border-danger"
+            ? "badge-soft-success text-success border-success"
+            : "badge-soft-danger text-danger border-danger"
             }`}
         >
           {text}
@@ -231,7 +231,7 @@ const Patients = () => {
               <button
                 type="button"
                 className="btn btn-sm btn-outline-danger"
-                onClick={reload}
+                onClick={() => reload()}
               >
                 Retry
               </button>

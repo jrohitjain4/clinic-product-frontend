@@ -321,7 +321,7 @@ const EditInvoices = () => {
                           </tr>
                         </thead>
                         <tbody className="invoices-list">
-                          {invoices.map((invoice, idx) => (
+                          {invoices.map((invoice, _idx) => (
                             <tr key={invoice.id} className="invoices-list-item">
                               <td>
                                 <div className="d-flex align-items-center gap-2">

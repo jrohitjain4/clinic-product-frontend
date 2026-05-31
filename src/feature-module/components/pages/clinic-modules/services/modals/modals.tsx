@@ -5,13 +5,11 @@ import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import { StatusActive } from "../../../../../../core/common/selectOption";
 import { useClinicDepartments } from "../../../../../../core/hooks/useClinicDepartments";
 import { apiPost, apiPut, apiDelete } from "../../../../../../core/utils/apiClient";
-
 interface ModalsProps {
   selectedService?: any;
   selectedProduct?: any;
   refetch?: () => void;
 }
-
 const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
   const { departments } = useClinicDepartments();
   const deptOptions = departments.map((d) => ({ value: d.id, label: d.name }));
@@ -329,5 +327,4 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
     </>
   );
 };
-
 export default Modals;

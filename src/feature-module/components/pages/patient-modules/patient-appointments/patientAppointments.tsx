@@ -208,10 +208,8 @@ const PatientAppointments = () => {
                 </Link>
               </div>
               <Link
-                to="#"
+                to={all_routes.newAppointment}
                 className="btn btn-primary ms-2 fs-13 btn-md"
-                data-bs-toggle="offcanvas"
-                data-bs-target="#new_appointment"
               >
                 <i className="ti ti-plus me-1" /> New Appointment
               </Link>

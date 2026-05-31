@@ -1,110 +1,58 @@
-import  { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router";
-import FilterIndex from "../../../../core/common/filter/filterIndex";
 import SearchInput from "../../../../core/common/dataTable/dataTableSearch";
-import { TransactionsListData } from "../../../../core/json/transactionsListData";
-import Datatable from "../../../../core/common/dataTable";
-import ImageWithBasePath from "../../../../core/imageWithBasePath";
+import { useClinicInvoices } from "../../../../core/hooks/useClinicInvoices";
+import dayjs from "dayjs";
 
 const TransactionsList = () => {
-  const data = TransactionsListData;
-  const columns = [
-    {
-      title: "Transaction ID",
-      dataIndex: "TransactionID",
-      render: (text: any) => <Link to="#">{text}</Link>,
-      sorter: (a: any, b: any) =>
-        a.TransactionID.length - b.TransactionID.length,
-    },
-    {
-      title: "Patient",
-      dataIndex: "Patient",
-      render: (text: any, record: any) => (
-        <div className="d-flex align-items-center">
-          <Link to="#" className="avatar avatar-md me-2">
-            <ImageWithBasePath
-              src={`assets/img/users/${record.Image}`}
-              alt="product"
-              className="rounded-circle"
-            />
-          </Link>
-          <Link to="#" className="text-dark fw-semibold">
-            {text}
-          </Link>
-        </div>
-      ),
-      sorter: (a: any, b: any) => a.Patient.length - b.Patient.length,
-    },
-    {
-      title: "Description",
-      dataIndex: "Description",
-      render: (text: any) => <div className="text-dark"> {text} </div>,
-      sorter: (a: any, b: any) => a.Description.length - b.Description.length,
-    },
-    {
-      title: "Paid Date",
-      dataIndex: "PaidDate",
-      render: (text: any) => <div className="text-dark">{text}</div>,
-      sorter: (a: any, b: any) => a.PaidDate.length - b.PaidDate.length,
-    },
-    {
-      title: "Payment Method",
-      dataIndex: "PaymentMethod",
-      render: (text: any) => <div className="text-dark"> {text} </div>,
-      sorter: (a: any, b: any) =>
-        a.PaymentMethod.length - b.PaymentMethod.length,
-    },
-    {
-      title: "Amount",
-      dataIndex: "Amount",
-      render: (text: any) => <div className="text-dark"> {text} </div>,
-      sorter: (a: any, b: any) =>
-        a.PaymentMAmountethod.length - b.PaymentMethod.length,
-    },
-    {
-      title: "Status",
-      dataIndex: "Status",
-      render: (text: any) => (
-        <span
-          className={`badge border ${
-            text === "Completed"
-              ? "badge-soft-success border-success text-success"
-              : "badge-soft-info border-info text-info"
-          } rounded fw-medium`}
-        >
-          Completed
-        </span>
-      ),
-      sorter: (a: any, b: any) => a.Status.length - b.Status.length,
-    },
-  ];
-
+  const { invoices, loading } = useClinicInvoices();
   const [searchText, setSearchText] = useState<string>("");
 
-  const handleSearch = (value: string) => {
-    setSearchText(value);
+  // Only show Paid invoices as Transactions
+  const transactions = useMemo(() => {
+    return invoices.filter(
+      (inv) => inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed"
+    );
+  }, [invoices]);
+
+  const filtered = useMemo(() => {
+    if (!searchText) return transactions;
+    const q = searchText.toLowerCase();
+    return transactions.filter((inv) => {
+      const patientName = inv.patient
+        ? `${inv.patient.firstName || ""} ${inv.patient.lastName || ""}`.toLowerCase()
+        : "";
+      return (
+        inv.invoiceCode.toLowerCase().includes(q) ||
+        patientName.includes(q) ||
+        (inv.paymentMethod || "").toLowerCase().includes(q) ||
+        (inv.items?.[0]?.description || "").toLowerCase().includes(q)
+      );
+    });
+  }, [transactions, searchText]);
+
+  const getInitials = (inv: any) => {
+    if (!inv.patient) return "?";
+    const f = inv.patient.firstName?.[0] || "";
+    const l = inv.patient.lastName?.[0] || "";
+    return `${f}${l}`.toUpperCase();
   };
+
   return (
     <>
-      {/* ========================
-			Start Page Content
-		========================= */}
       <div className="page-wrapper">
-        {/* Start Content */}
         <div className="content">
-          {/* Start Page Header */}
+          {/* Page Header */}
           <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
             <div className="flex-grow-1">
               <h4 className="fw-bold mb-0">
-                {" "}
                 Transactions{" "}
                 <span className="badge badge-soft-primary fw-medium border py-1 px-2 border-primary fs-13 ms-1">
-                  Total Transactions : 565
-                </span>{" "}
+                  Total Transactions : {loading ? "…" : transactions.length}
+                </span>
               </h4>
             </div>
             <div className="text-end d-flex">
-              {/* dropdown*/}
               <div className="dropdown me-1">
                 <Link
                   to="#"
@@ -129,100 +77,113 @@ const TransactionsList = () => {
               </div>
             </div>
           </div>
-          {/* End Page Header */}
-          {/*  Start Filter */}
-          <div className=" d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+          {/* Search */}
+          <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
             <div className="d-flex align-items-center gap-2">
-              <div className="search-set mb-3">
+              <div className="search-set">
                 <div className="d-flex align-items-center flex-wrap gap-2">
                   <div className="table-search d-flex align-items-center mb-0">
                     <div className="search-input">
-                      <SearchInput value={searchText} onChange={handleSearch} />
+                      <SearchInput value={searchText} onChange={setSearchText} />
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-            <div className="d-flex table-dropdown mb-3 pb-1 right-content align-items-center flex-wrap row-gap-3">
-              <div className="dropdown me-2">
-                <Link
-                  to="#"
-                  className="bg-white border rounded btn btn-md text-dark fs-14 py-1 align-items-center d-flex fw-normal"
-                  data-bs-toggle="dropdown"
-                  data-bs-auto-close="outside"
-                >
-                  <i className="ti ti-filter text-gray-5 me-1" />
-                  Filters
-                </Link>
-                <div
-                  className="dropdown-menu dropdown-lg dropdown-menu-end filter-dropdown p-0"
-                  id="filter-dropdown"
-                >
-                  <div className="d-flex align-items-center justify-content-between border-bottom filter-header">
-                    <h4 className="mb-0 fw-bold">Filter</h4>
-                    <div className="d-flex align-items-center">
-                      <Link
-                        to="#"
-                        className="link-danger text-decoration-underline"
-                      >
-                        Clear All
-                      </Link>
-                    </div>
-                  </div>
-                  <FilterIndex />
-                </div>
-              </div>
-              <div className="dropdown">
-                <Link
-                  to="#"
-                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
-                  data-bs-toggle="dropdown"
-                >
-                  <span className="me-1"> Sort By : </span> Recent
-                </Link>
-                <ul className="dropdown-menu  dropdown-menu-end p-2">
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Recent
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Oldest
-                    </Link>
-                  </li>
-                </ul>
               </div>
             </div>
           </div>
-          {/*  End Filter */}
-          {/*  Start Table */}
+          {/* Table */}
           <div className="table-responsive">
-            <Datatable
-              columns={columns}
-              dataSource={data}
-              Selection={false}
-              searchText={searchText}
-            />
+            <table className="table table-nowrap datatable">
+              <thead className="thead-light">
+                <tr>
+                  <th>Transaction ID</th>
+                  <th>Patient</th>
+                  <th>Description</th>
+                  <th>Paid Date</th>
+                  <th>Payment Method</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-4">
+                      <span className="spinner-border spinner-border-sm text-primary" role="status" />
+                    </td>
+                  </tr>
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-4 text-muted">
+                      No transactions found. Mark invoices as <strong>Paid</strong> to see them here.
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((inv) => {
+                    const patientName = inv.patient
+                      ? `${inv.patient.firstName || ""} ${inv.patient.lastName || ""}`.trim()
+                      : "—";
+                    const description = inv.items?.[0]?.description || "Invoice";
+
+                    return (
+                      <tr key={inv.id}>
+                        <td>
+                          <Link to="#" className="fw-semibold text-primary">
+                            {inv.invoiceCode}
+                          </Link>
+                        </td>
+                        <td>
+                          <div className="d-flex align-items-center">
+                            <span
+                              className="avatar avatar-md me-2 rounded-circle d-flex align-items-center justify-content-center bg-primary text-white fw-bold fs-13 flex-shrink-0"
+                              style={{ width: 36, height: 36 }}
+                            >
+                              {inv.patient?.profileImage ? (
+                                <img
+                                  src={inv.patient.profileImage}
+                                  alt={patientName}
+                                  className="rounded-circle"
+                                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                />
+                              ) : (
+                                getInitials(inv)
+                              )}
+                            </span>
+                            <span className="text-dark fw-semibold">{patientName}</span>
+                          </div>
+                        </td>
+                        <td className="text-dark">{description}</td>
+                        <td className="text-dark">
+                          {dayjs(inv.invoiceDate).format("DD MMM YYYY")}
+                        </td>
+                        <td className="text-dark">{inv.paymentMethod || "—"}</td>
+                        <td className="text-dark fw-semibold">
+                          ${inv.totalAmount.toFixed(2)}
+                        </td>
+                        <td>
+                          <span className="badge border badge-soft-success border-success text-success rounded fw-medium">
+                            {inv.paymentStatus}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
-          {/*  End Table */}
         </div>
-        {/* End Content */}
-        {/* Footer Start */}
+        {/* Footer */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
             2025 ©{" "}
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyori
             </Link>
             , All Rights Reserved
           </p>
         </div>
-        {/* Footer End */}
       </div>
-      {/* ========================
-			End Page Content
-		========================= */}
     </>
   );
 };

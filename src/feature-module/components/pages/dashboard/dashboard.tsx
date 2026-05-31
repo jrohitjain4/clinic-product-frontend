@@ -14,13 +14,6 @@ import { useDashboardStats } from "../../../../core/hooks/useDashboardStats";
 
 const Dashboard = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-  if (user?.role === 'PATIENT') {
-    return <Navigate to="/patient/patient-dashboard" replace />;
-  }
-  if (user?.role === 'DOCTOR') {
-    return <Navigate to="/doctor/doctor-dashboard" replace />;
-  }
-
   const { stats } = useDashboardStats();
   const [sColChart] = useState<any>({
     chart: {
@@ -68,6 +61,13 @@ const Dashboard = () => {
       data: [40, 15, 60, 15, 90, 20, 70], // y-values
     },
   ];
+
+  if (user?.role === 'PATIENT') {
+    return <Navigate to="/patient/patient-dashboard" replace />;
+  }
+  if (user?.role === 'DOCTOR') {
+    return <Navigate to="/doctor/doctor-dashboard" replace />;
+  }
 
   const onPanelChange = (value: Dayjs, mode: CalendarProps<Dayjs>["mode"]) => {
     console.log(value.format("YYYY-MM-DD"), mode);

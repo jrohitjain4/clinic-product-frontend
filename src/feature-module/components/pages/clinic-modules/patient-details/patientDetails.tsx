@@ -7,6 +7,8 @@ import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import Modals from "./modals/modals";
 import { useClinicPatient } from "../../../../../core/hooks/useClinicPatient";
 import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppointments";
+import { useClinicInvoices } from "../../../../../core/hooks/useClinicInvoices";
+import dayjs from "dayjs";
 import {
   formatPatientDateLong,
   statusToLabel,
@@ -28,6 +30,7 @@ const PatientDetails = () => {
   const { appointments, loading: apptLoading } = useClinicAppointments(
     id ? { patientId: id } : undefined
   );
+  const { invoices, loading: invLoading } = useClinicInvoices();
   const [searchText, setSearchText] = useState<string>("");
 
   const handleSearch = (value: string) => {
@@ -1509,146 +1512,34 @@ const PatientDetails = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>
-                        <Link to="#">#TNX0025</Link>
-                      </td>
-                      <td className="text-dark"> General Consultation </td>
-                      <td className="text-dark"> 30 Apr 2025</td>
-                      <td className="text-dark"> PayPal</td>
-                      <td className="text-dark"> $800</td>
-                      <td>
-                        <span className="badge fs-13 badge-soft-success rounded text-success fw-medium border border-success">
-                          Completed
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <Link to="#">#TNX0024</Link>
-                      </td>
-                      <td className="text-dark">Dental Cleaning</td>
-                      <td className="text-dark"> 15 Apr 2025</td>
-                      <td className="text-dark"> Debit Card </td>
-                      <td className="text-dark"> $930</td>
-                      <td>
-                        <span className="badge fs-13 badge-soft-info rounded text-info fw-medium border border-info">
-                          Pending
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <Link to="#">#TNX0023</Link>
-                      </td>
-                      <td className="text-dark"> Eye Checkup </td>
-                      <td className="text-dark"> 02 Apr 2025 </td>
-                      <td className="text-dark"> Cheque </td>
-                      <td className="text-dark"> $850</td>
-                      <td>
-                        <span className="badge fs-13 badge-soft-success rounded text-success fw-medium border border-success">
-                          Completed
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <Link to="#">#TNX0022</Link>
-                      </td>
-                      <td className="text-dark"> X-Ray </td>
-                      <td className="text-dark"> 27 Mar 2025 </td>
-                      <td className="text-dark"> Debit Card</td>
-                      <td className="text-dark"> $80</td>
-                      <td>
-                        <span className="badge fs-13 badge-soft-success rounded text-success fw-medium border border-success">
-                          Completed
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <Link to="#">#TNX0021</Link>
-                      </td>
-                      <td className="text-dark">Physiotherapy Session</td>
-                      <td className="text-dark"> 12 Mar 2025</td>
-                      <td className="text-dark"> PayPal</td>
-                      <td className="text-dark"> $650</td>
-                      <td>
-                        <span className="badge fs-13 badge-soft-success rounded text-success fw-medium border border-success">
-                          Completed
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <Link to="#">#TNX0020</Link>
-                      </td>
-                      <td className="text-dark">Cardiac Screening</td>
-                      <td className="text-dark"> 05 Mar 2025 </td>
-                      <td className="text-dark"> Cheque </td>
-                      <td className="text-dark"> $430 </td>
-                      <td>
-                        <span className="badge fs-13 badge-soft-success rounded text-success fw-medium border border-success">
-                          Completed
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <Link to="#">#TNX0019</Link>
-                      </td>
-                      <td className="text-dark">Skin Allergy Test</td>
-                      <td className="text-dark"> 24 Feb 2025 </td>
-                      <td className="text-dark"> Debit Card </td>
-                      <td className="text-dark"> $300</td>
-                      <td>
-                        <span className="badge fs-13 badge-soft-info rounded text-info fw-medium border border-info">
-                          Pending
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <Link to="#">#TNX0018</Link>
-                      </td>
-                      <td className="text-dark">Blood Test</td>
-                      <td className="text-dark"> 16 Feb 2025 </td>
-                      <td className="text-dark"> Cheque </td>
-                      <td className="text-dark"> $450</td>
-                      <td>
-                        <span className="badge fs-13 badge-soft-success rounded text-success fw-medium border border-success">
-                          Completed
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <Link to="#">#TNX0017</Link>
-                      </td>
-                      <td className="text-dark">ENT Consultation</td>
-                      <td className="text-dark"> 01 Feb 2025 </td>
-                      <td className="text-dark"> Debit Card </td>
-                      <td className="fw-semibold text-dark"> $570</td>
-                      <td>
-                        <span className="badge fs-13 badge-soft-success rounded text-success fw-medium border border-success">
-                          completed
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <Link to="#">#TNX0017</Link>
-                      </td>
-                      <td className="text-dark">Nutrition Counseling</td>
-                      <td className="text-dark"> 25 Jan 2025 </td>
-                      <td className="text-dark"> PayPal</td>
-                      <td className="text-dark"> $800</td>
-                      <td>
-                        <span className="badge fs-13 badge-soft-success rounded text-success fw-medium border border-success">
-                          Completed
-                        </span>
-                      </td>
-                    </tr>
+                    {invLoading ? (
+                      <tr>
+                        <td colSpan={6} className="text-center py-4">
+                          <span className="spinner-border spinner-border-sm text-primary" role="status" />
+                        </td>
+                      </tr>
+                    ) : invoices.filter(inv => inv.patientId === id && (inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed")).length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="text-center py-4 text-muted">No transactions found</td>
+                      </tr>
+                    ) : invoices
+                      .filter(inv => inv.patientId === id && (inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed"))
+                      .map((inv) => (
+                        <tr key={inv.id}>
+                          <td>
+                            <Link to="#">{inv.invoiceCode}</Link>
+                          </td>
+                          <td className="text-dark"> {inv.items?.[0]?.description || "Invoice"} </td>
+                          <td className="text-dark"> {dayjs(inv.invoiceDate).format("DD MMM YYYY")}</td>
+                          <td className="text-dark"> {inv.paymentMethod || "—"}</td>
+                          <td className="text-dark"> ${inv.totalAmount.toFixed(2)}</td>
+                          <td>
+                            <span className="badge fs-13 badge-soft-success rounded text-success fw-medium border border-success">
+                              {inv.paymentStatus.toUpperCase()}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>

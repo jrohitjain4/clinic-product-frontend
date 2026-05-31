@@ -40,10 +40,8 @@ const PatientDashboard = () => {
             </div>
             <div className="d-flex align-items-center flex-wrap gap-2">
               <Link
-                to="#"
+                to={all_routes.newAppointment}
                 className="btn btn-primary d-inline-flex align-items-center"
-                data-bs-toggle="offcanvas"
-                data-bs-target="#new_appointment"
               >
                 <i className="ti ti-plus me-1" />
                 New Appointment

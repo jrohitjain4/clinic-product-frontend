@@ -4,12 +4,6 @@ import { Link, useNavigate } from "react-router";
 import { all_routes } from "../../../routes/all_routes";
 import { apiUrl } from "../../../../core/config/api";
 
-interface ClinicOption {
-  id: string;
-  name: string;
-  subdomain: string;
-}
-
 interface PackageOption {
   id: string;
   name: string;
@@ -23,7 +17,7 @@ interface PackageOption {
 const RegisterBasic = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [role, setRole] = useState("DOCTOR");
+  const role = "ADMIN";
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,9 +26,6 @@ const RegisterBasic = () => {
   const [dob, setDob] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("Male");
-
-  const [selectedClinicId, setSelectedClinicId] = useState("");
-  const [clinics, setClinics] = useState<ClinicOption[]>([]);
 
   const [clinicName, setClinicName] = useState("");
   const [gstNo, setGstNo] = useState("");
@@ -49,13 +40,6 @@ const RegisterBasic = () => {
   const [draftUserId, setDraftUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(apiUrl("/api/auth/clinics"))
-      .then(res => res.json())
-      .then(data => {
-        setClinics(data);
-        if (data.length > 0) setSelectedClinicId(data[0].id);
-      });
-
     fetch(apiUrl("/api/auth/packages"))
       .then(res => res.json())
       .then(data => {
@@ -90,10 +74,6 @@ const RegisterBasic = () => {
         setError("Passwords do not match.");
         return;
       }
-      if (role === "PATIENT") {
-        submitRegistration();
-        return;
-      }
       setStep(2);
     } else if (step === 2) {
       if (!clinicName) {
@@ -126,23 +106,13 @@ const RegisterBasic = () => {
     setError("");
     setLoading(true);
     try {
-      if (role === "PATIENT") {
-        const response = await fetch(apiUrl("/api/auth/register"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, fullName, dob, age, gender, role, clinicId: selectedClinicId }),
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Registration failed");
-      } else {
-        const response = await fetch(apiUrl("/api/auth/complete-registration"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: draftUserId, packageId: selectedPackageId }),
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Plan activation failed");
-      }
+      const response = await fetch(apiUrl("/api/auth/complete-registration"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: draftUserId, packageId: selectedPackageId }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Plan activation failed");
       setSuccess("Account registered successfully! Redirecting to login...");
       setTimeout(() => navigate(all_routes.login), 2000);
     } catch (err: any) {
@@ -153,7 +123,6 @@ const RegisterBasic = () => {
   };
 
   const renderStepIndicator = () => {
-    if (role === "PATIENT") return null;
     return (
       <div className="d-flex justify-content-center mb-4">
         {[1, 2, 3].map(s => (
@@ -188,8 +157,7 @@ const RegisterBasic = () => {
                         Join the future of <br /> modern healthcare
                       </h1>
                       <p className="text-light fw-normal">
-                        Register your clinic or join as a doctor or patient.
-                        Manage your healthcare journey all in one place.
+                        Register your clinic and manage your healthcare journey all in one place.
                       </p>
                     </div>
                     <div className="mt-4 mx-auto authen-overlay-img">
@@ -212,7 +180,7 @@ const RegisterBasic = () => {
                   <div className="text-center mb-3">
                     <ImageWithBasePath src="assets/img/logo.svg" className="img-fluid mb-3" alt="Logo" />
                     <h4 className="fw-bold mb-0">Create Your Account</h4>
-                    {role !== "PATIENT" && <p className="text-muted fs-13">Step {step}: {stepLabel}</p>}
+                    <p className="text-muted fs-13">Step {step}: {stepLabel}</p>
                   </div>
 
                   <div className="card shadow-md border-1 rounded-3">
@@ -224,17 +192,6 @@ const RegisterBasic = () => {
 
                       {step === 1 && (
                         <div>
-                          <div className="mb-4">
-                            <label className="form-label text-center d-block fw-bold text-muted mb-2">Register As</label>
-                            <div className="d-flex gap-2 justify-content-center bg-light p-1 rounded-pill">
-                              {[{ v: "ADMIN", l: "Clinic Owner" }, { v: "DOCTOR", l: "Doctor" }, { v: "PATIENT", l: "Patient" }].map(r => (
-                                <button key={r.v} type="button" onClick={() => setRole(r.v)} className={`btn btn-sm rounded-pill transition-all fs-12 px-3 ${role === r.v ? 'btn-primary text-white shadow-sm' : 'btn-light text-dark'}`}>
-                                  {r.l}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
                           <div className="row">
                             <div className="col-md-12 mb-3">
                               <label className="form-label">Full Name</label>
@@ -265,15 +222,6 @@ const RegisterBasic = () => {
                             </div>
                           </div>
 
-                          {role === "PATIENT" && (
-                            <div className="mb-3">
-                              <label className="form-label">Select Your Clinic</label>
-                              <select className="form-select" value={selectedClinicId} onChange={e => setSelectedClinicId(e.target.value)}>
-                                {clinics.map(c => <option key={c.id} value={c.id}>{c.name} ({c.subdomain})</option>)}
-                              </select>
-                            </div>
-                          )}
-
                           <div className="row">
                             <div className="col-md-6 mb-3">
                               <label className="form-label">Password</label>
@@ -286,7 +234,7 @@ const RegisterBasic = () => {
                           </div>
 
                           <button type="button" onClick={handleNext} className="btn btn-primary w-100 py-2 fw-bold mt-2">
-                            {role === "PATIENT" ? (loading ? 'Registering...' : 'Complete Registration') : 'Next: Business Details'}
+                            Next: Business Details
                           </button>
                         </div>
                       )}
@@ -360,8 +308,8 @@ const RegisterBasic = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </div >
+      </div >
     </>
   );
 };

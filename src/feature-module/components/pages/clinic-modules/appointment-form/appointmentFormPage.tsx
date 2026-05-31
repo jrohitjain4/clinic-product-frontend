@@ -29,6 +29,10 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
   const [searchParams] = useSearchParams();
   const prefillPatientId = searchParams.get("patientId") || "";
 
+  const userStr = localStorage.getItem("user");
+  const currentUser = userStr ? JSON.parse(userStr) : null;
+  const isPatientRole = currentUser?.role === "PATIENT";
+
   const { appointment, loading: loadingAppt } = useClinicAppointment(
     mode === "edit" ? id : undefined
   );
@@ -69,10 +73,17 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
     document.getElementById("modal-datepicker") || document.body;
 
   useEffect(() => {
-    if (mode === "create" && prefillPatientId) {
-      setForm((f) => ({ ...f, patientId: prefillPatientId }));
+    if (mode === "create") {
+      let targetId = prefillPatientId;
+      if (isPatientRole && currentUser?.email && patients.length > 0) {
+        const myPatient = patients.find((p: any) => p.email === currentUser.email);
+        if (myPatient) targetId = myPatient.id;
+      }
+      if (targetId) {
+        setForm((f) => ({ ...f, patientId: targetId }));
+      }
     }
-  }, [mode, prefillPatientId]);
+  }, [mode, prefillPatientId, isPatientRole, currentUser?.email, patients]);
 
   useEffect(() => {
     if (mode === "edit" && appointment) {
@@ -89,27 +100,27 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
     }
   }, [mode, appointment?.id]);
 
-  const patientOptions = useMemo(
-    () =>
-      patients
-        .filter((p) => p.id)
-        .map((p) => ({
-          value: p.id,
-          label: p.fullName || `${p.firstName} ${p.lastName}`.trim(),
-        })),
-    [patients]
-  );
+  const patientOptions = useMemo(() => {
+    let filtered = patients.filter((p: any) => p.id);
+    if (isPatientRole && currentUser?.email) {
+      filtered = filtered.filter((p: any) => p.email === currentUser.email);
+    }
+    return filtered.map((p: any) => ({
+      value: p.id,
+      label: p.fullName || `${p.firstName} ${p.lastName}`.trim(),
+    }));
+  }, [patients, isPatientRole, currentUser?.email]);
 
   const doctorOptions = useMemo(() => {
-    let list = doctors.filter((d) => d.id);
+    let list = doctors.filter((d: any) => d.id);
     if (form.departmentId) {
       list = list.filter(
-        (d) =>
+        (d: any) =>
           (d as { departmentId?: string }).departmentId === form.departmentId ||
           d.department?.id === form.departmentId
       );
     }
-    return list.map((d) => ({ value: d.id, label: d.fullName }));
+    return list.map((d: any) => ({ value: d.id, label: d.fullName }));
   }, [doctors, form.departmentId]);
 
   const deptOptions = useMemo(
@@ -255,15 +266,17 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                           <label className="form-label mb-0 fw-medium">
                             Patient<span className="text-danger ms-1">*</span>
                           </label>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-primary py-0 px-2 fs-12"
-                            style={{ height: '22px' }}
-                            onClick={() => setShowAddPatient(true)}
-                          >
-                            <i className="ti ti-plus me-1" />
-                            Add New
-                          </button>
+                          {!isPatientRole && (
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-primary py-0 px-2 fs-12"
+                              style={{ height: '22px' }}
+                              onClick={() => setShowAddPatient(true)}
+                            >
+                              <i className="ti ti-plus me-1" />
+                              Add New
+                            </button>
+                          )}
                         </div>
                         <CommonSelect
                           key={`patient-${patientOptions.length}`}
@@ -430,9 +443,10 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                     <CommonSelect
                       options={APPOINTMENT_STATUS_OPTIONS}
                       className="select"
+                      isDisabled={isPatientRole}
                       value={findSelectOption(
                         APPOINTMENT_STATUS_OPTIONS,
-                        form.status
+                        isPatientRole ? "Schedule" : form.status
                       )}
                       onChange={(opt) =>
                         setForm((f) => ({ ...f, status: opt?.value || "Schedule" }))

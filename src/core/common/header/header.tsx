@@ -7,11 +7,15 @@ import { useDispatch, useSelector } from "react-redux";
 import { setMobileSidebar } from "../../redux/sidebarSlice";
 import { all_routes } from "../../../feature-module/routes/all_routes";
 import TrialCountdown from "../../../feature-module/components/common/TrialCountdown";
+import { useNotifications } from "../../hooks/useNotifications";
+import moment from "moment";
 
 const Header = () => {
 
   const dispatch = useDispatch();
   const themeSettings = useSelector((state: any) => state.theme.themeSettings);
+
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
 
   const [user, setUser] = useState<any>(null);
 
@@ -223,7 +227,7 @@ const Header = () => {
                   aria-expanded="false"
                 >
                   <i className="ti ti-bell-check fs-16 animate-ring" />
-                  <span className="notification-badge" />
+                  {unreadCount > 0 && <span className="notification-badge" />}
                 </button>
                 <div
                   className="dropdown-menu p-0 dropdown-menu-end dropdown-menu-lg"
@@ -232,211 +236,79 @@ const Header = () => {
                   <div className="p-2 border-bottom">
                     <div className="row align-items-center">
                       <div className="col">
-                        <h6 className="m-0 fs-16 fw-semibold">
-
-                          Notifications
-                        </h6>
+                        <h6 className="m-0 fs-16 fw-semibold">Notifications</h6>
                       </div>
+                      {unreadCount > 0 && (
+                        <div className="col-auto">
+                          <button onClick={markAllAsRead} className="btn btn-sm btn-link p-0 text-primary">
+                            Mark all as read
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                   {/* Notification Body */}
                   <div
-                    className="notification-body position-relative z-2 rounded-0"
+                    className="notification-body position-relative z-2 rounded-0 overflow-auto"
                     data-simplebar=""
+                    style={{ maxHeight: '350px' }}
                   >
-                    {/* Item*/}
-                    <div
-                      className="dropdown-item notification-item py-3 text-wrap border-bottom"
-                      id="notification-1"
-                    >
-                      <div className="d-flex">
-                        <div className="me-2 position-relative flex-shrink-0">
-                          <ImageWithBasePath
-                            src="assets/img/doctors/doctor-01.jpg"
-                            className="avatar-md rounded-circle"
-                            alt=""
-                          />
-                        </div>
-                        <div className="flex-grow-1">
-                          <p className="mb-0 fw-medium text-dark">Dr. Smith</p>
-                          <p className="mb-1 text-wrap">
-                            updated the
-                            <span className="fw-medium text-dark">surgery</span>
-                            schedule.
-                          </p>
-                          <div className="d-flex justify-content-between align-items-center">
-                            <span className="fs-12">
-                              <i className="ti ti-clock me-1" />4 min ago
-                            </span>
-                            <div className="notification-action d-flex align-items-center float-end gap-2">
-                              <Link
-                                to="#"
-                                className="notification-read rounded-circle bg-danger"
-                                data-bs-toggle="tooltip"
-                                title=""
-                                data-bs-original-title="Make as Read"
-                                aria-label="Make as Read"
-                              />
-                              <button
-                                className="btn rounded-circle p-0"
-                                data-dismissible="#notification-1"
-                              >
-                                <i className="ti ti-x" />
-                              </button>
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-muted">
+                        <p className="mb-0">No notifications yet.</p>
+                      </div>
+                    ) : (
+                      notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`dropdown-item notification-item py-3 text-wrap border-bottom ${!notification.isRead ? 'bg-light' : ''}`}
+                        >
+                          <div className="d-flex">
+                            <div className="me-2 position-relative flex-shrink-0">
+                              <span className="avatar avatar-md rounded-circle bg-primary text-white d-flex align-items-center justify-content-center">
+                                <i className={`ti ${notification.type === 'INVOICE' ? 'ti-file-invoice' : notification.type === 'APPOINTMENT' ? 'ti-calendar' : notification.type === 'DOCTOR_ADDED' ? 'ti-user-plus' : 'ti-bell'}`} />
+                              </span>
+                            </div>
+                            <div className="flex-grow-1">
+                              <p className="mb-0 fw-medium text-dark">{notification.title}</p>
+                              <p className="mb-1 text-wrap">{notification.message}</p>
+                              <div className="d-flex justify-content-between align-items-center">
+                                <span className="fs-12">
+                                  <i className="ti ti-clock me-1" />
+                                  {moment(notification.createdAt).fromNow()}
+                                </span>
+                                <div className="notification-action d-flex align-items-center float-end gap-2">
+                                  {!notification.isRead && (
+                                    <button
+                                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); markAsRead(notification.id); }}
+                                      className="btn btn-sm btn-icon rounded-circle bg-primary text-white"
+                                      data-bs-toggle="tooltip"
+                                      title="Mark as Read"
+                                      aria-label="Mark as Read"
+                                    >
+                                      <i className="ti ti-check" />
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteNotification(notification.id); }}
+                                    className="btn btn-sm btn-icon rounded-circle bg-light text-danger p-0"
+                                    data-bs-toggle="tooltip"
+                                    title="Delete"
+                                  >
+                                    <i className="ti ti-trash" />
+                                  </button>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                    {/* Item*/}
-                    <div
-                      className="dropdown-item notification-item py-3 text-wrap border-bottom"
-                      id="notification-2"
-                    >
-                      <div className="d-flex">
-                        <div className="me-2 position-relative flex-shrink-0">
-                          <ImageWithBasePath
-                            src="assets/img/doctors/doctor-06.jpg"
-                            className="avatar-md rounded-circle"
-                            alt=""
-                          />
-                        </div>
-                        <div className="flex-grow-1">
-                          <p className="mb-0 fw-medium text-dark">Dr. Patel</p>
-                          <p className="mb-1 text-wrap">
-                            completed a
-                            <span className="fw-medium text-dark">
-                              follow-up
-                            </span>
-                            report for patient
-                            <span className="fw-medium text-dark">Emily</span>.
-                          </p>
-                          <div className="d-flex justify-content-between align-items-center">
-                            <span className="fs-12">
-                              <i className="ti ti-clock me-1" />8 min ago
-                            </span>
-                            <div className="notification-action d-flex align-items-center float-end gap-2">
-                              <Link
-                                to="#"
-                                className="notification-read rounded-circle bg-danger"
-                                data-bs-toggle="tooltip"
-                                title=""
-                                data-bs-original-title="Make as Read"
-                                aria-label="Make as Read"
-                              />
-                              <button
-                                className="btn rounded-circle p-0"
-                                data-dismissible="#notification-2"
-                              >
-                                <i className="ti ti-x" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Item*/}
-                    <div
-                      className="dropdown-item notification-item py-3 text-wrap border-bottom"
-                      id="notification-3"
-                    >
-                      <div className="d-flex">
-                        <div className="me-2 position-relative flex-shrink-0">
-                          <ImageWithBasePath
-                            src="assets/img/doctors/doctor-02.jpg"
-                            className="avatar-md rounded-circle"
-                            alt=""
-                          />
-                        </div>
-                        <div className="flex-grow-1">
-                          <p className="mb-0 fw-medium text-dark">Emily</p>
-                          <p className="mb-1 text-wrap">
-                            booked an appointment with
-                            <span className="fw-medium text-dark">
-                              Dr. Patel
-                            </span>
-                            for
-                            <span className="fw-medium text-dark">
-                              April 15
-                            </span>
-                          </p>
-                          <div className="d-flex justify-content-between align-items-center">
-                            <span className="fs-12">
-                              <i className="ti ti-clock me-1" />
-                              15 min ago
-                            </span>
-                            <div className="notification-action d-flex align-items-center float-end gap-2">
-                              <Link
-                                to="#"
-                                className="notification-read rounded-circle bg-danger"
-                                data-bs-toggle="tooltip"
-                                title=""
-                                data-bs-original-title="Make as Read"
-                                aria-label="Make as Read"
-                              />
-                              <button
-                                className="btn rounded-circle p-0"
-                                data-dismissible="#notification-3"
-                              >
-                                <i className="ti ti-x" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Item*/}
-                    <div
-                      className="dropdown-item notification-item py-3 text-wrap"
-                      id="notification-4"
-                    >
-                      <div className="d-flex">
-                        <div className="me-2 position-relative flex-shrink-0">
-                          <ImageWithBasePath
-                            src="assets/img/doctors/doctor-07.jpg"
-                            className="avatar-md rounded-circle"
-                            alt=""
-                          />
-                        </div>
-                        <div className="flex-grow-1">
-                          <p className="mb-0 fw-medium text-dark">Amelia</p>
-                          <p className="mb-1 text-wrap">
-                            completed the
-                            <span className="fw-medium text-dark">
-                              pre-visit
-                            </span>
-                            health questionnaire.
-                          </p>
-                          <div className="d-flex justify-content-between align-items-center">
-                            <span className="fs-12">
-                              <i className="ti ti-clock me-1" />
-                              20 min ago
-                            </span>
-                            <div className="notification-action d-flex align-items-center float-end gap-2">
-                              <Link
-                                to="#"
-                                className="notification-read rounded-circle bg-danger"
-                                data-bs-toggle="tooltip"
-                                title=""
-                                data-bs-original-title="Make as Read"
-                                aria-label="Make as Read"
-                              />
-                              <button
-                                className="btn rounded-circle p-0"
-                                data-dismissible="#notification-4"
-                              >
-                                <i className="ti ti-x" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                      ))
+                    )}
                   </div>
                   {/* View All*/}
                   <div className="p-2 rounded-bottom border-top text-center">
                     <Link
-                      to={all_routes.notifications}
+                      to={all_routes.notifications || "#"}
                       className="text-center text-decoration-underline fs-14 mb-0"
                     >
                       View All Notifications

@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { all_routes } from "../../../routes/all_routes";
+import FooterFront from "./FooterFront";
 import FloatingActions from "./FloatingActions";
 import NavbarFront from "./NavbarFront";
 import "./homePage.scss";
@@ -166,7 +167,7 @@ const HomePage = () => {
       <section className="dy-about" id="features">
         <div className="dy-container dy-about-grid">
           <div className="dy-about-img">
-            <img src="/clinic-illustration.png" alt="DocYori Clinic" />
+            <img src="https://images.pexels.com/photos/3376790/pexels-photo-3376790.jpeg?auto=compress&cs=tinysrgb&w=800" alt="DocYori Clinic" />
           </div>
           <div className="dy-about-content">
             <div className="dy-tag-sm">ABOUT DOCYORI</div>
@@ -174,7 +175,7 @@ const HomePage = () => {
             <p>DocYori is a complete clinic management solution designed for modern healthcare providers. Whether you operate a single clinic or manage multiple locations, DocYori helps simplify daily operations and improve patient care.</p>
             <div className="dy-about-icons">
               {[
-                { icon: "ti ti-file-medical", label: "Patient Records" },
+                { icon: "ti ti-clipboard-list", label: "Patient Records" },
                 { icon: "ti ti-calendar-event", label: "Appointment Scheduling" },
                 { icon: "ti ti-stethoscope", label: "Doctor Management" },
                 { icon: "ti ti-id-badge", label: "HR & Payroll" },
@@ -303,6 +304,7 @@ const HomePage = () => {
           {/* FAQ */}
           <div id="faq">
             <div className="dy-tag-sm">FREQUENTLY ASKED QUESTIONS</div>
+            <h2 className="dy-tf-h2">We've Got Answers</h2>
             <div className="dy-faq-list">
               {FAQS.map((f, i) => (
                 <details key={i} className="dy-faq-item">
@@ -333,61 +335,7 @@ const HomePage = () => {
       </section>
 
       {/* ── FOOTER ─────────────────────────────── */}
-      <footer className="dy-footer" id="contact">
-        <div className="dy-container dy-footer-grid">
-          <div className="dy-footer-brand">
-            <img src="/logo-main.png" alt="DocYori" />
-            <p>All-in-one clinic management software to manage patients, track health, and deliver better patient care.</p>
-            <div className="dy-socials">
-              <a href="#"><i className="ti ti-brand-facebook" /></a>
-              <a href="#"><i className="ti ti-brand-twitter" /></a>
-              <a href="#"><i className="ti ti-brand-linkedin" /></a>
-              <a href="#"><i className="ti ti-brand-instagram" /></a>
-            </div>
-          </div>
-          <div className="dy-footer-col">
-            <h5>PRODUCT</h5>
-            <ul>
-              <li><a href="#features">Features</a></li>
-              <li><a href="#modules">Modules</a></li>
-              <li><a href="#pricing">Pricing</a></li>
-            </ul>
-          </div>
-          <div className="dy-footer-col">
-            <h5>COMPANY</h5>
-            <ul>
-              <li><a href="#">About Us</a></li>
-              <li><a href="#contact">Contact Us</a></li>
-            </ul>
-          </div>
-          <div className="dy-footer-col">
-            <h5>LEGAL</h5>
-            <ul>
-              <li><Link to={all_routes.privacyPolicy}>Privacy Policy</Link></li>
-              <li><Link to={all_routes.termsCondition}>Terms & Conditions</Link></li>
-              <li><a href="#">Refund Policy</a></li>
-            </ul>
-          </div>
-          <div className="dy-footer-col">
-            <h5>SUPPORT</h5>
-            <ul>
-              <li><a href="#">Help Center</a></li>
-              <li><a href="#">Documentation</a></li>
-              <li><a href="#">Customer Support</a></li>
-            </ul>
-          </div>
-          <div className="dy-footer-col">
-            <h5>CONTACT</h5>
-            <ul>
-              <li><a href="mailto:hello@docyori.com"><i className="ti ti-mail" />hello@docyori.com</a></li>
-              <li><a href={`tel:${siteSettings.phone}`}><i className="ti ti-phone" />{siteSettings.phone}</a></li>
-            </ul>
-          </div>
-        </div>
-        <div className="dy-footer-bottom">
-          <p>© {new Date().getFullYear()} DocYori. All Rights Reserved.</p>
-        </div>
-      </footer>
+      <FooterFront />
 
       <FloatingActions />
     </div>

@@ -1,7 +1,8 @@
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { all_routes } from "../../../routes/all_routes";
 import FloatingActions from "./FloatingActions";
 import NavbarFront from "./NavbarFront";
+import FooterFront from "./FooterFront";
 import "./homePage.scss";
 
 const PrivacyPolicyFront = () => {
@@ -97,64 +98,7 @@ const PrivacyPolicyFront = () => {
             </section>
 
             {/* ── FOOTER ─────────────────────────────── */}
-            <footer className="dy-footer" id="contact">
-                <div className="dy-container dy-footer-grid">
-                    {/* Reusing exact same footer */}
-                    <div className="dy-footer-brand">
-                        <img src="/logo-main.png" alt="DocYori" />
-                        <p>All-in-one clinic management software to automate operations, manage staff, and deliver better patient care.</p>
-                        <div className="dy-socials">
-                            <a href="#"><i className="ti ti-brand-facebook" /></a>
-                            <a href="#"><i className="ti ti-brand-twitter" /></a>
-                            <a href="#"><i className="ti ti-brand-linkedin" /></a>
-                            <a href="#"><i className="ti ti-brand-youtube" /></a>
-                        </div>
-                    </div>
-                    <div className="dy-footer-col">
-                        <h5>PRODUCT</h5>
-                        <ul>
-                            <li><Link to={all_routes.home + "#features"}>Features</Link></li>
-                            <li><Link to={all_routes.home + "#modules"}>Modules</Link></li>
-                            <li><a href="#pricing">Pricing</a></li>
-                        </ul>
-                    </div>
-                    <div className="dy-footer-col">
-                        <h5>COMPANY</h5>
-                        <ul>
-                            <li><Link to={all_routes.aboutUs || "#"}>About Us</Link></li>
-                            <li><Link to={all_routes.servicesFront || "#"}>Services</Link></li>
-                            <li><Link to={all_routes.contactUs || "#"}>Contact Us</Link></li>
-                        </ul>
-                    </div>
-                    <div className="dy-footer-col">
-                        <h5>LEGAL</h5>
-                        <ul>
-                            <li><Link to={all_routes.privacyPolicyFront || "#"}>Privacy Policy</Link></li>
-                            <li><Link to={all_routes.termsCondition || "#"}>Terms & Conditions</Link></li>
-                            <li><a href="#">Refund Policy</a></li>
-                        </ul>
-                    </div>
-                    <div className="dy-footer-col">
-                        <h5>SUPPORT</h5>
-                        <ul>
-                            <li><a href="#">Help Center</a></li>
-                            <li><a href="#">Documentation</a></li>
-                            <li><a href="#">Customer Support</a></li>
-                        </ul>
-                    </div>
-                    <div className="dy-footer-col">
-                        <h5>CONTACT</h5>
-                        <ul>
-                            <li><a href="mailto:hello@docyori.com"><i className="ti ti-mail" />hello@docyori.com</a></li>
-                            <li><a href={`tel:${siteSettings.phone}`}><i className="ti ti-phone" />{siteSettings.phone}</a></li>
-                            <li><a href="https://www.docyori.com"><i className="ti ti-world" />www.docyori.com</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div className="dy-footer-bottom">
-                    <p>© {new Date().getFullYear()} DocYori. All Rights Reserved.</p>
-                </div>
-            </footer>
+            <FooterFront />
             <FloatingActions />
         </div>
     );

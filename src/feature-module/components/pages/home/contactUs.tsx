@@ -1,20 +1,20 @@
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { all_routes } from "../../../routes/all_routes";
 import FloatingActions from "./FloatingActions";
 import NavbarFront from "./NavbarFront";
+import FooterFront from "./FooterFront";
 import "./homePage.scss";
 
 const ContactUs = () => {
-    const siteSettings = { whatsapp: "+919876543210", phone: "+919876543210" };
+    const siteSettings = { whatsapp: "+919876543210", phone: "+91 98765-43210" };
 
     return (
         <div className="dy-landing">
             <NavbarFront />
 
             {/* ── HERO ───────────────────────────────── */}
-            <section className="dy-hero" style={{ background: '#fff' }}>
+            <section className="dy-hero" style={{ background: 'linear-gradient(180deg, #fff 0%, #f0f7ff 100%)', paddingBottom: '3rem' }}>
                 <div className="dy-hero-wrap">
-                    {/* Hero Text */}
                     <div className="dy-hero-left">
                         <div className="dy-hero-tag">Contact Us</div>
                         <h1>
@@ -28,125 +28,113 @@ const ContactUs = () => {
                                 <i className="ti ti-device-laptop" /> Start Free Trial
                             </Link>
                             <Link to="#demo" className="hero-btn-outline">
-                                <i className="ti ti-device-desktop-analytics" /> Book Demo
+                                <i className="ti ti-player-play" /> Book Demo
                             </Link>
                         </div>
 
-                        {/* Trust row */}
-                        <div className="dy-trust">
-                            {['Quick Response', 'Expert Support', '24/7 Assistance', 'Trusted by Clinics'].map((t, idx) => (
-                                <span key={idx}>
-                                    <i className="ti ti-circle-check-filled" /> {t}
-                                </span>
-                            ))}
+                        {/* Contact info chips row */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '1.5rem' }}>
+                            <a href="mailto:support@docyori.com" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f0f7ff', color: '#007bff', padding: '0.5rem 1rem', borderRadius: '30px', textDecoration: 'none', fontSize: '0.82rem', fontWeight: 600 }}>
+                                <i className="ti ti-mail" /> support@docyori.com
+                            </a>
+                            <a href={`https://wa.me/${siteSettings.whatsapp}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f0fff4', color: '#22c55e', padding: '0.5rem 1rem', borderRadius: '30px', textDecoration: 'none', fontSize: '0.82rem', fontWeight: 600 }}>
+                                <i className="ti ti-brand-whatsapp" /> WhatsApp Us
+                            </a>
+                            <a href={`tel:${siteSettings.phone}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#fff7ed', color: '#f97316', padding: '0.5rem 1rem', borderRadius: '30px', textDecoration: 'none', fontSize: '0.82rem', fontWeight: 600 }}>
+                                <i className="ti ti-phone" /> {siteSettings.phone}
+                            </a>
                         </div>
                     </div>
 
-                    {/* Hero Visual Area */}
                     <div className="dy-hero-right">
                         <div style={{ position: 'relative', width: '100%', maxWidth: '450px' }}>
-                            <img src="https://images.pexels.com/photos/8460157/pexels-photo-8460157.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Contact Support" className="dy-about-img-main" />
+                            <img
+                                src="https://images.pexels.com/photos/8460157/pexels-photo-8460157.jpeg?auto=compress&cs=tinysrgb&w=800"
+                                alt="Contact Support"
+                                className="dy-about-img-main"
+                            />
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* ── CONTACT INFO CARDS ─────────────────────── */}
-            <section style={{ padding: '2.5rem 0', background: '#fcfdfe' }}>
+            {/* ── FORM + MAP ─────────────────────────── */}
+            <section style={{ padding: '4rem 0', background: '#fff' }}>
                 <div className="dy-container">
-                    <div className="dy-modules-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem' }}>
-                        <div style={{ background: '#fff', padding: '2.5rem 2rem', borderRadius: '24px', textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', border: '1px solid #f8f9fa' }}>
-                            <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#e6f2ff', color: '#007bff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', margin: '0 auto 1.5rem' }}><i className="ti ti-mail" /></div>
-                            <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1a233a', marginBottom: '0.5rem' }}>Email Us</h4>
-                            <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1rem' }}>Our team will respond within 24 hours.</p>
-                            <a href="mailto:support@docyori.com" style={{ color: '#007bff', fontWeight: 700, textDecoration: 'none' }}>support@docyori.com</a>
-                        </div>
-                        <div style={{ background: '#fff', padding: '2.5rem 2rem', borderRadius: '24px', textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', border: '1px solid #f8f9fa' }}>
-                            <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#f0fff4', color: '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', margin: '0 auto 1.5rem' }}><i className="ti ti-brand-whatsapp" /></div>
-                            <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1a233a', marginBottom: '0.5rem' }}>WhatsApp</h4>
-                            <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1rem' }}>Quick support on your favorite app.</p>
-                            <a href={`https://wa.me/${siteSettings.whatsapp}`} style={{ color: '#22c55e', fontWeight: 700, textDecoration: 'none' }}>Chat with Us</a>
-                        </div>
-                        <div style={{ background: '#fff', padding: '2.5rem 2rem', borderRadius: '24px', textAlign: 'center', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', border: '1px solid #f8f9fa' }}>
-                            <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#fff7ed', color: '#f97316', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', margin: '0 auto 1.5rem' }}><i className="ti ti-phone" /></div>
-                            <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1a233a', marginBottom: '0.5rem' }}>Call Us</h4>
-                            <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1rem' }}>Speak directly with our experts.</p>
-                            <a href={`tel:${siteSettings.phone}`} style={{ color: '#f97316', fontWeight: 700, textDecoration: 'none' }}>+91 98765-43210</a>
-                        </div>
+                    <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                        <div className="dy-tag-sm center">GET IN TOUCH</div>
+                        <h2 className="dy-sec-h2">Send Us A Message</h2>
+                        <p style={{ color: '#6b7280', fontSize: '1rem', maxWidth: '480px', margin: '0.5rem auto 0', lineHeight: 1.6 }}>
+                            Fill out the form below and our team will get back to you within 24 hours.
+                        </p>
                     </div>
-                </div>
-            </section>
 
-            {/* ── MAP & FORM ────────────────────────────── */}
-            <section style={{ padding: '2.5rem 0', background: '#fff' }}>
-                <div className="dy-container">
-                    <div className="dy-form-grid" style={{ alignItems: 'start' }}>
-                        <div>
-                            <h2 style={{ fontSize: '2rem', fontWeight: 850, color: '#1a233a', marginBottom: '1.5rem' }}>Send Us A Message</h2>
+                    <div className="dy-form-grid" style={{ alignItems: 'stretch', gap: '3rem' }}>
+                        {/* Form */}
+                        <div style={{ background: '#fcfdfe', border: '1px solid #eaedf1', borderRadius: '24px', padding: '2.5rem' }}>
                             <form style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-                                    <input type="text" placeholder="Full Name" style={{ padding: '1rem', borderRadius: '12px', border: '1px solid #eaedf1', background: '#fcfdfe', outline: 'none' }} />
-                                    <input type="email" placeholder="Email Address" style={{ padding: '1rem', borderRadius: '12px', border: '1px solid #eaedf1', background: '#fcfdfe', outline: 'none' }} />
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                        <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151' }}>Full Name</label>
+                                        <input type="text" placeholder="Dr. Anita Sharma" style={{ padding: '0.9rem 1rem', borderRadius: '12px', border: '1px solid #eaedf1', background: '#fff', outline: 'none', fontSize: '0.9rem' }} />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                        <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151' }}>Email Address</label>
+                                        <input type="email" placeholder="doctor@clinic.com" style={{ padding: '0.9rem 1rem', borderRadius: '12px', border: '1px solid #eaedf1', background: '#fff', outline: 'none', fontSize: '0.9rem' }} />
+                                    </div>
                                 </div>
-                                <input type="text" placeholder="Subject" style={{ padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid #eaedf1', background: '#fcfdfe', outline: 'none' }} />
-                                <textarea placeholder="Your Message" rows={5} style={{ padding: '1rem', borderRadius: '12px', border: '1px solid #eaedf1', background: '#fcfdfe', outline: 'none', resize: 'none' }}></textarea>
-                                <button type="button" style={{ background: '#007bff', color: '#fff', padding: '1rem', borderRadius: '12px', fontWeight: 800, border: 'none', cursor: 'pointer', boxShadow: '0 10px 20px rgba(0,123,255,0.1)' }}>Send Message</button>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                    <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151' }}>Phone Number</label>
+                                    <input type="text" placeholder="+91 98765 43210" style={{ padding: '0.9rem 1rem', borderRadius: '12px', border: '1px solid #eaedf1', background: '#fff', outline: 'none', fontSize: '0.9rem' }} />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                    <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151' }}>Subject</label>
+                                    <input type="text" placeholder="How can we help you?" style={{ padding: '0.9rem 1rem', borderRadius: '12px', border: '1px solid #eaedf1', background: '#fff', outline: 'none', fontSize: '0.9rem' }} />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                    <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#374151' }}>Your Message</label>
+                                    <textarea placeholder="Tell us about your clinic and what you need..." rows={5} style={{ padding: '0.9rem 1rem', borderRadius: '12px', border: '1px solid #eaedf1', background: '#fff', outline: 'none', resize: 'none', fontSize: '0.9rem', fontFamily: 'inherit' }}></textarea>
+                                </div>
+                                <button type="button" style={{ background: '#007bff', color: '#fff', padding: '1rem 2rem', borderRadius: '12px', fontWeight: 800, border: 'none', cursor: 'pointer', fontSize: '0.95rem', boxShadow: '0 8px 20px rgba(0,123,255,0.2)', transition: 'all 0.3s' }}>
+                                    Send Message <i className="ti ti-send" />
+                                </button>
                             </form>
                         </div>
-                        <div style={{ borderRadius: '24px', overflow: 'hidden', height: '100%', minHeight: '400px', border: '1px solid #eaedf1' }}>
-                            <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224345.8392319277!2d77.0688975472!3d28.5272181!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b34766247%3A0xaa13aa5b6023!2sNew%20Delhi%2C%20India!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
-                                width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"
-                            ></iframe>
+
+                        {/* Right: Map + contact info */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                            {/* Quick contact cards */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                {[
+                                    { icon: 'ti ti-mail', color: '#007bff', bg: '#f0f7ff', label: 'Email', val: 'support@docyori.com', href: 'mailto:support@docyori.com' },
+                                    { icon: 'ti ti-brand-whatsapp', color: '#22c55e', bg: '#f0fff4', label: 'WhatsApp', val: 'Chat with Us', href: `https://wa.me/${siteSettings.whatsapp}` },
+                                    { icon: 'ti ti-phone', color: '#f97316', bg: '#fff7ed', label: 'Call Us', val: siteSettings.phone, href: `tel:${siteSettings.phone}` },
+                                    { icon: 'ti ti-clock', color: '#7c3aed', bg: '#f5f3ff', label: 'Hours', val: 'Mon-Sat, 9am-6pm', href: '#' },
+                                ].map((c, i) => (
+                                    <a key={i} href={c.href} style={{ background: '#fff', border: '1px solid #eaedf1', borderRadius: '16px', padding: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', textDecoration: 'none', transition: 'box-shadow 0.2s' }}>
+                                        <div style={{ width: 40, height: 40, borderRadius: '10px', background: c.bg, color: c.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem' }}>
+                                            <i className={c.icon} />
+                                        </div>
+                                        <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.label}</div>
+                                        <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1a233a' }}>{c.val}</div>
+                                    </a>
+                                ))}
+                            </div>
+
+                            {/* Map */}
+                            <div style={{ flex: 1, borderRadius: '20px', overflow: 'hidden', border: '1px solid #eaedf1', minHeight: '300px' }}>
+                                <iframe
+                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224345.8392319277!2d77.0688975472!3d28.5272181!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b34766247%3A0xaa13aa5b6023!2sNew%20Delhi%2C%20India!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
+                                    width="100%" height="100%" style={{ border: 0, display: 'block' }} allowFullScreen loading="lazy"
+                                ></iframe>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* ── FOOTER ───────────────────────────────── */}
-            <footer className="dy-footer">
-                <div className="dy-container">
-                    <div className="dy-footer-grid">
-                        <div className="dy-footer-brand">
-                            <img src="/logo-front.png" alt="DocYori" />
-                            <p>DocYori is the ultimate solution for clinics and healthcare providers seeking a modern, efficient way to manage their operations.</p>
-                            <div className="dy-socials">
-                                <Link to="#"><i className="ti ti-brand-facebook" /></Link>
-                                <Link to="#"><i className="ti ti-brand-twitter" /></Link>
-                                <Link to="#"><i className="ti ti-brand-linkedin" /></Link>
-                            </div>
-                        </div>
-                        <div className="dy-footer-col">
-                            <h5>Quick Links</h5>
-                            <ul>
-                                <li><Link to="/">Home</Link></li>
-                                <li><Link to="/about-us">About Us</Link></li>
-                                <li><Link to="/services">Services</Link></li>
-                            </ul>
-                        </div>
-                        <div className="dy-footer-col">
-                            <h5>Features</h5>
-                            <ul>
-                                <li><Link to="#">Appointments</Link></li>
-                                <li><Link to="#">Doctors</Link></li>
-                                <li><Link to="#">Patients</Link></li>
-                            </ul>
-                        </div>
-                        <div className="dy-footer-col">
-                            <h5>Contact</h5>
-                            <ul>
-                                <li><Link to="#">Support</Link></li>
-                                <li><Link to="#">Sales</Link></li>
-                                <li><Link to="#">Demo</Link></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div className="dy-footer-bottom">
-                        <p>2025 ©Docyori, All Rights Reserved</p>
-                    </div>
-                </div>
-            </footer>
-
+            <FooterFront />
             <FloatingActions />
         </div>
     );

@@ -1,7 +1,8 @@
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { all_routes } from "../../../routes/all_routes";
 import FloatingActions from "./FloatingActions";
 import NavbarFront from "./NavbarFront";
+import FooterFront from "./FooterFront";
 import "./homePage.scss";
 
 const ServicesFront = () => {
@@ -148,10 +149,10 @@ const ServicesFront = () => {
                 <div className="dy-container">
                     <div style={{ background: 'linear-gradient(135deg, #004ee6, #00c6ff)', borderRadius: '30px', padding: '1.5rem 3.5rem', display: 'grid', gridTemplateColumns: '0.6fr 1.4fr', alignItems: 'center', gap: '3rem', position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'relative', zIndex: 2, background: '#fff', padding: '0.8rem', borderRadius: '20px', boxShadow: '0 15px 30px rgba(0,0,0,0.1)' }}>
-                            <img src="/clinic-illustration.png" alt="Demo" style={{ width: '100%', borderRadius: '15px' }} />
+                            <img src="https://images.pexels.com/photos/4386466/pexels-photo-4386466.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Demo" style={{ width: '100%', borderRadius: '15px', objectFit: 'cover', height: '220px' }} />
                         </div>
                         <div style={{ position: 'relative', zIndex: 2, color: '#fff' }}>
-                            <h2 style={{ fontSize: '1.8rem', fontWeight: 850, marginBottom: '0.8rem', lineHeight: 1.2 }}>Ready To Experience The Best Clinic Management Services?</h2>
+                            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '0.8rem', lineHeight: 1.25 }}>Ready To Experience The Best Clinic Management Services?</h2>
                             <p style={{ fontSize: '0.95rem', opacity: 0.9, marginBottom: '2rem', maxWidth: '540px' }}>Join hundreds of healthcare professionals who trust DocYori to simplify operations and improve patient care.</p>
                             <div style={{ display: 'flex', gap: '1rem' }}>
                                 <button style={{ background: '#fff', color: '#004ee6', padding: '1rem 2rem', borderRadius: '12px', fontWeight: 800, border: 'none', cursor: 'pointer', fontSize: '0.9rem' }}>Start Free Trial</button>
@@ -163,57 +164,7 @@ const ServicesFront = () => {
             </section>
 
             {/* ── FOOTER ─────────────────────────────── */}
-            <footer className="dy-footer">
-                <div className="dy-container dy-footer-grid">
-                    <div className="dy-footer-brand">
-                        <img src="/logo-main.png" alt="DocYori" />
-                        <p>All-in-one clinic management software to automate operations, manage staff, and deliver better patient care.</p>
-                        <div className="dy-socials">
-                            {['facebook', 'twitter', 'linkedin', 'youtube'].map(s => <a key={s} href="#"><i className={`ti ti-brand-${s}`} /></a>)}
-                        </div>
-                    </div>
-                    <div className="dy-footer-col">
-                        <h5>PRODUCT</h5>
-                        <ul>
-                            <li><Link to={all_routes.home + "#features"}>Features</Link></li>
-                            <li><Link to={all_routes.home + "#modules"}>Modules</Link></li>
-                            <li><a href="#pricing">Pricing</a></li>
-                        </ul>
-                    </div>
-                    <div className="dy-footer-col">
-                        <h5>COMPANY</h5>
-                        <ul>
-                            <li><Link to={all_routes.aboutUs}>About Us</Link></li>
-                            <li><Link to={all_routes.servicesFront}>Services</Link></li>
-                            <li><Link to={all_routes.contactUs}>Contact Us</Link></li>
-                        </ul>
-                    </div>
-                    <div className="dy-footer-col">
-                        <h5>LEGAL</h5>
-                        <ul>
-                            <li><Link to={all_routes.privacyPolicyFront}>Privacy Policy</Link></li>
-                            <li><Link to={all_routes.termsCondition || "#"}>Terms & Conditions</Link></li>
-                        </ul>
-                    </div>
-                    <div className="dy-footer-col">
-                        <h5>SUPPORT</h5>
-                        <ul>
-                            <li><a href="#">Help Center</a></li>
-                            <li><a href="#">Documentation</a></li>
-                        </ul>
-                    </div>
-                    <div className="dy-footer-col">
-                        <h5>CONTACT</h5>
-                        <ul>
-                            <li><a href="mailto:hello@docyori.com"><i className="ti ti-mail" /> hello@docyori.com</a></li>
-                            <li><a href={`tel:${siteSettings.phone}`}><i className="ti ti-phone" /> {siteSettings.phone}</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div className="dy-footer-bottom">
-                    <p>© {new Date().getFullYear()} DocYori. All Rights Reserved.</p>
-                </div>
-            </footer>
+            <FooterFront />
             <FloatingActions />
         </div>
     );

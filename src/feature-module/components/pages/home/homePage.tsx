@@ -56,7 +56,6 @@ const APPTS = [
 ];
 
 const HomePage = () => {
-  const siteSettings = { whatsapp: "+919876543210", phone: "+919876543210" };
 
   return (
     <div className="dy-landing">

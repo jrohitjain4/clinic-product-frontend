@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import { all_routes } from "../../../routes/all_routes";
+
 import FloatingActions from "./FloatingActions";
 import NavbarFront from "./NavbarFront";
 import FooterFront from "./FooterFront";

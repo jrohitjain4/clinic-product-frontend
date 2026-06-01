@@ -6,7 +6,6 @@ import FooterFront from "./FooterFront";
 import "./homePage.scss";
 
 const ServicesFront = () => {
-    const siteSettings = { whatsapp: "+919876543210", phone: "+919876543210" };
 
     return (
         <div className="dy-landing">

@@ -9,6 +9,10 @@ import ForgotPasswordCover from "../components/auth/forgot-password/forgotPasswo
 import ForgotPasswordIllustration from "../components/auth/forgot-password/forgotPasswordIllustration";
 import LockScreen from "../components/auth/lock-screen/lockScreen";
 import HomePage from "../components/pages/home/homePage";
+import AboutUs from "../components/pages/home/aboutUs";
+import ServicesFront from "../components/pages/home/servicesFront";
+import ContactUs from "../components/pages/home/contactUs";
+import PrivacyPolicyFront from "../components/pages/home/privacyPolicyFront";
 import Login from "../components/auth/login/login";
 import LoginBasic from "../components/auth/login/loginBasic";
 import LoginCover from "../components/auth/login/loginCover";
@@ -1417,6 +1421,26 @@ export const authRoutes = [
   {
     path: routes.home,
     element: <HomePage />,
+    route: Route,
+  },
+  {
+    path: routes.aboutUs,
+    element: <AboutUs />,
+    route: Route,
+  },
+  {
+    path: routes.servicesFront,
+    element: <ServicesFront />,
+    route: Route,
+  },
+  {
+    path: routes.contactUs,
+    element: <ContactUs />,
+    route: Route,
+  },
+  {
+    path: routes.privacyPolicyFront,
+    element: <PrivacyPolicyFront />,
     route: Route,
   },
   {

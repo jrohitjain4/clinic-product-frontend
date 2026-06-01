@@ -1,278 +1,395 @@
-import { useState, useEffect } from "react";
 import { Link } from "react-router";
-import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { all_routes } from "../../../routes/all_routes";
+import FloatingActions from "./FloatingActions";
+import NavbarFront from "./NavbarFront";
 import "./homePage.scss";
 
-const SERVICES = [
-  { id: 1, name: "Cardiology", desc: "Expert heart care and surgery.", icon: "ti ti-heartbeat" },
-  { id: 2, name: "Neurology", desc: "Advanced brain and nerve treatments.", icon: "ti ti-brain" },
-  { id: 3, name: "Orthopedics", desc: "Bone, joint, and muscle care.", icon: "ti ti-bone" },
-  { id: 4, name: "Dental Care", desc: "Complete oral health solutions.", icon: "ti ti-dental" },
-  { id: 5, name: "Pediatrics", desc: "Dedicated care for children.", icon: "ti ti-baby" },
-  { id: 6, name: "Eye Care", desc: "Vision correction and eye health.", icon: "ti ti-eye" },
+const MODULES = [
+  { icon: "ti ti-users", name: "Patient\nManagement", desc: "Manage records, history, documents and patient profiles." },
+  { icon: "ti ti-calendar-event", name: "Appointment\nManagement", desc: "Schedule appointments, manage queues, and reduce no-shows." },
+  { icon: "ti ti-stethoscope", name: "Doctor\nManagement", desc: "Manage doctor profiles, schedules, and consultation fees." },
+  { icon: "ti ti-report-money", name: "Accounts &\nFinance", desc: "Track income, expenses, invoices and payment transactions." },
+  { icon: "ti ti-id-badge", name: "HRM", desc: "Manage attendance, leaves, payroll and employee performance." },
+  { icon: "ti ti-user-check", name: "Staff\nManagement", desc: "Organise staff information, roles and responsibilities." },
 ];
 
-const BANNERS = [
-  {
-    title: "Premium Health Screenings",
-    subtitle: "Get 20% off on all full-body checkups this month.",
-    bgImage: "https://images.unsplash.com/photo-1516549655169-df83a0774514?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-    bgClass: "banner-blue"
-  },
-  {
-    title: "24/7 Emergency Care",
-    subtitle: "Always open. Always ready. We are here when you need us most.",
-    bgImage: "https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-    bgClass: "banner-red"
-  },
-  {
-    title: "Specialized Maternity Care",
-    subtitle: "Comprehensive monitoring and nurturing for expecting mothers.",
-    bgImage: "https://images.unsplash.com/photo-1555252834-31b4028eeb37?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-    bgClass: "banner-green"
-  }
+const STEPS = [
+  { no: "01", icon: "ti ti-building-hospital", title: "Create Your Clinic", desc: "Set up clinic details and departments." },
+  { no: "02", icon: "ti ti-user-plus", title: "Add Doctors & Staff", desc: "Manage doctors, schedules, and employees." },
+  { no: "03", icon: "ti ti-calendar-plus", title: "Manage Appointments", desc: "Start accepting and organising appointments." },
+  { no: "04", icon: "ti ti-chart-arrows", title: "Grow Your Practice", desc: "Track performance and improve operations." },
 ];
 
-const DOCTORS = [
-  { name: "Dr. Sarah Taylor", spec: "Cardiologist", img: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" },
-  { name: "Dr. James Wilson", spec: "Neurologist", img: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" },
-  { name: "Dr. Emily Chen", spec: "Pediatrician", img: "https://images.unsplash.com/photo-1594824436998-dd40e4fc3456?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" },
+const WHY = [
+  { icon: "ti ti-layout-dashboard", title: "Centralized Management", desc: "Manage everything from a single dashboard." },
+  { icon: "ti ti-clock", title: "Save Time", desc: "Automate tasks and reduce manual paperwork." },
+  { icon: "ti ti-heart-handshake", title: "Improve Patient Experience", desc: "Deliver faster and more organised services." },
+  { icon: "ti ti-shield-lock", title: "Secure & Reliable", desc: "Advanced data protection and role-based access." },
+  { icon: "ti ti-chart-arrows", title: "Scalable Platform", desc: "Suitable for both small clinics and large healthcare centres." },
+  { icon: "ti ti-device-mobile", title: "Easy To Use", desc: "Simple interface for doctors, receptionists, and admins." },
+];
+
+const FAQS = [
+  { q: "Is DocYori suitable for small clinics?" },
+  { q: "Can I manage multiple doctors?" },
+  { q: "Does DocYori include payroll management?" },
+  { q: "Can patients book appointments online?" },
+  { q: "Is training provided?" },
+  { q: "Is my clinic data secure?" },
 ];
 
 const TESTIMONIALS = [
-  { text: "The care I received at Preclinic was absolutely phenomenal. The doctors truly listen.", author: "Michael R.", role: "Patient" },
-  { text: "State-of-the-art facilities and a very compassionate staff. I highly recommend them.", author: "Jessica T.", role: "Patient" },
-  { text: "My surgery went smoothly and the recovery guidance was perfectly detailed.", author: "David Brooks", role: "Patient" },
+  { quote: "DocYori has transformed the way we manage appointments. It is very efficient, and significantly reduced our administration workload.", name: "Dr. Anita Verma", role: "Clinic Owner", img: "https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=80" },
+  { quote: "Managing doctors, staff, and finances is so effortless. The software is simple, professional and perfectly suited for modern clinics.", name: "Dr. Priya Sharma", role: "Medical Director", img: "https://images.pexels.com/photos/5214949/pexels-photo-5214949.jpeg?auto=compress&cs=tinysrgb&w=80" },
+  { quote: "Excellent software that has helped us scale from 1 to 4 branches without any chaos. Customer support is outstanding.", name: "Dr. Rahul Mehta", role: "Senior Doctor", img: "https://images.pexels.com/photos/4173251/pexels-photo-4173251.jpeg?auto=compress&cs=tinysrgb&w=80" },
+];
+
+const HRM_FEATURES = ["Staffs", "Departments", "Designations", "Attendance", "Leaves", "Holidays", "Payroll", "Appraisals", "To Do", "Notes"];
+const CLINIC_FEATURES = ["Clinic", "Services & Products", "Doctors", "Specializations", "Patients", "Assets", "Appointments"];
+
+const APPTS = [
+  { time: "09:30 AM", name: "John Doe", type: "General Consultation" },
+  { time: "10:00 AM", name: "Priya Sharma", type: "Dental Checkup" },
+  { time: "10:30 AM", name: "Rahul Verma", type: "Follow Up" },
+  { time: "11:00 AM", name: "Ananya Singh", type: "General Consultation" },
 ];
 
 const HomePage = () => {
-  const [activeBanner, setActiveBanner] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveBanner((prev) => (prev + 1) % BANNERS.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
+  const siteSettings = { whatsapp: "+919876543210", phone: "+919876543210" };
 
   return (
-    <div className="landing-page">
-      <header className="landing-nav interactive-nav">
-        <div className="landing-nav-inner">
-          <Link to={all_routes.home} className="landing-logo">
-            <ImageWithBasePath src="assets/img/logo.svg" alt="Preclinic" />
-          </Link>
-          <ul className="landing-nav-links d-none d-md-flex">
-            <li><a href="#hero">Home</a></li>
-            <li><a href="#services">Services</a></li>
-            <li><a href="#doctors">Doctors</a></li>
-            <li><a href="#banners">Offers</a></li>
-            <li><a href="#footer">Contact</a></li>
-          </ul>
-          <div className="landing-nav-actions d-none d-sm-flex">
-            <Link to={all_routes.login} replace className="btn-landing-outline btn-anim">Login</Link>
-            <Link to={all_routes.registerbasic} className="btn-landing-primary btn-anim">Start Free Trial</Link>
-          </div>
-        </div>
-      </header>
+    <div className="dy-landing">
 
-      <section id="hero" className="landing-hero interactive-hero">
-        <div className="hero-content">
-          <div className="hero-badge animate-badge">
-            <i className="ti ti-activity" /> The Best Medical Care in Town
-          </div>
-          <h1 className="hero-title animate-title">
-            Compassionate Care,<br /> <span>Advanced Medicine</span>
-          </h1>
-          <p className="hero-desc animate-desc">
-            Experience world-class healthcare tailored to your needs. Connect with our experts online or visit us for premium services.
-          </p>
-          <div className="hero-cta animate-cta">
-            <Link to={all_routes.registerbasic} className="btn-landing-primary pulse-btn">
-              Consult Now
-            </Link>
-          </div>
-        </div>
-        <div className="hero-visual animate-visual">
-          <div className="glass-card stat-card1">
-            <h4>150+</h4><p>Specialist Doctors</p>
-          </div>
-          <div className="glass-card stat-card2">
-            <h4>24/7</h4><p>Emergency Services</p>
-          </div>
-          <div className="glass-card stat-card3">
-            <h4>1M+</h4><p>Happy Patients</p>
-          </div>
-        </div>
-      </section>
+      <NavbarFront />
 
-      <section className="landing-section why-choose-us mt-4">
-        <div className="row text-center px-3 px-lg-0">
-          <div className="col-md-4 mb-4 mb-md-0">
-            <div className="feature-icon"><i className="ti ti-stethoscope" /></div>
-            <h4>Expert Doctors</h4>
-            <p className="text-muted">Highly qualified professionals from around the globe.</p>
+      {/* ── HERO ───────────────────────────────── */}
+      <section className="dy-hero">
+        <div className="dy-hero-wrap">
+          {/* LEFT */}
+          <div className="dy-hero-left">
+            <div className="dy-hero-tag">SMART CLINIC MANAGEMENT SOFTWARE</div>
+            <h1>
+              Manage Your Entire Clinic<br />
+              From One <span className="dy-highlight">Powerful Platform</span>
+            </h1>
+            <p>DocYori helps healthcare providers manage patients, appointments, doctors, staff, payroll, and finances while delivering a seamless patient experience.</p>
+            <div className="dy-hero-btns">
+              <Link to={all_routes.registerbasic} className="hero-btn-solid">Start Free Trial →</Link>
+              <Link to="#demo" className="hero-btn-outline"><i className="ti ti-player-play" />Book Live Demo</Link>
+            </div>
+            <div className="dy-trust">
+              <span><i className="ti ti-circle-check-filled" />Easy Setup</span>
+              <span><i className="ti ti-lock-filled" />Secure Data</span>
+              <span><i className="ti ti-users" />Multi-Doctor Support</span>
+              <span><i className="ti ti-cloud" />Cloud Based</span>
+            </div>
           </div>
-          <div className="col-md-4 mb-4 mb-md-0">
-            <div className="feature-icon"><i className="ti ti-microscope" /></div>
-            <h4>Modern Tech</h4>
-            <p className="text-muted">Equipped with the latest medical technology and labs.</p>
-          </div>
-          <div className="col-md-4">
-            <div className="feature-icon"><i className="ti ti-ambulance" /></div>
-            <h4>Fast Emergency</h4>
-            <p className="text-muted">Immediate response teams available 24/7 for you.</p>
-          </div>
-        </div>
-      </section>
 
-      <section id="banners" className="landing-section mt-5 px-3 px-lg-0">
-        <div className="service-banner-container glass-banner">
-          {BANNERS.map((banner, index) => (
-            <div
-              key={index}
-              className={`service-banner ${banner.bgClass} ${index === activeBanner ? 'active' : ''}`}
-              style={{ backgroundImage: `url('${banner.bgImage}')` }}
-            >
-              <div className="banner-overlay"></div>
-              <div className="banner-content text-center text-md-start">
-                <h2 className="banner-title">{banner.title}</h2>
-                <p className="banner-subtitle">{banner.subtitle}</p>
-                <button className="btn-landing-light mt-3 glowing-btn">Claim Offer</button>
+          {/* RIGHT — Dashboard Mockup */}
+          <div className="dy-hero-right">
+            <div className="dy-dash">
+              {/* dash header */}
+              <div className="dy-dash-top">
+                <div className="dy-dash-logo"><i className="ti ti-heartbeat" /><b>Doc</b>Yori</div>
+                <div className="dy-dash-title">Dashboard</div>
+                <div className="dy-dash-icons">
+                  <i className="ti ti-bell" />
+                  <div className="dy-dash-avatar"><i className="ti ti-user" /></div>
+                </div>
+              </div>
+              {/* dash body */}
+              <div className="dy-dash-body">
+                {/* sidebar */}
+                <div className="dy-dash-sidebar">
+                  {["Dashboard", "Patients", "Appointments", "Doctors", "Staff", "Accounts", "HRM", "Reports", "Settings"].map((item, i) => (
+                    <div key={i} className={`dy-dash-sitem${i === 0 ? " active" : ""}`}><i className={["ti ti-layout-dashboard", "ti ti-users", "ti ti-calendar", "ti ti-stethoscope", "ti ti-user-check", "ti ti-report-money", "ti ti-id-badge", "ti ti-chart-bar", "ti ti-settings"][i]} />{item}</div>
+                  ))}
+                </div>
+                {/* main content */}
+                <div className="dy-dash-main">
+                  {/* top stats */}
+                  <div className="dy-dash-stats">
+                    <div className="dy-ds"><div className="dy-ds-lbl">Total Patients</div><div className="dy-ds-val">1,248</div><div className="dy-ds-sub green">+12% from last month</div></div>
+                    <div className="dy-ds"><div className="dy-ds-lbl">Today's Appointments</div><div className="dy-ds-val">32</div><div className="dy-ds-sub green">+4% from yesterday</div></div>
+                    <div className="dy-ds"><div className="dy-ds-lbl">Total Doctors</div><div className="dy-ds-val">18</div><div className="dy-ds-sub blue">+2 new this month</div></div>
+                    <div className="dy-ds"><div className="dy-ds-lbl">Total Revenue</div><div className="dy-ds-val">₹2,45,000</div><div className="dy-ds-sub green">+18% from last month</div></div>
+                  </div>
+                  {/* two panels */}
+                  <div className="dy-dash-panels">
+                    {/* appointments */}
+                    <div className="dy-panel">
+                      <div className="dy-panel-hdr"><span>Appointments</span><a href="#">View all</a></div>
+                      {APPTS.map((a, i) => (
+                        <div key={i} className="dy-appt-row">
+                          <span className="dy-appt-time">{a.time}</span>
+                          <div><div className="dy-appt-name">{a.name}</div><div className="dy-appt-type">{a.type}</div></div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* revenue chart */}
+                    <div className="dy-panel">
+                      <div className="dy-panel-hdr"><span>Revenue Overview</span><span className="dy-period">This Month ▾</span></div>
+                      <div className="dy-chart">
+                        <div className="dy-chart-labels">
+                          <span>₹2.5L</span><span>₹1.5L</span><span>₹75k</span><span>₹0</span>
+                        </div>
+                        <svg viewBox="0 0 200 80" className="dy-line-chart">
+                          <polyline points="0,70 30,55 60,60 90,35 120,45 150,20 180,30 200,25" fill="none" stroke="#2563eb" strokeWidth="2" />
+                          <polyline points="0,70 30,55 60,60 90,35 120,45 150,20 180,30 200,25 200,80 0,80" fill="url(#grad)" stroke="none" />
+                          <defs>
+                            <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#2563eb" stopOpacity="0.3" />
+                              <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                        <div className="dy-chart-months">
+                          <span>1 May</span><span>8 May</span><span>15 May</span><span>22 May</span><span>28 May</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          ))}
-          <div className="banner-indicators">
-            {BANNERS.map((_, idx) => (
-              <span
-                key={idx}
-                className={`indicator ${idx === activeBanner ? 'active' : ''}`}
-                onClick={() => setActiveBanner(idx)}
-              />
+            {/* 3 bottom stat cards */}
+            <div className="dy-hero-bottom-cards">
+              <div className="dy-hbc blue"><div className="dy-hbc-icon"><i className="ti ti-calendar-plus" /></div><div><div className="dy-hbc-val">+24</div><div className="dy-hbc-lbl">New Appointment Today</div></div></div>
+              <div className="dy-hbc teal"><div className="dy-hbc-icon teal"><i className="ti ti-users" /></div><div><div className="dy-hbc-val teal">+18</div><div className="dy-hbc-lbl">Patient Registered Today</div></div></div>
+              <div className="dy-hbc orange"><div className="dy-hbc-icon orange"><i className="ti ti-wallet" /></div><div><div className="dy-hbc-val orange">₹ 45,600</div><div className="dy-hbc-lbl">Payment Received Today</div></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── ABOUT ──────────────────────────────── */}
+      <section className="dy-about" id="features">
+        <div className="dy-container dy-about-grid">
+          <div className="dy-about-img">
+            <img src="/clinic-illustration.png" alt="DocYori Clinic" />
+          </div>
+          <div className="dy-about-content">
+            <div className="dy-tag-sm">ABOUT DOCYORI</div>
+            <h2>Everything Your Clinic<br />Needs in One Platform</h2>
+            <p>DocYori is a complete clinic management solution designed for modern healthcare providers. Whether you operate a single clinic or manage multiple locations, DocYori helps simplify daily operations and improve patient care.</p>
+            <div className="dy-about-icons">
+              {[
+                { icon: "ti ti-file-medical", label: "Patient Records" },
+                { icon: "ti ti-calendar-event", label: "Appointment Scheduling" },
+                { icon: "ti ti-stethoscope", label: "Doctor Management" },
+                { icon: "ti ti-id-badge", label: "HR & Payroll" },
+                { icon: "ti ti-report-money", label: "Accounts & Finance" },
+                { icon: "ti ti-package", label: "Asset Tracking" },
+              ].map((item, i) => (
+                <div key={i} className="dy-about-icon">
+                  <div className="dy-ai-box"><i className={item.icon} /></div>
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── STEPS ──────────────────────────────── */}
+      <section className="dy-steps">
+        <div className="dy-container">
+          <div className="dy-tag-sm center">TAKE YOUR CLINIC ONLINE</div>
+          <h2 className="dy-sec-h2">In 4 Simple Steps</h2>
+          <div className="dy-steps-row">
+            {STEPS.map((s, i) => (
+              <div key={i} className="dy-step">
+                <div className={`dy-step-circle${i === 2 ? " active" : ""}`}><i className={s.icon} /></div>
+                {i < 3 && <div className="dy-step-line" />}
+                <div className="dy-step-tag">STEP {s.no}</div>
+                <h4>{s.title}</h4>
+                <p>{s.desc}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="services" className="landing-section services-section mt-5">
-        <div className="text-center mb-5">
-          <p className="section-label">Our Departments</p>
-          <h2 className="section-title">Specialized Healthcare Services</h2>
-        </div>
-        <div className="row g-4 px-3 px-xl-0">
-          {SERVICES.map((srv) => (
-            <div key={srv.id} className="col-md-6 col-lg-4">
-              <div className="service-card interactive-card">
-                <div className="service-icon"><i className={srv.icon} /></div>
-                <h5>{srv.name}</h5>
-                <p>{srv.desc}</p>
-                <Link to={all_routes.login} className="service-link">View Details <i className="ti ti-arrow-right" /></Link>
+      {/* ── MODULES ────────────────────────────── */}
+      <section className="dy-modules" id="modules">
+        <div className="dy-container">
+          <div className="dy-tag-sm center">OUR CORE MODULES</div>
+          <h2 className="dy-sec-h2">Powerful Modules Built For Modern Clinics</h2>
+          <div className="dy-modules-row">
+            {MODULES.map((m, i) => (
+              <div key={i} className="dy-mod-card">
+                <div className="dy-mod-icon"><i className={m.icon} /></div>
+                <h4>{m.name}</h4>
+                <p>{m.desc}</p>
+                <span className="dy-arrow">→</span>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
-      <section id="doctors" className="landing-section doctors-section bg-light-gradient py-5">
-        <div className="text-center mb-5">
-          <p className="section-label">Top Specialists</p>
-          <h2 className="section-title">Meet Our Doctors</h2>
-        </div>
-        <div className="row g-4 container mx-auto">
-          {DOCTORS.map((doc, idx) => (
-            <div key={idx} className="col-md-4">
-              <div className="doctor-card text-center">
-                <div className="doc-img-wrapper">
-                  <img src={doc.img} alt={doc.name} className="img-fluid" />
-                </div>
-                <h5 className="mt-4">{doc.name}</h5>
-                <p className="text-primary fw-bold">{doc.spec}</p>
+      {/* ── ALL FEATURES ───────────────────────── */}
+      <section className="dy-allfeats">
+        <div className="dy-container">
+          <div className="dy-tag-sm center">EVERYTHING INCLUDES</div>
+          <h2 className="dy-sec-h2">All The Features You Need</h2>
+          <div className="dy-feats-grid">
+            <div className="dy-feat-col">
+              <div className="dy-feat-header">
+                <div className="dy-feat-icon-wrap"><i className="ti ti-users" /></div>
+                <h4>Human Resource Management</h4>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="landing-section testimonials-section py-5">
-        <div className="text-center mb-5">
-          <h2 className="section-title">What Our Patients Say</h2>
-        </div>
-        <div className="row g-4 container mx-auto">
-          {TESTIMONIALS.map((test, idx) => (
-            <div key={idx} className="col-md-4">
-              <div className="testimonial-card">
-                <div className="stars mb-3">
-                  <i className="ti ti-star-filled text-warning"></i>
-                  <i className="ti ti-star-filled text-warning"></i>
-                  <i className="ti ti-star-filled text-warning"></i>
-                  <i className="ti ti-star-filled text-warning"></i>
-                  <i className="ti ti-star-filled text-warning"></i>
-                </div>
-                <p className="test-text">"{test.text}"</p>
-                <div className="test-author mt-4">
-                  <h6 className="mb-0">{test.author}</h6>
-                  <small className="text-muted">{test.role}</small>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <footer id="footer" className="landing-footer">
-        <div className="container py-5">
-          <div className="row g-4 px-3 px-lg-0">
-            <div className="col-lg-4 col-md-6 mb-4 mb-lg-0 text-start">
-              <ImageWithBasePath src="assets/img/logo.svg" alt="Preclinic" style={{ height: '40px', marginBottom: '1.5rem', filter: 'brightness(0) invert(1)' }} />
-              <p className="text-muted mb-4">
-                Experience world-class healthcare with top specialists and advanced medical technology tailored for your health. Your well-being is our primary focus.
-              </p>
-              <div className="social-links d-flex gap-3">
-                <a href="#"><i className="ti ti-brand-facebook"></i></a>
-                <a href="#"><i className="ti ti-brand-twitter"></i></a>
-                <a href="#"><i className="ti ti-brand-instagram"></i></a>
-                <a href="#"><i className="ti ti-brand-linkedin"></i></a>
-              </div>
-            </div>
-
-            <div className="col-lg-2 col-md-6 text-start">
-              <h5 className="footer-heading">Services</h5>
-              <ul className="footer-links">
-                <li><a href="#">Cardiology</a></li>
-                <li><a href="#">Neurology</a></li>
-                <li><a href="#">Orthopedics</a></li>
-                <li><a href="#">Dental Care</a></li>
+              <ul className="dy-feat-list">
+                {HRM_FEATURES.map((f, i) => <li key={i}><i className="ti ti-circle-check" />{f}</li>)}
               </ul>
             </div>
-
-            <div className="col-lg-2 col-md-6 text-start">
-              <h5 className="footer-heading">Quick Links</h5>
-              <ul className="footer-links">
-                <li><a href="#">About Us</a></li>
-                <li><a href="#">Our Doctors</a></li>
-                <li><a href="#">Appointments</a></li>
-                <li><a href="#">Contact</a></li>
-              </ul>
+            <div className="dy-feat-center-img">
+              <img src="https://images.pexels.com/photos/4386466/pexels-photo-4386466.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Features" />
             </div>
-
-            <div className="col-lg-4 col-md-6 text-start">
-              <h5 className="footer-heading">Contact Us</h5>
-              <ul className="footer-contact">
-                <li><i className="ti ti-map-pin text-primary me-2"></i> 123 Health Avenue, Medical District, NY 10001</li>
-                <li><i className="ti ti-phone text-primary me-2"></i> +1 (555) 123-4567</li>
-                <li><i className="ti ti-mail text-primary me-2"></i> support@preclinic.com</li>
+            <div className="dy-feat-col">
+              <div className="dy-feat-header">
+                <div className="dy-feat-icon-wrap green"><i className="ti ti-building-hospital" /></div>
+                <h4>Clinic Operations</h4>
+              </div>
+              <ul className="dy-feat-list">
+                {CLINIC_FEATURES.map((f, i) => <li key={i}><i className="ti ti-circle-check" />{f}</li>)}
               </ul>
             </div>
           </div>
         </div>
+      </section>
 
-        <div className="footer-bottom text-center pt-4 pb-3">
-          <p className="mb-0 text-muted">
-            © {new Date().getFullYear()} Preclinic Medical Care. All Rights Reserved.
-          </p>
+      {/* ── WHY DOCYORI ────────────────────────── */}
+      <section className="dy-why">
+        <div className="dy-container">
+          <div className="dy-tag-sm center">WHY CHOOSE DOCYORI</div>
+          <h2 className="dy-sec-h2">Why Clinics Choose DocYori</h2>
+          <div className="dy-why-grid">
+            {WHY.map((w, i) => (
+              <div key={i} className="dy-why-card">
+                <div className="dy-why-icon"><i className={w.icon} /></div>
+                <h4>{w.title}</h4>
+                <p>{w.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS + FAQ ─────────────────── */}
+      <section className="dy-tf">
+        <div className="dy-container dy-tf-grid">
+          {/* Testimonials */}
+          <div>
+            <div className="dy-tag-sm">TESTIMONIALS</div>
+            <h2 className="dy-tf-h2">Trusted By Healthcare Professionals</h2>
+            <div className="dy-test-list">
+              {TESTIMONIALS.map((t, i) => (
+                <div key={i} className="dy-test-card">
+                  <div className="dy-quote-icon">"</div>
+                  <p>{t.quote}</p>
+                  <div className="dy-test-author">
+                    <img src={t.img} alt={t.name} />
+                    <div>
+                      <strong>{t.name}</strong>
+                      <span>{t.role}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* FAQ */}
+          <div id="faq">
+            <div className="dy-tag-sm">FREQUENTLY ASKED QUESTIONS</div>
+            <div className="dy-faq-list">
+              {FAQS.map((f, i) => (
+                <details key={i} className="dy-faq-item">
+                  <summary>{f.q}<i className="ti ti-chevron-down" /></summary>
+                  <p>Yes, DocYori is designed to handle this efficiently and seamlessly for all clinic types and sizes.</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA BANNER ─────────────────────────── */}
+      <section className="dy-cta">
+        <div className="dy-container dy-cta-grid">
+          <div className="dy-cta-img">
+            <img src="https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Ready" />
+          </div>
+          <div className="dy-cta-text">
+            <h2>Ready To Digitize Your Clinic?</h2>
+            <p>Join modern healthcare providers who trust DocYori to simplify operations and improve patient care.</p>
+            <div className="dy-cta-btns">
+              <Link to={all_routes.registerbasic} className="cta-btn-solid">Start Free Trial</Link>
+              <Link to="#demo" className="cta-btn-outline">Book Demo</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ─────────────────────────────── */}
+      <footer className="dy-footer" id="contact">
+        <div className="dy-container dy-footer-grid">
+          <div className="dy-footer-brand">
+            <img src="/logo-main.png" alt="DocYori" />
+            <p>All-in-one clinic management software to manage patients, track health, and deliver better patient care.</p>
+            <div className="dy-socials">
+              <a href="#"><i className="ti ti-brand-facebook" /></a>
+              <a href="#"><i className="ti ti-brand-twitter" /></a>
+              <a href="#"><i className="ti ti-brand-linkedin" /></a>
+              <a href="#"><i className="ti ti-brand-instagram" /></a>
+            </div>
+          </div>
+          <div className="dy-footer-col">
+            <h5>PRODUCT</h5>
+            <ul>
+              <li><a href="#features">Features</a></li>
+              <li><a href="#modules">Modules</a></li>
+              <li><a href="#pricing">Pricing</a></li>
+            </ul>
+          </div>
+          <div className="dy-footer-col">
+            <h5>COMPANY</h5>
+            <ul>
+              <li><a href="#">About Us</a></li>
+              <li><a href="#contact">Contact Us</a></li>
+            </ul>
+          </div>
+          <div className="dy-footer-col">
+            <h5>LEGAL</h5>
+            <ul>
+              <li><Link to={all_routes.privacyPolicy}>Privacy Policy</Link></li>
+              <li><Link to={all_routes.termsCondition}>Terms & Conditions</Link></li>
+              <li><a href="#">Refund Policy</a></li>
+            </ul>
+          </div>
+          <div className="dy-footer-col">
+            <h5>SUPPORT</h5>
+            <ul>
+              <li><a href="#">Help Center</a></li>
+              <li><a href="#">Documentation</a></li>
+              <li><a href="#">Customer Support</a></li>
+            </ul>
+          </div>
+          <div className="dy-footer-col">
+            <h5>CONTACT</h5>
+            <ul>
+              <li><a href="mailto:hello@docyori.com"><i className="ti ti-mail" />hello@docyori.com</a></li>
+              <li><a href={`tel:${siteSettings.phone}`}><i className="ti ti-phone" />{siteSettings.phone}</a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="dy-footer-bottom">
+          <p>© {new Date().getFullYear()} DocYori. All Rights Reserved.</p>
         </div>
       </footer>
+
+      <FloatingActions />
     </div>
   );
 };

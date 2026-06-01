@@ -6,23 +6,5 @@ export default defineConfig({
   plugins: [react()],
   build: {
     chunkSizeWarningLimit: 2000,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('@remix-run') || id.includes('react-router')) {
-              return 'router';
-            }
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react';
-            }
-            if (id.includes('tabler-icons') || id.includes('bootstrap-icons')) {
-              return 'icons';
-            }
-            return 'vendor'; // all other node_modules
-          }
-        },
-      },
-    },
   },
 })

@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import Editor from "react-simple-wysiwyg";
 import { message } from "antd";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 const PrivacyPolicyAdmin = () => {
     const [content, setContent] = useState("");
     const [loading, setLoading] = useState(false);
@@ -10,7 +12,7 @@ const PrivacyPolicyAdmin = () => {
     useEffect(() => {
         const fetchPolicy = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/settings/privacy_policy");
+                const res = await fetch(`${API}/api/settings/privacy_policy`);
                 if (res.ok) {
                     const data = await res.json();
                     setContent(data.value || "");
@@ -25,7 +27,7 @@ const PrivacyPolicyAdmin = () => {
     const handleSave = async () => {
         setLoading(true);
         try {
-            const res = await fetch("http://localhost:5000/api/settings", {
+            const res = await fetch(`${API}/api/settings`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ key: "privacy_policy", value: content })

@@ -225,8 +225,8 @@ export default function ClinicLandingPage() {
                                                         selectedDocDetails.photo.startsWith('http') || selectedDocDetails.photo.startsWith('data:')
                                                             ? selectedDocDetails.photo
                                                             : selectedDocDetails.photo.includes('uploads')
-                                                                ? `http://localhost:5000${selectedDocDetails.photo.startsWith('/') ? '' : '/'}${selectedDocDetails.photo}`
-                                                                : `http://localhost:5000/uploads/doctors/${selectedDocDetails.photo}`
+                                                                ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}${selectedDocDetails.photo.startsWith('/') ? '' : '/'}${selectedDocDetails.photo}`
+                                                                : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/uploads/doctors/${selectedDocDetails.photo}`
                                                     ) : `https://placehold.co/120x120/1d4ed8/FFF?text=${selectedDocDetails.name.slice(0, 2).toUpperCase()}`}
                                                     alt={selectedDocDetails.name}
                                                     className="rounded"
@@ -734,8 +734,8 @@ export default function ClinicLandingPage() {
                                                             doc.photo.startsWith('http') || doc.photo.startsWith('data:')
                                                                 ? doc.photo
                                                                 : doc.photo.includes('uploads')
-                                                                    ? `http://localhost:5000${doc.photo.startsWith('/') ? '' : '/'}${doc.photo}`
-                                                                    : `http://localhost:5000/uploads/doctors/${doc.photo}`
+                                                                    ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}${doc.photo.startsWith('/') ? '' : '/'}${doc.photo}`
+                                                                    : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/uploads/doctors/${doc.photo}`
                                                         ) : "/assets/img/doctor-placeholder.png"}
                                                         alt={doc.name}
                                                         className="rounded-circle object-fit-cover shadow-sm bg-light"

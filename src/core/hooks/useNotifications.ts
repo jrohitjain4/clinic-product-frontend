@@ -12,7 +12,7 @@ export const useNotifications = () => {
     const userString = localStorage.getItem("user");
     const user = userString ? JSON.parse(userString) : null;
 
-    const API_URL = "http://localhost:5000/api/notifications";
+    const API_URL = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/notifications`;
 
     const fetchNotifications = async () => {
         if (!token || !user) {

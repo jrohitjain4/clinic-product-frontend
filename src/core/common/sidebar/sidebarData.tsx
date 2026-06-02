@@ -87,6 +87,17 @@ export const SidebarData = [
         submenuItems: [],
       },
       {
+        label: "Privacy Policy",
+        link: routes.privacyPolicyAdmin,
+        submenu: false,
+        showSubRoute: false,
+        icon: "file-text",
+        base: "settings",
+        materialicons: "start",
+        dot: true,
+        submenuItems: [],
+      },
+      {
         label: "Settings",
         link: routes.profilesettings,
         submenu: false,

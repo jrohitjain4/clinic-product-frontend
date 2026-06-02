@@ -4,7 +4,6 @@ import { apiUrl } from "../../../../../core/config/api";
 interface Tenant {
     id: string;
     name: string;
-    subdomain: string;
     ownerName: string;
     ownerEmail: string;
     packageName: string;
@@ -128,7 +127,6 @@ const TenantsAdmin = () => {
                                                         </div>
                                                         <div>
                                                             <h6 className="mb-0 fw-bold">{tenant.name}</h6>
-                                                            <small className="text-primary">@{tenant.subdomain}</small>
                                                         </div>
                                                     </div>
                                                 </td>

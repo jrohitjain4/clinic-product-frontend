@@ -2,9 +2,28 @@ import { Link } from "react-router";
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import { City, Country, State } from "../../../../../../core/common/selectOption";
+import { useState } from "react";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 
 const ProfileSettings = () => {
+  const [isEditing, setIsEditing] = useState(false);
+  let userObj: any = {};
+  try {
+    userObj = JSON.parse(localStorage.getItem("user") || "{}");
+  } catch (e) { }
+
+  const fullNameStr = userObj.fullName || "Administrator";
+  const firstName = fullNameStr.split(" ")[0];
+  const lastName = fullNameStr.split(" ").slice(1).join(" ") || "";
+  const email = userObj.email || "admin@example.com";
+  const phone = userObj.clinic?.phone || "+919876543210";
+  const addressLine1 = userObj.clinic?.address || "123 Healthcare Street";
+  const addressLine2 = "Sector 62"; // Placeholder if DB doesn't have it explicitly
+  const pincode = "201301";
+
+  const clinicName = userObj.clinic?.name || "";
+  const gstNo = userObj.clinic?.gstNo || "";
+
   return (
     <>
       {/* ========================
@@ -80,7 +99,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" />
+                              <input type="text" className="form-control" defaultValue={firstName} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -98,7 +117,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" />
+                              <input type="text" className="form-control" defaultValue={lastName} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -115,7 +134,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" />
+                              <input type="text" className="form-control" defaultValue={email} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -133,7 +152,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" />
+                              <input type="text" className="form-control" defaultValue={phone} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -157,7 +176,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" />
+                              <input type="text" className="form-control" defaultValue={addressLine1} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -174,7 +193,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" />
+                              <input type="text" className="form-control" defaultValue={addressLine2} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -246,7 +265,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" />
+                              <input type="text" className="form-control" defaultValue={pincode} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -255,13 +274,50 @@ const ProfileSettings = () => {
                         {/* end col */}
                       </div>
                       {/* end row */}
+                      {/* start row */}
+                      <div className="row border-bottom mb-3 pb-3">
+                        <div className="mb-3">
+                          <h5 className="fw-bold mb-0">Clinic Information</h5>
+                        </div>
+                        <div className="col-lg-6">
+                          {/* start row */}
+                          <div className="row align-items-center mb-3">
+                            <div className="col-lg-4">
+                              <label className="form-label mb-0">
+                                Clinic Name
+                              </label>
+                            </div>
+                            <div className="col-lg-8">
+                              <input type="text" className="form-control" defaultValue={clinicName} disabled={!isEditing} />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="col-lg-6">
+                          <div className="row align-items-center mb-3">
+                            <div className="col-lg-4">
+                              <label className="form-label mb-0">GST Number</label>
+                            </div>
+                            <div className="col-lg-8">
+                              <input type="text" className="form-control" defaultValue={gstNo} disabled={!isEditing} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                       <div className="d-flex align-items-center justify-content-end">
-                        <Link to="#" className="btn btn-light me-3">
-                          Cancel
-                        </Link>
-                        <Link to="#" className="btn btn-primary">
-                          Save Changes
-                        </Link>
+                        {!isEditing ? (
+                          <button type="button" className="btn btn-primary" onClick={(e) => { e.preventDefault(); setIsEditing(true); }}>
+                            <i className="ti ti-edit me-2" /> Edit Profile
+                          </button>
+                        ) : (
+                          <>
+                            <button type="button" className="btn btn-light me-3" onClick={(e) => { e.preventDefault(); setIsEditing(false); }}>
+                              Cancel
+                            </button>
+                            <button type="button" className="btn btn-primary" onClick={(e) => { e.preventDefault(); setIsEditing(false); }}>
+                              Save Changes
+                            </button>
+                          </>
+                        )}
                       </div>
                     </form>
                   </div>
@@ -278,7 +334,7 @@ const ProfileSettings = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="link-primary">
-              Preclinic
+              DocYori
             </Link>
             , All Rights Reserved
           </p>

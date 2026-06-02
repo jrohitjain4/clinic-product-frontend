@@ -16,7 +16,7 @@ const Modals = () => {
       [field]: !prevState[field],
     }));
   };
-const [phone, setPhone] = useState<string | undefined>()
+  const [phone, setPhone] = useState<string | undefined>()
   return (
     <>
       <div id="change_password" className="modal fade">
@@ -49,9 +49,8 @@ const [phone, setPhone] = useState<string | undefined>()
                       placeholder="****************"
                     />
                     <span
-                      className={`ti toggle-password text-dark fs-14 ${
-                        passwordVisibility.password ? "ti-eye" : "ti-eye-off"
-                      }`}
+                      className={`ti toggle-password text-dark fs-14 ${passwordVisibility.password ? "ti-eye" : "ti-eye-off"
+                        }`}
                       onClick={() => togglePasswordVisibility("password")}
                     ></span>
                   </div>
@@ -72,11 +71,10 @@ const [phone, setPhone] = useState<string | undefined>()
                       placeholder="****************"
                     />
                     <span
-                      className={`ti toggle-password text-dark fs-14 ${
-                        passwordVisibility.confirmPassword
+                      className={`ti toggle-password text-dark fs-14 ${passwordVisibility.confirmPassword
                           ? "ti-eye"
                           : "ti-eye-off"
-                      }`}
+                        }`}
                       onClick={() =>
                         togglePasswordVisibility("confirmPassword")
                       }
@@ -113,9 +111,8 @@ const [phone, setPhone] = useState<string | undefined>()
                       placeholder="****************"
                     />
                     <span
-                      className={`ti toggle-password text-dark fs-14 ${
-                        passwordVisibility.newpassword ? "ti-eye" : "ti-eye-off"
-                      }`}
+                      className={`ti toggle-password text-dark fs-14 ${passwordVisibility.newpassword ? "ti-eye" : "ti-eye-off"
+                        }`}
                       onClick={() => togglePasswordVisibility("newpassword")}
                     ></span>
                   </div>
@@ -129,7 +126,7 @@ const [phone, setPhone] = useState<string | undefined>()
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary">
+                <button type="button" className="btn btn-primary" data-bs-dismiss="modal" onClick={() => alert("Password updated successfully!")}>
                   Save Changes
                 </button>
               </div>
@@ -159,20 +156,20 @@ const [phone, setPhone] = useState<string | undefined>()
                     <span className="text-danger ms-1">*</span>
                   </label>
                   <PhoneInput
-                            defaultCountry="US"
-                            value={phone}
-                            onChange={setPhone}
-                          />
+                    defaultCountry="US"
+                    value={phone}
+                    onChange={setPhone}
+                  />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">
                     New Phone Number<span className="text-danger ms-1">*</span>
                   </label>
-                   <PhoneInput
-                            defaultCountry="US"
-                            value={phone}
-                            onChange={setPhone}
-                          />
+                  <PhoneInput
+                    defaultCountry="US"
+                    value={phone}
+                    onChange={setPhone}
+                  />
                   <p className="mt-2 d-inline-flex align-items-center">
                     <i className="ti ti-info-circle me-1" />
                     New phone number only updated once you verified
@@ -186,7 +183,7 @@ const [phone, setPhone] = useState<string | undefined>()
                     <span className="input-group-text border-end-0">
                       <i className="ti ti-lock" />
                     </span>
-                     <input
+                    <input
                       type={
                         passwordVisibility.confirmPassword ? "text" : "password"
                       }
@@ -194,11 +191,10 @@ const [phone, setPhone] = useState<string | undefined>()
                       placeholder="****************"
                     />
                     <span
-                      className={`ti toggle-password text-dark fs-14 ${
-                        passwordVisibility.confirmPassword
+                      className={`ti toggle-password text-dark fs-14 ${passwordVisibility.confirmPassword
                           ? "ti-eye"
                           : "ti-eye-off"
-                      }`}
+                        }`}
                       onClick={() =>
                         togglePasswordVisibility("confirmPassword")
                       }
@@ -214,7 +210,7 @@ const [phone, setPhone] = useState<string | undefined>()
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary">
+                <button type="button" className="btn btn-primary" data-bs-dismiss="modal" onClick={() => alert("Phone number updated successfully!")}>
                   Save Changes
                 </button>
               </div>
@@ -271,11 +267,10 @@ const [phone, setPhone] = useState<string | undefined>()
                       placeholder="****************"
                     />
                     <span
-                      className={`ti toggle-password text-dark fs-14 ${
-                        passwordVisibility.confirmPassword
+                      className={`ti toggle-password text-dark fs-14 ${passwordVisibility.confirmPassword
                           ? "ti-eye"
                           : "ti-eye-off"
-                      }`}
+                        }`}
                       onClick={() =>
                         togglePasswordVisibility("confirmPassword")
                       }
@@ -291,7 +286,7 @@ const [phone, setPhone] = useState<string | undefined>()
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary">
+                <button type="button" className="btn btn-primary" data-bs-dismiss="modal" onClick={() => alert("Email address updated successfully!")}>
                   Save Changes
                 </button>
               </div>

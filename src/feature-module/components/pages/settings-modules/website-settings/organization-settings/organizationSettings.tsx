@@ -1,485 +1,206 @@
+import { useState, useEffect } from "react"
 import { Link } from "react-router"
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar"
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath"
-import { City, Country, State } from "../../../../../../core/common/selectOption"
-import CommonSelect from "../../../../../../core/common/common-select/commonSelect"
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000"
+
+interface HeroForm {
+  name: string; tagline: string; phone: string; whatsapp: string; email: string;
+  facebook: string; instagram: string; mapUrl: string;
+  address1: string; address2: string; city: string; state: string; pincode: string;
+}
+
+const EMPTY: HeroForm = {
+  name: "", tagline: "", phone: "", whatsapp: "", email: "",
+  facebook: "", instagram: "", mapUrl: "",
+  address1: "", address2: "", city: "", state: "", pincode: "",
+}
 
 const OrganizationSettings = () => {
+  const [form, setForm] = useState<HeroForm>(EMPTY)
+  const [saving, setSaving] = useState(false)
+  const [status, setStatus] = useState<"idle" | "success" | "error">("idle")
+
+  // Get clinic id from logged-in user
+  const user = (() => { try { return JSON.parse(localStorage.getItem("user") || "{}") } catch { return {} } })()
+  const clinicId: string = user?.clinicId || user?.clinic?.id || ""
+
+  useEffect(() => {
+    if (!clinicId) return
+    fetch(`${API}/api/landing/${clinicId}`)
+      .then(r => r.json())
+      .then(data => {
+        setForm({
+          name: data.name || "",
+          tagline: data.tagline || "",
+          phone: data.phone || "",
+          whatsapp: data.whatsapp || "",
+          email: data.email || "",
+          facebook: data.facebook || "",
+          instagram: data.instagram || "",
+          mapUrl: data.mapUrl || "",
+          address1: data.address || "",
+          address2: "",
+          city: data.city || "",
+          state: "",
+          pincode: "",
+        })
+      })
+      .catch(() => { })
+  }, [clinicId])
+
+  const set = (k: keyof HeroForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm(p => ({ ...p, [k]: e.target.value }))
+
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!clinicId) {
+      alert("Error: No Clinic ID found. Only Clinic Owners can save these settings.");
+      return;
+    }
+    setSaving(true); setStatus("idle")
+    try {
+      const token = localStorage.getItem("token")
+      const r = await fetch(`${API}/api/landing/${clinicId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          tagline: form.tagline,
+          whatsapp: form.whatsapp,
+          email: form.email,
+          facebook: form.facebook,
+          instagram: form.instagram,
+          mapUrl: form.mapUrl,
+        }),
+      })
+      if (!r.ok) throw new Error("Save failed")
+      setStatus("success")
+    } catch {
+      setStatus("error")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <>
-  {/* ========================
-			Start Page Content
-		========================= */}
-  <div className="page-wrapper">
-    {/* Start Content */}
-    <div className="content" id="profilePage">
-      {/* Page Header */}
-      <div className="mb-3 border-bottom pb-3">
-        <h4 className="fw-bold mb-0">Settings</h4>
-      </div>
-      {/* End Page Header */}
-      <div className="card">
-        <div className="card-body p-0">
-          <div className="settings-wrapper d-flex">
-            {/* Start Settings Sidebar */}
-           <SettingsSidebar/>
-            {/* End Settings Sidebar */}
-            <div className="card flex-fill mb-0 border-0 bg-light-500 shadow-none">
-              <div className="card-header border-bottom px-0 mx-3">
-                <h5 className="fw-bold">Organization</h5>
-              </div>
-              <div className="card-body px-0 mx-3">
-                <form>
-                  {/* start row */}
-                  <div className="row border-bottom mb-3">
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="row align-items-center mb-3">
-                        <div className="col-lg-4">
-                          <label className="form-label mb-0">
-                            Company Name
-                            <span className="text-danger ms-1">*</span>
-                          </label>
-                        </div>
-                        {/* end col */}
-                        <div className="col-lg-8">
-                          <input type="text" className="form-control" />
-                        </div>
-                        {/* end col */}
-                      </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="row align-items-center mb-3">
-                        <div className="col-lg-4">
-                          <label className="form-label mb-0">
-                            Email Address
-                            <span className="text-danger ms-1">*</span>
-                          </label>
-                        </div>
-                        {/* end col */}
-                        <div className="col-lg-8">
-                          <input type="text" className="form-control" />
-                        </div>
-                        {/* end col */}
-                      </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="row align-items-center mb-3">
-                        <div className="col-lg-4">
-                          <label className="form-label mb-0">
-                            Phone Number
-                            <span className="text-danger ms-1">*</span>
-                          </label>
-                        </div>
-                        {/* end col */}
-                        <div className="col-lg-8">
-                          <input type="text" className="form-control" />
-                        </div>
-                        {/* end col */}
-                      </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="row align-items-center mb-3">
-                        <div className="col-lg-4">
-                          <label className="form-label mb-0">Fax</label>
-                        </div>
-                        {/* end col */}
-                        <div className="col-lg-8">
-                          <input type="text" className="form-control" />
-                        </div>
-                        {/* end col */}
-                      </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
+      <div className="page-wrapper">
+        <div className="content" id="profilePage">
+          <div className="mb-3 border-bottom pb-3">
+            <h4 className="fw-bold mb-0">Settings</h4>
+          </div>
+          <div className="card">
+            <div className="card-body p-0">
+              <div className="settings-wrapper d-flex">
+                <SettingsSidebar />
+                <div className="card flex-fill mb-0 border-0 bg-light-500 shadow-none">
+                  <div className="card-header border-bottom px-0 mx-3">
+                    <h5 className="fw-bold">Landing Page: Hero &amp; Contact</h5>
                   </div>
-                  {/* end row */}
-                  {/* start row */}
-                  <div className="row mb-3 border-bottom">
-                    <div className="mb-3">
-                      <h5 className="fw-bold mb-0">Company Images</h5>
-                    </div>
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="d-flex align-items-center mb-3">
-                        <div className="me-3">
-                          <div className="profile-container">
-                            <ImageWithBasePath
-                              src="assets/img/logo.svg"
-                              alt="Profile"
-                              className="img-fluid object-fit-contain p-1"
-                            />
-                            <div className="overlay-btn">
-                              <Link
-                                to="#"
-                                className="text-white"
-                                id="uploadTrigger"
-                              >
-                                <i className="ti ti-photo fs-10" />
-                              </Link>
+                  <div className="card-body px-0 mx-3">
+
+                    {status === "success" && (
+                      <div className="alert alert-success d-flex align-items-center gap-2 mb-3">
+                        <i className="ti ti-circle-check" /> Hero section saved successfully!
+                      </div>
+                    )}
+                    {status === "error" && (
+                      <div className="alert alert-danger d-flex align-items-center gap-2 mb-3">
+                        <i className="ti ti-alert-circle" /> Failed to save. Please try again.
+                      </div>
+                    )}
+
+                    <form onSubmit={handleSave}>
+                      {/* ── Hero Info ── */}
+                      <div className="row border-bottom mb-3 pb-2">
+                        <div className="col-12 mb-3">
+                          <h6 className="fw-semibold text-muted">Hero Section</h6>
+                        </div>
+
+                        {([
+                          { label: "Clinic Name / Title", key: "name" as keyof HeroForm, type: "text", ph: "e.g. HealthCare Plus Clinic", required: true, disabled: true },
+                          { label: "Tagline", key: "tagline" as keyof HeroForm, type: "text", ph: "e.g. Trusted Healthcare for Your Family", required: true },
+                          { label: "Phone Number", key: "phone" as keyof HeroForm, type: "text", ph: "+91 98765 43210", required: true, disabled: true },
+                          { label: "WhatsApp Number", key: "whatsapp" as keyof HeroForm, type: "text", ph: "+91 98765 43210" },
+                          { label: "Email Address", key: "email" as keyof HeroForm, type: "email", ph: "clinic@example.com" },
+                          { label: "Social – Facebook", key: "facebook" as keyof HeroForm, type: "url", ph: "https://facebook.com/yourclinic" },
+                          { label: "Social – Instagram", key: "instagram" as keyof HeroForm, type: "url", ph: "https://instagram.com/yourclinic" },
+                          { label: "Google Map Embed URL", key: "mapUrl" as keyof HeroForm, type: "url", ph: "Paste Google Maps embed link" },
+                        ] as Array<{ label: string; key: keyof HeroForm; type: string; ph: string; required?: boolean; disabled?: boolean }>).map((f, i) => (
+                          <div key={i} className="col-lg-6">
+                            <div className="row align-items-center mb-3">
+                              <div className="col-lg-4">
+                                <label className="form-label mb-0">
+                                  {f.label}{f.required && <span className="text-danger ms-1">*</span>}
+                                </label>
+                              </div>
+                              <div className="col-lg-8">
+                                <input
+                                  type={f.type}
+                                  className="form-control"
+                                  placeholder={f.ph}
+                                  value={form[f.key]}
+                                  onChange={set(f.key)}
+                                  disabled={f.disabled}
+                                />
+                                {f.disabled && <small className="text-muted">Managed from Profile Settings</small>}
+                              </div>
                             </div>
-                            <input
-                              type="file"
-                              id="profileUpload"
-                              style={{ display: "none" }}
-                            />
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* ── Address (read-only from clinic) ── */}
+                      <div className="row border-bottom mb-3 pb-2">
+                        <div className="col-12 mb-3">
+                          <h6 className="fw-semibold text-muted">Clinic Address <small className="text-muted fw-normal">(managed from Profile Settings)</small></h6>
+                        </div>
+                        <div className="col-12">
+                          <input type="text" className="form-control" value={form.address1} disabled placeholder="Address" />
+                        </div>
+                      </div>
+
+                      {/* ── Clinic Logo ── */}
+                      <div className="row mb-3 pb-2">
+                        <div className="col-12 mb-3">
+                          <h6 className="fw-semibold text-muted">Clinic Logo</h6>
+                        </div>
+                        <div className="col-lg-6">
+                          <div className="d-flex align-items-center mb-3">
+                            <div className="me-3">
+                              <div className="profile-container">
+                                <ImageWithBasePath src="assets/img/logo.svg" alt="Logo" className="img-fluid object-fit-contain p-1" />
+                              </div>
+                            </div>
+                            <div>
+                              <p className="fw-medium text-dark mb-1">Clinic Logo</p>
+                              <span className="text-muted small">Recommended: 250×100 px</span>
+                            </div>
                           </div>
                         </div>
-                        {/* end col */}
-                        <div className="">
-                          <p className="fw-medium text-dark mb-1">Logo</p>
-                          <span>Recommended size is 250 px*100 px</span>
-                        </div>
-                        {/* end col */}
                       </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="d-flex align-items-center mb-3">
-                        <div className="me-3">
-                          <div className="profile-container">
-                            <ImageWithBasePath
-                              src="assets/img/logo-white.svg"
-                              alt="Profile"
-                              className="img-fluid object-fit-contain bg-dark p-1"
-                            />
-                            <div className="overlay-btn">
-                              <Link
-                                to="#"
-                                className="text-white"
-                                id="uploadTrigger1"
-                              >
-                                <i className="ti ti-photo fs-10" />
-                              </Link>
-                            </div>
-                            <input
-                              type="file"
-                              id="profileUpload1"
-                              style={{ display: "none" }}
-                            />
-                          </div>
-                        </div>
-                        {/* end col */}
-                        <div className="">
-                          <p className="fw-medium text-dark mb-1">Dark Logo</p>
-                          <span>Recommended size is 250 px*100 px</span>
-                        </div>
-                        {/* end col */}
+
+                      <div className="d-flex align-items-center justify-content-end">
+                        <Link to="#" className="btn btn-light me-3">Cancel</Link>
+                        <button type="submit" className="btn btn-primary" disabled={saving}>
+                          {saving ? <><span className="spinner-border spinner-border-sm me-2" role="status" />Saving...</> : "Save Changes"}
+                        </button>
                       </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="d-flex align-items-center mb-3">
-                        <div className="me-3">
-                          <div className="profile-container">
-                            <ImageWithBasePath
-                              src="assets/img/logo-small.svg"
-                              alt="Profile"
-                              className="img-fluid object-fit-none"
-                            />
-                            <div className="overlay-btn">
-                              <Link
-                                to="#"
-                                className="text-white"
-                                id="uploadTrigger2"
-                              >
-                                <i className="ti ti-photo fs-10" />
-                              </Link>
-                            </div>
-                            <input
-                              type="file"
-                              id="profileUpload2"
-                              style={{ display: "none" }}
-                            />
-                          </div>
-                        </div>
-                        {/* end col */}
-                        <div className="">
-                          <p className="fw-medium text-dark mb-1">Mini Logo</p>
-                          <span>Recommended size is 250 px*100 px</span>
-                        </div>
-                        {/* end col */}
-                      </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="d-flex align-items-center mb-3">
-                        <div className="me-3">
-                          <div className="profile-container">
-                            <ImageWithBasePath
-                              src="assets/img/logo-small.svg"
-                              alt="Profile"
-                              className="img-fluid object-fit-none bg-dark"
-                            />
-                            <div className="overlay-btn">
-                              <Link
-                                to="#"
-                                className="text-white"
-                                id="uploadTrigger3"
-                              >
-                                <i className="ti ti-photo fs-10" />
-                              </Link>
-                            </div>
-                            <input
-                              type="file"
-                              id="profileUpload3"
-                              style={{ display: "none" }}
-                            />
-                          </div>
-                        </div>
-                        {/* end col */}
-                        <div className="">
-                          <p className="fw-medium text-dark mb-1">
-                            Dark Mini Logo
-                          </p>
-                          <span>Recommended size is 250 px*100 px</span>
-                        </div>
-                        {/* end col */}
-                      </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="d-flex align-items-center mb-3">
-                        <div className="me-3">
-                          <div className="profile-container">
-                            <ImageWithBasePath
-                              src="assets/img/logo-small.svg"
-                              alt="Profile"
-                              className="img-fluid object-fit-none"
-                            />
-                            <div className="overlay-btn">
-                              <Link
-                                to="#"
-                                className="text-white"
-                                id="uploadTrigger4"
-                              >
-                                <i className="ti ti-photo fs-10" />
-                              </Link>
-                            </div>
-                            <input
-                              type="file"
-                              id="profileUpload4"
-                              style={{ display: "none" }}
-                            />
-                          </div>
-                        </div>
-                        {/* end col */}
-                        <div className="">
-                          <p className="fw-medium text-dark mb-1">Favicon</p>
-                          <span>Recommended size is 250 px*100 px</span>
-                        </div>
-                        {/* end col */}
-                      </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="d-flex align-items-center mb-3">
-                        <div className="me-3">
-                          <div className="profile-container">
-                            <ImageWithBasePath
-                              src="assets/img/logo-small.svg"
-                              alt="Profile"
-                              className="img-fluid object-fit-none"
-                            />
-                            <div className="overlay-btn">
-                              <Link
-                                to="#"
-                                className="text-white"
-                                id="uploadTrigger5"
-                              >
-                                <i className="ti ti-photo fs-10" />
-                              </Link>
-                            </div>
-                            <input
-                              type="file"
-                              id="profileUpload5"
-                              style={{ display: "none" }}
-                            />
-                          </div>
-                        </div>
-                        {/* end col */}
-                        <div className="">
-                          <p className="fw-medium text-dark mb-1">Apple Icon</p>
-                          <span>Recommended size is 250 px*100 px</span>
-                        </div>
-                        {/* end col */}
-                      </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
+                    </form>
                   </div>
-                  {/* end row */}
-                  {/* start row */}
-                  <div className="row border-bottom mb-3 pb-3">
-                    <div className="mb-3">
-                      <h5 className="fw-bold mb-0">Contact Information</h5>
-                    </div>
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="row align-items-center mb-3">
-                        <div className="col-lg-4">
-                          <label className="form-label mb-0">
-                            Address Line 1
-                          </label>
-                        </div>
-                        {/* end col */}
-                        <div className="col-lg-8">
-                          <input type="text" className="form-control" />
-                        </div>
-                        {/* end col */}
-                      </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="row align-items-center mb-3">
-                        <div className="col-lg-4">
-                          <label className="form-label mb-0">
-                            Address Line 2
-                          </label>
-                        </div>
-                        {/* end col */}
-                        <div className="col-lg-8">
-                          <input type="text" className="form-control" />
-                        </div>
-                        {/* end col */}
-                      </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="row align-items-center mb-3">
-                        <div className="col-lg-4">
-                          <label className="form-label mb-0">Country</label>
-                        </div>
-                        {/* end col */}
-                        <div className="col-lg-8">
-                          <CommonSelect
-                        options={Country}
-                        className="select"
-                        defaultValue={Country[0]}
-                      />
-                        </div>
-                        {/* end col */}
-                      </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="row align-items-center mb-3">
-                        <div className="col-lg-4">
-                          <label className="form-label mb-0">State</label>
-                        </div>
-                        {/* end col */}
-                        <div className="col-lg-8">
-                          <CommonSelect
-                        options={State}
-                        className="select"
-                        defaultValue={State[0]}
-                      />
-                        </div>
-                        {/* end col */}
-                      </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="row align-items-center mb-3">
-                        <div className="col-lg-4">
-                          <label className="form-label mb-0">City</label>
-                        </div>
-                        {/* end col */}
-                        <div className="col-lg-8">
-                          <CommonSelect
-                        options={City}
-                        className="select"
-                        defaultValue={City[0]}
-                      />
-                        </div>
-                        {/* end col */}
-                      </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-6">
-                      {/* start row */}
-                      <div className="row align-items-center mb-3">
-                        <div className="col-lg-4">
-                          <label className="form-label mb-0">Pincode</label>
-                        </div>
-                        {/* end col */}
-                        <div className="col-lg-8">
-                          <input type="text" className="form-control" />
-                        </div>
-                        {/* end col */}
-                      </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                  </div>
-                  {/* end row */}
-                  <div className="d-flex align-items-center justify-content-end">
-                    <Link
-                      to="#"
-                      className="btn btn-light me-3"
-                    >
-                      Cancel
-                    </Link>
-                    <Link to="#" className="btn btn-primary">
-                      Save Changes
-                    </Link>
-                  </div>
-                </form>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        {/* end card body */}
+        <div className="footer text-center bg-white p-2 border-top">
+          <p className="text-dark mb-0">
+            2025 © <Link to="#" className="link-primary">Docyori</Link>, All Rights Reserved
+          </p>
+        </div>
       </div>
-      {/* end card */}
-    </div>
-    {/* End Content */}
-    {/* Footer Start */}
-    <div className="footer text-center bg-white p-2 border-top">
-      <p className="text-dark mb-0">
-        2025 ©
-        <Link to="#" className="link-primary">
-          Preclinic
-        </Link>
-        , All Rights Reserved
-      </p>
-    </div>
-    {/* Footer End */}
-  </div>
-  {/* ========================
-			End Page Content
-		========================= */}
-</>
-
+    </>
   )
 }
 

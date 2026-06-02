@@ -1,131 +1,194 @@
+import { useState, useEffect, useRef } from "react"
 import { Link } from "react-router"
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar"
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000"
+const GALLERY_CATEGORIES = ["Reception", "Waiting Area", "Consultation Room", "Equipment", "Other"]
+
+interface GalleryItem { url: string; category: string; caption?: string }
 
 const MaintenanceModeSettings = () => {
+  const [gallery, setGallery] = useState<GalleryItem[]>([])
+  const [mapUrl, setMapUrl] = useState("")
+  const [directionsUrl, setDirectionsUrl] = useState("")
+  const [saving, setSaving] = useState(false)
+  const [status, setStatus] = useState<"idle" | "success" | "error">("idle")
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const user = (() => { try { return JSON.parse(localStorage.getItem("user") || "{}") } catch { return {} } })()
+  const clinicId: string = user?.clinicId || user?.clinic?.id || ""
+
+  useEffect(() => {
+    if (!clinicId) return
+    fetch(`${API}/api/landing/${clinicId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data.gallery)) setGallery(data.gallery)
+        setMapUrl(data.mapUrl || "")
+        setDirectionsUrl(data.directionsUrl || "")
+      })
+      .catch(() => { })
+  }, [clinicId])
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    files.forEach(file => {
+      const reader = new FileReader()
+      reader.onload = ev => {
+        setGallery(prev => [...prev, { url: ev.target?.result as string, category: "Reception", caption: "" }])
+      }
+      reader.readAsDataURL(file)
+    })
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
+  const updateItem = (i: number, key: keyof GalleryItem, value: string) =>
+    setGallery(prev => prev.map((item, idx) => idx === i ? { ...item, [key]: value } : item))
+
+  const removeItem = (i: number) => setGallery(prev => prev.filter((_, idx) => idx !== i))
+
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!clinicId) {
+      alert("Error: No Clinic ID found. Only Clinic Owners can save these settings.");
+      return;
+    }
+    setSaving(true); setStatus("idle")
+    try {
+      const token = localStorage.getItem("token")
+      const r = await fetch(`${API}/api/landing/${clinicId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ gallery, mapUrl, directionsUrl }),
+      })
+      if (!r.ok) throw new Error()
+      setStatus("success")
+    } catch {
+      setStatus("error")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <>
-  {/* ========================
-			Start Page Content
-		========================= */}
-  <div className="page-wrapper">
-    {/* Start Content */}
-    <div className="content" id="profilePage">
-      {/* Page Header */}
-      <div className="mb-3 border-bottom pb-3">
-        <h4 className="fw-bold mb-0">Settings</h4>
-      </div>
-      {/* End Page Header */}
-      <div className="card">
-        <div className="card-body p-0">
-          <div className="settings-wrapper d-flex">
-            {/* Start Settings Sidebar */}
-            <SettingsSidebar/>
-            {/* End Settings Sidebar */}
-            <div className="card flex-fill mb-0 border-0 bg-light-500 shadow-none">
-              <div className="card-header border-bottom px-0 mx-3">
-                <h5 className="fw-bold">Maintenance Mode</h5>
-              </div>
-              <div className="card-body px-0 mx-3">
-                <form>
-                  {/* start row */}
-                  <div className="row border-bottom mb-3">
-                    <div className="col-lg-12">
-                      {/* start row */}
-                      <div className="row align-items-center mb-3">
-                        <div className="col-lg-2">
-                          <label className="form-label mb-0">Image </label>
-                        </div>
-                        {/* end col */}
-                        <div className="col-lg-10">
-                          <input type="file" className="form-control" />
-                        </div>
-                        {/* end col */}
+      <div className="page-wrapper">
+        <div className="content" id="profilePage">
+          <div className="mb-3 border-bottom pb-3">
+            <h4 className="fw-bold mb-0">Settings</h4>
+          </div>
+          <div className="card">
+            <div className="card-body p-0">
+              <div className="settings-wrapper d-flex">
+                <SettingsSidebar />
+                <div className="card flex-fill mb-0 border-0 bg-light-500 shadow-none">
+                  <div className="card-header border-bottom px-0 mx-3">
+                    <h5 className="fw-bold">Landing Page: Gallery &amp; Location</h5>
+                  </div>
+                  <div className="card-body px-0 mx-3">
+
+                    {status === "success" && (
+                      <div className="alert alert-success d-flex align-items-center gap-2 mb-3">
+                        <i className="ti ti-circle-check" /> Gallery &amp; location saved successfully!
                       </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-12">
-                      {/* start row */}
-                      <div className="row align-items-center mb-3">
-                        <div className="col-lg-2">
-                          <label className="form-label mb-0">Description</label>
-                        </div>
-                        {/* end col */}
-                        <div className="col-lg-10">
-                          <textarea
-                            className="form-control"
-                            rows={3}
-                            placeholder="Description"
-                            defaultValue={""}
-                          />
-                        </div>
-                        {/* end col */}
+                    )}
+                    {status === "error" && (
+                      <div className="alert alert-danger d-flex align-items-center gap-2 mb-3">
+                        <i className="ti ti-alert-circle" /> Failed to save. Please try again.
                       </div>
-                      {/* end row */}
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-12">
-                      {/* start row */}
-                      <div className="row align-items-center mb-3">
-                        <div className="col-lg-2">
-                          <label className="form-label mb-0">Status</label>
+                    )}
+
+                    {/* ── Gallery ── */}
+                    <div className="mb-4 border-bottom pb-4">
+                      <h6 className="fw-semibold text-muted mb-3">Clinic Gallery</h6>
+                      <div className="mb-3">
+                        <button type="button" className="btn btn-outline-primary" onClick={() => fileInputRef.current?.click()}>
+                          <i className="ti ti-upload me-2" /> Upload Photos
+                        </button>
+                        <input type="file" ref={fileInputRef} multiple accept="image/*" style={{ display: "none" }} onChange={handleFileChange} />
+                        <span className="text-muted small ms-3">JPG, PNG, WEBP – max 5 MB each</span>
+                      </div>
+
+                      {gallery.length > 0 ? (
+                        <div className="row g-3">
+                          {gallery.map((item, i) => (
+                            <div key={i} className="col-lg-4 col-md-6">
+                              <div className="card border shadow-none">
+                                <div className="position-relative" style={{ height: 160, overflow: "hidden", borderRadius: "0.375rem 0.375rem 0 0" }}>
+                                  <img src={item.url} alt={item.caption || "gallery"} className="w-100 h-100 object-fit-cover" />
+                                  <button type="button" className="btn btn-sm btn-danger position-absolute top-0 end-0 m-1"
+                                    onClick={() => removeItem(i)}><i className="ti ti-x" /></button>
+                                </div>
+                                <div className="card-body p-2">
+                                  <select className="form-select form-select-sm mb-2" value={item.category}
+                                    onChange={e => updateItem(i, "category", e.target.value)}>
+                                    {GALLERY_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                  </select>
+                                  <input type="text" className="form-control form-control-sm" placeholder="Caption (optional)"
+                                    value={item.caption || ""}
+                                    onChange={e => updateItem(i, "caption", e.target.value)} />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                        {/* end col */}
-                        <div className="col-lg-10">
-                          <div className="form-check form-switch ps-0">
-                            <input
-                              className="form-check-input m-0"
-                              type="checkbox"
-                              defaultChecked
-                            />
+                      ) : (
+                        <div className="border border-dashed rounded d-flex flex-column align-items-center justify-content-center text-muted"
+                          style={{ height: 160, cursor: "pointer" }} onClick={() => fileInputRef.current?.click()}>
+                          <i className="ti ti-photo fs-1 mb-2 opacity-50" />
+                          <p className="mb-0 small">Click to upload clinic photos</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* ── Location ── */}
+                    <div className="mb-4 border-bottom pb-4">
+                      <h6 className="fw-semibold text-muted mb-3">Location &amp; Map</h6>
+                      <div className="row g-3">
+                        <div className="col-12">
+                          <label className="form-label mb-1">Google Maps Embed URL</label>
+                          <input type="url" className="form-control"
+                            placeholder="Paste the embed src URL from Google Maps → Share → Embed a map"
+                            value={mapUrl} onChange={e => setMapUrl(e.target.value)} />
+                          <small className="text-muted">Go to <strong>Google Maps → Share → Embed a map</strong>, copy the <code>src</code> URL.</small>
+                        </div>
+                        {mapUrl && (
+                          <div className="col-12">
+                            <label className="form-label mb-1">Map Preview</label>
+                            <iframe src={mapUrl} width="100%" height="280"
+                              style={{ border: 0, borderRadius: 8 }} allowFullScreen loading="lazy"
+                              referrerPolicy="no-referrer-when-downgrade" title="Clinic Map" />
                           </div>
+                        )}
+                        <div className="col-12">
+                          <label className="form-label mb-1">Get Directions URL</label>
+                          <input type="url" className="form-control"
+                            placeholder="e.g. https://maps.google.com/?q=YourClinicAddress"
+                            value={directionsUrl} onChange={e => setDirectionsUrl(e.target.value)} />
+                          <small className="text-muted">Opens in Google Maps when patient clicks "Get Directions".</small>
                         </div>
-                        {/* end col */}
                       </div>
-                      {/* end row */}
                     </div>
-                    {/* end col */}
+
+                    <div className="d-flex align-items-center justify-content-end">
+                      <Link to="#" className="btn btn-light me-3">Cancel</Link>
+                      <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving}>
+                        {saving ? <><span className="spinner-border spinner-border-sm me-2" role="status" />Saving...</> : "Save Changes"}
+                      </button>
+                    </div>
                   </div>
-                  {/* end row */}
-                  <div className="d-flex align-items-center justify-content-end">
-                    <Link
-                      to="#"
-                      className="btn btn-light me-3"
-                    >
-                      Cancel
-                    </Link>
-                    <Link to="#" className="btn btn-primary">
-                      Save Changes
-                    </Link>
-                  </div>
-                </form>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        {/* end card body */}
+        <div className="footer text-center bg-white p-2 border-top">
+          <p className="text-dark mb-0">
+            2025 © <Link to="#" className="link-primary">Docyori</Link>, All Rights Reserved
+          </p>
+        </div>
       </div>
-      {/* end card */}
-    </div>
-    {/* End Content */}
-    {/* Footer Start */}
-    <div className="footer text-center bg-white p-2 border-top">
-      <p className="text-dark mb-0">
-        2025 ©
-        <Link to="#" className="link-primary">
-          Preclinic
-        </Link>
-        , All Rights Reserved
-      </p>
-    </div>
-    {/* Footer End */}
-  </div>
-  {/* ========================
-			End Page Content
-		========================= */}
-</>
-
+    </>
   )
 }
 

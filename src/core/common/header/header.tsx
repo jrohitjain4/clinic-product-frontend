@@ -175,14 +175,24 @@ const Header = () => {
 
             {/* AI Assistance and Premium Plan removed as requested */}
 
-            {/* Appointment */}
-            <div className="header-item">
-              <div className="dropdown me-2">
-                <Link to={all_routes.newAppointment} className="btn topbar-link">
-                  <i className="ti ti-calendar-due" />
-                </Link>
+            {/* Live Website */}
+            {user?.clinic?.id && (
+              <div className="header-item">
+                <div className="dropdown me-2">
+                  <a
+                    href={`/clinic/${user.clinic.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary btn-sm d-flex align-items-center gap-1 px-3 py-2 rounded-3 text-white shadow-sm"
+                    title="View Live Clinic Website"
+                  >
+                    <i className="ti ti-world" />
+                    <span className="d-none d-md-inline fw-medium fs-14">Live Website</span>
+                  </a>
+                </div>
               </div>
-            </div>
+            )}
+
             {/* Appointment */}
             {/* Settings */}
             <div className="header-item">

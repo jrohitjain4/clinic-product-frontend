@@ -13,6 +13,7 @@ import AboutUs from "../components/pages/home/aboutUs";
 import ServicesFront from "../components/pages/home/servicesFront";
 import ContactUs from "../components/pages/home/contactUs";
 import PrivacyPolicyFront from "../components/pages/home/privacyPolicyFront";
+import ClinicLandingPage from "../components/pages/home/clinicLandingPage";
 import Login from "../components/auth/login/login";
 import LoginBasic from "../components/auth/login/loginBasic";
 import LoginCover from "../components/auth/login/loginCover";
@@ -36,6 +37,7 @@ import Permissions from "../components/pages/administration-modules/users/permis
 import RolesAndPermissions from "../components/pages/administration-modules/users/roles-and-permissions/rolesAndPermissions";
 import PackagesAdmin from "../components/pages/super-admin/packages/PackagesAdmin";
 import TenantsAdmin from "../components/pages/super-admin/tenants/TenantsAdmin";
+import PrivacyPolicyAdmin from "../components/pages/super-admin/settings/PrivacyPolicyAdmin";
 import Calendars from "../components/pages/application-modules/application/calendar/calendar";
 import CallHistory from "../components/pages/application-modules/application/calls/callHistory";
 import IncomingCall from "../components/pages/application-modules/application/calls/incomingCall";
@@ -363,6 +365,12 @@ export const publicRoutes = [
   {
     path: routes.doctorsnotificationsettings,
     element: <DoctorsNotificationSettings />,
+    route: Route,
+  },
+  {
+    path: all_routes.privacyPolicyAdmin,
+    name: "privacy-policy-admin",
+    element: <PrivacyPolicyAdmin />,
     route: Route,
   },
   {
@@ -1441,6 +1449,11 @@ export const authRoutes = [
   {
     path: routes.privacyPolicyFront,
     element: <PrivacyPolicyFront />,
+    route: Route,
+  },
+  {
+    path: routes.clinicLandingPage,
+    element: <ClinicLandingPage />,
     route: Route,
   },
   {

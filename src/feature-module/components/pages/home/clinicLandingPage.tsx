@@ -132,10 +132,10 @@ export default function ClinicLandingPage() {
         <div className="dy-landing" style={{ minHeight: "100vh" }}>
 
             {/* ══════ NAVBAR (Docyori Style) ══════ */}
-            <nav className="dy-nav bg-white shadow-sm position-sticky top-0" style={{ zIndex: 1000 }}>
-                <div className="dy-nav-inner container px-3">
-                    <Link to="/" className="dy-brand d-flex align-items-center text-decoration-none" style={{ height: '70px' }} onClick={() => setSelectedDocDetails(null)}>
-                        <img src="docyari-logo.svg" alt="DocYori" style={{ width: "180px", transform: 'scale(2.2)', transformOrigin: 'left center', marginLeft: '-30px' }} />
+            <nav className="dy-nav bg-white shadow-sm position-sticky top-0" style={{ zIndex: 1000, overflow: 'visible' }}>
+                <div className="dy-nav-inner container px-3" style={{ overflow: 'visible' }}>
+                    <Link to="/" className="dy-brand d-flex align-items-center text-decoration-none" style={{ height: '70px', overflow: 'visible' }} onClick={() => setSelectedDocDetails(null)}>
+                        <img src="/docyari-logo.svg" alt="DocYori" style={{ width: "450px", height: "450px", marginTop: "-175px", marginBottom: "-175px", marginLeft: "-60px", maxWidth: "none" }} />
                     </Link>
 
                     <ul className="dy-nav-links d-none d-lg-flex mb-0">

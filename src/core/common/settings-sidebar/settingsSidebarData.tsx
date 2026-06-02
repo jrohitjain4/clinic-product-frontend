@@ -19,14 +19,5 @@ export const sidebarMenus = [
       { to: all_routes.prefixessettings, label: "Patient Reviews" },
       { to: all_routes.maintenancemodesettings, label: "Gallery & Location" },
     ],
-  },
-  {
-    label: "Clinic Settings",
-    icon: "ti ti-building-hospital me-2",
-    submenus: [
-      { to: all_routes.appointmentsettings, label: "Appointment" },
-      { to: all_routes.workinghourssettings, label: "Working Hours" },
-      { to: all_routes.cancellationreasonsettings, label: "Cancellation Reason" },
-    ],
-  },
+  }
 ];

@@ -823,22 +823,10 @@ export const SidebarData = [
             base: "invoices",
             customSubmenuTwo: false,
           },
-          {
-            label: "Notifications",
-            link: routes.notificationssettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Integrations",
-            link: routes.integrationssettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
         ],
       },
       {
-        label: "Website Settings",
+        label: "Landing Page Settings",
         link: "apps",
         submenu: true,
         showSubRoute: false,
@@ -847,25 +835,25 @@ export const SidebarData = [
         materialicons: "dashboard",
         submenuItems: [
           {
-            label: "Organization",
+            label: "Hero & Contact",
             link: routes.organizationsettings,
             base: "invoices",
             customSubmenuTwo: false,
           },
           {
-            label: "Localization",
+            label: "Clinic Overview",
             link: routes.localizationsettings,
             base: "invoices",
             customSubmenuTwo: false,
           },
           {
-            label: "Prefixes",
+            label: "Patient Reviews",
             link: routes.prefixessettings,
             base: "invoices",
             customSubmenuTwo: false,
           },
           {
-            label: "SEO Setup",
+            label: "Services & Icons",
             link: routes.seosetupsettings,
             base: "invoices",
             customSubmenuTwo: false,
@@ -877,7 +865,7 @@ export const SidebarData = [
             customSubmenuTwo: false,
           },
           {
-            label: "Maintenance Mode",
+            label: "Gallery & Location",
             link: routes.maintenancemodesettings,
             base: "invoices",
             customSubmenuTwo: false,
@@ -897,210 +885,6 @@ export const SidebarData = [
         ],
       },
 
-      {
-        label: "Clinic Settings",
-        link: "apps",
-        submenu: true,
-        showSubRoute: false,
-        icon: "building-hospital",
-        base: "inventory",
-        materialicons: "dashboard",
-        submenuItems: [
-          {
-            label: "Appointment",
-            link: routes.appointmentsettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Working Hours",
-            link: routes.workinghourssettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Cancellation Reason",
-            link: routes.cancellationreasonsettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-        ],
-      },
-
-      {
-        label: "App Settings",
-        link: "apps",
-        submenu: true,
-        showSubRoute: false,
-        icon: "device-mobile-cog",
-        base: "inventory",
-        materialicons: "dashboard",
-        submenuItems: [
-          {
-            label: "Invoice Settings",
-            link: routes.invoicesettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Invoice Templates",
-            link: routes.invoicetemplatessettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Signatures",
-            link: routes.signaturessettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Custom Fields",
-            link: routes.customfieldssettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-        ],
-      },
-
-      {
-        label: "System Settings",
-        link: "apps",
-        submenu: true,
-        showSubRoute: false,
-        icon: "device-desktop-cog",
-        base: "inventory",
-        materialicons: "dashboard",
-        submenuItems: [
-          {
-            label: "Email Settings",
-            link: routes.emailsettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Email Templates",
-            link: routes.emailtemplatessettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "SMS Gateways",
-            link: routes.smsgatewayssettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "SMS Templates",
-            link: routes.smstemplatessettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "GDPR Cookies",
-            link: routes.gdprcookiessettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-        ],
-      },
-
-      {
-        label: "Finance & Accounts",
-        link: "apps",
-        submenu: true,
-        showSubRoute: false,
-        icon: "settings-dollar",
-        base: "inventory",
-        materialicons: "dashboard",
-        submenuItems: [
-          {
-            label: "Payment Methods",
-            link: routes.paymentmethodssettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Bank Accounts",
-            link: routes.bankaccountssettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Tax Rates",
-            link: routes.taxratessettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Currencies",
-            link: routes.currenciessettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-        ],
-      },
-
-      {
-        label: "Other Settings",
-        link: "apps",
-        submenu: true,
-        showSubRoute: false,
-        icon: "settings-2",
-        base: "inventory",
-        materialicons: "dashboard",
-        submenuItems: [
-          {
-            label: "Sitemap",
-            link: routes.sitemapsettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Clear Cache",
-            link: routes.clearcachesettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Storage",
-            link: routes.storagesettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Cronjob",
-            link: routes.cronjobsettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Ban IP Address",
-            link: routes.banipaddresssettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "System Backup",
-            link: routes.systembackupsettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-
-          {
-            label: "Database Backup",
-            link: routes.databasebackupsettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "System Update",
-            link: routes.systemupdate,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-        ],
-      },
     ],
   },
   {

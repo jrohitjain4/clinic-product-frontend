@@ -10,8 +10,8 @@ const NavbarFront = () => {
     return (
         <nav className="dy-nav">
             <div className="dy-nav-inner">
-                <Link to={all_routes.home} className="dy-brand">
-                    <img src="/logo-main.png" alt="DocYori" />
+                <Link to={all_routes.home} className="dy-brand align-items-center d-flex" style={{ height: '70px' }}>
+                    <img src="docyari-logo.svg" alt="DocYori" style={{ width: '180px', transform: 'scale(2.2)', transformOrigin: 'left center', marginLeft: '-30px' }} />
                 </Link>
 
                 {/* Hamburger Icon */}
@@ -21,12 +21,9 @@ const NavbarFront = () => {
 
                 <ul className={`dy-nav-links ${isOpen ? 'show' : ''}`}>
                     <li><Link to={all_routes.home} onClick={() => setIsOpen(false)}>Home</Link></li>
-                    <li><Link to={`${all_routes.home}#features`} onClick={() => setIsOpen(false)}>Features</Link></li>
-                    <li><Link to={`${all_routes.home}#modules`} onClick={() => setIsOpen(false)}>Modules</Link></li>
                     <li><a href="#pricing" onClick={() => setIsOpen(false)}>Pricing</a></li>
                     <li><Link to={all_routes.aboutUs} onClick={() => setIsOpen(false)}>About Us</Link></li>
                     <li><Link to={all_routes.servicesFront} onClick={() => setIsOpen(false)}>Services</Link></li>
-                    <li><Link to={all_routes.privacyPolicyFront} onClick={() => setIsOpen(false)}>FAQ</Link></li>
                     <li><Link to={all_routes.contactUs} onClick={() => setIsOpen(false)}>Contact Us</Link></li>
 
                     {/* Mobile Only Actions */}

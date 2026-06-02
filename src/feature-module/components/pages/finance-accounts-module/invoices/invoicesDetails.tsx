@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { all_routes } from "../../../../routes/all_routes";
 import { apiUrl } from "../../../../../core/config/api";
@@ -280,7 +280,7 @@ const InvoicesDetails = () => {
           <p className="text-dark mb-0">
             2025 ©{" "}
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

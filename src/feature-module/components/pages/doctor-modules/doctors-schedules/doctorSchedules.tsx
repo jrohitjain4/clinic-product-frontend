@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { DatePicker, TimePicker, type TimePickerProps } from "antd";
 import dayjs from "dayjs";
 import { Link } from "react-router";
@@ -490,7 +490,7 @@ const DoctorSchedules = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

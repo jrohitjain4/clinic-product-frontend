@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import { contactType } from "../../../../../../core/common/selectOption";
@@ -728,7 +728,7 @@ const Contacts = () => {
             <p className="text-dark mb-0">
               2025 ©
               <Link to="#" className="link-primary">
-                Preclinic
+                Docyari
               </Link>
               , All Rights Reserved
             </p>

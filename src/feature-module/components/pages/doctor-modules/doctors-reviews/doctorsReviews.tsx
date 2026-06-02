@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link } from "react-router";
 import {
   Amount,
@@ -303,7 +303,7 @@ const DoctorsReviews = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { CitiesData } from "../../../../../core/json/citiesData";
 import Datatable from "../../../../../core/common/dataTable";
@@ -149,7 +149,7 @@ const Cities = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

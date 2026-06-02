@@ -1,4 +1,4 @@
-import { DatePicker, Select } from "antd";
+﻿import { DatePicker, Select } from "antd";
 import {
   Amount,
   Department,
@@ -216,7 +216,7 @@ const Doctors = () => {
           <p className="text-dark mb-0">
             2025 Â©
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

@@ -122,8 +122,8 @@ const ServicesFront = () => {
                     </div>
                     {/* Circle Diagram Mockup */}
                     <div style={{ position: 'relative', height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ width: '180px', height: '180px', background: '#fff', borderRadius: '50%', border: '2px solid #eaedf1', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3, boxShadow: '0 20px 50px rgba(0,0,0,0.05)' }}>
-                            <img src="/logo-main.png" alt="DocYori" style={{ width: '100px' }} />
+                        <div style={{ width: '180px', height: '180px', background: '#fff', borderRadius: '50%', border: '2px solid #eaedf1', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3, boxShadow: '0 20px 50px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                            <img src="docyari-logo.svg" alt="DocYori" style={{ width: '300px', height: '300px' }} />
                         </div>
                         {/* Nodes */}
                         {[

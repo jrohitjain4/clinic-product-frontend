@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { AssertsListData } from "../../../../../core/json/AssetsListData";
 import FilterIndex from "../../../../../core/common/filter/filterIndex";
 import Datatable from "../../../../../core/common/dataTable";
@@ -248,7 +248,7 @@ const Assets = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

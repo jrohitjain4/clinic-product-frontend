@@ -51,14 +51,14 @@ const ForgotPasswordCover = () => {
                       src="assets/img/logo.svg"
                       className="img-fluid"
                       alt="Logo"
-                    />
+                     style={{ width: "250px", height: "auto" }} />
                   </div>
                   <div className="card border-1 p-lg-3 shadow-md rounded-3">
                     <div className="card-body">
                       <div className="text-center mb-3">
                         <h5 className="mb-1 fs-20 fw-bold">Forgot Password</h5>
                         <p className="mb-0">
-                          No worries, weâ€™ll send you reset instructions
+                          No worries, we’ll send you reset instructions
                         </p>
                       </div>
                       <div className="mb-3">
@@ -100,7 +100,7 @@ const ForgotPasswordCover = () => {
               </form>
               <p className="fs-14 text-dark text-center mt-4">
                 
-                Copyright Â© 2025 - Preclinic
+                Copyright © 2025 - Docyari
               </p>
             </div>
             {/* end row*/}
@@ -117,3 +117,5 @@ const ForgotPasswordCover = () => {
 }
 
 export default ForgotPasswordCover
+
+

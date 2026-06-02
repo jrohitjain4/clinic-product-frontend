@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import Datatable from "../../../../../../core/common/dataTable";
 import PredefinedDatePicker from "../../../../../../core/common/datePicker";
 import { Received_From } from "../../../../../../core/common/selectOption";
@@ -324,7 +324,7 @@ const IncomeReport = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

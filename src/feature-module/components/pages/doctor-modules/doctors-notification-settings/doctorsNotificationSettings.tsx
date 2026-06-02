@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
 
 const DoctorsNotificationSettings = () => {
@@ -353,7 +353,7 @@ const DoctorsNotificationSettings = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

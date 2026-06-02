@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import { DeleteRequestData } from "../../../../../../core/json/deleteAccountRequestData";
 import Datatable from "../../../../../../core/common/dataTable";
 import Modals from "./modals/modals";
@@ -169,7 +169,7 @@ const DeleteAccountRequest = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

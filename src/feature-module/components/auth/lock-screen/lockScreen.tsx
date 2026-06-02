@@ -33,7 +33,7 @@ const LockScreen = () => {
                       src="assets/img/logo.svg"
                       className="img-fluid"
                       alt="Logo"
-                    />
+                     style={{ width: "250px", height: "auto" }} />
                   </div>
                   <div className="card border-1 p-lg-3 shadow-md rounded-3">
                     <div className="card-body">
@@ -117,3 +117,5 @@ const LockScreen = () => {
 };
 
 export default LockScreen;
+
+

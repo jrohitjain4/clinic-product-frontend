@@ -149,15 +149,15 @@ const Sidebar = () => {
           <div>
             {/* Logo Normal */}
             <Link to={all_routes.dashboard} className="logo logo-normal">
-              <ImageWithBasePath src="sidebar-logo.png" alt="Logo" style={{ height: '60px', width: 'auto' }} />
+              <ImageWithBasePath src="docyari-logo.svg" alt="Logo" style={{ width: '165px', height: '165px', marginTop: '-65px', marginBottom: '-65px', marginLeft: '-15px' }} />
             </Link>
             {/* Logo Small */}
             <Link to={all_routes.dashboard} className="logo-small">
-              <ImageWithBasePath src="sidebar-logo.png" alt="Logo" style={{ height: '45px', width: 'auto' }} />
+              <ImageWithBasePath src="docyari-logo.svg" alt="Logo" style={{ width: '60px', height: 'auto', marginLeft: '-10px' }} />
             </Link>
             {/* Logo Dark */}
             <Link to={all_routes.dashboard} className="dark-logo">
-              <ImageWithBasePath src="sidebar-logo.png" alt="Logo" style={{ height: '60px', width: 'auto' }} />
+              <ImageWithBasePath src="docyari-logo.svg" alt="Logo" style={{ width: '165px', height: '165px', marginTop: '-65px', marginBottom: '-65px', marginLeft: '-15px' }} />
             </Link>
           </div>
           <button

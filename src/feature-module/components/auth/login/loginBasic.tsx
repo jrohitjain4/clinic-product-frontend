@@ -24,7 +24,7 @@ const LoginBasic = () => {
           {/* start row */}
           <div className="row justify-content-center align-items-center vh-100 overflow-auto flex-wrap py-3">
             <div className="col-lg-4 mx-auto">
-              <form 
+              <form
                 className="d-flex justify-content-center align-items-center"
               >
                 <div className="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill">
@@ -33,7 +33,8 @@ const LoginBasic = () => {
                       src="assets/img/logo.svg"
                       className="img-fluid"
                       alt="Logo"
-                    />
+                      style={{ width: '250px', height: 'auto' }}
+                     style={{ width: "250px", height: "auto" }} />
                   </div>
                   <div className="card border-1 p-lg-3 shadow-md rounded-3 mb-4">
                     <div className="card-body">
@@ -51,7 +52,7 @@ const LoginBasic = () => {
                           </span>
                           <input
                             type="text"
-                            
+
                             className="form-control border-start-0 ps-0"
                             placeholder="Enter Email Address"
                           />
@@ -74,11 +75,10 @@ const LoginBasic = () => {
                               placeholder="****************"
                             />
                             <span
-                              className={`ti toggle-password text-dark fs-14 ${
-                                passwordVisibility.password
-                                  ? "ti-eye"
-                                  : "ti-eye-off"
-                              }`}
+                              className={`ti toggle-password text-dark fs-14 ${passwordVisibility.password
+                                ? "ti-eye"
+                                : "ti-eye-off"
+                                }`}
                               onClick={() =>
                                 togglePasswordVisibility("password")
                               }
@@ -166,7 +166,7 @@ const LoginBasic = () => {
                         <h6 className="fw-normal fs-14 text-dark mb-0">
                           Don’t have an account yet?
                           <Link to={all_routes.registerbasic} className="hover-a">
-                            
+
                             Register
                           </Link>
                         </h6>
@@ -178,7 +178,7 @@ const LoginBasic = () => {
                 </div>
               </form>
               <p className="text-dark text-center">
-                Copyright © 2025 - Preclinic.
+                Copyright © 2025 - Docyari.
               </p>
             </div>
             {/* end col */}
@@ -206,3 +206,5 @@ const LoginBasic = () => {
 };
 
 export default LoginBasic;
+
+

@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import Modals from "./modals/modals";
@@ -259,7 +259,7 @@ const LoginAndRegisterSettings = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="Link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

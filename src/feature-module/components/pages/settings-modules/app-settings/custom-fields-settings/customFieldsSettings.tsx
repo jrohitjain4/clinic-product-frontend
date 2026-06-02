@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import { Input_Type, Module } from "../../../../../../core/common/selectOption";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
@@ -413,7 +413,7 @@ const CustomFieldsSettings = () => {
           <p className="text-dark mb-0">
             2025 ©{" "}
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

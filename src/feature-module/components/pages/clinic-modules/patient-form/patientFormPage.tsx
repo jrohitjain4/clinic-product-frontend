@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { DatePicker } from "antd";
 import dayjs, { Dayjs } from "dayjs";
@@ -513,7 +513,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
       </div>
       <div className="footer text-center bg-white p-2 border-top">
         <p className="text-dark mb-0">
-          2025 © <span className="link-primary">Preclinic</span>, All Rights Reserved
+          2025 © <span className="link-primary">Docyari</span>, All Rights Reserved
         </p>
       </div>
     </div>

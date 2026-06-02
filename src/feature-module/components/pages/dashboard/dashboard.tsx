@@ -62,6 +62,15 @@ const Dashboard = () => {
     },
   ];
 
+  const [copied, setCopied] = useState(false);
+  const landingPageUrl = `${window.location.origin}/clinic/${user.clinic?.id || user.id || 'clinic'}`;
+
+  const handleCopyUrl = () => {
+    navigator.clipboard.writeText(landingPageUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (user?.role === 'PATIENT') {
     return <Navigate to="/patient/patient-dashboard" replace />;
   }
@@ -83,7 +92,21 @@ const Dashboard = () => {
           {/* Page Header */}
           <div className="d-flex align-items-sm-center justify-content-between flex-wrap gap-2 mb-4">
             <div>
-              <h4 className="fw-bold mb-0">Admin Dashboard </h4>
+              <h4 className="fw-bold mb-1">Admin Dashboard </h4>
+              <div className="d-flex align-items-center gap-2 mt-1">
+                <span className="text-muted fs-13">Clinic Landing Page: </span>
+                <div className="d-flex align-items-center bg-light px-2 py-1 rounded border shadow-sm">
+                  <span className="fs-13 text-primary fw-medium me-2">{landingPageUrl}</span>
+                  <button
+                    onClick={handleCopyUrl}
+                    className={`btn btn-sm btn-icon border-0 p-0 ${copied ? 'text-success' : 'text-gray-5'}`}
+                    title="Copy Link"
+                  >
+                    <i className={`ti ${copied ? 'ti-check' : 'ti-copy'}`} />
+                  </button>
+                </div>
+                {copied && <span className="badge bg-success fs-10 py-1">Copied!</span>}
+              </div>
             </div>
             <div className="d-flex align-items-center flex-wrap gap-2">
               <Link
@@ -1795,8 +1818,8 @@ const Dashboard = () => {
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
             2025 ©
-            <Link to="#" className="link-primary">
-              Preclinic
+            <Link to="#" className="link-primary ms-1">
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

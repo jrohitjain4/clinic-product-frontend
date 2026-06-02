@@ -95,13 +95,13 @@ const Header = () => {
               {/* Logo Normal */}
               <span className="logo-light">
                 <span className="logo-lg">
-                  <ImageWithBasePath src="sidebar-logo.png" alt="logo" style={{ height: '60px', width: 'auto' }} />
+                  <ImageWithBasePath src="docyari-logo.svg" alt="logo" style={{ width: '165px', height: '165px', marginTop: '-65px', marginBottom: '-65px', marginLeft: '-15px' }} />
                 </span>
                 <span className="logo-sm">
                   <ImageWithBasePath
-                    src="sidebar-logo.png"
+                    src="docyari-logo.svg"
                     alt="small logo"
-                    style={{ height: '45px', width: 'auto' }}
+                    style={{ width: '60px', height: 'auto', marginLeft: '-10px' }}
                   />
                 </span>
               </span>
@@ -109,16 +109,16 @@ const Header = () => {
               <span className="logo-dark">
                 <span className="logo-lg">
                   <ImageWithBasePath
-                    src="sidebar-logo.png"
+                    src="docyari-logo.svg"
                     alt="dark logo"
-                    style={{ height: '60px', width: 'auto' }}
+                    style={{ width: '165px', height: '165px', marginTop: '-65px', marginBottom: '-65px', marginLeft: '-15px' }}
                   />
                 </span>
                 <span className="logo-sm">
                   <ImageWithBasePath
-                    src="sidebar-logo.png"
+                    src="docyari-logo.svg"
                     alt="small logo"
-                    style={{ height: '45px', width: 'auto' }}
+                    style={{ width: '60px', height: 'auto', marginLeft: '-10px' }}
                   />
                 </span>
               </span>

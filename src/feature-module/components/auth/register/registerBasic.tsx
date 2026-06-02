@@ -178,7 +178,7 @@ const RegisterBasic = () => {
               <div className="row justify-content-center align-items-center overflow-auto flex-wrap vh-100">
                 <div className="col-md-9 mx-auto py-4">
                   <div className="text-center mb-3">
-                    <ImageWithBasePath src="assets/img/logo.svg" className="img-fluid mb-3" alt="Logo" />
+                    <ImageWithBasePath src="assets/img/logo.svg" className="img-fluid mb-3" alt="Logo" style={{ width: "250px", height: "auto" }} />
                     <h4 className="fw-bold mb-0">Create Your Account</h4>
                     <p className="text-muted fs-13">Step {step}: {stepLabel}</p>
                   </div>
@@ -303,7 +303,7 @@ const RegisterBasic = () => {
                       </div>
                     </div>
                   </div>
-                  <p className="text-center text-muted mt-3 fs-12">Copyright Â© 2025 - Preclinic SaaS Platform</p>
+                  <p className="text-center text-muted mt-3 fs-12">Copyright © 2025 - Docyari SaaS Platform</p>
                 </div>
               </div>
             </div>
@@ -315,3 +315,5 @@ const RegisterBasic = () => {
 };
 
 export default RegisterBasic;
+
+

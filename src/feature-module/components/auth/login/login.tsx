@@ -93,7 +93,7 @@ const Login = () => {
                   <form onSubmit={handleLogin} className="d-flex justify-content-center align-items-center">
                     <div className="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill">
                       <div className="mx-auto mb-4 text-center">
-                        <ImageWithBasePath src="assets/img/logo.svg" className="img-fluid" alt="Logo" />
+                        <ImageWithBasePath src="assets/img/logo.svg" className="img-fluid" alt="Logo" style={{ width: "250px", height: "auto" }} />
                       </div>
                       <div className="card border-1 p-lg-3 shadow-md rounded-3 m-0">
                         <div className="card-body">
@@ -214,7 +214,7 @@ const Login = () => {
                       </div>
                     </div>
                   </form>
-                  <p className="fs-14 text-dark text-center mt-4">Copyright © 2025 - Preclinic.</p>
+                  <p className="fs-14 text-dark text-center mt-4">Copyright © 2025 - Docyari.</p>
                 </div>
               </div>
             </div>
@@ -226,3 +226,5 @@ const Login = () => {
 };
 
 export default Login;
+
+

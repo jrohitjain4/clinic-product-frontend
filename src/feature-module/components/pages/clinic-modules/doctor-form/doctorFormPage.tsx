@@ -1,4 +1,4 @@
-import { DatePicker } from "antd";
+﻿import { DatePicker } from "antd";
 import dayjs from "dayjs";
 import { Link, useNavigate } from "react-router";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
@@ -1128,7 +1128,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
           <p className="text-dark mb-0">
             2025 ©{" "}
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar";
 import Modals from "./modals/modals";
 
@@ -50,7 +50,7 @@ const SitemapSettings = () => {
                         </thead>
                         <tbody className="border-none">
                           <tr>
-                            <td>https://localhost/Preclinic</td>
+                            <td>https://localhost/Docyari</td>
                             <td>sitemap18725604.xml</td>
                             <td className="action-item">
                               <Link
@@ -104,7 +104,7 @@ const SitemapSettings = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

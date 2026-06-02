@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import PredefinedDatePicker from "../../../../../../core/common/datePicker";
 import { all_routes } from "../../../../../routes/all_routes";
@@ -739,7 +739,7 @@ const CallHistory = () => {
             <p className="text-dark mb-0">
               2025 ©
               <Link to="#" className="link-primary">
-                Preclinic
+                Docyari
               </Link>
               , All Rights Reserved
             </p>

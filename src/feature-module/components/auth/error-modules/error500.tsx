@@ -15,7 +15,7 @@ const Error500 = () => {
                   <div className="authen-overlay-item w-100">
                     <div className="authen-head text-center">
                       <h1 className="text-white fs-32 fw-bold mb-2">
-                        Server error â€” <br /> we're on it!
+                        Server error — <br /> we're on it!
                       </h1>
                       <p className="text-light fw-normal">
                         Our team has been notified and is working to fix this
@@ -40,7 +40,7 @@ const Error500 = () => {
               <div className="row justify-content-center align-items-center overflow-auto flex-wrap vh-100">
                 <div className="col-md-8 mx-auto text-center p-4">
                   <div className="mx-auto mb-4">
-                    <ImageWithBasePath src="assets/img/logo.svg" className="img-fluid" alt="Logo" />
+                    <ImageWithBasePath src="assets/img/logo.svg" className="img-fluid" alt="Logo" style={{ width: "250px", height: "auto" }} />
                   </div>
                   <div className="error-images mb-4">
                     <ImageWithBasePath
@@ -60,7 +60,7 @@ const Error500 = () => {
                     <i className="ti ti-chevron-left me-2" />
                     Back to Dashboard
                   </Link>
-                  <p className="fs-14 text-dark text-center mt-5">Copyright Â© 2025 - Preclinic.</p>
+                  <p className="fs-14 text-dark text-center mt-5">Copyright © 2025 - Docyari.</p>
                 </div>
               </div>
             </div>
@@ -72,3 +72,5 @@ const Error500 = () => {
 };
 
 export default Error500;
+
+

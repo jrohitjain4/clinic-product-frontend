@@ -87,15 +87,15 @@ const SidebarTwo = () => {
           <div>
             {/* Logo Normal */}
             <Link to={all_routes.dashboard} className="logo logo-normal">
-              <ImageWithBasePath src="assets/img/logo.svg" alt="Logo" />
+              <ImageWithBasePath src="docyari-logo.svg" alt="Logo" style={{ width: '165px', height: '165px', marginTop: '-65px', marginBottom: '-65px', marginLeft: '-15px' }} />
             </Link>
             {/* Logo Small */}
             <Link to={all_routes.dashboard} className="logo-small">
-              <ImageWithBasePath src="assets/img/logo-small.svg" alt="Logo" />
+              <ImageWithBasePath src="docyari-logo.svg" alt="Logo" style={{ width: '60px', height: 'auto', marginLeft: '-10px' }} />
             </Link>
             {/* Logo Dark */}
             <Link to={all_routes.dashboard} className="dark-logo">
-              <ImageWithBasePath src="assets/img/logo-white.svg" alt="Logo" />
+              <ImageWithBasePath src="docyari-logo.svg" alt="Logo" style={{ width: '165px', height: '165px', marginTop: '-65px', marginBottom: '-65px', marginLeft: '-15px' }} />
             </Link>
           </div>
           <button

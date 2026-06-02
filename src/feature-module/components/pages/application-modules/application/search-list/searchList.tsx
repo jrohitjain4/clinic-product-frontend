@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 
 import Lightbox from "yet-another-react-lightbox";
 import media15 from "/assets/img/media/media-15.jpg";
@@ -43,7 +43,7 @@ const SearchList = () => {
                   <input
                     type="text"
                     className="form-control flex-fill me-3"
-                    defaultValue="Preclinic"
+                    defaultValue="Docyari"
                   />
                   <button type="submit" className="btn btn-primary">
                     Search
@@ -57,7 +57,7 @@ const SearchList = () => {
           <div className="card">
             <div className="card-body">
               <h6 className="mb-3 text-capitalize">
-                Search result for "Preclinic"
+                Search result for "Docyari"
               </h6>
               {/* start row */}
               <div className="row">
@@ -68,10 +68,10 @@ const SearchList = () => {
                         to="#"
                         className="text-info text-truncate mb-2 text-wrap"
                       >
-                        https://themeforest.net/search/Preclinic
+                        https://themeforest.net/search/Docyari
                       </Link>
                       <p className="text-truncate line-clamb-2 mb-2">
-                        Preclinic - Html, Vue 3, Angular 17+, React &amp; Node
+                        Docyari - Html, Vue 3, Angular 17+, React &amp; Node
                         HR Project Management &amp; CRM Admin Dashboard Template
                       </p>
                       <div className="d-flex align-items-center flex-wrap row-gap-2">
@@ -473,7 +473,7 @@ const SearchList = () => {
           <p className="text-dark mb-0">
             2025 ©{" "}
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

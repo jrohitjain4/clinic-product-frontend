@@ -32,7 +32,7 @@ const ForgotPasswordIllustration = () => {
                           src="assets/img/logo.svg"
                           className="img-fluid"
                           alt="Logo"
-                        />
+                         style={{ width: "250px", height: "auto" }} />
                       </div>
                       <div className="card border-1 p-lg-3 shadow-md rounded-3 mb-4">
                         <div className="card-body">
@@ -41,7 +41,7 @@ const ForgotPasswordIllustration = () => {
                               Forgot Password
                             </h5>
                             <p className="mb-0">
-                              No worries, weâ€™ll send you reset instructions
+                              No worries, we’ll send you reset instructions
                             </p>
                           </div>
                           <div className="mb-3">
@@ -83,7 +83,7 @@ const ForgotPasswordIllustration = () => {
                   </form>
                   <p className="text-dark text-center">
                     
-                    Copyright Â© 2025 - Preclinic
+                    Copyright © 2025 - Docyari
                   </p>
                 </div>
                 {/* end row*/}
@@ -99,3 +99,5 @@ const ForgotPasswordIllustration = () => {
 };
 
 export default ForgotPasswordIllustration;
+
+

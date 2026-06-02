@@ -1151,8 +1151,8 @@ const DoctorDahboard = () => {
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
             2025 ©
-            <Link to="#" className="link-primary">
-              Preclinic
+            <Link to="#" className="link-primary ms-1">
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

@@ -45,7 +45,7 @@ const LoginIllustration = () => {
                           src="assets/img/logo.svg"
                           className="img-fluid"
                           alt="Logo"
-                        />
+                         style={{ width: "250px", height: "auto" }} />
                       </div>
                       <div className="card border-1 p-lg-3 shadow-md rounded-3 mb-4">
                         <div className="card-body">
@@ -176,7 +176,7 @@ const LoginIllustration = () => {
                           </div>
                           <div className="text-center">
                             <h6 className="fw-normal fs-14 text-dark mb-0">
-                              Donâ€™t have an account yet?
+                              Don’t have an account yet?
                               <Link
                                 to={all_routes.registerillustration}
                                 className="hover-a"
@@ -193,7 +193,7 @@ const LoginIllustration = () => {
                     </div>
                   </form>
                   <p className="text-dark text-center">
-                    Copyright Â© 2025 - Preclinic.
+                    Copyright © 2025 - Docyari.
                   </p>
                 </div>
                 {/* end row*/}
@@ -209,3 +209,5 @@ const LoginIllustration = () => {
 };
 
 export default LoginIllustration;
+
+

@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { City, Country, State } from "../../../../core/common/selectOption";
 import CommonSelect from "../../../../core/common/common-select/commonSelect";
@@ -329,7 +329,7 @@ const Profile = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

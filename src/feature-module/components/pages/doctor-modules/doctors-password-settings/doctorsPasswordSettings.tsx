@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
 type PasswordField = "password" | "confirmPassword";
@@ -182,7 +182,7 @@ const DoctorsPasswordSettings = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

@@ -1,4 +1,4 @@
-import  { useState } from "react";
+﻿import  { useState } from "react";
 import { Link } from "react-router";
 import { NewslettersData } from "../../../../core/json/NewslettersData";
 import SearchInput from "../../../../core/common/dataTable/dataTableSearch";
@@ -94,7 +94,7 @@ const Newsletters = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

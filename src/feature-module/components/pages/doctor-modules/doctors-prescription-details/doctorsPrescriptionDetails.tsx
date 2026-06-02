@@ -1,4 +1,4 @@
-import { Link, useSearchParams } from "react-router";
+﻿import { Link, useSearchParams } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
 import { useState, useEffect } from "react";
@@ -87,7 +87,7 @@ const DoctorsPrescriptionDetails = () => {
                         <ImageWithBasePath src="./assets/img/icons/trust-care.svg" alt="clinic" className="img-fluid" />
                       </div>
                       <div>
-                        <h6 className="text-dark fw-semibold mb-1">Preclinic Medical Center</h6>
+                        <h6 className="text-dark fw-semibold mb-1">Docyari Medical Center</h6>
                         <p className="mb-1">{doctor.fullName || "-"}</p>
                         <p className="mb-0 text-muted fs-13">
                           {doctor.designation?.name || ""}{doctor.department?.name ? ` · ${doctor.department.name}` : ""}
@@ -219,7 +219,7 @@ const DoctorsPrescriptionDetails = () => {
 
       <div className="p-3 bg-white border-top text-center">
         <p className="text-dark text-center mb-0">
-          2025 © <span className="text-info">Preclinic</span>, All Rights Reserved
+          2025 © <span className="text-info">Docyari</span>, All Rights Reserved
         </p>
       </div>
     </>

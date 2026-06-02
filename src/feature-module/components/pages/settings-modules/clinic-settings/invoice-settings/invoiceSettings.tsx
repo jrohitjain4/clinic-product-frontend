@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar";
 import { Invoice_Roundoff } from "../../../../../../core/common/selectOption";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
@@ -164,7 +164,7 @@ const InvoiceSettings = () => {
           <p className="text-dark mb-0">
             2025 ©
             <Link to="#" className="link-primary">
-              Preclinic
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

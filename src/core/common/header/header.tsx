@@ -181,7 +181,7 @@ const Header = () => {
               <div className="header-item">
                 <div className="dropdown me-2">
                   <a
-                    href={`/clinic/${user.clinic.id}`}
+                    href={`/c/${user.clinic.username || 'clinic'}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="d-flex align-items-center"
@@ -374,8 +374,8 @@ const Header = () => {
                   <span className="align-middle">Account Settings</span>
                 </Link>
                 {/* Theme Customizer Trigger */}
-                <Link 
-                  to="#" 
+                <Link
+                  to="#"
                   className="dropdown-item"
                   data-bs-toggle="offcanvas"
                   data-bs-target="#theme-setting"

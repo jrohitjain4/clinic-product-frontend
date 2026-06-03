@@ -63,7 +63,7 @@ const Dashboard = () => {
   ];
 
   const [copied, setCopied] = useState(false);
-  const landingPageUrl = `${window.location.origin}/clinic/${user.clinic?.id || user.id || 'clinic'}`;
+  const landingPageUrl = `${window.location.origin}/c/${user.clinic?.username || user.username || 'clinic'}`;
 
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(landingPageUrl);

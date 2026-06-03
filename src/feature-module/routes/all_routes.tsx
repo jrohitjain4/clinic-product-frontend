@@ -22,7 +22,7 @@ export const all_routes = {
   servicesFront: "/front-services",
   contactUs: "/contact-us",
   privacyPolicyFront: "/privacy-policy-front",
-  clinicLandingPage: "/@:username",
+  clinicLandingPage: "/c/:username",
   //Auth routes
   login: "/login",
   loginCover: "/login-cover",

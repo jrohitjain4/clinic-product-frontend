@@ -12,7 +12,6 @@ import AboutUs from "../components/pages/home/aboutUs";
 import ServicesFront from "../components/pages/home/servicesFront";
 import ContactUs from "../components/pages/home/contactUs";
 import PrivacyPolicyFront from "../components/pages/home/privacyPolicyFront";
-import ClinicLandingPage from "../components/pages/home/clinicLandingPage";
 import Login from "../components/auth/login/login";
 import LoginBasic from "../components/auth/login/loginBasic";
 import LoginCover from "../components/auth/login/loginCover";
@@ -252,7 +251,7 @@ import UiRangeSlides from "../components/pages/ui-modules/ui-interface/ui-advanc
 import UiRating from "../components/pages/ui-modules/ui-interface/ui-advance/uiRating";
 import UiScrollbar from "../components/pages/ui-modules/ui-interface/ui-advance/uiScrollbar";
 import { all_routes } from "./all_routes";
-import { Navigate, Route } from "react-router";
+import { Route } from "react-router";
 
 const routes = all_routes;
 
@@ -1424,11 +1423,6 @@ export const publicRoutes = [
     element: <BanIpAddressSettings />,
     route: Route,
   },
-  {
-    path: "*",
-    element: <Navigate to={routes.dashboard} replace />,
-    route: Route,
-  },
 ];
 export const authRoutes = [
   {
@@ -1454,11 +1448,6 @@ export const authRoutes = [
   {
     path: routes.privacyPolicyFront,
     element: <PrivacyPolicyFront />,
-    route: Route,
-  },
-  {
-    path: routes.clinicLandingPage,
-    element: <ClinicLandingPage />,
     route: Route,
   },
   {

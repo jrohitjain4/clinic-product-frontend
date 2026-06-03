@@ -371,24 +371,6 @@ const Header = () => {
                   <i className="ti ti-settings me-1 align-middle" />
                   <span className="align-middle">Account Settings</span>
                 </Link>
-                {/* item */}
-                <div className="form-check form-switch form-check-reverse d-flex align-items-center justify-content-between dropdown-item mb-0">
-                  <label className="form-check-label" htmlFor="notify">
-                    <i className="ti ti-bell me-1" />
-                    Notifications
-                  </label>
-                  <input
-                    className="form-check-input me-0"
-                    type="checkbox"
-                    role="switch"
-                    id="notify"
-                  />
-                </div>
-                {/* Item*/}
-                <Link to={all_routes.transactions} className="dropdown-item">
-                  <i className="ti ti-transition-right me-1 align-middle" />
-                  <span className="align-middle">Transactions</span>
-                </Link>
                 {/* Item*/}
                 <div className="pt-2 mt-2 border-top">
                   <Link to="#" onClick={handleLogout} className="dropdown-item text-danger">

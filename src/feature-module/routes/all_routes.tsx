@@ -95,6 +95,7 @@ export const all_routes = {
   domain: "/super-admin/domain",
   purchaseTransaction: "/super-admin/purchase-transaction",
   privacyPolicyAdmin: "/super-admin/privacy-policy",
+  demoBookings: "/super-admin/demo-bookings",
 
   //Application routes
   chat: "/application/chat",

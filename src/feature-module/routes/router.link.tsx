@@ -38,6 +38,7 @@ import RolesAndPermissions from "../components/pages/administration-modules/user
 import PackagesAdmin from "../components/pages/super-admin/packages/PackagesAdmin";
 import TenantsAdmin from "../components/pages/super-admin/tenants/TenantsAdmin";
 import PrivacyPolicyAdmin from "../components/pages/super-admin/settings/PrivacyPolicyAdmin";
+import DemoBookingsAdmin from "../components/pages/super-admin/demo-bookings/DemoBookingsAdmin";
 import Calendars from "../components/pages/application-modules/application/calendar/calendar";
 import CallHistory from "../components/pages/application-modules/application/calls/callHistory";
 import IncomingCall from "../components/pages/application-modules/application/calls/incomingCall";
@@ -260,6 +261,11 @@ export const publicRoutes = [
   {
     path: routes.packages,
     element: <PackagesAdmin />,
+    route: Route,
+  },
+  {
+    path: routes.demoBookings,
+    element: <DemoBookingsAdmin />,
     route: Route,
   },
   {

@@ -9,6 +9,9 @@ import { all_routes } from "../../../feature-module/routes/all_routes";
 import TrialCountdown from "../../../feature-module/components/common/TrialCountdown";
 import { useNotifications } from "../../hooks/useNotifications";
 import moment from "moment";
+import { Button } from "../button/Button";
+import { Input } from "../input/Input";
+import { Search } from "react-feather";
 
 const Header = () => {
 
@@ -141,21 +144,19 @@ const Header = () => {
             </button>
             {/* Search */}
             <div className="me-auto d-flex align-items-center header-search d-lg-flex d-none">
-              {/* Search */}
-              <div className="input-icon-start position-relative me-2">
-                <span className="input-icon-addon">
-                  <i className="ti ti-search" />
-                </span>
-                <input
+              <div className="me-2" style={{ width: '260px' }}>
+                <Input
+                  className="mb-0 navbar-search"
                   type="text"
-                  className="form-control shadow-sm"
                   placeholder="Search"
+                  leftAddon={<Search size={16} strokeWidth={2.5} color="#64748b" />}
+                  rightIcon={
+                    <span className="text-dark shadow-sm fs-12 fw-bold d-inline-flex px-1 bg-light rounded border align-items-center justify-content-center" style={{ height: '22px' }}>
+                      <i className="ti ti-command me-1" /> K
+                    </span>
+                  }
                 />
-                <span className="input-icon-addon text-dark shadow fs-18 d-inline-flex p-0 header-search-icon">
-                  <i className="ti ti-command" />
-                </span>
               </div>
-              {/* /Search */}
             </div>
           </div>
           <div className="d-flex align-items-center">
@@ -183,11 +184,12 @@ const Header = () => {
                     href={`/clinic/${user.clinic.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn btn-primary btn-sm d-flex align-items-center gap-1 px-3 py-2 rounded-3 text-white shadow-sm"
-                    title="View Live Clinic Website"
+                    className="d-flex align-items-center"
+                    style={{ textDecoration: 'none' }}
                   >
-                    <i className="ti ti-world" />
-                    <span className="d-none d-md-inline fw-medium fs-14">Live Website</span>
+                    <Button variant="primary" icon={<i className="ti ti-world" />}>
+                      <span className="d-none d-md-inline fw-medium fs-14">Live Website</span>
+                    </Button>
                   </a>
                 </div>
               </div>
@@ -370,6 +372,35 @@ const Header = () => {
                 <Link to={all_routes.profilesettings} className="dropdown-item">
                   <i className="ti ti-settings me-1 align-middle" />
                   <span className="align-middle">Account Settings</span>
+                </Link>
+                {/* Theme Customizer Trigger */}
+                <Link 
+                  to="#" 
+                  className="dropdown-item"
+                  data-bs-toggle="offcanvas"
+                  data-bs-target="#theme-setting"
+                >
+                  <i className="ti ti-color-swatch me-1 align-middle" />
+                  <span className="align-middle">Theme Customizer</span>
+                </Link>
+                {/* item */}
+                <div className="form-check form-switch form-check-reverse d-flex align-items-center justify-content-between dropdown-item mb-0">
+                  <label className="form-check-label" htmlFor="notify">
+                    <i className="ti ti-bell me-1" />
+                    Notifications
+                  </label>
+                  <input
+
+                    className="form-check-input me-0"
+                    type="checkbox"
+                    role="switch"
+                    id="notify"
+                  />
+                </div>
+                {/* Item*/}
+                <Link to={all_routes.transactions} className="dropdown-item">
+                  <i className="ti ti-transition-right me-1 align-middle" />
+                  <span className="align-middle">Transactions</span>
                 </Link>
                 {/* Item*/}
                 <div className="pt-2 mt-2 border-top">

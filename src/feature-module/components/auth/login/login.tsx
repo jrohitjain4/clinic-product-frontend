@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { all_routes } from "../../../routes/all_routes";
-import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { apiUrl } from "../../../../core/config/api";
+import { Input } from "../../../../core/common/input/Input";
+import { Button } from "../../../../core/common/button/Button";
+import { User, Lock, Eye, EyeOff, LogIn } from "react-feather";
 
 const getDashboardPath = (role: string): string => {
   switch (role) {
@@ -60,43 +62,64 @@ const Login = () => {
         <div className="w-100 overflow-hidden position-relative flex-wrap d-block vh-100 bg-white">
           <div className="row">
             {/* Left Cover Panel */}
-            <div className="col-lg-6 p-0">
-              <div className="login-backgrounds login-covers bg-primary d-lg-flex align-items-center justify-content-center d-none flex-wrap p-4 position-relative h-100 z-0">
-                <div className="authentication-card w-100">
-                  <div className="authen-overlay-item w-100">
-                    <div className="authen-head text-center">
-                      <h1 className="text-white fs-32 fw-bold mb-2">
-                        Seamless healthcare access <br /> with smart, modern clinic
-                      </h1>
-                      <p className="text-light fw-normal">
-                        Experience efficient, secure, and user-friendly healthcare
-                        management designed for modern clinics and growing practices.
-                      </p>
-                    </div>
-                    <div className="mt-4 mx-auto authen-overlay-img">
-                      <ImageWithBasePath src="assets/img/auth/cover-imgs-1.png" alt="Img" />
-                    </div>
-                  </div>
+            <div className="col-lg-6 p-0 d-none d-lg-block">
+              <div
+                className="d-flex align-items-center justify-content-center p-4 position-relative h-100"
+                style={{
+                  backgroundImage: "url('https://images.openai.com/static-rsc-4/m44RsUMB2u35mpGxV_Vhj4deyk5kpDN_OJlgYvyzCOeR5XI9_VykH8ZIRtl4b387FIu2UGhjmW4hAg_nUf5Ghxzi7cir84rViThx-KEqqinSEFp1MFVAnTdwtejkPVlBeIss0F9lA_iawnFtF9lTqga0-X_RHtUO5zYSIOAYnqNDq80iZu0roji9fCH_0FVI?purpose=fullsize')",
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                <div style={{
+                  position: 'absolute',
+                  top: 0, left: 0, right: 0, bottom: 0,
+                  background: 'linear-gradient(to bottom, rgba(99, 102, 241, 0) 40%, rgba(99, 102, 241, 0.9) 100%)'
+                }}></div>
+
+                <div style={{ position: 'absolute', top: '40px', left: '40px', zIndex: 2 }}>
+                  <img src="/logo.png" className="img-fluid" alt="DocYori Logo" style={{ maxHeight: "100px", width: "auto" }} />
                 </div>
-                <ImageWithBasePath
-                  src="assets/img/auth/cover-imgs-2.png"
-                  alt="cover-imgs-2"
-                  className="img-fluid cover-img"
-                />
+
+                <div className="w-100 position-relative z-1 text-center" style={{ marginTop: 'auto', marginBottom: '30px' }}>
+                  <h1 className="text-white fs-32 fw-bold mb-3" style={{ textShadow: '0 2px 6px rgba(0,0,0,0.3)' }}>
+                    Seamless healthcare access <br /> with smart, modern clinic
+                  </h1>
+                  <p className="text-white fw-medium mx-auto fs-15" style={{ maxWidth: '500px', textShadow: '0 1px 4px rgba(0,0,0,0.3)', lineHeight: '1.6' }}>
+                    Experience efficient, secure, and user-friendly healthcare <br />
+                    management designed for modern clinics and growing practices.
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* Right Form Panel */}
-            <div className="col-lg-6 col-md-12 col-sm-12">
+            <div className="col-lg-6 col-md-12 col-sm-12 position-relative">
+
+              {/* Logo for Mobile View */}
+              <div className="text-center w-100 d-lg-none" style={{ position: 'absolute', top: '40px', left: 0, zIndex: 10 }}>
+                <img src="/logo.png" className="img-fluid" alt="DocYori Logo" style={{ maxHeight: "100px", width: "auto" }} />
+              </div>
+
               <div className="row justify-content-center align-items-center overflow-auto flex-wrap vh-100">
                 <div className="col-md-8 mx-auto">
                   <form onSubmit={handleLogin} className="d-flex justify-content-center align-items-center">
                     <div className="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill">
-                      <div className="mx-auto mb-4 text-center">
-                        <ImageWithBasePath src="assets/img/logo.svg" className="img-fluid" alt="Logo" style={{ width: "250px", height: "auto" }} />
-                      </div>
+
                       <div className="card border-1 p-lg-3 shadow-md rounded-3 m-0">
                         <div className="card-body">
+                          <div className="text-start mb-4">
+                            <div className="d-flex align-items-center mb-3">
+                              <div className="d-flex align-items-center justify-content-center bg-light rounded-circle me-3" style={{ width: '45px', height: '45px', border: '1.5px solid #e2e8f0' }}>
+                                <LogIn size={22} color="#6366f1" strokeWidth={2.5} />
+                              </div>
+                              <h5 className="mb-0 fs-28 fw-bold text-dark">Login</h5>
+                            </div>
+                            <p className="mb-0 text-muted fs-15">
+                              This panel is strictly for authorized administrators.<br />
+                              Unauthorized access is prohibited.
+                            </p>
+                          </div>
                           <div className="text-center mb-3">
                             <h5 className="mb-1 fs-20 fw-bold">Sign In</h5>
                             <p className="mb-0">Please enter your Mobile, Username, or Email to access your portal</p>
@@ -108,48 +131,35 @@ const Login = () => {
                             </div>
                           )}
 
-                          <div className="mb-3">
-                            <label className="form-label">Username / Mobile / Email</label>
-                            <div className="input-group">
-                              <span className="input-group-text border-end-0 bg-white">
-                                <i className="ti ti-user fs-14 text-dark" />
-                              </span>
-                              <input
-                                type="text"
-                                required
-                                value={identifier}
-                                onChange={(e) => setIdentifier(e.target.value)}
-                                className="form-control border-start-0 ps-0"
-                                placeholder="Enter Username, Mobile, or Email"
-                              />
-                            </div>
-                          </div>
+                          <Input
+                            label="Email / Mobile / Username"
+                            type="text"
+                            required
+                            value={identifier}
+                            onChange={(e) => setIdentifier(e.target.value)}
+                            placeholder="Enter Username, Mobile or Email"
+                            leftAddon={<User size={20} strokeWidth={2.5} color="#0f172a" />}
+                          />
 
-                          <div className="mb-3">
-                            <label className="form-label">Password</label>
-                            <div className="pass-group input-group position-relative border rounded">
-                              <span className="input-group-text bg-white border-0">
-                                <i className="ti ti-lock text-dark fs-14" />
-                              </span>
-                              <input
-                                type={showPassword ? "text" : "password"}
-                                required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="pass-input form-control ps-0 border-0"
-                                placeholder="****************"
-                              />
-                              <span
-                                className="input-group-text bg-white border-0"
+                          <Input
+                            label="Password"
+                            type={showPassword ? "text" : "password"}
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="****************"
+                            leftAddon={<Lock size={20} strokeWidth={2.5} color="#0f172a" />}
+                            rightIcon={
+                              <div
                                 onClick={() => setShowPassword(!showPassword)}
-                                style={{ cursor: "pointer" }}
+                                style={{ cursor: "pointer", display: "flex", alignItems: "center", height: "100%" }}
                               >
-                                <i className={`ti ${showPassword ? "ti-eye" : "ti-eye-off"} text-dark fs-14`} />
-                              </span>
-                            </div>
-                          </div>
+                                {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
+                              </div>
+                            }
+                          />
 
-                          <div className="d-flex align-items-center justify-content-between mb-3">
+                          <div className="d-flex align-items-center justify-content-between mb-3 mt-2">
                             <div className="form-check form-check-md mb-0">
                               <input className="form-check-input" id="remember_me" type="checkbox" />
                               <label htmlFor="remember_me" className="form-check-label mt-0 text-dark">
@@ -162,10 +172,14 @@ const Login = () => {
                           </div>
 
                           <div className="mb-3">
-                            <button
+                            <Button
                               type="submit"
                               disabled={loading}
-                              className="btn bg-primary text-white w-100 py-2 fw-semibold d-flex align-items-center justify-content-center"
+                              variant="primary"
+                              size="large"
+                              className="w-100"
+                              icon={<LogIn size={18} strokeWidth={2.5} />}
+                              iconPosition="right"
                             >
                               {loading ? (
                                 <>
@@ -175,37 +189,13 @@ const Login = () => {
                               ) : (
                                 "Login"
                               )}
-                            </button>
+                            </Button>
                           </div>
 
-                          <div className="login-or position-relative mb-3">
-                            <span className="span-or">OR</span>
-                          </div>
-
-                          <div className="mb-3">
-                            <div className="d-flex align-items-center justify-content-center flex-wrap">
-                              <div className="text-center me-2 flex-fill">
-                                <Link to="#" className="br-10 p-1 btn btn-outline-light border d-flex align-items-center justify-content-center">
-                                  <ImageWithBasePath className="img-fluid m-1" src="assets/img/icons/facebook-logo.svg" alt="Facebook" />
-                                </Link>
-                              </div>
-                              <div className="text-center me-2 flex-fill">
-                                <Link to="#" className="br-10 p-1 btn btn-outline-light border d-flex align-items-center justify-content-center">
-                                  <ImageWithBasePath className="img-fluid m-1" src="assets/img/icons/google-logo.svg" alt="Google" />
-                                </Link>
-                              </div>
-                              <div className="text-center me-2 flex-fill">
-                                <Link to="#" className="br-10 p-1 btn btn-outline-light border d-flex align-items-center justify-content-center">
-                                  <ImageWithBasePath className="img-fluid m-1" src="assets/img/icons/apple-logo.svg" alt="Apple" />
-                                </Link>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="text-center">
+                          <div className="text-center mt-4">
                             <h6 className="fw-normal fs-14 text-dark mb-0">
                               Don't have an account yet?{" "}
-                              <Link to={all_routes.registerbasic} className="hover-a text-primary ms-1">
+                              <Link to={all_routes.registerbasic} className="hover-a text-primary fw-medium ms-1">
                                 Register
                               </Link>
                             </h6>
@@ -214,7 +204,7 @@ const Login = () => {
                       </div>
                     </div>
                   </form>
-                  <p className="fs-14 text-dark text-center mt-4">Copyright © 2025 - Docyari.</p>
+                  <p className="fs-14 text-dark text-center mt-4">Copyright © 2026 - DocYori.</p>
                 </div>
               </div>
             </div>
@@ -226,5 +216,3 @@ const Login = () => {
 };
 
 export default Login;
-
-

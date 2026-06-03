@@ -19,7 +19,7 @@ export const doctorsListPath = () => {
 export const all_routes = {
   home: "/",
   aboutUs: "/about-us",
-  servicesFront: "/services",
+  servicesFront: "/front-services",
   contactUs: "/contact-us",
   privacyPolicyFront: "/privacy-policy-front",
   clinicLandingPage: "/@:username",

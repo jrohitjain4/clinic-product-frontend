@@ -1,4 +1,4 @@
-﻿import { DatePicker } from "antd";
+import { DatePicker } from "antd";
 import dayjs from "dayjs";
 import { Link, useNavigate } from "react-router";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
@@ -63,13 +63,14 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
     return modalElement ? modalElement : document.body;
   };
 
-  // ── Dynamic dropdown data ──────────────────────────────────────
+  // -- Dynamic dropdown data --------------------------------------
   const [departments, setDepartments] = useState<Dept[]>([]);
+  const [isLoadingDepartments, setIsLoadingDepartments] = useState(true);
   const [allDesignations, setAllDesignations] = useState<Desig[]>([]);
   const [filteredDesignations, setFilteredDesignations] = useState<Desig[]>([]);
   const [specializations, setSpecializations] = useState<{ id: string; name: string }[]>([]);
 
-  // ── Form state ─────────────────────────────────────────────────
+  // -- Form state -------------------------------------------------
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [phone, setPhone] = useState<string | undefined>();
@@ -78,8 +79,10 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   const [yearOfExperience, setYearOfExperience] = useState("");
   const [departmentId, setDepartmentId] = useState("");
   const [designationId, setDesignationId] = useState("");
-  const [specializationId, setSpecializationId] = useState("");
+  const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
   const [medicalLicenseNumber, setMedicalLicenseNumber] = useState("");
+  const [maritalStatus, setMaritalStatus] = useState("");
+  const [qualification, setQualification] = useState("");
   const [tags, setTags] = useState<string[]>(["English"]);
   const [bloodGroup, setBloodGroup] = useState("");
   const [gender, setGender] = useState("");
@@ -102,6 +105,9 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   const [consultationCharge, setConsultationCharge] = useState("");
   const [maxBookingsPerSlot, setMaxBookingsPerSlot] = useState("");
   const [displayOnBookingPage, setDisplayOnBookingPage] = useState(false);
+  const [followUpEnabled, setFollowUpEnabled] = useState(false);
+  const [followUpValidityDays, setFollowUpValidityDays] = useState("");
+  const [freeFollowUpLimit, setFreeFollowUpLimit] = useState("");
 
   // Schedule
   const WEEKDAYS = [
@@ -122,6 +128,12 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   const [awards, setAwards] = useState<AwardEntry[]>([]);
   const [certifications, setCertifications] = useState<AwardEntry[]>([]);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [signatureImage, setSignatureImage] = useState<string | null>(null);
+  const [medicalRegCertificate, setMedicalRegCertificate] = useState<string | null>(null);
+  const [qualificationCertificate, setQualificationCertificate] = useState<string | null>(null);
+  const [aadhaarCard, setAadhaarCard] = useState<string | null>(null);
+  const [panCard, setPanCard] = useState<string | null>(null);
+
   const [formReady, setFormReady] = useState(!isEdit);
   const [loadingDoctor, setLoadingDoctor] = useState(isEdit);
   const [educationKey, setEducationKey] = useState(0);
@@ -164,7 +176,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   const [phoneWarning, setPhoneWarning] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // ── Load doctor for edit ─────────────────────────────────────────
+  // -- Load doctor for edit -----------------------------------------
   useEffect(() => {
     if (!isEdit || !isValidDoctorId(doctorId)) return;
 
@@ -191,8 +203,14 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         );
         setDepartmentId(d.departmentId || "");
         setDesignationId(d.designationId || "");
-        setSpecializationId(d.specializationId || "");
+        setSelectedSpecializations(
+          Array.isArray(d.specializations)
+            ? d.specializations.map((s: any) => s.id)
+            : []
+        );
         setMedicalLicenseNumber(d.medicalLicenseNumber || "");
+        setMaritalStatus(d.maritalStatus || "");
+        setQualification(d.qualification || "");
         setTags(
           Array.isArray(d.languagesSpoken) && d.languagesSpoken.length
             ? d.languagesSpoken
@@ -203,6 +221,11 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         setBio(d.bio || "");
         setFeatureOnWebsite(!!d.featureOnWebsite);
         setProfileImage(d.profileImage || null);
+        setSignatureImage(d.signatureImage || null);
+        setMedicalRegCertificate(d.medicalRegCertificate || null);
+        setQualificationCertificate(d.qualificationCertificate || null);
+        setAadhaarCard(d.aadhaarCard || null);
+        setPanCard(d.panCard || null);
         setAddress1(d.address1 || "");
         setAddress2(d.address2 || "");
         setCountry(d.country || "");
@@ -226,6 +249,13 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
           d.maxBookingsPerSlot != null ? String(d.maxBookingsPerSlot) : ""
         );
         setDisplayOnBookingPage(!!d.displayOnBookingPage);
+        setFollowUpEnabled(!!d.followUpEnabled);
+        setFollowUpValidityDays(
+          d.followUpValidityDays != null ? String(d.followUpValidityDays) : ""
+        );
+        setFreeFollowUpLimit(
+          d.freeFollowUpLimit != null ? String(d.freeFollowUpLimit) : ""
+        );
         setSchedules(
           parseSchedulesFromApi(
             d.schedules as Record<string, { session?: string; from: string; to: string }[]>
@@ -247,7 +277,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
       .finally(() => setLoadingDoctor(false));
   }, [isEdit, doctorId]);
 
-  // ── Phone Duplicate Check ──────────────────────────────────────
+  // -- Phone Duplicate Check --------------------------------------
   useEffect(() => {
     if (!phone || phone.length < 5) {
       setPhoneWarning(null);
@@ -275,25 +305,38 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
       .catch(() => setPhoneWarning(null));
   }, [phone, isEdit, doctorId]);
 
-  // ── Fetch departments on mount ─────────────────────────────────
+  // -- Fetch departments on mount ---------------------------------
   useEffect(() => {
     const token = localStorage.getItem("token");
     fetch(apiUrl("/api/departments"), {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
-      .then((data: Dept[]) => {
-        const active = data.filter ? data.filter((d: any) => d.status === "Active") : data;
-        setDepartments(active);
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const active = data.filter((d: any) => d.status === "Active");
+          setDepartments(active);
+        } else {
+          console.error("Departments API returned non-array:", data);
+          setDepartments([]);
+        }
       })
-      .catch(console.error);
+      .catch((err) => {
+        console.error("Dept fetch error:", err);
+        setDepartments([]);
+      })
+      .finally(() => setIsLoadingDepartments(false));
 
     fetch(apiUrl("/api/designations"), {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
-      .then((data: Desig[]) => {
-        setAllDesignations(data);
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setAllDesignations(data);
+        } else {
+          setAllDesignations([]);
+        }
       })
       .catch(console.error);
 
@@ -307,7 +350,16 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
       .catch(console.error);
   }, []);
 
-  // ── Filter designations when department changes ────────────────
+  useEffect(() => {
+    if (!isLoadingDepartments && departments.length === 0) {
+      const msg = "To add a doctor, you need to first add at least one Department and one Designation in the system.";
+      setError(msg);
+      // Optional: Show a one-time popup alert as requested
+      window.alert(msg);
+    }
+  }, [isLoadingDepartments, departments]);
+
+  // -- Filter designations when department changes ----------------
   useEffect(() => {
     if (!departmentId) {
       setFilteredDesignations([]);
@@ -325,27 +377,45 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
 
   const deptOptions = departments.map((d) => ({ value: d.id, label: d.name }));
   const desigOptions = filteredDesignations.map((d) => ({ value: d.id, label: d.name }));
-  const specOptions = specializations.map((d) => ({ value: d.id, label: d.name }));
+  const specOptions = specializations.map((d: any) => ({ value: d.id, label: d.name }));
 
   const selectedDeptOption =
     deptOptions.find((o) => o.value === departmentId) ?? null;
   const selectedDesigOption =
     desigOptions.find((o) => o.value === designationId) ?? null;
-  const selectedSpecOption =
-    specOptions.find((o) => o.value === specializationId) ?? null;
 
   const handleDepartmentChange = (opt: { value: string; label: string } | null) => {
     setDepartmentId(opt?.value || "");
     setDesignationId("");
   };
 
-  // ── Submit ─────────────────────────────────────────────────────
+  // -- Submit -----------------------------------------------------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!fullName.trim()) {
       setError("Doctor name is required.");
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    if (departments.length === 0 || allDesignations.length === 0) {
+      const msg = "To add a doctor, you need to first add at least one Department and one Designation in the system.";
+      setError(msg);
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    if (!departmentId) {
+      setError("Please select a Department.");
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    if (!designationId) {
+      setError("Please select a Designation.");
+      window.scrollTo(0, 0);
       return;
     }
 
@@ -370,14 +440,21 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         yearOfExperience,
         departmentId,
         designationId,
-        specializationId,
+        specializations: selectedSpecializations,
         medicalLicenseNumber,
+        maritalStatus,
+        qualification,
         languagesSpoken: tags,
         bloodGroup,
         gender,
         bio,
         featureOnWebsite,
         profileImage: profileImage || null,
+        signatureImage: signatureImage || null,
+        medicalRegCertificate: medicalRegCertificate || null,
+        qualificationCertificate: qualificationCertificate || null,
+        aadhaarCard: aadhaarCard || null,
+        panCard: panCard || null,
         address1,
         address2,
         country,
@@ -390,6 +467,9 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         consultationCharge: acceptingAppointments ? consultationCharge : null,
         maxBookingsPerSlot: acceptingAppointments ? maxBookingsPerSlot : null,
         displayOnBookingPage: acceptingAppointments ? displayOnBookingPage : false,
+        followUpEnabled: followUpEnabled,
+        followUpValidityDays: followUpEnabled ? followUpValidityDays : null,
+        freeFollowUpLimit: followUpEnabled ? freeFollowUpLimit : null,
         schedules: serializeSchedules(schedules),
         educations: serializeEducations(educations),
         awards: serializeAwards(awards),
@@ -429,7 +509,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
       <div className="page-wrapper">
         <div className="content text-center py-5">
           <span className="spinner-border text-primary" role="status" />
-          <p className="text-muted mt-2 mb-0">Loading doctor…</p>
+          <p className="text-muted mt-2 mb-0">Loading doctor�</p>
         </div>
       </div>
     );
@@ -477,8 +557,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                 <div className="alert alert-success d-flex align-items-center gap-2 mb-3">
                   <i className="ti ti-circle-check" />
                   {isEdit
-                    ? "Doctor updated successfully! Redirecting…"
-                    : "Doctor added successfully! Redirecting…"}
+                    ? "Doctor updated successfully! Redirecting�"
+                    : "Doctor added successfully! Redirecting�"}
                 </div>
               )}
 
@@ -491,7 +571,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                   </div>
 
                   <form onSubmit={handleSubmit}>
-                    {/* ── Contact Information ───────────────── */}
+                    {/* -- Contact Information ----------------- */}
                     <div className="bg-light px-3 py-2 mb-3">
                       <h6 className="fw-bold mb-0">Contact Information</h6>
                     </div>
@@ -547,7 +627,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                   Phone Number <span className="text-danger">*</span>
                                 </label>
                                 <PhoneInput
-                                  defaultCountry="US"
+                                  defaultCountry="IN"
                                   value={phone}
                                   onChange={setPhone}
                                 />
@@ -626,7 +706,12 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                 <label className="form-label">
                                   Department <span className="text-danger ms-1">*</span>
                                 </label>
-                                {deptOptions.length > 0 ? (
+                                {isLoadingDepartments ? (
+                                  <div className="form-control text-muted d-flex align-items-center gap-2">
+                                    <span className="spinner-border spinner-border-sm" role="status" />
+                                    Loading departments�
+                                  </div>
+                                ) : deptOptions.length > 0 ? (
                                   <CommonSelect
                                     options={deptOptions}
                                     className="select"
@@ -635,12 +720,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                     onChange={handleDepartmentChange}
                                   />
                                 ) : (
-                                  <div className="form-control text-muted d-flex align-items-center gap-2">
-                                    <span
-                                      className="spinner-border spinner-border-sm"
-                                      role="status"
-                                    />
-                                    Loading departments…
+                                  <div className="form-control text-muted">
+                                    No departments available
                                   </div>
                                 )}
                               </div>
@@ -663,7 +744,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                   <div className="form-control text-muted py-2">
                                     {!departmentId
                                       ? "Select a department first"
-                                      : "No designations for this department — add one in Designation settings"}
+                                      : "No designations for this department � add one in Designation settings"}
                                   </div>
                                 )}
                               </div>
@@ -671,19 +752,24 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
                         </div>
 
-                        {/* Specialization */}
+                        {/* Specialization + Qualification */}
                         <div className="col-lg-12">
                           <div className="row">
                             <div className="col-lg-6">
                               <div className="mb-3">
-                                <label className="form-label">Specialization</label>
+                                <label className="form-label">Specializations</label>
                                 {specOptions.length > 0 ? (
                                   <CommonSelect
                                     options={specOptions}
                                     className="select"
-                                    value={selectedSpecOption}
-                                    placeholder="Select specialization"
-                                    onChange={(opt: any) => setSpecializationId(opt?.value || "")}
+                                    value={specOptions.filter((o: any) => selectedSpecializations.includes(o.value))}
+                                    placeholder="Select specializations"
+                                    isMulti={true}
+                                    onChange={(opt: any) =>
+                                      setSelectedSpecializations(
+                                        Array.isArray(opt) ? opt.map((o: any) => o.value) : []
+                                      )
+                                    }
                                   />
                                 ) : (
                                   <div className="form-control text-muted py-2">
@@ -692,12 +778,44 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                 )}
                               </div>
                             </div>
+                            <div className="col-lg-6">
+                              <div className="mb-3">
+                                <label className="form-label">Qualification</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  value={qualification}
+                                  onChange={(e) => setQualification(e.target.value)}
+                                  placeholder="e.g. MBBS, MD"
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
 
-                        {/* License + Languages */}
+                        {/* Marital Status + License */}
                         <div className="col-lg-12">
                           <div className="row">
+                            <div className="col-lg-6">
+                              <div className="mb-3">
+                                <label className="form-label">Marital Status</label>
+                                <CommonSelect
+                                  options={[
+                                    { value: "Single", label: "Single" },
+                                    { value: "Married", label: "Married" },
+                                    { value: "Divorced", label: "Divorced" },
+                                    { value: "Widowed", label: "Widowed" },
+                                  ]}
+                                  className="select"
+                                  value={
+                                    maritalStatus
+                                      ? { value: maritalStatus, label: maritalStatus }
+                                      : null
+                                  }
+                                  onChange={(opt: any) => setMaritalStatus(opt?.value || "")}
+                                />
+                              </div>
+                            </div>
                             <div className="col-lg-6">
                               <div className="mb-3">
                                 <label className="form-label">
@@ -724,6 +842,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                             </div>
                           </div>
                         </div>
+
+
 
                         {/* Blood Group + Gender */}
                         <div className="col-lg-12">
@@ -788,7 +908,36 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       </div>
                     </div>
 
-                    {/* ── Address Information ───────────────── */}
+                    {/* -- Document Information ----------------- */}
+                    <div className="bg-light px-3 py-2 mb-3">
+                      <h6 className="fw-bold mb-0">Documents Upload</h6>
+                    </div>
+                    <div className="pb-0">
+                      <div className="row">
+                        <div className="col-lg-6 mb-3">
+                          <label className="form-label">Doctor Signature</label>
+                          <DoctorProfileUpload value={signatureImage} onChange={setSignatureImage} />
+                        </div>
+                        <div className="col-lg-6 mb-3">
+                          <label className="form-label">Medical Registration Certificate</label>
+                          <DoctorProfileUpload value={medicalRegCertificate} onChange={setMedicalRegCertificate} />
+                        </div>
+                        <div className="col-lg-6 mb-3">
+                          <label className="form-label">Qualification Certificate</label>
+                          <DoctorProfileUpload value={qualificationCertificate} onChange={setQualificationCertificate} />
+                        </div>
+                        <div className="col-lg-6 mb-3">
+                          <label className="form-label">Aadhaar Card (Optional)</label>
+                          <DoctorProfileUpload value={aadhaarCard} onChange={setAadhaarCard} />
+                        </div>
+                        <div className="col-lg-6 mb-3">
+                          <label className="form-label">PAN Card (Optional)</label>
+                          <DoctorProfileUpload value={panCard} onChange={setPanCard} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* -- Address Information ----------------- */}
                     <div className="bg-light px-3 py-2 mb-3">
                       <h6 className="fw-bold mb-0">Address Information</h6>
                     </div>
@@ -863,7 +1012,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       </div>
                     </div>
 
-                    {/* ── Schedule ─────────────────────────── */}
+                    {/* -- Schedule --------------------------- */}
                     <div className="bg-light px-3 py-2 mb-3">
                       <h6 className="fw-bold mb-0">Schedule</h6>
                     </div>
@@ -921,13 +1070,13 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           <span className="text-success fs-13">{scheduleApplyMsg}</span>
                         )}
                         <span className="text-muted fs-12">
-                          Active day: <strong>{activeScheduleDay}</strong> — isi din ka time sab
+                          Active day: <strong>{activeScheduleDay}</strong> � isi din ka time sab
                           par copy hoga
                         </span>
                       </div>
                     </div>
 
-                    {/* ── Appointment Information ───────────── */}
+                    {/* -- Appointment Information ------------- */}
                     <div className="bg-light px-3 py-2 mb-3 d-flex align-items-center justify-content-between">
                       <h6 className="fw-bold mb-0">Appointment Information</h6>
                       <div className="form-check form-switch m-0">
@@ -1054,7 +1203,66 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       </div>
                     )}
 
-                    {/* ── Educational Information ───────────── */}
+                    {/* -- Follow-up Information ------------- */}
+                    <div className="bg-light px-3 py-2 mb-3">
+                      <h6 className="fw-bold mb-0">Follow-up Settings</h6>
+                    </div>
+                    <div className="pb-0">
+                      <div className="row">
+                        <div className="col-lg-12">
+                          <div className="form-check form-switch mb-3">
+                            <label className="form-check-label" htmlFor="followUpEnabled">
+                              Follow-up Enabled
+                            </label>
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              role="switch"
+                              id="followUpEnabled"
+                              checked={followUpEnabled}
+                              onChange={(e) => setFollowUpEnabled(e.target.checked)}
+                            />
+                          </div>
+                        </div>
+                        {followUpEnabled && (
+                          <>
+                            <div className="col-lg-6">
+                              <div className="mb-3">
+                                <label className="form-label">Follow-up Validity</label>
+                                <div className="input-group">
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    value={followUpValidityDays}
+                                    onChange={(e) => setFollowUpValidityDays(e.target.value)}
+                                    placeholder="e.g. 15"
+                                    min={0}
+                                  />
+                                  <span className="input-group-text bg-transparent text-dark fs-14">Days</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="col-lg-6">
+                              <div className="mb-3">
+                                <label className="form-label">Free Follow-up Limit</label>
+                                <div className="input-group">
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    value={freeFollowUpLimit}
+                                    onChange={(e) => setFreeFollowUpLimit(e.target.value)}
+                                    placeholder="e.g. 4"
+                                    min={0}
+                                  />
+                                  <span className="input-group-text bg-transparent text-dark fs-14">Visits</span>
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    {/* -- Educational Information ------------- */}
                     <div className="bg-light px-3 py-2 mb-3">
                       <h6 className="fw-bold mb-0">Educational Information</h6>
                     </div>
@@ -1068,7 +1276,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       </div>
                     </div>
 
-                    {/* ── Awards & Recognition ─────────────── */}
+                    {/* -- Awards & Recognition --------------- */}
                     <div className="bg-light px-3 py-2 mb-3">
                       <h6 className="fw-bold mb-0">Awards &amp; Recognition</h6>
                     </div>
@@ -1082,7 +1290,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       </div>
                     </div>
 
-                    {/* ── Certifications ───────────────────── */}
+                    {/* -- Certifications --------------------- */}
                     <div className="bg-light px-3 py-2">
                       <h6 className="fw-bold mb-0">Certifications</h6>
                     </div>
@@ -1096,7 +1304,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       </div>
                     </div>
 
-                    {/* ── Actions ──────────────────────────── */}
+                    {/* -- Actions ---------------------------- */}
                     <div className="d-flex justify-content-end gap-2">
                       <Link to={all_routes.doctors} className="btn btn-light btm-md">
                         Cancel
@@ -1110,7 +1318,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           <span className="spinner-border spinner-border-sm" role="status" />
                         )}
                         {submitting
-                          ? "Saving…"
+                          ? "Saving�"
                           : isEdit
                             ? "Save Changes"
                             : "Add Doctor"}
@@ -1120,20 +1328,20 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </div >
+        </div >
 
         {/* Footer */}
-        <div className="footer text-center bg-white p-2 border-top">
+        < div className="footer text-center bg-white p-2 border-top" >
           <p className="text-dark mb-0">
-            2025 ©{" "}
+            2025 �{" "}
             <Link to="#" className="link-primary">
               Docyari
             </Link>
             , All Rights Reserved
           </p>
-        </div>
-      </div>
+        </div >
+      </div >
     </>
   );
 };

@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router"
+import { Link } from "react-router"
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar"
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath"
 
@@ -139,7 +139,7 @@ const LanguageSettings3 = () => {
                             type="text"
                             dir="rtl"
                             className="form-control text-end"
-                            defaultValue="الفواتير"
+                            defaultValue="????????"
                           />
                         </td>
                       </tr>
@@ -150,7 +150,7 @@ const LanguageSettings3 = () => {
                             type="text"
                             dir="rtl"
                             className="form-control text-end"
-                            defaultValue="الفواتير المتكررة"
+                            defaultValue="???????? ????????"
                           />
                         </td>
                       </tr>
@@ -161,7 +161,7 @@ const LanguageSettings3 = () => {
                             type="text"
                             dir="rtl"
                             className="form-control text-end"
-                            defaultValue="ملاحظات الائتمان"
+                            defaultValue="??????? ????????"
                           />
                         </td>
                       </tr>
@@ -172,7 +172,7 @@ const LanguageSettings3 = () => {
                             type="text"
                             dir="rtl"
                             className="form-control text-end"
-                            defaultValue="الاقتباسات"
+                            defaultValue="??????????"
                           />
                         </td>
                       </tr>
@@ -183,7 +183,7 @@ const LanguageSettings3 = () => {
                             type="text"
                             dir="rtl"
                             className="form-control text-end"
-                            defaultValue="تسليم تشالان"
+                            defaultValue="????? ??????"
                           />
                         </td>
                       </tr>
@@ -194,7 +194,7 @@ const LanguageSettings3 = () => {
                             type="text"
                             dir="rtl"
                             className="form-control text-end"
-                            defaultValue="عملاء"
+                            defaultValue="?????"
                           />
                         </td>
                       </tr>
@@ -214,7 +214,7 @@ const LanguageSettings3 = () => {
     {/* Footer Start */}
     <div className="footer text-center bg-white p-2 border-top">
       <p className="text-dark mb-0">
-        2025 ©
+        2025 �
         <Link to="#" className="link-primary">
           Docyari
         </Link>

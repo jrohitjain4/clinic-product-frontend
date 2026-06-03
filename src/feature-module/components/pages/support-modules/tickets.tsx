@@ -1,4 +1,4 @@
-﻿import  { useState } from "react";
+import  { useState } from "react";
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { TicketsListData } from "../../../../core/json/ticketsListData";
@@ -244,7 +244,7 @@ const TicketsList = () => {
           {/* Footer Start */}
           <div className="footer text-center bg-white p-2 border-top">
             <p className="text-dark mb-0">
-              2025 ©
+              2025 �
               <Link to="#" className="link-primary">
                 Docyari
               </Link>

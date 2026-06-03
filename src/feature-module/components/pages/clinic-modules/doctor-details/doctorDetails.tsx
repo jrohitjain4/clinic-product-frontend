@@ -44,6 +44,17 @@ interface DoctorDetail {
   department?: { id: string; name: string } | null;
   designation?: { id: string; name: string } | null;
   clinic?: { id: string; name: string } | null;
+  specializations?: { id: string; name: string }[];
+  maritalStatus?: string | null;
+  qualification?: string | null;
+  followUpEnabled?: boolean;
+  followUpValidityDays?: number | null;
+  freeFollowUpLimit?: number | null;
+  signatureImage?: string | null;
+  medicalRegCertificate?: string | null;
+  qualificationCertificate?: string | null;
+  aadhaarCard?: string | null;
+  panCard?: string | null;
 }
 
 const WEEKDAYS = [
@@ -220,6 +231,9 @@ const DoctorDetails = () => {
                   {doctor.medicalLicenseNumber
                     ? ` · License: ${doctor.medicalLicenseNumber}`
                     : ""}
+                  {doctor.specializations && doctor.specializations.length > 0
+                    ? ` · Specializations: ${doctor.specializations.map(s => s.name).join(", ")}`
+                    : ""}
                 </span>
                 <div className="d-flex align-items-center flex-wrap gap-2">
                   <p className="mb-0 fs-13">
@@ -307,6 +321,35 @@ const DoctorDetails = () => {
                 <p className="mb-0">{doctor.bio || "No bio provided."}</p>
               </div>
             </div>
+
+            {doctor.followUpEnabled && (
+              <div className="card border-primary">
+                <div className="card-body">
+                  <h5 className="fw-bold text-primary mb-3">
+                    <i className="ti ti-refresh-dot me-2" />
+                    Follow-up Policy
+                  </h5>
+                  <div className="row">
+                    <div className="col-md-6 mb-2">
+                      <p className="mb-1 text-muted fs-13">Validity Period</p>
+                      <h6 className="fw-semibold">
+                        {doctor.followUpValidityDays != null
+                          ? `${doctor.followUpValidityDays} Days`
+                          : "Not specified"}
+                      </h6>
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <p className="mb-1 text-muted fs-13">Free Visits limit</p>
+                      <h6 className="fw-semibold">
+                        {doctor.freeFollowUpLimit != null
+                          ? `${doctor.freeFollowUpLimit} Visits`
+                          : "Unlimited"}
+                      </h6>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="card">
               <div className="card-body">
@@ -411,6 +454,8 @@ const DoctorDetails = () => {
                   }
                 />
                 <AboutRow icon="ti-gender-male" label="Gender" value={doctor.gender || "—"} />
+                <AboutRow icon="ti-rings" label="Marital Status" value={doctor.maritalStatus || "—"} />
+                <AboutRow icon="ti-certificate" label="Qualification" value={doctor.qualification || "—"} />
                 {doctor.languagesSpoken && doctor.languagesSpoken.length > 0 && (
                   <AboutRow
                     icon="ti-language"
@@ -418,6 +463,18 @@ const DoctorDetails = () => {
                     value={doctor.languagesSpoken.join(", ")}
                   />
                 )}
+              </div>
+            </div>
+            <div className="card mt-3">
+              <div className="card-body">
+                <h6 className="fw-bold mb-3">Documents & Certificates</h6>
+                <div className="d-flex flex-column gap-3">
+                  <DocumentRow label="Doctor Signature" url={doctor.signatureImage} />
+                  <DocumentRow label="Medical Registration" url={doctor.medicalRegCertificate} />
+                  <DocumentRow label="Qualification Certificate" url={doctor.qualificationCertificate} />
+                  <DocumentRow label="Aadhaar Card" url={doctor.aadhaarCard} />
+                  <DocumentRow label="PAN Card" url={doctor.panCard} />
+                </div>
               </div>
             </div>
           </div>
@@ -452,5 +509,25 @@ const AboutRow = ({
     </div>
   </div>
 );
+
+const DocumentRow = ({ label, url }: { label: string; url?: string | null }) => {
+  if (!url) {
+    return (
+      <div className="d-flex align-items-center justify-content-between">
+        <p className="mb-0 fs-14 fw-medium text-muted">{label}</p>
+        <span className="badge badge-soft-dark"><i className="ti ti-x me-1" />Missing</span>
+      </div>
+    );
+  }
+  return (
+    <div className="d-flex align-items-center justify-content-between">
+      <p className="mb-0 fs-14 fw-medium text-dark">{label}</p>
+      <a href={apiUrl(url)} target="_blank" rel="noreferrer" className="btn btn-sm btn-light">
+        <i className="ti ti-download me-1" />
+        View
+      </a>
+    </div>
+  );
+};
 
 export default DoctorDetails;

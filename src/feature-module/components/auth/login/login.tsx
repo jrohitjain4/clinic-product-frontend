@@ -20,7 +20,7 @@ const getDashboardPath = (role: string): string => {
 
 const Login = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -35,7 +35,7 @@ const Login = () => {
       const response = await fetch(apiUrl("/api/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier, password }),
       });
 
       const data = await response.json();
@@ -99,7 +99,7 @@ const Login = () => {
                         <div className="card-body">
                           <div className="text-center mb-3">
                             <h5 className="mb-1 fs-20 fw-bold">Sign In</h5>
-                            <p className="mb-0">Please enter your email and password to access your portal</p>
+                            <p className="mb-0">Please enter your Mobile, Username, or Email to access your portal</p>
                           </div>
 
                           {error && (
@@ -109,18 +109,18 @@ const Login = () => {
                           )}
 
                           <div className="mb-3">
-                            <label className="form-label">Email Address</label>
+                            <label className="form-label">Username / Mobile / Email</label>
                             <div className="input-group">
                               <span className="input-group-text border-end-0 bg-white">
-                                <i className="ti ti-mail fs-14 text-dark" />
+                                <i className="ti ti-user fs-14 text-dark" />
                               </span>
                               <input
-                                type="email"
+                                type="text"
                                 required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                value={identifier}
+                                onChange={(e) => setIdentifier(e.target.value)}
                                 className="form-control border-start-0 ps-0"
-                                placeholder="Enter Email Address"
+                                placeholder="Enter Username, Mobile, or Email"
                               />
                             </div>
                           </div>

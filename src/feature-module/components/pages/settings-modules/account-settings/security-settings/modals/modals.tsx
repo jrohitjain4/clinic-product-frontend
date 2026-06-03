@@ -156,7 +156,7 @@ const Modals = () => {
                     <span className="text-danger ms-1">*</span>
                   </label>
                   <PhoneInput
-                    defaultCountry="US"
+                    defaultCountry="IN"
                     value={phone}
                     onChange={setPhone}
                   />
@@ -166,7 +166,7 @@ const Modals = () => {
                     New Phone Number<span className="text-danger ms-1">*</span>
                   </label>
                   <PhoneInput
-                    defaultCountry="US"
+                    defaultCountry="IN"
                     value={phone}
                     onChange={setPhone}
                   />

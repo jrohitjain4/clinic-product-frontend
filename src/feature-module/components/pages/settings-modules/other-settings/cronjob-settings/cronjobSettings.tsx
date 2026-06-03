@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar";
 import TagInput from "../../../../../../core/common/Taginput";
 import { Link } from "react-router";
@@ -102,7 +102,7 @@ const CronjobSettings = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 �
             <Link to="#" className="link-primary">
               Docyari
             </Link>

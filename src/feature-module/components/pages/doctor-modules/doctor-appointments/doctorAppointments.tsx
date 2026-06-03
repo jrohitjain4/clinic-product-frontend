@@ -1,4 +1,4 @@
-ï»¿import { Link } from "react-router";
+import { Link } from "react-router";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import { useState } from "react";
 import Datatable from "../../../../../core/common/dataTable/index";
@@ -25,7 +25,7 @@ const DoctorAppointments = () => {
     Date_Time: app.dateTimeLabel,
     Patient: app.patientName,
     img: app.patient?.profileImage || "assets/img/users/user-08.jpg",
-    phone_number: app.patient?.phone || "â€”",
+    phone_number: app.patient?.phone || "—",
     Mode: app.mode,
     Status: app.status,
   }));
@@ -436,7 +436,7 @@ const DoctorAppointments = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 Â©
+            2025 ©
             <Link to="#" className="link-primary">
               Docyari
             </Link>

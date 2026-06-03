@@ -219,19 +219,6 @@ export const SidebarData = [
         submenuItems: [],
       },
 
-      {
-        label: "Assets",
-        link: routes.assets,
-        submenu: false,
-        showSubRoute: false,
-        icon: "asset",
-        base: "frontent",
-        materialicons: "start",
-        dot: true,
-        submenuItems: [],
-      },
-
-
     ],
   },
   {

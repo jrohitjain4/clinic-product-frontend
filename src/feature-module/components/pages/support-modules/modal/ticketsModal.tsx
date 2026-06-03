@@ -64,7 +64,7 @@ const [phone, setPhone] = useState<string | undefined>()
                         Phone Number<span className="text-danger ms-1">*</span>
                       </label>
                       <PhoneInput
-                            defaultCountry="US"
+                            defaultCountry="IN"
                             value={phone}
                             onChange={setPhone}
                           />
@@ -236,7 +236,7 @@ const [phone, setPhone] = useState<string | undefined>()
                         Phone Number<span className="text-danger ms-1">*</span>
                       </label>
                        <PhoneInput
-                            defaultCountry="US"
+                            defaultCountry="IN"
                             value={phone}
                             onChange={setPhone}
                           />

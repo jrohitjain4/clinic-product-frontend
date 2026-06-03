@@ -18,7 +18,7 @@ import Login from "../components/auth/login/login";
 import LoginBasic from "../components/auth/login/loginBasic";
 import LoginCover from "../components/auth/login/loginCover";
 import LoginIllustration from "../components/auth/login/loginIllustration";
-import RegisterBasic from "../components/auth/register/registerBasic";
+import MultiStepRegister from "../components/auth/register/MultiStepRegister";
 import RegisterCover from "../components/auth/register/registerCover";
 import RegisterIllustration from "../components/auth/register/registerIllustration";
 import ResetPasswordBasic from "../components/auth/reset-password/resetPasswordBasic";
@@ -1494,7 +1494,7 @@ export const authRoutes = [
   },
   {
     path: routes.registerbasic,
-    element: <RegisterBasic />,
+    element: <MultiStepRegister />,
     route: Route,
   },
   {

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { DatePicker } from "antd";
 import dayjs, { Dayjs } from "dayjs";
@@ -79,7 +79,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
     }
   }, [mode, patient?.id]);
 
-  // ── Phone Duplicate Check ──────────────────────────────────────
+  // -- Phone Duplicate Check --------------------------------------
   useEffect(() => {
     if (!form.phone || form.phone.length < 5) {
       setPhoneWarning(null);
@@ -254,7 +254,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                           Phone Number<span className="text-danger ms-1">*</span>
                         </label>
                         <PhoneInput
-                          defaultCountry="US"
+                          defaultCountry="IN"
                           value={form.phone}
                           onChange={(v) =>
                             setForm((f) => ({ ...f, phone: v || "" }))
@@ -306,7 +306,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                           />
                         ) : (
                           <div className="form-control text-muted py-2 fs-13">
-                            No doctors — add a doctor first
+                            No doctors � add a doctor first
                           </div>
                         )}
                       </div>
@@ -501,7 +501,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                   disabled={submitting}
                 >
                   {submitting
-                    ? "Saving…"
+                    ? "Saving�"
                     : mode === "create"
                       ? "Add New Patient"
                       : "Save Changes"}
@@ -513,7 +513,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
       </div>
       <div className="footer text-center bg-white p-2 border-top">
         <p className="text-dark mb-0">
-          2025 © <span className="link-primary">Docyari</span>, All Rights Reserved
+          2025 � <span className="link-primary">Docyari</span>, All Rights Reserved
         </p>
       </div>
     </div>

@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router";
+import { Link } from "react-router";
 import { all_routes } from "../../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
@@ -698,7 +698,7 @@ const Chat = () => {
                               <div className="message-box receive-message p-3">
                                 <p className="mb-0 fs-16">
                                   Perfect! That layout will work great on the
-                                  landing page. 👍
+                                  landing page. ??
                                 </p>
                               </div>
                               <div className="ms-2">
@@ -1006,7 +1006,7 @@ const Chat = () => {
       {/* Footer Start */}
       <div className="footer text-center bg-white p-2 border-top">
         <p className="text-dark mb-0">
-          2025 ©{" "}
+          2025 �{" "}
           <Link to="#" className="link-primary">
             Docyari
           </Link>

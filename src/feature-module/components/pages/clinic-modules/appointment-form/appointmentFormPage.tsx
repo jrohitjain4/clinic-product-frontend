@@ -100,6 +100,33 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
     }
   }, [mode, appointment?.id]);
 
+  // ── Auto-check for Follow-up status ────────────────────────────
+  useEffect(() => {
+    if (mode === "create" && form.patientId && form.doctorId) {
+      const scheduledAt = buildScheduledAt();
+      const query = new URLSearchParams();
+      query.append("patientId", form.patientId);
+      query.append("doctorId", form.doctorId);
+      if (scheduledAt) {
+        query.append("date", scheduledAt);
+      }
+
+      fetch(apiUrl(`/api/appointments/check-followup?${query.toString()}`), {
+        headers: authHeaders(),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.isFollowup) {
+            setForm((f) => ({ ...f, status: "Follow-up" }));
+          } else if (form.status === "Follow-up") {
+            // Revert if it's no longer a follow-up (e.g. doctor changed)
+            setForm((f) => ({ ...f, status: "Schedule" }));
+          }
+        })
+        .catch(console.error);
+    }
+  }, [mode, form.patientId, form.doctorId, form.appointmentDate, form.appointmentTime]);
+
   const patientOptions = useMemo(() => {
     let filtered = patients.filter((p: any) => p.id);
     if (isPatientRole && currentUser?.email) {

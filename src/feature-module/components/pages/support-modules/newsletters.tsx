@@ -1,4 +1,4 @@
-﻿import  { useState } from "react";
+import  { useState } from "react";
 import { Link } from "react-router";
 import { NewslettersData } from "../../../../core/json/NewslettersData";
 import SearchInput from "../../../../core/common/dataTable/dataTableSearch";
@@ -92,7 +92,7 @@ const Newsletters = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 �
             <Link to="#" className="link-primary">
               Docyari
             </Link>

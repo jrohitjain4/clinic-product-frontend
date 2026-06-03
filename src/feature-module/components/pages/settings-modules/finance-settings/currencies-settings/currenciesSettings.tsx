@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router";
+import { Link } from "react-router";
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar";
 import Modals from "./modals/modals";
 
@@ -104,7 +104,7 @@ const CurrenciesSettings = () => {
                           <tr>
                             <td>Rupee</td>
                             <td>INR</td>
-                            <td>₹</td>
+                            <td>?</td>
                             <td>86.62</td>
                             <td>
                               <span className="badge bg-soft-success fs-13 fw-medium text-success border border-success py-1 px-2">
@@ -146,7 +146,7 @@ const CurrenciesSettings = () => {
                           <tr>
                             <td>Pound</td>
                             <td>GBP</td>
-                            <td>£</td>
+                            <td>�</td>
                             <td>0.81</td>
                             <td>
                               <span className="badge bg-soft-success fs-13 fw-medium text-success border border-success py-1 px-2">
@@ -188,7 +188,7 @@ const CurrenciesSettings = () => {
                           <tr>
                             <td>Euro</td>
                             <td>EUR</td>
-                            <td>€</td>
+                            <td>�</td>
                             <td>0.96</td>
                             <td>
                               <span className="badge bg-soft-success fs-13 fw-medium text-success border border-success py-1 px-2">
@@ -230,7 +230,7 @@ const CurrenciesSettings = () => {
                           <tr>
                             <td>Dhirams</td>
                             <td>AED</td>
-                            <td>د.إ</td>
+                            <td>?.?</td>
                             <td>3.67</td>
                             <td>
                               <span className="badge bg-soft-success fs-13 fw-medium text-success border border-success py-1 px-2">
@@ -287,7 +287,7 @@ const CurrenciesSettings = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 �
             <Link to="#" className="link-primary">
               Docyari
             </Link>

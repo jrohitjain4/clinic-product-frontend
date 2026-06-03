@@ -1,4 +1,4 @@
-﻿import { DatePicker, Select } from "antd";
+import { DatePicker, Select } from "antd";
 import {
   Amount,
   Department,
@@ -34,7 +34,7 @@ const Doctors = () => {
               <h4 className="fw-bold mb-0">
                 Doctor Grid
                 <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                  Total Doctors : {loading ? "â€¦" : doctors.length}
+                  Total Doctors : {loading ? "…" : doctors.length}
                 </span>
               </h4>
             </div>
@@ -214,7 +214,7 @@ const Doctors = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 Â©
+            2025 ©
             <Link to="#" className="link-primary">
               Docyari
             </Link>

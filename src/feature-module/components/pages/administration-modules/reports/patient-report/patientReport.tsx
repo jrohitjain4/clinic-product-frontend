@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { PatientReportData } from "../../../../../../core/json/patientReportData";
 import TagInput from "../../../../../../core/common/Taginput";
 import PredefinedDatePicker from "../../../../../../core/common/datePicker";
@@ -333,7 +333,7 @@ const PatientReport = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 �
             <Link to="#" className="link-primary">
               Docyari
             </Link>

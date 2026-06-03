@@ -1,4 +1,4 @@
-ï»¿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import SearchInput from "../../../../core/common/dataTable/dataTableSearch";
@@ -158,7 +158,7 @@ const StaffsList = () => {
               <h4 className="fw-bold mb-0">
                 Staff
                 <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                  Total Staffs : {loading ? "â€¦" : staffs.length}
+                  Total Staffs : {loading ? "…" : staffs.length}
                 </span>
               </h4>
             </div>
@@ -220,7 +220,7 @@ const StaffsList = () => {
           {loading ? (
             <div className="text-center py-5">
               <span className="spinner-border text-primary" role="status" />
-              <p className="text-muted mt-2 mb-0">Loading staffâ€¦</p>
+              <p className="text-muted mt-2 mb-0">Loading staff…</p>
             </div>
           ) : staffs.length === 0 && !error ? (
             <div className="text-center py-5 border rounded bg-white">
@@ -251,7 +251,7 @@ const StaffsList = () => {
 
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 Â©
+            2025 ©
             <Link to="#" className="link-primary">
               Docyari
             </Link>

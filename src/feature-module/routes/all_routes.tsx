@@ -22,7 +22,7 @@ export const all_routes = {
   servicesFront: "/services",
   contactUs: "/contact-us",
   privacyPolicyFront: "/privacy-policy-front",
-  clinicLandingPage: "/clinic/:clinicId",
+  clinicLandingPage: "/@:username",
   //Auth routes
   login: "/login",
   loginCover: "/login-cover",
@@ -95,6 +95,7 @@ export const all_routes = {
   domain: "/super-admin/domain",
   purchaseTransaction: "/super-admin/purchase-transaction",
   privacyPolicyAdmin: "/super-admin/privacy-policy",
+  demoBookings: "/super-admin/demo-bookings",
 
   //Application routes
   chat: "/application/chat",

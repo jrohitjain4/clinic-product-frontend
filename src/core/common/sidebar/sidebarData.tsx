@@ -43,23 +43,12 @@ export const SidebarData = [
         submenuItems: [],
       },
       {
-        label: "Payment Gateways",
-        link: routes.paymentmethodssettings,
+        label: "Demo Bookings",
+        link: routes.demoBookings,
         submenu: false,
         showSubRoute: false,
-        icon: "credit-card",
-        base: "settings",
-        materialicons: "start",
-        dot: true,
-        submenuItems: [],
-      },
-      {
-        label: "Transection",
-        link: routes.purchaseTransaction,
-        submenu: false,
-        showSubRoute: false,
-        icon: "file-invoice",
-        base: "transactions",
+        icon: "calendar-event",
+        base: "demo-bookings",
         materialicons: "start",
         dot: true,
         submenuItems: [],
@@ -108,17 +97,6 @@ export const SidebarData = [
         dot: true,
         submenuItems: [],
       },
-      {
-        label: "Logout",
-        link: routes.login,
-        submenu: false,
-        showSubRoute: false,
-        icon: "logout",
-        base: "logout",
-        materialicons: "start",
-        dot: true,
-        submenuItems: [],
-      },
     ],
   },
   {
@@ -129,6 +107,7 @@ export const SidebarData = [
     submenuItems: [
       {
         label: "Dashboard",
+
         link: routes.dashboard,
         submenu: false,
         showSubRoute: false,
@@ -239,19 +218,6 @@ export const SidebarData = [
         dot: true,
         submenuItems: [],
       },
-
-      {
-        label: "Assets",
-        link: routes.assets,
-        submenu: false,
-        showSubRoute: false,
-        icon: "asset",
-        base: "frontent",
-        materialicons: "start",
-        dot: true,
-        submenuItems: [],
-      },
-
 
     ],
   },
@@ -859,26 +825,8 @@ export const SidebarData = [
             customSubmenuTwo: false,
           },
           {
-            label: "Language",
-            link: routes.languagesettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
             label: "Gallery & Location",
             link: routes.maintenancemodesettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Login & Register",
-            link: routes.loginandregistersettings,
-            base: "invoices",
-            customSubmenuTwo: false,
-          },
-          {
-            label: "Preferences",
-            link: routes.preferencessettings,
             base: "invoices",
             customSubmenuTwo: false,
           },

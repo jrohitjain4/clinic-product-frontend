@@ -1,4 +1,4 @@
-ï»¿import { Link, useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
 import { useState } from "react";
@@ -132,13 +132,13 @@ const PatientDetails = () => {
                     <h5 className="mb-1">
                       <span className="fw-bold">{displayName}</span>
                     </h5>
-                    <p className="mb-3">{patient.fullAddress || "â€”"}</p>
+                    <p className="mb-3">{patient.fullAddress || "—"}</p>
                     <div className="d-flex align-items-center flex-wrap">
                       <p className="mb-0 d-inline-flex align-items-center">
                         <i className="ti ti-phone me-1 text-dark" />
                         Phone :
                         <span className="text-dark ms-1">
-                          {patient.phone || "â€”"}
+                          {patient.phone || "—"}
                         </span>
                       </p>
                       <span className="mx-2 text-light">|</span>
@@ -146,7 +146,7 @@ const PatientDetails = () => {
                         <i className="ti ti-calendar-time me-1 text-dark" />
                         Last Visited :
                         <span className="text-dark ms-1">
-                          {patient.lastVisitLabel || "â€”"}
+                          {patient.lastVisitLabel || "—"}
                         </span>
                       </p>
                     </div>
@@ -217,7 +217,7 @@ const PatientDetails = () => {
                         </span>
                         <div>
                           <h6 className="fs-13 fw-bold mb-1">Blood Group</h6>
-                          <p className="mb-0">{patient.bloodGroup || "â€”"}</p>
+                          <p className="mb-0">{patient.bloodGroup || "—"}</p>
                         </div>
                       </div>
                     </div>
@@ -228,7 +228,7 @@ const PatientDetails = () => {
                         </span>
                         <div>
                           <h6 className="fs-13 fw-bold mb-1">Gender</h6>
-                          <p className="mb-0">{patient.gender || "â€”"}</p>
+                          <p className="mb-0">{patient.gender || "—"}</p>
                         </div>
                       </div>
                     </div>
@@ -239,7 +239,7 @@ const PatientDetails = () => {
                         </span>
                         <div>
                           <h6 className="fs-13 fw-bold mb-1">Email</h6>
-                          <p className="mb-0 text-break">{patient.email || "â€”"}</p>
+                          <p className="mb-0 text-break">{patient.email || "—"}</p>
                         </div>
                       </div>
                     </div>
@@ -942,8 +942,8 @@ const PatientDetails = () => {
                     ) : (
                       filteredAppointments.map((appt) => {
                         const doctorImage = appt.doctor?.profileImage || "assets/img/users/user-08.jpg";
-                        const doctorName = appt.doctorName || appt.doctor?.fullName || "â€”";
-                        const doctorRole = appt.doctorRole || appt.doctor?.designation?.name || appt.doctor?.department?.name || "â€”";
+                        const doctorName = appt.doctorName || appt.doctor?.fullName || "—";
+                        const doctorRole = appt.doctorRole || appt.doctor?.designation?.name || appt.doctor?.department?.name || "—";
                         return (
                           <tr key={appt.id}>
                             <td>{appt.dateTimeLabel || appt.scheduledAt}</td>
@@ -1531,7 +1531,7 @@ const PatientDetails = () => {
                           </td>
                           <td className="text-dark"> {inv.items?.[0]?.description || "Invoice"} </td>
                           <td className="text-dark"> {dayjs(inv.invoiceDate).format("DD MMM YYYY")}</td>
-                          <td className="text-dark"> {inv.paymentMethod || "â€”"}</td>
+                          <td className="text-dark"> {inv.paymentMethod || "—"}</td>
                           <td className="text-dark"> ${inv.totalAmount.toFixed(2)}</td>
                           <td>
                             <span className="badge fs-13 badge-soft-success rounded text-success fw-medium border border-success">
@@ -1552,7 +1552,7 @@ const PatientDetails = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 Â©
+            2025 ©
             <Link to="#" className="link-primary">
               Docyari
             </Link>

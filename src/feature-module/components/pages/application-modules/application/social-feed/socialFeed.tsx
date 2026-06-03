@@ -1,4 +1,4 @@
-﻿
+
 import { Link } from "react-router";
 import "yet-another-react-lightbox/styles.css";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
@@ -494,7 +494,7 @@ const SocialFeed = () => {
                         >
                           #Inspiration
                         </Link>
-                        🌟"
+                        ??"
                       </p>
                     </div>
                     <div className="mb-2">
@@ -770,7 +770,7 @@ const SocialFeed = () => {
                           
                           #Wellness
                         </Link>
-                        💧
+                        ??
                       </p>
                     </div>
                     <div className="card shadow-none mb-3">
@@ -787,7 +787,7 @@ const SocialFeed = () => {
                         <h6 className="mb-1 text-truncate">
                           <Link to="#">
                             Drinking water boosts skin health and beauty. Stay
-                            hydrated!💧
+                            hydrated!??
                           </Link>
                         </h6>
                         <Link to="#">Health.com</Link>
@@ -969,7 +969,7 @@ const SocialFeed = () => {
                           
                           #Innovation
                         </Link>
-                        🎉
+                        ??
                       </p>
                     </div>
                     <div className="mb-2">
@@ -1800,7 +1800,7 @@ const SocialFeed = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 �
             <Link to="#" className="link-primary">
               Docyari
             </Link>

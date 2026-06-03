@@ -1,4 +1,4 @@
-ï»¿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { all_routes } from "../../../../routes/all_routes";
 import { apiUrl } from "../../../../../core/config/api";
@@ -133,7 +133,7 @@ const InvoicesDetails = () => {
                         <p className="text-body mb-0">
                           Payment Method :{" "}
                           <span className="text-dark">
-                            {invoice.paymentMethod || "â€”"}
+                            {invoice.paymentMethod || "—"}
                           </span>
                         </p>
                       </div>
@@ -153,7 +153,7 @@ const InvoicesDetails = () => {
                         <p className="text-dark fw-medium mb-1">
                           {invoice.patient
                             ? `${invoice.patient.firstName} ${invoice.patient.lastName}`
-                            : "â€”"}
+                            : "—"}
                         </p>
                         {invoice.patient?.email && (
                           <p className="text-body mb-1">
@@ -192,7 +192,7 @@ const InvoicesDetails = () => {
                                     {item.service?.serviceName || "Service"}
                                   </td>
                                   <td className="text-muted">
-                                    {item.description || "â€”"}
+                                    {item.description || "—"}
                                   </td>
                                   <td>${Number(item.unitCost).toFixed(2)}</td>
                                   <td>{item.quantity}</td>
@@ -278,7 +278,7 @@ const InvoicesDetails = () => {
         </div>
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 Â©{" "}
+            2025 ©{" "}
             <Link to="#" className="link-primary">
               Docyari
             </Link>

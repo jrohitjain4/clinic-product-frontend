@@ -1,4 +1,4 @@
-ï»¿import { Link } from "react-router";
+import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 
@@ -104,7 +104,7 @@ const Blogs = () => {
                       </Link>
                     </h6>
                     <p className="truncate-2-lines mb-0">
-                      Fuel your body, move with purposeâ€”wellness starts with
+                      Fuel your body, move with purpose—wellness starts with
                       what you eat and how you live
                     </p>
                   </div>
@@ -148,8 +148,8 @@ const Blogs = () => {
                       </Link>
                     </h6>
                     <p className="truncate-2-lines mb-0">
-                      Add a fruit or veggie to every meal.Donâ€™t skip
-                      breakfastâ€”it fuels your day.Go to bed and wake up at the
+                      Add a fruit or veggie to every meal.Don’t skip
+                      breakfast—it fuels your day.Go to bed and wake up at the
                       same time daily
                     </p>
                   </div>
@@ -277,11 +277,11 @@ const Blogs = () => {
                     </span>
                     <h6 className="fw-bold">
                       <Link to={all_routes.blogDetails}>
-                        Therapy Isnâ€™t Just for Crisis
+                        Therapy Isn’t Just for Crisis
                       </Link>
                     </h6>
                     <p className="truncate-2-lines mb-0">
-                      Healing isn't linearâ€”progress takes time and
+                      Healing isn't linear—progress takes time and
                       patience.Therapy gives you tools; growth comes from using
                       them.
                     </p>
@@ -327,7 +327,7 @@ const Blogs = () => {
                     </h6>
                     <p className="truncate-2-lines mb-0">
                       Vaccines for Kids: What Parents Should Know.Screen Time
-                      and Childrenâ€™s Health: Striking the Balance
+                      and Children’s Health: Striking the Balance
                     </p>
                   </div>
                 </div>
@@ -441,7 +441,7 @@ const Blogs = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 Â©
+            2025 ©
             <Link to="#" className="link-primary">
               Docyari
             </Link>

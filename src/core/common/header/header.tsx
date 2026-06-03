@@ -390,6 +390,7 @@ const Header = () => {
                     Notifications
                   </label>
                   <input
+
                     className="form-check-input me-0"
                     type="checkbox"
                     role="switch"

@@ -1,4 +1,4 @@
-Ôªøimport { Link } from "react-router";
+import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 
 const Activities = () => {
@@ -101,7 +101,7 @@ const Activities = () => {
                     Dr. Linda Carpenter&nbsp;Doctors Meeting
                   </p>
                   <p>
-                    April 12, 2025, 10:00 AM ‚Äì 12:30 PM, Conference Room B /
+                    April 12, 2025, 10:00 AM ñ 12:30 PM, Conference Room B /
                     Virtual via Zoom
                   </p>
                 </div>
@@ -147,10 +147,10 @@ const Activities = () => {
                         </div>
                         <p>Rio Williams posted a new blog</p>
                         <p className="mb-2">
-                          ‚ÄúStay informed on how to keep your clinic environment
+                          ìStay informed on how to keep your clinic environment
                           safe. Rio shares essential COVID-19 safety protocols,
                           from sanitization tips to patient screening
-                          procedures.‚Äù
+                          procedures.î
                         </p>
                         <Link to="#" className="btn btn-primary">
                           Read more <i className="ti ti-chevron-right ms-1" />
@@ -170,7 +170,7 @@ const Activities = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ¬©
+            2025 ©
             <Link to="#" className="link-primary">
               Docyari
             </Link>

@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router";
+import { Link } from "react-router";
 
 import Lightbox from "yet-another-react-lightbox";
 import media15 from "/assets/img/media/media-15.jpg";
@@ -471,7 +471,7 @@ const SearchList = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©{" "}
+            2025 �{" "}
             <Link to="#" className="link-primary">
               Docyari
             </Link>

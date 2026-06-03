@@ -1,4 +1,4 @@
-ï»¿import { Link, useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
 import { useState, useEffect } from "react";
@@ -90,7 +90,7 @@ const DoctorsPrescriptionDetails = () => {
                         <h6 className="text-dark fw-semibold mb-1">Docyari Medical Center</h6>
                         <p className="mb-1">{doctor.fullName || "-"}</p>
                         <p className="mb-0 text-muted fs-13">
-                          {doctor.designation?.name || ""}{doctor.department?.name ? ` Â· ${doctor.department.name}` : ""}
+                          {doctor.designation?.name || ""}{doctor.department?.name ? ` · ${doctor.department.name}` : ""}
                         </p>
                       </div>
                     </div>
@@ -122,7 +122,7 @@ const DoctorsPrescriptionDetails = () => {
                       </h6>
                       <div className="d-flex align-items-center gap-3 flex-wrap">
                         {patientAge !== null && (
-                          <p className="mb-0 text-dark">{patientAge}Y / {patient.gender || "â€”"}</p>
+                          <p className="mb-0 text-dark">{patientAge}Y / {patient.gender || "—"}</p>
                         )}
                         {patient.bloodGroup && (
                           <p className="mb-0 text-dark">
@@ -160,10 +160,10 @@ const DoctorsPrescriptionDetails = () => {
                             <tr key={med.id || i}>
                               <td>{String(i + 1).padStart(2, "0")}</td>
                               <td className="fw-medium">{med.medicineName}</td>
-                              <td>{med.dosage || "â€”"}</td>
-                              <td className="text-primary fw-medium">{med.frequency || "â€”"}</td>
-                              <td>{med.duration || "â€”"}</td>
-                              <td>{med.timings || "â€”"}</td>
+                              <td>{med.dosage || "—"}</td>
+                              <td className="text-primary fw-medium">{med.frequency || "—"}</td>
+                              <td>{med.duration || "—"}</td>
+                              <td>{med.timings || "—"}</td>
                             </tr>
                           )) : (
                             <tr>
@@ -190,13 +190,13 @@ const DoctorsPrescriptionDetails = () => {
                       <p className="mb-0">
                         {prescription.followUpDate
                           ? new Date(prescription.followUpDate).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })
-                          : "â€”"}
-                        {prescription.followUpNotes ? ` Â· ${prescription.followUpNotes}` : ""}
+                          : "—"}
+                        {prescription.followUpNotes ? ` · ${prescription.followUpNotes}` : ""}
                       </p>
                     </div>
                     <div className="text-end">
                       <ImageWithBasePath src="assets/img/icons/signature-img.svg" alt="signature" className="img-fluid mb-1" />
-                      <h6 className="fs-14 fw-semibold mb-0">{doctor.fullName || "â€”"}</h6>
+                      <h6 className="fs-14 fw-semibold mb-0">{doctor.fullName || "—"}</h6>
                       <p className="fs-13 fw-normal text-muted">{doctor.designation?.name || ""}</p>
                     </div>
                   </div>
@@ -219,7 +219,7 @@ const DoctorsPrescriptionDetails = () => {
 
       <div className="p-3 bg-white border-top text-center">
         <p className="text-dark text-center mb-0">
-          2025 Â© <span className="text-info">Docyari</span>, All Rights Reserved
+          2025 © <span className="text-info">Docyari</span>, All Rights Reserved
         </p>
       </div>
     </>

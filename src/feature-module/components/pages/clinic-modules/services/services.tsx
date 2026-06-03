@@ -1,4 +1,4 @@
-ï»¿import { Link } from "react-router";
+import { Link } from "react-router";
 import Modals from "./modals/modals";
 import { useState } from "react";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
@@ -25,7 +25,7 @@ const Services = () => {
       Type: "Service",
       originalService: s,
       ServiceName: s.serviceName,
-      Department: s.department?.name || "â€”",
+      Department: s.department?.name || "—",
       Price: "$" + s.price,
       Status: s.status || "Active",
     })),
@@ -35,7 +35,7 @@ const Services = () => {
       Type: "Product",
       originalService: p,
       ServiceName: p.name,
-      Department: p.key || "â€”",
+      Department: p.key || "—",
       Price: "$" + p.price,
       Status: "Active",
     })),
@@ -195,7 +195,7 @@ const Services = () => {
           {/* Footer */}
           <div className="footer text-center bg-white p-2 border-top">
             <p className="text-dark mb-0">
-              2025 Â©{" "}
+              2025 ©{" "}
               <Link to="#" className="link-primary">
                 Docyari
               </Link>

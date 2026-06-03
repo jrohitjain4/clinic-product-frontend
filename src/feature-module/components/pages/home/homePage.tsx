@@ -55,11 +55,13 @@ const APPTS = [
   { time: "11:00 AM", name: "Ananya Singh", type: "General Consultation" },
 ];
 
+import { DemoBookingModal } from "./DemoBookingModal";
+
 const HomePage = () => {
 
   return (
     <div className="dy-landing">
-
+      <DemoBookingModal />
       <NavbarFront />
 
       {/* ── HERO ───────────────────────────────── */}

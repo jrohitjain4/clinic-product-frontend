@@ -23,7 +23,7 @@ const getDashboardPath = (role: string): string => {
 
 const Login = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -38,7 +38,7 @@ const Login = () => {
       const response = await fetch(apiUrl("/api/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier, password }),
       });
 
       const data = await response.json();
@@ -120,6 +120,9 @@ const Login = () => {
                               This panel is strictly for authorized administrators.<br />
                               Unauthorized access is prohibited.
                             </p>
+                          <div className="text-center mb-3">
+                            <h5 className="mb-1 fs-20 fw-bold">Sign In</h5>
+                            <p className="mb-0">Please enter your Mobile, Username, or Email to access your portal</p>
                           </div>
 
                           {error && (
@@ -147,6 +150,37 @@ const Login = () => {
                             placeholder="****************"
                             leftAddon={<Lock size={20} strokeWidth={2.5} color="#0f172a" />}
                             rightIcon={
+                          <div className="mb-3">
+                            <label className="form-label">Username / Mobile / Email</label>
+                            <div className="input-group">
+                              <span className="input-group-text border-end-0 bg-white">
+                                <i className="ti ti-user fs-14 text-dark" />
+                              </span>
+                              <input
+                                type="text"
+                                required
+                                value={identifier}
+                                onChange={(e) => setIdentifier(e.target.value)}
+                                className="form-control border-start-0 ps-0"
+                                placeholder="Enter Username, Mobile, or Email"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="mb-3">
+                            <label className="form-label">Password</label>
+                            <div className="pass-group input-group position-relative border rounded">
+                              <span className="input-group-text bg-white border-0">
+                                <i className="ti ti-lock text-dark fs-14" />
+                              </span>
+                              <input
+                                type={showPassword ? "text" : "password"}
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="pass-input form-control ps-0 border-0"
+                                placeholder="****************"
+                              />
                               <span
                                 onClick={() => setShowPassword(!showPassword)}
                                 style={{ cursor: "pointer", display: "flex" }}

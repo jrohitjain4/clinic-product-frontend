@@ -1,4 +1,4 @@
-ï»¿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
 import Datatable from "../../../../../core/common/dataTable";
@@ -197,7 +197,7 @@ const Patients = () => {
               <h4 className="fw-bold mb-0">
                 Patients List
                 <span className="badge badge-soft-primary fw-medium border py-1 px-2 border-primary fs-13 ms-1">
-                  Total Patients : {loading ? "â€¦" : patients.length}
+                  Total Patients : {loading ? "…" : patients.length}
                 </span>
               </h4>
             </div>
@@ -249,7 +249,7 @@ const Patients = () => {
           {loading ? (
             <div className="text-center py-5">
               <span className="spinner-border text-primary" role="status" />
-              <p className="text-muted mt-2 mb-0">Loading patientsâ€¦</p>
+              <p className="text-muted mt-2 mb-0">Loading patients…</p>
             </div>
           ) : patients.length === 0 && !error ? (
             <div className="text-center py-5 border rounded bg-white">
@@ -275,7 +275,7 @@ const Patients = () => {
           )}
         </div>
         <div className="footer text-center bg-white p-2 border-top">
-          <p className="text-dark mb-0">2025 Â© Docyari, All Rights Reserved</p>
+          <p className="text-dark mb-0">2025 © Docyari, All Rights Reserved</p>
         </div>
       </div>
 

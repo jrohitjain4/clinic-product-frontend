@@ -6,6 +6,7 @@ export const APPOINTMENT_STATUS_OPTIONS = [
   { value: "Checked In", label: "Checked In" },
   { value: "Checked Out", label: "Checked Out" },
   { value: "Cancelled", label: "Cancelled" },
+  { value: "Follow-up", label: "Follow-up" },
 ];
 
 export const APPOINTMENT_TYPE_OPTIONS = [
@@ -19,6 +20,7 @@ export const statusBadgeClass = (status: string) => {
   if (status === "Checked In") return "badge-soft-warning text-warning";
   if (status === "Cancelled") return "badge-soft-danger text-danger";
   if (status === "Schedule") return "badge-soft-primary text-primary";
+  if (status === "Follow-up") return "badge-soft-success text-success";
   return "badge-soft-success text-success";
 };
 

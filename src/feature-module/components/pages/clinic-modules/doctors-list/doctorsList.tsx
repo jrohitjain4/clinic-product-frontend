@@ -1,4 +1,4 @@
-ï»¿import { Select } from "antd";
+import { Select } from "antd";
 import {
   Amount,
   Department,
@@ -32,10 +32,10 @@ const DoctorsList = () => {
       doctors.map((d, i) => ({
         key: d.id,
         Name_Designation: d.fullName,
-        Department: d.department?.name || "â€”",
-        Phone: d.phone || "â€”",
-        Email: d.email || "â€”",
-        Fees: d.consultationCharge != null ? `$${d.consultationCharge}` : "â€”",
+        Department: d.department?.name || "—",
+        Phone: d.phone || "—",
+        Email: d.email || "—",
+        Fees: d.consultationCharge != null ? `$${d.consultationCharge}` : "—",
         Status: d.status === "Active" ? "Available" : d.status,
         img:
           d.profileImage ||
@@ -160,7 +160,7 @@ const DoctorsList = () => {
               <h4 className="fw-bold mb-0">
                 Doctor List
                 <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                  Total Doctors : {loading ? "â€¦" : doctors.length}
+                  Total Doctors : {loading ? "…" : doctors.length}
                 </span>
               </h4>
             </div>
@@ -336,7 +336,7 @@ const DoctorsList = () => {
         </div>
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 Â©
+            2025 ©
             <Link to="#" className="link-primary">
               Docyari
             </Link>

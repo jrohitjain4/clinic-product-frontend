@@ -37,7 +37,7 @@ const Stars = ({ n, color, size }: { n: number; color?: string; size?: number })
 
 
 export default function ClinicLandingPage() {
-    const { clinicId: _clinicId } = useParams();
+    const { username } = useParams();
     const [clinic, setClinic] = useState<ClinicData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -65,12 +65,12 @@ export default function ClinicLandingPage() {
 
     const handleBookSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!_clinicId) return;
+        if (!clinic?.id) return;
         setBookLoading(true);
         setBookError(null);
         setBookSuccess(null);
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/landing/${_clinicId}/book`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/landing/id/${clinic?.id}/book`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(bookForm),
@@ -86,9 +86,9 @@ export default function ClinicLandingPage() {
     };
 
     useEffect(() => {
-        if (!_clinicId) return;
+        if (!username) return;
         setLoading(true);
-        fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/landing/${_clinicId}`)
+        fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/landing/u/${username}`)
             .then(r => {
                 if (!r.ok) throw new Error("Clinic not found");
                 return r.json();
@@ -99,7 +99,7 @@ export default function ClinicLandingPage() {
             })
             .catch(err => setError(err.message))
             .finally(() => setLoading(false));
-    }, [_clinicId]);
+    }, [username]);
 
     if (loading) return (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", flexDirection: "column", gap: 16, background: "#f8fafc" }}>

@@ -169,7 +169,7 @@ const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
                     <div className="col-md-6 mb-3">
                         <label className="form-label mb-1 fw-medium">Phone Number</label>
                         <PhoneInput
-                            defaultCountry="US"
+                            defaultCountry="IN"
                             value={form.phone}
                             onChange={(v) => setForm({ ...form, phone: v || "" })}
                         />

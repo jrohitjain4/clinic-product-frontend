@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router";
+import { Link } from "react-router";
 
 const UiAccordion = () => {
   return (
@@ -2687,7 +2687,7 @@ const UiAccordion = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 �
             <Link to="#" className="link-primary">
               Docyari
             </Link>

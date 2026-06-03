@@ -1,4 +1,4 @@
-﻿import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { all_routes } from "../../../../routes/all_routes";
 import { DatePicker } from "antd";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";

@@ -8,14 +8,15 @@ export type Option = {
 
 export interface SelectProps {
   options: Option[];
-  defaultValue?: Option;
+  defaultValue?: Option | Option[];
   /** Controlled value — use with onChange for dependent dropdowns */
-  value?: Option | null;
+  value?: Option | Option[] | null;
   className?: string;
   styles?: any;
   placeholder?: string;
   isDisabled?: boolean;
-  onChange?: (option: Option | null) => void;
+  isMulti?: boolean;
+  onChange?: (option: any) => void;
 }
 
 const CommonSelect: React.FC<SelectProps> = ({
@@ -25,10 +26,11 @@ const CommonSelect: React.FC<SelectProps> = ({
   className,
   placeholder = "Select",
   isDisabled = false,
+  isMulti = false,
   onChange,
 }) => {
   const isControlled = value !== undefined;
-  const [selectedOption, setSelectedOption] = useState<Option | undefined>(defaultValue);
+  const [selectedOption, setSelectedOption] = useState<any>(defaultValue);
 
   const customStyles = {
     option: (base: any, state: any) => ({
@@ -43,7 +45,7 @@ const CommonSelect: React.FC<SelectProps> = ({
     }),
   };
 
-  const handleChange = (option: Option | null) => {
+  const handleChange = (option: any) => {
     setSelectedOption(option || undefined);
     if (onChange) onChange(option);
   };
@@ -66,6 +68,7 @@ const CommonSelect: React.FC<SelectProps> = ({
       onChange={handleChange}
       placeholder={placeholder}
       isDisabled={isDisabled}
+      isMulti={isMulti}
       isClearable
     />
   );

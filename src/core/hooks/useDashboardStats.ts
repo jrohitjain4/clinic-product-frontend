@@ -12,6 +12,7 @@ export interface DashboardStats {
         cancelled: number;
         rescheduled: number;
     };
+    profileCompletion: number;
 }
 
 export const useDashboardStats = () => {
@@ -20,7 +21,8 @@ export const useDashboardStats = () => {
         patientsCount: 0,
         appointmentsCount: 0,
         revenue: 0,
-        appointmentStats: { total: 0, completed: 0, cancelled: 0, rescheduled: 0 }
+        appointmentStats: { total: 0, completed: 0, cancelled: 0, rescheduled: 0 },
+        profileCompletion: 0
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

@@ -121,6 +121,35 @@ const Dashboard = () => {
             </div>
           </div>
           {/* End Page Header */}
+
+          {/* Profile Completion Warning */}
+          {stats.profileCompletion < 65 && (
+            <div className="alert alert-warning alert-dismissible bg-light-warning border-warning shadow-sm fade show mb-4 d-flex align-items-center justify-content-between p-3" role="alert">
+              <div className="flex-fill me-3">
+                <h6 className="fw-bold mb-1 text-warning d-flex align-items-center">
+                  <i className="ti ti-alert-triangle me-2 fs-5"></i>
+                  Please Complete Your Profile!
+                </h6>
+                <p className="fs-13 mb-2 text-dark">
+                  Your clinic profile is only <strong>{stats.profileCompletion}%</strong> complete. Complete it to at least 65% for better visibility and landing page functionality.
+                </p>
+                <div className="progress progress-sm">
+                  <div
+                    className={`progress-bar ${stats.profileCompletion < 40 ? 'bg-danger' : stats.profileCompletion < 65 ? 'bg-warning' : 'bg-success'}`}
+                    role="progressbar"
+                    style={{ width: `${stats.profileCompletion}%` }}
+                    aria-valuenow={stats.profileCompletion}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  ></div>
+                </div>
+              </div>
+              <Link to={all_routes.profilesettings || "#"} className="btn btn-warning flex-shrink-0 text-white rounded-pill px-3 shadow-sm py-1">
+                Complete Now
+              </Link>
+            </div>
+          )}
+
           {/* start row */}
           <div className="row">
             <div className="col-xl-3 col-md-6">

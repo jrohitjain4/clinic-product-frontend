@@ -37,7 +37,7 @@ const Login = () => {
       const response = await fetch(apiUrl("/api/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: identifier, password }),
+        body: JSON.stringify({ identifier, password }),
       });
 
       const data = await response.json();
@@ -97,7 +97,7 @@ const Login = () => {
             <div className="col-lg-6 col-md-12 col-sm-12">
               <div className="row justify-content-center align-items-center overflow-auto flex-wrap vh-100">
                 <div className="col-md-8 mx-auto">
-                  
+
                   {/* Logo for Mobile View */}
                   <div className="text-center w-100 d-lg-none mb-4 mt-4">
                     <img src="/logo.png" className="img-fluid" alt="DocYori Logo" style={{ maxHeight: "60px", width: "auto" }} />

@@ -12,17 +12,55 @@ const ProfileSettings = () => {
     userObj = JSON.parse(localStorage.getItem("user") || "{}");
   } catch (e) { }
 
-  const fullNameStr = userObj.fullName || "Administrator";
-  const firstName = fullNameStr.split(" ")[0];
-  const lastName = fullNameStr.split(" ").slice(1).join(" ") || "";
-  const email = userObj.email || "admin@example.com";
-  const phone = userObj.clinic?.phone || "+919876543210";
-  const addressLine1 = userObj.clinic?.address || "123 Healthcare Street";
-  const addressLine2 = "Sector 62"; // Placeholder if DB doesn't have it explicitly
-  const pincode = "201301";
+  const [logoPreview, setLogoPreview] = useState(userObj.clinic?.landingPage?.logo || "/logo.png");
 
-  const clinicName = userObj.clinic?.name || "";
-  const gstNo = userObj.clinic?.gstNo || "";
+  const initialFirstName = (userObj.fullName || "Administrator").split(" ")[0];
+  const initialLastName = (userObj.fullName || "Administrator").split(" ").slice(1).join(" ") || "";
+
+  const [formData, setFormData] = useState({
+    firstName: initialFirstName,
+    lastName: initialLastName,
+    email: userObj.email || "admin@example.com",
+    phone: userObj.clinic?.phone || "+919876543210",
+    addressLine1: userObj.clinic?.addressLine1 || "123 Healthcare Street",
+    addressLine2: userObj.clinic?.addressLine2 || "",
+    pincode: userObj.clinic?.pincode || "201301",
+    clinicName: userObj.clinic?.name || "",
+    gstNo: userObj.clinic?.gstNumber || ""
+  });
+
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({
+          ...formData,
+          clinicLogo: logoPreview !== "/logo.png" ? logoPreview : undefined
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+        setIsEditing(false);
+        window.location.reload(); // Quick refresh to update sidebar & header
+      } else {
+        alert(data.message || "Failed to update profile");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while saving.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <>
@@ -99,7 +137,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" defaultValue={firstName} disabled={!isEditing} />
+                              <input type="text" className="form-control" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -117,7 +155,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" defaultValue={lastName} disabled={!isEditing} />
+                              <input type="text" className="form-control" value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -134,7 +172,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" defaultValue={email} disabled={!isEditing} />
+                              <input type="email" className="form-control" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -152,7 +190,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" defaultValue={phone} disabled={!isEditing} />
+                              <input type="text" className="form-control" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -176,7 +214,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" defaultValue={addressLine1} disabled={!isEditing} />
+                              <input type="text" className="form-control" value={formData.addressLine1} onChange={e => setFormData({ ...formData, addressLine1: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -193,7 +231,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" defaultValue={addressLine2} disabled={!isEditing} />
+                              <input type="text" className="form-control" value={formData.addressLine2} onChange={e => setFormData({ ...formData, addressLine2: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -265,7 +303,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" defaultValue={pincode} disabled={!isEditing} />
+                              <input type="text" className="form-control" value={formData.pincode} onChange={e => setFormData({ ...formData, pincode: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -279,6 +317,53 @@ const ProfileSettings = () => {
                         <div className="mb-3">
                           <h5 className="fw-bold mb-0">Clinic Information</h5>
                         </div>
+                        <div className="col-lg-12">
+                          <div className="row align-items-center mb-4">
+                            <div className="col-lg-2">
+                              <label className="form-label mb-0">
+                                Clinic Logo
+                              </label>
+                            </div>
+                            <div className="col-lg-10">
+                              <div className="profile-container d-flex align-items-center justify-content-center bg-light" style={{ width: '100px', height: '100px', border: '1px dashed #ccc', borderRadius: '10px', overflow: 'hidden', position: 'relative' }}>
+                                <img
+                                  src={logoPreview}
+                                  alt="Clinic Logo Preview"
+                                  style={{ maxWidth: '80%', maxHeight: '80%', objectFit: 'contain' }}
+                                />
+                                <div className="overlay-btn" style={{ position: 'absolute', bottom: '5px', right: '5px', opacity: isEditing ? 1 : 0.5 }}>
+                                  <label
+                                    htmlFor="logoUpload"
+                                    className="btn btn-sm btn-primary rounded-circle p-1 cursor-pointer"
+                                    style={{ cursor: isEditing ? 'pointer' : 'default' }}
+                                  >
+                                    <i className="ti ti-photo fs-14" />
+                                  </label>
+                                </div>
+                                <input
+                                  type="file"
+                                  id="logoUpload"
+                                  accept="image/*"
+                                  style={{ display: "none" }}
+                                  disabled={!isEditing}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onload = (event) => {
+                                        if (event.target?.result) {
+                                          setLogoPreview(event.target.result as string);
+                                        }
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
+                                />
+                              </div>
+                              <p className="fs-12 text-muted mt-1 mb-0">Recommended size: 1:1 ratio (Square). Click the icon to upload.</p>
+                            </div>
+                          </div>
+                        </div>
                         <div className="col-lg-6">
                           {/* start row */}
                           <div className="row align-items-center mb-3">
@@ -288,7 +373,7 @@ const ProfileSettings = () => {
                               </label>
                             </div>
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" defaultValue={clinicName} disabled={!isEditing} />
+                              <input type="text" className="form-control" value={formData.clinicName} onChange={e => setFormData({ ...formData, clinicName: e.target.value })} disabled={!isEditing} />
                             </div>
                           </div>
                         </div>
@@ -298,7 +383,7 @@ const ProfileSettings = () => {
                               <label className="form-label mb-0">GST Number</label>
                             </div>
                             <div className="col-lg-8">
-                              <input type="text" className="form-control" defaultValue={gstNo} disabled={!isEditing} />
+                              <input type="text" className="form-control" value={formData.gstNo} onChange={e => setFormData({ ...formData, gstNo: e.target.value })} disabled={!isEditing} />
                             </div>
                           </div>
                         </div>
@@ -313,8 +398,8 @@ const ProfileSettings = () => {
                             <button type="button" className="btn btn-light me-3" onClick={(e) => { e.preventDefault(); setIsEditing(false); }}>
                               Cancel
                             </button>
-                            <button type="button" className="btn btn-primary" onClick={(e) => { e.preventDefault(); setIsEditing(false); }}>
-                              Save Changes
+                            <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving}>
+                              {saving ? "Saving..." : "Save Changes"}
                             </button>
                           </>
                         )}

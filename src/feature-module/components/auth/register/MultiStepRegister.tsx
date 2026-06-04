@@ -90,26 +90,21 @@ const MultiStepRegister: React.FC = () => {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        fullName: form.ownerName,
+                        ownerName: form.ownerName,
                         email: form.emailId,
                         password: form.password,
-                        role: "ADMIN",
-                        clinicInfo: {
-                            name: form.clinicName,
-                            address: `${form.addressLine1} ${form.addressLine2 ? form.addressLine2 : ''}, ${form.city}, ${form.state} - ${form.pincode}`.trim()
-                        },
-                        // Additional fields stored as flat info if needed by other backend parts
                         phone: form.mobileNumber,
                         whatsappNumber: form.sameAsMobile ? form.mobileNumber : form.whatsappNumber,
                         clinicName: form.clinicName,
-                        address: form.addressLine1,
+                        username: form.username,
+                        addressLine1: form.addressLine1,
+                        addressLine2: form.addressLine2,
                         district: form.district,
                         city: form.city,
                         state: form.state,
                         country: form.country,
                         pincode: form.pincode,
-                        doctorCount: form.doctorCount,
-                        username: form.username,
+                        doctorCount: form.doctorCount ? parseInt(form.doctorCount) : 0,
                     }),
                 });
                 const data = await res.json();
@@ -248,7 +243,7 @@ const MultiStepRegister: React.FC = () => {
                         <div className="col-lg-6 col-md-12 col-sm-12">
                             <div className="row justify-content-center align-items-center overflow-auto flex-wrap vh-100">
                                 <div className="col-md-10 mx-auto py-4">
-                                    
+
                                     {/* Logo for Mobile View */}
                                     <div className="text-center w-100 d-lg-none mb-4 mt-2">
                                         <img src="/logo.png" className="img-fluid" alt="DocYori Logo" style={{ maxHeight: "60px", width: "auto" }} />
@@ -273,84 +268,84 @@ const MultiStepRegister: React.FC = () => {
 
                                                 <div className="text-center mb-4">
                                                     <div className="step-pills">
-                        {stepTitles.map((title, i) => {
-                            const s = i + 1;
-                            const cls = s < step ? "done" : s === step ? "active" : "pending";
-                            return (
-                                <div key={i} className={`step-pill ${cls}`}>
-                                    <span className="step-pill-num">{s < step ? "✓" : s}</span>
-                                    <span>{title}</span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
+                                                        {stepTitles.map((title, i) => {
+                                                            const s = i + 1;
+                                                            const cls = s < step ? "done" : s === step ? "active" : "pending";
+                                                            return (
+                                                                <div key={i} className={`step-pill ${cls}`}>
+                                                                    <span className="step-pill-num">{s < step ? "✓" : s}</span>
+                                                                    <span>{title}</span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
 
-                {error && (
-                    <div className="alert alert-danger alert-dismissible fade show p-2 mb-3 rounded text-start" role="alert" style={{ fontSize: "13px" }}>
-                        <i className="ti ti-alert-triangle me-1"></i> {error}
-                    </div>
-                )}
-                {success && (
-                    <div className="alert alert-success alert-dismissible fade show p-3 mb-3 rounded text-center fw-medium" role="alert">
-                        {success}
-                    </div>
-                )}
+                                                {error && (
+                                                    <div className="alert alert-danger alert-dismissible fade show p-2 mb-3 rounded text-start" role="alert" style={{ fontSize: "13px" }}>
+                                                        <i className="ti ti-alert-triangle me-1"></i> {error}
+                                                    </div>
+                                                )}
+                                                {success && (
+                                                    <div className="alert alert-success alert-dismissible fade show p-3 mb-3 rounded text-center fw-medium" role="alert">
+                                                        {success}
+                                                    </div>
+                                                )}
 
-                {/* ─── STEP 1: Personal Details ─── */}
-                {step === 1 && (
-                    <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="text-start">
-                        <div className="mb-3 text-start">
-                            <Input 
-                                label="Owner / Your Name" 
-                                required 
-                                type="text" 
-                                placeholder="Dr. Rahul Sharma" 
-                                leftAddon={<User size={20} strokeWidth={2.5} color="#0f172a" />}
-                                value={form.ownerName}
-                                onChange={e => setForm({ ...form, ownerName: e.target.value })} 
-                            />
-                        </div>
+                                                {/* ─── STEP 1: Personal Details ─── */}
+                                                {step === 1 && (
+                                                    <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="text-start">
+                                                        <div className="mb-3 text-start">
+                                                            <Input
+                                                                label="Owner / Your Name"
+                                                                required
+                                                                type="text"
+                                                                placeholder="Dr. Rahul Sharma"
+                                                                leftAddon={<User size={20} strokeWidth={2.5} color="#0f172a" />}
+                                                                value={form.ownerName}
+                                                                onChange={e => setForm({ ...form, ownerName: e.target.value })}
+                                                            />
+                                                        </div>
 
                                                         <div className="mb-3">
-                                                            <Input 
-                                                                label="Mobile Number" 
-                                                                required 
-                                                                type="tel" 
-                                                                placeholder="9876543210" 
+                                                            <Input
+                                                                label="Mobile Number"
+                                                                required
+                                                                type="tel"
+                                                                placeholder="9876543210"
                                                                 maxLength={10}
                                                                 leftAddon={<Phone size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                 value={form.mobileNumber}
                                                                 onChange={e => {
                                                                     const val = e.target.value.replace(/\D/g, "").slice(0, 10);
                                                                     setForm({ ...form, mobileNumber: val, ...(form.sameAsMobile ? { whatsappNumber: val } : {}) });
-                                                                }} 
+                                                                }}
                                                             />
                                                             <div className="phone-note">Enter 10-digit Indian mobile number</div>
                                                         </div>
 
                                                         <div className="mb-3">
-                                                            <Input 
-                                                                label="Email Address" 
-                                                                required 
-                                                                type="email" 
-                                                                placeholder="doctor@clinic.com" 
+                                                            <Input
+                                                                label="Email Address"
+                                                                required
+                                                                type="email"
+                                                                placeholder="doctor@clinic.com"
                                                                 leftAddon={<Mail size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                 value={form.emailId}
-                                                                onChange={e => setForm({ ...form, emailId: e.target.value })} 
+                                                                onChange={e => setForm({ ...form, emailId: e.target.value })}
                                                             />
                                                         </div>
 
                                                         <div className="mb-4">
-                                                            <Input 
-                                                                label="WhatsApp Number" 
-                                                                type="tel" 
-                                                                placeholder="9876543210" 
+                                                            <Input
+                                                                label="WhatsApp Number"
+                                                                type="tel"
+                                                                placeholder="9876543210"
                                                                 maxLength={10}
                                                                 disabled={form.sameAsMobile}
                                                                 leftAddon={<MessageCircle size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                 value={form.sameAsMobile ? form.mobileNumber : form.whatsappNumber}
-                                                                onChange={e => setForm({ ...form, whatsappNumber: e.target.value.replace(/\D/g, "").slice(0, 10) })} 
+                                                                onChange={e => setForm({ ...form, whatsappNumber: e.target.value.replace(/\D/g, "").slice(0, 10) })}
                                                             />
                                                             <div className="form-check form-check-md mt-2 mb-0">
                                                                 <input className="form-check-input" type="checkbox" id="sameAsMobile" checked={form.sameAsMobile}
@@ -370,49 +365,49 @@ const MultiStepRegister: React.FC = () => {
                                                     <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="text-start">
                                                         <div className="row mb-3">
                                                             <div className="col-md-6 mb-3 mb-md-0">
-                                                                <Input 
-                                                                    label="Clinic Name" 
-                                                                    required 
-                                                                    type="text" 
+                                                                <Input
+                                                                    label="Clinic Name"
+                                                                    required
+                                                                    type="text"
                                                                     placeholder="Apollo Clinic"
                                                                     leftAddon={<Home size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                     value={form.clinicName}
-                                                                    onChange={e => setForm({ ...form, clinicName: e.target.value })} 
+                                                                    onChange={e => setForm({ ...form, clinicName: e.target.value })}
                                                                 />
                                                             </div>
                                                             <div className="col-md-6">
-                                                                <Input 
-                                                                    label="Clinic Username" 
-                                                                    required 
-                                                                    type="text" 
+                                                                <Input
+                                                                    label="Clinic Username"
+                                                                    required
+                                                                    type="text"
                                                                     placeholder="apollo_clinic"
                                                                     leftAddon={<AtSign size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                     value={form.username}
-                                                                    onChange={e => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })} 
+                                                                    onChange={e => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })}
                                                                 />
                                                             </div>
                                                         </div>
 
                                                         <div className="mb-3">
-                                                            <Input 
-                                                                label="Address Line 1" 
-                                                                required 
-                                                                type="text" 
+                                                            <Input
+                                                                label="Address Line 1"
+                                                                required
+                                                                type="text"
                                                                 placeholder="Shop No. 12, MG Road"
                                                                 leftAddon={<MapPin size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                 value={form.addressLine1}
-                                                                onChange={e => setForm({ ...form, addressLine1: e.target.value })} 
+                                                                onChange={e => setForm({ ...form, addressLine1: e.target.value })}
                                                             />
                                                         </div>
 
                                                         <div className="mb-3">
-                                                            <Input 
-                                                                label="Address Line 2 (Optional)" 
-                                                                type="text" 
+                                                            <Input
+                                                                label="Address Line 2 (Optional)"
+                                                                type="text"
                                                                 placeholder="Near City Hospital"
                                                                 leftAddon={<MapPin size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                 value={form.addressLine2}
-                                                                onChange={e => setForm({ ...form, addressLine2: e.target.value })} 
+                                                                onChange={e => setForm({ ...form, addressLine2: e.target.value })}
                                                             />
                                                         </div>
 
@@ -441,10 +436,10 @@ const MultiStepRegister: React.FC = () => {
 
                                                         <div className="row mb-3">
                                                             <div className="col-md-6 mb-3 mb-md-0">
-                                                                <Input 
-                                                                    label="Password" 
-                                                                    required 
-                                                                    type={showPassword ? "text" : "password"} 
+                                                                <Input
+                                                                    label="Password"
+                                                                    required
+                                                                    type={showPassword ? "text" : "password"}
                                                                     placeholder="Min 8 characters"
                                                                     leftAddon={<Lock size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                     rightIcon={
@@ -453,14 +448,14 @@ const MultiStepRegister: React.FC = () => {
                                                                         </div>
                                                                     }
                                                                     value={form.password}
-                                                                    onChange={e => setForm({ ...form, password: e.target.value })} 
+                                                                    onChange={e => setForm({ ...form, password: e.target.value })}
                                                                 />
                                                             </div>
                                                             <div className="col-md-6">
-                                                                <Input 
-                                                                    label="Confirm Password" 
-                                                                    required 
-                                                                    type={showConfirmPassword ? "text" : "password"} 
+                                                                <Input
+                                                                    label="Confirm Password"
+                                                                    required
+                                                                    type={showConfirmPassword ? "text" : "password"}
                                                                     placeholder="Re-enter password"
                                                                     leftAddon={<Lock size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                     rightIcon={
@@ -469,7 +464,7 @@ const MultiStepRegister: React.FC = () => {
                                                                         </div>
                                                                     }
                                                                     value={form.confirmPassword}
-                                                                    onChange={e => setForm({ ...form, confirmPassword: e.target.value })} 
+                                                                    onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
                                                                 />
                                                             </div>
                                                         </div>
@@ -518,8 +513,8 @@ const MultiStepRegister: React.FC = () => {
                                                                             {p.price === 0 ? "FREE" : `₹${p.price.toLocaleString("en-IN")}`}
                                                                         </div>
                                                                         {p.price > 0 && <div style={{ fontSize: "11px", color: "#9ca3af" }}>per cycle</div>}
-                                                                        
-                                                                        <Button 
+
+                                                                        <Button
                                                                             variant={p.price === 0 ? "success" : "primary"}
                                                                             onClick={() => handleComplete(p.id)}
                                                                             disabled={loading}

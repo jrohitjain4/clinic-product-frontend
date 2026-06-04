@@ -1,161 +1,151 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router";
-import ImageWithBasePath from "../../../../core/imageWithBasePath";
-import { TicketsListData } from "../../../../core/json/ticketsListData";
-import FilterIndex from "../../../../core/common/filter/filterIndex";
-import SearchInput from "../../../../core/common/dataTable/dataTableSearch";
 import { all_routes } from "../../../routes/all_routes";
 import Datatable from "../../../../core/common/dataTable";
 import TicketsModal from "./modal/ticketsModal";
+import { useTickets } from "../../../../core/hooks/useTickets";
+import type { Ticket } from "../../../../core/hooks/useTickets";
+import dayjs from "dayjs";
 
 const TicketsList = () => {
-  const data = TicketsListData;
+  const { tickets, loading, createTicket, updateStatus } = useTickets();
+  const [searchText, setSearchText] = useState<string>("");
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : {};
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+
   const columns = [
     {
       title: "Ticket ID",
-      dataIndex: "TicketID",
-      render: (text: any) => <Link to={all_routes.ticketDetails}>{text}</Link>,
-      sorter: (a: any, b: any) => a.TicketID.length - b.TicketID.length,
+      dataIndex: "ticketCode",
+      render: (text: any) => <span className="text-primary">{text}</span>,
+      sorter: (a: any, b: any) => a.ticketCode.localeCompare(b.ticketCode),
     },
     {
       title: "Created By",
-      dataIndex: "CreatedBy",
+      dataIndex: "userName",
       render: (text: any, record: any) => (
-        <div className="d-flex align-items-center">
-          <Link to="#" className="avatar avatar-sm me-2">
-            <ImageWithBasePath
-              src={`assets/img/users/${record.Image}`}
-              alt="product"
-              className="rounded-circle"
-            />
-          </Link>
-          <Link to="#" className="fw-medium">
-            {text}
-          </Link>
+        <div className="d-flex flex-column">
+          <span className="fw-medium text-dark">{text}</span>
+          <span className="fs-12 text-muted">{record.userEmail}</span>
+          {isSuperAdmin && record.clinic && (
+            <span className="badge bg-soft-info text-info mt-1" style={{ width: 'fit-content' }}>
+              {record.clinic.name}
+            </span>
+          )}
         </div>
       ),
-      sorter: (a: any, b: any) => a.CreatedBy.length - b.CreatedBy.length,
+      sorter: (a: any, b: any) => a.userName.localeCompare(b.userName),
     },
     {
       title: "Subject",
-      dataIndex: "Subject",
-      sorter: (a: any, b: any) => a.Subject.length - b.Subject.length,
+      dataIndex: "subject",
+      sorter: (a: any, b: any) => a.subject.localeCompare(b.subject),
     },
     {
       title: "Created Date",
-      dataIndex: "CreatedDate",
-      sorter: (a: any, b: any) => a.CreatedDate.length - b.CreatedDate.length,
+      dataIndex: "createdAt",
+      render: (text: string) => dayjs(text).format("DD MMM YYYY, hh:mm A"),
+      sorter: (a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     },
     {
       title: "Priority",
-      dataIndex: "Priority",
+      dataIndex: "priority",
       render: (text: any) => (
         <span className="badge border bg-white text-dark fw-medium">
           <i
-            className={`ti ti-point-filled ${
-              text === "Low"
-                ? "text-success"
-                : text === "High"
+            className={`ti ti-point-filled ${text === "Low"
+              ? "text-success"
+              : text === "High"
                 ? "text-danger"
                 : "text-warning"
-            } me-1`}
+              } me-1`}
           />
           {text}
         </span>
       ),
-      sorter: (a: any, b: any) => a.Priority.length - b.Priority.length,
-    },
-    {
-      title: "Assignee",
-      dataIndex: "Assignee",
-      sorter: (a: any, b: any) => a.Assignee.length - b.Assignee.length,
+      sorter: (a: any, b: any) => a.priority.localeCompare(b.priority),
     },
     {
       title: "Status",
-      dataIndex: "Status",
-      render: (text: any) => (
-        <span
-          className={`badge fw-medium ${
-            text === "Resolved"
-              ? "bg-soft-success text-success"
-              : text === "Inprogress"
-              ? "bg-soft-warning text-warning"
-              : text === "Open"
-              ? "bg-soft-info text-info"
-              : "bg-soft-danger text-danger"
-          } border ${
-            text === "Resolved"
-              ? "border-success"
-              : text === "Inprogress"
-              ? "border-warning"
-              : text === "Open"
-              ? "border-info"
-              : "border-danger"
-          }`}
-        >
-          {text}
-        </span>
+      dataIndex: "status",
+      render: (text: any, record: Ticket) => (
+        <div className="dropdown">
+          <span
+            className={`badge fw-medium dropdown-toggle pointer ${text === "Solved"
+              ? "bg-soft-success text-success border-success"
+              : text === "In Progress"
+                ? "bg-soft-warning text-warning border-warning"
+                : "bg-soft-danger text-danger border-danger"
+              } border`}
+            data-bs-toggle={isSuperAdmin ? "dropdown" : ""}
+          >
+            {text}
+          </span>
+          {isSuperAdmin && (
+            <ul className="dropdown-menu p-2">
+              <li>
+                <button
+                  className="dropdown-item rounded-1"
+                  onClick={() => updateStatus(record.id, "Pending")}
+                >
+                  Pending
+                </button>
+              </li>
+              <li>
+                <button
+                  className="dropdown-item rounded-1"
+                  onClick={() => updateStatus(record.id, "In Progress")}
+                >
+                  In Progress
+                </button>
+              </li>
+              <li>
+                <button
+                  className="dropdown-item rounded-1"
+                  onClick={() => updateStatus(record.id, "Solved")}
+                >
+                  Solved
+                </button>
+              </li>
+            </ul>
+          )}
+        </div>
       ),
-      sorter: (a: any, b: any) => a.Status.length - b.Status.length,
+      sorter: (a: any, b: any) => a.status.localeCompare(b.status),
     },
     {
-      title: "",
-      render: () => (
+      title: "Action",
+      render: (record: Ticket) => (
         <div className="action-item">
           <Link
             to="#"
-            data-bs-toggle="dropdown"
-            className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
+            className="btn btn-sm btn-white border me-2"
+            data-bs-toggle="modal"
+            data-bs-target="#view_ticket"
+            onClick={() => setSelectedTicket(record)}
           >
-            <i className="ti ti-dots-vertical" />
+            <i className="ti ti-eye me-1" /> View
           </Link>
-          <ul className="dropdown-menu p-2">
-            <li>
-              <Link
-                to="#"
-                className="dropdown-item d-flex align-items-center"
-                data-bs-toggle="modal"
-                data-bs-target="#edit_tickets"
-              >
-                Edit
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="#"
-                className="dropdown-item d-flex align-items-center"
-                data-bs-toggle="modal"
-                data-bs-target="#delete_tickets"
-              >
-                Delete
-              </Link>
-            </li>
-          </ul>
         </div>
       ),
     },
   ];
-  const [searchText, setSearchText] = useState<string>("");
 
-  const handleSearch = (value: string) => {
-    setSearchText(value);
-  };
   return (
-      <>
-        {/* ========================
-			Start Page Content
-		========================= */}
-        <div className="page-wrapper">
-          {/* Start Content */}
-          <div className="content">
-            {/* Page Header */}
-            <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-3 mb-3 border-bottom">
-              <div className="d-flex align-items-center">
-                <h4 className="fw-bold mb-0 me-2">Tickets</h4>
-                <span className="badge badge-soft-primary border pt-1 px-2 border-primary fw-medium">
-                  Total Announcements : 582
-                </span>
-              </div>
+    <>
+      <div className="page-wrapper">
+        <div className="content">
+          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-3 mb-3 border-bottom">
+            <div className="d-flex align-items-center">
+              <h4 className="fw-bold mb-0 me-2">Support Tickets</h4>
+              <span className="badge badge-soft-primary border pt-1 px-2 border-primary fw-medium">
+                Total Tickets : {tickets.length}
+              </span>
+            </div>
+            {!isSuperAdmin && (
               <div className="text-end">
                 <Link
                   to="#"
@@ -164,97 +154,35 @@ const TicketsList = () => {
                   data-bs-target="#add_tickets"
                 >
                   <i className="ti ti-plus me-1" />
-                  Add New Ticket
+                  Raise New Ticket
                 </Link>
               </div>
-            </div>
-            {/* End Page Header */}
-            <div className=" d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-              <div className="search-set mb-3">
-                <div className="d-flex align-items-center flex-wrap gap-2">
-                  
-                </div>
-              </div>
-              <div className="d-flex table-dropdown mb-3 pb-1 right-content align-items-center flex-wrap row-gap-3">
-                <div className="dropdown me-2">
-                  <Link
-                    to="#"
-                    className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
-                    data-bs-toggle="dropdown"
-                    data-bs-auto-close="outside"
-                  >
-                    <i className="ti ti-filter me-2 fs-14" />
-                    Filter
-                  </Link>
-                  <div
-                    className="dropdown-menu dropdown-lg dropdown-menu-end filter-dropdown"
-                    id="filter-dropdown"
-                  >
-                    <div className="d-flex align-items-center justify-content-between border-bottom filter-header">
-                      <h4 className="fs-18 fw-bold">Filter</h4>
-                      <div className="d-flex align-items-center">
-                        <Link
-                          to="#"
-                          className="link-danger text-decoration-underline me-3"
-                        >
-                          Clear All
-                        </Link>
-                      </div>
-                    </div>
-                    <FilterIndex />
-                  </div>
-                </div>
-                <div className="dropdown">
-                  <Link
-                    to="#"
-                    className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
-                    data-bs-toggle="dropdown"
-                  >
-                    <span className="me-1"> Sort By : </span> Recent
-                  </Link>
-                  <ul className="dropdown-menu  dropdown-menu-end p-2">
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        Recent
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        Oldest
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-            <div className="table-responsive">
-              <Datatable
-                columns={columns}
-                dataSource={data}
-                Selection={false}
-                searchText={searchText}
-              />
-            </div>
+            )}
           </div>
-          {/* End Content */}
-          {/* Footer Start */}
-          <div className="footer text-center bg-white p-2 border-top">
-            <p className="text-dark mb-0">
-              2025 
-              <Link to="#" className="link-primary">
-                Docyari
-              </Link>
-              , All Rights Reserved
-            </p>
-          </div>
-          {/* Footer End */}
-        </div>
-        {/* ========================
-			End Page Content
-		========================= */}
 
-        <TicketsModal />
-      </>
+          <div className="table-responsive">
+            <Datatable
+              columns={columns}
+              dataSource={tickets}
+              Selection={false}
+              searchText={searchText}
+              loading={loading}
+            />
+          </div>
+        </div>
+
+        <div className="footer text-center bg-white p-2 border-top">
+          <p className="text-dark mb-0">
+            2025 <Link to="#" className="link-primary">Docyari</Link>, All Rights Reserved
+          </p>
+        </div>
+      </div>
+
+      <TicketsModal
+        createTicket={createTicket}
+        selectedTicket={selectedTicket}
+      />
+    </>
   );
 };
 

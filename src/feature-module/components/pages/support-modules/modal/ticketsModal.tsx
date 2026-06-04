@@ -1,426 +1,192 @@
-import { useState } from "react";
-import {
-  Category,
-  Priority,
-  TicketStatus,
-} from "../../../../../core/common/selectOption";
-import PredefinedDatePicker from "../../../../../core/common/datePicker";
+import { useState, useEffect } from "react";
+import { Priority as PriorityOptions } from "../../../../../core/common/selectOption";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
-import { Link } from "react-router";
-import { all_routes } from "../../../../routes/all_routes";
-import ImageWithBasePath from "../../../../../core/imageWithBasePath";
-import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
+import type { Ticket } from "../../../../../core/hooks/useTickets";
+import dayjs from "dayjs";
 
-const TicketsModal = () => {
-const [phone, setPhone] = useState<string | undefined>()
+interface TicketsModalProps {
+  createTicket: (data: { subject: string; description: string; priority: string }) => Promise<boolean>;
+  selectedTicket: Ticket | null;
+}
+
+const TicketsModal: React.FC<TicketsModalProps> = ({ createTicket, selectedTicket }) => {
+  const [subject, setSubject] = useState("");
+  const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState("Medium");
+
+  useEffect(() => {
+    if (selectedTicket) {
+      setSubject(selectedTicket.subject);
+      setDescription(selectedTicket.description);
+      setPriority(selectedTicket.priority);
+    } else {
+      setSubject("");
+      setDescription("");
+      setPriority("Medium");
+    }
+  }, [selectedTicket]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subject || !description) return;
+
+    const success = await createTicket({ subject, description, priority });
+    if (success) {
+      setSubject("");
+      setDescription("");
+      // Close modal using bootstrap
+      const modalElement = document.getElementById('add_tickets');
+      if (modalElement) {
+        const modal = (window as any).bootstrap.Modal.getInstance(modalElement);
+        modal?.hide();
+      }
+    }
+  };
+
   return (
     <>
-      {/* Start Add Contact */}
+      {/* Start Add Ticket */}
       <div id="add_tickets" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="text-dark modal-title fw-bold">Add New Ticket</h5>
+              <h5 className="text-dark modal-title fw-bold">Raise New Support Ticket</h5>
               <button
                 type="button"
-                className="btn-close btn-close-modal custom-btn-close"
+                className="btn-close custom-btn-close"
                 data-bs-dismiss="modal"
                 aria-label="Close"
               >
                 <i className="fa-solid fa-x" />
               </button>
             </div>
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="modal-body">
-                {/* start row */}
                 <div className="row">
-                  <div className="col-lg-6">
-                    <div className="mb-2">
+                  <div className="col-lg-12">
+                    <div className="mb-3">
                       <label className="form-label">
-                        Ticket ID<span className="text-danger ms-1">*</span>
+                        Subject<span className="text-danger ms-1">*</span>
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        placeholder="#TKT0020"
-                        disabled
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        placeholder="e.g., Cannot access billing page"
+                        required
                       />
                     </div>
                   </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Created By<span className="text-danger ms-1">*</span>
-                      </label>
-                      <input type="text" className="form-control" />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Phone Number<span className="text-danger ms-1">*</span>
-                      </label>
-                      <PhoneInput
-                            defaultCountry="IN"
-                            value={phone}
-                            onChange={setPhone}
-                          />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Email Address<span className="text-danger ms-1">*</span>
-                      </label>
-                      <input type="text" className="form-control" />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Subject<span className="text-danger ms-1">*</span>
-                      </label>
-                      <input type="text" className="form-control" />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Category<span className="text-danger ms-1">*</span>
-                      </label>
-                      <CommonSelect
-                        options={Category}
-                        className="select"
-                        defaultValue={Category[0]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-2">
+                  <div className="col-lg-12">
+                    <div className="mb-3">
                       <label className="form-label">
                         Priority<span className="text-danger ms-1">*</span>
                       </label>
                       <CommonSelect
-                        options={Priority}
+                        options={PriorityOptions}
                         className="select"
-                        defaultValue={Priority[0]}
+                        defaultValue={PriorityOptions.find(p => p.value === priority) || PriorityOptions[1]}
+                        onChange={(val: any) => setPriority(val.value)}
                       />
                     </div>
                   </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Created Date<span className="text-danger ms-1">*</span>
-                      </label>
-                      <div className="input-group position-relative">
-                        <span className="input-icon-addon text-dark">
-                          <i className="ti ti-calendar-event" />
-                        </span>
-                        <PredefinedDatePicker />
-                      </div>
-                    </div>
-                  </div>
-                  {/* end col */}
                   <div className="col-lg-12">
-                    <div className="mb-2">
+                    <div className="mb-3">
                       <label className="form-label">
-                        Content<span className="text-danger ms-1">*</span>
+                        Description / Problem Details<span className="text-danger ms-1">*</span>
                       </label>
                       <textarea
                         className="form-control"
-                        rows={3}
-                        defaultValue={""}
+                        rows={4}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Describe your issue in detail..."
+                        required
                       />
                     </div>
                   </div>
-                  {/* end col */}
-                  <div className="col-lg-12">
-                    <div className="mb-2">
-                      <label className="form-label">File</label>
-                      <div className="file-upload drag-file bg-light w-100 d-flex align-items-center justify-content-center flex-column">
-                        <span className="upload-img d-block mb-2">
-                          <i className="ti ti-folder-open text-primary" />
-                        </span>
-                        <p className="mb-0 text-dark">
-                          Drop Your Files or
-                          <Link
-                            to="#"
-                            className="text-primary text-decoration-underline"
-                          >
-                            browse
-                          </Link>
-                        </p>
-                        <input type="file" accept="video/image" />
-                        <p className="fs-13">Maximum size : 50 MB</p>
-                      </div>
-                    </div>
-                  </div>
-                  {/* end col */}
                 </div>
-                {/* end row */}
               </div>
               <div className="modal-footer d-flex align-items-center gap-1">
                 <button
                   type="button"
-                  className="btn btn-white border"
+                  className="btn btn-light border"
                   data-bs-dismiss="modal"
                 >
                   Cancel
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  Add Ticket
+                  Submit Ticket
                 </button>
               </div>
             </form>
           </div>
         </div>
       </div>
-      {/* End Add Contact */}
-      {/* Start Edit Contact */}
-      <div id="edit_tickets" className="modal fade">
+
+      {/* View Ticket Modal */}
+      <div id="view_ticket" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="text-dark modal-title fw-bold">Edit Ticket</h5>
+            <div className="modal-header bg-light">
+              <h5 className="text-dark modal-title fw-bold">Ticket Details: {selectedTicket?.ticketCode}</h5>
               <button
                 type="button"
-                className="btn-close btn-close-modal custom-btn-close"
+                className="btn-close custom-btn-close"
                 data-bs-dismiss="modal"
                 aria-label="Close"
               >
                 <i className="fa-solid fa-x" />
               </button>
             </div>
-            <form>
-              <div className="modal-body">
-                {/* start row */}
+            <div className="modal-body">
+              {selectedTicket && (
                 <div className="row">
-                  <div className="col-lg-6">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Ticket ID<span className="text-danger ms-1">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="#TKT0020"
-                        disabled
-                      />
+                  <div className="col-md-6 mb-3">
+                    <label className="fs-12 text-muted mb-0">Status</label>
+                    <div>
+                      <span className={`badge border ${selectedTicket.status === "Solved" ? "bg-soft-success text-success border-success" :
+                        selectedTicket.status === "In Progress" ? "bg-soft-warning text-warning border-warning" :
+                          "bg-soft-danger text-danger border-danger"
+                        }`}>
+                        {selectedTicket.status}
+                      </span>
                     </div>
                   </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Created By<span className="text-danger ms-1">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        defaultValue="Andrew Simmons"
-                      />
+                  <div className="col-md-6 mb-3 text-md-end">
+                    <label className="fs-12 text-muted mb-0">Priority</label>
+                    <div>
+                      <span className="fw-medium">{selectedTicket.priority}</span>
                     </div>
                   </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Phone Number<span className="text-danger ms-1">*</span>
-                      </label>
-                       <PhoneInput
-                            defaultCountry="IN"
-                            value={phone}
-                            onChange={setPhone}
-                          />
+                  <div className="col-12 mb-3">
+                    <label className="fs-12 text-muted mb-0">Subject</label>
+                    <div className="fw-bold text-dark fs-16">{selectedTicket.subject}</div>
+                  </div>
+                  <div className="col-12 mb-3">
+                    <label className="fs-12 text-muted mb-0">Description</label>
+                    <div className="p-3 bg-light rounded border fs-14" style={{ whiteSpace: 'pre-wrap' }}>
+                      {selectedTicket.description}
                     </div>
                   </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Email Address<span className="text-danger ms-1">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        defaultValue="andrew@example.com"
-                      />
-                    </div>
+                  <div className="col-md-6">
+                    <label className="fs-12 text-muted mb-0">Created On</label>
+                    <div className="fs-13">{dayjs(selectedTicket.createdAt).format("DD MMM YYYY, hh:mm A")}</div>
                   </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Subject<span className="text-danger ms-1">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        defaultValue="Auto Logout Complaint"
-                      />
-                    </div>
+                  <div className="col-md-6 text-md-end">
+                    <label className="fs-12 text-muted mb-0">Raised By</label>
+                    <div className="fs-13">{selectedTicket.userName}</div>
                   </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Category<span className="text-danger ms-1">*</span>
-                      </label>
-                      <CommonSelect
-                        options={Category}
-                        className="select"
-                        defaultValue={Category[1]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Priority<span className="text-danger ms-1">*</span>
-                      </label>
-                      <CommonSelect
-                        options={Priority}
-                        className="select"
-                        defaultValue={Priority[2]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-lg-6">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Created Date<span className="text-danger ms-1">*</span>
-                      </label>
-                      <div className="input-group position-relative">
-                        <span className="input-icon-addon text-dark">
-                          <i className="ti ti-calendar-event" />
-                        </span>
-                        <PredefinedDatePicker />
-                      </div>
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-lg-12">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Content<span className="text-danger ms-1">*</span>
-                      </label>
-                      <textarea
-                        className="form-control"
-                        rows={3}
-                        defaultValue={
-                          "Keep getting logged out while working, even without being idle. It’s frustrating and interrupts my documentation process."
-                        }
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-lg-12">
-                    <div className="mb-2">
-                      <label className="form-label">File</label>
-                      <div className="file-upload drag-file bg-light w-100 d-flex align-items-center justify-content-center flex-column">
-                        <span className="upload-img d-block mb-2">
-                          <i className="ti ti-folder-open text-primary" />
-                        </span>
-                        <p className="mb-0 text-dark">
-                          Drop Your Files or
-                          <Link
-                            to="#"
-                            className="text-primary text-decoration-underline"
-                          >
-                            browse
-                          </Link>
-                        </p>
-                        <input type="file" accept="video/image" />
-                        <p className="fs-13">Maximum size : 50 MB</p>
-                      </div>
-                    </div>
-                  </div>
-                  {/* end col */}
-                  <div className="col-lg-12">
-                    <div className="mb-2">
-                      <label className="form-label">
-                        Status<span className="text-danger ms-1">*</span>
-                      </label>
-                      <CommonSelect
-                        options={TicketStatus}
-                        className="select"
-                        defaultValue={TicketStatus[2]}
-                      />
-                    </div>
-                  </div>
-                  {/* end col */}
                 </div>
-                {/* end row */}
-              </div>
-              <div className="modal-footer d-flex align-items-center gap-1">
-                <button
-                  type="button"
-                  className="btn btn-white border"
-                  data-bs-dismiss="modal"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-      {/* End Edit Contact */}
-      {/* Start Delete Modal  */}
-      <div className="modal fade" id="delete_tickets">
-        <div className="modal-dialog modal-dialog-centered modal-sm">
-          <div className="modal-content">
-            <div className="modal-body text-center position-relative">
-              <ImageWithBasePath
-                src="assets/img/bg/delete-modal-bg-01.png"
-                alt=""
-                className="img-fluid position-absolute top-0 start-0"
-              />
-              <ImageWithBasePath
-                src="assets/img/bg/delete-modal-bg-02.png"
-                alt=""
-                className="img-fluid position-absolute bottom-0 end-0"
-              />
-              <div className="mb-3">
-                <span className="avatar avatar-lg bg-danger text-white">
-                  <i className="ti ti-trash fs-24" />
-                </span>
-              </div>
-              <h5 className="fw-bold mb-1">Delete Confirmation</h5>
-              <p className="mb-3">Are you sure want to delete?</p>
-              <div className="d-flex justify-content-center">
-                <Link
-                  to="#"
-                  className="btn btn-light position-relative z-1 me-3"
-                  data-bs-dismiss="modal"
-                >
-                  Cancel
-                </Link>
-                <Link
-                  to={all_routes.tickets}
-                  className="btn btn-danger position-relative z-1"
-                >
-                  Yes, Delete
-                </Link>
-              </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-primary" data-bs-dismiss="modal">Close</button>
             </div>
           </div>
         </div>
       </div>
-      {/* End Delete Modal  */}
     </>
   );
 };

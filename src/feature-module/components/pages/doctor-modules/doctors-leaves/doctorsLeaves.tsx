@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
-import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import Datatable from "../../../../../core/common/dataTable";
 import { useLeaves } from "../../../../../core/hooks/useLeaves";
 import { useLeaveTypes } from "../../../../../core/hooks/useLeaveTypes";
@@ -10,7 +9,6 @@ import { DatePicker } from "antd";
 const DoctorsLeaves = () => {
   const { leaves, applyLeave, withdrawLeave, deleteLeave, getWorkingDays } = useLeaves();
   const { leaveTypes } = useLeaveTypes();
-  const [searchText, setSearchText] = useState("");
 
   // Add leave form state
   const [leaveTypeId, setLeaveTypeId] = useState("");
@@ -20,7 +18,6 @@ const DoctorsLeaves = () => {
   const [workingDays, setWorkingDays] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSearch = (v: string) => setSearchText(v);
 
   useEffect(() => {
     const updateWorkingDays = async () => {
@@ -141,12 +138,12 @@ const DoctorsLeaves = () => {
           <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
             <div className="search-set">
               <div className="d-flex align-items-center">
-                
+
               </div>
             </div>
           </div>
           <div className="table-responsive">
-            <Datatable columns={columns} dataSource={data} Selection={false} searchText={searchText} />
+            <Datatable columns={columns} dataSource={data} Selection={false} searchText="" />
           </div>
         </div>
       </div>

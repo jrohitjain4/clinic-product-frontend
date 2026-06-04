@@ -122,8 +122,8 @@ const Dashboard = () => {
           </div>
           {/* End Page Header */}
 
-          {/* Profile Completion Warning */}
-          {stats.profileCompletion < 65 && (
+          {/* Profile Completion Warning - Only for Admin, not Super Admin */}
+          {user?.role === 'ADMIN' && stats.profileCompletion < 65 && (
             <div className="alert alert-warning alert-dismissible bg-light-warning border-warning shadow-sm fade show mb-4 d-flex align-items-center justify-content-between p-3" role="alert">
               <div className="flex-fill me-3">
                 <h6 className="fw-bold mb-1 text-warning d-flex align-items-center">

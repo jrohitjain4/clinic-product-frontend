@@ -11,10 +11,12 @@ import CircleChart from "./chats/circleChart";
 import { Calendar, type CalendarProps } from "antd";
 import type { Dayjs } from "dayjs";
 import { useDashboardStats } from "../../../../core/hooks/useDashboardStats";
+import { useClinicStaff } from "../../../../core/hooks/useClinicStaff";
 
 const Dashboard = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const { stats } = useDashboardStats();
+  const { staffs } = useClinicStaff();
   const [sColChart] = useState<any>({
     chart: {
       width: 80,
@@ -674,9 +676,9 @@ const Dashboard = () => {
             <div className="col-xl-4 col-lg-6 d-flex">
               <div className="card shadow-sm flex-fill w-100">
                 <div className="card-header d-flex align-items-center justify-content-between">
-                  <h5 className="fw-bold mb-0">Doctors Schedule</h5>
+                  <h5 className="fw-bold mb-0">Clinic Staff</h5>
                   <Link
-                    to={all_routes.doctorschedule}
+                    to={all_routes.staffs}
                     className="btn fw-normal btn-outline-white"
                   >
                     View All
@@ -686,143 +688,54 @@ const Dashboard = () => {
                   <div className="row g-2 mb-4">
                     <div className="col d-flex border-end">
                       <div className="text-center flex-fill">
-                        <p className="mb-1">Available</p>
-                        <h3 className="fw-bold mb-0">48</h3>
-                      </div>
-                    </div>
-                    <div className="col d-flex border-end">
-                      <div className="text-center flex-fill">
-                        <p className="mb-1">Unavailable</p>
-                        <h3 className="fw-bold mb-0">28</h3>
-                      </div>
-                    </div>
-                    <div className="col d-flex">
-                      <div className="text-center flex-fill">
-                        <p className="mb-1">Leave</p>
-                        <h3 className="fw-bold mb-0">12</h3>
+                        <p className="mb-1">Total</p>
+                        <h3 className="fw-bold mb-0">{staffs.length}</h3>
                       </div>
                     </div>
                   </div>
-                  <div className="overflow-auto">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <div className="d-flex align-items-center flex-shrink-0">
-                        <Link
-                          to={all_routes.doctordetails}
-                          className="avatar flex-shrink-0"
-                        >
-                          <ImageWithBasePath
-                            src="assets/img/doctors/doctor-02.jpg"
-                            className="rounded-circle"
-                            alt="img"
-                          />
-                        </Link>
-                        <div className="ms-2 flex-shrink-0">
-                          <div>
-                            <h6 className="fw-semibold fs-14 text-truncate mb-1">
-                              <Link to={all_routes.doctordetails}>
-                                Dr. Sarah Johnson
-                              </Link>
-                            </h6>
-                            <p className="fs-13">Orthopedic Surgeon</p>
+                  <div className="overflow-auto" style={{ maxHeight: "400px" }}>
+                    {staffs.length === 0 ? (
+                      <p className="text-center text-muted mt-3">No staffs found</p>
+                    ) : (
+                      staffs.slice(0, 5).map((staff: any) => (
+                        <div key={staff.id} className="d-flex justify-content-between align-items-center mb-3">
+                          <div className="d-flex align-items-center flex-shrink-0">
+                            <Link
+                              to="#"
+                              className="avatar flex-shrink-0"
+                            >
+                              {staff.profileImage && !staff.profileImage.startsWith('http') ? (
+                                <ImageWithBasePath
+                                  src={`assets/img/users/${staff.profileImage}`}
+                                  className="rounded-circle"
+                                  alt="img"
+                                />
+                              ) : (
+                                <span
+                                  className="avatar avatar-md rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-semibold"
+                                  style={{ fontSize: 14 }}
+                                >
+                                  {staff.fullName?.charAt(0)?.toUpperCase() || "?"}
+                                </span>
+                              )}
+                            </Link>
+                            <div className="ms-3 flex-shrink-0">
+                              <div>
+                                <h6 className="fw-semibold fs-14 text-truncate mb-1">
+                                  <Link to="#">{staff.fullName}</Link>
+                                </h6>
+                                <p className="fs-13 mb-0 text-muted">{staff.role || "Staff"}</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0 ms-2">
+                            <span className={`badge ${staff.status === 'Active' ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger'}`}>
+                              {staff.status}
+                            </span>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex-shrink-0 ms-2">
-                        <Link
-                          to="#"
-                          className="btn btn-primary btn-sm py-1 flex-shrink-0"
-                        >
-                          Book Now
-                        </Link>
-                      </div>
-                    </div>
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <div className="d-flex align-items-center flex-shrink-0">
-                        <Link
-                          to={all_routes.doctordetails}
-                          className="avatar flex-shrink-0"
-                        >
-                          <ImageWithBasePath
-                            src="assets/img/doctors/doctor-03.jpg"
-                            className="rounded-circle"
-                            alt="img"
-                          />
-                        </Link>
-                        <div className="ms-2 flex-shrink-0">
-                          <div>
-                            <h6 className="fw-semibold fs-14 text-truncate mb-1">
-                              <Link to={all_routes.doctordetails}>
-                                Dr. Emily Carter
-                              </Link>
-                            </h6>
-                            <p className="fs-13">Pediatrician</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0 ms-2">
-                        <Link to="#" className="btn btn-primary btn-sm py-1">
-                          Book Now
-                        </Link>
-                      </div>
-                    </div>
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <div className="d-flex align-items-center flex-shrink-0">
-                        <Link
-                          to={all_routes.doctordetails}
-                          className="avatar flex-shrink-0"
-                        >
-                          <ImageWithBasePath
-                            src="assets/img/doctors/doctor-04.jpg"
-                            className="rounded-circle"
-                            alt="img"
-                          />
-                        </Link>
-                        <div className="ms-2 flex-shrink-0">
-                          <div>
-                            <h6 className="fw-semibold fs-14 text-truncate mb-1">
-                              <Link to={all_routes.doctordetails}>
-                                Dr. David Lee
-                              </Link>
-                            </h6>
-                            <p className="fs-13">Gynecologist</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0 ms-2">
-                        <Link to="#" className="btn btn-primary btn-sm py-1">
-                          Book Now
-                        </Link>
-                      </div>
-                    </div>
-                    <div className="d-flex justify-content-between align-items-center mb-0">
-                      <div className="d-flex align-items-center flex-shrink-0">
-                        <Link
-                          to={all_routes.doctordetails}
-                          className="avatar flex-shrink-0"
-                        >
-                          <ImageWithBasePath
-                            src="assets/img/doctors/doctor-14.jpg"
-                            className="rounded-circle"
-                            alt="img"
-                          />
-                        </Link>
-                        <div className="ms-2 flex-shrink-0">
-                          <div>
-                            <h6 className="fw-semibold fs-14 text-truncate mb-1">
-                              <Link to={all_routes.doctordetails}>
-                                Dr. Michael Smith
-                              </Link>
-                            </h6>
-                            <p className="fs-13">Cardiologist</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0 ms-2">
-                        <Link to="#" className="btn btn-primary btn-sm py-1">
-                          Book Now
-                        </Link>
-                      </div>
-                    </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>

@@ -60,7 +60,10 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
   }, []);
 
   const desigOptions = designations.map((d) => ({ value: d.id, label: d.name }));
-  const dynamicRoleOptions = clinicRoles.map(r => ({ value: r.name, label: r.name })); // using name to match existing DB scheme or ID if preferred. Let's use name since role column is string.
+  const defaultRoles = ["front desk","Nurse", "Receptionist", "Pharmacist", "Lab Technician", "Accountant", "Manager", "Other"];
+  const dynamicRoleOptions = clinicRoles.length > 0
+    ? clinicRoles.map(r => ({ value: r.name, label: r.name }))
+    : defaultRoles.map(r => ({ value: r, label: r }));
 
   const resetAddForm = () => {
     setForm(emptyStaffForm());

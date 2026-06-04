@@ -23,7 +23,7 @@ const PayrollList = () => {
     JoiningDate: pr.staff?.dateOfJoining ? new Date(pr.staff.dateOfJoining).toLocaleDateString() : "--",
     Role: pr.staff?.role || "--",
     Salary: "$" + pr.netSalary,
-    Status: pr.status,
+    Status: pr.displayStatus || pr.status,
     raw: pr,
   }));
 
@@ -81,14 +81,19 @@ const PayrollList = () => {
     {
       title: "Status",
       dataIndex: "Status",
-      render: (text: string) => (
-        <Link
-          to={all_routes.payroll2}
-          className="btn btn-white border text-dark"
-        >
-          {text}
-        </Link>
-      ),
+      render: (text: string) => {
+        let badgeClass = "badge-soft-secondary border border-secondary";
+        if (text === "Salary_Paid" || text === "Paid") badgeClass = "badge-soft-success border border-success";
+        else if (text === "Salary_Created" || text === "Created") badgeClass = "badge-soft-warning border border-warning";
+        else if (text === "Due") badgeClass = "badge-soft-danger border border-danger";
+        else if (text === "Salary_Hold" || text === "Hold") badgeClass = "badge-soft-dark border border-dark";
+
+        return (
+          <span className={`badge fw-medium fs-13 ${badgeClass}`}>
+            {text}
+          </span>
+        );
+      },
       sorter: (a: any, b: any) => a.Status.length - b.Status.length,
     },
     {

@@ -509,7 +509,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
       <div className="page-wrapper">
         <div className="content text-center py-5">
           <span className="spinner-border text-primary" role="status" />
-          <p className="text-muted mt-2 mb-0">Loading doctor…</p>
+          <p className="text-muted mt-2 mb-0">Loading doctorï¿½</p>
         </div>
       </div>
     );
@@ -557,8 +557,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                 <div className="alert alert-success d-flex align-items-center gap-2 mb-3">
                   <i className="ti ti-circle-check" />
                   {isEdit
-                    ? "Doctor updated successfully! Redirecting…"
-                    : "Doctor added successfully! Redirecting…"}
+                    ? "Doctor updated successfully! Redirectingï¿½"
+                    : "Doctor added successfully! Redirectingï¿½"}
                 </div>
               )}
 
@@ -709,7 +709,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                 {isLoadingDepartments ? (
                                   <div className="form-control text-muted d-flex align-items-center gap-2">
                                     <span className="spinner-border spinner-border-sm" role="status" />
-                                    Loading departments…
+                                    Loading departmentsï¿½
                                   </div>
                                 ) : deptOptions.length > 0 ? (
                                   <CommonSelect
@@ -744,7 +744,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                   <div className="form-control text-muted py-2">
                                     {!departmentId
                                       ? "Select a department first"
-                                      : "No designations for this department — add one in Designation settings"}
+                                      : "No designations for this department ï¿½ add one in Designation settings"}
                                   </div>
                                 )}
                               </div>
@@ -762,7 +762,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                   <CommonSelect
                                     options={specOptions}
                                     className="select"
-                                    value={specOptions.filter((o: any) => selectedSpecializations.includes(o.value))}
+                                    value={specOptions.filter((o: any) => selectedSpecializations.includes(o.value)) as any}
                                     placeholder="Select specializations"
                                     isMulti={true}
                                     onChange={(opt: any) =>
@@ -1070,7 +1070,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           <span className="text-success fs-13">{scheduleApplyMsg}</span>
                         )}
                         <span className="text-muted fs-12">
-                          Active day: <strong>{activeScheduleDay}</strong> — isi din ka time sab
+                          Active day: <strong>{activeScheduleDay}</strong> ï¿½ isi din ka time sab
                           par copy hoga
                         </span>
                       </div>
@@ -1318,7 +1318,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           <span className="spinner-border spinner-border-sm" role="status" />
                         )}
                         {submitting
-                          ? "Saving…"
+                          ? "Savingï¿½"
                           : isEdit
                             ? "Save Changes"
                             : "Add Doctor"}
@@ -1334,7 +1334,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         {/* Footer */}
         < div className="footer text-center bg-white p-2 border-top" >
           <p className="text-dark mb-0">
-            2025 ©{" "}
+            2025 ï¿½{" "}
             <Link to="#" className="link-primary">
               Docyari
             </Link>

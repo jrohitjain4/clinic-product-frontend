@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
+import { all_routes } from "../../../routes/all_routes";
 import FooterFront from "./FooterFront";
 
 interface Doctor {
@@ -37,10 +38,24 @@ const Stars = ({ n, color, size }: { n: number; color?: string; size?: number })
 
 
 export default function ClinicLandingPage() {
-    const { username } = useParams();
+    const { username, clinicId } = useParams();
     const [clinic, setClinic] = useState<ClinicData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Get logged-in user to check if they are the admin of this clinic
+    const loggedUser = (() => {
+        try {
+            const u = localStorage.getItem("user");
+            return u ? JSON.parse(u) : null;
+        } catch { return null; }
+    })();
+
+    const isAdminOfThisClinic = clinic && loggedUser &&
+        (loggedUser.clinicId === clinic.id || loggedUser.clinic?.id === clinic.id) &&
+        (loggedUser.role === "ADMIN" || loggedUser.role === "DOCTOR");
+
+    const isIncomplete = clinic && (!clinic.about || clinic.tagline === "Quality Healthcare for Your Family");
 
     // ── Booking Modal State ──
     const [showModal, setShowModal] = useState(false);
@@ -86,9 +101,13 @@ export default function ClinicLandingPage() {
     };
 
     useEffect(() => {
-        if (!username) return;
+        if (!username && !clinicId) return;
         setLoading(true);
-        fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/landing/u/${username}`)
+        const endpoint = username
+            ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/landing/u/${username}`
+            : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/landing/id/${clinicId}`;
+
+        fetch(endpoint)
             .then(r => {
                 if (!r.ok) throw new Error("Clinic not found");
                 return r.json();
@@ -99,7 +118,7 @@ export default function ClinicLandingPage() {
             })
             .catch(err => setError(err.message))
             .finally(() => setLoading(false));
-    }, [username]);
+    }, [username, clinicId]);
 
     if (loading) return (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", flexDirection: "column", gap: 16, background: "#f8fafc" }}>
@@ -113,12 +132,64 @@ export default function ClinicLandingPage() {
             <i className="ti ti-building-hospital" style={{ fontSize: 56, color: "#e2e8f0" }} />
             <h2 style={{ color: "#1e293b", fontFamily: "Inter,sans-serif" }}>Clinic Not Found</h2>
             <p style={{ color: "#64748b", fontFamily: "Inter,sans-serif" }}>{error || "This clinic page does not exist."}</p>
+            <Link to="/" className="btn btn-primary mt-3">Go to Homepage</Link>
         </div>
     );
 
     const avgRating = clinic.reviews.length
         ? Math.round(clinic.reviews.reduce((s, r) => s + r.rating, 0) / clinic.reviews.length)
         : 5;
+
+    // ── Pre-rendering logic for incomplete data ──
+    if (isIncomplete && !isAdminOfThisClinic) {
+        return (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", flexDirection: "column", background: "#f8fafc", textAlign: 'center', padding: 24 }}>
+                <div style={{ background: '#fff', padding: '48px 32px', borderRadius: 32, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.08)', maxWidth: 440 }}>
+                    <div style={{ width: 80, height: 80, background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                        <i className="ti ti-building-broadcast-tower" style={{ fontSize: 40, color: "#94a3b8" }} />
+                    </div>
+                    <h2 style={{ color: "#0f172a", fontWeight: 800, fontSize: 28, marginBottom: 12, letterSpacing: '-0.02em' }}>Almost Ready!</h2>
+                    <p style={{ color: "#64748b", fontSize: 16, lineHeight: 1.6, marginBottom: 32 }}>
+                        <strong>{clinic.name}</strong> is currently polishing their page.
+                        Check back in a bit to see their full profile and book appointments!
+                    </p>
+                    <Link to="/" className="btn btn-primary w-100 py-3 fw-bold rounded-xl shadow-lg border-0" style={{ background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)', borderRadius: 16 }}>
+                        Explore Other Clinics
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    // Full-screen notice for Admin if they haven't put ANY data
+    const isTotallyEmpty = !clinic.about && clinic.services.length === 0;
+    if (isTotallyEmpty && isAdminOfThisClinic) {
+        return (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#fff", padding: 24 }}>
+                <div style={{ maxWidth: 500, textAlign: 'center' }}>
+                    <img src="/docyari-logo.svg" alt="DocYori" style={{ width: 180, marginBottom: 40 }} />
+                    <div style={{ background: '#fff9db', border: '1px solid #ffec99', padding: 32, borderRadius: 24, textAlign: 'left' }}>
+                        <h4 style={{ fontWeight: 800, color: '#856404', marginBottom: 16 }}>
+                            🚀 Welome to Your Clinic Page!
+                        </h4>
+                        <p style={{ color: '#856404', opacity: 0.9, lineHeight: 1.6 }}>
+                            This is your public landing page where patients can find you and book appointments.
+                            Currently, it's empty! To make it look professional:
+                        </p>
+                        <ul style={{ color: '#856404', paddingLeft: 18, marginBottom: 24 }}>
+                            <li>Add an "About Us" description</li>
+                            <li>Upload your logo and gallery photos</li>
+                            <li>List the services you provide</li>
+                            <li>Add your consulting doctors</li>
+                        </ul>
+                        <Link to={all_routes.organizationsettings} className="btn btn-warning w-100 py-3 fw-bold rounded-xl shadow-sm border-0" style={{ color: '#856404' }}>
+                            Go to Settings & Fill Data
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const totalReviews = clinic.reviews.length > 0 ? clinic.reviews.length : "350+";
 
@@ -130,6 +201,19 @@ export default function ClinicLandingPage() {
 
     return (
         <div className="dy-landing" style={{ minHeight: "100vh" }}>
+            {isAdminOfThisClinic && isIncomplete && (
+                <div className="alert alert-warning border-0 rounded-0 m-0 py-3 text-center" style={{ background: '#fff9db', borderBottom: '1px solid #ffec99 !important' }}>
+                    <div className="container d-flex align-items-center justify-content-center flex-wrap gap-2">
+                        <i className="ti ti-info-circle-filled fs-20 text-warning"></i>
+                        <span className="fw-medium text-dark">
+                            Your clinic landing page is not fully set up.
+                        </span>
+                        <Link to={all_routes.organizationsettings} className="btn btn-warning btn-sm fw-bold px-3 ms-2 shadow-sm rounded-pill">
+                            Complete Setup Now
+                        </Link>
+                    </div>
+                </div>
+            )}
 
             {/* ══════ NAVBAR (Docyori Style) ══════ */}
             <nav className="dy-nav bg-white shadow-sm position-sticky top-0" style={{ zIndex: 1000, overflow: 'visible' }}>

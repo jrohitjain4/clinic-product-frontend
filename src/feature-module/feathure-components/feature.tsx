@@ -131,7 +131,7 @@ const Feature = () => {
 
   // Prevent Patients from accessing non-patient management routes
   if (user?.role === 'PATIENT') {
-    const isPublicPath = path === "/" || path === "/login" || path === "/register";
+    const isPublicPath = path === "/" || path === "/login" || path === "/register" || path.startsWith("/@") || path.startsWith("/clinic/");
     const isPatientPath = path.startsWith("/patient/");
     if (!isPublicPath && !isPatientPath && path !== "/patient/patient-dashboard" && !path.startsWith("/new-appointment")) {
       return <Navigate to="/patient/patient-dashboard" replace />;
@@ -140,7 +140,7 @@ const Feature = () => {
 
   // Prevent Doctors from accessing non-doctor management routes
   if (user?.role === 'DOCTOR') {
-    const isPublicPath = path === "/" || path === "/login" || path === "/register";
+    const isPublicPath = path === "/" || path === "/login" || path === "/register" || path.startsWith("/@") || path.startsWith("/clinic/");
     const isDoctorPath = path.startsWith("/doctor/");
     if (!isPublicPath && !isDoctorPath && path !== "/doctor/doctor-dashboard" && !path.startsWith("/new-appointment")) {
       return <Navigate to="/doctor/doctor-dashboard" replace />;

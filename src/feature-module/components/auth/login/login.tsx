@@ -37,7 +37,7 @@ const Login = () => {
       const response = await fetch(apiUrl("/api/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, password }),
+        body: JSON.stringify({ email: identifier, password }),
       });
 
       const data = await response.json();
@@ -94,15 +94,15 @@ const Login = () => {
             </div>
 
             {/* Right Form Panel */}
-            <div className="col-lg-6 col-md-12 col-sm-12 position-relative">
-
-              {/* Logo for Mobile View */}
-              <div className="text-center w-100 d-lg-none" style={{ position: 'absolute', top: '40px', left: 0, zIndex: 10 }}>
-                <img src="/logo.png" className="img-fluid" alt="DocYori Logo" style={{ maxHeight: "100px", width: "auto" }} />
-              </div>
-
+            <div className="col-lg-6 col-md-12 col-sm-12">
               <div className="row justify-content-center align-items-center overflow-auto flex-wrap vh-100">
                 <div className="col-md-8 mx-auto">
+                  
+                  {/* Logo for Mobile View */}
+                  <div className="text-center w-100 d-lg-none mb-4 mt-4">
+                    <img src="/logo.png" className="img-fluid" alt="DocYori Logo" style={{ maxHeight: "60px", width: "auto" }} />
+                  </div>
+
                   <form onSubmit={handleLogin} className="d-flex justify-content-center align-items-center">
                     <div className="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill">
 
@@ -120,10 +120,7 @@ const Login = () => {
                               Unauthorized access is prohibited.
                             </p>
                           </div>
-                          <div className="text-center mb-3">
-                            <h5 className="mb-1 fs-20 fw-bold">Sign In</h5>
-                            <p className="mb-0">Please enter your Mobile, Username, or Email to access your portal</p>
-                          </div>
+
 
                           {error && (
                             <div className="alert alert-danger alert-dismissible fade show p-2 mb-3 rounded" role="alert" style={{ fontSize: "13px" }}>
@@ -177,7 +174,8 @@ const Login = () => {
                               disabled={loading}
                               variant="primary"
                               size="large"
-                              className="w-100"
+                              className="w-100 fs-15"
+                              style={{ padding: "12px", minHeight: "50px" }}
                               icon={<LogIn size={18} strokeWidth={2.5} />}
                               iconPosition="right"
                             >

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { all_routes } from "../../../routes/all_routes";
 import { apiUrl } from "../../../../core/config/api";
+import { Input } from "../../../../core/common/input/Input";
+import { Button } from "../../../../core/common/button/Button";
+import { UserPlus, User, Phone, Mail, MessageCircle, MapPin, Hash, Lock, CheckCircle, ArrowRight, ArrowLeft, Eye, EyeOff, Home, AtSign, Map, Users } from "react-feather";
 
 const MultiStepRegister: React.FC = () => {
     const navigate = useNavigate();
@@ -12,6 +15,8 @@ const MultiStepRegister: React.FC = () => {
     const [success, setSuccess] = useState("");
     const [userId, setUserId] = useState("");
     const [selectedPkgId, setSelectedPkgId] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [form, setForm] = useState({
         ownerName: "",
@@ -75,8 +80,8 @@ const MultiStepRegister: React.FC = () => {
                 setError("Passwords do not match");
                 return;
             }
-            if (form.password.length < 6) {
-                setError("Password must be at least 6 characters");
+            if (form.password.length < 8) {
+                setError("Password must be at least 8 characters");
                 return;
             }
             setLoading(true);
@@ -85,14 +90,19 @@ const MultiStepRegister: React.FC = () => {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        ownerName: form.ownerName,
+                        fullName: form.ownerName,
                         email: form.emailId,
+                        password: form.password,
+                        role: "ADMIN",
+                        clinicInfo: {
+                            name: form.clinicName,
+                            address: `${form.addressLine1} ${form.addressLine2 ? form.addressLine2 : ''}, ${form.city}, ${form.state} - ${form.pincode}`.trim()
+                        },
+                        // Additional fields stored as flat info if needed by other backend parts
                         phone: form.mobileNumber,
                         whatsappNumber: form.sameAsMobile ? form.mobileNumber : form.whatsappNumber,
-                        password: form.password,
                         clinicName: form.clinicName,
-                        addressLine1: form.addressLine1,
-                        addressLine2: form.addressLine2,
+                        address: form.addressLine1,
                         district: form.district,
                         city: form.city,
                         state: form.state,
@@ -145,23 +155,17 @@ const MultiStepRegister: React.FC = () => {
     const stepIcons = ["👤", "🏥", "💎"];
 
     return (
-        <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", fontFamily: "'Inter', sans-serif" }}>
+        <>
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-                .reg-card { background: white; border-radius: 24px; box-shadow: 0 25px 60px rgba(0,0,0,0.2); overflow: hidden; width: 100%; max-width: 580px; }
-                .reg-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 36px 40px 28px; color: white; text-align: center; }
-                .reg-logo { font-size: 28px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(135deg, #a78bfa, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px; }
-                .reg-subtitle { color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 24px; }
                 .step-pills { display: flex; gap: 8px; justify-content: center; }
                 .step-pill { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 100px; font-size: 12px; font-weight: 500; transition: all 0.3s; }
                 .step-pill.active { background: linear-gradient(135deg, #a78bfa, #60a5fa); color: white; }
-                .step-pill.done { background: rgba(167,139,250,0.2); color: #a78bfa; }
-                .step-pill.pending { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); }
+                .step-pill.done { background: #f3e8ff; color: #a855f7; }
+                .step-pill.pending { background: #f1f5f9; color: #64748b; }
                 .step-pill-num { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
                 .step-pill.active .step-pill-num { background: rgba(255,255,255,0.25); }
-                .step-pill.done .step-pill-num { background: #a78bfa; color: white; }
-                .step-pill.pending .step-pill-num { background: rgba(255,255,255,0.1); }
-                .reg-body { padding: 36px 40px; }
+                .step-pill.done .step-pill-num { background: #a855f7; color: white; }
+                .step-pill.pending .step-pill-num { background: #cbd5e1; color: white; }
                 .step-heading { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
                 .step-desc { color: #6b7280; font-size: 14px; margin-bottom: 28px; }
                 .field-label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; display: block; }
@@ -205,13 +209,70 @@ const MultiStepRegister: React.FC = () => {
                 .phone-note { font-size: 11px; color: #9ca3af; margin-top: 4px; }
             `}</style>
 
-            <div className="reg-card">
-                {/* Header */}
-                <div className="reg-header">
-                    <div className="reg-logo">🏥 Docyori</div>
-                    <div className="reg-subtitle">Smart Clinic Management Platform</div>
+            <div className="container-fuild position-relative z-1" style={{ fontFamily: "'Inter', sans-serif" }}>
+                <div className="w-100 overflow-hidden position-relative flex-wrap d-block vh-100 bg-white">
+                    <div className="row">
+                        {/* Left Cover Panel */}
+                        <div className="col-lg-6 p-0 d-none d-lg-block">
+                            <div
+                                className="d-flex align-items-center justify-content-center p-4 position-relative h-100"
+                                style={{
+                                    backgroundImage: "url('https://images.openai.com/static-rsc-4/m44RsUMB2u35mpGxV_Vhj4deyk5kpDN_OJlgYvyzCOeR5XI9_VykH8ZIRtl4b387FIu2UGhjmW4hAg_nUf5Ghxzi7cir84rViThx-KEqqinSEFp1MFVAnTdwtejkPVlBeIss0F9lA_iawnFtF9lTqga0-X_RHtUO5zYSIOAYnqNDq80iZu0roji9fCH_0FVI?purpose=fullsize')",
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                }}
+                            >
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 0, left: 0, right: 0, bottom: 0,
+                                    background: 'linear-gradient(to bottom, rgba(99, 102, 241, 0) 40%, rgba(99, 102, 241, 0.9) 100%)'
+                                }}></div>
 
-                    <div className="step-pills">
+                                <div style={{ position: 'absolute', top: '40px', left: '40px', zIndex: 2 }}>
+                                    <img src="/logo.png" className="img-fluid" alt="DocYori Logo" style={{ maxHeight: "100px", width: "auto" }} />
+                                </div>
+
+                                <div className="w-100 position-relative z-1 text-center" style={{ marginTop: 'auto', marginBottom: '30px' }}>
+                                    <h1 className="text-white fs-32 fw-bold mb-3" style={{ textShadow: '0 2px 6px rgba(0,0,0,0.3)' }}>
+                                        Seamless healthcare access <br /> with smart, modern clinic
+                                    </h1>
+                                    <p className="text-white fw-medium mx-auto fs-15" style={{ maxWidth: '500px', textShadow: '0 1px 4px rgba(0,0,0,0.3)', lineHeight: '1.6' }}>
+                                        Experience efficient, secure, and user-friendly healthcare <br />
+                                        management designed for modern clinics and growing practices.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Form Panel */}
+                        <div className="col-lg-6 col-md-12 col-sm-12">
+                            <div className="row justify-content-center align-items-center overflow-auto flex-wrap vh-100">
+                                <div className="col-md-10 mx-auto py-4">
+                                    
+                                    {/* Logo for Mobile View */}
+                                    <div className="text-center w-100 d-lg-none mb-4 mt-2">
+                                        <img src="/logo.png" className="img-fluid" alt="DocYori Logo" style={{ maxHeight: "60px", width: "auto" }} />
+                                    </div>
+
+                                    <div className="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill">
+                                        <div className="card border-1 p-lg-3 shadow-md rounded-3 m-0">
+                                            <div className="card-body">
+                                                {/* Header matches Login */}
+                                                <div className="text-start mb-4">
+                                                    <div className="d-flex align-items-center mb-3">
+                                                        <div className="d-flex align-items-center justify-content-center bg-light rounded-circle me-3" style={{ width: '45px', height: '45px', border: '1.5px solid #e2e8f0' }}>
+                                                            <UserPlus size={22} color="#6366f1" strokeWidth={2.5} />
+                                                        </div>
+                                                        <h5 className="mb-0 fs-28 fw-bold text-dark">Register</h5>
+                                                    </div>
+                                                    <p className="mb-0 text-muted fs-15">
+                                                        Create your DocYori account to manage your clinic.<br />
+                                                        Fill in the details below to get started.
+                                                    </p>
+                                                </div>
+
+                                                <div className="text-center mb-4">
+                                                    <div className="step-pills">
                         {stepTitles.map((title, i) => {
                             const s = i + 1;
                             const cls = s < step ? "done" : s === step ? "active" : "pending";
@@ -225,238 +286,277 @@ const MultiStepRegister: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Body */}
-                <div className="reg-body">
-                    {/* Step heading */}
-                    <div className="step-heading">{stepIcons[step - 1]} {stepTitles[step - 1]}</div>
-                    <div className="step-desc">
-                        {step === 1 && "Enter your personal contact information"}
-                        {step === 2 && "Tell us about your clinic and set your password"}
-                        {step === 3 && "Choose the plan that fits your needs"}
+                {error && (
+                    <div className="alert alert-danger alert-dismissible fade show p-2 mb-3 rounded text-start" role="alert" style={{ fontSize: "13px" }}>
+                        <i className="ti ti-alert-triangle me-1"></i> {error}
                     </div>
+                )}
+                {success && (
+                    <div className="alert alert-success alert-dismissible fade show p-3 mb-3 rounded text-center fw-medium" role="alert">
+                        {success}
+                    </div>
+                )}
 
-                    {error && (
-                        <div className="error-box">
-                            <span>⚠️</span> {error}
+                {/* ─── STEP 1: Personal Details ─── */}
+                {step === 1 && (
+                    <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="text-start">
+                        <div className="mb-3 text-start">
+                            <Input 
+                                label="Owner / Your Name" 
+                                required 
+                                type="text" 
+                                placeholder="Dr. Rahul Sharma" 
+                                leftAddon={<User size={20} strokeWidth={2.5} color="#0f172a" />}
+                                value={form.ownerName}
+                                onChange={e => setForm({ ...form, ownerName: e.target.value })} 
+                            />
                         </div>
-                    )}
-                    {success && (
-                        <div className="success-box">
-                            {success}
-                        </div>
-                    )}
 
-                    {/* ─── STEP 1: Personal Details ─── */}
-                    {step === 1 && (
-                        <form onSubmit={(e) => { e.preventDefault(); handleNext(); }}>
-                            <div className="mb-3">
-                                <label className="field-label">Owner / Your Name <span className="req">*</span></label>
-                                <input type="text" className="form-control" placeholder="Dr. Rahul Sharma" value={form.ownerName}
-                                    onChange={e => setForm({ ...form, ownerName: e.target.value })} />
-                            </div>
+                                                        <div className="mb-3">
+                                                            <Input 
+                                                                label="Mobile Number" 
+                                                                required 
+                                                                type="tel" 
+                                                                placeholder="9876543210" 
+                                                                maxLength={10}
+                                                                leftAddon={<Phone size={20} strokeWidth={2.5} color="#0f172a" />}
+                                                                value={form.mobileNumber}
+                                                                onChange={e => {
+                                                                    const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                                                    setForm({ ...form, mobileNumber: val, ...(form.sameAsMobile ? { whatsappNumber: val } : {}) });
+                                                                }} 
+                                                            />
+                                                            <div className="phone-note">Enter 10-digit Indian mobile number</div>
+                                                        </div>
 
-                            <div className="mb-3">
-                                <label className="field-label">Mobile Number <span className="req">*</span></label>
-                                <div style={{ display: "flex" }}>
-                                    <div className="input-prefix">🇮🇳 +91</div>
-                                    <input type="tel" className="form-control" placeholder="9876543210" maxLength={10}
-                                        value={form.mobileNumber}
-                                        onChange={e => {
-                                            const val = e.target.value.replace(/\D/g, "").slice(0, 10);
-                                            setForm({ ...form, mobileNumber: val, ...(form.sameAsMobile ? { whatsappNumber: val } : {}) });
-                                        }} />
-                                </div>
-                                <div className="phone-note">Enter 10-digit Indian mobile number (e.g., 9876543210)</div>
-                            </div>
+                                                        <div className="mb-3">
+                                                            <Input 
+                                                                label="Email Address" 
+                                                                required 
+                                                                type="email" 
+                                                                placeholder="doctor@clinic.com" 
+                                                                leftAddon={<Mail size={20} strokeWidth={2.5} color="#0f172a" />}
+                                                                value={form.emailId}
+                                                                onChange={e => setForm({ ...form, emailId: e.target.value })} 
+                                                            />
+                                                        </div>
 
-                            <div className="mb-3">
-                                <label className="field-label">Email Address <span className="req">*</span></label>
-                                <input type="email" className="form-control" placeholder="doctor@clinic.com" value={form.emailId}
-                                    onChange={e => setForm({ ...form, emailId: e.target.value })} />
-                            </div>
+                                                        <div className="mb-4">
+                                                            <Input 
+                                                                label="WhatsApp Number" 
+                                                                type="tel" 
+                                                                placeholder="9876543210" 
+                                                                maxLength={10}
+                                                                disabled={form.sameAsMobile}
+                                                                leftAddon={<MessageCircle size={20} strokeWidth={2.5} color="#0f172a" />}
+                                                                value={form.sameAsMobile ? form.mobileNumber : form.whatsappNumber}
+                                                                onChange={e => setForm({ ...form, whatsappNumber: e.target.value.replace(/\D/g, "").slice(0, 10) })} 
+                                                            />
+                                                            <div className="form-check form-check-md mt-2 mb-0">
+                                                                <input className="form-check-input" type="checkbox" id="sameAsMobile" checked={form.sameAsMobile}
+                                                                    onChange={e => setForm({ ...form, sameAsMobile: e.target.checked })} />
+                                                                <label className="form-check-label mt-0 text-dark" htmlFor="sameAsMobile">Same as mobile number</label>
+                                                            </div>
+                                                        </div>
 
-                            <div className="mb-3">
-                                <label className="field-label">WhatsApp Number</label>
-                                <div style={{ display: "flex" }}>
-                                    <div className="input-prefix" style={{ opacity: form.sameAsMobile ? 0.5 : 1 }}>💬 +91</div>
-                                    <input type="tel" className="form-control" placeholder="9876543210" maxLength={10}
-                                        disabled={form.sameAsMobile}
-                                        value={form.sameAsMobile ? form.mobileNumber : form.whatsappNumber}
-                                        onChange={e => setForm({ ...form, whatsappNumber: e.target.value.replace(/\D/g, "").slice(0, 10) })} />
-                                </div>
-                                <div className="check-row">
-                                    <input type="checkbox" id="sameAsMobile" checked={form.sameAsMobile}
-                                        onChange={e => setForm({ ...form, sameAsMobile: e.target.checked })} />
-                                    <label htmlFor="sameAsMobile">Same as mobile number</label>
-                                </div>
-                            </div>
+                                                        <Button type="submit" variant="primary" size="large" className="w-100 fs-15" style={{ padding: "12px", minHeight: "50px" }} icon={<ArrowRight size={18} />} iconPosition="right">
+                                                            Continue to Clinic Details
+                                                        </Button>
+                                                    </form>
+                                                )}
 
-                            <button type="submit" className="btn-primary-grad">
-                                Continue to Clinic Details →
-                            </button>
-                        </form>
-                    )}
+                                                {/* ─── STEP 2: Clinic Details ─── */}
+                                                {step === 2 && (
+                                                    <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="text-start">
+                                                        <div className="row mb-3">
+                                                            <div className="col-md-6 mb-3 mb-md-0">
+                                                                <Input 
+                                                                    label="Clinic Name" 
+                                                                    required 
+                                                                    type="text" 
+                                                                    placeholder="Apollo Clinic"
+                                                                    leftAddon={<Home size={20} strokeWidth={2.5} color="#0f172a" />}
+                                                                    value={form.clinicName}
+                                                                    onChange={e => setForm({ ...form, clinicName: e.target.value })} 
+                                                                />
+                                                            </div>
+                                                            <div className="col-md-6">
+                                                                <Input 
+                                                                    label="Clinic Username" 
+                                                                    required 
+                                                                    type="text" 
+                                                                    placeholder="apollo_clinic"
+                                                                    leftAddon={<AtSign size={20} strokeWidth={2.5} color="#0f172a" />}
+                                                                    value={form.username}
+                                                                    onChange={e => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })} 
+                                                                />
+                                                            </div>
+                                                        </div>
 
-                    {/* ─── STEP 2: Clinic Details ─── */}
-                    {step === 2 && (
-                        <form onSubmit={(e) => { e.preventDefault(); handleNext(); }}>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }} className="mb-3">
-                                <div>
-                                    <label className="field-label">Clinic Name <span className="req">*</span></label>
-                                    <input type="text" className="form-control" placeholder="Apollo Clinic"
-                                        value={form.clinicName}
-                                        onChange={e => setForm({ ...form, clinicName: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="field-label">Clinic Username <span className="req">*</span></label>
-                                    <div style={{ display: "flex" }}>
-                                        <div className="input-prefix">@</div>
-                                        <input type="text" className="form-control" placeholder="apollo_clinic"
-                                            value={form.username}
-                                            onChange={e => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })} />
+                                                        <div className="mb-3">
+                                                            <Input 
+                                                                label="Address Line 1" 
+                                                                required 
+                                                                type="text" 
+                                                                placeholder="Shop No. 12, MG Road"
+                                                                leftAddon={<MapPin size={20} strokeWidth={2.5} color="#0f172a" />}
+                                                                value={form.addressLine1}
+                                                                onChange={e => setForm({ ...form, addressLine1: e.target.value })} 
+                                                            />
+                                                        </div>
+
+                                                        <div className="mb-3">
+                                                            <Input 
+                                                                label="Address Line 2 (Optional)" 
+                                                                type="text" 
+                                                                placeholder="Near City Hospital"
+                                                                leftAddon={<MapPin size={20} strokeWidth={2.5} color="#0f172a" />}
+                                                                value={form.addressLine2}
+                                                                onChange={e => setForm({ ...form, addressLine2: e.target.value })} 
+                                                            />
+                                                        </div>
+
+                                                        <div className="row mb-3">
+                                                            <div className="col-md-4 mb-3 mb-md-0">
+                                                                <Input label="District" type="text" placeholder="Indore" leftAddon={<Map size={20} strokeWidth={2.5} color="#0f172a" />} value={form.district} onChange={e => setForm({ ...form, district: e.target.value })} />
+                                                            </div>
+                                                            <div className="col-md-4 mb-3 mb-md-0">
+                                                                <Input label="City" type="text" placeholder="Indore" leftAddon={<MapPin size={20} strokeWidth={2.5} color="#0f172a" />} value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} />
+                                                            </div>
+                                                            <div className="col-md-4">
+                                                                <Input label="Pincode" type="text" placeholder="452001" maxLength={6} leftAddon={<Hash size={20} strokeWidth={2.5} color="#0f172a" />} value={form.pincode} onChange={e => setForm({ ...form, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) })} />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="row mb-3">
+                                                            <div className="col-md-6 mb-3 mb-md-0">
+                                                                <Input label="State" type="text" placeholder="Madhya Pradesh" leftAddon={<Map size={20} strokeWidth={2.5} color="#0f172a" />} value={form.state} onChange={e => setForm({ ...form, state: e.target.value })} />
+                                                            </div>
+                                                            <div className="col-md-6">
+                                                                <Input label="No. of Doctors" type="number" placeholder="5" min={1} leftAddon={<Users size={20} strokeWidth={2.5} color="#0f172a" />} value={form.doctorCount} onChange={e => setForm({ ...form, doctorCount: e.target.value })} />
+                                                            </div>
+                                                        </div>
+
+                                                        <hr className="divider" />
+
+                                                        <div className="row mb-3">
+                                                            <div className="col-md-6 mb-3 mb-md-0">
+                                                                <Input 
+                                                                    label="Password" 
+                                                                    required 
+                                                                    type={showPassword ? "text" : "password"} 
+                                                                    placeholder="Min 8 characters"
+                                                                    leftAddon={<Lock size={20} strokeWidth={2.5} color="#0f172a" />}
+                                                                    rightIcon={
+                                                                        <div onClick={() => setShowPassword(!showPassword)} style={{ cursor: "pointer", display: "flex", alignItems: "center", height: "100%" }}>
+                                                                            {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
+                                                                        </div>
+                                                                    }
+                                                                    value={form.password}
+                                                                    onChange={e => setForm({ ...form, password: e.target.value })} 
+                                                                />
+                                                            </div>
+                                                            <div className="col-md-6">
+                                                                <Input 
+                                                                    label="Confirm Password" 
+                                                                    required 
+                                                                    type={showConfirmPassword ? "text" : "password"} 
+                                                                    placeholder="Re-enter password"
+                                                                    leftAddon={<Lock size={20} strokeWidth={2.5} color="#0f172a" />}
+                                                                    rightIcon={
+                                                                        <div onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ cursor: "pointer", display: "flex", alignItems: "center", height: "100%" }}>
+                                                                            {showConfirmPassword ? <Eye size={16} /> : <EyeOff size={16} />}
+                                                                        </div>
+                                                                    }
+                                                                    value={form.confirmPassword}
+                                                                    onChange={e => setForm({ ...form, confirmPassword: e.target.value })} 
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="d-flex mt-4" style={{ gap: "12px" }}>
+                                                            <Button type="button" variant="secondary" size="large" className="fs-15" style={{ width: "40%", padding: "12px", minHeight: "50px" }} icon={<ArrowLeft size={18} />} onClick={() => setStep(1)}>
+                                                                Back
+                                                            </Button>
+                                                            <Button type="submit" variant="primary" size="large" className="fs-15" style={{ width: "60%", padding: "12px", minHeight: "50px" }} disabled={loading} icon={<ArrowRight size={18} />} iconPosition="right">
+                                                                {loading ? "Saving..." : "Continue to Plans"}
+                                                            </Button>
+                                                        </div>
+                                                    </form>
+                                                )}
+
+                                                {/* ─── STEP 3: Pricing ─── */}
+                                                {step === 3 && (
+                                                    <div>
+                                                        {!userId && (
+                                                            <div className="alert alert-danger p-2 mb-3 rounded" style={{ fontSize: "13px" }}>
+                                                                <i className="ti ti-alert-triangle me-1"></i> Session missing. <button className="btn btn-link p-0 ms-1" onClick={() => setStep(2)}>Go back</button>
+                                                            </div>
+                                                        )}
+                                                        {packages.length === 0 && (
+                                                            <div className="text-center p-4 text-muted">
+                                                                <span className="spinner-border spinner-border-sm me-2" />Loading plans...
+                                                            </div>
+                                                        )}
+                                                        {packages.map((p) => (
+                                                            <div key={p.id} className={`pkg-card ${p.price === 0 ? "free" : ""}`}>
+                                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                                                    <div style={{ flex: 1 }}>
+                                                                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+                                                                            <span className={`pkg-badge ${p.price === 0 ? "free" : "paid"}`}>
+                                                                                {p.price === 0 ? "FREE TRIAL" : "PAID"}
+                                                                            </span>
+                                                                            <span style={{ fontWeight: 700, fontSize: "16px", color: "#1a1a2e" }}>{p.name}</span>
+                                                                        </div>
+                                                                        <div className="pkg-meta">
+                                                                            📅 {p.durationInDays} Days &nbsp;|&nbsp; 👨‍⚕️ Max {p.maxDoctors} Doctors &nbsp;|&nbsp; 👤 Max {p.maxPatients} Patients
+                                                                        </div>
+                                                                        {p.price === 0 && <div className="tag-recommended">⭐ Recommended for New Users</div>}
+                                                                    </div>
+                                                                    <div style={{ textAlign: "right", marginLeft: "16px" }}>
+                                                                        <div className={`pkg-price ${p.price === 0 ? "free" : "paid"}`}>
+                                                                            {p.price === 0 ? "FREE" : `₹${p.price.toLocaleString("en-IN")}`}
+                                                                        </div>
+                                                                        {p.price > 0 && <div style={{ fontSize: "11px", color: "#9ca3af" }}>per cycle</div>}
+                                                                        
+                                                                        <Button 
+                                                                            variant={p.price === 0 ? "success" : "primary"}
+                                                                            onClick={() => handleComplete(p.id)}
+                                                                            disabled={loading}
+                                                                            className="mt-2"
+                                                                            icon={p.price === 0 ? undefined : <CheckCircle size={16} />}
+                                                                        >
+                                                                            {selectedPkgId === p.id && loading ? "Processing..." : p.price === 0 ? "🚀 Start Free Trial" : "Buy Now"}
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                        <Button variant="secondary" className="w-100 mt-2" onClick={() => { setStep(2); setError(""); }} icon={<ArrowLeft size={16} />}>
+                                                            Back to Clinic Details
+                                                        </Button>
+                                                    </div>
+                                                )}
+
+                                                <div className="text-center mt-4">
+                                                    <h6 className="fw-normal fs-14 text-dark mb-0">
+                                                        Already have an account?{" "}
+                                                        <Link to={all_routes.login} className="hover-a text-primary fw-medium ms-1">
+                                                            Sign In
+                                                        </Link>
+                                                    </h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p className="fs-14 text-dark text-center mt-4 mb-0">Copyright © 2026 - DocYori.</p>
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="mb-3">
-                                <label className="field-label">Address Line 1 <span className="req">*</span></label>
-                                <input type="text" className="form-control" placeholder="Shop No. 12, MG Road"
-                                    value={form.addressLine1}
-                                    onChange={e => setForm({ ...form, addressLine1: e.target.value })} />
-                            </div>
-
-                            <div className="mb-3">
-                                <label className="field-label">Address Line 2 <span style={{ color: "#9ca3af", fontWeight: 400 }}>(Optional)</span></label>
-                                <input type="text" className="form-control" placeholder="Near City Hospital"
-                                    value={form.addressLine2}
-                                    onChange={e => setForm({ ...form, addressLine2: e.target.value })} />
-                            </div>
-
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }} className="mb-3">
-                                <div>
-                                    <label className="field-label">District</label>
-                                    <input type="text" className="form-control" placeholder="Indore"
-                                        value={form.district}
-                                        onChange={e => setForm({ ...form, district: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="field-label">City</label>
-                                    <input type="text" className="form-control" placeholder="Indore"
-                                        value={form.city}
-                                        onChange={e => setForm({ ...form, city: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="field-label">Pincode</label>
-                                    <input type="text" className="form-control" placeholder="452001" maxLength={6}
-                                        value={form.pincode}
-                                        onChange={e => setForm({ ...form, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) })} />
-                                </div>
-                            </div>
-
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }} className="mb-3">
-                                <div>
-                                    <label className="field-label">State</label>
-                                    <input type="text" className="form-control" placeholder="Madhya Pradesh"
-                                        value={form.state}
-                                        onChange={e => setForm({ ...form, state: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="field-label">No. of Doctors</label>
-                                    <input type="number" className="form-control" placeholder="5" min={1}
-                                        value={form.doctorCount}
-                                        onChange={e => setForm({ ...form, doctorCount: e.target.value })} />
-                                </div>
-                            </div>
-
-                            <hr className="divider" />
-
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }} className="mb-3">
-                                <div>
-                                    <label className="field-label">Password <span className="req">*</span></label>
-                                    <input type="password" className="form-control" placeholder="Min 6 characters"
-                                        value={form.password}
-                                        onChange={e => setForm({ ...form, password: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="field-label">Confirm Password <span className="req">*</span></label>
-                                    <input type="password" className="form-control" placeholder="Re-enter password"
-                                        value={form.confirmPassword}
-                                        onChange={e => setForm({ ...form, confirmPassword: e.target.value })} />
-                                </div>
-                            </div>
-
-                            <div style={{ display: "flex", gap: "12px" }}>
-                                <button type="button" className="btn-back" style={{ width: "40%" }} onClick={() => setStep(1)}>
-                                    ← Back
-                                </button>
-                                <button type="submit" className="btn-primary-grad" style={{ width: "60%" }} disabled={loading}>
-                                    {loading ? (
-                                        <><span className="spinner-border spinner-border-sm me-2" />Saving...</>
-                                    ) : "Continue to Plans →"}
-                                </button>
-                            </div>
-                        </form>
-                    )}
-
-                    {/* ─── STEP 3: Pricing ─── */}
-                    {step === 3 && (
-                        <div>
-                            {!userId && (
-                                <div className="error-box">
-                                    ⚠️ Session missing. <button className="btn btn-link p-0 ms-1" onClick={() => setStep(2)}>Go back</button>
-                                </div>
-                            )}
-                            {packages.length === 0 && (
-                                <div style={{ textAlign: "center", padding: "20px", color: "#9ca3af" }}>
-                                    <span className="spinner-border spinner-border-sm me-2" />Loading plans...
-                                </div>
-                            )}
-                            {packages.map((p) => (
-                                <div key={p.id} className={`pkg-card ${p.price === 0 ? "free" : ""}`}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-                                                <span className={`pkg-badge ${p.price === 0 ? "free" : "paid"}`}>
-                                                    {p.price === 0 ? "FREE TRIAL" : "PAID"}
-                                                </span>
-                                                <span style={{ fontWeight: 700, fontSize: "16px", color: "#1a1a2e" }}>{p.name}</span>
-                                            </div>
-                                            <div className="pkg-meta">
-                                                📅 {p.durationInDays} Days &nbsp;|&nbsp; 👨‍⚕️ Max {p.maxDoctors} Doctors &nbsp;|&nbsp; 👤 Max {p.maxPatients} Patients
-                                            </div>
-                                            {p.price === 0 && <div className="tag-recommended">⭐ Recommended for New Users</div>}
-                                        </div>
-                                        <div style={{ textAlign: "right", marginLeft: "16px" }}>
-                                            <div className={`pkg-price ${p.price === 0 ? "free" : "paid"}`}>
-                                                {p.price === 0 ? "FREE" : `₹${p.price.toLocaleString("en-IN")}`}
-                                            </div>
-                                            {p.price > 0 && <div style={{ fontSize: "11px", color: "#9ca3af" }}>per cycle</div>}
-                                            <button
-                                                className={`pkg-btn ${p.price === 0 ? "free" : "paid"} mt-2`}
-                                                onClick={() => handleComplete(p.id)}
-                                                disabled={loading}
-                                                style={{ marginTop: "10px" }}
-                                            >
-                                                {selectedPkgId === p.id && loading ? (
-                                                    <><span className="spinner-border spinner-border-sm me-1" />Processing...</>
-                                                ) : p.price === 0 ? "🚀 Start Free Trial" : "Buy Now"}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                            <button className="btn-back w-100" style={{ marginTop: "8px" }} onClick={() => { setStep(2); setError(""); }}>
-                                ← Back to Clinic Details
-                            </button>
                         </div>
-                    )}
-
-                    <div className="signin-link">
-                        Already have an account? <Link to={all_routes.login}>Sign In</Link>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

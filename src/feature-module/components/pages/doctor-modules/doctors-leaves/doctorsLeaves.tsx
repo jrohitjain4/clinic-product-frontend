@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import Datatable from "../../../../../core/common/dataTable";
@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 import { DatePicker } from "antd";
 
 const DoctorsLeaves = () => {
-  const { leaves, applyLeave, deleteLeave } = useLeaves();
+  const { leaves, applyLeave, withdrawLeave, deleteLeave, getWorkingDays } = useLeaves();
   const { leaveTypes } = useLeaveTypes();
   const [searchText, setSearchText] = useState("");
 
@@ -17,9 +17,22 @@ const DoctorsLeaves = () => {
   const [startDate, setStartDate] = useState<any>(null);
   const [endDate, setEndDate] = useState<any>(null);
   const [reason, setReason] = useState("");
+  const [workingDays, setWorkingDays] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSearch = (v: string) => setSearchText(v);
+
+  useEffect(() => {
+    const updateWorkingDays = async () => {
+      if (startDate && endDate) {
+        const count = await getWorkingDays(startDate.toISOString(), endDate.toISOString());
+        setWorkingDays(count);
+      } else {
+        setWorkingDays(0);
+      }
+    };
+    updateWorkingDays();
+  }, [startDate, endDate]);
 
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +48,7 @@ const DoctorsLeaves = () => {
       startDate: start.toISOString(),
       endDate: end.toISOString(),
       days,
+      workingDays,
       reason,
     });
     if (success) {
@@ -42,7 +56,7 @@ const DoctorsLeaves = () => {
       setStartDate(null);
       setEndDate(null);
       setReason("");
-      // close modal
+      setWorkingDays(0);
       const btn = document.querySelector("#add-leave .btn-close") as HTMLButtonElement;
       if (btn) btn.click();
     }
@@ -54,7 +68,11 @@ const DoctorsLeaves = () => {
   const statusBadge = (status: string) => {
     if (status === "APPLIED") return "badge-soft-info border-info text-info";
     if (status === "APPROVED") return "badge-soft-success border-success text-success";
-    return "badge-soft-danger border-danger text-danger";
+    if (status === "REJECTED") return "badge-soft-danger border-danger text-danger";
+    if (status === "COMPLETED") return "badge-soft-secondary border-secondary text-secondary";
+    if (status === "WITHDRAWN") return "badge-soft-warning border-warning text-warning";
+    if (status === "CANCELLED") return "badge-soft-dark border-dark text-dark";
+    return "badge-soft-light border-light text-muted";
   };
 
   const data = leaves.map((l) => ({
@@ -62,7 +80,7 @@ const DoctorsLeaves = () => {
     ...l,
     Date: `${dayjs(l.startDate).format("DD MMM YYYY")} - ${dayjs(l.endDate).format("DD MMM YYYY")}`,
     Leave_Type: l.leaveTypeName,
-    Day: `${l.days} Day${l.days > 1 ? "s" : ""}`,
+    Day: l.workingDays === l.days ? `${l.days} Day${l.days > 1 ? "s" : ""}` : `${l.workingDays} / ${l.days} Days`,
     Applied_On: dayjs(l.appliedOn).format("DD MMM YYYY"),
     Status: l.status.charAt(0) + l.status.slice(1).toLowerCase(),
   }));
@@ -88,9 +106,17 @@ const DoctorsLeaves = () => {
               <li>
                 <Link to="#" className="dropdown-item text-danger d-flex align-items-center"
                   onClick={() => deleteLeave(record.id)}>
-                  <i className="ti ti-trash me-1" /> Cancel
+                  <i className="ti ti-trash me-1" /> Delete
                 </Link>
               </li>
+              {(record.status === "APPLIED" || record.status === "APPROVED") && dayjs().isBefore(dayjs(record.startDate)) && (
+                <li>
+                  <Link to="#" className="dropdown-item text-warning d-flex align-items-center"
+                    onClick={() => { if (window.confirm("Withdraw this leave?")) withdrawLeave(record.id) }}>
+                    <i className="ti ti-arrow-back-up me-1" /> Withdraw
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
         ) : null
@@ -171,6 +197,12 @@ const DoctorsLeaves = () => {
                       onChange={(d) => setEndDate(d)}
                       disabledDate={(cur) => startDate && cur.isBefore(startDate)}
                     />
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <div className="p-2 bg-soft-primary rounded border border-primary border-dashed d-flex justify-content-between align-items-center">
+                    <span className="fs-13 fw-semibold">Estimated Working Days:</span>
+                    <span className="badge bg-primary fs-14">{workingDays} Days</span>
                   </div>
                 </div>
                 <div className="mb-0">

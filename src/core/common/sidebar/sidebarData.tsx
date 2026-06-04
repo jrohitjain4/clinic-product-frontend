@@ -789,6 +789,12 @@ export const SidebarData = [
             base: "invoices",
             customSubmenuTwo: false,
           },
+          {
+            label: "Clinic Timing",
+            link: routes.workinghourssettings,
+            base: "invoices",
+            customSubmenuTwo: false,
+          },
         ],
       },
       {

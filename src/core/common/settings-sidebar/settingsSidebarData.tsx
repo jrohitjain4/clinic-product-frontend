@@ -7,6 +7,7 @@ export const sidebarMenus = [
     submenus: [
       { to: all_routes.profilesettings, label: "Profile" },
       { to: all_routes.securitysettings, label: "Security" },
+      { to: all_routes.workinghourssettings, label: "Clinic Timing" },
     ],
   },
   {

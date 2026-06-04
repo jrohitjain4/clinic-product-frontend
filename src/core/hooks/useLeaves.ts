@@ -7,13 +7,18 @@ export type Leave = {
     employeeType: string;
     employeeName: string;
     profileImage: string;
+    email: string;
     leaveTypeId: string;
     leaveTypeName: string;
     startDate: string;
     endDate: string;
     days: number;
+    workingDays: number;
     reason: string;
-    status: string; // APPLIED, APPROVED, REJECTED
+    status: string; // APPLIED, APPROVED, REJECTED, COMPLETED, WITHDRAWN, CANCELLED
+    rejectRemark?: string;
+    adminNotes?: string;
+    isPaid: boolean;
     appliedOn: string;
 };
 
@@ -37,7 +42,7 @@ export const useLeaves = () => {
 
     useEffect(() => { fetchLeaves(); }, [fetchLeaves]);
 
-    const applyLeave = async (data: Partial<Leave> & { reason?: string }) => {
+    const applyLeave = async (data: any) => {
         const res = await fetch(apiUrl("/api/leaves/apply"), {
             method: "POST",
             headers: {
@@ -50,14 +55,30 @@ export const useLeaves = () => {
         return false;
     };
 
-    const updateStatus = async (id: string, status: "APPROVED" | "REJECTED") => {
+    const updateStatus = async (id: string, data: {
+        status: "APPROVED" | "REJECTED" | "CANCELLED",
+        rejectRemark?: string,
+        startDate?: string,
+        endDate?: string,
+        isPaid?: boolean,
+        adminNotes?: string
+    }) => {
         const res = await fetch(apiUrl(`/api/leaves/${id}/status`), {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-            body: JSON.stringify({ status }),
+            body: JSON.stringify(data),
+        });
+        if (res.ok) { await fetchLeaves(); return true; }
+        return false;
+    };
+
+    const withdrawLeave = async (id: string) => {
+        const res = await fetch(apiUrl(`/api/leaves/${id}/withdraw`), {
+            method: "POST",
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         if (res.ok) { await fetchLeaves(); return true; }
         return false;
@@ -72,5 +93,16 @@ export const useLeaves = () => {
         return false;
     };
 
-    return { leaves, loading, applyLeave, updateStatus, deleteLeave, reload: fetchLeaves };
+    const getWorkingDays = async (startDate: string, endDate: string) => {
+        const res = await fetch(apiUrl(`/api/leaves/calculate-days?startDate=${startDate}&endDate=${endDate}`), {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        if (res.ok) {
+            const data = await res.json();
+            return data.count;
+        }
+        return 0;
+    };
+
+    return { leaves, loading, applyLeave, updateStatus, withdrawLeave, deleteLeave, getWorkingDays, reload: fetchLeaves };
 };

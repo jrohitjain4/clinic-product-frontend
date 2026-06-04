@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import SearchInput from "../../../../core/common/dataTable/dataTableSearch";
-import { all_routes } from "../../../routes/all_routes";
+
 import Datatable from "../../../../core/common/dataTable";
 import PayrollListModal from "./modal/payrollListModal";
 import { usePayroll } from "../../../../core/hooks/usePayroll";

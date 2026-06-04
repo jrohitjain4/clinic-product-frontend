@@ -147,7 +147,7 @@ const MultiStepRegister: React.FC = () => {
     };
 
     const stepTitles = ["Personal Details", "Clinic Details", "Choose Plan"];
-    const stepIcons = ["👤", "🏥", "💎"];
+
 
     return (
         <>

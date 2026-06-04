@@ -626,11 +626,16 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                 <label className="form-label">
                                   Phone Number <span className="text-danger">*</span>
                                 </label>
+                              <div className="input-icon-start position-relative">
+                                <span className="input-icon-addon">
+                                  <i className="ti ti-phone" />
+                                </span>
                                 <PhoneInput
                                   defaultCountry="IN"
                                   value={phone}
                                   onChange={setPhone}
                                 />
+                              </div>
                                 {phoneWarning && (
                                   <div className="text-warning fs-12 mt-1">
                                     <i className="ti ti-alert-triangle me-1" />

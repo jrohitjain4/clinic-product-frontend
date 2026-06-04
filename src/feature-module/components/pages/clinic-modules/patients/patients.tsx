@@ -143,7 +143,7 @@ const Patients = () => {
           <div className="action-item">
             <button
               type="button"
-              className="btn btn-link p-0 shadow-sm fs-14 border rounded-2"
+              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
               data-bs-toggle="dropdown"
               aria-label="Actions"
             >
@@ -197,7 +197,7 @@ const Patients = () => {
               <h4 className="fw-bold mb-0">
                 Patients List
                 <span className="badge badge-soft-primary fw-medium border py-1 px-2 border-primary fs-13 ms-1">
-                  Total Patients : {loading ? "…" : patients.length}
+                  Total Patients : {loading ? "" : patients.length}
                 </span>
               </h4>
             </div>
@@ -238,18 +238,12 @@ const Patients = () => {
             </div>
           )}
 
-          <div className="search-set mb-3">
-            <div className="table-search d-flex align-items-center mb-0">
-              <div className="search-input">
-                <SearchInput value={searchText} onChange={setSearchText} />
-              </div>
-            </div>
-          </div>
+
 
           {loading ? (
             <div className="text-center py-5">
               <span className="spinner-border text-primary" role="status" />
-              <p className="text-muted mt-2 mb-0">Loading patients…</p>
+              <p className="text-muted mt-2 mb-0">Loading patients</p>
             </div>
           ) : patients.length === 0 && !error ? (
             <div className="text-center py-5 border rounded bg-white">
@@ -275,7 +269,7 @@ const Patients = () => {
           )}
         </div>
         <div className="footer text-center bg-white p-2 border-top">
-          <p className="text-dark mb-0">2025 © Docyari, All Rights Reserved</p>
+          <p className="text-dark mb-0">2025  Docyari, All Rights Reserved</p>
         </div>
       </div>
 

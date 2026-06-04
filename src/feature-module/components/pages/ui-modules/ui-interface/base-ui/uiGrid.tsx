@@ -12,8 +12,8 @@ const UiGrid = () => {
         {/* Start Content */}
         <div className="content">
           {/* Page Header */}
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3">
-            <div className="flex-grow-1">
+          <div className="d-flex align-items-sm-center flex-sm-row g-2 flex-column gap-2 pb-3">
+            <div className="flex-grow g-2-1">
               <h4 className="fs-18 fw-semibold mb-0">Grid System</h4>
             </div>
             <div className="text-end">
@@ -30,7 +30,7 @@ const UiGrid = () => {
           </div>
           {/* End Page Header */}
           {/* start row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-12">
               <div className="card">
                 <div className="card-header">
@@ -157,7 +157,7 @@ const UiGrid = () => {
           </div>
           {/* end row */}
           {/* start row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-12">
               <div className="card">
                 <div className="card-header">
@@ -169,12 +169,12 @@ const UiGrid = () => {
                     <code>.col-lg-* </code>you can set the grid system.
                   </p>
                   <div className="grid-structure">
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-lg-12">
                         <div className="grid-container">col-lg-12</div>
                       </div>
                     </div>
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-lg-11">
                         <div className="grid-container">col-lg-11</div>
                       </div>
@@ -182,15 +182,15 @@ const UiGrid = () => {
                         <div className="grid-container">col-lg-1</div>
                       </div>
                     </div>
-                    <div className="row">
-                      <div className="col-lg-10">
+                    <div className="row g-2">
+                      <div className="col-lg-12">
                         <div className="grid-container">col-lg-10</div>
                       </div>
                       <div className="col-lg-2">
                         <div className="grid-container">col-lg-2</div>
                       </div>
                     </div>
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-lg-9">
                         <div className="grid-container">col-lg-9</div>
                       </div>
@@ -198,15 +198,15 @@ const UiGrid = () => {
                         <div className="grid-container">col-lg-3</div>
                       </div>
                     </div>
-                    <div className="row">
-                      <div className="col-lg-8">
+                    <div className="row g-2">
+                      <div className="col-lg-12">
                         <div className="grid-container">col-lg-8</div>
                       </div>
                       <div className="col-lg-4">
                         <div className="grid-container">col-lg-4</div>
                       </div>
                     </div>
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-lg-7">
                         <div className="grid-container">col-lg-7</div>
                       </div>
@@ -214,7 +214,7 @@ const UiGrid = () => {
                         <div className="grid-container">col-lg-5</div>
                       </div>
                     </div>
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-lg-6">
                         <div className="grid-container">col-lg-6</div>
                       </div>
@@ -222,7 +222,7 @@ const UiGrid = () => {
                         <div className="grid-container">col-lg-6</div>
                       </div>
                     </div>
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-lg-5">
                         <div className="grid-container">col-lg-5</div>
                       </div>
@@ -230,15 +230,15 @@ const UiGrid = () => {
                         <div className="grid-container">col-lg-7</div>
                       </div>
                     </div>
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-lg-4">
                         <div className="grid-container">col-lg-4</div>
                       </div>
-                      <div className="col-lg-8">
+                      <div className="col-lg-12">
                         <div className="grid-container">col-lg-8</div>
                       </div>
                     </div>
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-lg-3">
                         <div className="grid-container">col-lg-3</div>
                       </div>
@@ -246,15 +246,15 @@ const UiGrid = () => {
                         <div className="grid-container">col-lg-9</div>
                       </div>
                     </div>
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-lg-2">
                         <div className="grid-container">col-lg-2</div>
                       </div>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="grid-container">col-lg-10</div>
                       </div>
                     </div>
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-lg-1">
                         <div className="grid-container">col-lg-1</div>
                       </div>
@@ -262,7 +262,7 @@ const UiGrid = () => {
                         <div className="grid-container">col-lg-11</div>
                       </div>
                     </div>
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-lg-2">
                         <div className="grid-container">col-lg-2</div>
                       </div>

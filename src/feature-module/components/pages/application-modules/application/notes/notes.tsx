@@ -33,8 +33,8 @@ const Notes = () => {
         {/* Start Content */}
         <div className="content pb-0">
           {/* Page Header */}
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3">
-            <div className="flex-grow-1">
+          <div className="d-flex align-items-sm-center flex-sm-row g-2 flex-column gap-2 pb-3">
+            <div className="flex-grow g-2-1">
               <h4 className="fs-18 fw-semibold mb-0">Notes</h4>
             </div>
             <div className="text-end">
@@ -53,7 +53,7 @@ const Notes = () => {
           </div>
           {/* End Page Header */}
           {/* start row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-xl-3 col-md-12 theiaStickySidebar ">
               <div className="notes-sidebar">
               <div className="card">
@@ -249,9 +249,9 @@ const Notes = () => {
                 >
                   <div>
                     {/* start row */}
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-md-12">
-                        <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
+                        <div className="d-flex align-items-center justify-content-between flex-wrap row g-2-gap-3 mb-3">
                           <div className="d-flex align-items-center">
                             <h4 className="mb-0">Important Notes </h4>
                           </div>
@@ -269,7 +269,7 @@ const Notes = () => {
                     </div>
                     {/* end row */}
                     {/* start row */}
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-md-4 d-flex">
                         <div className="card flex-fill">
                           <div className="card-body">
@@ -625,7 +625,7 @@ const Notes = () => {
                   </div>
                   {/* end row */}
                   {/* start row */}
-                  <div className="row">
+                  <div className="row g-2">
                     <div className="col-md-4 d-flex">
                       <div className="card flex-fill">
                         <div className="card-body">
@@ -1337,7 +1337,7 @@ const Notes = () => {
                   aria-labelledby="v-pills-messages-tab"
                 >
                   {/* start row */}
-                  <div className="row">
+                  <div className="row g-2">
                     <div className="col-md-4 d-flex">
                       <div className="card flex-fill">
                         <div className="card-body">
@@ -2048,7 +2048,7 @@ const Notes = () => {
                   role="tabpanel"
                   aria-labelledby="v-pills-settings-tab"
                 >
-                  <div className="row">
+                  <div className="row g-2">
                     <div className="col-12 d-flex align-items-center justify-content-end">
                       <Link to="#" className="btn btn-danger mb-3">
                         <span>
@@ -2060,7 +2060,7 @@ const Notes = () => {
                     </div>
                   </div>
                   {/* start row */}
-                  <div className="row">
+                  <div className="row g-2">
                     <div className="col-md-4 d-flex">
                       <div className="card flex-fill">
                         <div className="card-body">
@@ -2427,7 +2427,7 @@ const Notes = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©{" "}
+            2025 {" "}
             <Link to="#" className="link-primary">
               Docyari
             </Link>
@@ -2456,7 +2456,7 @@ const Notes = () => {
               </div>
               <form>
                 <div className="modal-body">
-                  <div className="row">
+                  <div className="row g-2">
                     <div className="col-12">
                       <div className="mb-3">
                         <label className="form-label">Note Title</label>
@@ -2562,7 +2562,7 @@ const Notes = () => {
               </div>
               <form >
                 <div className="modal-body">
-                  <div className="row">
+                  <div className="row g-2">
                     <div className="col-12">
                       <div className="mb-3">
                         <label className="form-label">Note Title</label>
@@ -2705,7 +2705,7 @@ const Notes = () => {
                     />
                   </div>
                   <div className="modal-body">
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-12">
                         <div>
                           <h4 className="mb-2">

@@ -100,7 +100,7 @@ const DoctorsLeaves = () => {
       title: "",
       render: (_: any, record: any) => (
         record.status === "APPLIED" ? (
-          <div className="action-item">
+          <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
             <Link to="#" data-bs-toggle="dropdown"><i className="ti ti-dots-vertical" /></Link>
             <ul className="dropdown-menu p-2">
               <li>
@@ -141,11 +141,7 @@ const DoctorsLeaves = () => {
           <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
             <div className="search-set">
               <div className="d-flex align-items-center">
-                <div className="table-search d-flex align-items-center mb-0 me-2">
-                  <div className="search-input">
-                    <SearchInput value={searchText} onChange={handleSearch} />
-                  </div>
-                </div>
+                
               </div>
             </div>
           </div>

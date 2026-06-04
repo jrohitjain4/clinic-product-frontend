@@ -50,7 +50,7 @@ const ContactMessages = () => {
           <Link
             to="#"
             data-bs-toggle="dropdown"
-            className="btn p-1 btn-white border"
+            className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
           >
             <i className="ti ti-dots-vertical" />
           </Link>
@@ -106,11 +106,7 @@ const ContactMessages = () => {
           <div className=" d-flex align-items-center justify-content-between flex-wrap row-gap-3">
             <div className="search-set mb-3">
               <div className="d-flex align-items-center flex-wrap gap-2">
-                <div className="table-search d-flex align-items-center mb-0">
-                  <div className="search-input">
-                    <SearchInput value={searchText} onChange={handleSearch} />
-                  </div>
-                </div>
+                
               </div>
             </div>
             <div className="d-flex table-dropdown mb-3 pb-1 right-content align-items-center flex-wrap row-gap-3">
@@ -178,7 +174,7 @@ const ContactMessages = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 
             <Link to="#" className="link-primary">
               Docyari
             </Link>

@@ -121,9 +121,9 @@ const DoctorSchedules = () => {
           </div>
         </div>
         <div className="col-lg-7">
-          <div className="row align-items-end gx-3">
+          <div className="row g-2 align-items-end gx-3">
             <div className="col-lg-9">
-              <div className="row gx-3">
+              <div className="row g-2 gx-3">
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">From</label>
@@ -199,11 +199,11 @@ const DoctorSchedules = () => {
         {/* Start Content */}
         <div className="content">
           {/* Start Row */}
-          <div className="row justify-content-center">
-            <div className="col-lg-10">
+          <div className="row g-2">
+            <div className="col-lg-12">
               {/* Start Page Header */}
-              <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
-                <div className="flex-grow-1">
+              <div className="d-flex align-items-sm-center flex-sm-row g-2 flex-column gap-2 mb-3 pb-3 border-bottom">
+                <div className="flex-grow g-2-1">
                   <h4 className="fw-bold mb-0"> My Schedule</h4>
                 </div>
                 <div className="text-end d-flex">
@@ -237,7 +237,7 @@ const DoctorSchedules = () => {
                 <div className="card-body">
                   <div className="border-bottom mb-3">
                     <h6 className="fw-bold mb-3">Schedule Detail</h6>
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-lg-3 col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Location</label>
@@ -303,13 +303,13 @@ const DoctorSchedules = () => {
                   <div>
                     <h6 className="fw-bold mb-3">Schedules</h6>
                     <ul
-                      className="nav nav-pills schedule-tab mb-3"
+                      className="nav nav-pills schedule-tab mb-3 gap-2"
                       id="pills-tab2"
                       role="tablist"
                     >
-                      <li className="nav-item me-1" role="presentation">
+                      <li className="nav-item" role="presentation">
                         <button
-                          className="nav-link btn btn-sm btn-icon p-2 d-flex align-items-center justify-content-center w-auto active"
+                          className="nav-link border active"
                           data-bs-toggle="pill"
                           data-bs-target="#schedules-8"
                           type="button"
@@ -319,9 +319,9 @@ const DoctorSchedules = () => {
                           Monday
                         </button>
                       </li>
-                      <li className="nav-item me-1" role="presentation">
+                      <li className="nav-item" role="presentation">
                         <button
-                          className="nav-link btn btn-sm btn-icon p-2 d-flex align-items-center justify-content-center w-auto"
+                          className="nav-link border"
                           data-bs-toggle="pill"
                           data-bs-target="#schedules-9"
                           type="button"
@@ -332,9 +332,9 @@ const DoctorSchedules = () => {
                           Tuesday
                         </button>
                       </li>
-                      <li className="nav-item me-1" role="presentation">
+                      <li className="nav-item" role="presentation">
                         <button
-                          className="nav-link btn btn-sm btn-icon p-2 d-flex align-items-center justify-content-center w-auto"
+                          className="nav-link border"
                           data-bs-toggle="pill"
                           data-bs-target="#schedules-10"
                           type="button"
@@ -345,9 +345,9 @@ const DoctorSchedules = () => {
                           Wednesday
                         </button>
                       </li>
-                      <li className="nav-item me-1" role="presentation">
+                      <li className="nav-item" role="presentation">
                         <button
-                          className="nav-link btn btn-sm btn-icon p-2 d-flex align-items-center justify-content-center w-auto"
+                          className="nav-link border"
                           data-bs-toggle="pill"
                           data-bs-target="#schedules-11"
                           type="button"
@@ -358,9 +358,9 @@ const DoctorSchedules = () => {
                           Thursday
                         </button>
                       </li>
-                      <li className="nav-item me-1" role="presentation">
+                      <li className="nav-item" role="presentation">
                         <button
-                          className="nav-link btn btn-sm btn-icon p-2 d-flex align-items-center justify-content-center w-auto"
+                          className="nav-link border"
                           data-bs-toggle="pill"
                           data-bs-target="#schedules-12"
                           type="button"
@@ -371,9 +371,9 @@ const DoctorSchedules = () => {
                           Friday
                         </button>
                       </li>
-                      <li className="nav-item me-1" role="presentation">
+                      <li className="nav-item" role="presentation">
                         <button
-                          className="nav-link btn btn-sm btn-icon p-2 d-flex align-items-center justify-content-center w-auto"
+                          className="nav-link border"
                           data-bs-toggle="pill"
                           data-bs-target="#schedules-13"
                           type="button"
@@ -384,9 +384,9 @@ const DoctorSchedules = () => {
                           Saturday
                         </button>
                       </li>
-                      <li className="nav-item me-1" role="presentation">
+                      <li className="nav-item" role="presentation">
                         <button
-                          className="nav-link btn btn-sm btn-icon p-2 d-flex align-items-center justify-content-center w-auto"
+                          className="nav-link border"
                           data-bs-toggle="pill"
                           data-bs-target="#schedules-14"
                           type="button"
@@ -488,7 +488,7 @@ const DoctorSchedules = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 
             <Link to="#" className="link-primary">
               Docyari
             </Link>

@@ -59,7 +59,7 @@ const DoctorsGrid = ({ doctors, loading, error, onRetry }: DoctorsGridProps) => 
 
   return (
     <>
-      <div className="row">
+      <div className="row g-2">
         {doctors.map((doctor, index) => {
           const img =
             doctor.profileImage ||
@@ -85,7 +85,11 @@ const DoctorsGrid = ({ doctors, loading, error, onRetry }: DoctorsGridProps) => 
                         <Link to={doctorDetailsPath(doctor.id)}>{doctor.fullName}</Link>
                       </h6>
                       <div className="action-item">
-                        <Link to="#" data-bs-toggle="dropdown">
+                        <Link 
+                          to="#" 
+                          data-bs-toggle="dropdown"
+                          className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
+                        >
                           <i className="ti ti-dots-vertical" />
                         </Link>
                         <ul className="dropdown-menu">

@@ -33,8 +33,8 @@ const FormValidation = () => {
         {/* Start Content */}
         <div className="content">
           {/* Page Header */}
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3">
-            <div className="flex-grow-1">
+          <div className="d-flex align-items-sm-center flex-sm-row g-2 flex-column gap-2 pb-3">
+            <div className="flex-grow g-2-1">
               <h4 className="fs-18 fw-semibold mb-0">Form Validation</h4>
             </div>
             <div className="text-end">
@@ -51,7 +51,7 @@ const FormValidation = () => {
           </div>
           {/* End Page Header */}
           {/* start row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-sm-12">
               {/* Custom Boostrap Validation */}
               <div className="card">
@@ -73,10 +73,10 @@ const FormValidation = () => {
                   </p>
                 </div>
                 <div className="card-body">
-                  <div className="row">
+                  <div className="row g-2">
                     <div className="col-sm">
                       <form className="needs-validation" noValidate>
-                        <div className="form-row row">
+                        <div className="form-row g-2 row">
                           <div className="col-md-4 mb-3">
                             <label
                               className="form-label"
@@ -141,7 +141,7 @@ const FormValidation = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="form-row row">
+                        <div className="form-row g-2 row">
                           <div className="col-md-6 mb-3">
                             <label
                               className="form-label"
@@ -236,10 +236,10 @@ const FormValidation = () => {
                   </p>
                 </div>
                 <div className="card-body">
-                  <div className="row">
+                  <div className="row g-2">
                     <div className="col-sm">
                       <form>
-                        <div className="form-row row">
+                        <div className="form-row g-2 row">
                           <div className="col-md-4 mb-3">
                             <label
                               className="form-label"
@@ -297,7 +297,7 @@ const FormValidation = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="form-row row">
+                        <div className="form-row g-2 row">
                           <div className="col-md-6 mb-3">
                             <label
                               className="form-label"
@@ -384,7 +384,7 @@ const FormValidation = () => {
                 </div>
                 <div className="card-body">
                   <form>
-                    <div className="form-row row">
+                    <div className="form-row g-2 row">
                       <div className="col-md-4 mb-3">
                         <label
                           className="form-label"
@@ -447,7 +447,7 @@ const FormValidation = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="form-row row">
+                    <div className="form-row g-2 row">
                       <div className="col-md-6 mb-3">
                         <label
                           className="form-label"
@@ -540,7 +540,7 @@ const FormValidation = () => {
                   </p>
                 </div>
                 <div className="card-body">
-                  <div className="row">
+                  <div className="row g-2">
                     <div className="col-sm">
                       <form className="was-validated">
                         <div className="mb-3">
@@ -662,7 +662,7 @@ const FormValidation = () => {
                 </div>
                 <div className="card-body">
                   <form className="needs-validation" noValidate>
-                    <div className="form-row row">
+                    <div className="form-row g-2 row">
                       <div className="col-md-4 mb-3">
                         <label
                           className="form-label"
@@ -716,7 +716,7 @@ const FormValidation = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="form-row row">
+                    <div className="form-row g-2 row">
                       <div className="col-md-6 mb-3">
                         <label
                           className="form-label"

@@ -11,8 +11,8 @@ const FormHorizontal = () => {
         {/* Start Content */}
         <div className="content">
           {/* Page Header */}
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3">
-            <div className="flex-grow-1">
+          <div className="d-flex align-items-sm-center flex-sm-row g-2 flex-column gap-2 pb-3">
+            <div className="flex-grow g-2-1">
               <h4 className="fs-18 fw-semibold mb-0">Form Horizontal</h4>
             </div>
             <div className="text-end">
@@ -29,7 +29,7 @@ const FormHorizontal = () => {
           </div>
           {/* End Page Header */}
           {/* start row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-xl-6">
               <div className="card">
                 <div className="card-header">
@@ -37,19 +37,19 @@ const FormHorizontal = () => {
                 </div>
                 <div className="card-body">
                   <form action="#">
-                    <div className="row mb-3">
+                    <div className="row g-2 mb-3">
                       <label className="col-lg-3 form-label">First Name</label>
                       <div className="col-lg-9">
                         <input type="text" className="form-control" />
                       </div>
                     </div>
-                    <div className="row mb-3">
+                    <div className="row g-2 mb-3">
                       <label className="col-lg-3 form-label">Last Name</label>
                       <div className="col-lg-9">
                         <input type="text" className="form-control" />
                       </div>
                     </div>
-                    <div className="row mb-3">
+                    <div className="row g-2 mb-3">
                       <label className="col-lg-3 form-label">
                         Email Address
                       </label>
@@ -57,19 +57,19 @@ const FormHorizontal = () => {
                         <input type="email" className="form-control" />
                       </div>
                     </div>
-                    <div className="row mb-3">
+                    <div className="row g-2 mb-3">
                       <label className="col-lg-3 form-label">Username</label>
                       <div className="col-lg-9">
                         <input type="text" className="form-control" />
                       </div>
                     </div>
-                    <div className="row mb-3">
+                    <div className="row g-2 mb-3">
                       <label className="col-lg-3 form-label">Password</label>
                       <div className="col-lg-9">
                         <input type="password" className="form-control" />
                       </div>
                     </div>
-                    <div className="row mb-3">
+                    <div className="row g-2 mb-3">
                       <label className="col-lg-3 form-label">
                         Repeat Password
                       </label>
@@ -96,37 +96,37 @@ const FormHorizontal = () => {
                 </div>
                 <div className="card-body">
                   <form action="#">
-                    <div className="row mb-3">
+                    <div className="row g-2 mb-3">
                       <label className="col-lg-3 form-label">Address 1</label>
                       <div className="col-lg-9">
                         <input type="text" className="form-control" />
                       </div>
                     </div>
-                    <div className="row mb-3">
+                    <div className="row g-2 mb-3">
                       <label className="col-lg-3 form-label">Address 2</label>
                       <div className="col-lg-9">
                         <input type="text" className="form-control" />
                       </div>
                     </div>
-                    <div className="row mb-3">
+                    <div className="row g-2 mb-3">
                       <label className="col-lg-3 form-label">City</label>
                       <div className="col-lg-9">
                         <input type="text" className="form-control" />
                       </div>
                     </div>
-                    <div className="row mb-3">
+                    <div className="row g-2 mb-3">
                       <label className="col-lg-3 form-label">State</label>
                       <div className="col-lg-9">
                         <input type="text" className="form-control" />
                       </div>
                     </div>
-                    <div className="row mb-3">
+                    <div className="row g-2 mb-3">
                       <label className="col-lg-3 form-label">Country</label>
                       <div className="col-lg-9">
                         <input type="text" className="form-control" />
                       </div>
                     </div>
-                    <div className="row mb-3">
+                    <div className="row g-2 mb-3">
                       <label className="col-lg-3 form-label">Postal Code</label>
                       <div className="col-lg-9">
                         <input type="text" className="form-control" />
@@ -147,7 +147,7 @@ const FormHorizontal = () => {
           </div>
           {/* end row */}
           {/* start row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-md-12">
               <div className="card">
                 <div className="card-header">
@@ -157,10 +157,10 @@ const FormHorizontal = () => {
                   <h6 className="fs-16 mb-3">Personal Information</h6>
                   <form action="#">
                     {/* start row */}
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-xl-6">
                         {/* start row */}
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">
                             First Name
                           </label>
@@ -170,7 +170,7 @@ const FormHorizontal = () => {
                         </div>
                         {/* end row */}
                         {/* start row */}
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">
                             Last Name
                           </label>
@@ -180,7 +180,7 @@ const FormHorizontal = () => {
                         </div>
                         {/* end row */}
                         {/* start row */}
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">Gender</label>
                           <div className="col-lg-9">
                             <div className="form-check form-check-inline">
@@ -218,7 +218,7 @@ const FormHorizontal = () => {
                         </div>
                         {/* end row */}
                         {/* start row */}
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">
                             Blood Group
                           </label>
@@ -237,7 +237,7 @@ const FormHorizontal = () => {
                       {/* end col */}
                       <div className="col-xl-6">
                         {/* start row */}
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">
                             Username
                           </label>
@@ -247,7 +247,7 @@ const FormHorizontal = () => {
                         </div>
                         {/* end row */}
                         {/* start row */}
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">Email</label>
                           <div className="col-lg-9">
                             <input type="text" className="form-control" />
@@ -255,7 +255,7 @@ const FormHorizontal = () => {
                         </div>
                         {/* end row */}
                         {/* start row */}
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">
                             Password
                           </label>
@@ -265,7 +265,7 @@ const FormHorizontal = () => {
                         </div>
                         {/* end row */}
                         {/* start row */}
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">
                             Repeat Password
                           </label>
@@ -280,10 +280,10 @@ const FormHorizontal = () => {
                     {/* end row */}
                     <h6 className="fs-16 mb-3">Address</h6>
                     {/* start row */}
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-xl-6">
                         {/* start row */}
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">
                             Address Line 1
                           </label>
@@ -293,7 +293,7 @@ const FormHorizontal = () => {
                         </div>
                         {/* end row */}
                         {/* start row */}
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">
                             Address Line 2
                           </label>
@@ -303,7 +303,7 @@ const FormHorizontal = () => {
                         </div>
                         {/* end row */}
                         {/* start row */}
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">State</label>
                           <div className="col-lg-9">
                             <input type="text" className="form-control" />
@@ -314,7 +314,7 @@ const FormHorizontal = () => {
                       {/* end col */}
                       <div className="col-xl-6">
                         {/* start row */}
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">City</label>
                           <div className="col-lg-9">
                             <input type="text" className="form-control" />
@@ -322,7 +322,7 @@ const FormHorizontal = () => {
                         </div>
                         {/* end row */}
                         {/* start row */}
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">Country</label>
                           <div className="col-lg-9">
                             <input type="text" className="form-control" />
@@ -330,7 +330,7 @@ const FormHorizontal = () => {
                         </div>
                         {/* end row */}
                         {/* start row */}
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">
                             Postal Code
                           </label>
@@ -357,7 +357,7 @@ const FormHorizontal = () => {
             {/* end col */}
           </div>
           {/* end row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-md-12">
               <div className="card">
                 <div className="card-header">
@@ -365,10 +365,10 @@ const FormHorizontal = () => {
                 </div>
                 <div className="card-body">
                   <form action="#">
-                    <div className="row">
+                    <div className="row g-2">
                       <div className="col-xl-6">
                         <h6 className="fs-16 mb-3">Personal Information</h6>
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">
                             First Name
                           </label>
@@ -376,7 +376,7 @@ const FormHorizontal = () => {
                             <input type="text" className="form-control" />
                           </div>
                         </div>
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">
                             Last Name
                           </label>
@@ -384,7 +384,7 @@ const FormHorizontal = () => {
                             <input type="text" className="form-control" />
                           </div>
                         </div>
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">
                             Password
                           </label>
@@ -392,7 +392,7 @@ const FormHorizontal = () => {
                             <input type="password" className="form-control" />
                           </div>
                         </div>
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">State</label>
                           <div className="col-lg-9">
                             <select className="form-select">
@@ -403,7 +403,7 @@ const FormHorizontal = () => {
                             </select>
                           </div>
                         </div>
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">About</label>
                           <div className="col-lg-9">
                             <textarea
@@ -418,10 +418,10 @@ const FormHorizontal = () => {
                       </div>
                       <div className="col-xl-6">
                         <h6 className="fs-16 mb-3">Personal Details</h6>
-                        <div className="row">
+                        <div className="row g-2">
                           <label className="col-lg-3 form-label">Name</label>
                           <div className="col-lg-9">
-                            <div className="row">
+                            <div className="row g-2">
                               <div className="col-md-6">
                                 <div className="mb-3">
                                   <input
@@ -443,23 +443,23 @@ const FormHorizontal = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">Email</label>
                           <div className="col-lg-9">
                             <input type="text" className="form-control" />
                           </div>
                         </div>
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">Phone</label>
                           <div className="col-lg-9">
                             <input type="text" className="form-control" />
                           </div>
                         </div>
-                        <div className="row mb-3">
+                        <div className="row g-2 mb-3">
                           <label className="col-lg-3 form-label">Address</label>
                           <div className="col-lg-9">
                             <input type="text" className="form-control" />
-                            <div className="row mt-4">
+                            <div className="row g-2 mt-4">
                               <div className="col-md-6">
                                 <div className="mb-3">
                                   <select className="form-select">
@@ -512,7 +512,7 @@ const FormHorizontal = () => {
             </div>
             {/* end col */}
           </div>
-          <div className="row">
+          <div className="row g-2">
             <div className="col-xl-6">
               <div className="card">
                 <div className="card-header">
@@ -520,7 +520,7 @@ const FormHorizontal = () => {
                 </div>
                 <div className="card-body">
                   <form>
-                    <div className="row mb-3">
+                    <div className="row g-2 mb-3">
                       <label
                         htmlFor="inputEmail1"
                         className="col-sm-2 form-label"
@@ -540,7 +540,7 @@ const FormHorizontal = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="row mb-3">
+                    <div className="row g-2 mb-3">
                       <label
                         htmlFor="inputPassword1"
                         className="col-sm-2 form-label"
@@ -576,7 +576,7 @@ const FormHorizontal = () => {
                   <h5 className="card-title">Horizontal form label sizing</h5>
                 </div>
                 <div className="card-body">
-                  <div className="row mb-3">
+                  <div className="row g-2 mb-3">
                     <label
                       htmlFor="colFormLabelSm"
                       className="col-sm-2 form-label form-label-sm"
@@ -592,7 +592,7 @@ const FormHorizontal = () => {
                       />
                     </div>
                   </div>
-                  <div className="row mb-3">
+                  <div className="row g-2 mb-3">
                     <label
                       htmlFor="colFormLabel"
                       className="col-sm-2 form-label"
@@ -608,7 +608,7 @@ const FormHorizontal = () => {
                       />
                     </div>
                   </div>
-                  <div className="row">
+                  <div className="row g-2">
                     <label
                       htmlFor="colFormLabelLg"
                       className="col-sm-2 form-label form-label-lg"
@@ -632,7 +632,7 @@ const FormHorizontal = () => {
             {/* end col */}
           </div>
           {/* end row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-xl-12">
               <div className="card">
                 <div className="card-header">

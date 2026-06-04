@@ -50,7 +50,7 @@ const PatientDashboard = () => {
           </div>
           {/* End Page Header */}
           {/* row start */}
-          <div className="row">
+          <div className="row g-2">
             {/* col start */}
             <div className="col-xl-3 col-md-6 d-flex">
               <div className="card flex-fill w-100 shadow-sm">
@@ -146,7 +146,7 @@ const PatientDashboard = () => {
           </div>
           {/* row start */}
           {/* row start */}
-          <div className="row">
+          <div className="row g-2">
             {/* col start */}
             <div className="col-xl-4 col-lg-6 d-flex">
               <div className="card shadow-sm flex-fill w-100">
@@ -328,7 +328,7 @@ const PatientDashboard = () => {
             </div>
             <div className="card-body">
               {/* row start */}
-              <div className="row row-gap-3 row-cols-1 row-cols-xl-6 row-cols-md-3 row-cols-sm-2">
+              <div className="row g-2 row-gap-3 row-cols-1 row-cols-xl-6 row-cols-md-3 row-cols-sm-2">
                 {/* col start */}
                 <div className="col d-flex">
                   <div className="p-3 border shadow-sm flex-fill w-100 rounded-2">
@@ -464,7 +464,7 @@ const PatientDashboard = () => {
           </div>
           {/* card end */}
           {/* row start */}
-          <div className="row">
+          <div className="row g-2">
             {/* col start */}
             <div className="col-lg-6 d-flex">
               <div className="card shadow-sm flex-fill w-100">
@@ -685,7 +685,7 @@ const PatientDashboard = () => {
                           <Link
                             to="#"
                             data-bs-toggle="dropdown"
-                            className="shadow-sm fs-14 d-inline-flex border rounded-2 p-1"
+                            className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                           >
                             <i className="ti ti-dots-vertical" />
                           </Link>

@@ -39,7 +39,7 @@ const FormInputGroups = () => {
                   <form action="#">
                     <div className="mb-3 row">
                       <label className="form-label col-lg-2">Group Left</label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group">
                           <span className="input-group-text" id="basic-addon1">
                             @
@@ -56,7 +56,7 @@ const FormInputGroups = () => {
                     </div>
                     <div className="mb-3 row">
                       <label className="form-label col-lg-2">Group Right</label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group">
                           <input
                             type="text"
@@ -73,7 +73,7 @@ const FormInputGroups = () => {
                     </div>
                     <div className="mb-3 row">
                       <label className="form-label col-lg-2">URL Example</label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group">
                           <span className="input-group-text" id="basic-addon3">
                             https://example.com/users/
@@ -91,7 +91,7 @@ const FormInputGroups = () => {
                       <label className="form-label col-lg-2">
                         Group with Price
                       </label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group">
                           <span className="input-group-text">$</span>
                           <input
@@ -107,7 +107,7 @@ const FormInputGroups = () => {
                       <label className="form-label col-lg-2">
                         Group with Price (Left)
                       </label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group mb-3">
                           <span className="input-group-text">$</span>
                           <span className="input-group-text">0.00</span>
@@ -128,7 +128,7 @@ const FormInputGroups = () => {
                       <label className="form-label col-lg-2">
                         With textarea
                       </label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group">
                           <span className="input-group-text">
                             With textarea
@@ -155,7 +155,7 @@ const FormInputGroups = () => {
                       <label className="form-label col-lg-2">
                         Input Group Large
                       </label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group input-group-lg">
                           <span
                             className="input-group-text"
@@ -176,7 +176,7 @@ const FormInputGroups = () => {
                       <label className="form-label col-lg-2">
                         Input Group Default
                       </label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group">
                           <span
                             className="input-group-text"
@@ -197,7 +197,7 @@ const FormInputGroups = () => {
                       <label className="form-label col-lg-2">
                         Input Group Small
                       </label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group input-group-sm">
                           <span
                             className="input-group-text"
@@ -227,7 +227,7 @@ const FormInputGroups = () => {
                   <form action="#">
                     <div className="mb-3 row">
                       <label className="form-label col-lg-2">Checkbox</label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group">
                           <div className="input-group-text">
                             <input
@@ -247,7 +247,7 @@ const FormInputGroups = () => {
                     </div>
                     <div className="mb-3 row">
                       <label className="form-label col-lg-2">Radio</label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group">
                           <div className="input-group-text">
                             <input
@@ -280,7 +280,7 @@ const FormInputGroups = () => {
                       <label className="form-label col-lg-2">
                         Radio and Text Addons
                       </label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group">
                           <span className="input-group-text">
                             <input type="checkbox" />
@@ -294,7 +294,7 @@ const FormInputGroups = () => {
                       <label className="form-label col-lg-2">
                         Two Addons Left
                       </label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group">
                           <span className="input-group-text">$</span>
                           <span className="input-group-text">0.00</span>
@@ -306,7 +306,7 @@ const FormInputGroups = () => {
                       <label className="form-label col-lg-2">
                         Two Addons Right
                       </label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group">
                           <input type="text" className="form-control" />
                           <span className="input-group-text">$</span>
@@ -412,7 +412,7 @@ const FormInputGroups = () => {
                       <label className="form-label col-lg-2">
                         Left Dropdown Text Addons
                       </label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group">
                           <button
                             className="btn btn-primary dropdown-toggle"
@@ -471,7 +471,7 @@ const FormInputGroups = () => {
                       <label className="form-label col-lg-2">
                         Right Dropdown Text Addons
                       </label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group">
                           <input
                             type="text"
@@ -530,7 +530,7 @@ const FormInputGroups = () => {
                       <label className="form-label col-lg-2">
                         Right Dropdown Text Addons
                       </label>
-                      <div className="col-lg-10">
+                      <div className="col-lg-12">
                         <div className="input-group mb-2">
                           <button
                             className="btn btn-soft-primary dropdown-toggle"

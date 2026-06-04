@@ -103,7 +103,7 @@ const StaffsList = () => {
         <div className="action-item">
           <button
             type="button"
-            className="btn btn-link p-0 text-dark"
+            className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
             data-bs-toggle="dropdown"
             aria-label="Actions"
           >
@@ -158,7 +158,7 @@ const StaffsList = () => {
               <h4 className="fw-bold mb-0">
                 Staff
                 <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                  Total Staffs : {loading ? "…" : staffs.length}
+                  Total Staffs : {loading ? "" : staffs.length}
                 </span>
               </h4>
             </div>
@@ -209,18 +209,14 @@ const StaffsList = () => {
 
           <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
             <div className="search-set mb-3">
-              <div className="table-search d-flex align-items-center mb-0">
-                <div className="search-input">
-                  <SearchInput value={searchText} onChange={setSearchText} />
-                </div>
-              </div>
+              
             </div>
           </div>
 
           {loading ? (
             <div className="text-center py-5">
               <span className="spinner-border text-primary" role="status" />
-              <p className="text-muted mt-2 mb-0">Loading staff…</p>
+              <p className="text-muted mt-2 mb-0">Loading staff</p>
             </div>
           ) : staffs.length === 0 && !error ? (
             <div className="text-center py-5 border rounded bg-white">
@@ -251,7 +247,7 @@ const StaffsList = () => {
 
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 
             <Link to="#" className="link-primary">
               Docyari
             </Link>

@@ -75,7 +75,7 @@ const PatientsGrid = () => {
               <span className="spinner-border text-primary" role="status" />
             </div>
           ) : (
-            <div className="row">
+            <div className="row g-2">
               {patients.map((p, index) => {
                 const img =
                   p.profileImage ||
@@ -113,7 +113,7 @@ const PatientsGrid = () => {
                           <div className="dropdown">
                             <button
                               type="button"
-                              className="btn btn-link p-0 shadow-sm fs-14 border rounded-2"
+                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                               data-bs-toggle="dropdown"
                             >
                               <i className="ti ti-dots-vertical" />

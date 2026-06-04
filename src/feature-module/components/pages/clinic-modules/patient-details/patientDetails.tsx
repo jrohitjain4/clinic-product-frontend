@@ -99,7 +99,7 @@ const PatientDetails = () => {
           {/* page header end */}
           {/* card start */}
           <div className="card">
-            <div className="row align-items-end">
+            <div className="row g-2 align-items-end">
               <div className="col-xl-9 col-lg-8">
                 <div className="d-sm-flex align-items-center position-relative z-0 overflow-hidden p-3">
                   <ImageWithBasePath
@@ -132,13 +132,13 @@ const PatientDetails = () => {
                     <h5 className="mb-1">
                       <span className="fw-bold">{displayName}</span>
                     </h5>
-                    <p className="mb-3">{patient.fullAddress || "—"}</p>
+                    <p className="mb-3">{patient.fullAddress || ""}</p>
                     <div className="d-flex align-items-center flex-wrap">
                       <p className="mb-0 d-inline-flex align-items-center">
                         <i className="ti ti-phone me-1 text-dark" />
                         Phone :
                         <span className="text-dark ms-1">
-                          {patient.phone || "—"}
+                          {patient.phone || ""}
                         </span>
                       </p>
                       <span className="mx-2 text-light">|</span>
@@ -146,7 +146,7 @@ const PatientDetails = () => {
                         <i className="ti ti-calendar-time me-1 text-dark" />
                         Last Visited :
                         <span className="text-dark ms-1">
-                          {patient.lastVisitLabel || "—"}
+                          {patient.lastVisitLabel || ""}
                         </span>
                       </p>
                     </div>
@@ -188,7 +188,7 @@ const PatientDetails = () => {
           </div>
           {/* card end */}
           {/* row start */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-xl-5 d-flex">
               <div className="card shadow-sm flex-fill w-100">
                 <div className="card-header">
@@ -198,7 +198,7 @@ const PatientDetails = () => {
                   </h5>
                 </div>
                 <div className="card-body pb-0">
-                  <div className="row">
+                  <div className="row g-2">
                     <div className="col-sm-5">
                       <div className="d-flex align-items-center mb-3">
                         <span className="avatar rounded-circle bg-light text-dark flex-shrink-0 me-2">
@@ -217,7 +217,7 @@ const PatientDetails = () => {
                         </span>
                         <div>
                           <h6 className="fs-13 fw-bold mb-1">Blood Group</h6>
-                          <p className="mb-0">{patient.bloodGroup || "—"}</p>
+                          <p className="mb-0">{patient.bloodGroup || ""}</p>
                         </div>
                       </div>
                     </div>
@@ -228,7 +228,7 @@ const PatientDetails = () => {
                         </span>
                         <div>
                           <h6 className="fs-13 fw-bold mb-1">Gender</h6>
-                          <p className="mb-0">{patient.gender || "—"}</p>
+                          <p className="mb-0">{patient.gender || ""}</p>
                         </div>
                       </div>
                     </div>
@@ -239,7 +239,7 @@ const PatientDetails = () => {
                         </span>
                         <div>
                           <h6 className="fs-13 fw-bold mb-1">Email</h6>
-                          <p className="mb-0 text-break">{patient.email || "—"}</p>
+                          <p className="mb-0 text-break">{patient.email || ""}</p>
                         </div>
                       </div>
                     </div>
@@ -256,7 +256,7 @@ const PatientDetails = () => {
                   </h5>
                 </div>
                 <div className="card-body pb-0">
-                  <div className="row">
+                  <div className="row g-2">
                     <div className="col-sm-4">
                       <div className="d-flex align-items-center mb-3">
                         <span className="avatar rounded-2 bg-light text-dark flex-shrink-0 me-2 border">
@@ -389,14 +389,7 @@ const PatientDetails = () => {
                 <div className="d-flex align-items-center gap-2">
                   <div className="search-set mb-3">
                     <div className="d-flex align-items-center flex-wrap gap-2">
-                      <div className="table-search d-flex align-items-center mb-0">
-                        <div className="search-input">
-                          <SearchInput
-                            value={searchText}
-                            onChange={handleSearch}
-                          />
-                        </div>
-                      </div>
+                      
                     </div>
                   </div>
                   <div className="d-flex right-content align-items-center flex-wrap mb-3">
@@ -408,7 +401,7 @@ const PatientDetails = () => {
                     </div>
                   </div>
                 </div>
-                <div className="d-flex table-dropdown mb-3 right-content align-items-center flex-wrap row-gap-3">
+                <div className="d-flex table-dropdown mb-3 right-content align-items-center flex-wrap row g-2-gap-3">
                   <div className="dropdown me-2">
                     <Link
                       to="#"
@@ -942,8 +935,8 @@ const PatientDetails = () => {
                     ) : (
                       filteredAppointments.map((appt) => {
                         const doctorImage = appt.doctor?.profileImage || "assets/img/users/user-08.jpg";
-                        const doctorName = appt.doctorName || appt.doctor?.fullName || "—";
-                        const doctorRole = appt.doctorRole || appt.doctor?.designation?.name || appt.doctor?.department?.name || "—";
+                        const doctorName = appt.doctorName || appt.doctor?.fullName || "";
+                        const doctorRole = appt.doctorRole || appt.doctor?.designation?.name || appt.doctor?.department?.name || "";
                         return (
                           <tr key={appt.id}>
                             <td>{appt.dateTimeLabel || appt.scheduledAt}</td>
@@ -972,7 +965,7 @@ const PatientDetails = () => {
                                 {appt.status}
                               </span>
                             </td>
-                            <td className="action-item">
+                            <td className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
                               <Link to="#" data-bs-toggle="dropdown">
                                 <i className="ti ti-dots-vertical" />
                               </Link>
@@ -1002,14 +995,7 @@ const PatientDetails = () => {
                 <div className="d-flex align-items-center gap-2">
                   <div className="search-set mb-3">
                     <div className="d-flex align-items-center flex-wrap gap-2">
-                      <div className="table-search d-flex align-items-center mb-0">
-                        <div className="search-input">
-                          <SearchInput
-                            value={searchText}
-                            onChange={handleSearch}
-                          />
-                        </div>
-                      </div>
+                      
                     </div>
                   </div>
                   <div className="d-flex right-content align-items-center flex-wrap mb-3">
@@ -1021,7 +1007,7 @@ const PatientDetails = () => {
                     </div>
                   </div>
                 </div>
-                <div className="d-flex table-dropdown mb-3 right-content align-items-center flex-wrap row-gap-3">
+                <div className="d-flex table-dropdown mb-3 right-content align-items-center flex-wrap row g-2-gap-3">
                   <div className="dropdown me-2">
                     <Link
                       to="#"
@@ -1531,7 +1517,7 @@ const PatientDetails = () => {
                           </td>
                           <td className="text-dark"> {inv.items?.[0]?.description || "Invoice"} </td>
                           <td className="text-dark"> {dayjs(inv.invoiceDate).format("DD MMM YYYY")}</td>
-                          <td className="text-dark"> {inv.paymentMethod || "—"}</td>
+                          <td className="text-dark"> {inv.paymentMethod || ""}</td>
                           <td className="text-dark"> ${inv.totalAmount.toFixed(2)}</td>
                           <td>
                             <span className="badge fs-13 badge-soft-success rounded text-success fw-medium border border-success">
@@ -1552,7 +1538,7 @@ const PatientDetails = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 
             <Link to="#" className="link-primary">
               Docyari
             </Link>

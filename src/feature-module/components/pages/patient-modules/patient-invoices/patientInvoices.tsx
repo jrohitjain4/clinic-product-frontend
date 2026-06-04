@@ -83,7 +83,7 @@ const PatientInvoices = () => {
     {
       title: "",
       render: () => (
-        <div className="action-item">
+        <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
           <>
             <Link to="#" data-bs-toggle="dropdown">
               <i className="ti ti-dots-vertical" />
@@ -142,11 +142,7 @@ const PatientInvoices = () => {
           <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
             <div className="search-set mb-3">
               <div className="d-flex align-items-center flex-wrap gap-2">
-                <div className="table-search d-flex align-items-center mb-0">
-                  <div className="search-input">
-                    <SearchInput value={searchText} onChange={handleSearch} />
-                  </div>
-                </div>
+                
               </div>
             </div>
             <div className="d-flex table-dropdown mb-3 pb-1 right-content align-items-center flex-wrap row-gap-3">

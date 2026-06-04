@@ -440,7 +440,7 @@ const KanbanView = () => {
                                         <div className="dropdown">
                                           <Link
                                             to="#"
-                                            className="d-inline-flex align-items-center"
+                                            className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                                             data-bs-toggle="dropdown"
                                           >
                                             <i className="ti ti-dots-vertical" />
@@ -509,7 +509,7 @@ const KanbanView = () => {
                                                   <div className="dropdown">
                                                     <Link
                                                       to="#"
-                                                      className="d-inline-flex align-items-center"
+                                                      className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                                                       data-bs-toggle="dropdown"
                                                     >
                                                       <i className="ti ti-dots-vertical" />
@@ -738,7 +738,7 @@ const KanbanView = () => {
                                           <div className="dropdown">
                                             <Link
                                               to="#"
-                                              className="d-inline-flex align-items-center"
+                                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                                               data-bs-toggle="dropdown"
                                             >
                                               <i className="ti ti-dots-vertical" />
@@ -808,7 +808,7 @@ const KanbanView = () => {
                                                     <div className="dropdown">
                                                       <Link
                                                         to="#"
-                                                        className="d-inline-flex align-items-center"
+                                                        className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                                                         data-bs-toggle="dropdown"
                                                       >
                                                         <i className="ti ti-dots-vertical" />
@@ -1038,7 +1038,7 @@ const KanbanView = () => {
                                           <div className="dropdown">
                                             <Link
                                               to="#"
-                                              className="d-inline-flex align-items-center"
+                                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                                               data-bs-toggle="dropdown"
                                             >
                                               <i className="ti ti-dots-vertical" />
@@ -1105,7 +1105,7 @@ const KanbanView = () => {
                                                     <div className="dropdown">
                                                       <Link
                                                         to="#"
-                                                        className="d-inline-flex align-items-center"
+                                                        className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                                                         data-bs-toggle="dropdown"
                                                       >
                                                         <i className="ti ti-dots-vertical" />
@@ -1331,7 +1331,7 @@ const KanbanView = () => {
                                           <div className="dropdown">
                                             <Link
                                               to="#"
-                                              className="d-inline-flex align-items-center"
+                                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                                               data-bs-toggle="dropdown"
                                             >
                                               <i className="ti ti-dots-vertical" />
@@ -1398,7 +1398,7 @@ const KanbanView = () => {
                                                     <div className="dropdown">
                                                       <Link
                                                         to="#"
-                                                        className="d-inline-flex align-items-center"
+                                                        className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                                                         data-bs-toggle="dropdown"
                                                       >
                                                         <i className="ti ti-dots-vertical" />

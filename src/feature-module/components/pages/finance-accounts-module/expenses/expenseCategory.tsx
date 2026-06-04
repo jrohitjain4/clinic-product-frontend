@@ -41,7 +41,7 @@ const ExpenseCategory = () => {
     {
       title: "",
       render: (_: string, record: any) => (
-        <div className="action-item p-2">
+        <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
           <Link to="#" data-bs-toggle="dropdown">
             <i className="ti ti-dots-vertical" />
           </Link>

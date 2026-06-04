@@ -37,7 +37,25 @@ const TodoList = () => {
             </div>
           </div>
           {/* End Page Header */}
-          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+          <div className="d-flex align-items-center justify-content-end flex-wrap gap-3 mb-3">
+            <ul className="d-flex align-items-center flex-shrink-0 list-unstyled mb-0">
+              <li>
+                <Link
+                  to={all_routes.todo}
+                  className="btn btn-icon btn-sm bg-white text-dark border me-2"
+                >
+                  <i className="ti ti-layout-grid" />
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to={all_routes.todoList}
+                  className="btn btn-icon btn-sm bg-primary-subtle text-primary border border-primary active me-2"
+                >
+                  <i className="ti ti-list-tree" />
+                </Link>
+              </li>
+            </ul>
             <Link
               to="#"
               className="btn btn-sm btn-primary"
@@ -47,30 +65,13 @@ const TodoList = () => {
               <i className="ti ti-circle-plus me-1" />
               Create New
             </Link>
-            <ul className="d-flex align-items-center flex-shrink-0 list-unstyled mb-0">
-              <li>
-                <Link
-                  to={all_routes.todo}
-                  className="btn btn-icon btn-sm bg-white text-dark me-2"
-                >
-                  <i className="ti ti-layout-grid" />
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to={all_routes.todoList}
-                  className="btn btn-icon btn-sm bg-primary text-white active me-2"
-                >
-                  <i className="ti ti-list-tree" />
-                </Link>
-              </li>
-            </ul>
           </div>
 
-          <div>
+          <div className="card overflow-hidden">
+            <div className="card-body p-0">
             {/* table list start */}
             <div className="table-responsive table-nowrap">
-              <table className="table border mb-0">
+              <table className="table table-hover border mb-0">
                 <thead className="table-light text-uppercase">
                   <tr>
                     <th>
@@ -1017,6 +1018,7 @@ const TodoList = () => {
               </table>
             </div>
             {/* table list end */}
+          </div>
           </div>
         </div>
         {/* Start Footer*/}

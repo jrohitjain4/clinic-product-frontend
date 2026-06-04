@@ -16,8 +16,8 @@ const SocialFeed = () => {
 
 
   {/* Page Header */}
-  <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3">
-    <div className="flex-grow-1">
+  <div className="d-flex align-items-sm-center flex-sm-row g-2 flex-column gap-2 pb-3">
+    <div className="flex-grow g-2-1">
       <h4 className="fs-18 fw-semibold mb-0">Social Feed</h4>
     </div>
     <div className="text-end">
@@ -38,7 +38,7 @@ const SocialFeed = () => {
 
 
           {/* start row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-xl-3 theiaStickySidebar">
               <div className="card sticky-class">
                 <div className="card-body">
@@ -260,7 +260,7 @@ const SocialFeed = () => {
                           />
                         </div>
                       </div>
-                      <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                      <div className="d-flex align-items-center justify-content-between flex-wrap row g-2-gap-3">
                         <div className="d-flex align-items-center">
                           <Link
                             to="#"
@@ -343,7 +343,7 @@ const SocialFeed = () => {
                     <div className="d-flex align-items-center mb-3">
                       <h6 className="mb-0">Popular Channels</h6>
                     </div>
-                    <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                    <div className="d-flex align-items-center justify-content-between flex-wrap row g-2-gap-3">
                       <Link to="#">
                         <ImageWithBasePath src="assets/img/icons/channel-01.svg" alt="Img" />
                       </Link>
@@ -372,7 +372,7 @@ const SocialFeed = () => {
                 {/* end card */}
                 <div className="card">
                   <div className="card-header border-0 pb-0">
-                    <div className="d-flex align-items-center justify-content-between border-bottom flex-wrap row-gap-3 pb-3">
+                    <div className="d-flex align-items-center justify-content-between border-bottom flex-wrap row g-2-gap-3 pb-3">
                       <div className="d-flex align-items-center">
                         <Link
                           to="#"
@@ -427,7 +427,7 @@ const SocialFeed = () => {
                         <div className="dropdown">
                           <Link
                             to="#"
-                            className="d-inline-flex align-items-center show"
+                            className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                             data-bs-toggle="dropdown"
                             aria-expanded="true"
                           >
@@ -578,8 +578,8 @@ const SocialFeed = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
-                      <div className="d-flex align-items-center flex-wrap row-gap-3">
+                    <div className="d-flex align-items-center justify-content-between flex-wrap row g-2-gap-3 mb-3">
+                      <div className="d-flex align-items-center flex-wrap row g-2-gap-3">
                         <Link
                           to="#"
                           className="d-inline-flex align-items-center me-3"
@@ -648,7 +648,7 @@ const SocialFeed = () => {
                 {/* end card */}
                 <div className="card">
                   <div className="card-header border-0 pb-0">
-                    <div className="d-flex align-items-center justify-content-between border-bottom flex-wrap row-gap-3 pb-3">
+                    <div className="d-flex align-items-center justify-content-between border-bottom flex-wrap row g-2-gap-3 pb-3">
                       <div className="d-flex align-items-center">
                         <Link
                           to="#"
@@ -703,7 +703,7 @@ const SocialFeed = () => {
                         <div className="dropdown">
                           <Link
                             to="#"
-                            className="d-inline-flex align-items-center show"
+                            className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                             data-bs-toggle="dropdown"
                             aria-expanded="true"
                           >
@@ -793,8 +793,8 @@ const SocialFeed = () => {
                         <Link to="#">Health.com</Link>
                       </div>
                     </div>
-                    <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                      <div className="d-flex align-items-center flex-wrap row-gap-3">
+                    <div className="d-flex align-items-center justify-content-between flex-wrap row g-2-gap-3">
+                      <div className="d-flex align-items-center flex-wrap row g-2-gap-3">
                         <Link
                           to="#"
                           className="d-inline-flex align-items-center me-3"
@@ -850,7 +850,7 @@ const SocialFeed = () => {
                 {/* end card */}
                 <div className="card">
                   <div className="card-header border-0 pb-0">
-                    <div className="d-flex align-items-center justify-content-between border-bottom flex-wrap row-gap-3 pb-3">
+                    <div className="d-flex align-items-center justify-content-between border-bottom flex-wrap row g-2-gap-3 pb-3">
                       <div className="d-flex align-items-center">
                         <span className="avatar avatar-lg avatar-rounded flex-shrink-0 me-2">
                           <ImageWithBasePath src="assets/img/users/user-04.jpg" alt="Img" />
@@ -902,7 +902,7 @@ const SocialFeed = () => {
                         <div className="dropdown">
                           <Link
                             to="#"
-                            className="d-inline-flex align-items-center show"
+                            className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                             data-bs-toggle="dropdown"
                             aria-expanded="true"
                           >
@@ -979,8 +979,8 @@ const SocialFeed = () => {
                         alt="Img"
                       />
                     </div>
-                    <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
-                      <div className="d-flex align-items-center flex-wrap row-gap-3">
+                    <div className="d-flex align-items-center justify-content-between flex-wrap row g-2-gap-3 mb-3">
+                      <div className="d-flex align-items-center flex-wrap row g-2-gap-3">
                         <Link
                           to="#"
                           className="d-inline-flex align-items-center me-3"
@@ -1800,7 +1800,7 @@ const SocialFeed = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 
             <Link to="#" className="link-primary">
               Docyari
             </Link>

@@ -47,7 +47,7 @@ const InvoicesDetails = () => {
       <div className="page-wrapper">
         <div className="content">
           <div className="row m-auto justify-content-center">
-            <div className="col-lg-10">
+            <div className="col-lg-12">
               {/* Header */}
               <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3">
                 <div className="flex-grow-1">
@@ -133,7 +133,7 @@ const InvoicesDetails = () => {
                         <p className="text-body mb-0">
                           Payment Method :{" "}
                           <span className="text-dark">
-                            {invoice.paymentMethod || "—"}
+                            {invoice.paymentMethod || ""}
                           </span>
                         </p>
                       </div>
@@ -153,7 +153,7 @@ const InvoicesDetails = () => {
                         <p className="text-dark fw-medium mb-1">
                           {invoice.patient
                             ? `${invoice.patient.firstName} ${invoice.patient.lastName}`
-                            : "—"}
+                            : ""}
                         </p>
                         {invoice.patient?.email && (
                           <p className="text-body mb-1">
@@ -192,7 +192,7 @@ const InvoicesDetails = () => {
                                     {item.service?.serviceName || "Service"}
                                   </td>
                                   <td className="text-muted">
-                                    {item.description || "—"}
+                                    {item.description || ""}
                                   </td>
                                   <td>${Number(item.unitCost).toFixed(2)}</td>
                                   <td>{item.quantity}</td>
@@ -278,7 +278,7 @@ const InvoicesDetails = () => {
         </div>
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©{" "}
+            2025 {" "}
             <Link to="#" className="link-primary">
               Docyari
             </Link>

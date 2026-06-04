@@ -216,7 +216,7 @@ const AppointmentReportChart = () => {
   return (
     <div>
       {/* row start */}
-      <div className="row">
+      <div className="row g-2">
         {/* col start */}
         <div className="col-xl-3 col-md-6 d-flex">
           <div className="card shadow-sm flex-fill w-100 z-0">

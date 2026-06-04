@@ -25,7 +25,7 @@ const Services = () => {
       Type: "Service",
       originalService: s,
       ServiceName: s.serviceName,
-      Department: s.department?.name || "—",
+      Department: s.department?.name || "",
       Price: "$" + s.price,
       Status: s.status || "Active",
     })),
@@ -35,7 +35,7 @@ const Services = () => {
       Type: "Product",
       originalService: p,
       ServiceName: p.name,
-      Department: p.key || "—",
+      Department: p.key || "",
       Price: "$" + p.price,
       Status: "Active",
     })),
@@ -85,7 +85,7 @@ const Services = () => {
     {
       title: "",
       render: (_text: string, record: any) => (
-        <div className="action-item">
+        <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
           <Link to="#" data-bs-toggle="dropdown">
             <i className="ti ti-dots-vertical" />
           </Link>
@@ -171,11 +171,7 @@ const Services = () => {
             <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
               <div className="search-set">
                 <div className="d-flex align-items-center flex-wrap gap-2">
-                  <div className="table-search d-flex align-items-center mb-0">
-                    <div className="search-input">
-                      <SearchInput value={searchText} onChange={setSearchText} />
-                    </div>
-                  </div>
+                  
                 </div>
               </div>
             </div>
@@ -195,7 +191,7 @@ const Services = () => {
           {/* Footer */}
           <div className="footer text-center bg-white p-2 border-top">
             <p className="text-dark mb-0">
-              2025 ©{" "}
+              2025 {" "}
               <Link to="#" className="link-primary">
                 Docyari
               </Link>

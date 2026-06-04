@@ -146,7 +146,7 @@ const RegisterBasic = () => {
     <>
       <div className="container-fuild position-relative z-1">
         <div className="w-100 overflow-hidden position-relative flex-wrap d-block vh-100 bg-white">
-          <div className="row h-100">
+          <div className="row g-2 h-100">
             {/* Left Cover Panel */}
             <div className="col-lg-6 p-0">
               <div className="login-backgrounds login-covers bg-primary d-lg-flex align-items-center justify-content-center d-none flex-wrap p-4 position-relative h-100 z-0">
@@ -175,7 +175,7 @@ const RegisterBasic = () => {
 
             {/* Right Form Panel */}
             <div className="col-lg-6 col-md-12 col-sm-12">
-              <div className="row justify-content-center align-items-center overflow-auto flex-wrap vh-100">
+              <div className="row g-2 justify-content-center align-items-center overflow-auto flex-wrap vh-100">
                 <div className="col-md-9 mx-auto py-4">
                   <div className="text-center mb-3">
                     <ImageWithBasePath src="assets/img/logo.svg" className="img-fluid mb-3" alt="Logo" style={{ width: "250px", height: "auto" }} />
@@ -192,7 +192,7 @@ const RegisterBasic = () => {
 
                       {step === 1 && (
                         <div>
-                          <div className="row">
+                          <div className="row g-2">
                             <div className="col-md-12 mb-3">
                               <label className="form-label">Full Name</label>
                               <input type="text" className="form-control" placeholder="Enter your full name" value={fullName} onChange={e => setFullName(e.target.value)} />
@@ -203,7 +203,7 @@ const RegisterBasic = () => {
                             </div>
                           </div>
 
-                          <div className="row">
+                          <div className="row g-2">
                             <div className="col-md-6 mb-3">
                               <label className="form-label">Date of Birth</label>
                               <input type="date" className="form-control" value={dob} onChange={e => handleDobChange(e.target.value)} />
@@ -222,7 +222,7 @@ const RegisterBasic = () => {
                             </div>
                           </div>
 
-                          <div className="row">
+                          <div className="row g-2">
                             <div className="col-md-6 mb-3">
                               <label className="form-label">Password</label>
                               <input type="password" title="password" className="form-control" placeholder="********" value={password} onChange={e => setPassword(e.target.value)} />
@@ -303,7 +303,7 @@ const RegisterBasic = () => {
                       </div>
                     </div>
                   </div>
-                  <p className="text-center text-muted mt-3 fs-12">Copyright © 2025 - Docyari SaaS Platform</p>
+                  <p className="text-center text-muted mt-3 fs-12">Copyright  2025 - Docyari SaaS Platform</p>
                 </div>
               </div>
             </div>

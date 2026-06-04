@@ -21,7 +21,7 @@ const PatientProfileSettings = () => {
           <div className="card" id="profilePage">
             <div className="card-body">
               {/* end card body */}
-              <div className="row">
+              <div className="row g-2">
                 <div className="col-lg-3">
                   <div className="text-start">
                     <Link
@@ -58,10 +58,10 @@ const PatientProfileSettings = () => {
                       Basic Information
                     </h5>
                     {/* start row */}
-                    <div className="row border-bottom mb-3">
+                    <div className="row g-2 border-bottom mb-3">
                       <div className="col-lg-12">
                         {/* start row */}
-                        <div className="row align-items-center mb-3">
+                        <div className="row g-2 align-items-center mb-3">
                           <div className="col-lg-2">
                             <label className="form-label mb-0">
                               Profile Image
@@ -69,7 +69,7 @@ const PatientProfileSettings = () => {
                             </label>
                           </div>
                           {/* end col */}
-                          <div className="col-lg-10">
+                          <div className="col-lg-12">
                             <div className="profile-container">
                               <ImageWithBasePath
                                 src="assets/img/users/user-08.jpg"
@@ -98,7 +98,7 @@ const PatientProfileSettings = () => {
                       {/* end col */}
                       <div className="col-lg-6">
                         {/* start row */}
-                        <div className="row align-items-center mb-3">
+                        <div className="row g-2 align-items-center mb-3">
                           <div className="col-lg-4">
                             <label className="form-label mb-0">
                               First Name
@@ -106,7 +106,7 @@ const PatientProfileSettings = () => {
                             </label>
                           </div>
                           {/* end col */}
-                          <div className="col-lg-8">
+                          <div className="col-lg-12">
                             <input type="text" className="form-control" />
                           </div>
                           {/* end col */}
@@ -116,7 +116,7 @@ const PatientProfileSettings = () => {
                       {/* end col */}
                       <div className="col-lg-6">
                         {/* start row */}
-                        <div className="row align-items-center mb-3">
+                        <div className="row g-2 align-items-center mb-3">
                           <div className="col-lg-4">
                             <label className="form-label mb-0">
                               Last Name
@@ -124,7 +124,7 @@ const PatientProfileSettings = () => {
                             </label>
                           </div>
                           {/* end col */}
-                          <div className="col-lg-8">
+                          <div className="col-lg-12">
                             <input type="text" className="form-control" />
                           </div>
                           {/* end col */}
@@ -134,14 +134,14 @@ const PatientProfileSettings = () => {
                       {/* end col */}
                       <div className="col-lg-6">
                         {/* start row */}
-                        <div className="row align-items-center mb-3">
+                        <div className="row g-2 align-items-center mb-3">
                           <div className="col-lg-4">
                             <label className="form-label mb-0">
                               Email<span className="text-danger ms-1">*</span>
                             </label>
                           </div>
                           {/* end col */}
-                          <div className="col-lg-8">
+                          <div className="col-lg-12">
                             <input type="text" className="form-control" />
                           </div>
                           {/* end col */}
@@ -151,7 +151,7 @@ const PatientProfileSettings = () => {
                       {/* end col */}
                       <div className="col-lg-6">
                         {/* start row */}
-                        <div className="row align-items-center mb-3">
+                        <div className="row g-2 align-items-center mb-3">
                           <div className="col-lg-4">
                             <label className="form-label mb-0">
                               Phone Number
@@ -159,7 +159,7 @@ const PatientProfileSettings = () => {
                             </label>
                           </div>
                           {/* end col */}
-                          <div className="col-lg-8">
+                          <div className="col-lg-12">
                             <input type="text" className="form-control" />
                           </div>
                           {/* end col */}
@@ -170,20 +170,20 @@ const PatientProfileSettings = () => {
                     </div>
                     {/* end row */}
                     {/* start row */}
-                    <div className="row border-bottom mb-3">
+                    <div className="row g-2 border-bottom mb-3">
                       <div className="mb-3">
                         <h5 className="fw-bold mb-0">Address Information</h5>
                       </div>
                       <div className="col-lg-6">
                         {/* start row */}
-                        <div className="row align-items-center mb-3">
+                        <div className="row g-2 align-items-center mb-3">
                           <div className="col-lg-4">
                             <label className="form-label mb-0">
                               Address Line 1
                             </label>
                           </div>
                           {/* end col */}
-                          <div className="col-lg-8">
+                          <div className="col-lg-12">
                             <input type="text" className="form-control" />
                           </div>
                           {/* end col */}
@@ -193,14 +193,14 @@ const PatientProfileSettings = () => {
                       {/* end col */}
                       <div className="col-lg-6">
                         {/* start row */}
-                        <div className="row align-items-center mb-3">
+                        <div className="row g-2 align-items-center mb-3">
                           <div className="col-lg-4">
                             <label className="form-label mb-0">
                               Address Line 2
                             </label>
                           </div>
                           {/* end col */}
-                          <div className="col-lg-8">
+                          <div className="col-lg-12">
                             <input type="text" className="form-control" />
                           </div>
                           {/* end col */}
@@ -210,12 +210,12 @@ const PatientProfileSettings = () => {
                       {/* end col */}
                       <div className="col-lg-6">
                         {/* start row */}
-                        <div className="row align-items-center mb-3">
+                        <div className="row g-2 align-items-center mb-3">
                           <div className="col-lg-4">
                             <label className="form-label mb-0">Country</label>
                           </div>
                           {/* end col */}
-                          <div className="col-lg-8">
+                          <div className="col-lg-12">
                             <CommonSelect
                               options={Country}
                               className="select"
@@ -229,12 +229,12 @@ const PatientProfileSettings = () => {
                       {/* end col */}
                       <div className="col-lg-6">
                         {/* start row */}
-                        <div className="row align-items-center mb-3">
+                        <div className="row g-2 align-items-center mb-3">
                           <div className="col-lg-4">
                             <label className="form-label mb-0">State</label>
                           </div>
                           {/* end col */}
-                          <div className="col-lg-8">
+                          <div className="col-lg-12">
                             <CommonSelect
                               options={State}
                               className="select"
@@ -248,12 +248,12 @@ const PatientProfileSettings = () => {
                       {/* end col */}
                       <div className="col-lg-6">
                         {/* start row */}
-                        <div className="row align-items-center mb-3">
+                        <div className="row g-2 align-items-center mb-3">
                           <div className="col-lg-4">
                             <label className="form-label mb-0">City</label>
                           </div>
                           {/* end col */}
-                          <div className="col-lg-8">
+                          <div className="col-lg-12">
                            <CommonSelect
                               options={City}
                               className="select"
@@ -267,12 +267,12 @@ const PatientProfileSettings = () => {
                       {/* end col */}
                       <div className="col-lg-6">
                         {/* start row */}
-                        <div className="row align-items-center mb-3">
+                        <div className="row g-2 align-items-center mb-3">
                           <div className="col-lg-4">
                             <label className="form-label mb-0">Pincode</label>
                           </div>
                           {/* end col */}
-                          <div className="col-lg-8">
+                          <div className="col-lg-12">
                             <input type="text" className="form-control" />
                           </div>
                           {/* end col */}
@@ -311,7 +311,7 @@ const PatientProfileSettings = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 
             <Link to="#" className="link-primary">
               Docyari
             </Link>

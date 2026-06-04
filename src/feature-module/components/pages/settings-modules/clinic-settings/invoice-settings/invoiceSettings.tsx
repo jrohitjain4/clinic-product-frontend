@@ -31,10 +31,10 @@ const InvoiceSettings = () => {
                   <div className="card-body px-0 mx-3">
                     <form>
                       {/* start row */}
-                      <div className="row border-bottom mb-3">
+                      <div className="row g-2 border-bottom mb-3">
                         <div className="col-lg-12">
                           {/* start row */}
-                          <div className="row align-items-center mb-3">
+                          <div className="row g-2 align-items-center mb-3">
                             <div className="col-lg-3">
                               <label className="form-label mb-0">
                                 Invoice Image
@@ -51,7 +51,7 @@ const InvoiceSettings = () => {
                         {/* end col */}
                         <div className="col-lg-12">
                           {/* start row */}
-                          <div className="row align-items-center mb-3">
+                          <div className="row g-2 align-items-center mb-3">
                             <div className="col-lg-3">
                               <label className="form-label mb-0">
                                 Invoice Prefix
@@ -68,7 +68,7 @@ const InvoiceSettings = () => {
                         {/* end col */}
                         <div className="col-lg-12">
                           {/* start row */}
-                          <div className="row align-items-center mb-3">
+                          <div className="row g-2 align-items-center mb-3">
                             <div className="col-lg-3">
                               <label className="form-label mb-0">
                                 Invoice Roundoff
@@ -99,7 +99,7 @@ const InvoiceSettings = () => {
                         {/* end col */}
                         <div className="col-lg-12">
                           {/* start row */}
-                          <div className="row align-items-center mb-3">
+                          <div className="row g-2 align-items-center mb-3">
                             <div className="col-lg-3">
                               <label className="form-label mb-0">
                                 Show Company Details
@@ -122,7 +122,7 @@ const InvoiceSettings = () => {
                         {/* end col */}
                         <div className="col-lg-12">
                           {/* start row */}
-                          <div className="row align-items-center mb-3">
+                          <div className="row g-2 align-items-center mb-3">
                             <div className="col-lg-3">
                               <label className="form-label mb-0">
                                 Invoice Terms
@@ -162,7 +162,7 @@ const InvoiceSettings = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 
             <Link to="#" className="link-primary">
               Docyari
             </Link>

@@ -92,7 +92,7 @@ const InvoicesList = () => {
     {
       title: "",
       render: (_: any, record: any) => (
-        <div className="action-item p-2">
+        <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
           <Link to="#" data-bs-toggle="dropdown">
             <i className="ti ti-dots-vertical" />
           </Link>
@@ -191,11 +191,7 @@ const InvoicesList = () => {
             <div className="d-flex align-items-center gap-2">
               <div className="search-set mb-3">
                 <div className="d-flex align-items-center flex-wrap gap-2">
-                  <div className="table-search d-flex align-items-center mb-0">
-                    <div className="search-input">
-                      <SearchInput value={searchText} onChange={handleSearch} />
-                    </div>
-                  </div>
+                  
                 </div>
               </div>
             </div>
@@ -267,7 +263,7 @@ const InvoicesList = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©{" "}
+            2025 {" "}
             <Link to="#" className="link-primary">
               Docyari
             </Link>

@@ -233,7 +233,7 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
     <div className="page-wrapper">
       <div className="content">
         <div className="row justify-content-center">
-          <div className="col-lg-10">
+          <div className="col-lg-12">
             <div className="mb-4">
               <h6 className="fw-bold mb-0">
                 <Link to={all_routes.appointments} className="text-dark">

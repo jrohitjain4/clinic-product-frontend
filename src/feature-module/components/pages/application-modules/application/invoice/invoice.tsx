@@ -14,8 +14,8 @@ const Invoice = () => {
     {/* Start Content */}
     <div className="content content-two">
       {/* Page Header */}
-      <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3">
-        <div className="flex-grow-1">
+      <div className="d-flex align-items-sm-center flex-sm-row g-2 flex-column gap-2 pb-3">
+        <div className="flex-grow g-2-1">
           <h4 className="fs-18 fw-semibold mb-0">Invoices</h4>
         </div>
         <div className="text-end">
@@ -31,7 +31,7 @@ const Invoice = () => {
       </div>
       {/* End Page Header */}
       {/* start row */}
-      <div className="row">
+      <div className="row g-2">
         <div className="col-xl-3 col-sm-6">
           <div className="card flex-fill">
             <div className="card-body">
@@ -195,10 +195,10 @@ const Invoice = () => {
       </div>
       {/* end row */}
       {/* start row */}
-      <div className="row">
+      <div className="row g-2">
         <div className="col-sm-12">
           <div>
-            <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
+            <div className="d-flex align-items-center justify-content-between flex-wrap row g-2-gap-3 mb-3">
               <h5 className="d-flex align-items-center mb-0">
                 Invoices
                 <span className="badge bg-soft-dark ms-2 text-dark fs-12">
@@ -914,7 +914,7 @@ const Invoice = () => {
     {/* Footer Start */}
     <div className="footer text-center bg-white p-2 border-top">
       <p className="text-dark mb-0">
-        2025 ©
+        2025 
         <Link to="#" className="link-primary">
           Docyari
         </Link>

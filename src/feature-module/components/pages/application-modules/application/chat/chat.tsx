@@ -352,7 +352,7 @@ const Chat = () => {
                                   Hey mark! Did you check out the new logo design?
                                 </p>
                               </div>
-                              <div className="ms-2">
+                              <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
                                 <Link
                                   to="#"
                                   data-bs-toggle="dropdown"
@@ -426,7 +426,7 @@ const Chat = () => {
                               <h6 className="fs-14 fw-semibold mb-0">You</h6>
                             </div>
                             <div className="d-flex align-items-center">
-                              <div className="me-2">
+                              <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
                                 <Link
                                   to="#"
                                   data-bs-toggle="dropdown"
@@ -531,7 +531,7 @@ const Chat = () => {
                                   </span>
                                 </div>
                               </div>
-                              <div className="ms-2">
+                              <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
                                 <Link
                                   to="#"
                                   data-bs-toggle="dropdown"
@@ -610,7 +610,7 @@ const Chat = () => {
                               <h6 className="fs-14 fw-semibold mb-0">You</h6>
                             </div>
                             <div className="d-flex align-items-center">
-                              <div className="me-2">
+                              <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
                                 <Link
                                   to="#"
                                   data-bs-toggle="dropdown"
@@ -701,7 +701,7 @@ const Chat = () => {
                                   landing page. ??
                                 </p>
                               </div>
-                              <div className="ms-2">
+                              <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
                                 <Link
                                   to="#"
                                   data-bs-toggle="dropdown"
@@ -775,7 +775,7 @@ const Chat = () => {
                               <h6 className="fs-14 fw-semibold mb-0">You</h6>
                             </div>
                             <div className="d-flex align-items-center">
-                              <div className="me-2">
+                              <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
                                 <Link
                                   to="#"
                                   data-bs-toggle="dropdown"
@@ -864,7 +864,7 @@ const Chat = () => {
                                   Hey mark! Did you check out the new logo design?
                                 </p>
                               </div>
-                              <div className="ms-2">
+                              <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
                                 <Link
                                   to="#"
                                   data-bs-toggle="dropdown"
@@ -951,7 +951,7 @@ const Chat = () => {
                         <div>
                           <Link
                             to="#"
-                            className="btn btn-icon btn-outline-light"
+                            className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                             data-bs-toggle="dropdown"
                             aria-label="more options"
                           >
@@ -1006,7 +1006,7 @@ const Chat = () => {
       {/* Footer Start */}
       <div className="footer text-center bg-white p-2 border-top">
         <p className="text-dark mb-0">
-          2025 ©{" "}
+          2025 {" "}
           <Link to="#" className="link-primary">
             Docyari
           </Link>

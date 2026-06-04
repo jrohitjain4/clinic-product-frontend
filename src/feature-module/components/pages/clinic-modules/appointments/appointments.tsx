@@ -133,7 +133,7 @@ const Appointments = () => {
         <div className="action-item">
           <button
             type="button"
-            className="btn btn-link p-0 text-dark"
+            className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
             data-bs-toggle="dropdown"
             aria-label="Actions"
           >
@@ -220,9 +220,7 @@ const Appointments = () => {
 
           {/* Filters Row */}
           <div className="d-flex align-items-center gap-2 mb-3 flex-wrap">
-            <div className="search-input">
-              <SearchInput value={searchText} onChange={setSearchText} />
-            </div>
+            
             <input
               type="text"
               className="form-control"
@@ -239,6 +237,13 @@ const Appointments = () => {
               value={filterDoctor}
               onChange={(e) => setFilterDoctor(e.target.value)}
             />
+            <input
+              type="date"
+              className="form-control"
+              style={{ maxWidth: 180 }}
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+            />
             <select
               className="form-select"
               style={{ maxWidth: 180 }}
@@ -252,13 +257,6 @@ const Appointments = () => {
               <option value="Checked Out">Checked Out</option>
               <option value="Cancelled">Cancelled</option>
             </select>
-            <input
-              type="date"
-              className="form-control"
-              style={{ maxWidth: 180 }}
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-            />
             {(filterPatient || filterDoctor || filterStatus || filterDate) && (
               <button
                 className="btn btn-outline-secondary btn-sm"

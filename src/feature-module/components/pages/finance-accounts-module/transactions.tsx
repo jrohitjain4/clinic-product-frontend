@@ -82,11 +82,7 @@ const TransactionsList = () => {
             <div className="d-flex align-items-center gap-2">
               <div className="search-set">
                 <div className="d-flex align-items-center flex-wrap gap-2">
-                  <div className="table-search d-flex align-items-center mb-0">
-                    <div className="search-input">
-                      <SearchInput value={searchText} onChange={setSearchText} />
-                    </div>
-                  </div>
+                  
                 </div>
               </div>
             </div>

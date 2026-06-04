@@ -130,7 +130,7 @@ export const SidebarData = [
           {
             label: "To Do",
             showSubRoute: false,
-            link: routes.todo,
+            link: routes.todoList,
             customSubmenuTwo: false,
             base: "todo",
           },

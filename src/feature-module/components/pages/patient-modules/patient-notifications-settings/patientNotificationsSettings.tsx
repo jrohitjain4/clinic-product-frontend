@@ -19,7 +19,7 @@ const PatientNotificationsSettings = () => {
       <div className="card">
         <div className="card-body">
           {/* end card body */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-lg-3">
               <div className="text-start">
                 <Link
@@ -56,7 +56,7 @@ const PatientNotificationsSettings = () => {
                   Notifications
                 </h5>
                 {/* Items */}
-                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 border mb-3 p-3 rounded">
+                <div className="d-flex align-items-center justify-content-between flex-wrap row g-2-gap-3 border mb-3 p-3 rounded">
                   <div className="d-flex align-items-center">
                     <span className="avatar avatar-lg border bg-light me-2">
                       <i className="ti ti-calendar-time text-dark fs-16" />
@@ -104,7 +104,7 @@ const PatientNotificationsSettings = () => {
                   </div>
                 </div>
                 {/* Items */}
-                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 border mb-3 p-3 rounded">
+                <div className="d-flex align-items-center justify-content-between flex-wrap row g-2-gap-3 border mb-3 p-3 rounded">
                   <div className="d-flex align-items-center">
                     <span className="avatar avatar-lg border bg-light me-2">
                       <i className="ti ti-calendar-x text-dark fs-16" />
@@ -150,7 +150,7 @@ const PatientNotificationsSettings = () => {
                   </div>
                 </div>
                 {/* Items */}
-                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 border mb-3 p-3">
+                <div className="d-flex align-items-center justify-content-between flex-wrap row g-2-gap-3 border mb-3 p-3">
                   <div className="d-flex align-items-center">
                     <span className="avatar avatar-lg border bg-light me-2">
                       <i className="ti ti-calendar-time text-dark fs-16" />
@@ -198,7 +198,7 @@ const PatientNotificationsSettings = () => {
                   </div>
                 </div>
                 {/* Items */}
-                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 border mb-3 p-3">
+                <div className="d-flex align-items-center justify-content-between flex-wrap row g-2-gap-3 border mb-3 p-3">
                   <div className="d-flex align-items-center">
                     <span className="avatar avatar-lg border bg-light me-2">
                       <i className="ti ti-activity-heartbeat text-dark fs-16" />
@@ -244,7 +244,7 @@ const PatientNotificationsSettings = () => {
                   </div>
                 </div>
                 {/* Items */}
-                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 border mb-3 p-3">
+                <div className="d-flex align-items-center justify-content-between flex-wrap row g-2-gap-3 border mb-3 p-3">
                   <div className="d-flex align-items-center">
                     <span className="avatar avatar-lg border bg-light me-2">
                       <i className="ti ti-file-dollar text-dark fs-16" />
@@ -292,7 +292,7 @@ const PatientNotificationsSettings = () => {
                   </div>
                 </div>
                 {/* Items */}
-                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 border mb-3 p-3">
+                <div className="d-flex align-items-center justify-content-between flex-wrap row g-2-gap-3 border mb-3 p-3">
                   <div className="d-flex align-items-center">
                     <span className="avatar avatar-lg border bg-light me-2">
                       <i className="ti ti-alert-octagon text-dark fs-16" />
@@ -350,7 +350,7 @@ const PatientNotificationsSettings = () => {
     {/* Footer Start */}
     <div className="footer text-center bg-white p-2 border-top">
       <p className="text-dark mb-0">
-        2025 ©
+        2025 
         <Link to="#" className="link-primary">
           Docyari
         </Link>

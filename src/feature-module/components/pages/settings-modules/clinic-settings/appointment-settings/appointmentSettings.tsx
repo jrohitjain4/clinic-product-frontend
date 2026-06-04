@@ -40,7 +40,7 @@ const AppointmentSettings = () => {
                     id="break-hours-section"
                   >
                     {/* start row */}
-                    <div className="row row-gap-2 align-items-center justify-content-between pb-3 mb-3 border-bottom">
+                    <div className="row g-2 row-gap-2 align-items-center justify-content-between pb-3 mb-3 border-bottom">
                       <div className="col-lg-11">
                         <h6 className="fs-14 fw-medium">
                           Automatically notify clients about upcoming
@@ -95,11 +95,11 @@ const AppointmentSettings = () => {
                     <div>
                       <h5 className="fw-bold mb-3">Automatic Reminders</h5>
                       <div className="reminder-list mb-3 border-bottom">
-                        <div className="row d-flex align-items-center mb-3 reminder-list-item">
+                        <div className="row g-2 d-flex align-items-center mb-3 reminder-list-item">
                           <div className="col-md-2">
                             <h6 className="fs-14 fw-medium mb-0">Reminder </h6>
                           </div>
-                          <div className="col-md-10 flex-grow-1">
+                          <div className="col-md-10 flex-grow g-2-1">
                             <div className="d-flex align-items-center justify-content-end">
                               <div className="me-2">
                                 <CommonSelect
@@ -140,11 +140,11 @@ const AppointmentSettings = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="row d-flex align-items-center mb-3 reminder-list-item">
+                        <div className="row g-2 d-flex align-items-center mb-3 reminder-list-item">
                           <div className="col-md-2">
                             <h6 className="fs-14 fw-medium mb-0">Reminder </h6>
                           </div>
-                          <div className="col-md-10 flex-grow-1">
+                          <div className="col-md-10 flex-grow g-2-1">
                             <div className="d-flex align-items-center justify-content-end">
                               <div className="me-2">
                                 <CommonSelect
@@ -191,7 +191,7 @@ const AppointmentSettings = () => {
                           <h5 className="fw-bold mb-0">Manual Reminders</h5>
                         </div>
                         {/* start row */}
-                        <div className="row align-items-center row-gap-2 mb-3">
+                        <div className="row g-2 align-items-center row-gap-2 mb-3">
                           <div className="col-lg-6">
                             <p className="text-dark fw-medium mb-0">
                               SMS Reminder Template
@@ -217,7 +217,7 @@ const AppointmentSettings = () => {
                         </div>
                         {/* end row */}
                         {/* start row */}
-                        <div className="row align-items-center row-gap-2 mb-3">
+                        <div className="row g-2 align-items-center row-gap-2 mb-3">
                           <div className="col-lg-6">
                             <p className="text-dark fw-medium mb-0">
                               Email Reminder Template
@@ -244,7 +244,7 @@ const AppointmentSettings = () => {
                         {/* end row */}
                         <div className="border-top pt-3">
                           {/* start row */}
-                          <div className="row align-items-center mb-3">
+                          <div className="row g-2 align-items-center mb-3">
                             <div className="col-9">
                               <p className="mb-0 text-dark fw-medium">
                                 Send reminder automatically upon new appointment
@@ -265,7 +265,7 @@ const AppointmentSettings = () => {
                           </div>
                           {/* start end */}
                           {/* start row */}
-                          <div className="row align-items-center row-gap-2">
+                          <div className="row g-2 align-items-center row-gap-2">
                             <div className="col-xl-5 col-lg-3">
                               <p className="text-dark fw-medium mb-0">
                                 Reminder
@@ -318,7 +318,7 @@ const AppointmentSettings = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 
             <Link to="#" className="link-primary">
               Docyari
             </Link>

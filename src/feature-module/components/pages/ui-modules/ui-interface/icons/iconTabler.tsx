@@ -231,9 +231,9 @@ const IconTabler = () => {
                           title="ti ti-discount"
                         />
                       </div>
-                      <div className="icons-list-item">
+                      <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
                         <i
-                          className="ti ti-dots-vertical"
+                          className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                           data-bs-toggle="tooltip"
                           title="ti ti-dots-vertical"
                         />

@@ -99,7 +99,7 @@ const ProfileSettings = () => {
                               </label>
                             </div>
                             {/* end col */}
-                            <div className="col-lg-10">
+                            <div className="col-lg-12">
                               <div className="profile-container">
                                 <ImageWithBasePath
                                   src="assets/img/users/user-08.jpg"
@@ -136,7 +136,7 @@ const ProfileSettings = () => {
                               </label>
                             </div>
                             {/* end col */}
-                            <div className="col-lg-8">
+                            <div className="col-lg-12">
                               <input type="text" className="form-control" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
@@ -154,7 +154,7 @@ const ProfileSettings = () => {
                               </label>
                             </div>
                             {/* end col */}
-                            <div className="col-lg-8">
+                            <div className="col-lg-12">
                               <input type="text" className="form-control" value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
@@ -171,7 +171,7 @@ const ProfileSettings = () => {
                               </label>
                             </div>
                             {/* end col */}
-                            <div className="col-lg-8">
+                            <div className="col-lg-12">
                               <input type="email" className="form-control" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
@@ -189,7 +189,7 @@ const ProfileSettings = () => {
                               </label>
                             </div>
                             {/* end col */}
-                            <div className="col-lg-8">
+                            <div className="col-lg-12">
                               <input type="text" className="form-control" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
@@ -213,7 +213,7 @@ const ProfileSettings = () => {
                               </label>
                             </div>
                             {/* end col */}
-                            <div className="col-lg-8">
+                            <div className="col-lg-12">
                               <input type="text" className="form-control" value={formData.addressLine1} onChange={e => setFormData({ ...formData, addressLine1: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
@@ -230,7 +230,7 @@ const ProfileSettings = () => {
                               </label>
                             </div>
                             {/* end col */}
-                            <div className="col-lg-8">
+                            <div className="col-lg-12">
                               <input type="text" className="form-control" value={formData.addressLine2} onChange={e => setFormData({ ...formData, addressLine2: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
@@ -245,7 +245,7 @@ const ProfileSettings = () => {
                               <label className="form-label mb-0">Country</label>
                             </div>
                             {/* end col */}
-                            <div className="col-lg-8">
+                            <div className="col-lg-12">
                               <CommonSelect
                                 options={Country}
                                 className="select"
@@ -264,7 +264,7 @@ const ProfileSettings = () => {
                               <label className="form-label mb-0">State</label>
                             </div>
                             {/* end col */}
-                            <div className="col-lg-8">
+                            <div className="col-lg-12">
                               <CommonSelect
                                 options={State}
                                 className="select"
@@ -283,7 +283,7 @@ const ProfileSettings = () => {
                               <label className="form-label mb-0">City</label>
                             </div>
                             {/* end col */}
-                            <div className="col-lg-8">
+                            <div className="col-lg-12">
                               <CommonSelect
                                 options={City}
                                 className="select"
@@ -302,7 +302,7 @@ const ProfileSettings = () => {
                               <label className="form-label mb-0">Pincode</label>
                             </div>
                             {/* end col */}
-                            <div className="col-lg-8">
+                            <div className="col-lg-12">
                               <input type="text" className="form-control" value={formData.pincode} onChange={e => setFormData({ ...formData, pincode: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
@@ -324,7 +324,7 @@ const ProfileSettings = () => {
                                 Clinic Logo
                               </label>
                             </div>
-                            <div className="col-lg-10">
+                            <div className="col-lg-12">
                               <div className="profile-container d-flex align-items-center justify-content-center bg-light" style={{ width: '100px', height: '100px', border: '1px dashed #ccc', borderRadius: '10px', overflow: 'hidden', position: 'relative' }}>
                                 <img
                                   src={logoPreview}
@@ -372,7 +372,7 @@ const ProfileSettings = () => {
                                 Clinic Name
                               </label>
                             </div>
-                            <div className="col-lg-8">
+                            <div className="col-lg-12">
                               <input type="text" className="form-control" value={formData.clinicName} onChange={e => setFormData({ ...formData, clinicName: e.target.value })} disabled={!isEditing} />
                             </div>
                           </div>
@@ -382,7 +382,7 @@ const ProfileSettings = () => {
                             <div className="col-lg-4">
                               <label className="form-label mb-0">GST Number</label>
                             </div>
-                            <div className="col-lg-8">
+                            <div className="col-lg-12">
                               <input type="text" className="form-control" value={formData.gstNo} onChange={e => setFormData({ ...formData, gstNo: e.target.value })} disabled={!isEditing} />
                             </div>
                           </div>

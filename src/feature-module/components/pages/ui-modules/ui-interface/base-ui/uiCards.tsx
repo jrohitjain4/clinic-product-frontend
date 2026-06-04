@@ -14,8 +14,8 @@ const UiCards = () => {
         {/* Start Content */}
         <div className="content">
           {/* Page Header */}
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3">
-            <div className="flex-grow-1">
+          <div className="d-flex align-items-sm-center flex-sm-row g-2 flex-column gap-2 pb-3">
+            <div className="flex-grow g-2-1">
               <h4 className="fs-18 fw-semibold mb-0">Cards</h4>
             </div>
             <div className="text-end">
@@ -32,7 +32,7 @@ const UiCards = () => {
           </div>
           {/* End Page Header */}
           {/* start row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-sm-6 col-lg-3">
               <div className="card d-block">
                 <ImageWithBasePath
@@ -153,7 +153,7 @@ const UiCards = () => {
             {/* end col */}
           </div>
           {/* end row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-sm-6">
               <div className="card card-body">
                 <h5 className="card-title mb-2">Special title treatment</h5>
@@ -184,7 +184,7 @@ const UiCards = () => {
             {/* end col */}
           </div>
           {/* end row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-md-4">
               <div className="card">
                 <h5 className="card-header bg-light">Featured</h5>
@@ -241,14 +241,14 @@ const UiCards = () => {
             {/* end col */}
           </div>
           {/* end row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-12">
               <h4 className="mb-3 mt-3">Card Colored</h4>
             </div>
             {/* end col */}
           </div>
           {/* end row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-lg-4 col-sm-6">
               <div className="card text-bg-secondary">
                 <div className="card-body">
@@ -368,7 +368,7 @@ const UiCards = () => {
             {/* end col */}
           </div>
           {/* end row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-lg-4 col-sm-6">
               <div className="card text-bg-secondary bg-gradient">
                 <div className="card-body">
@@ -485,14 +485,14 @@ const UiCards = () => {
             {/* end col */}
           </div>
           {/* end row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-12">
               <h4 className="mb-3 mt-3">Card Bordered</h4>
             </div>
             {/* end col */}
           </div>
           {/* end row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-md-4">
               <div className="card border-secondary border">
                 <div className="card-body">
@@ -559,14 +559,14 @@ const UiCards = () => {
             {/* end col */}
           </div>
           {/* end row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-12">
               <h4 className="mb-3 mt-3">Horizontal Card</h4>
             </div>
             {/* end col */}
           </div>
           {/* end row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-lg-6">
               <div className="card">
                 <div className="row g-0 align-items-center">
@@ -636,14 +636,14 @@ const UiCards = () => {
             {/* end col */}
           </div>
           {/* end row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-12">
               <h4 className="mb-3 mt-3">Stretched link</h4>
             </div>
             {/* end col */}
           </div>
           {/* end row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-sm-6 col-lg-3">
               <div className="card">
                 <ImageWithBasePath
@@ -728,14 +728,14 @@ const UiCards = () => {
             {/* end col */}
           </div>
           {/* end row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-12">
               <h4 className="mb-3 mt-3">Card Group</h4>
             </div>
             {/* end col */}
           </div>
           {/* end row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-12">
               <div className="card-group mb-3">
                 <div className="card d-block">

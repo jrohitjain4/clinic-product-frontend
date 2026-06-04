@@ -51,7 +51,7 @@ const HolidaysList = () => {
           <Link
             to="#"
             data-bs-toggle="dropdown"
-            className="btn p-1 btn-white border"
+            className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
           >
             <i className="ti ti-dots-vertical" />
           </Link>

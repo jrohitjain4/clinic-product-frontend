@@ -73,8 +73,8 @@ const FileManager = () => {
           <div className="content pb-0">
  
   {/* Page Header */}
-  <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3">
-    <div className="flex-grow-1">
+  <div className="d-flex align-items-sm-center flex-sm-row g-2 flex-column gap-2 pb-3">
+    <div className="flex-grow g-2-1">
       <h4 className="fs-18 fw-semibold mb-0">File Manager</h4>
     </div>
     <div className="text-end">
@@ -147,7 +147,7 @@ const FileManager = () => {
 
 
             {/* start row */}
-            <div className="row">
+            <div className="row g-2">
               <div className="col-lg-3 col-md-6 d-flex">
                 <div className="card flex-fill">
                   <div className="card-body">
@@ -195,7 +195,7 @@ const FileManager = () => {
                         </ul>
                       </div>
                     </div>
-                    <div className="progress progress-xs flex-grow-1 mb-2">
+                    <div className="progress progress-xs flex-grow g-2-1 mb-2">
                       <div
                         className="progress-bar bg-pink rounded"
                         role="progressbar"
@@ -262,7 +262,7 @@ const FileManager = () => {
                         </ul>
                       </div>
                     </div>
-                    <div className="progress progress-xs flex-grow-1 mb-2">
+                    <div className="progress progress-xs flex-grow g-2-1 mb-2">
                       <div
                         className="progress-bar bg-pink rounded"
                         role="progressbar"
@@ -329,7 +329,7 @@ const FileManager = () => {
                         </ul>
                       </div>
                     </div>
-                    <div className="progress progress-xs flex-grow-1 mb-2">
+                    <div className="progress progress-xs flex-grow g-2-1 mb-2">
                       <div
                         className="progress-bar bg-purple rounded"
                         role="progressbar"
@@ -396,7 +396,7 @@ const FileManager = () => {
                         </ul>
                       </div>
                     </div>
-                    <div className="progress progress-xs flex-grow-1 mb-2">
+                    <div className="progress progress-xs flex-grow g-2-1 mb-2">
                       <div
                         className="progress-bar bg-purple rounded"
                         role="progressbar"
@@ -419,7 +419,7 @@ const FileManager = () => {
             </div>
             {/* end row */}
             {/* start row */}
-            <div className="row">
+            <div className="row g-2">
               {/* Start Sidebar */}
               <div className="col-xl-3">
                 <div className="card">
@@ -639,7 +639,7 @@ const FileManager = () => {
                     </div>
                   </div>
                   {/* start row */}
-                  <div className="row row-cols-xxl-5 row-cols-xl-3 row-cols-sm-3 row-cols-1 justify-content-center">
+                  <div className="row g-2 row-cols-xxl-5 row-cols-xl-3 row-cols-sm-3 row-cols-1 justify-content-center">
                     <div className="col d-flex">
                       <div className="card position-relative flex-fill">
                         <div className="card-body text-center">
@@ -830,7 +830,7 @@ const FileManager = () => {
                     </div>
                   </div>
                   {/* start row */}
-                  <div className="row">
+                  <div className="row g-2">
                     <div className="col-lg-4 col-md-6">
                       <div className="bg-white d-flex align-items-center justify-content-between border p-2 rounded mb-3">
                         <div className="d-flex align-items-center">
@@ -1286,7 +1286,7 @@ const FileManager = () => {
                     </div>
                   </div>
                   {/* start row */}
-                  <div className="row">
+                  <div className="row g-2">
                     <div className="col-lg-4 col-md-6">
                       <div className="rounded border mb-3">
                         <div className="bg-transparent-dark p-5 d-flex align-items-center justify-content-center rounded-top">
@@ -2251,7 +2251,7 @@ const FileManager = () => {
           {/* Footer Start */}
           <div className="footer text-center bg-white p-2 border-top">
             <p className="text-dark mb-0">
-              2025 ©
+              2025 
               <Link to="#" className="link-primary">
                 Docyari
               </Link>
@@ -2344,7 +2344,7 @@ const FileManager = () => {
                         alt="img"
                       />
                     </span>
-                    <div className="ms-2 flex-grow-1">
+                    <div className="ms-2 flex-grow g-2-1">
                       <p className="mb-0">
                         <span className="text-dark">Mercy</span> Added New File
                         in <span className="text-dark">Drive</span>
@@ -2367,7 +2367,7 @@ const FileManager = () => {
                         alt="img"
                       />
                     </span>
-                    <div className="ms-2 flex-grow-1">
+                    <div className="ms-2 flex-grow g-2-1">
                       <p className="mb-0">
                         <span className="text-dark">Druman</span> Added New File
                         in <span className="text-dark">ROOT FOLDER</span>
@@ -2407,7 +2407,7 @@ const FileManager = () => {
                         alt="img"
                       />
                     </span>
-                    <div className="ms-2 flex-grow-1">
+                    <div className="ms-2 flex-grow g-2-1">
                       <p className="mb-0">
                         <span className="text-dark">Mercy</span> Added New File
                         in <span className="text-dark">Personal Assets</span>
@@ -2430,7 +2430,7 @@ const FileManager = () => {
                         alt="img"
                       />
                     </span>
-                    <div className="ms-2 flex-grow-1">
+                    <div className="ms-2 flex-grow g-2-1">
                       <p className="mb-0">
                         <span className="text-dark">Jackson</span> Added New
                         File in <span className="text-dark">Drive</span>

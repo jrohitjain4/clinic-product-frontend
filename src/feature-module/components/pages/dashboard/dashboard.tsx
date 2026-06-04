@@ -151,7 +151,7 @@ const Dashboard = () => {
           )}
 
           {/* start row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-xl-3 col-md-6">
               <div className="position-relative border card rounded-2 shadow-sm">
                 <ImageWithBasePath
@@ -297,7 +297,7 @@ const Dashboard = () => {
           </div>
           {/* end row */}
           {/* row start */}
-          <div className="row">
+          <div className="row g-2">
             {/* col start */}
             <div className="col-xl-8">
               {/* card start */}
@@ -332,7 +332,7 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <div className="card-body pb-0">
-                  <div className="row row-gap-3 mb-2">
+                  <div className="row g-2 row-gap-3 mb-2">
                     <div className="col-md-3 col-sm-6">
                       <div className="bg-light border p-2 text-center rounded-2">
                         <p className="mb-1 text-truncate">
@@ -408,7 +408,7 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <div className="card-body">
-                  <div className="row row-gap-3">
+                  <div className="row g-2 row-gap-3">
                     <div className="col-md-4">
                       <div className="border shadow-sm p-3 rounded-2">
                         <div className="d-flex align-items-center mb-3">
@@ -636,7 +636,7 @@ const Dashboard = () => {
           </div>
           {/* end row */}
           {/* start row */}
-          <div className="row">
+          <div className="row g-2">
             {/* col start */}
             <div className="col-xl-4 d-flex">
               <div className="card shadow-sm flex-fill w-100">
@@ -842,7 +842,7 @@ const Dashboard = () => {
           </div>
           {/* end row */}
           {/* row start */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-12 d-flex">
               <div className="card shadow-sm flex-fill w-100">
                 <div className="card-header d-flex align-items-center justify-content-between">
@@ -1173,7 +1173,7 @@ const Dashboard = () => {
           </div>
           {/* row end */}
           {/* row start */}
-          <div className="row">
+          <div className="row g-2">
             {/* col start */}
             <div className="col-xl-4 d-flex">
               <div className="card shadow-sm flex-fill w-100">

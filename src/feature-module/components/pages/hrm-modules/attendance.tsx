@@ -62,11 +62,7 @@ const AttendanceList = () => {
           <div className="d-flex align-items-center justify-content-between flex-wrap">
             <div className="search-set mb-3">
               <div className="d-flex align-items-center">
-                <div className="table-search d-flex align-items-center mb-0 me-2">
-                  <div className="search-input">
-                    <SearchInput value={searchText} onChange={handleSearch} />
-                  </div>
-                </div>
+                
                 <div className="d-flex right-content align-items-center flex-wrap">
                   <DatePicker
                     picker="month"

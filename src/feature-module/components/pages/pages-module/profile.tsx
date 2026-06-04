@@ -30,7 +30,7 @@ const Profile = () => {
                       </label>
                     </div>
                     {/* end col */}
-                    <div className="col-lg-10">
+                    <div className="col-lg-12">
                       <div className="profile-container">
                         <ImageWithBasePath
                           src="assets/img/users/user-08.jpg"
@@ -66,7 +66,7 @@ const Profile = () => {
                       </label>
                     </div>
                     {/* end col */}
-                    <div className="col-lg-8">
+                    <div className="col-lg-12">
                       <input type="text" className="form-control" />
                     </div>
                     {/* end col */}
@@ -83,7 +83,7 @@ const Profile = () => {
                       </label>
                     </div>
                     {/* end col */}
-                    <div className="col-lg-8">
+                    <div className="col-lg-12">
                       <input type="text" className="form-control" />
                     </div>
                     {/* end col */}
@@ -100,7 +100,7 @@ const Profile = () => {
                       </label>
                     </div>
                     {/* end col */}
-                    <div className="col-lg-8">
+                    <div className="col-lg-12">
                       <input type="text" className="form-control" />
                     </div>
                     {/* end col */}
@@ -117,7 +117,7 @@ const Profile = () => {
                       </label>
                     </div>
                     {/* end col */}
-                    <div className="col-lg-8">
+                    <div className="col-lg-12">
                       <input type="text" className="form-control" />
                     </div>
                     {/* end col */}
@@ -139,7 +139,7 @@ const Profile = () => {
                       <label className="form-label mb-0">Address Line 1</label>
                     </div>
                     {/* end col */}
-                    <div className="col-lg-8">
+                    <div className="col-lg-12">
                       <input type="text" className="form-control" />
                     </div>
                     {/* end col */}
@@ -154,7 +154,7 @@ const Profile = () => {
                       <label className="form-label mb-0">Address Line 2</label>
                     </div>
                     {/* end col */}
-                    <div className="col-lg-8">
+                    <div className="col-lg-12">
                       <input type="text" className="form-control" />
                     </div>
                     {/* end col */}
@@ -169,7 +169,7 @@ const Profile = () => {
                       <label className="form-label mb-0">Country</label>
                     </div>
                     {/* end col */}
-                    <div className="col-lg-8">
+                    <div className="col-lg-12">
                       <CommonSelect
                         options={Country}
                         className="select"
@@ -188,7 +188,7 @@ const Profile = () => {
                       <label className="form-label mb-0">State</label>
                     </div>
                     {/* end col */}
-                    <div className="col-lg-8">
+                    <div className="col-lg-12">
                       <CommonSelect
                         options={State}
                         className="select"
@@ -207,7 +207,7 @@ const Profile = () => {
                       <label className="form-label mb-0">City</label>
                     </div>
                     {/* end col */}
-                    <div className="col-lg-8">
+                    <div className="col-lg-12">
                       <CommonSelect
                         options={City}
                         className="select"
@@ -226,7 +226,7 @@ const Profile = () => {
                       <label className="form-label mb-0">Pincode</label>
                     </div>
                     {/* end col */}
-                    <div className="col-lg-8">
+                    <div className="col-lg-12">
                       <input type="text" className="form-control" />
                     </div>
                     {/* end col */}
@@ -327,7 +327,7 @@ const Profile = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 
             <Link to="#" className="link-primary">
               Docyari
             </Link>

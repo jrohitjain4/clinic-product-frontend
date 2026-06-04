@@ -179,7 +179,7 @@ const DesignationList = () => {
     {
       title: "Department",
       dataIndex: "departmentName",
-      render: (text: string) => text || <span className="text-muted">—</span>,
+      render: (text: string) => text || <span className="text-muted"></span>,
     },
     {
       title: "CreatedDate",
@@ -199,7 +199,7 @@ const DesignationList = () => {
     {
       title: "",
       render: (_: any, record: Designation) => (
-        <div className="action-item">
+        <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
           <Link to="#" data-bs-toggle="dropdown"><i className="ti ti-dots-vertical" /></Link>
           <ul className="dropdown-menu">
             <li>
@@ -249,9 +249,7 @@ const DesignationList = () => {
           {/* Filters */}
           <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
             <div className="search-set">
-              <div className="search-input">
-                <SearchInput value={searchText} onChange={setSearchText} />
-              </div>
+              
             </div>
             <div className="d-flex table-dropdown right-content align-items-center flex-wrap row-gap-3">
               <div className="dropdown me-2">
@@ -301,7 +299,7 @@ const DesignationList = () => {
           </div>
         </div>
         <div className="footer text-center bg-white p-2 border-top">
-          <p className="text-dark mb-0">2025 © <Link to="#" className="link-primary">Docyari</Link>, All Rights Reserved</p>
+          <p className="text-dark mb-0">2025  <Link to="#" className="link-primary">Docyari</Link>, All Rights Reserved</p>
         </div>
       </div>
 

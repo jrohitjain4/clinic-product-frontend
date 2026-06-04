@@ -160,14 +160,14 @@ const LeavesList = () => {
     <>
       <div className="page-wrapper">
         <div className="content">
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
-            <div className="flex-grow-1">
+          <div className="d-flex align-items-sm-center flex-sm-row g-2 flex-column gap-2 mb-3 pb-3 border-bottom">
+            <div className="flex-grow g-2-1">
               <h4 className="fw-bold mb-0">Admin Leaves</h4>
             </div>
           </div>
 
           {/* Stats row */}
-          <div className="row mb-3">
+          <div className="row g-2 mb-3">
             <div className="col-lg-3">
               <div className="card">
                 <div className="card-body d-flex align-items-center justify-content-between">
@@ -224,9 +224,7 @@ const LeavesList = () => {
 
           <div className="d-flex align-items-center justify-content-between flex-wrap mb-3">
             <div className="search-set">
-              <div className="search-input">
-                <SearchInput value={searchText} onChange={handleSearch} />
-              </div>
+              
             </div>
           </div>
 

@@ -92,7 +92,7 @@ const DoctorDahboard = () => {
           </div>
           {/* End Page Header */}
           {/* row start */}
-          <div className="row">
+          <div className="row g-2">
             {/* col start */}
             <div className="col-xl-4 d-flex">
               <div className="card shadow-sm flex-fill w-100">
@@ -183,7 +183,7 @@ const DoctorDahboard = () => {
           </div>
           {/* row end */}
           {/* row start */}
-          <div className="row">
+          <div className="row g-2">
             {/* col start */}
             <div className="col-xl-4 d-flex">
               {/* card start */}
@@ -248,7 +248,7 @@ const DoctorDahboard = () => {
                       06:30 PM
                     </p>
                   </div>
-                  <div className="row">
+                  <div className="row g-2">
                     <div className="col">
                       <h6 className="fs-13 fw-semibold mb-1">Department</h6>
                       <p>Cardiology</p>
@@ -331,7 +331,7 @@ const DoctorDahboard = () => {
           </div>
           {/* row end */}
           {/* row start */}
-          <div className="row row-cols-1 row-cols-xl-6 row-cols-md-3 row-cols-sm-2">
+          <div className="row g-2 row-cols-1 row-cols-xl-6 row-cols-md-3 row-cols-sm-2">
             {/* col start */}
             <div className="col">
               <div className="card shadow-sm">
@@ -431,7 +431,7 @@ const DoctorDahboard = () => {
           </div>
           {/* row start */}
           {/* row start */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-12 d-flex">
               <div className="card shadow-sm flex-fill w-100">
                 <div className="card-header d-flex align-items-center justify-content-between">
@@ -516,7 +516,7 @@ const DoctorDahboard = () => {
                             <Link
                               to="#"
                               data-bs-toggle="dropdown"
-                              className="shadow-sm fs-14 d-inline-flex border rounded-2 p-1"
+                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                             >
                               <i className="ti ti-dots-vertical" />
                             </Link>
@@ -584,7 +584,7 @@ const DoctorDahboard = () => {
                             <Link
                               to="#"
                               data-bs-toggle="dropdown"
-                              className="shadow-sm fs-14 d-inline-flex border rounded-2 p-1"
+                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                             >
                               <i className="ti ti-dots-vertical" />
                             </Link>
@@ -652,7 +652,7 @@ const DoctorDahboard = () => {
                             <Link
                               to="#"
                               data-bs-toggle="dropdown"
-                              className="shadow-sm fs-14 d-inline-flex border rounded-2 p-1"
+                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                             >
                               <i className="ti ti-dots-vertical" />
                             </Link>
@@ -720,7 +720,7 @@ const DoctorDahboard = () => {
                             <Link
                               to="#"
                               data-bs-toggle="dropdown"
-                              className="shadow-sm fs-14 d-inline-flex border rounded-2 p-1"
+                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                             >
                               <i className="ti ti-dots-vertical" />
                             </Link>
@@ -788,7 +788,7 @@ const DoctorDahboard = () => {
                             <Link
                               to="#"
                               data-bs-toggle="dropdown"
-                              className="shadow-sm fs-14 d-inline-flex border rounded-2 p-1"
+                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                             >
                               <i className="ti ti-dots-vertical" />
                             </Link>
@@ -828,7 +828,7 @@ const DoctorDahboard = () => {
           </div>
           {/* row end */}
           {/* row start */}
-          <div className="row">
+          <div className="row g-2">
             {/* col start */}
             <div className="col-xl-4 d-flex">
               <div className="card shadow-sm flex-fill w-100">

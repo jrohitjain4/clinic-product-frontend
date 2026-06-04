@@ -49,7 +49,7 @@ const FormWizard = () => {
       case 1:
         return (
           <div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label className="col-md-3 col-form-label" htmlFor="userName">
                 User Name
               </label>
@@ -63,7 +63,7 @@ const FormWizard = () => {
                 />
               </div>
             </div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label className="col-md-3 col-form-label" htmlFor="password">
                 Password
               </label>
@@ -77,7 +77,7 @@ const FormWizard = () => {
                 />
               </div>
             </div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label className="col-md-3 col-form-label" htmlFor="confirm">
                 Re Password
               </label>
@@ -96,7 +96,7 @@ const FormWizard = () => {
       case 2:
         return (
           <div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label className="col-md-3 col-form-label" htmlFor="firstName">
                 First Name
               </label>
@@ -110,7 +110,7 @@ const FormWizard = () => {
                 />
               </div>
             </div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label className="col-md-3 col-form-label" htmlFor="lastName">
                 Last Name
               </label>
@@ -124,7 +124,7 @@ const FormWizard = () => {
                 />
               </div>
             </div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label className="col-md-3 col-form-label" htmlFor="email">
                 Email
               </label>
@@ -175,7 +175,7 @@ const FormWizard = () => {
       case 1:
         return (
           <div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label className="col-md-3 col-form-label" htmlFor="userName">
                 User Name
               </label>
@@ -189,7 +189,7 @@ const FormWizard = () => {
                 />
               </div>
             </div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label className="col-md-3 col-form-label" htmlFor="password">
                 Password
               </label>
@@ -203,7 +203,7 @@ const FormWizard = () => {
                 />
               </div>
             </div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label className="col-md-3 col-form-label" htmlFor="confirm">
                 Re Password
               </label>
@@ -222,7 +222,7 @@ const FormWizard = () => {
       case 2:
         return (
           <div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label className="col-md-3 col-form-label" htmlFor="firstName">
                 First Name
               </label>
@@ -236,7 +236,7 @@ const FormWizard = () => {
                 />
               </div>
             </div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label className="col-md-3 col-form-label" htmlFor="lastName">
                 Last Name
               </label>
@@ -250,7 +250,7 @@ const FormWizard = () => {
                 />
               </div>
             </div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label className="col-md-3 col-form-label" htmlFor="email">
                 Email
               </label>
@@ -301,7 +301,7 @@ const FormWizard = () => {
       case 1:
         return (
           <div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label
                 className="col-md-3 col-form-label"
                 htmlFor="userName-step3"
@@ -320,7 +320,7 @@ const FormWizard = () => {
                 />
               </div>
             </div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label
                 className="col-md-3 col-form-label"
                 htmlFor="password-step3"
@@ -339,7 +339,7 @@ const FormWizard = () => {
                 />
               </div>
             </div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label
                 className="col-md-3 col-form-label"
                 htmlFor="confirm-step3"
@@ -363,7 +363,7 @@ const FormWizard = () => {
       case 2:
         return (
           <div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label
                 className="col-md-3 col-form-label"
                 htmlFor="firstName-step3"
@@ -382,7 +382,7 @@ const FormWizard = () => {
                 />
               </div>
             </div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label
                 className="col-md-3 col-form-label"
                 htmlFor="lastName-step3"
@@ -401,7 +401,7 @@ const FormWizard = () => {
                 />
               </div>
             </div>
-            <div className="row mb-3">
+            <div className="row g-2 mb-3">
               <label className="col-md-3 col-form-label" htmlFor="email-step3">
                 Email
               </label>
@@ -494,8 +494,8 @@ const FormWizard = () => {
       <div className="page-wrapper">
         {/* Start Content */}
         <div className="content">
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3">
-            <div className="flex-grow-1">
+          <div className="d-flex align-items-sm-center flex-sm-row g-2 flex-column gap-2 pb-3">
+            <div className="flex-grow g-2-1">
               <h4 className="fs-18 fw-semibold mb-0">Form Wizard</h4>
             </div>
             <div className="text-end">
@@ -511,7 +511,7 @@ const FormWizard = () => {
             </div>
           </div>
           {/* start row */}
-          <div className="row">
+          <div className="row g-2">
             <div className="col-lg-6">
               <div className="card">
                 <div className="card-header border-bottom border-dashed d-flex align-items-center">

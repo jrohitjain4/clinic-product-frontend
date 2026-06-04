@@ -77,7 +77,7 @@ const DoctorsPrescriptions = () => {
     {
       title: "",
       render: (_: any, record: any) => (
-        <div className="action-item">
+        <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
           <Link to="#" data-bs-toggle="dropdown">
             <i className="ti ti-dots-vertical" />
           </Link>
@@ -139,9 +139,7 @@ const DoctorsPrescriptions = () => {
 
           <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
             <div className="search-set">
-              <div className="search-input">
-                <SearchInput value={searchText} onChange={setSearchText} />
-              </div>
+              
             </div>
           </div>
 

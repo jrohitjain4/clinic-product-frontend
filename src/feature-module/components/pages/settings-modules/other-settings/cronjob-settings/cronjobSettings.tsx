@@ -45,7 +45,7 @@ const CronjobSettings = () => {
                               </label>
                             </div>
                             {/* end col */}
-                            <div className="col-lg-10">
+                            <div className="col-lg-12">
                               <input type="text" className="form-control" />
                             </div>
                             {/* end col */}
@@ -62,7 +62,7 @@ const CronjobSettings = () => {
                               </label>
                             </div>
                             {/* end col */}
-                            <div className="col-lg-10">
+                            <div className="col-lg-12">
                               <TagInput
                                 initialTags={tags}
                                 onTagsChange={handleTagsChange}
@@ -102,7 +102,7 @@ const CronjobSettings = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 
             <Link to="#" className="link-primary">
               Docyari
             </Link>

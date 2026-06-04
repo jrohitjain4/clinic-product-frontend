@@ -31,7 +31,7 @@ const DoctorsPasswordSettings = () => {
           <div className="card">
             <div className="card-body">
               {/* end card body */}
-              <div className="row">
+              <div className="row g-2">
                 <div className="col-lg-3">
                   <div className="text-start">
                     <Link
@@ -64,10 +64,10 @@ const DoctorsPasswordSettings = () => {
                       Change Password
                     </h5>
                     {/* start row */}
-                    <div className="row border-bottom mb-3">
+                    <div className="row g-2 border-bottom mb-3">
                       <div className="col-lg-6">
                         {/* start row */}
-                        <div className="row align-items-center mb-3">
+                        <div className="row g-2 align-items-center mb-3">
                           <div className="col-lg-5">
                             <label className="form-label mb-0">
                               New Password{" "}
@@ -110,7 +110,7 @@ const DoctorsPasswordSettings = () => {
                       {/* end col */}
                       <div className="col-lg-6">
                         {/* start row */}
-                        <div className="row align-items-center mb-3">
+                        <div className="row g-2 align-items-center mb-3">
                           <div className="col-lg-5">
                             <label className="form-label mb-0">
                               Confirm Password
@@ -180,7 +180,7 @@ const DoctorsPasswordSettings = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 
             <Link to="#" className="link-primary">
               Docyari
             </Link>

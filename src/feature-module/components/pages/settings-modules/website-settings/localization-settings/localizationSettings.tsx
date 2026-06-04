@@ -99,7 +99,7 @@ const LocalizationSettings = () => {
                               <label className="form-label mb-0 mt-2">Clinic Overview</label>
                               <small className="d-block text-muted">100–150 words</small>
                             </div>
-                            <div className="col-lg-10">
+                            <div className="col-lg-12">
                               <textarea
                                 className="form-control"
                                 rows={5}

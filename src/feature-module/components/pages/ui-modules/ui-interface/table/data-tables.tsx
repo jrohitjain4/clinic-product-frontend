@@ -75,11 +75,7 @@ const DataTables = () => {
                 </div>
                 {/* end card header */}
                 <div className="card-body">
-                  <div className="table-search d-flex align-items-center">
-                    <div className="search-input">
-                      <SearchInput value={searchText} onChange={handleSearch} />
-                    </div>
-                  </div>
+                  
                   <div className="table-responsive">
                     <Datatable
                       columns={columns}

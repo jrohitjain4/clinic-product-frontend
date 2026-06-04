@@ -30,7 +30,7 @@ const InvoiceTemplatesSettings = () => {
               </div>
               <div className="card-body px-0 mx-3">
                 {/* start row */}
-                <div className="row gx-3">
+                <div className="row g-2 gx-3">
                   <div className="col-md-3">
                     <div className="card invoice-template bg-white">
                       <div className="card-body p-2">
@@ -183,7 +183,7 @@ const InvoiceTemplatesSettings = () => {
     {/* Footer Start */}
     <div className="footer text-center bg-white p-2 border-top">
       <p className="text-dark mb-0">
-        2025 ©
+        2025 
         <Link to="#" className="link-primary">
           Docyari
         </Link>

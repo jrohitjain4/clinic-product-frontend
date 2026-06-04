@@ -208,7 +208,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
     <div className="page-wrapper">
       <div className="content">
         <div className="row justify-content-center">
-          <div className="col-lg-10">
+          <div className="col-lg-12">
             <div className="mb-4">
               <h6 className="fw-bold mb-0 d-flex align-items-center">
                 <Link to={all_routes.patients} className="text-dark">

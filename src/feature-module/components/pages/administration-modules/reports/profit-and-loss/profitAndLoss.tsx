@@ -10,8 +10,8 @@ const ProfitAndLoss = () => {
         {/* Start Content */}
         <div className="content">
           {/* Start Page Header */}
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
-            <div className="flex-grow-1">
+          <div className="d-flex align-items-sm-center flex-sm-row g-2 flex-column gap-2 mb-3 pb-3 border-bottom">
+            <div className="flex-grow g-2-1">
               <h4 className="fw-bold mb-0">Profit &amp; Loss Report</h4>
             </div>
             <div className="text-end d-flex">
@@ -42,7 +42,7 @@ const ProfitAndLoss = () => {
           </div>
           {/* End Page Header */}
           {/* row start */}
-          <div className="row">
+          <div className="row g-2">
             {/* col start */}
             <div className="col-xl-3 col-md-6 d-flex">
               <div className="card shadow-sm flex-fill w-100">
@@ -375,7 +375,7 @@ const ProfitAndLoss = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 
             <Link to="#" className="link-primary">
               Docyari
             </Link>

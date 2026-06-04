@@ -19,8 +19,8 @@ const Todo = () => {
     {/* Start Content */}
     <div className="content">
       {/* Page Header */}
-      <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3">
-        <div className="flex-grow-1">
+      <div className="d-flex align-items-sm-center flex-sm-row g-2 flex-column gap-2 pb-3">
+        <div className="flex-grow g-2-1">
           <h4 className="fs-18 fw-semibold mb-0">Todo</h4>
         </div>
         <div className="text-end">
@@ -38,8 +38,26 @@ const Todo = () => {
         </div>
       </div>
       {/* End Page Header */}
-      <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-        <Link
+      <div className="d-flex align-items-center justify-content-end flex-wrap gap-3 mb-3">
+            <ul className="d-flex align-items-center flex-shrink-0 list-unstyled mb-0">
+          <li>
+            <Link
+              to={all_routes.todo}
+              className="btn btn-icon btn-sm bg-primary-subtle text-primary border border-primary active me-2"
+            >
+              <i className="ti ti-layout-grid" />
+            </Link>
+          </li>
+          <li>
+            <Link
+              to={all_routes.todoList}
+              className="btn btn-icon btn-sm bg-white text-dark border me-2"
+            >
+              <i className="ti ti-list-tree" />
+            </Link>
+          </li>
+        </ul>
+            <Link
           to="#"
           className="btn btn-sm btn-primary"
           data-bs-toggle="modal"
@@ -48,29 +66,11 @@ const Todo = () => {
           <i className="ti ti-circle-plus me-1" />
           Create New
         </Link>
-        <ul className="d-flex align-items-center flex-shrink-0 list-unstyled mb-0">
-          <li>
-            <Link
-              to={all_routes.todo}
-              className="btn btn-icon btn-sm bg-primary text-white active me-2"
-            >
-              <i className="ti ti-layout-grid" />
-            </Link>
-          </li>
-          <li>
-            <Link
-              to={all_routes.todoList}
-              className="btn btn-icon btn-sm bg-white text-dark me-2"
-            >
-              <i className="ti ti-list-tree" />
-            </Link>
-          </li>
-        </ul>
-      </div>
+          </div>
       <div className="card shadow-none mb-0">
         <div className="card-body">
           {/* start row */}
-          <div className="row gy-3 mb-3">
+          <div className="row g-2 gy-3 mb-3">
             <div className="col-sm-4">
               <div className="d-flex align-items-center">
                 <h6 className="fs-16 mb-0">Total Todo</h6>
@@ -98,7 +98,7 @@ const Todo = () => {
           {/* end row */}
           <div className="border-bottom mb-3">
             {/* start row */}
-            <div className="row">
+            <div className="row g-2">
               <div className="col-lg-12">
                 <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
                   <div className="input-group input-group-flat w-auto">
@@ -242,7 +242,7 @@ const Todo = () => {
             {/* Accordion Start */}
             <div className="accordion-item mb-3 border-0 border-bottom pb-2">
               {/* start row */}
-              <div className="row align-items-center mb-2 row-gap-3">
+              <div className="row g-2 align-items-center mb-2 row-gap-3">
                 <div className="col-lg-4 col-sm-6">
                   <div
                     className="accordion-header cursor-pointer"
@@ -297,9 +297,9 @@ const Todo = () => {
                   <div className="list-group list-group-flush">
                     <div className="list-group-item list-item-hover border rounded mb-2 p-3">
                       {/* start row */}
-                      <div className="row align-items-center row-gap-3">
+                      <div className="row g-2 align-items-center row-gap-3">
                         <div className="col-lg-6 col-md-7">
-                          <div className="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <div className="todo-inbox-check d-flex align-items-center flex-wrap row g-2-gap-3">
                             <span className="me-2 d-flex align-items-center">
                               <i className="ti ti-grid-dots text-dark" />
                             </span>
@@ -325,7 +325,7 @@ const Todo = () => {
                         </div>
                         {/* end col */}
                         <div className="col-lg-6 col-md-5">
-                          <div className="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <div className="d-flex align-items-center justify-content-md-end flex-wrap row g-2-gap-3">
                             <span className="badge badge-success bg-success me-2">
                               Projects
                             </span>
@@ -360,7 +360,7 @@ const Todo = () => {
                               <div className="dropdown ms-2">
                                 <Link
                                   to="#"
-                                  className="d-inline-flex align-items-center"
+                                  className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                                   data-bs-toggle="dropdown"
                                 >
                                   <i className="ti ti-dots-vertical" />
@@ -410,9 +410,9 @@ const Todo = () => {
                     </div>
                     <div className="list-group-item list-item-hover border rounded mb-2 p-3">
                       {/* start row */}
-                      <div className="row align-items-center row-gap-3">
+                      <div className="row g-2 align-items-center row-gap-3">
                         <div className="col-lg-6 col-md-7">
-                          <div className="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <div className="todo-inbox-check d-flex align-items-center flex-wrap row g-2-gap-3">
                             <span className="me-2 d-flex align-items-center">
                               <i className="ti ti-grid-dots text-dark" />
                             </span>
@@ -438,7 +438,7 @@ const Todo = () => {
                         </div>
                         {/* end col */}
                         <div className="col-lg-6 col-md-5">
-                          <div className="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <div className="d-flex align-items-center justify-content-md-end flex-wrap row g-2-gap-3">
                             <span className="badge bg-danger me-2">
                               Internal
                             </span>
@@ -473,7 +473,7 @@ const Todo = () => {
                               <div className="dropdown ms-2">
                                 <Link
                                   to="#"
-                                  className="d-inline-flex align-items-center"
+                                  className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                                   data-bs-toggle="dropdown"
                                 >
                                   <i className="ti ti-dots-vertical" />
@@ -523,9 +523,9 @@ const Todo = () => {
                     </div>
                     <div className="list-group-item list-item-hover border rounded mb-2 p-3">
                       {/* start row */}
-                      <div className="row align-items-center row-gap-3">
+                      <div className="row g-2 align-items-center row-gap-3">
                         <div className="col-lg-6 col-md-7">
-                          <div className="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3 todo-strike-content">
+                          <div className="todo-inbox-check d-flex align-items-center flex-wrap row g-2-gap-3 todo-strike-content">
                             <span className="me-2 d-flex align-items-center">
                               <i className="ti ti-grid-dots text-dark" />
                             </span>
@@ -552,7 +552,7 @@ const Todo = () => {
                         </div>
                         {/* end col */}
                         <div className="col-lg-6 col-md-5">
-                          <div className="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <div className="d-flex align-items-center justify-content-md-end flex-wrap row g-2-gap-3">
                             <span className="badge bg-info me-2">Reminder</span>
                             <span className="badge badge-soft-info d-flex align-items-center me-2">
                               <i className="fas fa-circle fs-6 me-1" />
@@ -585,7 +585,7 @@ const Todo = () => {
                               <div className="dropdown ms-2">
                                 <Link
                                   to="#"
-                                  className="d-inline-flex align-items-center"
+                                  className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                                   data-bs-toggle="dropdown"
                                 >
                                   <i className="ti ti-dots-vertical" />
@@ -641,7 +641,7 @@ const Todo = () => {
             {/* Accordion Start */}
             <div className="accordion-item mb-3 border-0 border-bottom pb-2">
               {/* start row */}
-              <div className="row align-items-center mb-2 row-gap-3">
+              <div className="row g-2 align-items-center mb-2 row-gap-3">
                 <div className="col-lg-4 col-sm-6">
                   <div
                     className="accordion-header cursor-pointer"
@@ -696,9 +696,9 @@ const Todo = () => {
                   <div className="list-group list-group-flush">
                     <div className="list-group-item list-item-hover border rounded mb-2 p-3">
                       {/* start row */}
-                      <div className="row align-items-center row-gap-3">
+                      <div className="row g-2 align-items-center row-gap-3">
                         <div className="col-lg-6 col-md-7">
-                          <div className="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <div className="todo-inbox-check d-flex align-items-center flex-wrap row g-2-gap-3">
                             <span className="me-2 d-flex align-items-center">
                               <i className="ti ti-grid-dots text-dark" />
                             </span>
@@ -724,7 +724,7 @@ const Todo = () => {
                         </div>
                         {/* end col */}
                         <div className="col-lg-6 col-md-5">
-                          <div className="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <div className="d-flex align-items-center justify-content-md-end flex-wrap row g-2-gap-3">
                             <span className="badge bg-info me-2">Reminder</span>
                             <span className="badge badge-soft-success d-inline-flex align-items-center me-2">
                               <i className="fas fa-circle fs-6 me-1" />
@@ -757,7 +757,7 @@ const Todo = () => {
                               <div className="dropdown ms-2">
                                 <Link
                                   to="#"
-                                  className="d-inline-flex align-items-center"
+                                  className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                                   data-bs-toggle="dropdown"
                                 >
                                   <i className="ti ti-dots-vertical" />
@@ -807,9 +807,9 @@ const Todo = () => {
                     </div>
                     <div className="list-group-item list-item-hover border rounded mb-2 p-3">
                       {/* start row */}
-                      <div className="row align-items-center row-gap-3">
+                      <div className="row g-2 align-items-center row-gap-3">
                         <div className="col-lg-6 col-md-7">
-                          <div className="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <div className="todo-inbox-check d-flex align-items-center flex-wrap row g-2-gap-3">
                             <span className="me-2 d-flex align-items-center">
                               <i className="ti ti-grid-dots text-dark" />
                             </span>
@@ -835,7 +835,7 @@ const Todo = () => {
                         </div>
                         {/* end col */}
                         <div className="col-lg-6 col-md-5">
-                          <div className="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <div className="d-flex align-items-center justify-content-md-end flex-wrap row g-2-gap-3">
                             <span className="badge bg-danger me-2">
                               Internal
                             </span>
@@ -870,7 +870,7 @@ const Todo = () => {
                               <div className="dropdown ms-2">
                                 <Link
                                   to="#"
-                                  className="d-inline-flex align-items-center"
+                                  className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                                   data-bs-toggle="dropdown"
                                 >
                                   <i className="ti ti-dots-vertical" />
@@ -926,7 +926,7 @@ const Todo = () => {
             {/* Accordion Start */}
             <div className="accordion-item border-0 pb-2">
               {/* start row */}
-              <div className="row align-items-center mb-2 row-gap-3">
+              <div className="row g-2 align-items-center mb-2 row-gap-3">
                 <div className="col-lg-4 col-sm-6">
                   <div
                     className="accordion-header cursor-pointer"
@@ -981,9 +981,9 @@ const Todo = () => {
                   <div className="list-group list-group-flush">
                     <div className="list-group-item list-item-hover border rounded mb-2 p-3">
                       {/* start row */}
-                      <div className="row align-items-center row-gap-3">
+                      <div className="row g-2 align-items-center row-gap-3">
                         <div className="col-lg-6 col-md-7">
-                          <div className="todo-inbox-check d-flex align-items-center flex-wrap row-gap-3">
+                          <div className="todo-inbox-check d-flex align-items-center flex-wrap row g-2-gap-3">
                             <span className="me-2 d-flex align-items-center">
                               <i className="ti ti-grid-dots text-dark" />
                             </span>
@@ -1009,7 +1009,7 @@ const Todo = () => {
                         </div>
                         {/* end col */}
                         <div className="col-lg-6 col-md-5">
-                          <div className="d-flex align-items-center justify-content-md-end flex-wrap row-gap-3">
+                          <div className="d-flex align-items-center justify-content-md-end flex-wrap row g-2-gap-3">
                             <span className="badge bg-info me-2">Social</span>
                             <span className="badge badge-soft-info d-flex align-items-center me-2">
                               <i className="fas fa-circle fs-6 me-1" />
@@ -1042,7 +1042,7 @@ const Todo = () => {
                               <div className="dropdown ms-2">
                                 <Link
                                   to="#"
-                                  className="d-inline-flex align-items-center"
+                                  className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                                   data-bs-toggle="dropdown"
                                 >
                                   <i className="ti ti-dots-vertical" />

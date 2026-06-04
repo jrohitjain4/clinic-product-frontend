@@ -40,6 +40,7 @@ const Datatable: React.FC<DatatableProps> = ({
   };
 
   return (
+    <div className="card overflow-hidden bg-white shadow-sm border"><div className="card-body p-0"><div className="table-responsive">
     <Table
       className="table table-nowrap datatable"
       rowKey={(record) => record.key ?? record.id ?? String(record.Name_Designation)}
@@ -54,7 +55,7 @@ const Datatable: React.FC<DatatableProps> = ({
         onShowSizeChange: (size) => setPageSize(size),
         total: filteredDataSource.length,
         showTotal: (total) => (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 16 }}>
             Rows per page:
             <Select
               value={pageSize}
@@ -73,6 +74,7 @@ const Datatable: React.FC<DatatableProps> = ({
         prevIcon: <i className="ti ti-chevron-left" />,
       }}
     />
+    </div></div></div>
   );
 };
 

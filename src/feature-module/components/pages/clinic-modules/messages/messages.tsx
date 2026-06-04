@@ -73,7 +73,7 @@ const Messages = () => {
                           </div>
                         </Link>
                         <div className="chat-dropdown">
-                          <Link className="#" to="#" data-bs-toggle="dropdown">
+                          <Link className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent" to="#" data-bs-toggle="dropdown">
                             <i className="ti ti-dots-vertical" />
                           </Link>
                           <ul className="dropdown-menu dropdown-menu-end p-3">
@@ -136,7 +136,7 @@ const Messages = () => {
                           </div>
                         </Link>
                         <div className="chat-dropdown">
-                          <Link className="#" to="#" data-bs-toggle="dropdown">
+                          <Link className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent" to="#" data-bs-toggle="dropdown">
                             <i className="ti ti-dots-vertical" />
                           </Link>
                           <ul className="dropdown-menu dropdown-menu-end p-3">
@@ -199,7 +199,7 @@ const Messages = () => {
                           </div>
                         </Link>
                         <div className="chat-dropdown">
-                          <Link className="#" to="#" data-bs-toggle="dropdown">
+                          <Link className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent" to="#" data-bs-toggle="dropdown">
                             <i className="ti ti-dots-vertical" />
                           </Link>
                           <ul className="dropdown-menu dropdown-menu-end p-3">
@@ -261,7 +261,7 @@ const Messages = () => {
                           </div>
                         </Link>
                         <div className="chat-dropdown">
-                          <Link className="#" to="#" data-bs-toggle="dropdown">
+                          <Link className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent" to="#" data-bs-toggle="dropdown">
                             <i className="ti ti-dots-vertical" />
                           </Link>
                           <ul className="dropdown-menu dropdown-menu-end p-3">
@@ -321,7 +321,7 @@ const Messages = () => {
                           </div>
                         </Link>
                         <div className="chat-dropdown">
-                          <Link className="#" to="#" data-bs-toggle="dropdown">
+                          <Link className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent" to="#" data-bs-toggle="dropdown">
                             <i className="ti ti-dots-vertical" />
                           </Link>
                           <ul className="dropdown-menu dropdown-menu-end p-3">
@@ -382,7 +382,7 @@ const Messages = () => {
                           </div>
                         </Link>
                         <div className="chat-dropdown">
-                          <Link className="#" to="#" data-bs-toggle="dropdown">
+                          <Link className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent" to="#" data-bs-toggle="dropdown">
                             <i className="ti ti-dots-vertical" />
                           </Link>
                           <ul className="dropdown-menu dropdown-menu-end p-3">
@@ -447,7 +447,7 @@ const Messages = () => {
                           </div>
                         </Link>
                         <div className="chat-dropdown">
-                          <Link className="#" to="#" data-bs-toggle="dropdown">
+                          <Link className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent" to="#" data-bs-toggle="dropdown">
                             <i className="ti ti-dots-vertical" />
                           </Link>
                           <ul className="dropdown-menu dropdown-menu-end p-3">
@@ -513,7 +513,7 @@ const Messages = () => {
                           </div>
                         </Link>
                         <div className="chat-dropdown">
-                          <Link className="#" to="#" data-bs-toggle="dropdown">
+                          <Link className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent" to="#" data-bs-toggle="dropdown">
                             <i className="ti ti-dots-vertical" />
                           </Link>
                           <ul className="dropdown-menu dropdown-menu-end p-3">
@@ -594,7 +594,7 @@ const Messages = () => {
                       </li>
                       <li>
                         <Link
-                          className="btn no-bg"
+                          className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                           to="#"
                           data-bs-toggle="dropdown"
                         >
@@ -757,7 +757,7 @@ const Messages = () => {
                           </div>
                           <div className="chat-actions">
                             <Link
-                              className="#"
+                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                               to="#"
                               data-bs-toggle="dropdown"
                             >
@@ -915,7 +915,7 @@ const Messages = () => {
                           </div>
                           <div className="chat-actions">
                             <Link
-                              className="#"
+                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                               to="#"
                               data-bs-toggle="dropdown"
                             >
@@ -987,7 +987,7 @@ const Messages = () => {
                         <div className="chat-info">
                           <div className="chat-actions">
                             <Link
-                              className="#"
+                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                               to="#"
                               data-bs-toggle="dropdown"
                             >
@@ -1258,7 +1258,7 @@ const Messages = () => {
                           </div>
                           <div className="chat-actions">
                             <Link
-                              className="#"
+                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                               to="#"
                               data-bs-toggle="dropdown"
                             >
@@ -1330,7 +1330,7 @@ const Messages = () => {
                         <div className="chat-info">
                           <div className="chat-actions">
                             <Link
-                              className="#"
+                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                               to="#"
                               data-bs-toggle="dropdown"
                             >
@@ -1607,7 +1607,7 @@ const Messages = () => {
                           </div>
                           <div className="chat-actions">
                             <Link
-                              className="#"
+                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                               to="#"
                               data-bs-toggle="dropdown"
                             >
@@ -1679,7 +1679,7 @@ const Messages = () => {
                         <div className="chat-info">
                           <div className="chat-actions">
                             <Link
-                              className="#"
+                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
                               to="#"
                               data-bs-toggle="dropdown"
                             >
@@ -2025,7 +2025,7 @@ const Messages = () => {
                         id="files"
                       />
                     </div>
-                    <div className="form-item">
+                    <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
                       <Link to="#" data-bs-toggle="dropdown">
                         <i className="ti ti-dots-vertical" />
                       </Link>

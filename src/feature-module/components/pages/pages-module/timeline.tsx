@@ -47,7 +47,7 @@ const Timeline = () => {
                     photos
                   </p>
                   {/* start row */}
-                  <div className="row">
+                  <div className="row g-2">
                     <div className="col-lg-3">
                       <div className="avatar avatar-xxxl rounded-3">
                         <ImageWithBasePath
@@ -101,7 +101,7 @@ const Timeline = () => {
                     Dr. Linda Carpenter&nbsp;Doctors Meeting
                   </p>
                   <p>
-                    April 12, 2025, 10:00 AM – 12:30 PM, Conference Room B /
+                    April 12, 2025, 10:00 AM  12:30 PM, Conference Room B /
                     Virtual via Zoom
                   </p>
                 </div>
@@ -147,10 +147,10 @@ const Timeline = () => {
                         </div>
                         <p>Rio Williams posted a new blog</p>
                         <p className="mb-2">
-                          “Stay informed on how to keep your clinic environment
+                          Stay informed on how to keep your clinic environment
                           safe. Rio shares essential COVID-19 safety protocols,
                           from sanitization tips to patient screening
-                          procedures.”
+                          procedures.
                         </p>
                         <Link to="#" className="btn btn-primary">
                           Read more <i className="ti ti-chevron-right ms-1" />
@@ -170,7 +170,7 @@ const Timeline = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 
             <Link to="#" className="link-primary">
               Docyari
             </Link>

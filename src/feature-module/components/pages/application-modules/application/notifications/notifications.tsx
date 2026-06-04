@@ -17,7 +17,7 @@ const Notifications = () => {
             <h4 className="fw-bold mb-0">Notification</h4>
           </div>
           {/* End Page Header */}
-          <div className="row">
+          <div className="row g-2">
             {/* Notifications */}
             <div className="col-xl-12">
               <div className="notification-header">
@@ -47,7 +47,7 @@ const Notifications = () => {
               <div className="notication-list">
                 {/* Notification 1 */}
                 <div className="notication-item bg-white">
-                  <div className="row align-items-center">
+                  <div className="row g-2 align-items-center">
                     <div className="col-lg-9">
                       <div className="notication-content">
                         <span>
@@ -86,7 +86,7 @@ const Notifications = () => {
                 </div>
                 {/* Notification 2 */}
                 <div className="notication-item bg-white">
-                  <div className="row align-items-center">
+                  <div className="row g-2 align-items-center">
                     <div className="col-lg-9">
                       <div className="notication-content">
                         <span>
@@ -127,7 +127,7 @@ const Notifications = () => {
                 </div>
                 {/* Notification 3 */}
                 <div className="notication-item bg-white">
-                  <div className="row align-items-center">
+                  <div className="row g-2 align-items-center">
                     <div className="col-lg-9">
                       <div className="notication-content">
                         <span>
@@ -166,7 +166,7 @@ const Notifications = () => {
                 </div>
                 {/* Notification 4 */}
                 <div className="notication-item bg-white">
-                  <div className="row align-items-center">
+                  <div className="row g-2 align-items-center">
                     <div className="col-lg-9">
                       <div className="notication-content">
                         <span>
@@ -205,7 +205,7 @@ const Notifications = () => {
                 </div>
                 {/* Notification 5 */}
                 <div className="notication-item bg-white">
-                  <div className="row align-items-center">
+                  <div className="row g-2 align-items-center">
                     <div className="col-lg-9">
                       <div className="notication-content">
                         <span>
@@ -251,7 +251,7 @@ const Notifications = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©{" "}
+            2025 {" "}
             <Link to="#" className="link-primary">
               Docyari
             </Link>

@@ -301,8 +301,8 @@ export default function ClinicLandingPage() {
 
                                 {/* Top Hero Card */}
                                 <div className="card border-0 shadow-sm mb-4">
-                                    <div className="card-body p-4 d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                                        <div className="d-flex align-items-center flex-sm-nowrap flex-wrap row-gap-3">
+                                    <div className="card-body p-4 d-flex align-items-center justify-content-between flex-wrap row g-2-gap-3">
+                                        <div className="d-flex align-items-center flex-sm-nowrap flex-wrap row g-2-gap-3">
                                             <div className="me-3 doctor-profile-img">
                                                 <img
                                                     src={selectedDocDetails.photo ? (
@@ -363,8 +363,8 @@ export default function ClinicLandingPage() {
                                     </div>
                                 </div>
 
-                                <div className="row">
-                                    <div className="col-lg-8">
+                                <div className="row g-2">
+                                    <div className="col-lg-12">
                                         <div className="card">
                                             <div className="card-body">
                                                 <h5 className="fw-bold mb-3">Availability</h5>
@@ -974,7 +974,7 @@ export default function ClinicLandingPage() {
                                 <div className="col-lg-4">
                                     <div className="card h-100 p-4 border rounded-4 shadow-sm bg-white d-flex flex-column">
                                         <h6 className="fw-bold mb-4" style={{ color: "#1d4ed8", letterSpacing: "0.5px" }}>CLINIC TIMINGS</h6>
-                                        <div className="d-flex flex-column gap-3 flex-grow-1">
+                                        <div className="d-flex flex-column gap-3 flex-grow g-2-1">
                                             {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map(day => (
                                                 <div key={day} className="d-flex justify-content-between align-items-center border-bottom pb-2">
                                                     <span className="fw-bold text-dark" style={{ fontSize: "14px" }}>{day}</span>
@@ -1151,8 +1151,8 @@ export default function ClinicLandingPage() {
                             </div>
 
                             <h6 className="fw-bold text-center text-uppercase mb-4 mt-4" style={{ color: "#1d4ed8", fontSize: "14px", letterSpacing: "0.5px" }}>FREQUENTLY ASKED QUESTIONS</h6>
-                            <div className="row justify-content-center mb-3">
-                                <div className="col-lg-10">
+                            <div className="row g-2 justify-content-center mb-3">
+                                <div className="col-lg-12">
                                     <div className="row g-2">
                                         {['How can I book an appointment?', 'What are the consultation charges?', 'Do you provide online consultation?', 'Is walk-in consultation available?', 'When will I get my test reports?', 'Do you provide home sample collection?'].map((q, i) => (
                                             <div key={i} className="col-md-6">

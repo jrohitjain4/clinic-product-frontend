@@ -62,7 +62,7 @@ const RolesAndPermissions = () => {
     {
       title: "",
       render: (role: any) => (
-        <div className="action-item">
+        <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
           <Link to="#" data-bs-toggle="dropdown">
             <i className="ti ti-dots-vertical" />
           </Link>
@@ -130,7 +130,7 @@ const RolesAndPermissions = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 
             <Link to="#" className="link-primary">
               Docyari
             </Link>

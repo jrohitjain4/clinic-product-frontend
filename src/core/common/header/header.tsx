@@ -367,7 +367,7 @@ const Header = () => {
                   <i className="ti ti-circle-filled d-flex bg-white rounded-circle border border-1 border-white" />
                 </span>
               </Link>
-              <div className="dropdown-menu dropdown-menu-end dropdown-menu-md p-2">
+              <div className="dropdown-menu dropdown-menu-end dropdown-menu-md p-2 border border-primary shadow-lg">
                 <div className="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
                   <ImageWithBasePath
                     src="assets/img/users/user-01.jpg"

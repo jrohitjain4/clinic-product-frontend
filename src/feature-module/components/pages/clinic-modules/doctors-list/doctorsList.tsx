@@ -32,10 +32,10 @@ const DoctorsList = () => {
       doctors.map((d, i) => ({
         key: d.id,
         Name_Designation: d.fullName,
-        Department: d.department?.name || "—",
-        Phone: d.phone || "—",
-        Email: d.email || "—",
-        Fees: d.consultationCharge != null ? `$${d.consultationCharge}` : "—",
+        Department: d.department?.name || "",
+        Phone: d.phone || "",
+        Email: d.email || "",
+        Fees: d.consultationCharge != null ? `$${d.consultationCharge}` : "",
         Status: d.status === "Active" ? "Available" : d.status,
         img:
           d.profileImage ||
@@ -117,7 +117,7 @@ const DoctorsList = () => {
               <i className="ti ti-calendar-cog" />
             </Link>
           </div>
-          <div className="action-item">
+          <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
             <Link to="#" data-bs-toggle="dropdown">
               <i className="ti ti-dots-vertical" />
             </Link>
@@ -160,7 +160,7 @@ const DoctorsList = () => {
               <h4 className="fw-bold mb-0">
                 Doctor List
                 <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                  Total Doctors : {loading ? "…" : doctors.length}
+                  Total Doctors : {loading ? "" : doctors.length}
                 </span>
               </h4>
             </div>
@@ -220,11 +220,7 @@ const DoctorsList = () => {
           <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
             <div className="search-set mb-3">
               <div className="d-flex align-items-center flex-wrap gap-2">
-                <div className="table-search d-flex align-items-center mb-0">
-                  <div className="search-input">
-                    <SearchInput value={searchText} onChange={handleSearch} />
-                  </div>
-                </div>
+                
               </div>
             </div>
             <div className="d-flex table-dropdown mb-3 pb-1 right-content align-items-center flex-wrap row-gap-3">
@@ -336,7 +332,7 @@ const DoctorsList = () => {
         </div>
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 
             <Link to="#" className="link-primary">
               Docyari
             </Link>

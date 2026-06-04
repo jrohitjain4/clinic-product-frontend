@@ -548,7 +548,7 @@ const MultiStepRegister: React.FC = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        <p className="fs-14 text-dark text-center mt-4 mb-0">Copyright © 2026 - DocYori.</p>
+
                                     </div>
                                 </div>
                             </div>

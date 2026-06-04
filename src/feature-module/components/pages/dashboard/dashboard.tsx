@@ -64,14 +64,6 @@ const Dashboard = () => {
     },
   ];
 
-  const [copied, setCopied] = useState(false);
-  const landingPageUrl = `${window.location.origin}/c/${user.clinic?.username || user.username || 'clinic'}`;
-
-  const handleCopyUrl = () => {
-    navigator.clipboard.writeText(landingPageUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   if (user?.role === 'PATIENT') {
     return <Navigate to="/patient/patient-dashboard" replace />;
@@ -88,27 +80,28 @@ const Dashboard = () => {
       {/* ========================
 			Start Page Content
 		========================= */}
-      <div className="page-wrapper">
+      <div className="page-wrapper dashboard-page-wrapper">
+        <style>{`
+          .dashboard-page-wrapper {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%) !important;
+            min-height: 100vh;
+          }
+          .dashboard-page-wrapper .content {
+            background: transparent !important;
+          }
+          .dashboard-page-wrapper .card {
+            border: 1px solid #94a3b8 !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+            background-color: #ffffff;
+          }
+        `}</style>
         {/* Start Content */}
         <div className="content pb-0">
           {/* Page Header */}
           <div className="d-flex align-items-sm-center justify-content-between flex-wrap gap-2 mb-4">
             <div>
               <h4 className="fw-bold mb-1">Admin Dashboard </h4>
-              <div className="d-flex align-items-center gap-2 mt-1">
-                <span className="text-muted fs-13">Clinic Landing Page: </span>
-                <div className="d-flex align-items-center bg-light px-2 py-1 rounded border shadow-sm">
-                  <span className="fs-13 text-primary fw-medium me-2">{landingPageUrl}</span>
-                  <button
-                    onClick={handleCopyUrl}
-                    className={`btn btn-sm btn-icon border-0 p-0 ${copied ? 'text-success' : 'text-gray-5'}`}
-                    title="Copy Link"
-                  >
-                    <i className={`ti ${copied ? 'ti-check' : 'ti-copy'}`} />
-                  </button>
-                </div>
-                {copied && <span className="badge bg-success fs-10 py-1">Copied!</span>}
-              </div>
             </div>
             <div className="d-flex align-items-center flex-wrap gap-2">
               <Link

@@ -202,7 +202,7 @@ const Login = () => {
                       </div>
                     </div>
                   </form>
-                  <p className="fs-14 text-dark text-center mt-4">Copyright © 2026 - DocYori.</p>
+
                 </div>
               </div>
             </div>

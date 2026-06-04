@@ -21,15 +21,16 @@
 .docyori-input-wrapper {
   display: flex;
   align-items: center;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #6366f1;
   border-radius: 12px;
   background-color: #ffffff;
   transition: all 0.2s ease-in-out;
   overflow: hidden;
 
   &:focus-within {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    border-color: #4f46e5;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+    transform: translateY(-1px);
   }
 
   &.has-error {

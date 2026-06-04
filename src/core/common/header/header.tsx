@@ -143,8 +143,8 @@ const Header = () => {
               <i className="ti ti-arrow-right" />
             </button>
             {/* Search */}
-            <div className="me-auto d-flex align-items-center header-search d-lg-flex d-none">
-              <div className="me-2" style={{ width: '260px' }}>
+            <div className="me-auto d-flex align-items-center header-search d-lg-flex d-none me-3">
+              <div className="me-2" style={{ width: '240px', transition: 'width 0.3s ease-in-out' }}>
                 <Input
                   className="mb-0 navbar-search"
                   type="text"
@@ -157,6 +157,24 @@ const Header = () => {
                   }
                 />
               </div>
+              {/* Copy URL */}
+              {user?.clinic?.id && (
+                <div 
+                  className="ms-2 d-flex align-items-center bg-white border rounded px-3 text-nowrap shadow-sm flex-shrink-0" 
+                  style={{ height: '38px' }}
+                  title="Copy Link"
+                >
+                  <span className="fw-semibold text-primary fs-13 user-select-all">
+                    docyari.com/c/{user.clinic.username || 'clinic'}
+                  </span>
+                  <button 
+                    className="btn btn-sm btn-icon border-0 p-0 text-muted ms-2" 
+                    onClick={() => navigator.clipboard.writeText(`${window.location.origin}/c/${user.clinic.username || 'clinic'}`)}
+                  >
+                    <i className="ti ti-copy fs-15 hover-primary" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
           <div className="d-flex align-items-center">
@@ -184,11 +202,11 @@ const Header = () => {
                     href={`/c/${user.clinic.username || 'clinic'}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="d-flex align-items-center"
+                    className="d-flex align-items-center text-nowrap"
                     style={{ textDecoration: 'none' }}
                   >
-                    <Button variant="primary" icon={<i className="ti ti-world" />}>
-                      <span className="d-none d-md-inline fw-medium fs-14">Live Website</span>
+                    <Button variant="primary" icon={<i className="ti ti-world" />} className="text-nowrap">
+                      <span className="d-none d-md-inline fw-medium fs-14 text-nowrap">Live Website</span>
                     </Button>
                   </a>
                 </div>

@@ -67,7 +67,7 @@ const TrialCountdown = () => {
     if (!timeLeft) return null;
 
     return (
-        <div className={`d-flex align-items-center px-3 py-1.5 rounded-pill me-3 shadow-sm border ${isExpired ? 'bg-danger-subtle border-danger text-danger' : 'bg-warning-subtle border-warning text-warning-emphasis'}`} style={{ fontSize: '13px', fontWeight: 'bold' }}>
+        <div className={`d-flex align-items-center px-3 py-1.5 rounded-pill me-3 shadow-sm border text-nowrap flex-shrink-0 ${isExpired ? 'bg-danger-subtle border-danger text-danger' : 'bg-warning-subtle border-warning text-warning-emphasis'}`} style={{ fontSize: '13px', fontWeight: 'bold' }}>
             <i className={`ti ti-clock-hour-4 me-2 ${!isExpired && 'animate-spin'}`} style={{ fontSize: '16px' }} />
             <span>{isExpired ? 'TRIAL EXPIRED' : `Trial Ends In: ${timeLeft}`}</span>
         </div>

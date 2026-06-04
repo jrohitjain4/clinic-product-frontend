@@ -27647,3 +27647,18 @@ img {
 }
 
 /*# sourceMappingURL=style.css.map */
+
+.page-wrapper .card { border: 1px solid #94a3b8 !important; border-radius: 12px !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important; }
+
+
+/* Global UI Fixes for Gap, Input and Cards */
+.content .col-lg-10.mx-auto { width: 100% !important; max-width: 100% !important; flex: 0 0 100% !important; margin: 0 !important; }
+.form-control { border: 1.5px solid #6366f1 !important; border-radius: 12px !important; padding: 10px 16px !important; font-size: 15px !important; font-weight: 500 !important; transition: all 0.2s ease-in-out !important; }
+.form-control:focus { border-color: #4f46e5 !important; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25) !important; transform: translateY(-1px) !important; }
+.page-wrapper .card { border: 1px solid #94a3b8 !important; border-radius: 12px !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important; }
+
+
+/* Fix for Date picker and Input Groups */
+.input-group > .form-control { border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; }
+.input-group > .input-group-text { border: 1.5px solid #6366f1 !important; border-right: none !important; border-top-left-radius: 12px !important; border-bottom-left-radius: 12px !important; background-color: transparent !important; display: flex; align-items: center; }
+

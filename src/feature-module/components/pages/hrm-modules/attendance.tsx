@@ -27,6 +27,7 @@ const AttendanceList = () => {
     if (status === "ABSENT") return <span className="text-danger"><i className="ti ti-square-filled fs-14" /></span>;
     if (status === "HALF_DAY") return <span className="text-warning"><i className="ti ti-square-filled fs-14" /></span>;
     if (status === "HOLIDAY") return <span className="text-info"><i className="ti ti-square-filled fs-14" /></span>;
+    if (status === "OFF") return <span className="text-secondary" style={{ opacity: 0.5 }}><i className="ti ti-square-minus-filled fs-14" /></span>;
     if (status === "LEAVE") return <span style={{ color: "#7c3aed" }}><i className="ti ti-square-filled fs-14" /></span>;
     return <span className="text-secondary" style={{ opacity: 0.3 }}><i className="ti ti-square fs-14" /></span>; // Empty box
   };
@@ -62,7 +63,7 @@ const AttendanceList = () => {
           <div className="d-flex align-items-center justify-content-between flex-wrap">
             <div className="search-set mb-3">
               <div className="d-flex align-items-center">
-                
+
                 <div className="d-flex right-content align-items-center flex-wrap">
                   <DatePicker
                     picker="month"
@@ -127,7 +128,7 @@ const AttendanceList = () => {
                       </td>
                       {daysArray.map((day) => {
                         const status = emp.attendance[day] || "";
-                        if (status === "HOLIDAY") {
+                        if (status === "HOLIDAY" || status === "OFF") {
                           return (
                             <td key={day}>
                               {getStatusIcon(status)}

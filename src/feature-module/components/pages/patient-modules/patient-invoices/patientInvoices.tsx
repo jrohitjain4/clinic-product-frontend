@@ -68,10 +68,10 @@ const PatientInvoices = () => {
       render: (text: string) => (
         <span
           className={`badge ${text === "Paid"
-              ? "badge-soft-success"
-              : text === "Partially Paid"
-                ? "badge-soft-warning"
-                : "badge-soft-danger"
+            ? "badge-soft-success"
+            : text === "Partially Paid"
+              ? "badge-soft-warning"
+              : "badge-soft-danger"
             } d-inline-flex align-items-center`}
         >
           <i className="ti ti-point-filled me-1" />
@@ -121,7 +121,7 @@ const PatientInvoices = () => {
                 </span>
               </h4>
             </div>
-            <div className="text-end d-flex">
+            <div className="text-end d-flex align-items-center gap-2">
               <div className="dropdown me-1">
                 <Link
                   to="#"
@@ -135,17 +135,6 @@ const PatientInvoices = () => {
                   <li><Link className="dropdown-item" to="#">Download as Excel</Link></li>
                 </ul>
               </div>
-            </div>
-          </div>
-
-          {/* Search & Sort */}
-          <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-            <div className="search-set mb-3">
-              <div className="d-flex align-items-center flex-wrap gap-2">
-                
-              </div>
-            </div>
-            <div className="d-flex table-dropdown mb-3 pb-1 right-content align-items-center flex-wrap row-gap-3">
               <div className="dropdown">
                 <Link
                   to="#"
@@ -158,6 +147,15 @@ const PatientInvoices = () => {
                   <li><Link to="#" className="dropdown-item rounded-1">Recent</Link></li>
                   <li><Link to="#" className="dropdown-item rounded-1">Oldest</Link></li>
                 </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Search & Sort */}
+          <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+            <div className="search-set mb-3">
+              <div className="d-flex align-items-center flex-wrap gap-2">
+
               </div>
             </div>
           </div>

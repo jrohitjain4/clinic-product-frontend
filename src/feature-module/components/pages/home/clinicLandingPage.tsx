@@ -25,6 +25,7 @@ interface ClinicData {
     logo: string; facebook: string; instagram: string;
     doctors: Doctor[]; services: Service[]; reviews: Review[];
     gallery: { url: string; category: string }[];
+    workingDays: { schedules: any[]; offDays: number[] } | null;
 }
 
 const Stars = ({ n, color, size }: { n: number; color?: string; size?: number }) => (
@@ -571,10 +572,25 @@ export default function ClinicLandingPage() {
                                                 </h6>
                                                 <table className="table table-borderless table-sm mb-0">
                                                     <tbody className="fs-13">
-                                                        <tr><td>Mon - Wed</td><td className="text-end text-primary fw-medium">09:00 - 18:00</td></tr>
-                                                        <tr><td>Thu - Fri</td><td className="text-end text-primary fw-medium">09:00 - 18:00</td></tr>
-                                                        <tr className="text-danger"><td>Saturday</td><td className="text-end fw-medium">10:00 - 14:00</td></tr>
-                                                        <tr className="opacity-50"><td>Sunday</td><td className="text-end">Closed</td></tr>
+                                                        {clinic.workingDays?.schedules ? (
+                                                            clinic.workingDays.schedules.map((s: any, i: number) => {
+                                                                const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                                                                return (
+                                                                    <tr key={i} className={!s.isActive ? 'opacity-50' : ''}>
+                                                                        <td>{dayNames[s.day]}</td>
+                                                                        <td className={`text-end fw-medium ${s.isActive ? 'text-primary' : 'text-danger'}`}>
+                                                                            {s.isActive ? `${s.startTime} - ${s.endTime}` : 'Closed'}
+                                                                        </td>
+                                                                    </tr>
+                                                                );
+                                                            })
+                                                        ) : (
+                                                            <>
+                                                                <tr><td>Mon - Fri</td><td className="text-end text-primary fw-medium">09:00 - 18:00</td></tr>
+                                                                <tr className="text-danger"><td>Saturday</td><td className="text-end fw-medium">10:00 - 14:00</td></tr>
+                                                                <tr className="opacity-50"><td>Sunday</td><td className="text-end">Closed</td></tr>
+                                                            </>
+                                                        )}
                                                     </tbody>
                                                 </table>
                                             </div>

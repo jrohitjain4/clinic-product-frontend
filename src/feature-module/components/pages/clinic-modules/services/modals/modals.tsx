@@ -21,12 +21,12 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
 
   const handleAddSubmit = async (e: any) => {
     e.preventDefault();
-    if (!addName || !addDept || !addPrice) return;
+    if (!addName || !addDept) return;
     try {
       await apiPost("/api/services", {
         serviceName: addName,
         departmentId: addDept.value,
-        price: addPrice,
+        price: addPrice || 0,
         status: "Active",
       });
       refetch?.();
@@ -56,12 +56,12 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
 
   const handleEditSubmit = async (e: any) => {
     e.preventDefault();
-    if (!selectedService || !editName || !editDept || !editPrice || !editStatus) return;
+    if (!selectedService || !editName || !editDept || !editStatus) return;
     try {
       await apiPut(`/api/services/${selectedService.id}`, {
         serviceName: editName,
         departmentId: editDept.value,
-        price: editPrice,
+        price: editPrice || 0,
         status: editStatus.value,
       });
       refetch?.();
@@ -164,8 +164,8 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
                   <CommonSelect options={deptOptions} className="select" value={addDept} onChange={(val) => setAddDept(val)} />
                 </div>
                 <div className="mb-0">
-                  <label className="form-label">Price<span className="text-danger ms-1">*</span></label>
-                  <input type="number" className="form-control" value={addPrice} onChange={(e) => setAddPrice(e.target.value)} required />
+                  <label className="form-label">Price</label>
+                  <input type="number" className="form-control" value={addPrice} onChange={(e) => setAddPrice(e.target.value)} />
                 </div>
               </div>
               <div className="modal-footer d-flex align-items-center gap-1">
@@ -196,8 +196,8 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
                   <CommonSelect options={deptOptions} className="select" value={editDept} onChange={(val) => setEditDept(val)} />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Price<span className="text-danger ms-1">*</span></label>
-                  <input type="number" className="form-control" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} required />
+                  <label className="form-label">Price</label>
+                  <input type="number" className="form-control" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">Status<span className="text-danger ms-1">*</span></label>

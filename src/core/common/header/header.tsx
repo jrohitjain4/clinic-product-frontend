@@ -158,17 +158,17 @@ const Header = () => {
                 />
               </div>
               {/* Copy URL */}
-              {user?.clinic?.id && (
-                <div 
-                  className="ms-2 d-flex align-items-center bg-white border rounded px-3 text-nowrap shadow-sm flex-shrink-0" 
+              {user?.clinic?.id && user?.role !== 'PATIENT' && (
+                <div
+                  className="ms-2 d-flex align-items-center bg-white border rounded px-3 text-nowrap shadow-sm flex-shrink-0"
                   style={{ height: '38px' }}
                   title="Copy Link"
                 >
                   <span className="fw-semibold text-primary fs-13 user-select-all">
                     docyari.com/c/{user.clinic.username || 'clinic'}
                   </span>
-                  <button 
-                    className="btn btn-sm btn-icon border-0 p-0 text-muted ms-2" 
+                  <button
+                    className="btn btn-sm btn-icon border-0 p-0 text-muted ms-2"
                     onClick={() => navigator.clipboard.writeText(`${window.location.origin}/c/${user.clinic.username || 'clinic'}`)}
                   >
                     <i className="ti ti-copy fs-15 hover-primary" />
@@ -195,7 +195,7 @@ const Header = () => {
             {/* AI Assistance and Premium Plan removed as requested */}
 
             {/* Live Website */}
-            {user?.clinic?.id && (
+            {user?.clinic?.id && user?.role !== 'PATIENT' && (
               <div className="header-item">
                 <div className="dropdown me-2">
                   <a
@@ -400,25 +400,6 @@ const Header = () => {
                 >
                   <i className="ti ti-color-swatch me-1 align-middle" />
                   <span className="align-middle">Theme Customizer</span>
-                </Link>
-                {/* item */}
-                <div className="form-check form-switch form-check-reverse d-flex align-items-center justify-content-between dropdown-item mb-0">
-                  <label className="form-check-label" htmlFor="notify">
-                    <i className="ti ti-bell me-1" />
-                    Notifications
-                  </label>
-                  <input
-
-                    className="form-check-input me-0"
-                    type="checkbox"
-                    role="switch"
-                    id="notify"
-                  />
-                </div>
-                {/* Item*/}
-                <Link to={all_routes.transactions} className="dropdown-item">
-                  <i className="ti ti-transition-right me-1 align-middle" />
-                  <span className="align-middle">Transactions</span>
                 </Link>
                 {/* Item*/}
                 <div className="pt-2 mt-2 border-top">

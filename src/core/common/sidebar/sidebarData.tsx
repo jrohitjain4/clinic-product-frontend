@@ -360,10 +360,6 @@ export const SidebarData = [
         dot: true,
         submenuItems: [
           { label: "Roles & Permissions", link: routes.rolesPermissions },
-          {
-            label: "Delete Account Request",
-            link: routes.deleteaccountrequest,
-          },
         ],
       },
     ],

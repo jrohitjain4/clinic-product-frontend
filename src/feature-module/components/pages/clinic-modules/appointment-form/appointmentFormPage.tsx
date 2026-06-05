@@ -67,6 +67,8 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
     holidays: any[];
     leaves: any[];
     appointments: any[];
+    clinicWorkingDays?: number[];
+    clinicSchedules?: any[];
   } | null>(null);
 
   const loadError = patientsError || doctorsError || deptsError;
@@ -309,10 +311,21 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
       );
     }
 
+    // 2. Clinic Off Day (Orange/Red) - Clinic is closed
+    const clinicOffDays = availability.clinicWorkingDays || [0];
+    const dayOfWeek = current.day();
+    if (clinicOffDays.includes(dayOfWeek)) {
+      return (
+        <div className="ant-picker-cell-inner" style={{ backgroundColor: '#fff7e6', border: '1px solid #ffd591', borderRadius: '4px', color: '#d46b08' }}>
+          {current.date()}
+        </div>
+      );
+    }
+
     const daySchedule = availability.schedules?.[dayName];
     const isWorking = Array.isArray(daySchedule) && daySchedule.length > 0;
 
-    // 2. Weekly Off (Red)
+    // 3. Doctor Weekly Off (Red) - Clinic open but doctor not here
     if (!isWorking) {
       return (
         <div className="ant-picker-cell-inner" style={{ backgroundColor: '#fff1f0', border: '1px solid #ffa39e', borderRadius: '4px', color: '#a8071a' }}>
@@ -357,7 +370,11 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
 
     const timeStr = time.format("HH:mm");
 
-    // Check if within working hours
+    // Check if within clinic working hours (optional, but keep for safety)
+    const clinicOffDays = availability.clinicWorkingDays || [0];
+    if (clinicOffDays.includes(time.day())) return false;
+
+    // Check if within doctor working hours
     const isWorking = daySchedule.some((slot: any) => {
       return timeStr >= slot.from && timeStr <= slot.to;
     });
@@ -673,8 +690,12 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                           Holiday
                         </div>
                         <div className="d-flex align-items-center">
+                          <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#fff7e6', border: '1px solid #ffd591' }}></span>
+                          Clinic Closed
+                        </div>
+                        <div className="d-flex align-items-center">
                           <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#fff1f0', border: '1px solid #ffa39e' }}></span>
-                          Weekly Off
+                          Dr. Off
                         </div>
                       </div>
                     </div>

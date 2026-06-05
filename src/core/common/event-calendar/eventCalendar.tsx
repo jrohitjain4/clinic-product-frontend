@@ -75,14 +75,19 @@ const EventCalendar = ({ events: externalEvents, calendarRef: extRef }: EventCal
   };
 
   return (
-    <div className="fc-premium-wrapper" style={{ height: 'calc(100vh - 180px)' }}>
+    <div className="fc-premium-wrapper">
+      <style>{`
+        .fc .fc-daygrid-day-frame {
+          min-height: 80px !important; 
+        }
+      `}</style>
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
         events={events}
         headerToolbar={false}
-        height="100%"
-        expandRows={true}
+        height="auto"
+        aspectRatio={2.5}
         eventContent={renderEventContent}
         eventClick={handleEventClick}
         ref={calendarRef}

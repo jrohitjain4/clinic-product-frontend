@@ -78,6 +78,7 @@
     "react-slick": "^0.31.0",
     "react-star-ratings": "^2.3.0",
     "react-tag-input": "^6.10.6",
+    "replace-in-file": "^8.4.0",
     "sass": "^1.92.1",
     "sass-loader": "^16.0.5",
     "slick-carousel": "^1.8.1",

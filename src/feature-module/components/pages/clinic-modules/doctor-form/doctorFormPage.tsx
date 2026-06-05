@@ -497,7 +497,6 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
       }
 
       setSuccess(true);
-      toast.success(isEdit ? "Doctor updated successfully!" : "Doctor added successfully!");
       setTimeout(() => navigate(all_routes.doctors), 1500);
     } catch (err: any) {
       setError(err.message);

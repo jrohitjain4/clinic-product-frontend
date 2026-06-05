@@ -39,6 +39,19 @@ async function apiRequest<T>(path: string, method: string, body?: any): Promise<
     toast.error(message);
     throw new Error(message);
   }
+
+  // Add automatic success toasts for POST, PUT, DELETE
+  if (method !== "GET") {
+    const successMsg = typeof data === "object" && data && "message" in data
+      ? String((data as { message: string }).message)
+      : method === "POST"
+        ? "Successfully added!"
+        : method === "PUT"
+          ? "Successfully updated!"
+          : "Successfully deleted!";
+    toast.success(successMsg);
+  }
+
   return data as T;
 }
 

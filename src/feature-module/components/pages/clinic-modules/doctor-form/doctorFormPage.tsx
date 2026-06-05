@@ -13,6 +13,7 @@ import { all_routes } from "../../../../routes/all_routes";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { apiUrl } from "../../../../../core/config/api";
+import { toast } from "react-toastify";
 import {
   Blood_Group,
   City,
@@ -496,6 +497,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
       }
 
       setSuccess(true);
+      toast.success(isEdit ? "Doctor updated successfully!" : "Doctor added successfully!");
       setTimeout(() => navigate(all_routes.doctors), 1500);
     } catch (err: any) {
       setError(err.message);
@@ -626,13 +628,13 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                 <label className="form-label">
                                   Phone Number <span className="text-danger">*</span>
                                 </label>
-                              <div>
-                                <PhoneInput
-                                  defaultCountry="IN"
-                                  value={phone}
-                                  onChange={setPhone}
-                                />
-                              </div>
+                                <div>
+                                  <PhoneInput
+                                    defaultCountry="IN"
+                                    value={phone}
+                                    onChange={setPhone}
+                                  />
+                                </div>
                                 {phoneWarning && (
                                   <div className="text-warning fs-12 mt-1">
                                     <i className="ti ti-alert-triangle me-1" />

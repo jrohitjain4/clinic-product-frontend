@@ -18,6 +18,7 @@ import {
 import { authHeaders } from "../../../../../core/utils/apiClient";
 import { findSelectOption } from "../../../../../core/utils/doctorSchedule";
 import AddPatientModal from "../appointments/modals/addPatientModal";
+import { toast } from "react-toastify";
 
 interface AppointmentFormPageProps {
   mode: "create" | "edit";
@@ -60,6 +61,13 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [showAddPatient, setShowAddPatient] = useState(false);
+  const [availability, setAvailability] = useState<{
+    schedules: any;
+    duration?: number;
+    holidays: any[];
+    leaves: any[];
+    appointments: any[];
+  } | null>(null);
 
   const loadError = patientsError || doctorsError || deptsError;
   const optionsLoading = loadingPatients || loadingDoctors || loadingDepts;
@@ -99,6 +107,63 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
       });
     }
   }, [mode, appointment?.id]);
+
+  // ── Fetch Doctor Availability ──────────────────────────────────
+  useEffect(() => {
+    if (form.doctorId) {
+      const start = dayjs().startOf("month").subtract(1, "month").toISOString();
+      const end = dayjs().endOf("month").add(3, "month").toISOString();
+
+      fetch(apiUrl(`/api/doctors/${form.doctorId}/availability?startDate=${start}&endDate=${end}`), {
+        headers: authHeaders(),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          setAvailability(data);
+          // If a slot was previously selected but is no longer valid, we could warn,
+          // but for now let it be.
+        })
+        .catch(console.error);
+    } else {
+      setAvailability(null);
+    }
+  }, [form.doctorId]);
+
+  const availableSlots = useMemo(() => {
+    if (!availability || !form.appointmentDate) return [];
+    const dayName = form.appointmentDate.format("dddd");
+    const dateStr = form.appointmentDate.format("YYYY-MM-DD");
+    const daySchedule = availability.schedules?.[dayName];
+    if (!Array.isArray(daySchedule)) return [];
+
+    const duration = availability.duration || 30; // Default to 30 mins if not set
+    const slots: any[] = [];
+
+    daySchedule.forEach((session: any) => {
+      let currentSlot = dayjs(session.from, "HH:mm");
+      const sessionEnd = dayjs(session.to, "HH:mm");
+
+      while (currentSlot.isBefore(sessionEnd)) {
+        const slotTime = currentSlot.format("HH:mm");
+        const isBooked = availability.appointments?.some((a: any) => {
+          return (
+            dayjs(a.start).format("YYYY-MM-DD") === dateStr &&
+            dayjs(a.start).format("HH:mm") === slotTime
+          );
+        });
+
+        slots.push({
+          from: slotTime,
+          isBooked,
+          label: currentSlot.format("hh:mm A"),
+        });
+
+        currentSlot = currentSlot.add(duration, "minute");
+      }
+    });
+
+    return slots;
+  }, [availability, form.appointmentDate]);
 
   // ── Auto-check for Follow-up status ────────────────────────────
   useEffect(() => {
@@ -211,12 +276,102 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Failed to save appointment");
       }
+
+      toast.success(mode === "create" ? "Appointment created successfully!" : "Appointment updated successfully!");
       navigate(all_routes.appointments, { replace: true });
     } catch (err: unknown) {
-      setFormError(err instanceof Error ? err.message : "Failed to save");
+      const msg = err instanceof Error ? err.message : "Failed to save";
+      setFormError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const cellRender = (current: Dayjs | any, info: any) => {
+    if (info.type !== 'date' || !availability || !dayjs.isDayjs(current)) return info.originNode;
+
+    const dateStr = current.format("YYYY-MM-DD");
+    const dayName = current.format("dddd");
+
+    // 1. Holiday (Blueish) - HIGHEST PRIORITY as per user
+    const isHoliday = availability.holidays.some((h) => {
+      const start = dayjs(h.date).startOf("day");
+      const end = h.endDate ? dayjs(h.endDate).endOf("day") : start.endOf("day");
+      return (current.isAfter(start) || current.isSame(start)) && (current.isBefore(end) || current.isSame(end));
+    });
+
+    if (isHoliday) {
+      return (
+        <div className="ant-picker-cell-inner" style={{ backgroundColor: '#e6f7ff', border: '1px solid #91d5ff', borderRadius: '4px', color: '#0050b3' }}>
+          {current.date()}
+        </div>
+      );
+    }
+
+    const daySchedule = availability.schedules?.[dayName];
+    const isWorking = Array.isArray(daySchedule) && daySchedule.length > 0;
+
+    // 2. Weekly Off (Red)
+    if (!isWorking) {
+      return (
+        <div className="ant-picker-cell-inner" style={{ backgroundColor: '#fff1f0', border: '1px solid #ffa39e', borderRadius: '4px', color: '#a8071a' }}>
+          {current.date()}
+        </div>
+      );
+    }
+
+    // 3. Leave (Yellow)
+    const isLeave = availability.leaves.some((l) => {
+      const s = dayjs(l.start).startOf("day");
+      const e = dayjs(l.end).endOf("day");
+      return (current.isAfter(s) || current.isSame(s)) && (current.isBefore(e) || current.isSame(e));
+    });
+    if (isLeave) {
+      return (
+        <div className="ant-picker-cell-inner" style={{ backgroundColor: '#fffbe6', border: '1px solid #ffe58f', borderRadius: '4px', color: '#874d00' }}>
+          {current.date()}
+        </div>
+      );
+    }
+
+    // 4. Working Day (Green)
+    if (isWorking) {
+      return (
+        <div className="ant-picker-cell-inner" style={{ backgroundColor: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: '4px', color: '#237804' }}>
+          {current.date()}
+        </div>
+      );
+    }
+
+    return info.originNode;
+  };
+
+  // Helper to determine if a time is within doctor's available slots
+  const isTimeAvailable = (time: Dayjs) => {
+    if (!availability || !form.appointmentDate) return true;
+    const dayName = form.appointmentDate.format("dddd");
+    const dateStr = form.appointmentDate.format("YYYY-MM-DD");
+    const daySchedule = availability.schedules?.[dayName];
+    if (!Array.isArray(daySchedule)) return false;
+
+    const timeStr = time.format("HH:mm");
+
+    // Check if within working hours
+    const isWorking = daySchedule.some((slot: any) => {
+      return timeStr >= slot.from && timeStr <= slot.to;
+    });
+    if (!isWorking) return false;
+
+    // Check if booked
+    const isBooked = availability.appointments?.some((a: any) => {
+      return (
+        dayjs(a.start).format("YYYY-MM-DD") === dateStr &&
+        dayjs(a.start).format("HH:mm") === timeStr
+      );
+    });
+
+    return !isBooked;
   };
 
   if (mode === "edit" && loadingAppt) {
@@ -415,6 +570,7 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                             getPopupContainer={getModalContainer}
                             placeholder="DD-MM-YYYY"
                             suffixIcon={null}
+                            cellRender={cellRender}
                             value={form.appointmentDate}
                             onChange={(d: Dayjs | null) =>
                               setForm((f) => ({ ...f, appointmentDate: d }))
@@ -433,19 +589,73 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                         </label>
                         <div className="input-icon-end position-relative">
                           <TimePicker
-                            className="form-control w-100"
+                            className={`form-control w-100 ${form.appointmentTime && isTimeAvailable(form.appointmentTime) ? 'border-success' : ''}`}
                             use12Hours
                             format="hh:mm A"
                             value={form.appointmentTime}
+                            status={form.appointmentTime && !isTimeAvailable(form.appointmentTime) ? 'warning' : undefined}
                             onChange={(t: Dayjs | null) =>
                               setForm((f) => ({ ...f, appointmentTime: t }))
                             }
                             getPopupContainer={getModalContainer}
                           />
                           <span className="input-icon-addon">
-                            <i className="ti ti-clock text-gray-7" />
+                            <i className={`ti ti-clock ${form.appointmentTime && isTimeAvailable(form.appointmentTime) ? 'text-success' : 'text-gray-7'}`} />
                           </span>
                         </div>
+                        {form.appointmentTime && !isTimeAvailable(form.appointmentTime) && (
+                          <div className="text-warning fs-12 mt-1">
+                            <i className="ti ti-alert-triangle me-1" />
+                            Doctor may not be available at this time.
+                          </div>
+                        )}
+                        {form.appointmentTime && isTimeAvailable(form.appointmentTime) && (
+                          <div className="text-success fs-12 mt-1">
+                            <i className="ti ti-check me-1" />
+                            Doctor is available.
+                          </div>
+                        )}
+
+                        {availability && availability.schedules && form.appointmentDate && (
+                          <div className="mb-2">
+                            {availability.schedules[form.appointmentDate.format("dddd")]?.map((s: any, idx: number) => (
+                              <span key={idx} className="badge badge-soft-info me-2 p-2 border border-info mb-2 fs-11">
+                                <i className="ti ti-info-circle me-1" />
+                                {s.label || (idx === 0 ? "Session 1" : "Session 2")}: {dayjs(s.from, "HH:mm").format("hh:mm A")} - {dayjs(s.to, "HH:mm").format("hh:mm A")}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {availableSlots.length > 0 && (
+                          <div className="mt-3">
+                            <label className="form-label mb-2 fw-medium fs-13">Available Slots on {form.appointmentDate?.format("DD MMM")}</label>
+                            <div className="d-flex flex-wrap gap-2">
+                              {availableSlots.map((slot, i) => {
+                                const isSelected = form.appointmentTime?.format("HH:mm") === slot.from;
+                                return (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    className={`btn btn-sm ${slot.isBooked ? 'btn-danger' : isSelected ? 'btn-success' : 'btn-outline-success'} py-1 px-2 fs-12`}
+                                    disabled={slot.isBooked}
+                                    onClick={() => setForm(f => ({ ...f, appointmentTime: dayjs(slot.from, "HH:mm") }))}
+                                    title={slot.isBooked ? "This slot is already booked" : "Click to select"}
+                                  >
+                                    <i className={`ti ${slot.isBooked ? 'ti-lock' : 'ti-clock'} me-1`} />
+                                    {slot.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                        {form.doctorId && form.appointmentDate && availableSlots.length === 0 && !optionsLoading && (
+                          <div className="alert alert-soft-danger py-2 px-3 fs-12 mt-3">
+                            <i className="ti ti-alert-circle me-1" />
+                            No active schedule slots found for this doctor on this day.
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -479,6 +689,26 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                         setForm((f) => ({ ...f, status: opt?.value || "Schedule" }))
                       }
                     />
+                    <div className="mt-3 p-2 bg-light rounded border">
+                      <div className="d-flex flex-wrap gap-3 fs-12">
+                        <div className="d-flex align-items-center">
+                          <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#f6ffed', border: '1px solid #b7eb8f' }}></span>
+                          Available
+                        </div>
+                        <div className="d-flex align-items-center">
+                          <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#fffbe6', border: '1px solid #ffe58f' }}></span>
+                          On Leave
+                        </div>
+                        <div className="d-flex align-items-center">
+                          <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#e6f7ff', border: '1px solid #91d5ff' }}></span>
+                          Holiday
+                        </div>
+                        <div className="d-flex align-items-center">
+                          <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#fff1f0', border: '1px solid #ffa39e' }}></span>
+                          Weekly Off
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

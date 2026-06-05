@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { all_routes } from "../../../routes/all_routes";
+import { toast } from "react-toastify";
 import { apiUrl } from "../../../../core/config/api";
 import { Input } from "../../../../core/common/input/Input";
 import { Button } from "../../../../core/common/button/Button";
@@ -48,9 +49,11 @@ const Login = () => {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      toast.success("Welcome back!");
       navigate(getDashboardPath(data.user.role), { replace: true });
     } catch (err: any) {
       setError(err.message);
+      toast.error(err.message || "Login failed");
     } finally {
       setLoading(false);
     }

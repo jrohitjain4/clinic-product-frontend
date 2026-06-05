@@ -3,6 +3,7 @@ import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import { StatusActive } from "../../../../../../core/common/selectOption";
 import { apiPost, apiPut, apiDelete } from "../../../../../../core/utils/apiClient";
+import { toast } from "react-toastify";
 
 interface ModalsProps {
   selectedSpecialization?: any;
@@ -23,12 +24,13 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
         description: addDesc,
         status: "Active"
       });
+      toast.success("Specialization added successfully!");
       refetch?.();
       setAddName("");
       setAddDesc("");
       document.getElementById("close-add-modal")?.click();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add specialization");
     }
   };
 
@@ -61,10 +63,11 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
         description: editDesc,
         status: editStatus?.value || "Active",
       });
+      toast.success("Specialization updated successfully!");
       refetch?.();
       document.getElementById("close-edit-modal")?.click();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update specialization");
     }
   };
 
@@ -74,10 +77,11 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
     if (!selectedSpecialization) return;
     try {
       await apiDelete(`/api/specializations/${selectedSpecialization.id}`);
+      toast.success("Specialization deleted successfully!");
       refetch?.();
       document.getElementById("close-delete-modal")?.click();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete specialization");
     }
   };
 

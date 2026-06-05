@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { all_routes } from "../../../routes/all_routes";
+import { toast } from "react-toastify";
 import { apiUrl } from "../../../../core/config/api";
 import { Input } from "../../../../core/common/input/Input";
 import { Button } from "../../../../core/common/button/Button";
@@ -101,6 +102,7 @@ const MultiStepRegister: React.FC = () => {
                 setStep(3);
             } catch (err: any) {
                 setError(err.message);
+                toast.error(err.message || "Validation failed");
             } finally {
                 setLoading(false);
             }
@@ -141,10 +143,13 @@ const MultiStepRegister: React.FC = () => {
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
 
+            toast.success("Account created successfully!");
             setSuccess("🎉 Account created successfully! Redirecting...");
             setTimeout(() => navigate(all_routes.dashboard), 2000);
         } catch (err: any) {
-            setError(err.message || "Something went wrong. Please try again.");
+            const msg = err.message || "Something went wrong. Please try again.";
+            setError(msg);
+            toast.error(msg);
         } finally {
             setLoading(false);
             setSelectedPkgId("");

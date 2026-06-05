@@ -1,1360 +1,233 @@
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { all_routes } from "../../../../../routes/all_routes";
-import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
-import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
-import {
-  addAssignee,
-  priority,
-  StatusCompleted,
-  tag,
-} from "../../../../../../core/common/selectOption";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { apiUrl } from "../../../../../../core/config/api";
 
 const TodoList = () => {
-  return (
-    <>
-      {/* ========================
-              Start Page Content
-          ========================= */}
-      <div className="page-wrapper">
-        <div className="content content-two">
-          {/* Page Header */}
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3">
-            <div className="flex-grow-1">
-              <h4 className="fs-18 fw-semibold mb-0">Todo List</h4>
-            </div>
-            <div className="text-end">
-              <ol className="breadcrumb m-0 py-0">
-                <li className="breadcrumb-item">
-                  <Link to={all_routes.dashboard}>Home</Link>
-                </li>
-                <li className="breadcrumb-item">
-                  <Link to="#">Applications</Link>
-                </li>
-                <li className="breadcrumb-item active" aria-current="page">
-                  Todo List
-                </li>
-              </ol>
-            </div>
-          </div>
-          {/* End Page Header */}
-          <div className="d-flex align-items-center justify-content-end flex-wrap gap-3 mb-3">
-            <ul className="d-flex align-items-center flex-shrink-0 list-unstyled mb-0">
-              <li>
-                <Link
-                  to={all_routes.todo}
-                  className="btn btn-icon btn-sm bg-white text-dark border me-2"
-                >
-                  <i className="ti ti-layout-grid" />
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to={all_routes.todoList}
-                  className="btn btn-icon btn-sm bg-primary-subtle text-primary border border-primary active me-2"
-                >
-                  <i className="ti ti-list-tree" />
-                </Link>
-              </li>
-            </ul>
-            <Link
-              to="#"
-              className="btn btn-sm btn-primary"
-              data-bs-toggle="modal"
-              data-bs-target="#add_todo"
-            >
-              <i className="ti ti-circle-plus me-1" />
-              Create New
-            </Link>
-          </div>
+  const [todos, setTodos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [newTodo, setNewTodo] = useState({ title: "", priority: "Medium" });
+  const [editTodo, setEditTodo] = useState<any>(null);
 
-          <div className="card overflow-hidden">
-            <div className="card-body p-0">
-            {/* table list start */}
-            <div className="table-responsive table-nowrap">
-              <table className="table table-hover border mb-0">
-                <thead className="table-light text-uppercase">
+  const fetchTodos = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(apiUrl("/api/todos"), {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const data = await res.json();
+      if (res.ok) setTodos(data);
+    } catch (error) {
+      console.error("Error fetching todos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTodos();
+  }, []);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(apiUrl("/api/todos"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(newTodo),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTodos([data, ...todos]);
+        setNewTodo({ title: "", priority: "Medium" });
+        toast.success("Task added successfully!");
+        // Close modal manually if needed or use state
+        const closeBtn = document.getElementById("close_add_todo");
+        if (closeBtn) closeBtn.click();
+      }
+    } catch (error) {
+      toast.error("Failed to add task");
+    }
+  };
+
+  const handleUpdate = async (id: string, updates: any) => {
+    try {
+      const res = await fetch(apiUrl(`/api/todos/${id}`), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(updates),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTodos(todos.map(t => t.id === id ? data : t));
+        if (updates.status) {
+          toast.info(`Task status updated to ${updates.status}`);
+        }
+      }
+    } catch (error) {
+      toast.error("Update failed");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this task?")) return;
+    try {
+      const res = await fetch(apiUrl(`/api/todos/${id}`), {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      if (res.ok) {
+        setTodos(todos.filter(t => t.id !== id));
+        toast.success("Task deleted");
+      }
+    } catch (error) {
+      toast.error("Delete failed");
+    }
+  };
+
+  return (
+    <div className="page-wrapper">
+      <ToastContainer position="top-right" autoClose={2000} />
+      <div className="content">
+        <div className="row">
+          <div className="col-md-12">
+            <div className="section-header d-flex justify-content-between align-items-center mb-4">
+              <h4 className="page-title">Dynamic To Do List</h4>
+              <button className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_todo">
+                <i className="fa fa-plus me-2"></i> Add New Task
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="card shadow-sm border-0">
+          <div className="card-body p-0">
+            <div className="table-responsive">
+              <table className="table table-hover mb-0 custom-todo-table">
+                <thead className="bg-light">
                   <tr>
-                    <th>
-                      <div className="form-check form-check-md">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          id="select-all"
-                        />
-                      </div>
-                    </th>
-                    <th>Company Name</th>
-                    <th>Tags</th>
-                    <th>Assignee</th>
-                    <th>Created On</th>
-                    <th>Progress</th>
-                    <th>Due Date</th>
+                    <th style={{ width: "50px" }}>#</th>
+                    <th>Task Description</th>
+                    <th>Priority</th>
                     <th>Status</th>
-                    <th />
+                    <th className="text-end">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <div className="form-check form-check-md">
-                          <input className="form-check-input" type="checkbox" />
-                        </div>
-                        <span className="mx-2 d-flex align-items-center rating-select">
-                          <i className="ti ti-star" />
-                        </span>
-                        <span className="d-flex align-items-center">
-                          <i className="ti ti-square-rounded text-danger me-2" />
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <p className="fw-medium text-dark">
-                        Respond to any pending messages
-                      </p>
-                    </td>
-                    <td>
-                      <span className="badge bg-info">Social</span>
-                    </td>
-                    <td>
-                      <div className="avatar-list-stacked avatar-group-sm">
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-01.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-02.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-05.jpg"
-                            alt="img"
-                          />
-                        </span>
-                      </div>
-                    </td>
-                    <td>14 Jan 2024</td>
-                    <td>
-                      <span className="d-block mb-1">Progress : 100%</span>
-                      <div
-                        className="progress progress-xs flex-grow-1 mb-2"
-                        style={{ width: 190 }}
-                      >
-                        <div
-                          className="progress-bar bg-success rounded"
-                          role="progressbar"
-                          style={{ width: "100%" }}
-                          aria-valuenow={30}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                        />
-                      </div>
-                    </td>
-                    <td>14 Jan 2024</td>
-                    <td>
-                      <span className="badge badge-soft-success d-inline-flex align-items-center">
-                        <i className="ti ti-circle-filled fs-5 me-1" />
-                        Completed
-                      </span>
-                    </td>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit_todo"
-                        >
-                          <i className="ti ti-edit" />
-                        </Link>
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#delete_modal"
-                        >
-                          <i className="ti ti-trash" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <div className="form-check form-check-md">
-                          <input className="form-check-input" type="checkbox" />
-                        </div>
-                        <span className="mx-2 d-flex align-items-center rating-select">
-                          <i className="ti ti-star-filled filled" />
-                        </span>
-                        <span className="d-flex align-items-center">
-                          <i className="ti ti-square-rounded text-purple me-2" />
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <p className="fw-medium text-dark">
-                        Update calendar and schedule
-                      </p>
-                    </td>
-                    <td>
-                      <span className="badge bg-primary">Meetings</span>
-                    </td>
-                    <td>
-                      <div className="avatar-list-stacked avatar-group-sm">
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-01.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-02.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-03.jpg"
-                            alt="img"
-                          />
-                        </span>
-                      </div>
-                    </td>
-                    <td>21 Jan 2024</td>
-                    <td>
-                      <span className="d-block mb-1">Progress : 15%</span>
-                      <div
-                        className="progress progress-xs flex-grow-1 mb-2"
-                        style={{ width: 190 }}
-                      >
-                        <div
-                          className="progress-bar bg-danger rounded"
-                          role="progressbar"
-                          style={{ width: "15%" }}
-                          aria-valuenow={30}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                        />
-                      </div>
-                    </td>
-                    <td>21 Jan 2024</td>
-                    <td>
-                      <span className="badge badge-soft-secondary d-inline-flex align-items-center">
-                        <i className="ti ti-circle-filled fs-5 me-1" />
-                        Pending
-                      </span>
-                    </td>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit_todo"
-                        >
-                          <i className="ti ti-edit" />
-                        </Link>
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#delete_modal"
-                        >
-                          <i className="ti ti-trash" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <div className="form-check form-check-md">
-                          <input className="form-check-input" type="checkbox" />
-                        </div>
-                        <span className="mx-2 d-flex align-items-center rating-select">
-                          <i className="ti ti-star" />
-                        </span>
-                        <span className="d-flex align-items-center">
-                          <i className="ti ti-square-rounded text-purple me-2" />
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <p className="fw-medium text-dark">
-                        Respond to any pending messages
-                      </p>
-                    </td>
-                    <td>
-                      <span className="badge bg-danger">Research</span>
-                    </td>
-                    <td>
-                      <div className="avatar-list-stacked avatar-group-sm">
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-04.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-05.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-06.jpg"
-                            alt="img"
-                          />
-                        </span>
-                      </div>
-                    </td>
-                    <td>20 Feb 2024</td>
-                    <td>
-                      <span className="d-block mb-1">Progress : 45%</span>
-                      <div
-                        className="progress progress-xs flex-grow-1 mb-2"
-                        style={{ width: 190 }}
-                      >
-                        <div
-                          className="progress-bar bg-warning rounded"
-                          role="progressbar"
-                          style={{ width: "45%" }}
-                          aria-valuenow={30}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                        />
-                      </div>
-                    </td>
-                    <td>20 Feb 2024</td>
-                    <td>
-                      <span className="badge badge-soft-primary d-inline-flex align-items-center">
-                        <i className="ti ti-circle-filled fs-5 me-1" />
-                        Inprogress
-                      </span>
-                    </td>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit_todo"
-                        >
-                          <i className="ti ti-edit" />
-                        </Link>
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#delete_modal"
-                        >
-                          <i className="ti ti-trash" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <div className="form-check form-check-md">
-                          <input className="form-check-input" type="checkbox" />
-                        </div>
-                        <span className="mx-2 d-flex align-items-center rating-select">
-                          <i className="ti ti-star" />
-                        </span>
-                        <span className="d-flex align-items-center">
-                          <i className="ti ti-square-rounded text-warning me-2" />
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <p className="fw-medium text-dark">
-                        Attend team meeting at 10:00 AM
-                      </p>
-                    </td>
-                    <td>
-                      <span className="badge bg-primary">Web Design</span>
-                    </td>
-                    <td>
-                      <div className="avatar-list-stacked avatar-group-sm">
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-05.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-06.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-07.jpg"
-                            alt="img"
-                          />
-                        </span>
-                      </div>
-                    </td>
-                    <td>15 Mar 2024</td>
-                    <td>
-                      <span className="d-block mb-1">Progress : 40%</span>
-                      <div
-                        className="progress progress-xs flex-grow-1 mb-2"
-                        style={{ width: 190 }}
-                      >
-                        <div
-                          className="progress-bar bg-warning rounded"
-                          role="progressbar"
-                          style={{ width: "40%" }}
-                          aria-valuenow={30}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                        />
-                      </div>
-                    </td>
-                    <td>15 Mar 2024</td>
-                    <td>
-                      <span className="badge badge-soft-primary d-inline-flex align-items-center">
-                        <i className="ti ti-circle-filled fs-5 me-1" />
-                        Inprogress
-                      </span>
-                    </td>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit_todo"
-                        >
-                          <i className="ti ti-edit" />
-                        </Link>
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#delete_modal"
-                        >
-                          <i className="ti ti-trash" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <div className="form-check form-check-md">
-                          <input className="form-check-input" type="checkbox" />
-                        </div>
-                        <span className="mx-2 d-flex align-items-center rating-select">
-                          <i className="ti ti-star" />
-                        </span>
-                        <span className="d-flex align-items-center">
-                          <i className="ti ti-square-rounded text-purple me-2" />
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <p className="fw-medium text-dark">
-                        Check and respond to emails
-                      </p>
-                    </td>
-                    <td>
-                      <span className="badge bg-info">Reminder</span>
-                    </td>
-                    <td>
-                      <div className="avatar-list-stacked avatar-group-sm">
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-08.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-09.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-10.jpg"
-                            alt="img"
-                          />
-                        </span>
-                      </div>
-                    </td>
-                    <td>12 Apr 2024</td>
-                    <td>
-                      <span className="d-block mb-1">Progress : 65%</span>
-                      <div
-                        className="progress progress-xs flex-grow-1 mb-2"
-                        style={{ width: 190 }}
-                      >
-                        <div
-                          className="progress-bar bg-purple rounded"
-                          role="progressbar"
-                          style={{ width: "65%" }}
-                          aria-valuenow={30}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                        />
-                      </div>
-                    </td>
-                    <td>12 Apr 2024</td>
-                    <td>
-                      <span className="badge badge-soft-secondary d-inline-flex align-items-center">
-                        <i className="ti ti-circle-filled fs-5 me-1" />
-                        Pending
-                      </span>
-                    </td>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit_todo"
-                        >
-                          <i className="ti ti-edit" />
-                        </Link>
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#delete_modal"
-                        >
-                          <i className="ti ti-trash" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <div className="form-check form-check-md">
-                          <input className="form-check-input" type="checkbox" />
-                        </div>
-                        <span className="mx-2 d-flex align-items-center rating-select">
-                          <i className="ti ti-star" />
-                        </span>
-                        <span className="d-flex align-items-center">
-                          <i className="ti ti-square-rounded text-warning me-2" />
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <p className="fw-medium text-dark">
-                        Coordinate with department head
-                      </p>
-                    </td>
-                    <td>
-                      <span className="badge bg-danger">Internal</span>
-                    </td>
-                    <td>
-                      <div className="avatar-list-stacked avatar-group-sm">
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-11.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-12.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-13.jpg"
-                            alt="img"
-                          />
-                        </span>
-                      </div>
-                    </td>
-                    <td>20 Apr 2024</td>
-                    <td>
-                      <span className="d-block mb-1">Progress : 85%</span>
-                      <div
-                        className="progress progress-xs flex-grow-1 mb-2"
-                        style={{ width: 190 }}
-                      >
-                        <div
-                          className="progress-bar bg-pink rounded"
-                          role="progressbar"
-                          style={{ width: "85%" }}
-                          aria-valuenow={30}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                        />
-                      </div>
-                    </td>
-                    <td>20 Apr 2024</td>
-                    <td>
-                      <span className="badge badge-soft-danger d-inline-flex align-items-center">
-                        <i className="ti ti-circle-filled fs-5 me-1" />
-                        Onhold
-                      </span>
-                    </td>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit_todo"
-                        >
-                          <i className="ti ti-edit" />
-                        </Link>
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#delete_modal"
-                        >
-                          <i className="ti ti-trash" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <div className="form-check form-check-md">
-                          <input className="form-check-input" type="checkbox" />
-                        </div>
-                        <span className="mx-2 d-flex align-items-center rating-select">
-                          <i className="ti ti-star" />
-                        </span>
-                        <span className="d-flex align-items-center">
-                          <i className="ti ti-square-rounded text-success me-2" />
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <p className="fw-medium text-dark">
-                        Plan tasks for the next day
-                      </p>
-                    </td>
-                    <td>
-                      <span className="badge bg-info">Social</span>
-                    </td>
-                    <td>
-                      <div className="avatar-list-stacked avatar-group-sm">
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-14.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-15.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-16.jpg"
-                            alt="img"
-                          />
-                        </span>
-                      </div>
-                    </td>
-                    <td>06 Jul 2024</td>
-                    <td>
-                      <span className="d-block mb-1">Progress : 100%</span>
-                      <div
-                        className="progress progress-xs flex-grow-1 mb-2"
-                        style={{ width: 190 }}
-                      >
-                        <div
-                          className="progress-bar bg-success rounded"
-                          role="progressbar"
-                          style={{ width: "100%" }}
-                          aria-valuenow={30}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                        />
-                      </div>
-                    </td>
-                    <td>06 Jul 2024</td>
-                    <td>
-                      <span className="badge badge-soft-success d-inline-flex align-items-center">
-                        <i className="ti ti-circle-filled fs-5 me-1" />
-                        Completed
-                      </span>
-                    </td>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit_todo"
-                        >
-                          <i className="ti ti-edit" />
-                        </Link>
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#delete_modal"
-                        >
-                          <i className="ti ti-trash" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <div className="form-check form-check-md">
-                          <input className="form-check-input" type="checkbox" />
-                        </div>
-                        <span className="mx-2 d-flex align-items-center rating-select">
-                          <i className="ti ti-star" />
-                        </span>
-                        <span className="d-flex align-items-center">
-                          <i className="ti ti-square-rounded text-success me-2" />
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <p className="fw-medium text-dark">
-                        Finalize project proposal
-                      </p>
-                    </td>
-                    <td>
-                      <span className="badge bg-success">Projects</span>
-                    </td>
-                    <td>
-                      <div className="avatar-list-stacked avatar-group-sm">
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-17.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-18.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-19.jpg"
-                            alt="img"
-                          />
-                        </span>
-                      </div>
-                    </td>
-                    <td>02 Sep 2024</td>
-                    <td>
-                      <span className="d-block mb-1">Progress : 65%</span>
-                      <div
-                        className="progress progress-xs flex-grow-1 mb-2"
-                        style={{ width: 190 }}
-                      >
-                        <div
-                          className="progress-bar bg-danger rounded"
-                          role="progressbar"
-                          style={{ width: "65%" }}
-                          aria-valuenow={30}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                        />
-                      </div>
-                    </td>
-                    <td>02 Sep 2024</td>
-                    <td>
-                      <span className="badge badge-soft-danger d-inline-flex align-items-center">
-                        <i className="ti ti-circle-filled fs-5 me-1" />
-                        Onhold
-                      </span>
-                    </td>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit_todo"
-                        >
-                          <i className="ti ti-edit" />
-                        </Link>
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#delete_modal"
-                        >
-                          <i className="ti ti-trash" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <div className="form-check form-check-md">
-                          <input className="form-check-input" type="checkbox" />
-                        </div>
-                        <span className="mx-2 d-flex align-items-center rating-select">
-                          <i className="ti ti-star" />
-                        </span>
-                        <span className="d-flex align-items-center">
-                          <i className="ti ti-square-rounded text-purple me-2" />
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <p className="fw-medium text-dark">
-                        Submit to supervisor by EOD
-                      </p>
-                    </td>
-                    <td>
-                      <span className="badge bg-info">Reminder</span>
-                    </td>
-                    <td>
-                      <div className="avatar-list-stacked avatar-group-sm">
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-01.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-02.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-03.jpg"
-                            alt="img"
-                          />
-                        </span>
-                      </div>
-                    </td>
-                    <td>15 Nov 2024</td>
-                    <td>
-                      <span className="d-block mb-1">Progress : 75%</span>
-                      <div
-                        className="progress progress-xs flex-grow-1 mb-2"
-                        style={{ width: 190 }}
-                      >
-                        <div
-                          className="progress-bar bg-purple rounded"
-                          role="progressbar"
-                          style={{ width: "75%" }}
-                          aria-valuenow={30}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                        />
-                      </div>
-                    </td>
-                    <td>15 Nov 2024</td>
-                    <td>
-                      <span className="badge badge-soft-primary d-inline-flex align-items-center">
-                        <i className="ti ti-circle-filled fs-5 me-1" />
-                        Inprogress
-                      </span>
-                    </td>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit_todo"
-                        >
-                          <i className="ti ti-edit" />
-                        </Link>
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#delete_modal"
-                        >
-                          <i className="ti ti-trash" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <div className="form-check form-check-md">
-                          <input className="form-check-input" type="checkbox" />
-                        </div>
-                        <span className="mx-2 d-flex align-items-center rating-select">
-                          <i className="ti ti-star" />
-                        </span>
-                        <span className="d-flex align-items-center">
-                          <i className="ti ti-square-rounded text-success me-2" />
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <p className="fw-medium text-dark">
-                        Prepare presentation slides
-                      </p>
-                    </td>
-                    <td>
-                      <span className="badge bg-danger">Research</span>
-                    </td>
-                    <td>
-                      <div className="avatar-list-stacked avatar-group-sm">
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-01.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-02.jpg"
-                            alt="img"
-                          />
-                        </span>
-                        <span className="avatar avatar-rounded">
-                          <ImageWithBasePath
-                            className="border border-white"
-                            src="assets/img/profiles/avatar-03.jpg"
-                            alt="img"
-                          />
-                        </span>
-                      </div>
-                    </td>
-                    <td>10 Dec 2024</td>
-                    <td>
-                      <span className="d-block mb-1">Progress : 90%</span>
-                      <div
-                        className="progress progress-xs flex-grow-1 mb-2"
-                        style={{ width: 190 }}
-                      >
-                        <div
-                          className="progress-bar bg-pink rounded"
-                          role="progressbar"
-                          style={{ width: "90%" }}
-                          aria-valuenow={30}
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                        />
-                      </div>
-                    </td>
-                    <td>10 Dec 2024</td>
-                    <td>
-                      <span className="badge badge-soft-secondary d-inline-flex align-items-center">
-                        <i className="ti ti-circle-filled fs-5 me-1" />
-                        Pending
-                      </span>
-                    </td>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit_todo"
-                        >
-                          <i className="ti ti-edit" />
-                        </Link>
-                        <Link
-                          to="#"
-                          className="btn btn-sm btn-icon"
-                          data-bs-toggle="modal"
-                          data-bs-target="#delete_modal"
-                        >
-                          <i className="ti ti-trash" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={5} className="text-center p-5">
+                        <div className="spinner-border text-primary" role="status"></div>
+                        <p className="mt-2 text-muted">Loading your tasks...</p>
+                      </td>
+                    </tr>
+                  ) : todos.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center p-5 text-muted">
+                        No tasks found. Click "Add New Task" to get started!
+                      </td>
+                    </tr>
+                  ) : (
+                    todos.map((todo, index) => (
+                      <tr key={todo.id}>
+                        <td>{index + 1}</td>
+                        <td>
+                          <span className={todo.status === 'Completed' ? 'text-decoration-line-through text-muted' : 'fw-medium'}>
+                            {todo.title}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`badge rounded-pill ${todo.priority === 'High' ? 'bg-danger' :
+                            todo.priority === 'Medium' ? 'bg-warning text-dark' : 'bg-info'
+                            }`}>
+                            {todo.priority}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="form-check form-switch">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              checked={todo.status === 'Completed'}
+                              onChange={(e) => handleUpdate(todo.id, { status: e.target.checked ? 'Completed' : 'Pending' })}
+                            />
+                            <label className="form-check-label ms-1">
+                              {todo.status}
+                            </label>
+                          </div>
+                        </td>
+                        <td className="text-end">
+                          <div className="dropdown dropdown-action">
+                            <button className="btn btn-icon btn-sm" onClick={() => handleDelete(todo.id)}>
+                              <i className="fa fa-trash-alt text-danger"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
-            {/* table list end */}
-          </div>
-          </div>
-        </div>
-        {/* Start Footer*/}
-        <div className="footer d-sm-flex align-items-center justify-content-between bg-white py-2 px-4 border-top">
-          <p className="text-dark mb-0">
-            © 2025
-            <Link to="#" className="link-primary">
-              Kanakku
-            </Link>
-            , All Rights Reserved
-          </p>
-          <p className="text-dark">Version : 1.3.8</p>
-        </div>
-        {/* End Footer*/}
-      </div>
-      {/* ========================
-              End Page Content
-          ========================= */}
-      {/* Add Todo Start */}
-      <div className="modal fade" id="add_todo">
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="modal-title">Add New Todo</h4>
-              <button
-                type="button"
-                className="btn-close btn-close-modal custom-btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <i className="ti ti-x" />
-              </button>
-            </div>
-            <form>
-              <div className="modal-body">
-                <div className="row">
-                  <div className="col-12">
-                    <div className="mb-3">
-                      <label className="form-label">Todo Title</label>
-                      <input type="text" className="form-control" />
-                    </div>
-                  </div>
-                  <div className="col-6">
-                    <div className="mb-3">
-                      <label className="form-label">Tag</label>
-                      <CommonSelect
-                        options={tag}
-                        className="select"
-                        defaultValue={tag[0]}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-6">
-                    <div className="mb-3">
-                      <label className="form-label">Priority</label>
-                      <CommonSelect
-                        options={priority}
-                        className="select"
-                        defaultValue={priority[0]}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-lg-12">
-                    <div className="mb-3">
-                      <label className="form-label">Descriptions</label>
-                      <div className="quill-editor" />
-                    </div>
-                  </div>
-                  <div className="col-12">
-                    <div className="mb-3">
-                      <label className="form-label">Add Assignee</label>
-                      <CommonSelect
-                        options={addAssignee}
-                        className="select"
-                        defaultValue={addAssignee[0]}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-12">
-                    <div className="mb-0">
-                      <label className="form-label">Status</label>
-                      <CommonSelect
-                        options={StatusCompleted}
-                        className="select"
-                        defaultValue={StatusCompleted[0]}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-light me-2"
-                  data-bs-dismiss="modal"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Add New Todo
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       </div>
-      {/* Add Todo End */}
-      {/* Edit Todo Start */}
-      <div className="modal fade" id="edit_todo">
+
+      {/* Add Todo Modal */}
+      <div id="add_todo" className="modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="modal-title">Edit Todo</h4>
-              <button
-                type="button"
-                className="btn-close btn-close-modal custom-btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <i className="ti ti-x" />
-              </button>
-            </div>
-            <form>
-              <div className="modal-body">
-                <div className="row">
-                  <div className="col-12">
-                    <div className="mb-3">
-                      <label className="form-label">Todo Title</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        defaultValue="Update calendar and schedule"
-                      />
-                    </div>
-                  </div>
-                  <div className="col-6">
-                    <div className="mb-3">
-                      <label className="form-label">Tag</label>
-                      <CommonSelect
-                        options={tag}
-                        className="select"
-                        defaultValue={tag[1]}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-6">
-                    <div className="mb-3">
-                      <label className="form-label">Priority</label>
-                      <CommonSelect
-                        options={priority}
-                        className="select"
-                        defaultValue={priority[1]}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-lg-12">
-                    <div className="mb-3">
-                      <label className="form-label">Descriptions</label>
-                      <div className="quill-editor" />
-                    </div>
-                  </div>
-                  <div className="col-12">
-                    <div className="mb-3">
-                      <label className="form-label">Add Assignee</label>
-                      <CommonSelect
-                        options={addAssignee}
-                        className="select"
-                        defaultValue={addAssignee[1]}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-12">
-                    <div className="mb-0">
-                      <label className="form-label">Status</label>
-                      <CommonSelect
-                        options={StatusCompleted}
-                        className="select"
-                        defaultValue={StatusCompleted[1]}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-light me-2"
-                  data-bs-dismiss="modal"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Submit
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-      {/* Edit Todo End */}
-      {/* Todo Details Start */}
-      <div className="modal fade" id="view_todo">
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header bg-dark">
-              <h4 className="modal-title text-white">
-                Respond to any pending messages
-              </h4>
-              <span className="badge bg-danger d-inline-flex align-items-center">
-                <i className="ti ti-square me-1" />
-                Urgent
-              </span>
-              <span>
-                <i className="ti ti-star-filled text-warning" />
-              </span>
-              <Link to="#">
-                <i className="ti ti-trash text-white" />
-              </Link>
-              <button
-                type="button"
-                className="btn-close btn-close-modal custom-btn-close bg-transparent fs-16 text-white position-static"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <i className="ti ti-x" />
-              </button>
+          <div className="modal-content border-0 shadow-lg">
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">Create New Task</h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" id="close_add_todo"></button>
             </div>
             <div className="modal-body">
-              <h5 className="mb-2">Task Details</h5>
-              <div className="border rounded mb-3 p-2">
-                <div className="row row-gap-3">
-                  <div className="col-md-4">
-                    <div className="text-center">
-                      <span className="d-block mb-1">Created On</span>
-                      <p className="text-dark">22 July 2025</p>
-                    </div>
-                  </div>
-                  <div className="col-md-4">
-                    <div className="text-center">
-                      <span className="d-block mb-1">Due Date</span>
-                      <p className="text-dark">22 July 2025</p>
-                    </div>
-                  </div>
-                  <div className="col-md-4">
-                    <div className="text-center">
-                      <span className="d-block mb-1">Status</span>
-                      <span className="badge badge-soft-success d-inline-flex align-items-center">
-                        <i className="fas fa-circle fs-6 me-1" />
-                        Completed
-                      </span>
-                    </div>
-                  </div>
+              <form onSubmit={handleCreate}>
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Task Description</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-lg"
+                    placeholder="What needs to be done?"
+                    value={newTodo.title}
+                    onChange={(e) => setNewTodo({ ...newTodo, title: e.target.value })}
+                    required
+                  />
                 </div>
-              </div>
-              <div className="mb-3">
-                <h5 className="mb-2">Description</h5>
-                <p>
-                  Hiking is a long, vigorous walk, usually on trails or
-                  footpaths in the countryside. Walking for pleasure developed
-                  in Europe during the eighteenth century. Religious pilgrimages
-                  have existed much longer but they involve walking long
-                  distances for a spiritual purpose associated with specific
-                  religions and also we achieve inner peace while we hike at a
-                  local park.
-                </p>
-              </div>
-              <div className="mb-3">
-                <h5 className="mb-2">Tags</h5>
-                <div className="d-flex align-items-center">
-                  <span className="badge bg-danger me-2">Internal</span>
-                  <span className="badge bg-success me-2">Projects</span>
-                  <span className="badge bg-info">Reminder</span>
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Priority</label>
+                  <select
+                    className="form-select form-select-lg"
+                    value={newTodo.priority}
+                    onChange={(e) => setNewTodo({ ...newTodo, priority: e.target.value })}
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
                 </div>
-              </div>
-              <div>
-                <h5 className="mb-2">Assignee</h5>
-                <div className="avatar-list-stacked avatar-group-sm">
-                  <span className="avatar avatar-rounded">
-                    <ImageWithBasePath
-                      className="border border-white"
-                      src="assets/img/profiles/avatar-01.jpg"
-                      alt="img"
-                    />
-                  </span>
-                  <span className="avatar avatar-rounded">
-                    <ImageWithBasePath
-                      className="border border-white"
-                      src="assets/img/profiles/avatar-02.jpg"
-                      alt="img"
-                    />
-                  </span>
-                  <span className="avatar avatar-rounded">
-                    <ImageWithBasePath
-                      className="border border-white"
-                      src="assets/img/profiles/avatar-03.jpg"
-                      alt="img"
-                    />
-                  </span>
+                <div className="text-end mt-4">
+                  <button type="button" className="btn btn-light me-2 px-4" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" className="btn btn-primary px-4 bg-primary text-white border-0">Create Task</button>
                 </div>
-              </div>
+              </form>
             </div>
           </div>
         </div>
       </div>
-      {/* Todo Details End */}
-      {/* Delete Modal Start */}
-      <div className="modal fade" id="delete_modal">
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-body text-center">
-              <span className="avatar avatar-xl bg-transparent-danger text-danger mb-3">
-                <i className="ti ti-trash-x fs-36" />
-              </span>
-              <h4 className="mb-1">Confirm Delete</h4>
-              <p className="mb-3">
-                You want to delete all the marked items, this cant be undone
-                once you delete.
-              </p>
-              <div className="d-flex justify-content-center">
-                <Link
-                  to="#"
-                  className="btn btn-light me-3"
-                  data-bs-dismiss="modal"
-                >
-                  Cancel
-                </Link>
-                <Link to={all_routes.todo} className="btn btn-danger">
-                  Yes, Delete
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* Delete Modal End */}
-    </>
+    </div>
   );
 };
 

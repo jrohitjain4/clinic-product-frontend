@@ -4,6 +4,8 @@ import { Provider } from 'react-redux'
 import store from './core/redux/store'
 import { BrowserRouter } from 'react-router'
 import { base_path } from './environment'
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import ALLRoutes from './feature-module/routes/router'
 import ThemeRouteHandler from './core/common/theme-route-handler/themeRouteHandler'
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
@@ -13,14 +15,15 @@ import "../src/style/css/feather.css";
 import "../node_modules/@tabler/icons-webfont/dist/tabler-icons.css";
 import "../node_modules/@fortawesome/fontawesome-free/css/fontawesome.min.css";
 import "../node_modules/@fortawesome/fontawesome-free/css/all.min.css";
-import "../src/index.scss"; 
+import "../src/index.scss";
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
-    <BrowserRouter basename={base_path}>
-      <ThemeRouteHandler />
-      <ALLRoutes />
-    </BrowserRouter>
+      <BrowserRouter basename={base_path}>
+        <ThemeRouteHandler />
+        <ToastContainer />
+        <ALLRoutes />
+      </BrowserRouter>
     </Provider>
   </StrictMode>
 )

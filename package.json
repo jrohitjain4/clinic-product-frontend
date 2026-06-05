@@ -14,7 +14,8 @@
     "overlayscrollbars-react": "^0.5.6",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-phone-number-input": "^3.4.12"
+    "react-phone-number-input": "^3.4.12",
+    "react-toastify": "^11.1.0"
   },
   "devDependencies": {
     "@ant-design/icons": "^6.0.2",

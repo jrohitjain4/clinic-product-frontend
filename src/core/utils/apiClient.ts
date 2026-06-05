@@ -1,4 +1,5 @@
 import { apiUrl } from "../config/api";
+import { toast } from "react-toastify";
 
 export const authHeaders = (): HeadersInit => {
   const token = localStorage.getItem("token");
@@ -13,6 +14,7 @@ export async function apiGet<T>(path: string): Promise<T> {
       typeof data === "object" && data && "message" in data
         ? String((data as { message: string }).message)
         : `Request failed (${res.status})`;
+    toast.error(message);
     throw new Error(message);
   }
   return data as T;
@@ -34,6 +36,7 @@ async function apiRequest<T>(path: string, method: string, body?: any): Promise<
     const message = typeof data === "object" && data && "message" in data
       ? String((data as { message: string }).message)
       : `Request failed (${res.status})`;
+    toast.error(message);
     throw new Error(message);
   }
   return data as T;

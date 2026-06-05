@@ -50,11 +50,9 @@ import FileManager from "../components/pages/application-modules/application/fil
 import AddInoivce from "../components/pages/application-modules/application/invoice/add-invoice/addInoivce";
 import Invoice from "../components/pages/application-modules/application/invoice/invoice";
 import KanbanView from "../components/pages/application-modules/application/kanban-view/kanbanView";
-import Notes from "../components/pages/application-modules/application/notes/notes";
 import Notifications from "../components/pages/application-modules/application/notifications/notifications";
 import SearchList from "../components/pages/application-modules/application/search-list/searchList";
 import SocialFeed from "../components/pages/application-modules/application/social-feed/socialFeed";
-import Todo from "../components/pages/application-modules/application/todo/todo";
 import TodoList from "../components/pages/application-modules/application/todo/todoList";
 import InvoiceDetails from "../components/pages/application-modules/invoice-details/invoiceDetails";
 import Activities from "../components/pages/clinic-modules/activities/activities";
@@ -484,17 +482,12 @@ export const publicRoutes = [
   },
   {
     path: routes.todo,
-    element: <Todo />,
+    element: <TodoList />,
     route: Route,
   },
   {
     path: routes.todoList,
     element: <TodoList />,
-    route: Route,
-  },
-  {
-    path: routes.notes,
-    element: <Notes />,
     route: Route,
   },
   {

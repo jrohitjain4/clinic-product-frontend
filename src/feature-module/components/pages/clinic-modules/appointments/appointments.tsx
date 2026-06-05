@@ -163,10 +163,31 @@ const Appointments = () => {
               <button
                 type="button"
                 className="dropdown-item d-flex align-items-center"
+                onClick={() => handlePrintAppointment(record._raw)}
+              >
+                <i className="ti ti-printer me-2" />
+                Print Copy
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className="dropdown-item d-flex align-items-center"
+                onClick={() => handleDownloadAppointment(record._raw)}
+              >
+                <i className="ti ti-download me-2" />
+                Download Copy
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className="dropdown-item d-flex align-items-center"
                 data-bs-toggle="modal"
                 data-bs-target="#delete_appointment_modal"
                 onClick={() => setSelected(record._raw)}
               >
+                <i className="ti ti-trash me-2" />
                 Delete
               </button>
             </li>
@@ -176,6 +197,99 @@ const Appointments = () => {
     },
   ];
 
+  const handlePrintAppointment = (a: ClinicAppointment) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Appointment Copy - ${a.appointmentCode}</title>
+          <style>
+            body { font-family: sans-serif; padding: 40px; color: #333; }
+            .header { border-bottom: 2px solid #6366f1; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+            .logo { font-size: 24px; font-weight: bold; color: #6366f1; }
+            .details { margin-bottom: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+            .label { font-weight: bold; color: #666; font-size: 14px; margin-bottom: 5px; }
+            .value { font-size: 16px; margin-bottom: 15px; }
+            .footer { margin-top: 50px; border-top: 1px solid #eee; padding-top: 20px; text-align: center; font-size: 12px; color: #999; }
+            @media print { .btn-print { display: none; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="logo">DocYori Appointment Copy</div>
+            <div>Code: <strong>${a.appointmentCode}</strong></div>
+          </div>
+          <div class="details">
+            <div>
+              <div class="label">PATIENT DETAILS</div>
+              <div class="value">${a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'N/A'}</div>
+              <div class="label">DATE & TIME</div>
+              <div class="value">${new Date(a.scheduledAt).toLocaleString()}</div>
+            </div>
+            <div>
+              <div class="label">DOCTOR</div>
+              <div class="value">Dr. ${a.doctor?.fullName || 'N/A'}</div>
+              <div class="label">STATUS</div>
+              <div class="value">${a.status}</div>
+            </div>
+          </div>
+          <div class="label">REASON</div>
+          <div class="value">${a.reason || 'Regular Checkup'}</div>
+          <div class="footer">
+            Generated on ${new Date().toLocaleString()} by DocYori Clinic Management System
+          </div>
+          <script>
+            window.onload = () => { window.print(); };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const handleDownloadAppointment = (a: ClinicAppointment) => {
+    const content = `
+      Appointment Copy
+      ----------------
+      Code: ${a.appointmentCode}
+      Patient: ${a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'N/A'}
+      Doctor: Dr. ${a.doctor?.fullName || 'N/A'}
+      Date: ${new Date(a.scheduledAt).toLocaleString()}
+      Status: ${a.status}
+      Reason: ${a.reason}
+    `;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `appointment_${a.appointmentCode}.txt`;
+    link.click();
+  };
+
+  const handleExportCSV = () => {
+    const headers = ["Code", "Date", "Patient", "Doctor", "Status"];
+    const csvData = filteredData.map(row => [
+      row._raw.appointmentCode,
+      row.Date_Time,
+      row.Patient,
+      row.Doctor,
+      row.Status
+    ]);
+
+    let csvContent = "data:text/csv;charset=utf-8,"
+      + headers.join(",") + "\n"
+      + csvData.map(e => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "appointments_export.csv");
+    document.body.appendChild(link);
+    link.click();
+  };
+
   return (
     <>
       <div className="page-wrapper">
@@ -184,7 +298,13 @@ const Appointments = () => {
             <div className="flex-grow-1">
               <h4 className="fw-semibold mb-0">Appointment</h4>
             </div>
-            <div className="text-end d-flex">
+            <div className="text-end d-flex align-items-center">
+              <button
+                className="btn btn-outline-primary btn-sm me-2 d-none d-md-inline-flex align-items-center"
+                onClick={handleExportCSV}
+              >
+                <i className="ti ti-download me-1" /> Export CSV
+              </button>
               <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center me-2">
                 <span className="bg-light rounded p-1 d-flex align-items-center justify-content-center">
                   <i className="ti ti-list fs-14 text-dark" />
@@ -220,7 +340,7 @@ const Appointments = () => {
 
           {/* Filters Row */}
           <div className="d-flex align-items-center gap-2 mb-3 flex-wrap">
-            
+
             <input
               type="text"
               className="form-control"

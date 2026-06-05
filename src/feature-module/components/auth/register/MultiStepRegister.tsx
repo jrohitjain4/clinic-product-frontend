@@ -86,30 +86,19 @@ const MultiStepRegister: React.FC = () => {
             }
             setLoading(true);
             try {
+                // Now only validates uniqueness of email, phone, and username
                 const res = await fetch(apiUrl("/api/auth/register-draft"), {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        ownerName: form.ownerName,
                         email: form.emailId,
-                        password: form.password,
                         phone: form.mobileNumber,
-                        whatsappNumber: form.sameAsMobile ? form.mobileNumber : form.whatsappNumber,
-                        clinicName: form.clinicName,
                         username: form.username,
-                        addressLine1: form.addressLine1,
-                        addressLine2: form.addressLine2,
-                        district: form.district,
-                        city: form.city,
-                        state: form.state,
-                        country: form.country,
-                        pincode: form.pincode,
-                        doctorCount: form.doctorCount ? parseInt(form.doctorCount) : 0,
                     }),
                 });
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.message || "Failed to create account");
-                setUserId(data.userId);
+                if (!res.ok) throw new Error(data.message || "Validation failed");
+
                 setStep(3);
             } catch (err: any) {
                 setError(err.message);
@@ -124,20 +113,37 @@ const MultiStepRegister: React.FC = () => {
         setLoading(true);
         setError("");
         try {
-            if (!userId) {
-                setError("Session expired. Please go back and try again.");
-                return;
-            }
-            const res = await fetch(apiUrl("/api/auth/complete-registration"), {
+            // Perform full registration in one step
+            const res = await fetch(apiUrl("/api/auth/register-full"), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId, packageId }),
+                body: JSON.stringify({
+                    ownerName: form.ownerName,
+                    email: form.emailId,
+                    password: form.password,
+                    phone: form.mobileNumber,
+                    whatsappNumber: form.sameAsMobile ? form.mobileNumber : form.whatsappNumber,
+                    clinicName: form.clinicName,
+                    username: form.username,
+                    addressLine1: form.addressLine1,
+                    addressLine2: form.addressLine2,
+                    district: form.district,
+                    city: form.city,
+                    state: form.state,
+                    country: form.country,
+                    pincode: form.pincode,
+                    doctorCount: form.doctorCount ? parseInt(form.doctorCount) : 0,
+                    packageId: packageId,
+                }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Failed to complete registration");
 
-            setSuccess("🎉 Account created successfully! Redirecting to login...");
-            setTimeout(() => navigate(all_routes.login), 2000);
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("user", JSON.stringify(data.user));
+
+            setSuccess("🎉 Account created successfully! Redirecting...");
+            setTimeout(() => navigate(all_routes.dashboard), 2000);
         } catch (err: any) {
             setError(err.message || "Something went wrong. Please try again.");
         } finally {

@@ -48,7 +48,11 @@ const DoctorProfileUpload = ({
   };
 
   return (
-    <div className="position-relative d-inline-block ms-4 mb-2 profile-upload-wrapper">
+    <div
+      className="position-relative d-inline-block ms-4 mb-2 profile-upload-wrapper"
+      onClick={() => !uploading && inputRef.current?.click()}
+      style={{ cursor: "pointer" }}
+    >
       <div className="avatar avatar-xxl rounded-circle bg-light text-primary position-relative overflow-hidden z-1 p-0 d-flex align-items-center justify-content-center" style={{ border: '3px solid #fff', boxShadow: '0 4px 14px rgba(0,0,0,0.08)' }}>
         {value ? (
           <>
@@ -59,7 +63,7 @@ const DoctorProfileUpload = ({
               style={{ objectFit: "cover" }}
             />
             <div className="upload-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50 opacity-0 transition-all">
-               <i className="ti ti-camera fs-24 text-white" />
+              <i className="ti ti-camera fs-24 text-white" />
             </div>
           </>
         ) : (
@@ -67,7 +71,7 @@ const DoctorProfileUpload = ({
             <i className="ti ti-camera-plus" style={{ fontSize: "36px", color: "#6366f1" }} />
           </div>
         )}
-        
+
         {uploading && (
           <div
             className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50 z-1"
@@ -80,8 +84,7 @@ const DoctorProfileUpload = ({
       <input
         ref={inputRef}
         type="file"
-        className="position-absolute top-0 start-0 w-100 h-100 opacity-0 z-4"
-        style={{ cursor: 'pointer' }}
+        style={{ display: "none" }}
         accept="image/jpeg,image/png,image/webp,image/gif"
         disabled={uploading}
         onChange={(e) => {

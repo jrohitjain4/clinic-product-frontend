@@ -105,25 +105,7 @@ const AnnouncementsList = () => {
               </span>
             </div>
             <div className="text-end">
-              <Link
-                to="#"
-                className="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#add_announcement"
-              >
-                <i className="ti ti-plus me-1" />
-                Add New Announcement
-              </Link>
-            </div>
-          </div>
-          {/* End Page Header */}
-          <div className=" d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-            <div className="search-set mb-3">
-              <div className="d-flex align-items-center flex-wrap gap-2">
-                
-              </div>
-            </div>
-            <div className="d-flex table-dropdown mb-3 pb-1 right-content align-items-center flex-wrap row-gap-3">
+              
               <div className="dropdown me-2">
                 <Link
                   to="#"
@@ -152,29 +134,17 @@ const AnnouncementsList = () => {
                   <FilterIndex />
                 </div>
               </div>
-              <div className="dropdown">
-                <Link
-                  to="#"
-                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
-                  data-bs-toggle="dropdown"
-                >
-                  <span className="me-1"> Sort By : </span> Recent
-                </Link>
-                <ul className="dropdown-menu  dropdown-menu-end p-2">
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Recent
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Oldest
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+              <Link
+                to="#"
+                className="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#add_announcement"
+              >
+                Add New Announcement <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
+          {/* End Page Header */}
+          
           {/* Table List */}
           <div className="table-responsive">
             <Datatable

@@ -309,42 +309,7 @@ const PatientPrescriptions = () => {
                   </form>
                 </div>
               </div>
-              <div className="dropdown">
-                <Link
-                  to="#"
-                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
-                  data-bs-toggle="dropdown"
-                >
-                  <span className="me-1"> Sort By : </span> Recent
-                </Link>
-                <ul className="dropdown-menu  dropdown-menu-end p-2">
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Recently Added
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Ascending
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Desending
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Last Month
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Last 7 Days
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+              
             </div>
           </div>
           <div className="table-responsive">

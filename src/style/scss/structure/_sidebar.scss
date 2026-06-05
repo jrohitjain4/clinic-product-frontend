@@ -284,12 +284,16 @@
                                 font-weight: $font-weight-normal;
                                 border: none;
                                 &.active {
-                                    color: $menu-item-hover-color;
+                                    color: $primary !important;
+                                    background: $menu-light-bg;
+                                    border-radius: 5px;
+                                    border-left: 2px solid $menu-item-active-color !important;
+                                    font-weight: $font-weight-medium;
                                     &::before {
-                                        opacity: 1;
+                                        opacity: 0;
                                     }
                                     &::after{
-                                        color: $menu-item-hover-color;
+                                        display: none;
                                     }
                                 }
                                 &:hover {                                 

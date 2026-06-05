@@ -65,9 +65,7 @@ const LanguageSettings = () => {
                       to="#"
                       className="btn btn-primary d-inline-flex align-items-center"
                     >
-                      <i className="ti ti-plus me-1" />
-                      Add New Language
-                    </Link>
+                      Add New Language <i className="ti ti-plus ms-2" /></Link>
                   </div>
                 </div>
               </div>

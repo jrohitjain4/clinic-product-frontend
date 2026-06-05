@@ -741,8 +741,7 @@ const Messages = () => {
                                       </li>
                                       <li className="add-emoj">
                                         <Link to="#">
-                                          <i className="ti ti-plus" />
-                                        </Link>
+                                            <i className="ti ti-plus ms-2" /></Link>
                                       </li>
                                     </ul>
                                   </div>
@@ -899,8 +898,7 @@ const Messages = () => {
                                       </li>
                                       <li className="add-emoj">
                                         <Link to="#">
-                                          <i className="ti ti-plus" />
-                                        </Link>
+                                            <i className="ti ti-plus ms-2" /></Link>
                                       </li>
                                     </ul>
                                   </div>
@@ -1120,8 +1118,7 @@ const Messages = () => {
                                       </li>
                                       <li className="add-emoj">
                                         <Link to="#">
-                                          <i className="ti ti-plus" />
-                                        </Link>
+                                            <i className="ti ti-plus ms-2" /></Link>
                                       </li>
                                     </ul>
                                   </div>
@@ -1242,8 +1239,7 @@ const Messages = () => {
                                       </li>
                                       <li className="add-emoj">
                                         <Link to="#">
-                                          <i className="ti ti-plus" />
-                                        </Link>
+                                            <i className="ti ti-plus ms-2" /></Link>
                                       </li>
                                     </ul>
                                   </div>
@@ -1465,8 +1461,7 @@ const Messages = () => {
                                       </li>
                                       <li className="add-emoj">
                                         <Link to="#">
-                                          <i className="ti ti-plus" />
-                                        </Link>
+                                            <i className="ti ti-plus ms-2" /></Link>
                                       </li>
                                     </ul>
                                   </div>
@@ -1591,8 +1586,7 @@ const Messages = () => {
                                       </li>
                                       <li className="add-emoj">
                                         <Link to="#">
-                                          <i className="ti ti-plus" />
-                                        </Link>
+                                            <i className="ti ti-plus ms-2" /></Link>
                                       </li>
                                     </ul>
                                   </div>
@@ -1813,8 +1807,7 @@ const Messages = () => {
                                       </li>
                                       <li className="add-emoj">
                                         <Link to="#">
-                                          <i className="ti ti-plus" />
-                                        </Link>
+                                            <i className="ti ti-plus ms-2" /></Link>
                                       </li>
                                     </ul>
                                   </div>
@@ -1923,8 +1916,7 @@ const Messages = () => {
                                     </li>
                                     <li className="add-emoj">
                                       <Link to="#">
-                                        <i className="ti ti-plus" />
-                                      </Link>
+                                          <i className="ti ti-plus ms-2" /></Link>
                                     </li>
                                   </ul>
                                 </div>
@@ -2005,8 +1997,7 @@ const Messages = () => {
                           </li>
                           <li className="add-emoj">
                             <Link to="#">
-                              <i className="ti ti-plus" />
-                            </Link>
+                                <i className="ti ti-plus ms-2" /></Link>
                           </li>
                         </ul>
                       </div>

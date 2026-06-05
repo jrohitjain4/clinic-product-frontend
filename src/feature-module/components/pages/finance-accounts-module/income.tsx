@@ -131,6 +131,28 @@ const IncomeList = () => {
               </h4>
             </div>
             <div className="text-end d-flex">
+              <div className="dropdown">
+                <Link
+                  to="#"
+                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
+                  data-bs-toggle="dropdown"
+                >
+                  <span className="me-1"> Sort By : </span> Recent
+                </Link>
+                <ul className="dropdown-menu  dropdown-menu-end p-2">
+                  <li>
+                    <Link to="#" className="dropdown-item rounded-1">
+                      Recent
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="#" className="dropdown-item rounded-1">
+                      Oldest
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              
               {/* dropdown*/}
               <div className="dropdown me-1">
                 <Link
@@ -154,28 +176,7 @@ const IncomeList = () => {
                   </li>
                 </ul>
               </div>
-              <Link
-                to="#"
-                className="btn btn-primary ms-2 fs-13 btn-md"
-                data-bs-toggle="modal"
-                data-bs-target="#add_new_income"
-              >
-                <i className="ti ti-plus me-1" />
-                New Income{" "}
-              </Link>
-            </div>
-          </div>
-          {/* End Page Header */}
-          {/*  Start Filter */}
-          <div className=" d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-            <div className="d-flex align-items-center gap-2">
-              <div className="search-set mb-3">
-                <div className="d-flex align-items-center flex-wrap gap-2">
-                  
-                </div>
-              </div>
-            </div>
-            <div className="d-flex table-dropdown mb-3 pb-1 right-content align-items-center flex-wrap row-gap-3">
+              
               <div className="dropdown me-2">
                 <Link
                   to="#"
@@ -204,29 +205,18 @@ const IncomeList = () => {
                   <FilterIndex />
                 </div>
               </div>
-              <div className="dropdown">
-                <Link
-                  to="#"
-                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
-                  data-bs-toggle="dropdown"
-                >
-                  <span className="me-1"> Sort By : </span> Recent
-                </Link>
-                <ul className="dropdown-menu  dropdown-menu-end p-2">
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Recent
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Oldest
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+              <Link
+                to="#"
+                className="btn btn-primary ms-2 fs-13 btn-md"
+                data-bs-toggle="modal"
+                data-bs-target="#add_new_income"
+              >
+                New Income{" "} <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
+          {/* End Page Header */}
+          {/*  Start Filter */}
+          
           {/*  End Filter */}
           {/*  Start Table */}
           <div className="table-responsive">

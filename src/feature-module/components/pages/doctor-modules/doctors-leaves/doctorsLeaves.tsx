@@ -131,8 +131,7 @@ const DoctorsLeaves = () => {
             </div>
             <div className="text-end d-flex">
               <Link to="#" className="btn btn-primary ms-2 fs-13 btn-md" data-bs-toggle="modal" data-bs-target="#add-leave">
-                <i className="ti ti-plus me-1" /> Add New Leave
-              </Link>
+                Add New Leave <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
           <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">

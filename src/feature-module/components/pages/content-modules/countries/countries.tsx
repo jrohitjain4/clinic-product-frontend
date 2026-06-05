@@ -115,9 +115,7 @@ const Countries = () => {
                 data-bs-toggle="modal"
                 data-bs-target="#add_countries"
               >
-                <i className="ti ti-plus me-1" />
-                Add New Countries
-              </Link>
+                Add New Countries <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
           {/* End Page Header */}

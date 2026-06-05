@@ -210,8 +210,7 @@ const AddPrescriptionModal = ({ onClose, onSubmit }: Props) => {
                                             className="btn btn-sm btn-outline-primary"
                                             onClick={addMedicine}
                                         >
-                                            <i className="ti ti-plus me-1" /> Add Medicine
-                                        </button>
+                                            Add Medicine <i className="ti ti-plus ms-2" /></button>
                                     </div>
 
                                     <div className="table-responsive border rounded">

@@ -192,9 +192,7 @@ const StaffsList = () => {
                 data-bs-target="#add_staff"
                 onClick={() => setSelected(null)}
               >
-                <i className="ti ti-plus me-1" />
-                Add Staff
-              </button>
+                Add Staff <i className="ti ti-plus ms-2" /></button>
             </div>
           </div>
 
@@ -229,9 +227,7 @@ const StaffsList = () => {
                 data-bs-toggle="modal"
                 data-bs-target="#add_staff"
               >
-                <i className="ti ti-plus me-1" />
-                Add Staff
-              </button>
+                Add Staff <i className="ti ti-plus ms-2" /></button>
             </div>
           ) : (
             <div className="table-responsive">

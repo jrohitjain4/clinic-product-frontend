@@ -92,9 +92,7 @@ const BlogCategories = () => {
                 data-bs-toggle="modal"
                 data-bs-target="#add_categories"
               >
-                <i className="ti ti-plus me-1" />
-                Add New Categories
-              </Link>
+                Add New Categories <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
           {/* End Page Header */}

@@ -32,9 +32,7 @@ const SystemBackupSettings = () => {
                         data-bs-toggle="modal"
                         data-bs-target="#generate"
                       >
-                        <i className="ti ti-plus me-1" />
-                        Generate Backup
-                      </Link>
+                        Generate Backup <i className="ti ti-plus ms-2" /></Link>
                     </div>
                   </div>
                   <div className="card-body px-0 mx-3">

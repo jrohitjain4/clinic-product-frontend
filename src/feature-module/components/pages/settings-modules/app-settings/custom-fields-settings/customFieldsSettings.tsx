@@ -270,9 +270,7 @@ const CustomFieldsSettings = () => {
                         data-bs-toggle="modal"
                         data-bs-target="#add_reason"
                       >
-                        <i className="ti ti-plus me-1" />
-                        New Custom Field
-                      </Link>
+                        New Custom Field <i className="ti ti-plus ms-2" /></Link>
                     </div>
                   </div>
                   <div className="card-body px-0 mx-3">

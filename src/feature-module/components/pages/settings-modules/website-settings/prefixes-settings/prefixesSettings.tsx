@@ -150,8 +150,7 @@ const PrefixesSettings = () => {
                         </div>
                         <div className="col-12">
                           <button type="button" className="btn btn-outline-primary" onClick={addReview}>
-                            <i className="ti ti-plus me-1" /> Add Review
-                          </button>
+                            Add Review <i className="ti ti-plus ms-2" /></button>
                         </div>
                       </div>
                     </div>

@@ -104,9 +104,7 @@ const LeaveType = () => {
                 data-bs-target="#add_leave_type"
                 onClick={() => setCurrentRecord(null)}
               >
-                <i className="ti ti-plus me-1" />
-                New Leave Type
-              </Link>
+                New Leave Type <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
           <div className="table-responsive border">

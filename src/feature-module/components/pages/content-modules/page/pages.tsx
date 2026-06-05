@@ -107,8 +107,7 @@ const Pages = () => {
                 to={all_routes.addPage}
                 className="btn btn-primary ms-2 fs-13 btn-md"
               >
-                <i className="ti ti-plus me-1" /> Add New Page
-              </Link>
+                Add New Page <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
           {/* End Page Header */}

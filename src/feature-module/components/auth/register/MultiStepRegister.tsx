@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { apiUrl } from "../../../../core/config/api";
 import { Input } from "../../../../core/common/input/Input";
 import { Button } from "../../../../core/common/button/Button";
-import { UserPlus, User, Phone, Mail, MessageCircle, MapPin, Hash, Lock, CheckCircle, ArrowRight, ArrowLeft, Eye, EyeOff, Home, AtSign, Map, Users } from "react-feather";
+import { UserPlus, User, Phone, Mail, MessageCircle, MapPin, Hash, Lock, CheckCircle, ArrowRight, ArrowLeft, Eye, EyeOff, Home, AtSign, Map, Users, Calendar, Star, Zap } from "react-feather";
 
 const MultiStepRegister: React.FC = () => {
     const navigate = useNavigate();
@@ -354,17 +354,24 @@ const MultiStepRegister: React.FC = () => {
                                                                 maxLength={10}
                                                                 disabled={form.sameAsMobile}
                                                                 leftAddon={<MessageCircle size={20} strokeWidth={2.5} color="#0f172a" />}
+                                                                rightIcon={
+                                                                    <div className="d-flex align-items-center h-100 pe-2">
+                                                                        <button 
+                                                                            type="button"
+                                                                            onClick={() => setForm({ ...form, sameAsMobile: !form.sameAsMobile })}
+                                                                            className={`btn btn-sm ${form.sameAsMobile ? 'btn-primary' : 'btn-light border text-muted'} rounded-pill`}
+                                                                            style={{ fontSize: "11px", padding: "3px 10px", fontWeight: 600, whiteSpace: "nowrap" }}
+                                                                        >
+                                                                            {form.sameAsMobile ? "✓ Same as Mobile" : "Same as Mobile"}
+                                                                        </button>
+                                                                    </div>
+                                                                }
                                                                 value={form.sameAsMobile ? form.mobileNumber : form.whatsappNumber}
                                                                 onChange={e => setForm({ ...form, whatsappNumber: e.target.value.replace(/\D/g, "").slice(0, 10) })}
                                                             />
-                                                            <div className="form-check form-check-md mt-2 mb-0">
-                                                                <input className="form-check-input" type="checkbox" id="sameAsMobile" checked={form.sameAsMobile}
-                                                                    onChange={e => setForm({ ...form, sameAsMobile: e.target.checked })} />
-                                                                <label className="form-check-label mt-0 text-dark" htmlFor="sameAsMobile">Same as mobile number</label>
-                                                            </div>
                                                         </div>
 
-                                                        <Button type="submit" variant="primary" size="large" className="w-100 fs-15" style={{ padding: "12px", minHeight: "50px" }} icon={<ArrowRight size={18} />} iconPosition="right">
+                                                        <Button type="submit" variant="primary" size="large" className="w-100 fs-15 btn-primary-grad" style={{ padding: "12px", minHeight: "50px" }} icon={<ArrowRight size={18} />} iconPosition="right">
                                                             Continue to Clinic Details
                                                         </Button>
                                                     </form>
@@ -480,10 +487,10 @@ const MultiStepRegister: React.FC = () => {
                                                         </div>
 
                                                         <div className="d-flex mt-4" style={{ gap: "12px" }}>
-                                                            <Button type="button" variant="secondary" size="large" className="fs-15" style={{ width: "40%", padding: "12px", minHeight: "50px" }} icon={<ArrowLeft size={18} />} onClick={() => setStep(1)}>
+                                                            <Button type="button" variant="secondary" size="large" className="fs-15 btn-back" style={{ width: "40%", padding: "12px", minHeight: "50px" }} icon={<ArrowLeft size={18} />} onClick={() => setStep(1)}>
                                                                 Back
                                                             </Button>
-                                                            <Button type="submit" variant="primary" size="large" className="fs-15" style={{ width: "60%", padding: "12px", minHeight: "50px" }} disabled={loading} icon={<ArrowRight size={18} />} iconPosition="right">
+                                                            <Button type="submit" variant="primary" size="large" className="fs-15 btn-primary-grad" style={{ width: "60%", padding: "12px", minHeight: "50px" }} disabled={loading} icon={<ArrowRight size={18} />} iconPosition="right">
                                                                 {loading ? "Saving..." : "Continue to Plans"}
                                                             </Button>
                                                         </div>
@@ -499,7 +506,12 @@ const MultiStepRegister: React.FC = () => {
                                                             </div>
                                                         )}
                                                         {packages.map((p) => (
-                                                            <div key={p.id} className={`pkg-card ${p.price === 0 ? "free" : ""}`}>
+                                                            <div 
+                                                                key={p.id} 
+                                                                className={`pkg-card ${p.price === 0 ? "free" : ""} ${selectedPkgId === p.id ? "border-primary" : ""}`}
+                                                                style={{ ...(selectedPkgId === p.id ? { borderColor: '#7c3aed', boxShadow: '0 4px 16px rgba(124,58,237,0.1)' } : {}) }}
+                                                                onClick={() => setSelectedPkgId(p.id)}
+                                                            >
                                                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                                                                     <div style={{ flex: 1 }}>
                                                                         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
@@ -508,10 +520,12 @@ const MultiStepRegister: React.FC = () => {
                                                                             </span>
                                                                             <span style={{ fontWeight: 700, fontSize: "16px", color: "#1a1a2e" }}>{p.name}</span>
                                                                         </div>
-                                                                        <div className="pkg-meta">
-                                                                            📅 {p.durationInDays} Days &nbsp;|&nbsp; 👨‍⚕️ Max {p.maxDoctors} Doctors &nbsp;|&nbsp; 👤 Max {p.maxPatients} Patients
+                                                                        <div className="pkg-meta d-flex align-items-center flex-wrap gap-2 text-muted" style={{ fontSize: "13px", marginTop: "8px" }}>
+                                                                            <span className="d-flex align-items-center gap-1"><Calendar size={14} /> {p.durationInDays} Days</span> <span className="opacity-50">|</span>
+                                                                            <span className="d-flex align-items-center gap-1"><UserPlus size={14} /> Max {p.maxDoctors} Doctors</span> <span className="opacity-50">|</span>
+                                                                            <span className="d-flex align-items-center gap-1"><User size={14} /> Max {p.maxPatients} Patients</span>
                                                                         </div>
-                                                                        {p.price === 0 && <div className="tag-recommended">⭐ Recommended for New Users</div>}
+                                                                        {p.price === 0 && <div className="tag-recommended d-inline-flex align-items-center gap-1 mt-2"><Star size={12} /> Recommended for New Users</div>}
                                                                     </div>
                                                                     <div style={{ textAlign: "right", marginLeft: "16px" }}>
                                                                         <div className={`pkg-price ${p.price === 0 ? "free" : "paid"}`}>
@@ -520,19 +534,38 @@ const MultiStepRegister: React.FC = () => {
                                                                         {p.price > 0 && <div style={{ fontSize: "11px", color: "#9ca3af" }}>per cycle</div>}
 
                                                                         <Button
-                                                                            variant={p.price === 0 ? "success" : "primary"}
-                                                                            onClick={() => handleComplete(p.id)}
-                                                                            disabled={loading}
-                                                                            className="mt-2"
-                                                                            icon={p.price === 0 ? undefined : <CheckCircle size={16} />}
+                                                                            type="button"
+                                                                            variant={selectedPkgId === p.id ? (p.price === 0 ? "success" : "primary") : "secondary"}
+                                                                            className="mt-2 px-4"
+                                                                            icon={selectedPkgId === p.id ? <CheckCircle size={16} /> : undefined}
                                                                         >
-                                                                            {selectedPkgId === p.id && loading ? "Processing..." : p.price === 0 ? "🚀 Start Free Trial" : "Buy Now"}
+                                                                            {selectedPkgId === p.id ? "Selected" : "Select"}
                                                                         </Button>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         ))}
-                                                        <Button variant="secondary" className="w-100 mt-2" onClick={() => { setStep(2); setError(""); }} icon={<ArrowLeft size={16} />}>
+                                                        
+                                                        {packages.length > 0 && selectedPkgId && (
+                                                            <div className="mt-4">
+                                                                {(() => {
+                                                                    const selectedPkg = packages.find(p => p.id === selectedPkgId);
+                                                                    return selectedPkg ? (
+                                                                        <Button 
+                                                                            variant="primary" 
+                                                                            size="large" 
+                                                                            className="w-100 fs-15 btn-primary-grad d-flex align-items-center justify-content-center gap-2" 
+                                                                            style={{ minHeight: "50px" }}
+                                                                            onClick={() => handleComplete(selectedPkgId)}
+                                                                            disabled={loading}
+                                                                        >
+                                                                            {loading ? "Processing..." : selectedPkg.price === 0 ? <><Zap size={18} /> Start Free Trial Now</> : `Pay ₹${selectedPkg.price.toLocaleString("en-IN")} Now`}
+                                                                        </Button>
+                                                                    ) : null;
+                                                                })()}
+                                                            </div>
+                                                        )}
+                                                        <Button variant="secondary" className="w-100 mt-2 btn-back" style={{ minHeight: "50px" }} onClick={() => { setStep(2); setError(""); }} icon={<ArrowLeft size={16} />}>
                                                             Back to Clinic Details
                                                         </Button>
                                                     </div>

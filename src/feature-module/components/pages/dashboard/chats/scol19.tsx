@@ -4,7 +4,7 @@ interface SCol19ChartProps {
   data: { month: string, completed: number, ongoing: number, rescheduled: number }[];
 }
 
-const SCol19Chart = ({ data }: SCol19ChartProps) => {
+const SCol19Chart = ({ data = [] }: SCol19ChartProps) => {
   const chartOptions: any = {
     chart: {
       type: "bar",

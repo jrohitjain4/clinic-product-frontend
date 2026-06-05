@@ -119,8 +119,7 @@ const DoctorsPrescriptions = () => {
                 className="btn btn-primary btn-md d-flex align-items-center"
                 onClick={() => setShowModal(true)}
               >
-                <i className="ti ti-plus me-1" /> Add Prescription
-              </button>
+                Add Prescription <i className="ti ti-plus ms-2" /></button>
               <div className="dropdown">
                 <Link
                   to="#"

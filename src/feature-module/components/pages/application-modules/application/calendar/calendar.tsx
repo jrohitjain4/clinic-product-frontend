@@ -78,9 +78,7 @@ const Calendars = () => {
                 data-bs-target="#add_event"
                 className="btn btn-sm btn-primary"
               >
-                <i className="ti ti-plus me-1" />
-                Create
-              </Link>
+                Create <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
 

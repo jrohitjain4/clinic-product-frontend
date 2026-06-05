@@ -35,9 +35,7 @@ const TaxRatesSettings = () => {
                             data-bs-toggle="modal"
                             data-bs-target="#add_tax_rate"
                           >
-                            <i className="ti ti-plus me-1" />
-                            New Bank Account
-                          </Link>
+                            New Bank Account <i className="ti ti-plus ms-2" /></Link>
                         </div>
                       </div>
                       <div className="card-body px-0 mx-3">
@@ -198,9 +196,7 @@ const TaxRatesSettings = () => {
                             data-bs-toggle="modal"
                             data-bs-target="#add_tax_group"
                           >
-                            <i className="ti ti-plus me-1" />
-                            New Tax Group
-                          </Link>
+                            New Tax Group <i className="ti ti-plus ms-2" /></Link>
                         </div>
                       </div>
                       <div className="card-body px-0 mx-3">

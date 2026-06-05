@@ -98,9 +98,8 @@ const DoctorsList = () => {
       dataIndex: "Status",
       render: (text: string) => (
         <span
-          className={`badge ${
-            text === "Available" ? "badge-soft-success" : "badge-soft-danger"
-          } border border-success`}
+          className={`badge ${text === "Available" ? "badge-soft-success" : "badge-soft-danger"
+            } border border-success`}
         >
           {text}
         </span>
@@ -164,8 +163,8 @@ const DoctorsList = () => {
                 </span>
               </h4>
             </div>
-            <div className="text-end d-flex">
-              <div className="dropdown me-1">
+            <div className="text-end d-flex align-items-center gap-2">
+              <div className="dropdown">
                 <Link
                   to="#"
                   className="btn btn-md fs-14 fw-normal border bg-white rounded text-dark d-inline-flex align-items-center"
@@ -187,44 +186,23 @@ const DoctorsList = () => {
                   </li>
                 </ul>
               </div>
-              <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center">
+              <div className="d-flex align-items-center gap-2">
                 <Link
                   to={all_routes.doctorsList}
-                  className="bg-light rounded p-1 d-flex align-items-center justify-content-center"
+                  className="btn btn-icon btn-sm bg-primary-subtle text-primary border border-primary d-flex align-items-center justify-content-center"
+                  style={{ width: '38px', height: '38px', borderRadius: '8px' }}
                 >
-                  <i className="ti ti-list fs-14 text-dark" />
+                  <i className="ti ti-list-tree fs-16" />
                 </Link>
                 <Link
                   to={all_routes.doctors}
-                  className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
+                  className="btn btn-icon btn-sm bg-white text-dark border d-flex align-items-center justify-content-center"
+                  style={{ width: '38px', height: '38px', borderRadius: '8px' }}
                 >
-                  <i className="ti ti-layout-grid fs-14 text-body" />
+                  <i className="ti ti-layout-grid fs-16" />
                 </Link>
               </div>
-              <Link to={all_routes.addDoctors} className="btn btn-primary ms-2 fs-13 btn-md">
-                <i className="ti ti-plus me-1" />
-                New Doctor
-              </Link>
-            </div>
-          </div>
-
-          {error && (
-            <div className="alert alert-danger d-flex align-items-center justify-content-between mb-3">
-              <span>{error}</span>
-              <button type="button" className="btn btn-sm btn-outline-danger" onClick={refetch}>
-                Retry
-              </button>
-            </div>
-          )}
-
-          <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-            <div className="search-set mb-3">
-              <div className="d-flex align-items-center flex-wrap gap-2">
-                
-              </div>
-            </div>
-            <div className="d-flex table-dropdown mb-3 pb-1 right-content align-items-center flex-wrap row-gap-3">
-              <div className="dropdown me-2">
+              <div className="dropdown">
                 <Link
                   to="#"
                   className="btn btn-white bg-white fs-14 py-1 border d-inline-flex text-dark align-items-center"
@@ -305,6 +283,28 @@ const DoctorsList = () => {
                   </form>
                 </div>
               </div>
+              <Link to={all_routes.addDoctors} className="btn btn-primary fs-13 btn-md">
+                New Doctor <i className="ti ti-plus ms-2" /></Link>
+            </div>
+          </div>
+
+          {error && (
+            <div className="alert alert-danger d-flex align-items-center justify-content-between mb-3">
+              <span>{error}</span>
+              <button type="button" className="btn btn-sm btn-outline-danger" onClick={refetch}>
+                Retry
+              </button>
+            </div>
+          )}
+
+          <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+            <div className="search-set mb-3">
+              <div className="d-flex align-items-center flex-wrap gap-2">
+
+              </div>
+            </div>
+            <div className="d-flex table-dropdown mb-3 pb-1 right-content align-items-center flex-wrap row-gap-3">
+
             </div>
           </div>
 
@@ -332,7 +332,7 @@ const DoctorsList = () => {
         </div>
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 
+            2025
             <Link to="#" className="link-primary">
               Docyari
             </Link>

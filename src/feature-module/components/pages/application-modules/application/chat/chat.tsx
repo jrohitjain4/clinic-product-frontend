@@ -55,8 +55,7 @@ const Chat = () => {
                       data-bs-placement="top"
                       data-bs-title="New Chat"
                     >
-                      <i className="ti ti-plus" />
-                    </Link>
+                        <i className="ti ti-plus ms-2" /></Link>
                   </div>
                   <div>
                     <div className="input-group w-auto input-group-flat p-4 pb-0">

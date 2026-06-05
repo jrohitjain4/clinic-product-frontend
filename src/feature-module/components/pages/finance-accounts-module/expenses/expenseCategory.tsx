@@ -90,9 +90,7 @@ const ExpenseCategory = () => {
                 data-bs-target="#add_expense_category"
                 onClick={() => setSelectedCategory(null)}
               >
-                <i className="ti ti-plus me-1" />
-                Add Category
-              </Link>
+                Add Category <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
           <div className="table-responsive">

@@ -22,9 +22,7 @@ const Faq = () => {
                 data-bs-toggle="modal"
                 data-bs-target="#add_faq"
               >
-                <i className="ti ti-plus me-1" />
-                Add New FAQ
-              </Link>
+                Add New FAQ <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
           {/* End Page Header */}

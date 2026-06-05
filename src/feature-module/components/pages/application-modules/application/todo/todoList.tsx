@@ -103,9 +103,14 @@ const TodoList = () => {
       <div className="content">
         <div className="row">
           <div className="col-md-12">
-            <div className="section-header d-flex justify-content-between align-items-center mb-4">
-              <h4 className="page-title">Dynamic To Do List</h4>
-              <button className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_todo">
+            <div className="section-header d-flex justify-content-between align-items-center flex-nowrap gap-2 mb-4">
+              <h4 className="page-title mb-0">Dynamic To Do List</h4>
+              <button 
+                className="btn btn-primary d-flex align-items-center justify-content-center" 
+                style={{ minHeight: '46px', whiteSpace: 'nowrap' }} 
+                data-bs-toggle="modal" 
+                data-bs-target="#add_todo"
+              >
                 <i className="fa fa-plus me-2"></i> Add New Task
               </button>
             </div>
@@ -116,8 +121,7 @@ const TodoList = () => {
           <div className="card-body p-0">
             <div className="table-responsive">
               <table className="table table-hover mb-0 custom-todo-table">
-                <thead className="bg-light">
-                  <tr>
+                <thead className="bg-light">                  <tr>
                     <th style={{ width: "50px" }}>#</th>
                     <th>Task Description</th>
                     <th>Priority</th>

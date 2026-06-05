@@ -33,6 +33,22 @@ const CommonSelect: React.FC<SelectProps> = ({
   const [selectedOption, setSelectedOption] = useState<any>(defaultValue);
 
   const customStyles = {
+    
+    control: (base: any, state: any) => ({
+      ...base,
+      backgroundColor: 'white',
+      border: state.isFocused ? '1.5px solid #6366f1' : '1.5px solid #6366f1',
+      boxShadow: 'none',
+      borderRadius: '12px',
+      minHeight: '46px',
+      fontSize: '15px',
+      fontWeight: '500',
+      padding: '2px 8px',
+      transition: 'all 0.2s ease-in-out',
+      '&:hover': {
+        border: '1.5px solid #6366f1'
+      }
+    }),
     option: (base: any, state: any) => ({
       ...base,
       color: "#6C7688",

@@ -166,16 +166,21 @@ const OrganizationSettings = () => {
                         <div className="col-12 mb-3">
                           <h6 className="fw-semibold text-muted">Clinic Logo</h6>
                         </div>
-                        <div className="col-lg-6">
+                        <div className="col-lg-12">
                           <div className="d-flex align-items-center mb-3">
-                            <div className="me-3">
-                              <div className="profile-container">
-                                <ImageWithBasePath src="assets/img/logo.svg" alt="Logo" className="img-fluid object-fit-contain p-1" />
+                            <div className="profile-upload me-3">
+                              <div className="profile-container d-flex align-items-center justify-content-center bg-light" style={{ width: '150px', height: '60px', border: '1px dashed #ccc', borderRadius: '8px', overflow: 'hidden' }}>
+                                <ImageWithBasePath src="assets/img/logo.svg" alt="Logo" className="img-fluid object-fit-contain p-1 w-100 h-100" />
                               </div>
                             </div>
-                            <div>
-                              <p className="fw-medium text-dark mb-1">Clinic Logo</p>
-                              <span className="text-muted small">Recommended: 250×100 px</span>
+                            <div className="profile-upload-content">
+                              <div className="profile-upload-btn mb-2">
+                                <label className="btn btn-primary btn-sm" style={{ position: 'relative', cursor: 'pointer' }}>
+                                  <input type="file" className="upload" style={{ position: 'absolute', opacity: 0, top: 0, left: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
+                                  <i className="ti ti-upload me-1" /> Browse
+                                </label>
+                              </div>
+                              <p className="fs-12 text-muted mb-0">Recommended image size is 250px x 100px.</p>
                             </div>
                           </div>
                         </div>

@@ -33,9 +33,7 @@ const SmsTemplatesSettings = () => {
                     data-bs-toggle="modal"
                     data-bs-target="#add_template"
                   >
-                    <i className="ti ti-plus me-1" />
-                    New Template
-                  </Link>
+                    New Template <i className="ti ti-plus ms-2" /></Link>
                 </div>
               </div>
               <div className="card-body px-0 mx-3">

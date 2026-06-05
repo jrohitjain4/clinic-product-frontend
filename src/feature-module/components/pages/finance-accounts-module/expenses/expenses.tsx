@@ -148,9 +148,7 @@ const ExpensesList = () => {
                 data-bs-target="#add_new_expense"
                 onClick={() => setSelectedExpense(null)}
               >
-                <i className="ti ti-plus me-1" />
-                New Expense
-              </Link>
+                New Expense <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
           <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">

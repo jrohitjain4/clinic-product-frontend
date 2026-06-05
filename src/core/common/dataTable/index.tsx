@@ -41,39 +41,39 @@ const Datatable: React.FC<DatatableProps> = ({
 
   return (
     <div className="card overflow-hidden bg-white shadow-sm border"><div className="card-body p-0"><div className="table-responsive">
-    <Table
-      className="table table-nowrap datatable"
-      rowKey={(record) => record.key ?? record.id ?? String(record.Name_Designation)}
-      rowSelection={Selections ? rowSelection : undefined}
-      columns={columns}
-      rowHoverable={false}
-      dataSource={filteredDataSource}
-      loading={loading}
-      pagination={{
-        showSizeChanger: false,
-        pageSize,
-        onShowSizeChange: (size) => setPageSize(size),
-        total: filteredDataSource.length,
-        showTotal: (total) => (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 16 }}>
-            Rows per page:
-            <Select
-              value={pageSize}
-              onChange={(value) => setPageSize(value)}
-              style={{ width: 80 }}
-              popupMatchSelectWidth={false}
-            >
-              <Option value={10}>10</Option>
-              <Option value={20}>20</Option>
-              <Option value={30}>30</Option>
-            </Select>
-            of {total} Entries
-          </div>
-        ),
-        nextIcon: <i className="ti ti-chevron-right" />,
-        prevIcon: <i className="ti ti-chevron-left" />,
-      }}
-    />
+      <Table
+        className="table table-nowrap datatable"
+        rowKey={(record) => record.key ?? record.id ?? String(record.Name_Designation)}
+        rowSelection={Selections ? rowSelection : undefined}
+        columns={columns}
+        rowHoverable={false}
+        dataSource={filteredDataSource}
+        loading={loading}
+        pagination={{
+          showSizeChanger: false,
+          pageSize,
+          onShowSizeChange: (size) => setPageSize(size),
+          total: filteredDataSource.length,
+          showTotal: (total) => (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 16 }}>
+              Rows per page:
+              <Select
+                value={pageSize}
+                onChange={(value) => setPageSize(value)}
+                style={{ width: 80 }}
+                popupMatchSelectWidth={false}
+              >
+                <Option value={10}>10</Option>
+                <Option value={20}>20</Option>
+                <Option value={30}>30</Option>
+              </Select>
+              of {total} Entries
+            </div>
+          ),
+          nextIcon: <i className="ti ti-chevron-right" />,
+          prevIcon: <i className="ti ti-chevron-left" />,
+        }}
+      />
     </div></div></div>
   );
 };

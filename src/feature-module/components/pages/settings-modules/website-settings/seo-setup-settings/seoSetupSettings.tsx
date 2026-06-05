@@ -154,8 +154,7 @@ const SeoSetupSettings = () => {
                         </div>
                         <div className="col-lg-3">
                           <button type="button" className="btn btn-outline-primary w-100" onClick={addCustom}>
-                            <i className="ti ti-plus me-1" /> Add
-                          </button>
+                            Add <i className="ti ti-plus ms-2" /></button>
                         </div>
                       </div>
                     </div>

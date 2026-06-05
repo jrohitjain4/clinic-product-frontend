@@ -43,9 +43,7 @@ const PatientDashboard = () => {
                 to={all_routes.newAppointment}
                 className="btn btn-primary d-inline-flex align-items-center"
               >
-                <i className="ti ti-plus me-1" />
-                New Appointment
-              </Link>
+                New Appointment <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
           {/* End Page Header */}

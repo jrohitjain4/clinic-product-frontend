@@ -451,12 +451,11 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                           {!isPatientRole && (
                             <button
                               type="button"
-                              className="btn btn-sm btn-outline-primary py-0 px-2 fs-12"
-                              style={{ height: '22px' }}
+                              className="btn btn-outline-primary btn-compact"
+                              style={{ alignSelf: 'flex-start' }}
                               onClick={() => setShowAddPatient(true)}
                             >
-                              <i className="ti ti-plus me-1" />
-                              Add New
+                              Add New <i className="ti ti-plus ms-1" />
                             </button>
                           )}
                         </div>

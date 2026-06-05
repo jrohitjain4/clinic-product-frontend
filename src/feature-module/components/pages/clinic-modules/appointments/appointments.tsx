@@ -294,33 +294,83 @@ const Appointments = () => {
     <>
       <div className="page-wrapper">
         <div className="content">
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
-            <div className="flex-grow-1">
+          <div className="d-flex align-items-center gap-2 pb-3 mb-3 border-bottom flex-nowrap overflow-auto">
+            <div className="flex-shrink-0">
               <h4 className="fw-semibold mb-0">Appointment</h4>
             </div>
-            <div className="text-end d-flex align-items-center">
-              <button
-                className="btn btn-outline-primary btn-sm me-2 d-none d-md-inline-flex align-items-center"
-                onClick={handleExportCSV}
+            <div className="d-flex align-items-center gap-2 flex-nowrap ms-auto">
+              {/* Filters inline */}
+              <input
+                type="text"
+                className="form-control"
+                style={{ width: 140, minWidth: 100 }}
+                placeholder="Filter by Patient"
+                value={filterPatient}
+                onChange={(e) => setFilterPatient(e.target.value)}
+              />
+              <input
+                type="text"
+                className="form-control"
+                style={{ width: 140, minWidth: 100 }}
+                placeholder="Filter by Doctor"
+                value={filterDoctor}
+                onChange={(e) => setFilterDoctor(e.target.value)}
+              />
+              <input
+                type="date"
+                className="form-control"
+                style={{ width: 150, minWidth: 120 }}
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+              />
+              <select
+                className="form-select"
+                style={{ width: 140, minWidth: 110 }}
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
               >
-                <i className="ti ti-download me-1" /> Export CSV
-              </button>
-              <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center me-2">
-                <span className="bg-light rounded p-1 d-flex align-items-center justify-content-center">
-                  <i className="ti ti-list fs-14 text-dark" />
-                </span>
+                <option value="">All Status</option>
+                <option value="Schedule">Schedule</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Checked In">Checked In</option>
+                <option value="Checked Out">Checked Out</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+              {(filterPatient || filterDoctor || filterStatus || filterDate) && (
+                <button
+                  className="btn btn-outline-secondary btn-sm flex-shrink-0"
+                  onClick={() => {
+                    setFilterPatient("");
+                    setFilterDoctor("");
+                    setFilterStatus("");
+                    setFilterDate("");
+                  }}
+                >
+                  Clear
+                </button>
+              )}
+              {/* List / Calendar toggle */}
+              <div className="d-flex align-items-center gap-2 flex-shrink-0">
+                <Link
+                  to={all_routes.appointments}
+                  className="btn btn-icon btn-sm bg-primary-subtle text-primary border border-primary d-flex align-items-center justify-content-center"
+                  style={{ width: '38px', height: '38px', borderRadius: '8px' }}
+                >
+                  <i className="ti ti-list-tree fs-16" />
+                </Link>
                 <Link
                   to={all_routes.appointmentCalendar}
-                  className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
+                  className="btn btn-icon btn-sm bg-white text-dark border d-flex align-items-center justify-content-center"
+                  style={{ width: '38px', height: '38px', borderRadius: '8px' }}
                 >
-                  <i className="ti ti-calendar-event fs-14 text-body" />
+                  <i className="ti ti-calendar-event fs-16" />
                 </Link>
               </div>
               <Link
                 to={all_routes.newAppointment}
-                className="btn btn-primary ms-2 fs-13 btn-md"
+                className="btn btn-primary fs-13 btn-md flex-shrink-0"
               >
-                <i className="ti ti-plus me-1" /> New Appointment
+                New Appointment <i className="ti ti-plus ms-2" />
               </Link>
             </div>
           </div>
@@ -337,60 +387,6 @@ const Appointments = () => {
               </button>
             </div>
           )}
-
-          {/* Filters Row */}
-          <div className="d-flex align-items-center gap-2 mb-3 flex-wrap">
-
-            <input
-              type="text"
-              className="form-control"
-              style={{ maxWidth: 180 }}
-              placeholder="Filter by Patient"
-              value={filterPatient}
-              onChange={(e) => setFilterPatient(e.target.value)}
-            />
-            <input
-              type="text"
-              className="form-control"
-              style={{ maxWidth: 180 }}
-              placeholder="Filter by Doctor"
-              value={filterDoctor}
-              onChange={(e) => setFilterDoctor(e.target.value)}
-            />
-            <input
-              type="date"
-              className="form-control"
-              style={{ maxWidth: 180 }}
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-            />
-            <select
-              className="form-select"
-              style={{ maxWidth: 180 }}
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-            >
-              <option value="">All Status</option>
-              <option value="Schedule">Schedule</option>
-              <option value="Confirmed">Confirmed</option>
-              <option value="Checked In">Checked In</option>
-              <option value="Checked Out">Checked Out</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
-            {(filterPatient || filterDoctor || filterStatus || filterDate) && (
-              <button
-                className="btn btn-outline-secondary btn-sm"
-                onClick={() => {
-                  setFilterPatient("");
-                  setFilterDoctor("");
-                  setFilterStatus("");
-                  setFilterDate("");
-                }}
-              >
-                Clear
-              </button>
-            )}
-          </div>
 
           {loading ? (
             <div className="text-center py-5">

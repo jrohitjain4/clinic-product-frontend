@@ -48,35 +48,48 @@ const StaffProfileUpload = ({
   };
 
   return (
-    <div>
-      <div className="drag-upload-btn avatar avatar-xxl rounded-circle bg-light text-muted position-relative overflow-hidden z-1 mb-2 ms-4 p-0">
-        <img
-          src={displaySrc}
-          alt="Profile"
-          className="position-relative z-n1 w-100 h-100"
-          style={{ objectFit: "cover" }}
-        />
+    <div className="position-relative d-inline-block ms-4 mb-2 profile-upload-wrapper">
+      <div className="avatar avatar-xxl rounded-circle bg-light text-primary position-relative overflow-hidden z-1 p-0 d-flex align-items-center justify-content-center" style={{ border: '3px solid #fff', boxShadow: '0 4px 14px rgba(0,0,0,0.08)' }}>
+        {value ? (
+          <>
+            <img
+              src={resolveMediaUrl(value)}
+              alt="Profile"
+              className="position-relative z-n1 w-100 h-100 object-fit-cover"
+              style={{ objectFit: "cover" }}
+            />
+            <div className="upload-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50 opacity-0 transition-all">
+               <i className="ti ti-camera fs-24 text-white" />
+            </div>
+          </>
+        ) : (
+          <div className="d-flex align-items-center justify-content-center w-100 h-100" style={{ backgroundColor: "#f3f4f6" }}>
+            <i className="ti ti-camera-plus" style={{ fontSize: "36px", color: "#6366f1" }} />
+          </div>
+        )}
+        
         {uploading && (
-          <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50 z-1">
+          <div
+            className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50 z-1"
+          >
             <span className="spinner-border spinner-border-sm text-white" />
           </div>
         )}
-        <input
-          ref={inputRef}
-          type="file"
-          className="form-control image-sign position-absolute top-0 start-0 w-100 h-100 opacity-0 z-2"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          disabled={uploading}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleFile(file);
-          }}
-        />
-        <div className="position-absolute bottom-0 end-0 start-0 w-100 h-25 bg-dark d-flex align-items-center justify-content-center z-1 pointer-events-none">
-          <i className="ti ti-photo fs-14 text-white" />
-        </div>
       </div>
-      {error && <p className="text-danger fs-12 ms-4 mb-0">{error}</p>}
+
+      <input
+        ref={inputRef}
+        type="file"
+        className="position-absolute top-0 start-0 w-100 h-100 opacity-0 z-4"
+        style={{ cursor: 'pointer' }}
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        disabled={uploading}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+        }}
+      />
+      {error && <p className="text-danger fs-12 mt-2 position-absolute w-100 text-center mb-0">{error}</p>}
     </div>
   );
 };

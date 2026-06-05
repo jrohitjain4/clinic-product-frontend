@@ -32,9 +32,7 @@ const SitemapSettings = () => {
                         data-bs-toggle="modal"
                         data-bs-target="#add_sitemap"
                       >
-                        <i className="ti ti-plus me-1" />
-                        Generate Sitemap
-                      </Link>
+                        Generate Sitemap <i className="ti ti-plus ms-2" /></Link>
                     </div>
                   </div>
                   <div className="card-body px-0 mx-3">

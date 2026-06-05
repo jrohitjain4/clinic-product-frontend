@@ -94,9 +94,7 @@ const Locations = () => {
                 data-bs-toggle="modal"
                 data-bs-target="#add_modal"
               >
-                <i className="ti ti-plus me-1" />
-                New Location
-              </Link>
+                New Location <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
           {/* End Page Header */}

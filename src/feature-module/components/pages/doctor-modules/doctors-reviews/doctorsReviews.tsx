@@ -261,27 +261,7 @@ const DoctorsReviews = () => {
                   </form>
                 </div>
               </div>
-              <div className="dropdown">
-                <Link
-                  to="#"
-                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
-                  data-bs-toggle="dropdown"
-                >
-                  <span className="me-1"> Sort By : </span> Recent
-                </Link>
-                <ul className="dropdown-menu  dropdown-menu-end p-2">
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Recent
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Oldest
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+              
             </div>
           </div>
           <div className="table-responsive">

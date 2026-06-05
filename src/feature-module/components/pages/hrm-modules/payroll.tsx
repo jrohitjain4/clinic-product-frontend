@@ -158,9 +158,7 @@ const PayrollList = () => {
                 data-bs-toggle="modal"
                 data-bs-target="#add_payroll"
               >
-                <i className="ti ti-plus me-1" />
-                Add Employee Salary
-              </Link>
+                Add Employee Salary <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
           <div className=" d-flex align-items-center justify-content-between flex-wrap row-gap-3">

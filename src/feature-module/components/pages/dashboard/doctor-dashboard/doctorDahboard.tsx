@@ -78,9 +78,7 @@ const DoctorDahboard = () => {
                 data-bs-toggle="offcanvas"
                 data-bs-target="#new_appointment"
               >
-                <i className="ti ti-plus me-1" />
-                New Appointment
-              </Link>
+                New Appointment <i className="ti ti-plus ms-2" /></Link>
               <Link
                 to="#"
                 className="btn btn-outline-white bg-white d-inline-flex align-items-center"

@@ -22,10 +22,12 @@ export interface CalendarEventInput {
 
 interface EventCalendarProps {
   events?: CalendarEventInput[];
+  calendarRef?: React.RefObject<any>;
 }
 
-const EventCalendar = ({ events: externalEvents }: EventCalendarProps) => {
-  const calendarRef = useRef(null);
+const EventCalendar = ({ events: externalEvents, calendarRef: extRef }: EventCalendarProps) => {
+  const internalRef = useRef<any>(null);
+  const calendarRef = extRef ?? internalRef;
   const [selectedEvent, setSelectedEvent] = useState<EventApi | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -73,16 +75,14 @@ const EventCalendar = ({ events: externalEvents }: EventCalendarProps) => {
   };
 
   return (
-    <div className="p-4">
+    <div className="fc-premium-wrapper" style={{ height: 'calc(100vh - 180px)' }}>
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
         events={events}
-        headerToolbar={{
-          start: "today,prev,next",
-          center: "title",
-          end: "dayGridMonth,dayGridWeek,dayGridDay",
-        }}
+        headerToolbar={false}
+        height="100%"
+        expandRows={true}
         eventContent={renderEventContent}
         eventClick={handleEventClick}
         ref={calendarRef}
@@ -94,7 +94,7 @@ const EventCalendar = ({ events: externalEvents }: EventCalendarProps) => {
           tabIndex={-1}
           role="dialog"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-           onClick={closeModal} 
+          onClick={closeModal}
         >
           <div className="modal-dialog modal-dialog-centered" role="document">
             <div className="modal-content">

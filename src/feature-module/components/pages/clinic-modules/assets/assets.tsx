@@ -122,6 +122,28 @@ const Assets = () => {
               </h4>
             </div>
             <div className="text-end d-flex">
+              <div className="dropdown">
+                <Link
+                  to="#"
+                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
+                  data-bs-toggle="dropdown"
+                >
+                  <span className="me-1"> Sort By : </span> Recent
+                </Link>
+                <ul className="dropdown-menu  dropdown-menu-end p-2">
+                  <li>
+                    <Link to="#" className="dropdown-item rounded-1">
+                      Recent
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="#" className="dropdown-item rounded-1">
+                      Oldest
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              
               {/* dropdown*/}
               <div className="dropdown me-1">
                 <Link
@@ -151,9 +173,7 @@ const Assets = () => {
                 data-bs-toggle="modal"
                 data-bs-target="#add_asset"
               >
-                <i className="ti ti-plus me-1" />
-                Add Asset
-              </Link>
+                Add Asset <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
           {/* End Page Header */}
@@ -203,27 +223,7 @@ const Assets = () => {
                   <FilterIndex />
                 </div>
               </div>
-              <div className="dropdown">
-                <Link
-                  to="#"
-                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
-                  data-bs-toggle="dropdown"
-                >
-                  <span className="me-1"> Sort By : </span> Recent
-                </Link>
-                <ul className="dropdown-menu  dropdown-menu-end p-2">
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Recent
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Oldest
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+              
             </div>
           </div>
           {/*  End Filter */}

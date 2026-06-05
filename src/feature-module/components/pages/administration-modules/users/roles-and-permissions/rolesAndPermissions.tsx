@@ -111,9 +111,7 @@ const RolesAndPermissions = () => {
                 className="btn btn-primary ms-2 fs-13 btn-md"
                 onClick={handleAddRole}
               >
-                <i className="ti ti-plus me-1" />
-                New Role
-              </button>
+                New Role <i className="ti ti-plus ms-2" /></button>
             </div>
           </div>
           {/* End Page Header */}

@@ -134,8 +134,7 @@ const AppointmentSettings = () => {
                                   to="#"
                                   className="btn btn-white p-2 border rounded-2 add-reminder"
                                 >
-                                  <i className="ti ti-plus" />
-                                </Link>
+                                    <i className="ti ti-plus ms-2" /></Link>
                               </div>
                             </div>
                           </div>

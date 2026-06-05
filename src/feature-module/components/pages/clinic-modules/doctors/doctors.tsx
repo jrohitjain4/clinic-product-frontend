@@ -29,7 +29,7 @@ const Doctors = () => {
         {/* Start Content */}
         <div className="content">
           {/* Start Page Header */}
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3">
+          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
             <div className="flex-grow-1">
               <h4 className="fw-bold mb-0">
                 Doctor Grid
@@ -38,8 +38,27 @@ const Doctors = () => {
                 </span>
               </h4>
             </div>
-            <div className="text-end d-flex">
-              <div className="dropdown me-2">
+            <div className="text-end d-flex align-items-center gap-2">
+              
+              <div className="d-flex align-items-center gap-2">
+                <Link
+                  to={all_routes.doctorsList}
+                  className="btn btn-icon btn-sm bg-white text-dark border d-flex align-items-center justify-content-center"
+                  style={{ width: '38px', height: '38px', borderRadius: '8px' }}
+                >
+                  <i className="ti ti-list-tree fs-16" />
+                </Link>
+                <Link
+                  to={all_routes.doctors}
+                  className="btn btn-icon btn-sm bg-primary-subtle text-primary border border-primary d-flex align-items-center justify-content-center"
+                  style={{ width: '38px', height: '38px', borderRadius: '8px' }}
+                >
+                  <i className="ti ti-layout-grid fs-16" />
+                </Link>
+              </div>
+              <HasPermission module="Doctors" action="CREATE">
+                
+              <div className="dropdown">
                 <Link
                   to="#"
                   className="btn btn-white bg-white fs-14 py-1 border d-inline-flex text-dark align-items-center"
@@ -182,27 +201,12 @@ const Doctors = () => {
                   </form>
                 </div>
               </div>
-              <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center">
-                <Link
-                  to={all_routes.doctorsList}
-                  className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
-                >
-                  <i className="ti ti-list fs-14 text-body" />
-                </Link>
-                <Link
-                  to={all_routes.doctors}
-                  className="bg-light rounded p-1 d-flex align-items-center justify-content-center"
-                >
-                  <i className="ti ti-layout-grid fs-14 text-body" />
-                </Link>
-              </div>
-              <HasPermission module="Doctors" action="CREATE">
-                <Link
+              <Link
                   to={all_routes.addDoctors}
-                  className="btn btn-primary ms-2 fs-13 btn-md"
+                  className="btn btn-primary fs-13 btn-md"
                 >
-                  <i className="ti ti-plus me-1" />
                   New Doctor
+                  <i className="ti ti-plus ms-2" />
                 </Link>
               </HasPermission>
             </div>

@@ -32,9 +32,7 @@ const BanIpAddressSettings = () => {
                         data-bs-toggle="modal"
                         data-bs-target="#add_ip_address"
                       >
-                        <i className="ti ti-plus me-1" />
-                        New IP Address
-                      </Link>
+                        New IP Address <i className="ti ti-plus ms-2" /></Link>
                     </div>
                   </div>
                   <div className="card-body px-0 mx-3">

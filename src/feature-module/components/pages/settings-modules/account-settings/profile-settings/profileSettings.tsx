@@ -318,49 +318,54 @@ const ProfileSettings = () => {
                           <h5 className="fw-bold mb-0">Clinic Information</h5>
                         </div>
                         <div className="col-lg-12">
-                          <div className="row align-items-center mb-4">
-                            <div className="col-lg-2">
-                              <label className="form-label mb-0">
+                          <div className="row mb-4">
+                            <div className="col-lg-12">
+                              <label className="form-label mb-2">
                                 Clinic Logo
                               </label>
-                            </div>
-                            <div className="col-lg-12">
-                              <div className="profile-container d-flex align-items-center justify-content-center bg-light" style={{ width: '100px', height: '100px', border: '1px dashed #ccc', borderRadius: '10px', overflow: 'hidden', position: 'relative' }}>
-                                <img
-                                  src={logoPreview}
-                                  alt="Clinic Logo Preview"
-                                  style={{ maxWidth: '80%', maxHeight: '80%', objectFit: 'contain' }}
-                                />
-                                <div className="overlay-btn" style={{ position: 'absolute', bottom: '5px', right: '5px', opacity: isEditing ? 1 : 0.5 }}>
-                                  <label
-                                    htmlFor="logoUpload"
-                                    className="btn btn-sm btn-primary rounded-circle p-1 cursor-pointer"
-                                    style={{ cursor: isEditing ? 'pointer' : 'default' }}
-                                  >
-                                    <i className="ti ti-photo fs-14" />
-                                  </label>
+                              <div className="d-flex align-items-center mb-3">
+                                <div className="profile-upload me-3">
+                                  <div className="profile-container d-flex align-items-center justify-content-center bg-light" style={{ width: '150px', height: '60px', border: '1px dashed #ccc', borderRadius: '8px', overflow: 'hidden' }}>
+                                    <img
+                                      src={logoPreview}
+                                      alt="Clinic Logo Preview"
+                                      className="img-fluid object-fit-contain p-1 w-100 h-100"
+                                    />
+                                  </div>
                                 </div>
-                                <input
-                                  type="file"
-                                  id="logoUpload"
-                                  accept="image/*"
-                                  style={{ display: "none" }}
-                                  disabled={!isEditing}
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      const reader = new FileReader();
-                                      reader.onload = (event) => {
-                                        if (event.target?.result) {
-                                          setLogoPreview(event.target.result as string);
-                                        }
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }
-                                  }}
-                                />
+                                <div className="profile-upload-content">
+                                  <div className="profile-upload-btn mb-2">
+                                    <label
+                                      htmlFor="logoUpload"
+                                      className={`btn btn-primary btn-sm ${!isEditing ? 'disabled' : ''}`}
+                                      style={{ position: 'relative', cursor: isEditing ? 'pointer' : 'default' }}
+                                    >
+                                      <input
+                                        type="file"
+                                        id="logoUpload"
+                                        accept="image/*"
+                                        className="upload"
+                                        disabled={!isEditing}
+                                        style={{ position: 'absolute', opacity: 0, top: 0, left: 0, width: '100%', height: '100%', cursor: isEditing ? 'pointer' : 'default' }}
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) {
+                                            const reader = new FileReader();
+                                            reader.onload = (event) => {
+                                              if (event.target?.result) {
+                                                setLogoPreview(event.target.result as string);
+                                              }
+                                            };
+                                            reader.readAsDataURL(file);
+                                          }
+                                        }}
+                                      />
+                                      <i className="ti ti-upload me-1" /> Browse
+                                    </label>
+                                  </div>
+                                  <p className="fs-12 text-muted mb-0">Recommended image size is 250px x 100px.</p>
+                                </div>
                               </div>
-                              <p className="fs-12 text-muted mt-1 mb-0">Recommended size: 1:1 ratio (Square). Click the icon to upload.</p>
                             </div>
                           </div>
                         </div>

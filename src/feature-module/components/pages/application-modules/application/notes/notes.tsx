@@ -185,7 +185,7 @@ const Notes = () => {
                 <div className="card-body">
                   <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <div>
-                      <select className="form-select">
+                      <select className="form-select" style={{ minHeight: "50px", padding: "12px 20px" }}>
                         <option>Bulk Actions</option>
                         <option>Delete Marked</option>
                         <option>Unmark All</option>
@@ -196,7 +196,8 @@ const Notes = () => {
                       <div className="dropdown">
                         <Link
                           to="#"
-                          className="dropdown-toggle btn border bg-white rounded text-dark d-inline-flex align-items-center drop-arrow-none"
+                          className="dropdown-toggle btn border bg-white rounded text-dark d-inline-flex align-items-center justify-content-center drop-arrow-none"
+                          style={{ padding: "12px 20px", minHeight: "50px" }}
                           data-bs-toggle="dropdown"
                         >
                           <i className="ti ti-file-export me-1" />
@@ -226,12 +227,13 @@ const Notes = () => {
                       </div>
                       <Link
                         to="#"
-                        className="btn btn-primary btn-md d-flex align-items-center"
+                        className="btn btn-primary fs-15 d-flex align-items-center justify-content-center gap-2"
+                        style={{ padding: "12px 20px", minHeight: "50px" }}
                         data-bs-toggle="modal"
                         data-bs-target="#add_note"
                       >
-                        <i className="ti ti-circle-plus me-1" />
                         Add Notes
+                        <i className="ti ti-circle-plus" style={{ fontSize: '18px' }} />
                       </Link>
                     </div>
                   </div>

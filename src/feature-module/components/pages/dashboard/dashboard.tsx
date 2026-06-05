@@ -108,9 +108,7 @@ const Dashboard = () => {
                 to={all_routes.newAppointment}
                 className="btn btn-primary d-inline-flex align-items-center"
               >
-                <i className="ti ti-plus me-1" />
-                New Appointment
-              </Link>
+                New Appointment <i className="ti ti-plus ms-2" /></Link>
               <Link
                 to={all_routes.doctorschedule}
                 className="btn btn-outline-white bg-white d-inline-flex align-items-center"
@@ -662,10 +660,10 @@ const Dashboard = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {stats.recentAppointments?.length === 0 ? (
+                        {!stats?.recentAppointments || stats.recentAppointments.length === 0 ? (
                           <tr><td colSpan={5} className="text-center">No recent appointments</td></tr>
                         ) : (
-                          stats.recentAppointments?.map((app) => (
+                          stats.recentAppointments.map((app) => (
                             <tr key={app.id}>
                               <td>
                                 <div className="d-flex align-items-center">
@@ -737,7 +735,7 @@ const Dashboard = () => {
                   </Link>
                 </div>
                 <div className="card-body">
-                  {stats.topPatients.length === 0 ? (
+                  {!stats?.topPatients || stats.topPatients.length === 0 ? (
                     <p className="text-center text-muted mt-3">No patient data found</p>
                   ) : (
                     stats.topPatients.map((p, index) => (
@@ -816,7 +814,7 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <div className="card-body">
-                  {stats.recentTransactions.length === 0 ? (
+                  {!stats?.recentTransactions || stats.recentTransactions.length === 0 ? (
                     <p className="text-center text-muted mt-3">No recent transactions</p>
                   ) : (
                     stats.recentTransactions.map((tx, index) => (

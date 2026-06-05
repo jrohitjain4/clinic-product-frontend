@@ -152,18 +152,14 @@ const Services = () => {
                   data-bs-target="#add_service"
                   className="btn btn-primary btn-md fs-13"
                 >
-                  <i className="ti ti-plus me-1" />
-                  New Service
-                </Link>
+                  New Service <i className="ti ti-plus ms-2" /></Link>
                 <Link
                   to="#"
                   data-bs-toggle="modal"
                   data-bs-target="#add_product"
                   className="btn btn-info btn-md fs-13"
                 >
-                  <i className="ti ti-plus me-1" />
-                  New Product
-                </Link>
+                  New Product <i className="ti ti-plus ms-2" /></Link>
               </div>
             </div>
             {/* End Page Header */}

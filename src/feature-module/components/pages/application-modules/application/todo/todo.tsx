@@ -18,55 +18,42 @@ const Todo = () => {
   <div className="page-wrapper">
     {/* Start Content */}
     <div className="content">
-      {/* Page Header */}
-      <div className="d-flex align-items-sm-center flex-sm-row g-2 flex-column gap-2 pb-3">
-        <div className="flex-grow g-2-1">
-          <h4 className="fs-18 fw-semibold mb-0">Todo</h4>
+      {/* Start Page Header */}
+      <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
+        <div className="flex-grow-1">
+          <h4 className="fw-bold mb-0">
+            Todo Grid
+          </h4>
         </div>
-        <div className="text-end">
-          <ol className="breadcrumb m-0 py-0">
-            <li className="breadcrumb-item">
-              <Link to={all_routes.dashboard}>Home</Link>
-            </li>
-            <li className="breadcrumb-item">
-              <Link to="#">Applications</Link>
-            </li>
-            <li className="breadcrumb-item active" aria-current="page">
-              Todo
-            </li>
-          </ol>
+        <div className="text-end d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center gap-2">
+            <Link
+              to={all_routes.todoList}
+              className="btn btn-icon btn-sm bg-white text-dark border d-flex align-items-center justify-content-center"
+              style={{ width: '38px', height: '38px', borderRadius: '8px' }}
+            >
+              <i className="ti ti-list-tree fs-16" />
+            </Link>
+            <Link
+              to={all_routes.todo}
+              className="btn btn-icon btn-sm bg-primary-subtle text-primary border border-primary d-flex align-items-center justify-content-center"
+              style={{ width: '38px', height: '38px', borderRadius: '8px' }}
+            >
+              <i className="ti ti-layout-grid fs-16" />
+            </Link>
+          </div>
+          <Link
+            to="#"
+            className="btn btn-primary fs-13 btn-md"
+            data-bs-toggle="modal"
+            data-bs-target="#add_todo"
+          >
+            Create New
+            <i className="ti ti-plus ms-2" />
+          </Link>
         </div>
       </div>
       {/* End Page Header */}
-      <div className="d-flex align-items-center justify-content-end flex-wrap gap-3 mb-3">
-            <ul className="d-flex align-items-center flex-shrink-0 list-unstyled mb-0">
-          <li>
-            <Link
-              to={all_routes.todo}
-              className="btn btn-icon btn-sm bg-primary-subtle text-primary border border-primary active me-2"
-            >
-              <i className="ti ti-layout-grid" />
-            </Link>
-          </li>
-          <li>
-            <Link
-              to={all_routes.todoList}
-              className="btn btn-icon btn-sm bg-white text-dark border me-2"
-            >
-              <i className="ti ti-list-tree" />
-            </Link>
-          </li>
-        </ul>
-            <Link
-          to="#"
-          className="btn btn-sm btn-primary"
-          data-bs-toggle="modal"
-          data-bs-target="#add_todo"
-        >
-          <i className="ti ti-circle-plus me-1" />
-          Create New
-        </Link>
-          </div>
       <div className="card shadow-none mb-0">
         <div className="card-body">
           {/* start row */}

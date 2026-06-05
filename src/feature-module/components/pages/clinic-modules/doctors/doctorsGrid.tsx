@@ -50,9 +50,7 @@ const DoctorsGrid = ({ doctors, loading, error, onRetry }: DoctorsGridProps) => 
         <h6 className="fw-bold">No doctors yet</h6>
         <p className="text-muted mb-3">Add your first doctor to see them here.</p>
         <Link to={all_routes.addDoctors} className="btn btn-primary">
-          <i className="ti ti-plus me-1" />
-          Add Doctor
-        </Link>
+          Add Doctor <i className="ti ti-plus ms-2" /></Link>
       </div>
     );
   }

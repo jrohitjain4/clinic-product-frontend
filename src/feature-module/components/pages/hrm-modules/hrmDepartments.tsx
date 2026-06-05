@@ -201,21 +201,7 @@ const HrmDepartments = () => {
               </h4>
             </div>
             <div className="text-end d-flex">
-              <Link to="#" className="btn btn-primary ms-2 fs-13 btn-md"
-                data-bs-toggle="modal" data-bs-target="#add_department">
-                <i className="ti ti-plus me-1" /> Add New Department
-              </Link>
-            </div>
-          </div>
-
-          {error && <div className="alert alert-danger py-2 fs-13">{error}</div>}
-
-          {/* Filter row */}
-          <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
-            <div className="search-set">
               
-            </div>
-            <div className="d-flex table-dropdown right-content align-items-center flex-wrap row-gap-3">
               <div className="dropdown me-2">
                 <Link to="#" className="btn btn-white bg-white fs-14 py-1 border d-inline-flex text-dark align-items-center"
                   data-bs-toggle="dropdown" data-bs-auto-close="outside">
@@ -251,6 +237,21 @@ const HrmDepartments = () => {
                   </form>
                 </div>
               </div>
+              <Link to="#" className="btn btn-primary ms-2 fs-13 btn-md"
+                data-bs-toggle="modal" data-bs-target="#add_department">
+                Add New Department <i className="ti ti-plus ms-2" /></Link>
+            </div>
+          </div>
+
+          {error && <div className="alert alert-danger py-2 fs-13">{error}</div>}
+
+          {/* Filter row */}
+          <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
+            <div className="search-set">
+              
+            </div>
+            <div className="d-flex table-dropdown right-content align-items-center flex-wrap row-gap-3">
+              
             </div>
           </div>
 

@@ -535,7 +535,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
           <div className="row">
             <div className="col-lg-10 mx-auto">
               {/* Page Header */}
-              <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3">
+              <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
                   <h6 className="fw-bold mb-0 d-flex align-items-center">
                     <Link to={all_routes.doctors}>
@@ -626,10 +626,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                 <label className="form-label">
                                   Phone Number <span className="text-danger">*</span>
                                 </label>
-                              <div className="input-icon-start position-relative">
-                                <span className="input-icon-addon">
-                                  <i className="ti ti-phone" />
-                                </span>
+                              <div>
                                 <PhoneInput
                                   defaultCountry="IN"
                                   value={phone}

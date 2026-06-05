@@ -15,11 +15,32 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="/src/style/css/style.css" />
 
   <style>
+    /* Global Font Family */
+    body, h1, h2, h3, h4, h5, h6, p, a, button, input, select, textarea {
+      font-family: 'Outfit', sans-serif !important;
+    }
+
+    /* Standardize Top Action Buttons (New Appointment, New Doctor, etc.) */
+    .content > div:first-child .btn {
+      min-height: 48px !important;
+      padding: 0px 20px !important;
+      font-size: 15px !important;
+      font-weight: 600 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 8px !important;
+    }
+
+    .content > div:first-child .btn i {
+      font-size: 18px !important;
+    }
+
     /* Global UI Fixes for Cards */
     .card {
       border: 1px solid #94a3b8 !important;

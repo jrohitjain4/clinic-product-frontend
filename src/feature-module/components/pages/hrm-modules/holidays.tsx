@@ -102,9 +102,7 @@ const HolidaysList = () => {
                 data-bs-toggle="modal"
                 data-bs-target="#add_holiday"
               >
-                <i className="ti ti-plus me-1" />
-                Add Holiday
-              </Link>
+                Add Holiday <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
           <div className="table-responsive border">

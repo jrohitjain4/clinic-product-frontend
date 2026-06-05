@@ -202,15 +202,20 @@ const Patients = () => {
               </h4>
             </div>
             <div className="text-end d-flex">
-              <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center me-2">
-                <span className="bg-light rounded p-1 d-flex align-items-center justify-content-center">
-                  <i className="ti ti-list fs-14 text-dark" />
-                </span>
+              <div className="d-flex align-items-center gap-2">
+                <Link
+                  to={all_routes.patients}
+                  className="btn btn-icon btn-sm bg-primary-subtle text-primary border border-primary d-flex align-items-center justify-content-center"
+                  style={{ width: '38px', height: '38px', borderRadius: '8px' }}
+                >
+                  <i className="ti ti-list-tree fs-16" />
+                </Link>
                 <Link
                   to={all_routes.patientsGrid}
-                  className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
+                  className="btn btn-icon btn-sm bg-white text-dark border d-flex align-items-center justify-content-center"
+                  style={{ width: '38px', height: '38px', borderRadius: '8px' }}
                 >
-                  <i className="ti ti-layout-grid fs-14 text-body" />
+                  <i className="ti ti-layout-grid fs-16" />
                 </Link>
               </div>
               <HasPermission module="Patients" action="CREATE">
@@ -218,9 +223,7 @@ const Patients = () => {
                   to={all_routes.createPatient}
                   className="btn btn-primary ms-2 fs-13 btn-md"
                 >
-                  <i className="ti ti-plus me-1" />
-                  New Patient
-                </Link>
+                  New Patient <i className="ti ti-plus ms-2" /></Link>
               </HasPermission>
             </div>
           </div>
@@ -252,9 +255,7 @@ const Patients = () => {
               <p className="text-muted mb-3">Add your first patient.</p>
               <HasPermission module="Patients" action="CREATE">
                 <Link to={all_routes.createPatient} className="btn btn-primary">
-                  <i className="ti ti-plus me-1" />
-                  New Patient
-                </Link>
+                  New Patient <i className="ti ti-plus ms-2" /></Link>
               </HasPermission>
             </div>
           ) : (

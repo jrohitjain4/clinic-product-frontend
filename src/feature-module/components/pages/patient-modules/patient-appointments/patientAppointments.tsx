@@ -204,7 +204,7 @@ const PatientAppointments = () => {
                   </li>
                 </ul>
               </div>
-              
+
               {/* dropdown*/}
               <div className="dropdown me-1">
                 <Link
@@ -230,21 +230,21 @@ const PatientAppointments = () => {
               </div>
               <div className="d-flex align-items-center gap-2">
                 <Link
-                  to={all_routes.patientAppointments}
+                  to={all_routes.patientappointments}
                   className="btn btn-icon btn-sm bg-primary-subtle text-primary border border-primary d-flex align-items-center justify-content-center"
                   style={{ width: '38px', height: '38px', borderRadius: '8px' }}
                 >
                   <i className="ti ti-list-tree fs-16" />
                 </Link>
                 <Link
-                  to={all_routes.patientAppointmentDetails}
+                  to={all_routes.patientappointmentdetails}
                   className="btn btn-icon btn-sm bg-white text-dark border d-flex align-items-center justify-content-center"
                   style={{ width: '38px', height: '38px', borderRadius: '8px' }}
                 >
                   <i className="ti ti-calendar-event fs-16" />
                 </Link>
               </div>
-              
+
               <div className="dropdown me-2">
                 <Link
                   to="#"
@@ -414,7 +414,7 @@ const PatientAppointments = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 
+            2025
             <Link to="#" className="link-primary">
               Docyari
             </Link>

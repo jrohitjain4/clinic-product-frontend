@@ -1,8 +1,11 @@
-import { useState } from "react";
 import Chart from "react-apexcharts";
 
-const SCol19Chart = () => {
-  const [chartOptions] = useState<any>({
+interface SCol19ChartProps {
+  data: { month: string, completed: number, ongoing: number, rescheduled: number }[];
+}
+
+const SCol19Chart = ({ data }: SCol19ChartProps) => {
+  const chartOptions: any = {
     chart: {
       type: "bar",
       height: 250,
@@ -14,7 +17,7 @@ const SCol19Chart = () => {
       bar: {
         horizontal: false,
         columnWidth: "25%",
-        borderRadius: 3,
+        borderRadius: 2,
         distributed: false,
       },
     },
@@ -26,23 +29,10 @@ const SCol19Chart = () => {
     },
     colors: ["#00D1D1", "#1E90FF", "#3B28CC"],
     xaxis: {
-      categories: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
+      categories: data.map(d => d.month),
       labels: {
         style: {
-          fontSize: "14px",
+          fontSize: "12px",
         },
       },
       axisBorder: {
@@ -51,14 +41,13 @@ const SCol19Chart = () => {
       axisTicks: {
         show: false,
       },
-      tickPlacement: "between",
     },
     yaxis: {
       labels: {
         style: {
-          fontSize: "14px",
+          fontSize: "12px",
         },
-        formatter: (val: number) => `${val / 1000}K`,
+        formatter: (val: number) => val.toFixed(0),
         offsetX: -10,
       },
     },
@@ -74,24 +63,22 @@ const SCol19Chart = () => {
       },
     },
     tooltip: { enabled: true },
-  });
+  };
 
-  const [series] = useState([
+  const series = [
     {
       name: "Completed",
-      data: [
-        800, 1000, 1200, 1300, 1500, 700, 900, 1000, 1600, 1500, 1200, 1100,
-      ],
+      data: data.map(d => d.completed),
     },
     {
       name: "Ongoing",
-      data: [700, 900, 1100, 1000, 1100, 600, 800, 950, 1300, 1200, 1000, 950],
+      data: data.map(d => d.ongoing),
     },
     {
       name: "Rescheduled",
-      data: [600, 700, 1100, 1100, 1900, 500, 700, 850, 1500, 1600, 900, 850],
+      data: data.map(d => d.rescheduled),
     },
-  ]);
+  ];
 
   return (
     <div id="s-col-19">

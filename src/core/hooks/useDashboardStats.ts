@@ -12,6 +12,12 @@ export interface DashboardStats {
         cancelled: number;
         rescheduled: number;
     };
+    monthlyData: { month: string, completed: number, ongoing: number, rescheduled: number }[];
+    topDepartments: { name: string, patientCount: number }[];
+    incomeByTreatment: { name: string, income: number, appointmentCount: number }[];
+    topPatients: { id: string, fullName: string, profileImage: string | null, totalPaid: number, appointmentCount: number }[];
+    recentTransactions: { id: string, invoiceCode: string | null, amount: number, status: string, patientName: string, method: string | null, createdAt: string }[];
+    recentAppointments: { id: string, doctor: { fullName: string, profileImage: string | null }, patient: { firstName: string, lastName: string, phone: string | null }, department: { name: string } | null, scheduledAt: string, status: string, mode: string }[];
     profileCompletion: number;
 }
 
@@ -22,6 +28,12 @@ export const useDashboardStats = () => {
         appointmentsCount: 0,
         revenue: 0,
         appointmentStats: { total: 0, completed: 0, cancelled: 0, rescheduled: 0 },
+        monthlyData: [],
+        topDepartments: [],
+        incomeByTreatment: [],
+        topPatients: [],
+        recentTransactions: [],
+        recentAppointments: [],
         profileCompletion: 0
     });
     const [loading, setLoading] = useState(true);

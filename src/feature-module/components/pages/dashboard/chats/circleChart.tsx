@@ -1,14 +1,17 @@
-import { useState } from "react";
 import Chart from "react-apexcharts";
 
-const CircleChart = () => {
-  const [chartOptions] = useState<any>({
+interface CircleChartProps {
+  data: { name: string, patientCount: number }[];
+}
+
+const CircleChart = ({ data }: CircleChartProps) => {
+  const chartOptions: any = {
     chart: {
       type: "donut",
       height: 270,
       width: "100%",
     },
-    labels: ["214 Cardiology", "121 Neurolgy", "150 Dental"],
+    labels: data.map(d => `${d.patientCount} ${d.name}`),
     colors: ["#6DA6F2", "#5C60CC", "#9B51B6"],
     legend: {
       show: false,
@@ -59,9 +62,9 @@ const CircleChart = () => {
     tooltip: {
       enabled: true,
     },
-  });
+  };
 
-  const [series] = useState([219, 200, 219]);
+  const series = data.map(d => d.patientCount);
 
   return (
     <div id="circle-chart">

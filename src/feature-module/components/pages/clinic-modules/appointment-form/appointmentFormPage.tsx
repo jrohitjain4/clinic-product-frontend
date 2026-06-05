@@ -625,36 +625,6 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                             ))}
                           </div>
                         )}
-
-                        {availableSlots.length > 0 && (
-                          <div className="mt-3">
-                            <label className="form-label mb-2 fw-medium fs-13">Available Slots on {form.appointmentDate?.format("DD MMM")}</label>
-                            <div className="d-flex flex-wrap gap-2">
-                              {availableSlots.map((slot, i) => {
-                                const isSelected = form.appointmentTime?.format("HH:mm") === slot.from;
-                                return (
-                                  <button
-                                    key={i}
-                                    type="button"
-                                    className={`btn btn-sm ${slot.isBooked ? 'btn-danger' : isSelected ? 'btn-success' : 'btn-outline-success'} py-1 px-2 fs-12`}
-                                    disabled={slot.isBooked}
-                                    onClick={() => setForm(f => ({ ...f, appointmentTime: dayjs(slot.from, "HH:mm") }))}
-                                    title={slot.isBooked ? "This slot is already booked" : "Click to select"}
-                                  >
-                                    <i className={`ti ${slot.isBooked ? 'ti-lock' : 'ti-clock'} me-1`} />
-                                    {slot.label}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-                        {form.doctorId && form.appointmentDate && availableSlots.length === 0 && !optionsLoading && (
-                          <div className="alert alert-soft-danger py-2 px-3 fs-12 mt-3">
-                            <i className="ti ti-alert-circle me-1" />
-                            No active schedule slots found for this doctor on this day.
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>

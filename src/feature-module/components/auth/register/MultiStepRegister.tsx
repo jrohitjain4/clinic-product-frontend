@@ -13,7 +13,6 @@ const MultiStepRegister: React.FC = () => {
     const [packages, setPackages] = useState<any[]>([]);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-    const [userId, setUserId] = useState("");
     const [selectedPkgId, setSelectedPkgId] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -489,11 +488,6 @@ const MultiStepRegister: React.FC = () => {
                                                 {/* ─── STEP 3: Pricing ─── */}
                                                 {step === 3 && (
                                                     <div>
-                                                        {!userId && (
-                                                            <div className="alert alert-danger p-2 mb-3 rounded" style={{ fontSize: "13px" }}>
-                                                                <i className="ti ti-alert-triangle me-1"></i> Session missing. <button className="btn btn-link p-0 ms-1" onClick={() => setStep(2)}>Go back</button>
-                                                            </div>
-                                                        )}
                                                         {packages.length === 0 && (
                                                             <div className="text-center p-4 text-muted">
                                                                 <span className="spinner-border spinner-border-sm me-2" />Loading plans...

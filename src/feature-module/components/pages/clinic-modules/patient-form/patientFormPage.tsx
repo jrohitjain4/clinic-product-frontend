@@ -21,6 +21,7 @@ import {
   emptyPatientForm,
 } from "../../../../../core/utils/patientForm";
 import { findSelectOption } from "../../../../../core/utils/doctorSchedule";
+import { toast } from "react-toastify";
 
 type DoctorOption = { id: string; fullName: string };
 
@@ -186,6 +187,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Failed to save patient");
       }
+      toast.success(mode === "create" ? "Patient added successfully!" : "Patient updated successfully!");
       navigate(all_routes.patients, { replace: true });
     } catch (err: unknown) {
       setFormError(err instanceof Error ? err.message : "Failed to save patient");

@@ -306,6 +306,7 @@ export interface DatatableProps {
   Selection?: boolean | undefined;
   searchText: string;
   loading?: boolean;
+  onSelectionChange?: (selectedRowKeys: any[]) => void;
 }
 
 export interface CountriesData {

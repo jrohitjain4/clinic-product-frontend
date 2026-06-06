@@ -9,6 +9,7 @@ import dayjs from "dayjs";
 const LeaveType = () => {
   const { leaveTypes, createLeaveType, updateLeaveType, deleteLeaveType } = useLeaveTypes();
   const [currentRecord, setCurrentRecord] = useState<LeaveTypeModel | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const data = leaveTypes.map((item, index) => ({
     key: item.id,
@@ -59,25 +60,23 @@ const LeaveType = () => {
     {
       title: "Action",
       render: (_text: any, record: any) => (
-        <div className="d-flex align-items-center gap-2">
-          <Link
-            to="#"
-            className="avatar avatar-sm border text-primary rounded-circle d-flex align-items-center justify-content-center bg-transparent"
+        <div className="text-end d-flex align-items-center justify-content-end gap-2">
+          <button
+            className="bg-transparent border-0 text-primary p-1"
             data-bs-toggle="modal"
             data-bs-target="#edit_leave_type"
             onClick={() => setCurrentRecord(leaveTypes.find(l => l.id === record.id) || null)}
           >
-            <i className="ti ti-edit fs-16" />
-          </Link>
-          <Link
-            to="#"
-            className="avatar avatar-sm border text-danger rounded-circle d-flex align-items-center justify-content-center bg-transparent"
+            <i className="fa fa-edit fs-16" />
+          </button>
+          <button
+            className="bg-transparent border-0 text-danger p-1"
             data-bs-toggle="modal"
             data-bs-target="#delete_leave_type"
             onClick={() => setCurrentRecord(leaveTypes.find(l => l.id === record.id) || null)}
           >
-            <i className="ti ti-trash fs-16" />
-          </Link>
+            <i className="fa fa-trash-alt fs-16" />
+          </button>
         </div>
       ),
     },
@@ -87,17 +86,19 @@ const LeaveType = () => {
     <>
       <div className="page-wrapper">
         <div className="content" id="profilePage">
-          <div className="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 pb-3 border-bottom">
-            <h4 className="fw-bold mb-0 d-flex align-items-center">
-              Leave Type
-              <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                Total: {leaveTypes.length}
-              </span>
-            </h4>
-            <div className="d-flex align-items-center gap-2">
+          <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
+            <div className="flex-grow-1">
+              <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
+                Leave Type
+                <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
+                  Total: {leaveTypes.length}
+                </span>
+              </h4>
+            </div>
+            <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Date : </span> Select
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '130px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><span className="text-muted">Date:</span> Select</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
@@ -107,8 +108,8 @@ const LeaveType = () => {
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Status : </span> All
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '130px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><span className="text-muted">Status:</span> All</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
@@ -117,25 +118,17 @@ const LeaveType = () => {
                 </ul>
               </div>
 
-              <div className="dropdown me-2">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Sort By : </span> Recent
-                </Link>
-                <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item rounded-1">Recent</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Oldest</Link></li>
-                </ul>
-              </div>
 
-              <Link
-                to="#"
-                className="btn btn-primary btn-md"
+
+              <button
+                className="btn btn-primary d-flex align-items-center justify-content-center"
+                style={{ minHeight: '38px', whiteSpace: 'nowrap' }}
                 data-bs-toggle="modal"
                 data-bs-target="#add_leave_type"
                 onClick={() => setCurrentRecord(null)}
               >
-                New Leave Type <i className="ti ti-plus ms-1" />
-              </Link>
+                New Leave Type <i className="fa fa-plus ms-2" />
+              </button>
             </div>
           </div>
           <div className="table-responsive border">
@@ -144,8 +137,22 @@ const LeaveType = () => {
               dataSource={data}
               Selection={true}
               searchText={""}
+              onSelectionChange={(keys) => setSelectedIds(keys as string[])}
             />
           </div>
+          {selectedIds.length > 0 && (
+            <div className="d-flex justify-content-center mt-auto pt-4 pb-4">
+              <button
+                className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
+                data-bs-toggle="modal"
+                data-bs-target="#delete_leave_type"
+                style={{ borderRadius: '8px', minHeight: '42px', fontWeight: 'bold' }}
+              >
+                <i className="ti ti-trash fs-18"></i>
+                Delete Selected ({selectedIds.length})
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

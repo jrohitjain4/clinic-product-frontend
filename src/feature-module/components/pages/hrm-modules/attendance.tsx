@@ -3,12 +3,14 @@ import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { Link } from "react-router";
 import SearchInput from "../../../../core/common/dataTable/dataTableSearch";
 import { useAttendance } from "../../../../core/hooks/useAttendance";
-import { DatePicker, Dropdown, Menu } from "antd";
+import { DatePicker, Dropdown, Menu, Pagination } from "antd";
 import dayjs from "dayjs";
 
 const AttendanceList = () => {
   const [searchText, setSearchText] = useState<string>("");
   const [currentDate, setCurrentDate] = useState(dayjs());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const month = currentDate.month() + 1; // 1-12
   const year = currentDate.year();
@@ -52,24 +54,25 @@ const AttendanceList = () => {
   };
 
   const filteredData = data.filter(emp => emp.name.toLowerCase().includes(searchText.toLowerCase()));
+  const paginatedData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <>
       <div className="page-wrapper">
         <div className="content">
-          <div className="d-flex align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
-            <div className="d-flex align-items-center text-nowrap">
-              <h4 className="fw-bold mb-0 d-flex align-items-center">
+          <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
+            <div className="flex-grow-1">
+              <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
                 Attendance
                 <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
                   Total: {data.length}
                 </span>
               </h4>
             </div>
-            <div className="d-flex align-items-center gap-2">
+            <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <i className="ti ti-search me-1" /> {searchText ? searchText : "Search Name"}
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ minWidth: '150px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><i className="ti ti-search me-1" /> {searchText ? searchText : "Search Name"}</span>
                 </Link>
                 <div className="dropdown-menu dropdown-menu-end p-2" style={{ minWidth: "220px" }} onClick={(e) => e.stopPropagation()}>
                   <input
@@ -93,8 +96,8 @@ const AttendanceList = () => {
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Type : </span> All
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><span className="text-muted">Type:</span> All</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
@@ -104,8 +107,8 @@ const AttendanceList = () => {
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Department : </span> All
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '160px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><span className="text-muted">Department:</span> All</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
@@ -154,7 +157,7 @@ const AttendanceList = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredData.map((emp) => (
+                  {paginatedData.map((emp) => (
                     <tr key={emp.id}>
                       <td>
                         <div className="d-flex align-items-center">
@@ -217,6 +220,15 @@ const AttendanceList = () => {
                 </tbody>
               </table>
             )}
+          </div>
+          <div className="d-flex justify-content-end mt-3">
+            <Pagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={filteredData.length}
+              onChange={(page, size) => { setCurrentPage(page); setPageSize(size); }}
+              showSizeChanger
+            />
           </div>
         </div>
       </div>

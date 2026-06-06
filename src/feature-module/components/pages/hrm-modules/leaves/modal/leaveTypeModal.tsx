@@ -57,12 +57,12 @@ const LeaveTypeModal = ({ currentRecord, handleCreate, handleUpdate, handleDelet
 
   return (
     <>
-      <div id="add_leave_type" className="modal fade">
+      <div id="add_leave_type" className="modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="text-dark modal-title fw-bold">Add Leave Type</h5>
-              <button type="button" className="btn-close custom-btn-close" data-bs-dismiss="modal" />
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">Add Leave Type</h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" />
             </div>
             <form onSubmit={onSubmitAdd}>
               <div className="modal-body">
@@ -75,21 +75,21 @@ const LeaveTypeModal = ({ currentRecord, handleCreate, handleUpdate, handleDelet
                   <input type="number" className="form-control" value={quota} onChange={e => setQuota(e.target.value)} required />
                 </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-white border" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" className="btn btn-primary">Add New Leave Type</button>
-              </div>
-            </form>
+                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                  <button type="button" className="btn btn-light px-4 shadow-sm" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Cancel</button>
+                  <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" style={{ borderRadius: '6px' }}>Add New Leave Type</button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div id="edit_leave_type" className="modal fade">
+      <div id="edit_leave_type" className="modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="text-dark modal-title fw-bold">Edit Leave Type</h5>
-              <button type="button" className="btn-close custom-btn-close" data-bs-dismiss="modal" />
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">Edit Leave Type</h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" />
             </div>
             <form onSubmit={onSubmitEdit}>
               <div className="modal-body">
@@ -111,14 +111,14 @@ const LeaveTypeModal = ({ currentRecord, handleCreate, handleUpdate, handleDelet
                   />
                 </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-white border" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Changes</button>
-              </div>
-            </form>
+                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                  <button type="button" className="btn btn-light px-4 shadow-sm" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Cancel</button>
+                  <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" style={{ borderRadius: '6px' }}>Save Changes</button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
 
       <div className="modal fade" id="delete_leave_type">
         <div className="modal-dialog modal-dialog-centered modal-sm">

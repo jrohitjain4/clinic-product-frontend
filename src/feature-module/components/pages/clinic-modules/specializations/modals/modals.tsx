@@ -88,22 +88,18 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
   return (
     <>
       {/* Start Add Modal */}
-      <div id="add_specialization" className="modal fade">
+      <div id="add_specialization" className="modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="text-dark modal-title fw-bold">
-                Add New Specialization
-              </h4>
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">Add New Specialization</h5>
               <button
                 type="button"
-                className="btn-close btn-close-modal custom-btn-close"
+                className="btn-close btn-close-white"
                 data-bs-dismiss="modal"
                 id="close-add-modal"
                 aria-label="Close"
-              >
-                <i className="ti ti-x" />
-              </button>
+              ></button>
             </div>
             <form onSubmit={handleAddSubmit}>
               <div className="modal-body">
@@ -129,41 +125,38 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
                   />
                 </div>
               </div>
-              <div className="modal-footer d-flex align-items-center gap-1">
-                <button
-                  type="button"
-                  className="btn btn-light border"
-                  data-bs-dismiss="modal"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Add Specialization
-                </button>
-              </div>
-            </form>
-          </div>
+                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                  <button
+                    type="button"
+                    className="btn btn-light px-4 shadow-sm"
+                    data-bs-dismiss="modal"
+                    style={{ borderRadius: '6px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" style={{ borderRadius: '6px' }}>
+                    Add Specialization
+                  </button>
+                </div>
+              </form>
+            </div>
         </div>
       </div>
       {/* End Add Modal */}
 
       {/* Start Edit Modal */}
-      <div id="edit_specialization" className="modal fade">
+      <div id="edit_specialization" className="modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="text-dark modal-title fw-bold">
-                Edit Specialization
-              </h4>
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">Edit Specialization</h5>
               <button
                 type="button"
-                className="btn-close btn-close-modal custom-btn-close"
+                className="btn-close btn-close-white"
                 data-bs-dismiss="modal"
                 id="close-edit-modal"
                 aria-label="Close"
-              >
-                <i className="ti ti-x" />
-              </button>
+              ></button>
             </div>
             <form onSubmit={handleEditSubmit}>
               <div className="modal-body">
@@ -200,20 +193,21 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
                   />
                 </div>
               </div>
-              <div className="modal-footer d-flex align-items-center gap-1">
-                <button
-                  type="button"
-                  className="btn btn-white border"
-                  data-bs-dismiss="modal"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
+                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                  <button
+                    type="button"
+                    className="btn btn-light px-4 shadow-sm"
+                    data-bs-dismiss="modal"
+                    style={{ borderRadius: '6px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" style={{ borderRadius: '6px' }}>
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
         </div>
       </div>
       {/* End Edit Modal */}

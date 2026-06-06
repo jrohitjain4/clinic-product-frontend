@@ -11,6 +11,7 @@ const { TextArea } = Input;
 const LeavesList = () => {
   const { leaves, updateStatus, withdrawLeave } = useLeaves();
   const [searchText, setSearchText] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const handleSearch = (v: string) => setSearchText(v);
 
@@ -105,12 +106,11 @@ const LeavesList = () => {
         const canCancel = isAdmin && record.rawStatus === "APPROVED" && dayjs().isBefore(dayjs(record.endDate));
 
         return (
-          <div className="d-flex gap-2 align-items-center">
+          <div className="text-end d-flex align-items-center justify-content-end gap-2">
             {(record.rawStatus === "APPLIED" || record.rawStatus === "APPROVED") && (
               <>
-                <Link
-                  to="#"
-                  className={`avatar avatar-sm border rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent ${record.rawStatus === "APPROVED" ? "text-primary border-primary" : "text-success border-success"}`}
+                <button
+                  className={`bg-transparent border-0 p-1 ${record.rawStatus === "APPROVED" ? "text-primary" : "text-success"}`}
                   onClick={(e) => {
                     e.preventDefault();
                     setApproveModal({
@@ -124,39 +124,36 @@ const LeavesList = () => {
                   }}
                   title="Approve / Edit"
                 >
-                  <i className={`${record.rawStatus === "APPROVED" ? "ti ti-edit fs-16" : "ti ti-check fs-16"}`} />
-                </Link>
-                <Link
-                  to="#"
-                  className="avatar avatar-sm border text-danger border-danger rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent"
+                  <i className={`${record.rawStatus === "APPROVED" ? "fa fa-edit fs-16" : "fa fa-check fs-16"}`} />
+                </button>
+                <button
+                  className="bg-transparent border-0 text-danger p-1"
                   onClick={(e) => { e.preventDefault(); setRejectModal({ open: true, id: record.id, remark: "" }) }}
                   title="Reject"
                 >
-                  <i className="ti ti-x fs-16" />
-                </Link>
+                  <i className="fa fa-times fs-16" />
+                </button>
               </>
             )}
 
             {canWithdraw && isSelf && (
-              <Link
-                to="#"
-                className="avatar avatar-sm border text-warning border-warning rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent"
+              <button
+                className="bg-transparent border-0 text-warning p-1"
                 onClick={(e) => { e.preventDefault(); if (window.confirm("Withdraw this leave?")) withdrawLeave(record.id) }}
                 title="Withdraw"
               >
-                <i className="ti ti-arrow-back-up fs-16" />
-              </Link>
+                <i className="fa fa-undo fs-16" />
+              </button>
             )}
 
             {canCancel && (
-              <Link
-                to="#"
-                className="avatar avatar-sm border text-dark border-dark rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent"
+              <button
+                className="bg-transparent border-0 text-dark p-1"
                 onClick={(e) => { e.preventDefault(); if (window.confirm("Cancel this approved leave?")) updateStatus(record.id, { status: "CANCELLED" }) }}
                 title="Cancel Leave"
               >
-                <i className="ti ti-circle-x fs-16" />
-              </Link>
+                <i className="fa fa-ban fs-16" />
+              </button>
             )}
 
             {!(record.rawStatus === "APPLIED" || record.rawStatus === "APPROVED") && !canWithdraw && !canCancel && <span className="text-muted fs-12">—</span>}
@@ -170,17 +167,19 @@ const LeavesList = () => {
     <>
       <div className="page-wrapper">
         <div className="content">
-          <div className="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 pb-3 border-bottom">
-            <h4 className="fw-bold mb-0 d-flex align-items-center">
-              Admin Leaves
-              <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                Total: {leaves.length}
-              </span>
-            </h4>
-            <div className="d-flex align-items-center gap-2">
+          <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
+            <div className="flex-grow-1">
+              <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
+                Admin Leaves
+                <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
+                  Total: {leaves.length}
+                </span>
+              </h4>
+            </div>
+            <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Employee : </span> All
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '130px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><span className="text-muted">Employee:</span> All</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
@@ -190,8 +189,8 @@ const LeavesList = () => {
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Leave Type : </span> All
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '140px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><span className="text-muted">Leave Type:</span> All</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
@@ -201,8 +200,8 @@ const LeavesList = () => {
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Date : </span> Select
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><span className="text-muted">Date:</span> Select</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
@@ -212,8 +211,8 @@ const LeavesList = () => {
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Status : </span> All
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><span className="text-muted">Status:</span> All</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
@@ -222,21 +221,32 @@ const LeavesList = () => {
                 </ul>
               </div>
 
-              <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Sort By : </span> Recent
-                </Link>
-                <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item rounded-1">Recent</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Oldest</Link></li>
-                </ul>
-              </div>
+
             </div>
           </div>
 
           <div className="table-responsive">
-            <Datatable columns={columns} dataSource={data} Selection={true} searchText={searchText} />
+            <Datatable 
+              columns={columns} 
+              dataSource={data} 
+              Selection={true} 
+              searchText={searchText} 
+              onSelectionChange={(keys) => setSelectedIds(keys as string[])}
+            />
           </div>
+          {selectedIds.length > 0 && (
+            <div className="d-flex justify-content-center mt-auto pt-4 pb-4">
+              <button
+                className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
+                data-bs-toggle="modal"
+                data-bs-target="#delete_modal"
+                style={{ borderRadius: '8px', minHeight: '42px', fontWeight: 'bold' }}
+              >
+                <i className="ti ti-trash fs-18"></i>
+                Delete Selected ({selectedIds.length})
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

@@ -114,14 +114,12 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
   return (
     <>
       {/* Start Add Modal */}
-      <div id="add_payroll" className="modal fade">
+      <div id="add_payroll" className="modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="text-dark modal-title fw-bold">Add Employee Salary</h4>
-              <button type="button" className="btn-close btn-close-modal custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                <i className="ti ti-x" />
-              </button>
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">Add Employee Salary</h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form onSubmit={handleAdd}>
               <div className="modal-body">
@@ -168,10 +166,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     <div className="mb-0"><label className="form-label">Others</label><input type="number" className="form-control" value={otherDeductions} onChange={(e) => setOtherDeductions(Number(e.target.value))} /></div>
                   </div>
                 </div>
-              </div>
-              <div className="modal-footer d-flex align-items-center gap-1">
-                <button type="button" className="btn btn-white border" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? <Spin size="small" /> : "Add Payslip"}</button>
+                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                  <button type="button" className="btn btn-light px-4 shadow-sm" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Cancel</button>
+                  <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" disabled={loading} style={{ borderRadius: '6px' }}>{loading && <i className="fa fa-spinner fa-spin me-2" />} {loading ? "Saving..." : "Add Payslip"}</button>
+                </div>
               </div>
             </form>
           </div>
@@ -179,14 +177,12 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
       </div>
 
       {/* Edit Modal */}
-      <div id="edit_payroll" className="modal fade">
+      <div id="edit_payroll" className="modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="text-dark modal-title fw-bold">Edit Employee Salary</h4>
-              <button type="button" className="btn-close btn-close-modal custom-btn-close" data-bs-dismiss="modal" aria-label="Close">
-                <i className="ti ti-x" />
-              </button>
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">Edit Employee Salary</h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form onSubmit={handleEdit}>
               <div className="modal-body">
@@ -232,10 +228,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     <div className="mb-0"><label className="form-label">Others</label><input type="number" className="form-control" value={otherDeductions} onChange={(e) => setOtherDeductions(Number(e.target.value))} /></div>
                   </div>
                 </div>
-              </div>
-              <div className="modal-footer d-flex align-items-center gap-1">
-                <button type="button" className="btn btn-white border" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? <Spin size="small" /> : "Save Changes"}</button>
+                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                  <button type="button" className="btn btn-light px-4 shadow-sm" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Cancel</button>
+                  <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" disabled={loading} style={{ borderRadius: '6px' }}>{loading && <i className="fa fa-spinner fa-spin me-2" />} {loading ? "Saving..." : "Save Changes"}</button>
+                </div>
               </div>
             </form>
           </div>

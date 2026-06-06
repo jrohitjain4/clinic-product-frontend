@@ -98,22 +98,20 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch 
 
   return (
     <>
-      <div id="add_holiday" className="modal fade">
+      <div id="add_holiday" className="modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="text-dark modal-title fw-bold">Add Holiday</h5>
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">Add Holiday</h5>
               <button
                 type="button"
-                className="btn-close btn-close-modal custom-btn-close"
+                className="btn-close btn-close-white"
                 data-bs-dismiss="modal"
                 aria-label="Close"
-              >
-                <i className="fa-solid fa-x" />
-              </button>
+              ></button>
             </div>
-            <form onSubmit={handleAdd}>
-              <div className="modal-body">
+            <div className="modal-body">
+              <form onSubmit={handleAdd}>
                 <div className="mb-3">
                   <label className="form-label">
                     Title<span className="text-danger ms-1">*</span>
@@ -172,39 +170,34 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch 
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="modal-footer d-flex align-items-center gap-1">
-                <button
-                  type="button"
-                  className="btn btn-white border"
-                  data-bs-dismiss="modal"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
-                  {loading ? <Spin size="small" /> : 'Add Holiday'}
-                </button>
-              </div>
-            </form>
+                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                  <button type="button" className="btn btn-light px-4 shadow-sm" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" disabled={loading} style={{ borderRadius: '6px' }}>
+                    {loading && <i className="fa fa-spinner fa-spin me-2" />}
+                    {loading ? 'Saving...' : 'Add Holiday'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>
-      <div id="edit_holiday" className="modal fade">
+      <div id="edit_holiday" className="modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="text-dark modal-title fw-bold">Edit Holiday</h5>
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">Edit Holiday</h5>
               <button
                 type="button"
-                className="btn-close btn-close-modal custom-btn-close"
+                className="btn-close btn-close-white"
                 data-bs-dismiss="modal"
                 aria-label="Close"
-              >
-                <i className="fa-solid fa-x" />
-              </button>
+              ></button>
             </div>
-            <form onSubmit={handleEdit}>
-              <div className="modal-body">
+            <div className="modal-body">
+              <form onSubmit={handleEdit}>
                 <div className="mb-3">
                   <label className="form-label">
                     Title<span className="text-danger ms-1">*</span>
@@ -269,20 +262,17 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch 
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="modal-footer d-flex align-items-center gap-1">
-                <button
-                  type="button"
-                  className="btn btn-white border"
-                  data-bs-dismiss="modal"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
-                  {loading ? <Spin size="small" /> : 'Save Changes'}
-                </button>
-              </div>
-            </form>
+                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                  <button type="button" className="btn btn-light px-4 shadow-sm" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" disabled={loading} style={{ borderRadius: '6px' }}>
+                    {loading && <i className="fa fa-spinner fa-spin me-2" />}
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>

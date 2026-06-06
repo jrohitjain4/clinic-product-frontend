@@ -11,6 +11,7 @@ const Datatable: React.FC<DatatableProps> = ({
   Selection,
   searchText,
   loading,
+  onSelectionChange,
 }) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
   const [Selections, setSelections] = useState<any>(true);
@@ -32,6 +33,9 @@ const Datatable: React.FC<DatatableProps> = ({
 
   const onSelectChange = (newSelectedRowKeys: any[]) => {
     setSelectedRowKeys(newSelectedRowKeys);
+    if (onSelectionChange) {
+      onSelectionChange(newSelectedRowKeys);
+    }
   };
 
   const rowSelection = {

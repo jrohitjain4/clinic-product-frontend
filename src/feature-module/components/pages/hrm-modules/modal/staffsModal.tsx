@@ -517,19 +517,17 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
       </div>
 
       {/* Add */}
-      <div id="add_staff" className="modal fade">
+      <div id="add_staff" className="modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="fw-bold modal-title">New Staff</h5>
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">New Staff</h5>
               <button
                 type="button"
-                className="btn-close btn-close-modal custom-btn-close"
+                className="btn-close btn-close-white"
                 data-bs-dismiss="modal"
                 aria-label="Close"
-              >
-                <i className="ti ti-x" />
-              </button>
+              ></button>
             </div>
             <form
               onSubmit={handleAdd}
@@ -537,23 +535,28 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
                 if (!form.fullName && !form.role) resetAddForm();
               }}
             >
-              <div className="modal-body">{renderFormFields()}</div>
-              <div className="modal-footer d-flex align-items-center gap-1">
-                <button
-                  type="button"
-                  className="btn btn-white border"
-                  data-bs-dismiss="modal"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={submitting}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {submitting ? "Saving…" : "Add Staff"}
-                </button>
+              <div className="modal-body">
+                {renderFormFields()}
+                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                  <button
+                    type="button"
+                    className="btn btn-light px-4 shadow-sm"
+                    data-bs-dismiss="modal"
+                    style={{ borderRadius: '6px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center"
+                    disabled={submitting}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ borderRadius: '6px' }}
+                  >
+                    {submitting && <i className="fa fa-spinner fa-spin me-2" />}
+                    {submitting ? "Saving…" : "Add Staff"}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -561,38 +564,41 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
       </div>
 
       {/* Edit */}
-      <div id="edit_staff" className="modal fade">
+      <div id="edit_staff" className="modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="fw-bold modal-title">Edit Staff</h5>
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">Edit Staff</h5>
               <button
                 type="button"
-                className="btn-close btn-close-modal custom-btn-close"
+                className="btn-close btn-close-white"
                 data-bs-dismiss="modal"
                 aria-label="Close"
-              >
-                <i className="ti ti-x" />
-              </button>
+              ></button>
             </div>
             <form onSubmit={handleEdit}>
-              <div className="modal-body">{renderFormFields({ showStatus: true })}</div>
-              <div className="modal-footer d-flex align-items-center gap-1">
-                <button
-                  type="button"
-                  className="btn btn-white border"
-                  data-bs-dismiss="modal"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={submitting}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {submitting ? "Saving…" : "Save Changes"}
-                </button>
+              <div className="modal-body">
+                {renderFormFields({ showStatus: true })}
+                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                  <button
+                    type="button"
+                    className="btn btn-light px-4 shadow-sm"
+                    data-bs-dismiss="modal"
+                    style={{ borderRadius: '6px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center"
+                    disabled={submitting}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ borderRadius: '6px' }}
+                  >
+                    {submitting && <i className="fa fa-spinner fa-spin me-2" />}
+                    {submitting ? "Saving…" : "Save Changes"}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

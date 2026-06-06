@@ -30,6 +30,7 @@ const DesignationList = () => {
   const [searchText, setSearchText] = useState("");
   const [error, setError] = useState("");
   const [filterDept, setFilterDept] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Add modal state
   const [addName, setAddName] = useState("");
@@ -208,37 +209,25 @@ const DesignationList = () => {
     {
       title: "Action",
       render: (_: any, record: Designation) => (
-        <div className="d-flex align-items-center gap-2">
-          <Link
-            to="#"
-            className="btn btn-sm btn-white text-info d-flex align-items-center justify-content-center p-2"
-            style={{ width: "32px", height: "32px", borderRadius: "50%" }}
-            title="View"
-          >
-            <i className="ti ti-eye fs-16" />
-          </Link>
-          <Link
-            to="#"
-            className="btn btn-sm btn-white text-primary d-flex align-items-center justify-content-center p-2"
-            style={{ width: "32px", height: "32px", borderRadius: "50%" }}
+        <div className="text-end d-flex align-items-center justify-content-end gap-2">
+          <button
+            className="bg-transparent border-0 text-primary p-1"
+            title="Edit"
             data-bs-toggle="modal"
             data-bs-target="#edit_designation"
             onClick={() => openEdit(record)}
-            title="Edit"
           >
-            <i className="ti ti-edit fs-16" />
-          </Link>
-          <Link
-            to="#"
-            className="btn btn-sm btn-white text-danger d-flex align-items-center justify-content-center p-2"
-            style={{ width: "32px", height: "32px", borderRadius: "50%" }}
+            <i className="fa fa-edit fs-16"></i>
+          </button>
+          <button
+            className="bg-transparent border-0 text-danger p-1"
+            title="Delete"
             data-bs-toggle="modal"
             data-bs-target="#delete_designation"
             onClick={() => openDelete(record)}
-            title="Delete"
           >
-            <i className="ti ti-trash fs-16" />
-          </Link>
+            <i className="fa fa-trash-alt fs-16"></i>
+          </button>
         </div>
       ),
     },
@@ -249,19 +238,19 @@ const DesignationList = () => {
       <div className="page-wrapper">
         <div className="content">
           {/* Header */}
-          <div className="d-flex align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
-            <div className="d-flex align-items-center text-nowrap">
-              <h4 className="fw-bold mb-0 d-flex align-items-center">
+          <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
+            <div className="flex-grow-1">
+              <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
                 Designation
                 <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
                   Total: {filteredDesignations.length}
                 </span>
               </h4>
             </div>
-            <div className="d-flex align-items-center gap-2">
+            <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Date : </span> Select
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '130px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><span className="text-muted">Date:</span> Select</span>
                 </Link>
                 <div className="dropdown-menu dropdown-menu-end p-2">
                   <DatePicker format={{ format: "DD-MM-YYYY", type: "mask" }} getPopupContainer={getModalContainer} placeholder="DD-MM-YYYY" suffixIcon={<i className="ti ti-calendar" />} style={{ width: "100%" }} />
@@ -269,8 +258,8 @@ const DesignationList = () => {
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Type : </span> All
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><span className="text-muted">Type:</span> All</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
@@ -280,8 +269,8 @@ const DesignationList = () => {
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                  <span className="me-1"> Department : </span> {filterDept || "All"}
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '160px', minHeight: '38px' }} data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                  <span><span className="text-muted">Department:</span> {filterDept || "All"}</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2" style={{ minWidth: "180px" }}>
                   <li>
@@ -296,8 +285,8 @@ const DesignationList = () => {
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Status : </span> All
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><span className="text-muted">Status:</span> All</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
@@ -306,19 +295,14 @@ const DesignationList = () => {
                 </ul>
               </div>
 
-              <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Sort By : </span> Recent
-                </Link>
-                <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item rounded-1">Recent</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Oldest</Link></li>
-                </ul>
-              </div>
-
-              <Link to="#" className="btn btn-primary fs-13 btn-md" data-bs-toggle="modal" data-bs-target="#add_designation">
-                Add New Designation <i className="ti ti-plus ms-2" />
-              </Link>
+              <button
+                className="btn btn-primary d-flex align-items-center justify-content-center"
+                style={{ minHeight: '38px', whiteSpace: 'nowrap' }}
+                data-bs-toggle="modal" 
+                data-bs-target="#add_designation"
+              >
+                Add New Designation <i className="fa fa-plus ms-2" />
+              </button>
             </div>
           </div>
 
@@ -328,9 +312,31 @@ const DesignationList = () => {
             {loading ? (
               <div className="text-center py-5"><div className="spinner-border text-primary" /></div>
             ) : (
-              <Datatable columns={columns} dataSource={filteredDesignations} Selection={true} searchText={searchText} />
+              <Datatable 
+                columns={columns} 
+                dataSource={filteredDesignations} 
+                Selection={true} 
+                searchText={searchText}
+                onSelectionChange={(keys) => setSelectedIds(keys as string[])}
+              />
             )}
           </div>
+          {selectedIds.length > 0 && (
+            <div className="d-flex justify-content-center mt-auto pt-4 pb-4">
+              <button
+                className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
+                data-bs-toggle="modal"
+                data-bs-target="#delete_designation"
+                onClick={() => {
+                  setDeleteId(""); // Trigger bulk delete if you implement handleBulkDelete
+                }}
+                style={{ borderRadius: '8px', minHeight: '42px', fontWeight: 'bold' }}
+              >
+                <i className="ti ti-trash fs-18"></i>
+                Delete Selected ({selectedIds.length})
+              </button>
+            </div>
+          )}
         </div>
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">2025  <Link to="#" className="link-primary">Docyari</Link>, All Rights Reserved</p>
@@ -338,22 +344,20 @@ const DesignationList = () => {
       </div>
 
       {/* ===== ADD MODAL ===== */}
-      <div id="add_designation" className="modal fade">
+      <div id="add_designation" className="modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="text-dark modal-title fw-bold">Add New Designation</h4>
-              <button id="btn-close-add-desig" type="button" className="btn-close btn-close-modal custom-btn-close" data-bs-dismiss="modal">
-                <i className="ti ti-x" />
-              </button>
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">Add New Designation</h5>
+              <button id="btn-close-add-desig" type="button" className="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form onSubmit={handleAdd}>
-              <div className="modal-body">
+            <div className="modal-body">
+              <form onSubmit={handleAdd}>
                 {addError && <div className="alert alert-danger py-2 fs-13">{addError}</div>}
 
                 {/* Type radio */}
                 <div className="mb-3">
-                  <label className="form-label">Type <span className="text-danger ms-1">*</span></label>
+                  <label className="form-label fw-bold">Type <span className="text-danger ms-1">*</span></label>
                   <div className="d-flex align-items-center gap-3">
                     <div className="form-check d-flex align-items-center">
                       <input className="form-check-input me-2" type="radio" name="addType" id="add-type-staff"
@@ -369,13 +373,13 @@ const DesignationList = () => {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">Designation Name <span className="text-danger ms-1">*</span></label>
+                  <label className="form-label fw-bold">Designation Name <span className="text-danger ms-1">*</span></label>
                   <input type="text" className="form-control" value={addName}
                     onChange={e => setAddName(e.target.value)} placeholder="e.g. Senior Nurse" />
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">Department <span className="text-danger ms-1">*</span></label>
+                  <label className="form-label fw-bold">Department <span className="text-danger ms-1">*</span></label>
                   <select className="form-select" value={addDeptId} onChange={e => setAddDeptId(e.target.value)}>
                     <option value="">-- Select Department --</option>
                     {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -385,19 +389,21 @@ const DesignationList = () => {
                   )}
                 </div>
 
-                <div className="mb-0">
-                  <label className="form-label">Description</label>
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Description</label>
                   <textarea className="form-control" rows={3} value={addDesc}
                     onChange={e => setAddDesc(e.target.value)} placeholder="Optional description" />
                 </div>
-              </div>
-              <div className="modal-footer d-flex align-items-center gap-1">
-                <button type="button" className="btn btn-white border" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={addLoading}>
-                  {addLoading ? <><span className="spinner-border spinner-border-sm me-1" />Saving...</> : "Add Designation"}
-                </button>
-              </div>
-            </form>
+
+                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                  <button type="button" className="btn btn-light px-4 shadow-sm" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Cancel</button>
+                  <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" disabled={addLoading} style={{ borderRadius: '6px' }}>
+                    {addLoading && <i className="fa fa-spinner fa-spin me-2" />}
+                    {addLoading ? 'Saving...' : 'Add Designation'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>

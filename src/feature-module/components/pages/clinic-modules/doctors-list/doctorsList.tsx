@@ -26,6 +26,7 @@ const PLACEHOLDER_IMAGES = [
 const DoctorsList = () => {
   const { doctors, loading, error, refetch } = useClinicDoctors();
   const [searchText, setSearchText] = useState<string>("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const tableData = useMemo(
     () =>
@@ -108,39 +109,40 @@ const DoctorsList = () => {
         a.Status.localeCompare(b.Status),
     },
     {
-      title: "",
+      title: "Action",
+      dataIndex: "action",
+      align: "right",
       render: (_: unknown, record: (typeof tableData)[0]) => (
-        <div className="d-flex align-items-center">
-          <div className="action-item me-2">
-            <Link to={all_routes.appointmentCalendar}>
-              <i className="ti ti-calendar-cog" />
-            </Link>
-          </div>
-          <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
-            <Link to="#" data-bs-toggle="dropdown">
-              <i className="ti ti-dots-vertical" />
-            </Link>
-            <ul className="dropdown-menu">
-              <li>
-                <Link
-                  to={editDoctorPath(record.key)}
-                  className="dropdown-item d-flex align-items-center"
-                >
-                  Edit
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="#"
-                  className="dropdown-item d-flex align-items-center"
-                  data-bs-toggle="modal"
-                  data-bs-target="#delete_modal"
-                >
-                  Delete
-                </Link>
-              </li>
-            </ul>
-          </div>
+        <div className="text-end d-flex align-items-center justify-content-end gap-2">
+          <Link
+            to={all_routes.appointmentCalendar}
+            className="btn btn-icon btn-sm btn-soft-info"
+            title="Appointment Calendar"
+          >
+            <i className="ti ti-calendar-cog"></i>
+          </Link>
+          <Link
+            to={doctorDetailsPath(record.key)}
+            className="btn btn-icon btn-sm btn-soft-secondary"
+            title="View Doctor"
+          >
+            <i className="ti ti-eye"></i>
+          </Link>
+          <Link
+            to={editDoctorPath(record.key)}
+            className="btn btn-icon btn-sm btn-soft-primary"
+            title="Edit Doctor"
+          >
+            <i className="ti ti-edit"></i>
+          </Link>
+          <button
+            className="btn btn-icon btn-sm btn-soft-danger"
+            title="Delete Doctor"
+            data-bs-toggle="modal"
+            data-bs-target="#delete_modal"
+          >
+            <i className="ti ti-trash"></i>
+          </button>
         </div>
       ),
     },
@@ -154,9 +156,9 @@ const DoctorsList = () => {
     <>
       <div className="page-wrapper">
         <div className="content">
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
+          <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom">
             <div className="flex-grow-1">
-              <h4 className="fw-bold mb-0">
+              <h4 className="page-title fw-bold mb-0">
                 Doctor List
                 <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
                   Total Doctors : {loading ? "" : doctors.length}
@@ -283,8 +285,13 @@ const DoctorsList = () => {
                   </form>
                 </div>
               </div>
-              <Link to={all_routes.addDoctors} className="btn btn-primary fs-13 btn-md">
-                New Doctor <i className="ti ti-plus ms-2" /></Link>
+              <Link 
+                to={all_routes.addDoctors} 
+                className="btn btn-primary d-flex align-items-center justify-content-center ms-1"
+                style={{ minHeight: '38px', whiteSpace: 'nowrap' }}
+              >
+                New Doctor <i className="fa fa-plus ms-2" />
+              </Link>
             </div>
           </div>
 
@@ -297,16 +304,7 @@ const DoctorsList = () => {
             </div>
           )}
 
-          <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-            <div className="search-set mb-3">
-              <div className="d-flex align-items-center flex-wrap gap-2">
 
-              </div>
-            </div>
-            <div className="d-flex table-dropdown mb-3 pb-1 right-content align-items-center flex-wrap row-gap-3">
-
-            </div>
-          </div>
 
           {loading ? (
             <div className="text-center py-5">
@@ -315,8 +313,12 @@ const DoctorsList = () => {
           ) : tableData.length === 0 && !error ? (
             <div className="text-center py-5 border rounded bg-white">
               <p className="text-muted mb-3">No doctors found. Add a doctor to get started.</p>
-              <Link to={all_routes.addDoctors} className="btn btn-primary">
-                Add Doctor
+              <Link 
+                to={all_routes.addDoctors} 
+                className="btn btn-primary d-flex align-items-center justify-content-center ms-1"
+                style={{ minHeight: '38px', whiteSpace: 'nowrap' }}
+              >
+                New Doctor <i className="fa fa-plus ms-2" />
               </Link>
             </div>
           ) : (
@@ -324,9 +326,24 @@ const DoctorsList = () => {
               <Datatable
                 columns={columns}
                 dataSource={tableData}
-                Selection={false}
+                Selection={true}
                 searchText={searchText}
+                onSelectionChange={(keys) => setSelectedIds(keys as string[])}
               />
+            </div>
+          )}
+          
+          {selectedIds.length > 0 && (
+            <div className="d-flex justify-content-center mt-auto pt-4 pb-4">
+              <button
+                className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
+                data-bs-toggle="modal"
+                data-bs-target="#delete_modal"
+                style={{ borderRadius: '8px', minHeight: '42px', fontWeight: 'bold' }}
+              >
+                <i className="ti ti-trash fs-18"></i>
+                Delete Selected ({selectedIds.length})
+              </button>
             </div>
           )}
         </div>

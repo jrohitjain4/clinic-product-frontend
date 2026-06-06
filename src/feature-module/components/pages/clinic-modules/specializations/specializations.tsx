@@ -11,6 +11,7 @@ import { Specialization, StatusActive } from "../../../../../core/common/selectO
 const Specializations = () => {
   const { specializations, refetch } = useClinicSpecializations();
   const [selectedSpecialization, setSelectedSpecialization] = useState<any>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const data = specializations.map((spec) => ({
     key: spec.id,
@@ -42,16 +43,7 @@ const Specializations = () => {
 
         return (
           <div className="d-flex align-items-center">
-            <Link
-              to="#"
-              className="avatar me-2"
-            >
-              <ImageWithBasePath
-                src={imageSrc}
-                alt="Doctor"
-                className="rounded-circle"
-              />
-            </Link>
+         
             <div>
               <h6 className="mb-0 fs-14 fw-semibold">
                 <Link to="#">
@@ -93,29 +85,25 @@ const Specializations = () => {
     {
       title: "Action",
       render: (_text: string, render: any) => (
-        <div className="d-flex align-items-center gap-2">
-          <Link
-            to="#"
-            className="btn btn-sm btn-white text-primary d-flex align-items-center justify-content-center p-2"
-            style={{ width: "32px", height: "32px", borderRadius: "50%" }}
+        <div className="text-end d-flex align-items-center justify-content-end gap-2">
+          <button
+            className="bg-transparent border-0 text-primary p-1"
             data-bs-toggle="modal"
             data-bs-target="#edit_specialization"
             onClick={() => setSelectedSpecialization(render.raw)}
             title="Edit"
           >
-            <i className="ti ti-edit fs-16" />
-          </Link>
-          <Link
-            to="#"
-            className="btn btn-sm btn-white text-danger d-flex align-items-center justify-content-center p-2"
-            style={{ width: "32px", height: "32px", borderRadius: "50%" }}
+            <i className="fa fa-edit fs-16"></i>
+          </button>
+          <button
+            className="bg-transparent border-0 text-danger p-1"
             data-bs-toggle="modal"
             data-bs-target="#delete_specialization"
             onClick={() => setSelectedSpecialization(render.raw)}
             title="Delete"
           >
-            <i className="ti ti-trash fs-16" />
-          </Link>
+            <i className="fa fa-trash-alt fs-16"></i>
+          </button>
         </div>
       ),
       sorter: (a: any, b: any) => a.Status.length - b.Status.length,
@@ -139,25 +127,25 @@ const Specializations = () => {
         {/* Start Content */}
         <div className="content">
           {/* Start Page Header */}
-          <div className="d-flex align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
-            <div className="d-flex align-items-center text-nowrap">
-              <h4 className="fw-bold mb-0 d-flex align-items-center">
+          <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
+            <div className="flex-grow-1">
+              <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
                 Specializations
                 <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
                   Total Specializations : {specializations.length}
                 </span>
               </h4>
             </div>
-            <div className="d-flex align-items-center gap-2">
+            <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
 
               {/* Inline Header Filters as Clones */}
               <div className="dropdown">
                 <Link
                   to="#"
-                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '160px', minHeight: '38px' }}
                   data-bs-toggle="dropdown"
                 >
-                  <span className="me-1"> Specialization : </span> All
+                  <span><span className="text-muted">Specialization:</span> All</span>
                 </Link>
                 <ul className="dropdown-menu  dropdown-menu-end p-2">
                   <li>
@@ -176,10 +164,10 @@ const Specializations = () => {
               <div className="dropdown">
                 <Link
                   to="#"
-                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '130px', minHeight: '38px' }}
                   data-bs-toggle="dropdown"
                 >
-                  <span className="me-1"> Date : </span> Select
+                  <span><span className="text-muted">Date:</span> Select</span>
                 </Link>
                 <div className="dropdown-menu dropdown-menu-end p-2">
                   <DatePicker
@@ -195,10 +183,10 @@ const Specializations = () => {
               <div className="dropdown">
                 <Link
                   to="#"
-                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '120px', minHeight: '38px' }}
                   data-bs-toggle="dropdown"
                 >
-                  <span className="me-1"> Status : </span> All
+                  <span><span className="text-muted">Status:</span> All</span>
                 </Link>
                 <ul className="dropdown-menu  dropdown-menu-end p-2">
                   <li>
@@ -214,36 +202,17 @@ const Specializations = () => {
                 </ul>
               </div>
 
-              <div className="dropdown">
-                <Link
-                  to="#"
-                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
-                  data-bs-toggle="dropdown"
-                >
-                  <span className="me-1"> Sort By : </span> Recent
-                </Link>
-                <ul className="dropdown-menu  dropdown-menu-end p-2">
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Recent
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Oldest
-                    </Link>
-                  </li>
-                </ul>
-              </div>
 
-              <Link to="#"
-                className="btn btn-primary text-white fs-13 btn-md"
+
+              <button
+                className="btn btn-primary d-flex align-items-center justify-content-center"
+                style={{ minHeight: '38px', whiteSpace: 'nowrap' }}
                 data-bs-toggle="modal"
                 data-bs-target="#add_specialization"
               >
                 Add New Specialization
-                <i className="ti ti-plus ms-2" />
-              </Link>
+                <i className="fa fa-plus ms-2" />
+              </button>
             </div>
           </div>
           {/* End Page Header */}
@@ -254,9 +223,22 @@ const Specializations = () => {
               dataSource={data}
               Selection={true}
               searchText={searchText}
-
+              onSelectionChange={(keys) => setSelectedIds(keys as string[])}
             />
           </div>
+          {selectedIds.length > 0 && (
+            <div className="d-flex justify-content-center mt-auto pt-4 pb-4">
+              <button
+                className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
+                data-bs-toggle="modal"
+                data-bs-target="#delete_specialization"
+                style={{ borderRadius: '8px', minHeight: '42px', fontWeight: 'bold' }}
+              >
+                <i className="ti ti-trash fs-18"></i>
+                Delete Selected ({selectedIds.length})
+              </button>
+            </div>
+          )}
         </div>
         {/* End Content */}
         {/* Footer Start */}

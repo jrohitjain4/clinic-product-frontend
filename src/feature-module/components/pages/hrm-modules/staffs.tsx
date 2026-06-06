@@ -12,6 +12,7 @@ const StaffsList = () => {
   const { staffs, loading, error, refetch, reload } = useClinicStaff();
   const [searchText, setSearchText] = useState("");
   const [selected, setSelected] = useState<ClinicStaff | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const tableData = useMemo(
     () => staffs.map((s, i) => staffToTableRow(s, i)),
@@ -105,24 +106,24 @@ const StaffsList = () => {
     {
       title: "Action",
       render: (_: unknown, record: (typeof tableData)[0]) => (
-        <div className="d-flex align-items-center gap-2">
+        <div className="text-end d-flex align-items-center justify-content-end gap-2">
           <button
             type="button"
-            className="avatar avatar-sm border text-primary rounded-circle d-flex align-items-center justify-content-center bg-transparent p-0"
+            className="bg-transparent border-0 text-primary p-1"
             data-bs-toggle="modal"
             data-bs-target="#edit_staff"
             onClick={() => openStaff(record._raw)}
           >
-            <i className="ti ti-edit fs-16" />
+            <i className="fa fa-edit fs-16" />
           </button>
           <button
             type="button"
-            className="avatar avatar-sm border text-danger rounded-circle d-flex align-items-center justify-content-center bg-transparent p-0"
+            className="bg-transparent border-0 text-danger p-1"
             data-bs-toggle="modal"
             data-bs-target="#delete_staff"
             onClick={() => openStaff(record._raw)}
           >
-            <i className="ti ti-trash fs-16" />
+            <i className="fa fa-trash-alt fs-16" />
           </button>
         </div>
       ),
@@ -133,17 +134,19 @@ const StaffsList = () => {
     <>
       <div className="page-wrapper">
         <div className="content" id="profilePage">
-          <div className="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 pb-3 border-bottom">
-            <h4 className="fw-bold mb-0 d-flex align-items-center">
-              Staff
-              <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                Total Staffs : {loading ? "" : staffs.length}
-              </span>
-            </h4>
-            <div className="d-flex align-items-center gap-2">
+          <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
+            <div className="flex-grow-1">
+              <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
+                Staff
+                <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
+                  Total Staffs : {loading ? "" : staffs.length}
+                </span>
+              </h4>
+            </div>
+            <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Date : </span> Select
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '130px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><span className="text-muted">Date:</span> Select</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
@@ -153,8 +156,8 @@ const StaffsList = () => {
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Designation : </span> All
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '150px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><span className="text-muted">Designation:</span> All</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
@@ -163,8 +166,8 @@ const StaffsList = () => {
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Role : </span> All
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><span className="text-muted">Role:</span> All</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
@@ -174,8 +177,8 @@ const StaffsList = () => {
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
-                  <span className="me-1"> Status : </span> All
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '130px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span><span className="text-muted">Status:</span> All</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
@@ -187,11 +190,10 @@ const StaffsList = () => {
               <div className="dropdown">
                 <button
                   type="button"
-                  className="btn btn-md fs-14 fw-normal border bg-white rounded text-dark d-inline-flex align-items-center px-2 py-1"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '100px', minHeight: '38px', background: '#fff' }}
                   data-bs-toggle="dropdown"
                 >
-                  Export
-                  <i className="ti ti-chevron-down ms-2" />
+                  <span>Export</span>
                 </button>
 
                 <ul className="dropdown-menu p-2">
@@ -207,14 +209,17 @@ const StaffsList = () => {
                   </li>
                 </ul>
               </div>
+              
               <button
                 type="button"
-                className="btn btn-primary ms-2 fs-13 btn-md"
+                className="btn btn-primary d-flex align-items-center justify-content-center"
+                style={{ minHeight: '38px', whiteSpace: 'nowrap' }}
                 data-bs-toggle="modal"
                 data-bs-target="#add_staff"
                 onClick={() => setSelected(null)}
               >
-                Add Staff <i className="ti ti-plus ms-2" /></button>
+                Add Staff <i className="fa fa-plus ms-2" />
+              </button>
             </div>
           </div>
 
@@ -258,7 +263,22 @@ const StaffsList = () => {
                 dataSource={tableData}
                 Selection={true}
                 searchText={searchText}
+                onSelectionChange={(keys) => setSelectedIds(keys as string[])}
               />
+            </div>
+          )}
+          
+          {selectedIds.length > 0 && (
+            <div className="d-flex justify-content-center mt-auto pt-4 pb-4">
+              <button
+                className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
+                data-bs-toggle="modal"
+                data-bs-target="#delete_staff" // Use existing delete modal or global modal
+                style={{ borderRadius: '8px', minHeight: '42px', fontWeight: 'bold' }}
+              >
+                <i className="ti ti-trash fs-18"></i>
+                Delete Selected ({selectedIds.length})
+              </button>
             </div>
           )}
         </div>

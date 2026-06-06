@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { all_routes } from "../../../../../routes/all_routes";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { apiUrl } from "../../../../../../core/config/api";
 
 const TodoList = () => {
   const [todos, setTodos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newTodo, setNewTodo] = useState({ title: "", priority: "Medium" });
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [newTodo, setNewTodo] = useState({ title: "", priority: "Medium", taskDate: "" });
   const [editTodo, setEditTodo] = useState<any>(null);
 
   const fetchTodos = async () => {
@@ -34,6 +34,11 @@ const TodoList = () => {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newTodo.title.trim()) {
+      toast.error("Task description is required");
+      return;
+    }
+    setLoading(true);
     try {
       const res = await fetch(apiUrl("/api/todos"), {
         method: "POST",
@@ -46,14 +51,19 @@ const TodoList = () => {
       if (res.ok) {
         const data = await res.json();
         setTodos([data, ...todos]);
-        setNewTodo({ title: "", priority: "Medium" });
-        toast.success("Task added successfully!");
-        // Close modal manually if needed or use state
+        setNewTodo({ title: "", priority: "Medium", taskDate: "" });
+
+        toast.success("Task created successfully!", {
+          position: "top-center"
+        });
+
         const closeBtn = document.getElementById("close_add_todo");
         if (closeBtn) closeBtn.click();
       }
     } catch (error) {
-      toast.error("Failed to add task");
+      toast.error("Failed to add task", { position: "top-center" });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,18 +107,68 @@ const TodoList = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} tasks?`)) return;
+
+    try {
+      const res = await fetch(apiUrl("/api/todos/bulk-delete"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ ids: selectedIds }),
+      });
+      if (res.ok) {
+        setTodos(todos.filter((t) => !selectedIds.includes(t.id)));
+        setSelectedIds([]);
+        toast.success(`Successfully deleted ${selectedIds.length} tasks!`, { position: "top-center" });
+      }
+    } catch (error) {
+      toast.error("Bulk delete failed", { position: "top-center" });
+    }
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(todos.map((t) => t.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter((sid) => sid !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
+
   return (
     <div className="page-wrapper">
-      <ToastContainer position="top-right" autoClose={2000} />
       <div className="content">
         <div className="row">
           <div className="col-md-12">
             <div className="section-header d-flex justify-content-between align-items-center flex-nowrap gap-2 mb-4">
-              <h4 className="page-title mb-0">Dynamic To Do List</h4>
-              <button 
-                className="btn btn-primary d-flex align-items-center justify-content-center" 
-                style={{ minHeight: '46px', whiteSpace: 'nowrap' }} 
-                data-bs-toggle="modal" 
+              <div className="d-flex align-items-center gap-3">
+                <h4 className="page-title mb-0">Dynamic To Do List</h4>
+                {selectedIds.length > 0 && (
+                  <button
+                    className="btn btn-danger btn-sm d-flex align-items-center gap-2 px-3 shadow-sm"
+                    onClick={handleBulkDelete}
+                    style={{ borderRadius: '8px', minHeight: '38px' }}
+                  >
+                    <i className="ti ti-trash fs-18"></i>
+                    Delete Selected ({selectedIds.length})
+                  </button>
+                )}
+              </div>
+              <button
+                className="btn btn-primary d-flex align-items-center justify-content-center"
+                style={{ minHeight: '46px', whiteSpace: 'nowrap' }}
+                data-bs-toggle="modal"
                 data-bs-target="#add_todo"
               >
                 <i className="fa fa-plus me-2"></i> Add New Task
@@ -121,9 +181,21 @@ const TodoList = () => {
           <div className="card-body p-0">
             <div className="table-responsive">
               <table className="table table-hover mb-0 custom-todo-table">
-                <thead className="bg-light">                  <tr>
+                <thead className="bg-light">
+                  <tr>
+                    <th style={{ width: "40px" }}>
+                      <div className="form-check custom-checkbox">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          checked={todos.length > 0 && selectedIds.length === todos.length}
+                          onChange={handleSelectAll}
+                        />
+                      </div>
+                    </th>
                     <th style={{ width: "50px" }}>#</th>
                     <th>Task Description</th>
+                    <th>Date</th>
                     <th>Priority</th>
                     <th>Status</th>
                     <th className="text-end">Action</th>
@@ -132,24 +204,39 @@ const TodoList = () => {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={5} className="text-center p-5">
+                      <td colSpan={6} className="text-center p-5">
                         <div className="spinner-border text-primary" role="status"></div>
                         <p className="mt-2 text-muted">Loading your tasks...</p>
                       </td>
                     </tr>
                   ) : todos.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="text-center p-5 text-muted">
+                      <td colSpan={6} className="text-center p-5 text-muted">
                         No tasks found. Click "Add New Task" to get started!
                       </td>
                     </tr>
                   ) : (
                     todos.map((todo, index) => (
-                      <tr key={todo.id}>
-                        <td>{index + 1}</td>
+                      <tr key={todo.id} className={selectedIds.includes(todo.id) ? 'bg-light-primary' : ''}>
                         <td>
-                          <span className={todo.status === 'Completed' ? 'text-decoration-line-through text-muted' : 'fw-medium'}>
+                          <div className="form-check custom-checkbox">
+                            <input
+                              type="checkbox"
+                              className="form-check-input"
+                              checked={selectedIds.includes(todo.id)}
+                              onChange={() => handleSelectRow(todo.id)}
+                            />
+                          </div>
+                        </td>
+                        <td>{index + 1}</td>
+                        <td style={{ maxWidth: '300px' }}>
+                          <span className={todo.status === 'Completed' ? 'text-decoration-line-through text-muted' : 'fw-medium text-wrap'}>
                             {todo.title}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="text-muted fs-13">
+                            {todo.taskDate ? new Date(todo.taskDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                           </span>
                         </td>
                         <td>
@@ -200,31 +287,46 @@ const TodoList = () => {
             <div className="modal-body">
               <form onSubmit={handleCreate}>
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Task Description</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-lg"
+                  <label className="form-label fw-bold">Task Description <span className="text-danger">*</span></label>
+                  <textarea
+                    className="form-control"
+                    rows={3}
                     placeholder="What needs to be done?"
                     value={newTodo.title}
                     onChange={(e) => setNewTodo({ ...newTodo, title: e.target.value })}
                     required
-                  />
+                  ></textarea>
                 </div>
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Priority</label>
-                  <select
-                    className="form-select form-select-lg"
-                    value={newTodo.priority}
-                    onChange={(e) => setNewTodo({ ...newTodo, priority: e.target.value })}
-                  >
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                  </select>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label fw-bold">Date</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={newTodo.taskDate}
+                      min={new Date().toISOString().split("T")[0]}
+                      onChange={(e) => setNewTodo({ ...newTodo, taskDate: e.target.value })}
+                    />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label fw-bold">Priority</label>
+                    <select
+                      className="form-select"
+                      value={newTodo.priority}
+                      onChange={(e) => setNewTodo({ ...newTodo, priority: e.target.value })}
+                    >
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="text-end mt-4">
-                  <button type="button" className="btn btn-light me-2 px-4" data-bs-dismiss="modal">Cancel</button>
-                  <button type="submit" className="btn btn-primary px-4 bg-primary text-white border-0">Create Task</button>
+                  <button type="button" className="btn btn-light me-2 px-4 shadow-sm" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" className="btn btn-primary px-4 bg-primary text-white border-0 shadow-sm d-flex align-items-center" disabled={loading}>
+                    {loading && <i className="fa fa-spinner fa-spin me-2" />}
+                    {loading ? 'Creating...' : 'Create Task'}
+                  </button>
                 </div>
               </form>
             </div>

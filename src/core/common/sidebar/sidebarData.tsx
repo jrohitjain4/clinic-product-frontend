@@ -1304,6 +1304,17 @@ export const SidebarData = [
         dot: true,
         submenuItems: [],
       },
+      {
+        label: "Notes",
+        link: routes.notes,
+        submenu: false,
+        showSubRoute: false,
+        icon: "file-text",
+        base: "notes",
+        materialicons: "start",
+        dot: true,
+        submenuItems: [],
+      },
     ],
   },
 ];

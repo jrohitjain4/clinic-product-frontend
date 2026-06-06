@@ -54,6 +54,7 @@ import Notifications from "../components/pages/application-modules/application/n
 import SearchList from "../components/pages/application-modules/application/search-list/searchList";
 import SocialFeed from "../components/pages/application-modules/application/social-feed/socialFeed";
 import TodoList from "../components/pages/application-modules/application/todo/todoList";
+import Notes from "../components/pages/application-modules/application/notes/notes";
 import InvoiceDetails from "../components/pages/application-modules/invoice-details/invoiceDetails";
 import Activities from "../components/pages/clinic-modules/activities/activities";
 import AddDoctor from "../components/pages/clinic-modules/add-doctor/addDoctor";
@@ -488,6 +489,11 @@ export const publicRoutes = [
   {
     path: routes.todoList,
     element: <TodoList />,
+    route: Route,
+  },
+  {
+    path: routes.notes,
+    element: <Notes />,
     route: Route,
   },
   {

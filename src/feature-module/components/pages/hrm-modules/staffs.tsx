@@ -22,6 +22,11 @@ const StaffsList = () => {
 
   const columns = [
     {
+      title: "S.No",
+      dataIndex: "S_No",
+      sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) => a.S_No - b.S_No,
+    },
+    {
       title: "Staff",
       dataIndex: "Staff",
       render: (text: string, record: (typeof tableData)[0]) => (
@@ -87,8 +92,8 @@ const StaffsList = () => {
       render: (text: string) => (
         <span
           className={`badge border ${text === "Available"
-              ? "badge-soft-success border-success"
-              : "badge-soft-danger border-danger"
+            ? "badge-soft-success border-success"
+            : "badge-soft-danger border-danger"
             }`}
         >
           {text}
@@ -98,52 +103,27 @@ const StaffsList = () => {
         a.Status.localeCompare(b.Status),
     },
     {
-      title: "",
+      title: "Action",
       render: (_: unknown, record: (typeof tableData)[0]) => (
-        <div className="action-item">
+        <div className="d-flex align-items-center gap-2">
           <button
             type="button"
-            className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
-            data-bs-toggle="dropdown"
-            aria-label="Actions"
+            className="avatar avatar-sm border text-primary rounded-circle d-flex align-items-center justify-content-center bg-transparent p-0"
+            data-bs-toggle="modal"
+            data-bs-target="#edit_staff"
+            onClick={() => openStaff(record._raw)}
           >
-            <i className="ti ti-dots-vertical" />
+            <i className="ti ti-edit fs-16" />
           </button>
-          <ul className="dropdown-menu p-2">
-            <li>
-              <button
-                type="button"
-                className="dropdown-item d-flex align-items-center"
-                data-bs-toggle="modal"
-                data-bs-target="#view_staff"
-                onClick={() => openStaff(record._raw)}
-              >
-                View Details
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className="dropdown-item d-flex align-items-center"
-                data-bs-toggle="modal"
-                data-bs-target="#edit_staff"
-                onClick={() => openStaff(record._raw)}
-              >
-                Edit
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className="dropdown-item d-flex align-items-center"
-                data-bs-toggle="modal"
-                data-bs-target="#delete_staff"
-                onClick={() => openStaff(record._raw)}
-              >
-                Delete
-              </button>
-            </li>
-          </ul>
+          <button
+            type="button"
+            className="avatar avatar-sm border text-danger rounded-circle d-flex align-items-center justify-content-center bg-transparent p-0"
+            data-bs-toggle="modal"
+            data-bs-target="#delete_staff"
+            onClick={() => openStaff(record._raw)}
+          >
+            <i className="ti ti-trash fs-16" />
+          </button>
         </div>
       ),
     },
@@ -153,25 +133,67 @@ const StaffsList = () => {
     <>
       <div className="page-wrapper">
         <div className="content" id="profilePage">
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
-            <div className="flex-grow-1">
-              <h4 className="fw-bold mb-0">
-                Staff
-                <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                  Total Staffs : {loading ? "" : staffs.length}
-                </span>
-              </h4>
-            </div>
-            <div className="text-end d-flex">
-              <div className="dropdown me-1">
+          <div className="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 pb-3 border-bottom">
+            <h4 className="fw-bold mb-0 d-flex align-items-center">
+              Staff
+              <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
+                Total Staffs : {loading ? "" : staffs.length}
+              </span>
+            </h4>
+            <div className="d-flex align-items-center gap-2">
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Date : </span> Select
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Today</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">This Week</Link></li>
+                </ul>
+              </div>
+
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Designation : </span> All
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">dfghj</Link></li>
+                </ul>
+              </div>
+
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Role : </span> All
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Front Desk</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Nurse</Link></li>
+                </ul>
+              </div>
+
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Status : </span> All
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Available</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Unavailable</Link></li>
+                </ul>
+              </div>
+
+              <div className="dropdown">
                 <button
                   type="button"
-                  className="btn btn-md fs-14 fw-normal border bg-white rounded text-dark d-inline-flex align-items-center"
+                  className="btn btn-md fs-14 fw-normal border bg-white rounded text-dark d-inline-flex align-items-center px-2 py-1"
                   data-bs-toggle="dropdown"
                 >
                   Export
                   <i className="ti ti-chevron-down ms-2" />
                 </button>
+
                 <ul className="dropdown-menu p-2">
                   <li>
                     <button type="button" className="dropdown-item">
@@ -207,7 +229,7 @@ const StaffsList = () => {
 
           <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
             <div className="search-set mb-3">
-              
+
             </div>
           </div>
 
@@ -234,7 +256,7 @@ const StaffsList = () => {
               <Datatable
                 columns={columns}
                 dataSource={tableData}
-                Selection={false}
+                Selection={true}
                 searchText={searchText}
               />
             </div>
@@ -243,7 +265,7 @@ const StaffsList = () => {
 
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 
+            2025
             <Link to="#" className="link-primary">
               Docyari
             </Link>

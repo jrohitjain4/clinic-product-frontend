@@ -10,9 +10,10 @@ const LeaveType = () => {
   const { leaveTypes, createLeaveType, updateLeaveType, deleteLeaveType } = useLeaveTypes();
   const [currentRecord, setCurrentRecord] = useState<LeaveTypeModel | null>(null);
 
-  const data = leaveTypes.map((item) => ({
+  const data = leaveTypes.map((item, index) => ({
     key: item.id,
     id: item.id,
+    S_No: index + 1,
     LeaveType: item.name,
     LeaveQuota: item.quota.toString(),
     CreatedOn: dayjs(item.createdAt).format("DD MMM YYYY"),
@@ -20,6 +21,11 @@ const LeaveType = () => {
   }));
 
   const columns = [
+    {
+      title: "S.No",
+      dataIndex: "S_No",
+      sorter: (a: any, b: any) => a.S_No - b.S_No,
+    },
     {
       title: "Leave Type",
       dataIndex: "LeaveType",
@@ -51,40 +57,27 @@ const LeaveType = () => {
       sorter: (a: any, b: any) => a.Status.length - b.Status.length,
     },
     {
-      title: "",
+      title: "Action",
       render: (_text: any, record: any) => (
-        <div className="action-item p-2">
+        <div className="d-flex align-items-center gap-2">
           <Link
             to="#"
-            data-bs-toggle="dropdown"
-            className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
+            className="avatar avatar-sm border text-primary rounded-circle d-flex align-items-center justify-content-center bg-transparent"
+            data-bs-toggle="modal"
+            data-bs-target="#edit_leave_type"
+            onClick={() => setCurrentRecord(leaveTypes.find(l => l.id === record.id) || null)}
           >
-            <i className="ti ti-dots-vertical" />
+            <i className="ti ti-edit fs-16" />
           </Link>
-          <ul className="dropdown-menu p-2">
-            <li>
-              <Link
-                to="#"
-                className="dropdown-item d-flex align-items-center"
-                data-bs-toggle="modal"
-                data-bs-target="#edit_leave_type"
-                onClick={() => setCurrentRecord(leaveTypes.find(l => l.id === record.id) || null)}
-              >
-                Edit
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="#"
-                className="dropdown-item d-flex align-items-center"
-                data-bs-toggle="modal"
-                data-bs-target="#delete_leave_type"
-                onClick={() => setCurrentRecord(leaveTypes.find(l => l.id === record.id) || null)}
-              >
-                Delete
-              </Link>
-            </li>
-          </ul>
+          <Link
+            to="#"
+            className="avatar avatar-sm border text-danger rounded-circle d-flex align-items-center justify-content-center bg-transparent"
+            data-bs-toggle="modal"
+            data-bs-target="#delete_leave_type"
+            onClick={() => setCurrentRecord(leaveTypes.find(l => l.id === record.id) || null)}
+          >
+            <i className="ti ti-trash fs-16" />
+          </Link>
         </div>
       ),
     },
@@ -94,24 +87,62 @@ const LeaveType = () => {
     <>
       <div className="page-wrapper">
         <div className="content" id="profilePage">
-          <div className="mb-3 border-bottom pb-3">
-            <div className="d-flex align-items-center justify-content-between">
-              <h4 className="fw-bold mb-0">Leave Type</h4>
+          <div className="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 pb-3 border-bottom">
+            <h4 className="fw-bold mb-0 d-flex align-items-center">
+              Leave Type
+              <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
+                Total: {leaveTypes.length}
+              </span>
+            </h4>
+            <div className="d-flex align-items-center gap-2">
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Date : </span> Select
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Today</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">This Week</Link></li>
+                </ul>
+              </div>
+
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Status : </span> All
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Active</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Inactive</Link></li>
+                </ul>
+              </div>
+
+              <div className="dropdown me-2">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Sort By : </span> Recent
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">Recent</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Oldest</Link></li>
+                </ul>
+              </div>
+
               <Link
                 to="#"
-                className="btn btn-primary"
+                className="btn btn-primary btn-md"
                 data-bs-toggle="modal"
                 data-bs-target="#add_leave_type"
                 onClick={() => setCurrentRecord(null)}
               >
-                New Leave Type <i className="ti ti-plus ms-2" /></Link>
+                New Leave Type <i className="ti ti-plus ms-1" />
+              </Link>
             </div>
           </div>
           <div className="table-responsive border">
             <Datatable
               columns={columns}
               dataSource={data}
-              Selection={false}
+              Selection={true}
               searchText={""}
             />
           </div>

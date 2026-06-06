@@ -1,6 +1,8 @@
 import { useState } from "react";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+import { toast } from "react-toastify";
+import { apiUrl } from "../../../../../../../core/config/api";
 type PasswordField = "password" | "confirmPassword" | "newpassword";
 
 const Modals = () => {
@@ -17,6 +19,47 @@ const Modals = () => {
     }));
   };
   const [phone, setPhone] = useState<string | undefined>()
+
+  const [passwordForm, setPasswordForm] = useState({
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [updating, setUpdating] = useState(false);
+
+  const handlePasswordChange = async () => {
+    if (!passwordForm.newPassword) {
+      toast.error("Please enter a new password");
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(apiUrl("/api/auth/change-password"), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newPassword: passwordForm.newPassword }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to update password");
+
+      toast.success("Password updated successfully!");
+      setPasswordForm({ newPassword: "", confirmPassword: "" });
+      // Close modal manually if needed or let data-bs-dismiss handle it
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
   return (
     <>
       <div id="change_password" className="modal fade">
@@ -37,26 +80,6 @@ const Modals = () => {
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label">
-                    Current Password<span className="text-danger ms-1">*</span>
-                  </label>
-                  <div className="pass-group input-group">
-                    <span className="input-group-text border-end-0">
-                      <i className="ti ti-lock" />
-                    </span>
-                    <input
-                      type={passwordVisibility.password ? "text" : "password"}
-                      className="pass-input form-control border-start-0 ps-0"
-                      placeholder="****************"
-                    />
-                    <span
-                      className={`ti toggle-password text-dark fs-14 ${passwordVisibility.password ? "ti-eye" : "ti-eye-off"
-                        }`}
-                      onClick={() => togglePasswordVisibility("password")}
-                    ></span>
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">
                     New Password<span className="text-danger ms-1">*</span>
                   </label>
                   <div className="pass-group input-group mb-3">
@@ -69,11 +92,13 @@ const Modals = () => {
                       }
                       className="pass-input form-control border-start-0 ps-0"
                       placeholder="****************"
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm(p => ({ ...p, newPassword: e.target.value }))}
                     />
                     <span
                       className={`ti toggle-password text-dark fs-14 ${passwordVisibility.confirmPassword
-                          ? "ti-eye"
-                          : "ti-eye-off"
+                        ? "ti-eye"
+                        : "ti-eye-off"
                         }`}
                       onClick={() =>
                         togglePasswordVisibility("confirmPassword")
@@ -109,6 +134,8 @@ const Modals = () => {
                       }
                       className="pass-input form-control border-start-0 ps-0"
                       placeholder="****************"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm(p => ({ ...p, confirmPassword: e.target.value }))}
                     />
                     <span
                       className={`ti toggle-password text-dark fs-14 ${passwordVisibility.newpassword ? "ti-eye" : "ti-eye-off"
@@ -126,8 +153,14 @@ const Modals = () => {
                 >
                   Cancel
                 </button>
-                <button type="button" className="btn btn-primary" data-bs-dismiss="modal" onClick={() => alert("Password updated successfully!")}>
-                  Save Changes
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handlePasswordChange}
+                  disabled={updating}
+                  {...(passwordForm.newPassword && passwordForm.newPassword === passwordForm.confirmPassword ? { "data-bs-dismiss": "modal" } : {})}
+                >
+                  {updating ? "Updating..." : "Save Changes"}
                 </button>
               </div>
             </form>
@@ -174,32 +207,6 @@ const Modals = () => {
                     <i className="ti ti-info-circle me-1" />
                     New phone number only updated once you verified
                   </p>
-                </div>
-                <div>
-                  <label className="form-label">
-                    Current Password<span className="text-danger ms-1">*</span>
-                  </label>
-                  <div className="pass-group input-group">
-                    <span className="input-group-text border-end-0">
-                      <i className="ti ti-lock" />
-                    </span>
-                    <input
-                      type={
-                        passwordVisibility.confirmPassword ? "text" : "password"
-                      }
-                      className="pass-input form-control border-start-0 ps-0"
-                      placeholder="****************"
-                    />
-                    <span
-                      className={`ti toggle-password text-dark fs-14 ${passwordVisibility.confirmPassword
-                          ? "ti-eye"
-                          : "ti-eye-off"
-                        }`}
-                      onClick={() =>
-                        togglePasswordVisibility("confirmPassword")
-                      }
-                    ></span>
-                  </div>
                 </div>
               </div>
               <div className="modal-footer d-flex align-items-center justify-content-between gap-1">
@@ -250,32 +257,6 @@ const Modals = () => {
                     <i className="ti ti-info-circle me-1" />
                     New email address only updated once you verified
                   </p>
-                </div>
-                <div>
-                  <label className="form-label">
-                    Current Password<span className="text-danger ms-1">*</span>
-                  </label>
-                  <div className="pass-group input-group">
-                    <span className="input-group-text border-end-0">
-                      <i className="ti ti-lock" />
-                    </span>
-                    <input
-                      type={
-                        passwordVisibility.confirmPassword ? "text" : "password"
-                      }
-                      className="pass-input form-control border-start-0 ps-0"
-                      placeholder="****************"
-                    />
-                    <span
-                      className={`ti toggle-password text-dark fs-14 ${passwordVisibility.confirmPassword
-                          ? "ti-eye"
-                          : "ti-eye-off"
-                        }`}
-                      onClick={() =>
-                        togglePasswordVisibility("confirmPassword")
-                      }
-                    ></span>
-                  </div>
                 </div>
               </div>
               <div className="modal-footer d-flex align-items-center justify-content-end gap-1">

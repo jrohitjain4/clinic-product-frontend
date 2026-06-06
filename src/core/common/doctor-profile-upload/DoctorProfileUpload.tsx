@@ -5,12 +5,14 @@ interface DoctorProfileUploadProps {
   value?: string | null;
   onChange: (url: string) => void;
   fallbackSrc?: string;
+  disabled?: boolean;
 }
 
 const DoctorProfileUpload = ({
   value,
   onChange,
   fallbackSrc = "assets/img/doctors/doctor-01.jpg",
+  disabled = false,
 }: DoctorProfileUploadProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -49,9 +51,9 @@ const DoctorProfileUpload = ({
 
   return (
     <div
-      className="position-relative d-inline-block ms-4 mb-2 profile-upload-wrapper"
-      onClick={() => !uploading && inputRef.current?.click()}
-      style={{ cursor: "pointer" }}
+      className={`position-relative d-inline-block ms-4 mb-2 profile-upload-wrapper ${disabled ? 'opacity-75' : ''}`}
+      onClick={() => !uploading && !disabled && inputRef.current?.click()}
+      style={{ cursor: disabled || uploading ? "default" : "pointer" }}
     >
       <div className="avatar avatar-xxl rounded-circle bg-light text-primary position-relative overflow-hidden z-1 p-0 d-flex align-items-center justify-content-center" style={{ border: '3px solid #fff', boxShadow: '0 4px 14px rgba(0,0,0,0.08)' }}>
         {value ? (
@@ -86,7 +88,7 @@ const DoctorProfileUpload = ({
         type="file"
         style={{ display: "none" }}
         accept="image/jpeg,image/png,image/webp,image/gif"
-        disabled={uploading}
+        disabled={uploading || disabled}
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) handleFile(file);

@@ -5,6 +5,7 @@ import { City, Country, State } from "../../../../../../core/common/selectOption
 import { useState } from "react";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import DoctorProfileUpload from "../../../../../../core/common/doctor-profile-upload/DoctorProfileUpload";
+import { toast } from "react-toastify";
 
 const ProfileSettings = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -16,12 +17,13 @@ const ProfileSettings = () => {
   const [logoPreview, setLogoPreview] = useState(userObj.clinic?.landingPage?.logo || "/logo.png");
   const [profileImage, setProfileImage] = useState<string | null>(userObj.profileImage || null);
 
-  const initialFirstName = (userObj.fullName || "Administrator").split(" ")[0];
-  const initialLastName = (userObj.fullName || "Administrator").split(" ").slice(1).join(" ") || "";
+  const nameParts = (userObj.fullName || "Admin User").split(" ");
+  const initialFirstName = nameParts[0] || "Admin";
+  const initialLastName = nameParts.slice(1).join(" ") || (userObj.fullName && !userObj.fullName.includes(" ") ? "" : "User");
 
   const [formData, setFormData] = useState({
     firstName: initialFirstName,
-    lastName: initialLastName,
+    lastName: initialLastName || (initialFirstName === "Admin" ? "User" : ""),
     email: userObj.email || "admin@example.com",
     phone: userObj.clinic?.phone || "+919876543210",
     addressLine1: userObj.clinic?.addressLine1 || "123 Healthcare Street",
@@ -35,6 +37,12 @@ const ProfileSettings = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      toast.error("Please fill the fields proper (First Name and Surname are required)", {
+        position: "top-center"
+      });
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/auth/profile`, {
@@ -51,11 +59,12 @@ const ProfileSettings = () => {
       });
       const data = await res.json();
       if (res.ok) {
+        toast.success("Profile updated successfully", { position: "top-center" });
         localStorage.setItem("user", JSON.stringify(data.user));
         setIsEditing(false);
-        window.location.reload(); // Quick refresh to update sidebar & header
+        setTimeout(() => window.location.reload(), 1500); // Wait a bit so they can see the success toast
       } else {
-        alert(data.message || "Failed to update profile");
+        toast.error(data.message || "Failed to update profile", { position: "top-center" });
       }
     } catch (err) {
       console.error(err);
@@ -85,8 +94,24 @@ const ProfileSettings = () => {
                 <SettingsSidebar />
                 {/* End Settings Sidebar */}
                 <div className="card flex-fill mb-0 border-0 bg-light-500 shadow-none">
-                  <div className="card-header border-bottom px-0 mx-3">
-                    <h5 className="fw-bold">Basic Information</h5>
+                  <div className="card-header d-flex align-items-center justify-content-between border-bottom px-0 mx-3">
+                    <h5 className="fw-bold mb-0">Basic Information</h5>
+                    <div className="d-flex align-items-center">
+                      {!isEditing ? (
+                        <button type="button" className="btn btn-primary btn-sm" onClick={(e) => { e.preventDefault(); setIsEditing(true); }}>
+                          <i className="ti ti-edit me-2" /> Edit Profile
+                        </button>
+                      ) : (
+                        <>
+                          <button type="button" className="btn btn-light btn-sm me-2" onClick={(e) => { e.preventDefault(); setIsEditing(false); }}>
+                            Cancel
+                          </button>
+                          <button type="button" className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
+                            {saving ? "Saving..." : "Save Changes"}
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <div className="card-body px-0 mx-3">
                     <form>
@@ -103,7 +128,7 @@ const ProfileSettings = () => {
                             </div>
                             <div className="col-lg-12">
                               <div>
-                                <DoctorProfileUpload 
+                                <DoctorProfileUpload
                                   value={profileImage}
                                   onChange={(url) => setProfileImage(url)}
                                   disabled={!isEditing}
@@ -138,7 +163,7 @@ const ProfileSettings = () => {
                           <div className="row align-items-center mb-3">
                             <div className="col-lg-4">
                               <label className="form-label mb-0">
-                                Last Name
+                                Surname
                                 <span className="text-danger ms-1">*</span>
                               </label>
                             </div>
@@ -382,22 +407,7 @@ const ProfileSettings = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="d-flex align-items-center justify-content-end">
-                        {!isEditing ? (
-                          <button type="button" className="btn btn-primary" onClick={(e) => { e.preventDefault(); setIsEditing(true); }}>
-                            <i className="ti ti-edit me-2" /> Edit Profile
-                          </button>
-                        ) : (
-                          <>
-                            <button type="button" className="btn btn-light me-3" onClick={(e) => { e.preventDefault(); setIsEditing(false); }}>
-                              Cancel
-                            </button>
-                            <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving}>
-                              {saving ? "Saving..." : "Save Changes"}
-                            </button>
-                          </>
-                        )}
-                      </div>
+                      {/* Actions removed from bottom and moved to header */}
                     </form>
                   </div>
                 </div>

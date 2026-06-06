@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Link } from "react-router"
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar"
-import ImageWithBasePath from "../../../../../../core/imageWithBasePath"
+import { apiUrl, resolveMediaUrl } from "../../../../../../core/config/api"
+import { toast } from "react-toastify"
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000"
 
@@ -9,18 +10,140 @@ interface HeroForm {
   name: string; tagline: string; phone: string; whatsapp: string; email: string;
   facebook: string; instagram: string; mapUrl: string;
   address1: string; address2: string; city: string; state: string; pincode: string;
+  headerImage: string;
+  aboutImage: string;
 }
 
 const EMPTY: HeroForm = {
   name: "", tagline: "", phone: "", whatsapp: "", email: "",
   facebook: "", instagram: "", mapUrl: "",
   address1: "", address2: "", city: "", state: "", pincode: "",
+  headerImage: "",
+  aboutImage: "",
 }
+
+// Reusable image uploader component
+const LandingImageUpload = ({
+  label,
+  value,
+  onChange,
+  hint,
+}: {
+  label: string;
+  value: string;
+  onChange: (url: string) => void;
+  hint?: string;
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFile = async (file: File) => {
+    setError(null);
+    setUploading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch(apiUrl("/api/uploads/landing-image"), {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Upload failed");
+      }
+
+      const data = await res.json();
+      onChange(data.url);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  const displayUrl = value ? resolveMediaUrl(value) : null;
+
+  return (
+    <div className="mb-4">
+      <h6 className="fw-semibold text-muted mb-3">{label}</h6>
+      <div className="d-flex align-items-start gap-4 flex-wrap">
+        {/* Preview */}
+        <div
+          className="rounded-3 overflow-hidden border bg-light d-flex align-items-center justify-content-center"
+          style={{ width: 220, height: 130, flexShrink: 0, position: "relative" }}
+        >
+          {displayUrl ? (
+            <img
+              src={displayUrl}
+              alt={label}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            <div className="text-center text-muted">
+              <i className="ti ti-photo fs-2 d-block mb-1" />
+              <small>No image</small>
+            </div>
+          )}
+          {uploading && (
+            <div
+              className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50"
+              style={{ zIndex: 2 }}
+            >
+              <span className="spinner-border spinner-border-sm text-white" />
+            </div>
+          )}
+        </div>
+
+        {/* Controls */}
+        <div>
+          <div className="mb-2">
+            <label
+              className="btn btn-primary btn-sm"
+              style={{ cursor: "pointer" }}
+            >
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                style={{ display: "none" }}
+                disabled={uploading}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFile(file);
+                }}
+              />
+              <i className="ti ti-upload me-1" />
+              {uploading ? "Uploading..." : "Browse Image"}
+            </label>
+            {value && (
+              <button
+                type="button"
+                className="btn btn-outline-danger btn-sm ms-2"
+                onClick={() => onChange("")}
+                disabled={uploading}
+              >
+                <i className="ti ti-trash me-1" />
+                Remove
+              </button>
+            )}
+          </div>
+          {hint && <p className="fs-12 text-muted mb-0">{hint}</p>}
+          {error && <p className="text-danger fs-12 mt-1 mb-0">{error}</p>}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const OrganizationSettings = () => {
   const [form, setForm] = useState<HeroForm>(EMPTY)
   const [saving, setSaving] = useState(false)
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle")
 
   // Get clinic id from logged-in user
   const user = (() => { try { return JSON.parse(localStorage.getItem("user") || "{}") } catch { return {} } })()
@@ -45,6 +168,8 @@ const OrganizationSettings = () => {
           city: data.city || "",
           state: "",
           pincode: "",
+          headerImage: data.headerImage || "",
+          aboutImage: data.aboutImage || "",
         })
       })
       .catch(() => { })
@@ -59,7 +184,7 @@ const OrganizationSettings = () => {
       alert("Error: No Clinic ID found. Only Clinic Owners can save these settings.");
       return;
     }
-    setSaving(true); setStatus("idle")
+    setSaving(true)
     try {
       const token = localStorage.getItem("token")
       const r = await fetch(`${API}/api/landing/${clinicId}`, {
@@ -72,12 +197,17 @@ const OrganizationSettings = () => {
           facebook: form.facebook,
           instagram: form.instagram,
           mapUrl: form.mapUrl,
+          headerImage: form.headerImage,
+          aboutImage: form.aboutImage,
         }),
       })
-      if (!r.ok) throw new Error("Save failed")
-      setStatus("success")
-    } catch {
-      setStatus("error")
+      if (!r.ok) {
+        const errData = await r.json().catch(() => ({}))
+        throw new Error(errData.message || `Server error (${r.status})`)
+      }
+      toast.success("✅ Landing page settings saved successfully!")
+    } catch (err: any) {
+      toast.error(`❌ Save failed: ${err.message || "Unknown error. Please try again."}`)
     } finally {
       setSaving(false)
     }
@@ -99,17 +229,6 @@ const OrganizationSettings = () => {
                     <h5 className="fw-bold">Landing Page: Hero &amp; Contact</h5>
                   </div>
                   <div className="card-body px-0 mx-3">
-
-                    {status === "success" && (
-                      <div className="alert alert-success d-flex align-items-center gap-2 mb-3">
-                        <i className="ti ti-circle-check" /> Hero section saved successfully!
-                      </div>
-                    )}
-                    {status === "error" && (
-                      <div className="alert alert-danger d-flex align-items-center gap-2 mb-3">
-                        <i className="ti ti-alert-circle" /> Failed to save. Please try again.
-                      </div>
-                    )}
 
                     <form onSubmit={handleSave}>
                       {/* ── Hero Info ── */}
@@ -161,6 +280,30 @@ const OrganizationSettings = () => {
                         </div>
                       </div>
 
+                      {/* ── Hero Image ── */}
+                      <div className="row border-bottom mb-3 pb-4">
+                        <div className="col-12">
+                          <LandingImageUpload
+                            label="Hero Section Image"
+                            value={form.headerImage}
+                            onChange={(url) => setForm(p => ({ ...p, headerImage: url }))}
+                            hint="Shown in the hero banner on your public clinic page. Recommended: 1200×600px"
+                          />
+                        </div>
+                      </div>
+
+                      {/* ── About Image ── */}
+                      <div className="row border-bottom mb-3 pb-4">
+                        <div className="col-12">
+                          <LandingImageUpload
+                            label="About Section Image"
+                            value={form.aboutImage}
+                            onChange={(url) => setForm(p => ({ ...p, aboutImage: url }))}
+                            hint="Shown in the About Us section on your public clinic page. Recommended: 800×600px"
+                          />
+                        </div>
+                      </div>
+
                       {/* ── Clinic Logo ── */}
                       <div className="row mb-3 pb-2">
                         <div className="col-12 mb-3">
@@ -170,7 +313,7 @@ const OrganizationSettings = () => {
                           <div className="d-flex align-items-center mb-3">
                             <div className="profile-upload me-3">
                               <div className="profile-container d-flex align-items-center justify-content-center bg-light" style={{ width: '150px', height: '60px', border: '1px dashed #ccc', borderRadius: '8px', overflow: 'hidden' }}>
-                                <ImageWithBasePath src="assets/img/logo.svg" alt="Logo" className="img-fluid object-fit-contain p-1 w-100 h-100" />
+                                <img src={`${API}/logo.png`} alt="Logo" className="img-fluid object-fit-contain p-1 w-100 h-100" onError={(e) => { e.currentTarget.style.display = 'none' }} />
                               </div>
                             </div>
                             <div className="profile-upload-content">

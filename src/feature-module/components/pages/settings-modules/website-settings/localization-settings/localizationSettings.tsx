@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router"
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar"
+import { toast } from "react-toastify"
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000"
 
@@ -11,7 +12,6 @@ interface OverviewForm {
 const LocalizationSettings = () => {
   const [form, setForm] = useState<OverviewForm>({ about: "", established: "", patientsServed: "", experience: "" })
   const [saving, setSaving] = useState(false)
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle")
 
   const user = (() => { try { return JSON.parse(localStorage.getItem("user") || "{}") } catch { return {} } })()
   const clinicId: string = user?.clinicId || user?.clinic?.id || ""
@@ -37,7 +37,7 @@ const LocalizationSettings = () => {
       alert("Error: No Clinic ID found. Only Clinic Owners can save these settings.");
       return;
     }
-    setSaving(true); setStatus("idle")
+    setSaving(true)
     try {
       const token = localStorage.getItem("token")
       const r = await fetch(`${API}/api/landing/${clinicId}`, {
@@ -50,10 +50,13 @@ const LocalizationSettings = () => {
           experience: form.experience ? Number(form.experience) : undefined,
         }),
       })
-      if (!r.ok) throw new Error()
-      setStatus("success")
-    } catch {
-      setStatus("error")
+      if (!r.ok) {
+        const errData = await r.json().catch(() => ({}))
+        throw new Error(errData.message || `Server error (${r.status})`)
+      }
+      toast.success("✅ Clinic overview saved! It will now appear on your public landing page.")
+    } catch (err: any) {
+      toast.error(`❌ Save failed: ${err.message || "Unknown error. Please try again."}`)
     } finally {
       setSaving(false)
     }
@@ -76,21 +79,14 @@ const LocalizationSettings = () => {
                   </div>
                   <div className="card-body px-0 mx-3">
 
-                    {status === "success" && (
-                      <div className="alert alert-success d-flex align-items-center gap-2 mb-3">
-                        <i className="ti ti-circle-check" /> Clinic overview saved successfully!
-                      </div>
-                    )}
-                    {status === "error" && (
-                      <div className="alert alert-danger d-flex align-items-center gap-2 mb-3">
-                        <i className="ti ti-alert-circle" /> Failed to save. Please try again.
-                      </div>
-                    )}
-
                     <form onSubmit={handleSave}>
                       <div className="row border-bottom mb-3 pb-2">
                         <div className="col-12 mb-3">
                           <h6 className="fw-semibold text-muted">About the Clinic</h6>
+                          <p className="text-muted small mb-0">
+                            <i className="ti ti-info-circle me-1 text-primary" />
+                            This text is shown in the <strong>About Us</strong> section of your public clinic landing page as the description paragraph.
+                          </p>
                         </div>
 
                         <div className="col-12">

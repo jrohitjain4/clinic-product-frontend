@@ -8,6 +8,8 @@ type AttendanceRecord = {
     img: string;
     percentage: string;
     attendance: Record<number, string>;
+    totalWorkingDays: number;
+    presentDays: number;
 };
 
 export const useAttendance = (month: number, year: number) => {

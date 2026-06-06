@@ -57,8 +57,63 @@ const AttendanceList = () => {
     <>
       <div className="page-wrapper">
         <div className="content">
-          <div className="mb-3 pb-3 border-bottom">
-            <h4 className="fw-bold mb-0">Attendance</h4>
+          <div className="d-flex align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
+            <div className="d-flex align-items-center text-nowrap">
+              <h4 className="fw-bold mb-0 d-flex align-items-center">
+                Attendance
+                <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
+                  Total: {data.length}
+                </span>
+              </h4>
+            </div>
+            <div className="d-flex align-items-center gap-2">
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <i className="ti ti-search me-1" /> {searchText ? searchText : "Search Name"}
+                </Link>
+                <div className="dropdown-menu dropdown-menu-end p-2" style={{ minWidth: "220px" }} onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm mb-2"
+                    placeholder="Type name here..."
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                  />
+                  <ul className="list-unstyled mb-0 overflow-auto" style={{ maxHeight: "200px" }}>
+                    <li>
+                      <Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setSearchText(""); document.body.click(); }}>All Names</Link>
+                    </li>
+                    {data.filter(emp => emp.name.toLowerCase().includes(searchText.toLowerCase())).map(emp => (
+                      <li key={emp.id}>
+                        <Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setSearchText(emp.name); document.body.click(); }}>{emp.name}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Type : </span> All
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Doctor</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Staff</Link></li>
+                </ul>
+              </div>
+
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Department : </span> All
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Cardiology</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Orthopedics</Link></li>
+                </ul>
+              </div>
+            </div>
           </div>
           <div className="d-flex align-items-center justify-content-between flex-wrap">
             <div className="search-set mb-3">
@@ -90,6 +145,8 @@ const AttendanceList = () => {
                 <thead className="thead-light">
                   <tr>
                     <th>Staff</th>
+                    <th>Working</th>
+                    <th>Present</th>
                     <th>%</th>
                     {daysArray.map((d) => (
                       <th key={d}>{String(d).padStart(2, '0')}</th>
@@ -115,6 +172,12 @@ const AttendanceList = () => {
                             <span className="fs-12 text-muted">{emp.type}</span>
                           </div>
                         </div>
+                      </td>
+                      <td>
+                        <span className="badge badge-soft-primary border border-primary fw-medium">{emp.totalWorkingDays}</span>
+                      </td>
+                      <td>
+                        <span className="badge badge-soft-success border border-success fw-medium">{emp.presentDays}</span>
                       </td>
                       <td>
                         <span className={`badge border fw-medium ${parseInt(emp.percentage) < 50

@@ -22,7 +22,7 @@ interface ClinicData {
     name: string; tagline: string; phone: string; whatsapp: string; email: string;
     address: string; city: string; mapUrl: string; directionsUrl: string;
     about: string; established: number; patientsServed: string; experience: number;
-    logo: string; facebook: string; instagram: string;
+    logo: string; headerImage: string; aboutImage: string; facebook: string; instagram: string;
     doctors: Doctor[]; services: Service[]; reviews: Review[];
     gallery: { url: string; category: string }[];
     workingDays: { schedules: any[]; offDays: number[] } | null;
@@ -730,7 +730,9 @@ export default function ClinicLandingPage() {
                                 {/* Image Column */}
                                 <div className="col-lg-6 d-none d-lg-block position-relative">
                                     <img
-                                        src={clinic.gallery[0]?.url || "/assets/img/hero-clinic-bg.png"}
+                                        src={clinic.headerImage
+                                            ? (clinic.headerImage.startsWith('http') ? clinic.headerImage : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}${clinic.headerImage}`)
+                                            : (clinic.gallery[0]?.url || "/assets/img/hero-clinic-bg.png")}
                                         alt={clinic.name}
                                         className="img-fluid rounded-4 shadow-lg w-100"
                                         style={{ maxHeight: "400px", objectFit: "cover", objectPosition: "center" }}
@@ -777,25 +779,28 @@ export default function ClinicLandingPage() {
                                 <div className="col-lg-6">
                                     <h5 className="fw-bold text-uppercase mb-4" style={{ color: "#1d4ed8", letterSpacing: "1px" }}>ABOUT {clinic.name.toUpperCase()}</h5>
                                     <p className="fs-5 text-dark mb-4" style={{ lineHeight: 1.6 }}>
-                                        {clinic.name} is a multi-speciality healthcare center committed to providing high-quality medical services with compassion and care. We have a team of experienced doctors and modern facilities to ensure the best treatment for you and your family.
+                                        {clinic.about
+                                            ? clinic.about
+                                            : `${clinic.name} is a multi-speciality healthcare center committed to providing high-quality medical services with compassion and care. We have a team of experienced doctors and modern facilities to ensure the best treatment for you and your family.`
+                                        }
                                     </p>
 
                                     <div className="row g-3 mt-4 text-center">
                                         <div className="col-4">
                                             <div className="border rounded-4 p-3 shadow-sm h-100 d-flex flex-column justify-content-center">
-                                                <h4 className="fw-bold mb-1 text-dark" style={{ color: "#1d4ed8" }}>2012</h4>
+                                                <h4 className="fw-bold mb-1" style={{ color: "#1d4ed8" }}>{clinic.established || "—"}</h4>
                                                 <small className="text-secondary fw-semibold">Established</small>
                                             </div>
                                         </div>
                                         <div className="col-4">
                                             <div className="border rounded-4 p-3 shadow-sm h-100 d-flex flex-column justify-content-center">
-                                                <h4 className="fw-bold mb-1 text-dark" style={{ color: "#1d4ed8" }}>{clinic.patientsServed}+</h4>
+                                                <h4 className="fw-bold mb-1" style={{ color: "#1d4ed8" }}>{clinic.patientsServed || "—"}</h4>
                                                 <small className="text-secondary fw-semibold">Patients Served</small>
                                             </div>
                                         </div>
                                         <div className="col-4">
                                             <div className="border rounded-4 p-3 shadow-sm h-100 d-flex flex-column justify-content-center">
-                                                <h4 className="fw-bold mb-1 text-dark" style={{ color: "#1d4ed8" }}>10+</h4>
+                                                <h4 className="fw-bold mb-1" style={{ color: "#1d4ed8" }}>{clinic.experience ? `${clinic.experience}+` : "—"}</h4>
                                                 <small className="text-secondary fw-semibold">Years Experience</small>
                                             </div>
                                         </div>
@@ -804,7 +809,14 @@ export default function ClinicLandingPage() {
 
                                 {/* Image Content */}
                                 <div className="col-lg-6">
-                                    <img src={clinic.gallery[1]?.url || "/assets/img/clinic-reception.png"} alt="Reception" className="img-fluid rounded-4 shadow" style={{ border: "4px solid #f1f5f9", width: "100%", height: "400px", objectFit: "cover" }} />
+                                    <img
+                                        src={clinic.aboutImage
+                                            ? (clinic.aboutImage.startsWith('http') ? clinic.aboutImage : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}${clinic.aboutImage}`)
+                                            : (clinic.gallery[1]?.url || "/assets/img/clinic-reception.png")}
+                                        alt="Reception"
+                                        className="img-fluid rounded-4 shadow"
+                                        style={{ border: "4px solid #f1f5f9", width: "100%", height: "400px", objectFit: "cover" }}
+                                    />
                                 </div>
                             </div>
                         </div>

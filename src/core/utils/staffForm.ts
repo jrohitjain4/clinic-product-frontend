@@ -73,6 +73,7 @@ export const staffToTableRow = (s: ClinicStaff, index: number) => {
     s.profileImage || `assets/img/users/${placeholders[index % placeholders.length]}`;
   return {
     key: s.id,
+    S_No: index + 1,
     Staff: s.fullName,
     Image: img,
     Designation: s.designation?.name || "—",

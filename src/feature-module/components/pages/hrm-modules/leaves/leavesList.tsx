@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import Datatable from "../../../../../core/common/dataTable";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
@@ -51,6 +52,7 @@ const LeavesList = () => {
   const data = leaves.map((l, i) => ({
     key: l.id,
     ...l,
+    S_No: i + 1,
     ID: `#EMP0${String(i + 1).padStart(2, "0")}`,
     Employee: l.employeeName,
     Image: l.profileImage,
@@ -63,6 +65,7 @@ const LeavesList = () => {
   }));
 
   const columns = [
+    { title: "S.No", dataIndex: "S_No", sorter: (a: any, b: any) => a.S_No - b.S_No },
     { title: "ID", dataIndex: "ID", sorter: (a: any, b: any) => a.ID.localeCompare(b.ID) },
     {
       title: "Employee", dataIndex: "Employee",
@@ -102,54 +105,61 @@ const LeavesList = () => {
         const canCancel = isAdmin && record.rawStatus === "APPROVED" && dayjs().isBefore(dayjs(record.endDate));
 
         return (
-          <div className="d-flex gap-1 align-items-center">
-            {isAdmin && (record.rawStatus === "APPLIED" || record.rawStatus === "APPROVED") && (
+          <div className="d-flex gap-2 align-items-center">
+            {(record.rawStatus === "APPLIED" || record.rawStatus === "APPROVED") && (
               <>
-                <button
-                  className="btn btn-sm btn-soft-success"
-                  onClick={() => setApproveModal({
-                    open: true,
-                    id: record.id,
-                    startDate: record.startDate,
-                    endDate: record.endDate,
-                    isPaid: record.isPaid,
-                    adminNotes: record.adminNotes || ""
-                  })}
+                <Link
+                  to="#"
+                  className={`avatar avatar-sm border rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent ${record.rawStatus === "APPROVED" ? "text-primary border-primary" : "text-success border-success"}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setApproveModal({
+                      open: true,
+                      id: record.id,
+                      startDate: record.startDate,
+                      endDate: record.endDate,
+                      isPaid: record.isPaid,
+                      adminNotes: record.adminNotes || ""
+                    });
+                  }}
                   title="Approve / Edit"
                 >
-                  <i className={`${record.rawStatus === "APPROVED" ? "ti ti-edit" : "ti ti-check"}`} />
-                </button>
-                <button
-                  className="btn btn-sm btn-soft-danger"
-                  onClick={() => setRejectModal({ open: true, id: record.id, remark: "" })}
+                  <i className={`${record.rawStatus === "APPROVED" ? "ti ti-edit fs-16" : "ti ti-check fs-16"}`} />
+                </Link>
+                <Link
+                  to="#"
+                  className="avatar avatar-sm border text-danger border-danger rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent"
+                  onClick={(e) => { e.preventDefault(); setRejectModal({ open: true, id: record.id, remark: "" }) }}
                   title="Reject"
                 >
-                  <i className="ti ti-x" />
-                </button>
+                  <i className="ti ti-x fs-16" />
+                </Link>
               </>
             )}
 
             {canWithdraw && isSelf && (
-              <button
-                className="btn btn-sm btn-soft-warning"
-                onClick={() => { if (window.confirm("Withdraw this leave?")) withdrawLeave(record.id) }}
+              <Link
+                to="#"
+                className="avatar avatar-sm border text-warning border-warning rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent"
+                onClick={(e) => { e.preventDefault(); if (window.confirm("Withdraw this leave?")) withdrawLeave(record.id) }}
                 title="Withdraw"
               >
-                <i className="ti ti-arrow-back-up" />
-              </button>
+                <i className="ti ti-arrow-back-up fs-16" />
+              </Link>
             )}
 
             {canCancel && (
-              <button
-                className="btn btn-sm btn-soft-dark"
-                onClick={() => { if (window.confirm("Cancel this approved leave?")) updateStatus(record.id, { status: "CANCELLED" }) }}
+              <Link
+                to="#"
+                className="avatar avatar-sm border text-dark border-dark rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent"
+                onClick={(e) => { e.preventDefault(); if (window.confirm("Cancel this approved leave?")) updateStatus(record.id, { status: "CANCELLED" }) }}
                 title="Cancel Leave"
               >
-                <i className="ti ti-circle-x" />
-              </button>
+                <i className="ti ti-circle-x fs-16" />
+              </Link>
             )}
 
-            {!isAdmin && !canWithdraw && <span className="text-muted fs-12">—</span>}
+            {!(record.rawStatus === "APPLIED" || record.rawStatus === "APPROVED") && !canWithdraw && !canCancel && <span className="text-muted fs-12">—</span>}
           </div>
         );
       },
@@ -160,76 +170,72 @@ const LeavesList = () => {
     <>
       <div className="page-wrapper">
         <div className="content">
-          <div className="d-flex align-items-sm-center flex-sm-row g-2 flex-column gap-2 mb-3 pb-3 border-bottom">
-            <div className="flex-grow g-2-1">
-              <h4 className="fw-bold mb-0">Admin Leaves</h4>
-            </div>
-          </div>
+          <div className="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 pb-3 border-bottom">
+            <h4 className="fw-bold mb-0 d-flex align-items-center">
+              Admin Leaves
+              <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
+                Total: {leaves.length}
+              </span>
+            </h4>
+            <div className="d-flex align-items-center gap-2">
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Employee : </span> All
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Doctor Type</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Staff Type</Link></li>
+                </ul>
+              </div>
 
-          {/* Stats row */}
-          <div className="row g-2 mb-3">
-            <div className="col-lg-3">
-              <div className="card">
-                <div className="card-body d-flex align-items-center justify-content-between">
-                  <div>
-                    <p className="mb-1 text-muted">Total Leaves</p>
-                    <span className="text-dark fw-bold fs-4">{leaves.length}</span>
-                  </div>
-                  <span className="p-2 bg-soft-primary border border-primary rounded-circle text-primary">
-                    <i className="ti ti-calendar fs-20" />
-                  </span>
-                </div>
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Leave Type : </span> All
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Medical Leave</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Casual Leave</Link></li>
+                </ul>
               </div>
-            </div>
-            <div className="col-lg-3">
-              <div className="card">
-                <div className="card-body d-flex align-items-center justify-content-between">
-                  <div>
-                    <p className="mb-1 text-muted">Pending Requests</p>
-                    <span className="text-dark fw-bold fs-4">{pendingCount}</span>
-                  </div>
-                  <span className="p-2 bg-soft-danger border border-danger rounded-circle text-danger">
-                    <i className="ti ti-user-question fs-20" />
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="col-lg-3">
-              <div className="card">
-                <div className="card-body d-flex align-items-center justify-content-between">
-                  <div>
-                    <p className="mb-1 text-muted">Approved</p>
-                    <span className="text-dark fw-bold fs-4">{approvedCount}</span>
-                  </div>
-                  <span className="p-2 bg-soft-success border border-success rounded-circle text-success">
-                    <i className="ti ti-user-check fs-20" />
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="col-lg-3">
-              <div className="card">
-                <div className="card-body d-flex align-items-center justify-content-between">
-                  <div>
-                    <p className="mb-1 text-muted">Rejected</p>
-                    <span className="text-dark fw-bold fs-4">{rejectedCount}</span>
-                  </div>
-                  <span className="p-2 bg-soft-warning border border-warning rounded-circle text-warning">
-                    <i className="ti ti-user-x fs-20" />
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <div className="d-flex align-items-center justify-content-between flex-wrap mb-3">
-            <div className="search-set">
-              
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Date : </span> Select
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Today</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">This Week</Link></li>
+                </ul>
+              </div>
+
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Status : </span> All
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Approved</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Rejected</Link></li>
+                </ul>
+              </div>
+
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Sort By : </span> Recent
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">Recent</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Oldest</Link></li>
+                </ul>
+              </div>
             </div>
           </div>
 
           <div className="table-responsive">
-            <Datatable columns={columns} dataSource={data} Selection={false} searchText={searchText} />
+            <Datatable columns={columns} dataSource={data} Selection={true} searchText={searchText} />
           </div>
         </div>
       </div>

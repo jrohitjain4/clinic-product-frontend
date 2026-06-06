@@ -14,13 +14,14 @@ const PayrollList = () => {
   const [searchText, setSearchText] = useState<string>("");
   const [selectedPayroll, setSelectedPayroll] = useState<any>(null);
 
-  const data = payrolls.map((pr: any) => ({
+  const data = payrolls.map((pr: any, index: number) => ({
     key: pr.id,
     id: pr.id,
+    S_No: index + 1,
     Employee: pr.staff?.fullName || "Unknown",
     Image: pr.staff?.profileImage && !pr.staff.profileImage.startsWith("http") ? pr.staff.profileImage : null,
     Email: pr.staff?.email || "--",
-    JoiningDate: pr.staff?.dateOfJoining ? new Date(pr.staff.dateOfJoining).toLocaleDateString() : "--",
+    JoiningDate: pr.staff?.dateOfJoining ? new Date(pr.staff.dateOfJoining).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "--",
     Role: pr.staff?.role || "--",
     Salary: "$" + pr.netSalary,
     Status: pr.displayStatus || pr.status,
@@ -28,6 +29,11 @@ const PayrollList = () => {
   }));
 
   const columns = [
+    {
+      title: "S.No",
+      dataIndex: "S_No",
+      sorter: (a: any, b: any) => a.S_No - b.S_No,
+    },
     {
       title: "Employee",
       dataIndex: "Employee",
@@ -97,40 +103,27 @@ const PayrollList = () => {
       sorter: (a: any, b: any) => a.Status.length - b.Status.length,
     },
     {
-      title: "",
+      title: "Action",
       render: (_: string, record: any) => (
-        <div className="action-item p-2">
+        <div className="d-flex align-items-center gap-2">
           <Link
             to="#"
-            data-bs-toggle="dropdown"
-            className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
+            className="avatar avatar-sm border text-primary rounded-circle d-flex align-items-center justify-content-center bg-transparent"
+            data-bs-toggle="modal"
+            data-bs-target="#edit_payroll"
+            onClick={() => setSelectedPayroll(record.raw)}
           >
-            <i className="ti ti-dots-vertical" />
+            <i className="ti ti-edit fs-16" />
           </Link>
-          <ul className="dropdown-menu p-2">
-            <li>
-              <Link
-                to="#"
-                className="dropdown-item d-flex align-items-center"
-                data-bs-toggle="modal"
-                data-bs-target="#edit_payroll"
-                onClick={() => setSelectedPayroll(record.raw)}
-              >
-                Edit
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="#"
-                className="dropdown-item d-flex align-items-center"
-                data-bs-toggle="modal"
-                data-bs-target="#delete_payroll"
-                onClick={() => setSelectedPayroll(record.raw)}
-              >
-                Delete
-              </Link>
-            </li>
-          </ul>
+          <Link
+            to="#"
+            className="avatar avatar-sm border text-danger rounded-circle d-flex align-items-center justify-content-center bg-transparent"
+            data-bs-toggle="modal"
+            data-bs-target="#delete_payroll"
+            onClick={() => setSelectedPayroll(record.raw)}
+          >
+            <i className="ti ti-trash fs-16" />
+          </Link>
         </div>
       ),
     },
@@ -144,38 +137,62 @@ const PayrollList = () => {
     <>
       <div className="page-wrapper">
         <div className="content">
-          <div className="mb-3 pb-3 border-bottom">
-            <div className="d-flex align-items-center justify-content-between">
-              <div className="d-flex align-items-center">
-                <h4 className="fw-bold mb-0 me-2">Payroll</h4>
-                <span className="badge badge-soft-primary border border-primary fw-medium">
-                  Total Employee Payrolls : {payrolls.length}
-                </span>
+          <div className="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3 pb-3 border-bottom">
+            <h4 className="fw-bold mb-0 d-flex align-items-center">
+              Payroll
+              <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
+                Total: {payrolls.length}
+              </span>
+            </h4>
+            <div className="d-flex align-items-center gap-2">
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Date : </span> Select
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Today</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">This Week</Link></li>
+                </ul>
               </div>
+
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Role : </span> All
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Doctor</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Staff</Link></li>
+                </ul>
+              </div>
+
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14" data-bs-toggle="dropdown">
+                  <span className="me-1"> Status : </span> All
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Paid</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1">Due</Link></li>
+                </ul>
+              </div>
+
               <Link
                 to="#"
-                className="btn btn-primary"
+                className="btn btn-primary btn-md"
                 data-bs-toggle="modal"
                 data-bs-target="#add_payroll"
               >
-                Add Employee Salary <i className="ti ti-plus ms-2" /></Link>
-            </div>
-          </div>
-          <div className=" d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-            <div className="search-set mb-3">
-              <div className="d-flex align-items-center flex-wrap gap-2">
-                
-              </div>
-            </div>
-            <div className="d-flex table-dropdown mb-3 pb-1 right-content align-items-center flex-wrap row-gap-3">
-              {/* Filter code removed for brevity since it relies on unused select options, keeping placeholder */}
+                Add Employee Salary <i className="ti ti-plus ms-1" />
+              </Link>
             </div>
           </div>
           <div className="table-responsive">
             <Datatable
               columns={columns}
               dataSource={data}
-              Selection={false}
+              Selection={true}
               searchText={searchText}
             />
           </div>

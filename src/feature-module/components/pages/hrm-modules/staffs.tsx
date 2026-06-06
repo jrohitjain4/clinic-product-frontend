@@ -1,23 +1,50 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
-import SearchInput from "../../../../core/common/dataTable/dataTableSearch";
 import Datatable from "../../../../core/common/dataTable";
 import StaffsModal from "./modal/staffsModal";
+import { DatePicker } from "antd";
+import type { Dayjs } from "dayjs";
 import { useClinicStaff } from "../../../../core/hooks/useClinicStaff";
 import type { ClinicStaff } from "../../../../core/types/clinicStaff";
 import { staffToTableRow } from "../../../../core/utils/staffForm";
 
 const StaffsList = () => {
   const { staffs, loading, error, refetch, reload } = useClinicStaff();
-  const [searchText, setSearchText] = useState("");
   const [selected, setSelected] = useState<ClinicStaff | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const [filterDesignation, setFilterDesignation] = useState("All");
+  const [filterRole, setFilterRole] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("All");
 
   const tableData = useMemo(
     () => staffs.map((s, i) => staffToTableRow(s, i)),
     [staffs]
   );
+
+  const designations: string[] = useMemo(() => {
+    const list = staffs.map(v => v.designation?.name).filter((v): v is string => !!v);
+    return ["All", ...Array.from(new Set(list))];
+  }, [staffs]);
+
+  const roles: string[] = useMemo(() => {
+    const list = staffs.map(v => v.role).filter((v): v is string => !!v);
+    return ["All", ...Array.from(new Set(list))];
+  }, [staffs]);
+
+  const filteredData = useMemo(() => {
+    return tableData.filter((item) => {
+      const matchDesignation = filterDesignation === "All" || item.Designation === filterDesignation;
+      const matchRole = filterRole === "All" || item.Role === filterRole;
+      const matchStatus = filterStatus === "All" || item.Status === filterStatus;
+
+      // Note: Add date filtering if item has a Created Date field
+      // const matchDate = !filterDate || dayjs(item.CreatedDate).isSame(filterDate, 'day');
+
+      return matchDesignation && matchRole && matchStatus;
+    });
+  }, [tableData, filterDesignation, filterRole, filterStatus]);
 
   const openStaff = (staff: ClinicStaff) => setSelected(staff);
 
@@ -106,24 +133,24 @@ const StaffsList = () => {
     {
       title: "Action",
       render: (_: unknown, record: (typeof tableData)[0]) => (
-        <div className="text-end d-flex align-items-center justify-content-end gap-2">
+        <div className="d-flex align-items-center gap-2">
           <button
             type="button"
-            className="bg-transparent border-0 text-primary p-1"
+            className="avatar avatar-sm border border-primary text-primary rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle p-0"
             data-bs-toggle="modal"
             data-bs-target="#edit_staff"
             onClick={() => openStaff(record._raw)}
           >
-            <i className="fa fa-edit fs-16" />
+            <i className="ti ti-edit fs-14" />
           </button>
           <button
             type="button"
-            className="bg-transparent border-0 text-danger p-1"
+            className="avatar avatar-sm border border-danger text-danger rounded-circle d-flex align-items-center justify-content-center bg-danger-subtle p-0"
             data-bs-toggle="modal"
             data-bs-target="#delete_staff"
             onClick={() => openStaff(record._raw)}
           >
-            <i className="fa fa-trash-alt fs-16" />
+            <i className="ti ti-trash fs-14" />
           </button>
         </div>
       ),
@@ -139,51 +166,42 @@ const StaffsList = () => {
               <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
                 Staff
                 <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                  Total Staffs : {loading ? "" : staffs.length}
+                  Total Staffs : {loading ? "" : filteredData.length}
                 </span>
               </h4>
             </div>
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
+
               <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '130px', minHeight: '38px' }} data-bs-toggle="dropdown">
-                  <span><span className="text-muted">Date:</span> Select</span>
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap" style={{ width: '150px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span className="text-truncate"><span className="text-muted">Designation:</span> {filterDesignation}</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Today</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">This Week</Link></li>
+                  {designations.map(d => (
+                    <li key={d}><Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterDesignation(d); }}>{d}</Link></li>
+                  ))}
                 </ul>
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '150px', minHeight: '38px' }} data-bs-toggle="dropdown">
-                  <span><span className="text-muted">Designation:</span> All</span>
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap" style={{ width: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span className="text-truncate"><span className="text-muted">Role:</span> {filterRole}</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">dfghj</Link></li>
+                  {roles.map(r => (
+                    <li key={r}><Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterRole(r); }}>{r}</Link></li>
+                  ))}
                 </ul>
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
-                  <span><span className="text-muted">Role:</span> All</span>
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap" style={{ width: '130px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span className="text-truncate"><span className="text-muted">Status:</span> {filterStatus}</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Front Desk</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Nurse</Link></li>
-                </ul>
-              </div>
-
-              <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '130px', minHeight: '38px' }} data-bs-toggle="dropdown">
-                  <span><span className="text-muted">Status:</span> All</span>
-                </Link>
-                <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Available</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Unavailable</Link></li>
+                  {["All", "Available", "Unavailable"].map(s => (
+                    <li key={s}><Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterStatus(s); }}>{s}</Link></li>
+                  ))}
                 </ul>
               </div>
 
@@ -197,19 +215,11 @@ const StaffsList = () => {
                 </button>
 
                 <ul className="dropdown-menu p-2">
-                  <li>
-                    <button type="button" className="dropdown-item">
-                      Download as PDF
-                    </button>
-                  </li>
-                  <li>
-                    <button type="button" className="dropdown-item">
-                      Download as Excel
-                    </button>
-                  </li>
+                  <li><button type="button" className="dropdown-item">Download as PDF</button></li>
+                  <li><button type="button" className="dropdown-item">Download as Excel</button></li>
                 </ul>
               </div>
-              
+
               <button
                 type="button"
                 className="btn btn-primary d-flex align-items-center justify-content-center"
@@ -232,11 +242,6 @@ const StaffsList = () => {
             </div>
           )}
 
-          <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-            <div className="search-set mb-3">
-
-            </div>
-          </div>
 
           {loading ? (
             <div className="text-center py-5">
@@ -254,26 +259,27 @@ const StaffsList = () => {
                 data-bs-toggle="modal"
                 data-bs-target="#add_staff"
               >
-                Add Staff <i className="ti ti-plus ms-2" /></button>
+                Add Staff <i className="ti ti-plus ms-2" />
+              </button>
             </div>
           ) : (
             <div className="table-responsive">
               <Datatable
                 columns={columns}
-                dataSource={tableData}
+                dataSource={filteredData}
                 Selection={true}
-                searchText={searchText}
+                searchText=""
                 onSelectionChange={(keys) => setSelectedIds(keys as string[])}
               />
             </div>
           )}
-          
+
           {selectedIds.length > 0 && (
             <div className="d-flex justify-content-center mt-auto pt-4 pb-4">
               <button
                 className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
                 data-bs-toggle="modal"
-                data-bs-target="#delete_staff" // Use existing delete modal or global modal
+                data-bs-target="#delete_staff"
                 style={{ borderRadius: '8px', minHeight: '42px', fontWeight: 'bold' }}
               >
                 <i className="ti ti-trash fs-18"></i>

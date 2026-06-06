@@ -1,23 +1,27 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import Datatable from "../../../../../core/common/dataTable";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { useLeaves } from "../../../../../core/hooks/useLeaves";
 import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
+dayjs.extend(isBetween);
 import { Modal, Input, DatePicker, Switch } from "antd";
 const { TextArea } = Input;
 
 const LeavesList = () => {
   const { leaves, updateStatus, withdrawLeave } = useLeaves();
-  const [searchText, setSearchText] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const handleSearch = (v: string) => setSearchText(v);
+  const [filterType, setFilterType] = useState("All");
+  const [filterEmpType, setFilterEmpType] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterDate, setFilterDate] = useState<dayjs.Dayjs | null>(null);
 
-  const pendingCount = leaves.filter(l => l.status === "APPLIED").length;
-  const approvedCount = leaves.filter(l => l.status === "APPROVED").length;
-  const rejectedCount = leaves.filter(l => l.status === "REJECTED").length;
+  const leaveTypes = useMemo(() => {
+    const list = Array.from(new Set(leaves.map(l => l.leaveTypeName).filter(Boolean)));
+    return ["All", ...list];
+  }, [leaves]);
 
   const statusBadge = (status: string) => {
     if (status === "APPLIED") return "badge-soft-info border-info";
@@ -50,11 +54,22 @@ const LeavesList = () => {
     setRejectModal({ ...rejectModal, open: false });
   };
 
-  const data = leaves.map((l, i) => ({
+  const filteredData = useMemo(() => {
+    return leaves.filter((l) => {
+      const matchType = filterType === "All" || l.leaveTypeName === filterType;
+      const matchEmpType = filterEmpType === "All" || l.employeeType === filterEmpType;
+      const matchStatus = filterStatus === "All" || l.status === filterStatus.toUpperCase();
+      const matchDate = !filterDate || dayjs(l.startDate).isSame(filterDate, 'day') || dayjs(l.endDate).isSame(filterDate, 'day') || filterDate.isBetween(dayjs(l.startDate), dayjs(l.endDate), 'day', '[]');
+
+      return matchType && matchEmpType && matchStatus && matchDate;
+    });
+  }, [leaves, filterType, filterEmpType, filterStatus, filterDate]);
+
+  const data = filteredData.map((l, i) => ({
     key: l.id,
     ...l,
     S_No: i + 1,
-    ID: `#EMP0${String(i + 1).padStart(2, "0")}`,
+    ID: `#LVE0${String(i + 1).padStart(2, "0")}`,
     Employee: l.employeeName,
     Image: l.profileImage,
     LeaveType: l.leaveTypeName,
@@ -74,13 +89,13 @@ const LeavesList = () => {
         <div className="d-flex align-items-center">
           <div className="avatar me-2">
             <ImageWithBasePath
-              src={record.Image?.startsWith('/') ? record.Image : `assets/img/users/${record.Image}`}
+              src={record.Image?.startsWith('/') ? record.Image : `assets/img/users/${record.Image || 'avatar-21.jpg'}`}
               alt={text}
               className="rounded-circle"
             />
           </div>
           <div>
-            <h6 className="mb-0 fs-14 fw-semibold">{text}</h6>
+            <h6 className="mb-0 fs-14 fw-semibold text-dark">{text}</h6>
             <span className="text-muted fs-12">{record.employeeType}</span>
           </div>
         </div>
@@ -106,11 +121,11 @@ const LeavesList = () => {
         const canCancel = isAdmin && record.rawStatus === "APPROVED" && dayjs().isBefore(dayjs(record.endDate));
 
         return (
-          <div className="text-end d-flex align-items-center justify-content-end gap-2">
-            {(record.rawStatus === "APPLIED" || record.rawStatus === "APPROVED") && (
+          <div className="d-flex align-items-center gap-2">
+            {(record.rawStatus === "APPLIED" || record.rawStatus === "APPROVED") && isAdmin && (
               <>
                 <button
-                  className={`bg-transparent border-0 p-1 ${record.rawStatus === "APPROVED" ? "text-primary" : "text-success"}`}
+                  className="avatar avatar-sm border border-primary text-primary rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle p-0"
                   onClick={(e) => {
                     e.preventDefault();
                     setApproveModal({
@@ -124,39 +139,37 @@ const LeavesList = () => {
                   }}
                   title="Approve / Edit"
                 >
-                  <i className={`${record.rawStatus === "APPROVED" ? "fa fa-edit fs-16" : "fa fa-check fs-16"}`} />
+                  <i className="ti ti-edit fs-14" />
                 </button>
                 <button
-                  className="bg-transparent border-0 text-danger p-1"
+                  className="avatar avatar-sm border border-danger text-danger rounded-circle d-flex align-items-center justify-content-center bg-danger-subtle p-0"
                   onClick={(e) => { e.preventDefault(); setRejectModal({ open: true, id: record.id, remark: "" }) }}
                   title="Reject"
                 >
-                  <i className="fa fa-times fs-16" />
+                  <i className="ti ti-trash fs-14" />
                 </button>
               </>
             )}
 
             {canWithdraw && isSelf && (
               <button
-                className="bg-transparent border-0 text-warning p-1"
+                className="avatar avatar-sm border border-warning text-warning rounded-circle d-flex align-items-center justify-content-center bg-warning-subtle p-0"
                 onClick={(e) => { e.preventDefault(); if (window.confirm("Withdraw this leave?")) withdrawLeave(record.id) }}
                 title="Withdraw"
               >
-                <i className="fa fa-undo fs-16" />
+                <i className="ti ti-rotate-2 fs-14" />
               </button>
             )}
 
             {canCancel && (
               <button
-                className="bg-transparent border-0 text-dark p-1"
+                className="avatar avatar-sm border border-dark text-dark rounded-circle d-flex align-items-center justify-content-center bg-dark-subtle p-0"
                 onClick={(e) => { e.preventDefault(); if (window.confirm("Cancel this approved leave?")) updateStatus(record.id, { status: "CANCELLED" }) }}
                 title="Cancel Leave"
               >
-                <i className="fa fa-ban fs-16" />
+                <i className="ti ti-ban fs-14" />
               </button>
             )}
-
-            {!(record.rawStatus === "APPLIED" || record.rawStatus === "APPROVED") && !canWithdraw && !canCancel && <span className="text-muted fs-12">—</span>}
           </div>
         );
       },
@@ -172,65 +185,65 @@ const LeavesList = () => {
               <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
                 Admin Leaves
                 <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                  Total: {leaves.length}
+                  Total: {filteredData.length}
                 </span>
               </h4>
             </div>
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
               <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '130px', minHeight: '38px' }} data-bs-toggle="dropdown">
-                  <span><span className="text-muted">Employee:</span> All</span>
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap" style={{ width: '130px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span className="text-truncate"><span className="text-muted">Type:</span> {filterEmpType}</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Doctor Type</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Staff Type</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1" onClick={() => setFilterEmpType("All")}>All</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1" onClick={() => setFilterEmpType("Doctor")}>Doctor</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1" onClick={() => setFilterEmpType("Staff")}>Staff</Link></li>
                 </ul>
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '140px', minHeight: '38px' }} data-bs-toggle="dropdown">
-                  <span><span className="text-muted">Leave Type:</span> All</span>
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap" style={{ minWidth: '150px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span className="text-truncate"><span className="text-muted">Leave:</span> {filterType}</span>
                 </Link>
-                <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Medical Leave</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Casual Leave</Link></li>
+                <ul className="dropdown-menu dropdown-menu-end p-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                  {leaveTypes.map(t => (
+                    <li key={t}><Link to="#" className="dropdown-item rounded-1" onClick={() => setFilterType(t)}>{t}</Link></li>
+                  ))}
                 </ul>
               </div>
+
+              <DatePicker
+                placeholder="Select Date"
+                className="form-select text-dark text-nowrap"
+                style={{ width: '130px', minHeight: '38px', paddingTop: '7px' }}
+                format="DD-MM-YYYY"
+                allowClear={true}
+                suffixIcon={<i className="ti ti-calendar" />}
+                onChange={(date) => setFilterDate(date)}
+                value={filterDate}
+              />
 
               <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
-                  <span><span className="text-muted">Date:</span> Select</span>
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap" style={{ width: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                  <span className="text-truncate"><span className="text-muted">Status:</span> {filterStatus}</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Today</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">This Week</Link></li>
+                  <li><Link to="#" className="dropdown-item rounded-1" onClick={() => setFilterStatus("All")}>All</Link></li>
+                  {["Applied", "Approved", "Rejected", "Completed", "Withdrawn", "Cancelled"].map(s => (
+                    <li key={s}><Link to="#" className="dropdown-item rounded-1" onClick={() => setFilterStatus(s)}>{s}</Link></li>
+                  ))}
                 </ul>
               </div>
-
-              <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
-                  <span><span className="text-muted">Status:</span> All</span>
-                </Link>
-                <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Approved</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Rejected</Link></li>
-                </ul>
-              </div>
-
-
             </div>
           </div>
 
-          <div className="table-responsive">
-            <Datatable 
-              columns={columns} 
-              dataSource={data} 
-              Selection={true} 
-              searchText={searchText} 
+
+          <div className="table-responsive border rounded bg-white shadow-sm">
+            <Datatable
+              columns={columns}
+              dataSource={data}
+              Selection={true}
+              searchText=""
               onSelectionChange={(keys) => setSelectedIds(keys as string[])}
             />
           </div>

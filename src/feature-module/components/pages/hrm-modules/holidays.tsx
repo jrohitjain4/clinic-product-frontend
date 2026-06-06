@@ -1,23 +1,35 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import Datatable from "../../../../core/common/dataTable";
 import HolidaysModal from "./modal/holidaysModal";
 import { useHolidays } from "../../../../core/hooks/useHolidays";
-import { Calendar } from "antd";
+import { Calendar, DatePicker } from "antd";
 import type { Dayjs } from 'dayjs';
 import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import isBetween from "dayjs/plugin/isBetween";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
+dayjs.extend(isBetween);
 
 const HolidaysList = () => {
   const { holidays, refetch } = useHolidays();
   const [selectedHoliday, setSelectedHoliday] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [filterDate, setFilterDate] = useState<Dayjs | null>(null);
 
-  const data = holidays.map((holiday, index) => {
+  const filteredData = useMemo(() => {
+    return holidays.filter(h => {
+      if (!filterDate) return true;
+      const hDate = dayjs(h.date);
+      const hEnd = h.endDate ? dayjs(h.endDate) : hDate;
+      return filterDate.isBetween(hDate, hEnd, 'day', '[]');
+    });
+  }, [holidays, filterDate]);
+
+  const data = filteredData.map((holiday, index) => {
     const start = new Date(holiday.date);
     const end = holiday.endDate ? new Date(holiday.endDate) : start;
 
@@ -47,37 +59,37 @@ const HolidaysList = () => {
     {
       title: "Name",
       dataIndex: "Name",
-      sorter: (a: any, b: any) => a.Name.length - b.Name.length,
+      sorter: (a: any, b: any) => a.Name.localeCompare(b.Name),
     },
     {
       title: "Date",
       dataIndex: "Date",
-      sorter: (a: any, b: any) => a.Date.length - b.Date.length,
+      sorter: (a: any, b: any) => new Date(a.raw.date).getTime() - new Date(b.raw.date).getTime(),
     },
     {
       title: "Days",
       dataIndex: "Days",
-      sorter: (a: any, b: any) => a.Days.length - b.Days.length,
+      sorter: (a: any, b: any) => a.Days.localeCompare(b.Days),
     },
     {
       title: "Action",
-      render: (_: string, render: any) => (
-        <div className="text-end d-flex align-items-center justify-content-end gap-2">
+      render: (_: string, record: any) => (
+        <div className="d-flex align-items-center gap-2">
           <button
-            className="bg-transparent border-0 text-primary p-1"
+            className="avatar avatar-sm border border-primary text-primary rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle p-0"
             data-bs-toggle="modal"
             data-bs-target="#edit_holiday"
-            onClick={() => setSelectedHoliday(render.raw)}
+            onClick={() => setSelectedHoliday(record.raw)}
           >
-            <i className="fa fa-edit fs-16" />
+            <i className="ti ti-edit fs-14" />
           </button>
           <button
-            className="bg-transparent border-0 text-danger p-1"
+            className="avatar avatar-sm border border-danger text-danger rounded-circle d-flex align-items-center justify-content-center bg-danger-subtle p-0"
             data-bs-toggle="modal"
             data-bs-target="#delete_holiday"
-            onClick={() => setSelectedHoliday(render.raw)}
+            onClick={() => setSelectedHoliday(record.raw)}
           >
-            <i className="fa fa-trash-alt fs-16" />
+            <i className="ti ti-trash fs-14" />
           </button>
         </div>
       ),
@@ -97,13 +109,9 @@ const HolidaysList = () => {
 
     let dotClass = "";
 
-    if (isHoliday) {
-      dotClass = "bg-primary";
-    } else if (isOffDay) {
-      dotClass = "bg-danger";
-    } else {
-      dotClass = "bg-success";
-    }
+    if (isHoliday) dotClass = "bg-primary";
+    else if (isOffDay) dotClass = "bg-danger";
+    else dotClass = "bg-success";
 
     return (
       <div className="d-flex align-items-center justify-content-center w-100 mt-1">
@@ -115,43 +123,40 @@ const HolidaysList = () => {
   return (
     <>
       <div className="page-wrapper">
-        <div className="content" id="profilePage">
+        <div className="content">
           <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
             <div className="flex-grow-1">
               <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
                 Holidays
                 <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                  Total: {holidays.length}
+                  Total: {filteredData.length}
                 </span>
               </h4>
             </div>
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
+              <DatePicker
+                placeholder="Filter Date"
+                className="form-select text-dark text-nowrap"
+                style={{ width: '130px', minHeight: '38px', paddingTop: '7px' }}
+                onChange={(date) => setFilterDate(date)}
+                value={filterDate}
+                format="DD-MM-YYYY"
+                allowClear={true}
+              />
+
               <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '150px', minHeight: '38px' }} data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                  <span><i className="ti ti-calendar me-1" /> Calendar View</span>
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap" style={{ width: '150px', minHeight: '38px' }} data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                  <span className="text-truncate"><i className="ti ti-calendar me-1" /> Calendar View</span>
                 </Link>
                 <div className="dropdown-menu dropdown-menu-end p-3 shadow" style={{ minWidth: "350px" }}>
                   <Calendar fullscreen={false} cellRender={cellRender} />
-                  <div className="d-flex align-items-center justify-content-between mt-2 pt-2 border-top">
+                  <div className="d-flex align-items-center justify-content-between mt-2 pt-2 border-top row-gap-1">
                     <span className="badge badge-soft-primary border border-primary fs-10">Holiday</span>
                     <span className="badge badge-soft-danger border border-danger fs-10">Off Day</span>
                     <span className="badge badge-soft-success border border-success fs-10">Working</span>
                   </div>
                 </div>
               </div>
-
-              <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '130px', minHeight: '38px' }} data-bs-toggle="dropdown">
-                  <span><span className="text-muted">Date:</span> Select</span>
-                </Link>
-                <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item rounded-1">All</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">Today</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1">This Week</Link></li>
-                </ul>
-              </div>
-
-
 
               <button
                 className="btn btn-primary d-flex align-items-center justify-content-center"
@@ -164,12 +169,13 @@ const HolidaysList = () => {
             </div>
           </div>
 
-          <div className="table-responsive border">
+
+          <div className="table-responsive border rounded bg-white shadow-sm">
             <Datatable
               columns={columns}
               dataSource={data}
               Selection={true}
-              searchText={""}
+              searchText=""
               onSelectionChange={(keys) => setSelectedIds(keys as string[])}
             />
           </div>

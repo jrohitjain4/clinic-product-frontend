@@ -10,6 +10,7 @@ type AttendanceRecord = {
     attendance: Record<number, string>;
     totalWorkingDays: number;
     presentDays: number;
+    department?: string;
 };
 
 export const useAttendance = (month: number, year: number) => {

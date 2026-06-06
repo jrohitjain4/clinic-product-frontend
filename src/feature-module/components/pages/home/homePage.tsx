@@ -68,63 +68,143 @@ const HomePage = () => {
       <section className="dy-hero">
         <div className="dy-hero-wrap">
           {/* LEFT */}
-          <div className="dy-hero-left">
-            <div className="dy-hero-tag">SMART CLINIC MANAGEMENT SOFTWARE</div>
-            <h1>
-              Manage Your Entire Clinic<br />
-              From One <span className="dy-highlight">Powerful Platform</span>
+          {/* LEFT */}
+          <div className="dy-hero-left" style={{ paddingRight: '2rem' }}>
+            <div className="dy-hero-tag" style={{ background: '#eef2ff', color: '#4338ca', padding: '6px 16px', borderRadius: '50px', fontSize: '12px', fontWeight: 700, display: 'inline-block', marginBottom: '20px', letterSpacing: '1px' }}>ABOUT DOCYORI</div>
+            <h1 style={{ color: '#0f172a', fontWeight: 800, fontSize: '3.5rem', lineHeight: 1.2, marginBottom: '20px' }}>
+              About Us<br />
+              <span style={{ color: '#0f172a' }}>Empowering Clinics</span><br />
+              <span style={{ color: '#0f172a' }}>For A </span><span style={{ background: 'linear-gradient(90deg, #0ea5e9, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Better Tomorrow</span>
             </h1>
-            <p>DocYori helps healthcare providers manage patients, appointments, doctors, staff, payroll, and finances while delivering a seamless patient experience.</p>
-            <div className="dy-hero-btns">
-              <Link to={all_routes.registerbasic} className="hero-btn-solid">Start Free Trial →</Link>
-              <Link to="#demo" className="hero-btn-outline"><i className="ti ti-player-play" />Book Live Demo</Link>
-            </div>
-            <div className="dy-trust">
-              <span><i className="ti ti-circle-check-filled" />Easy Setup</span>
-              <span><i className="ti ti-lock-filled" />Secure Data</span>
-              <span><i className="ti ti-users" />Multi-Doctor Support</span>
-              <span><i className="ti ti-cloud" />Cloud Based</span>
+            <p style={{ color: '#64748b', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '30px', maxWidth: '500px' }}>
+              DocYori is a modern clinic management software built to simplify healthcare operations and help clinics deliver smarter care and better health.
+            </p>
+            <div className="dy-hero-btns" style={{ display: 'flex', gap: '15px' }}>
+              <Link to={all_routes.registerbasic} className="hero-btn-solid" style={{ background: '#2563eb', color: '#fff', padding: '12px 28px', borderRadius: '8px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', border: 'none' }}>
+                Start Free Trial <i className="ti ti-arrow-right" />
+              </Link>
+              <Link to="#demo" className="hero-btn-outline" style={{ background: '#fff', color: '#0ea5e9', border: '1px solid #0ea5e9', padding: '12px 28px', borderRadius: '8px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+                Book Demo <i className="ti ti-player-play" style={{ color: '#0ea5e9' }} />
+              </Link>
             </div>
           </div>
 
           {/* RIGHT — Dashboard Mockup */}
-          <div className="dy-hero-right">
-            <img src="/hero-image.png" alt="DocYori Dashboard Mockup" style={{ width: '100%', height: 'auto', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)', display: 'block', marginBottom: '30px' }} />
-            {/* 3 bottom stat cards */}
-            <div className="dy-hero-bottom-cards">
-              <div className="dy-hbc blue"><div className="dy-hbc-icon"><i className="ti ti-calendar-plus" /></div><div><div className="dy-hbc-val">+24</div><div className="dy-hbc-lbl">New Appointment Today</div></div></div>
-              <div className="dy-hbc teal"><div className="dy-hbc-icon teal"><i className="ti ti-users" /></div><div><div className="dy-hbc-val teal">+18</div><div className="dy-hbc-lbl">Patient Registered Today</div></div></div>
-              <div className="dy-hbc orange"><div className="dy-hbc-icon orange"><i className="ti ti-wallet" /></div><div><div className="dy-hbc-val orange">₹ 45,600</div><div className="dy-hbc-lbl">Payment Received Today</div></div></div>
+          <div className="dy-hero-right" style={{ position: 'relative' }}>
+            <img src="/hero-image.png" alt="DocYori Dashboard Mockup" style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '16px' }} />
+            
+            {/* Vertical Floating Cards */}
+            <div style={{ position: 'absolute', top: '10%', right: '-30px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              
+              <div style={{ background: '#fff', padding: '15px 25px', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '15px', minWidth: '220px' }}>
+                <div style={{ color: '#3b82f6' }}><i className="ti ti-building-hospital fs-24" /></div>
+                <div>
+                  <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Clinics Onboarded</div>
+                  <div style={{ fontSize: '20px', color: '#0f172a', fontWeight: 800 }}>500+</div>
+                </div>
+              </div>
+
+              <div style={{ background: '#fff', padding: '15px 25px', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '15px', minWidth: '220px' }}>
+                <div style={{ color: '#3b82f6' }}><i className="ti ti-users fs-24" /></div>
+                <div>
+                  <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Patients Managed</div>
+                  <div style={{ fontSize: '20px', color: '#0f172a', fontWeight: 800 }}>50,000+</div>
+                </div>
+              </div>
+
+              <div style={{ background: '#fff', padding: '15px 25px', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '15px', minWidth: '220px' }}>
+                <div style={{ color: '#3b82f6' }}><i className="ti ti-calendar-event fs-24" /></div>
+                <div>
+                  <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Appointments</div>
+                  <div style={{ fontSize: '20px', color: '#0f172a', fontWeight: 800 }}>1,00,000+</div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── ABOUT ──────────────────────────────── */}
-      <section className="dy-about" id="features">
-        <div className="dy-container dy-about-grid">
-          <div className="dy-about-img">
-            <img src="https://images.pexels.com/photos/3376790/pexels-photo-3376790.jpeg?auto=compress&cs=tinysrgb&w=800" alt="DocYori Clinic" />
+      {/* ── ABOUT / OUR STORY ──────────────────────────────── */}
+      <section id="features" style={{ padding: '5rem 0', background: '#fff' }}>
+        <div className="dy-container" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center', marginBottom: '4rem' }}>
+          {/* LEFT Image */}
+          <div>
+            <img src="/Doc_new.png" alt="DocYori Clinic" style={{ width: '100%', height: 'auto', display: 'block' }} />
           </div>
-          <div className="dy-about-content">
-            <div className="dy-tag-sm">ABOUT DOCYORI</div>
-            <h2>Everything Your Clinic<br />Needs in One Platform</h2>
-            <p>DocYori is a complete clinic management solution designed for modern healthcare providers. Whether you operate a single clinic or manage multiple locations, DocYori helps simplify daily operations and improve patient care.</p>
-            <div className="dy-about-icons">
+          {/* RIGHT Content */}
+          <div>
+            <div style={{ color: '#2563eb', fontSize: '0.8rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '1rem' }}>OUR STORY</div>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>Why We Built DocYori</h2>
+            <p style={{ fontSize: '1rem', color: '#475569', lineHeight: 1.7, marginBottom: '1.5rem' }}>
+              Healthcare professionals spend too much time managing paperwork, appointments, staff, and administrative tasks.
+            </p>
+            <p style={{ fontSize: '1rem', color: '#475569', lineHeight: 1.7, marginBottom: '1.5rem' }}>
+              We created DocYori to simplify clinic operations through a single, easy-to-use platform that allows healthcare providers to focus more on patient care and less on manual management.
+            </p>
+            <p style={{ fontSize: '1rem', color: '#475569', lineHeight: 1.7, marginBottom: '2rem' }}>
+              Our goal is to help clinics become more organized, productive, and digitally empowered.
+            </p>
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, background: 'linear-gradient(90deg, #2563eb, #0ea5e9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              Smarter Care, Better Health.
+            </div>
+          </div>
+        </div>
+
+        {/* ── OUR JOURNEY ─────────────────────────── */}
+        <div className="dy-container" style={{ marginBottom: '2rem' }}>
+          <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: '24px', padding: '3rem 2rem', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.05)', position: 'relative' }}>
+            <div style={{ textAlign: 'center', color: '#2563eb', fontSize: '0.8rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '3rem' }}>OUR JOURNEY</div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+              {/* Horizontal Line */}
+              <div style={{ position: 'absolute', top: '40px', left: '10%', right: '10%', height: '2px', background: '#2563eb', zIndex: -1 }} />
+
               {[
-                { icon: "ti ti-clipboard-list", label: "Patient Records" },
-                { icon: "ti ti-calendar-event", label: "Appointment Scheduling" },
-                { icon: "ti ti-stethoscope", label: "Doctor Management" },
-                { icon: "ti ti-id-badge", label: "HR & Payroll" },
-                { icon: "ti ti-report-money", label: "Accounts & Finance" },
-                { icon: "ti ti-package", label: "Asset Tracking" },
-              ].map((item, i) => (
-                <div key={i} className="dy-about-icon">
-                  <div className="dy-ai-box"><i className={item.icon} /></div>
-                  <span>{item.label}</span>
+                { icon: 'ti ti-device-analytics', title: 'Identify Challenges', desc: 'Understanding the real problems faced by clinics every day.', color: '#2563eb' },
+                { icon: 'ti ti-edit', title: 'Design Solutions', desc: 'Designing smart workflows and digital solutions for every department.', color: '#2563eb' },
+                { icon: 'ti ti-code', title: 'Build DocYori', desc: 'Developing a complete clinic management platform.', color: '#2563eb' },
+                { icon: 'ti ti-chart-arrows', title: 'Empower Clinics', desc: 'Helping clinics grow with better management and smarter decisions.', color: '#0ea5e9' },
+              ].map((s, i) => (
+                <div key={i} style={{ width: '22%', textAlign: 'center', background: '#fff' }}>
+                  <div style={{ width: 80, height: 80, background: '#fff', border: `3px solid ${s.color}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', fontSize: '2rem', color: s.color }}>
+                    <i className={s.icon} />
+                  </div>
+                  <div style={{ fontSize: '0.9rem', color: s.color, fontWeight: 800, marginBottom: '0.5rem' }}>0{i + 1}</div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem' }}>{s.title}</h4>
+                  <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0, lineHeight: 1.5 }}>{s.desc}</p>
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* ── OUR MISSION & VISION ───────────────────── */}
+        <div className="dy-container">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+            
+            {/* MISSION */}
+            <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: '24px', padding: '2.5rem', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.05)', display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+              <div style={{ fontSize: '3.5rem', color: '#2563eb', lineHeight: 1 }}><i className="ti ti-target" /></div>
+              <div>
+                <div style={{ color: '#2563eb', fontSize: '0.8rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.8rem' }}>OUR MISSION</div>
+                <p style={{ fontSize: '1rem', color: '#475569', lineHeight: 1.6, margin: 0 }}>
+                  To simplify clinic management through technology and automation, allowing healthcare professionals to focus on what matters most — patient care.
+                </p>
+              </div>
+            </div>
+
+            {/* VISION */}
+            <div style={{ background: '#fff', border: '1px solid #e0f2fe', borderRadius: '24px', padding: '2.5rem', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.05)', display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+              <div style={{ fontSize: '3.5rem', color: '#0ea5e9', lineHeight: 1 }}><i className="ti ti-eye" /></div>
+              <div>
+                <div style={{ color: '#0ea5e9', fontSize: '0.8rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.8rem' }}>OUR VISION</div>
+                <p style={{ fontSize: '1rem', color: '#475569', lineHeight: 1.6, margin: 0 }}>
+                  To become a trusted healthcare technology partner for clinics across India and empower every healthcare provider with modern digital tools.
+                </p>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>

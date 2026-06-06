@@ -10,6 +10,18 @@ const TodoList = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [newTodo, setNewTodo] = useState({ title: "", priority: "Medium", taskDate: "" });
 
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterPriority, setFilterPriority] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+
+  const filteredTodos = todos.filter((todo) => {
+    let match = true;
+    if (filterStatus && todo.status !== filterStatus) match = false;
+    if (filterPriority && todo.priority !== filterPriority) match = false;
+    if (filterDate && todo.taskDate && !todo.taskDate.startsWith(filterDate)) match = false;
+    return match;
+  });
+
   const fetchTodos = async () => {
     setLoading(true);
     try {
@@ -127,7 +139,7 @@ const TodoList = () => {
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedIds(todos.map((t) => t.id));
+      setSelectedIds(filteredTodos.map((t) => t.id));
     } else {
       setSelectedIds([]);
     }

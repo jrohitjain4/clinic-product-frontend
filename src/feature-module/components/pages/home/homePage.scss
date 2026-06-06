@@ -49,10 +49,10 @@
 }
 
 .dy-container {
-  max-width: 1200px;
+  max-width: 1300px;
   width: 100%;
   margin: 0 auto;
-  padding: 0 1.25rem;
+  padding: 0 1.5rem;
   box-sizing: border-box;
 }
 
@@ -187,8 +187,7 @@
 /* ── Hero ── */
 .dy-hero {
   background: linear-gradient(180deg, #fff 0%, #eef5ff 100%);
-  padding: 2.5rem 1.5rem;
-  overflow: hidden;
+  padding: 2.5rem 0;
   width: 100%;
 }
 
@@ -196,6 +195,7 @@
   max-width: 1300px;
   width: 100%;
   margin: 0 auto;
+  padding: 0 1.5rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
@@ -566,7 +566,7 @@
     padding: 0.75rem 1rem;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    border: 1px solid var(--border);
+    border: 1px solid rgba(0, 123, 255, 0.3);
     flex: 1;
 
     .dy-hbc-icon {
@@ -635,6 +635,7 @@
 .dy-about-img img {
   width: 100%;
   border-radius: var(--radius-lg);
+  border: 1px solid rgba(0, 123, 255, 0.3);
 }
 
 .dy-about-content {
@@ -721,6 +722,10 @@
 .dy-why-card {
   text-align: center;
   transition: transform 0.3s ease;
+  border: 1px solid rgba(0, 123, 255, 0.3);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  background: #fff;
 
   &:hover {
     transform: translateY(-5px);
@@ -776,7 +781,7 @@
       width: 70px;
       height: 70px;
       border-radius: 50%;
-      border: 2px solid var(--blue);
+      border: 1px solid rgba(0, 123, 255, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -835,7 +840,7 @@
 
   .dy-mod-card {
     background: #fff;
-    border: 1px solid var(--border);
+    border: 1px solid rgba(0, 123, 255, 0.3);
     padding: 1.5rem;
     border-radius: var(--radius);
 
@@ -897,6 +902,7 @@
     object-fit: cover;
     border-radius: 20px;
     box-shadow: var(--shadow);
+    border: 1px solid rgba(0, 123, 255, 0.3);
   }
 }
 
@@ -997,7 +1003,7 @@
   background: var(--bg-light);
   border-radius: var(--radius);
   padding: 1.5rem;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 123, 255, 0.3);
   transition: box-shadow 0.3s;
 
   &:hover {
@@ -1054,7 +1060,7 @@
 }
 
 .dy-faq-item {
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 123, 255, 0.3);
   border-radius: var(--radius);
   overflow: hidden;
 
@@ -1121,6 +1127,7 @@
     height: 250px;
     object-fit: cover;
     border-radius: 12px;
+    border: 1px solid rgba(0, 123, 255, 0.3);
   }
 
   .dy-cta-text h2 {

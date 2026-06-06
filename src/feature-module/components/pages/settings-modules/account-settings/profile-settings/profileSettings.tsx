@@ -4,6 +4,7 @@ import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import { City, Country, State } from "../../../../../../core/common/selectOption";
 import { useState } from "react";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
+import DoctorProfileUpload from "../../../../../../core/common/doctor-profile-upload/DoctorProfileUpload";
 
 const ProfileSettings = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -13,6 +14,7 @@ const ProfileSettings = () => {
   } catch (e) { }
 
   const [logoPreview, setLogoPreview] = useState(userObj.clinic?.landingPage?.logo || "/logo.png");
+  const [profileImage, setProfileImage] = useState<string | null>(userObj.profileImage || null);
 
   const initialFirstName = (userObj.fullName || "Administrator").split(" ")[0];
   const initialLastName = (userObj.fullName || "Administrator").split(" ").slice(1).join(" ") || "";
@@ -43,6 +45,7 @@ const ProfileSettings = () => {
         },
         body: JSON.stringify({
           ...formData,
+          profileImage: profileImage !== userObj.profileImage ? profileImage : undefined,
           clinicLogo: logoPreview !== "/logo.png" ? logoPreview : undefined
         })
       });
@@ -98,26 +101,12 @@ const ProfileSettings = () => {
                                 <span className="text-danger ms-1">*</span>
                               </label>
                             </div>
-                            {/* end col */}
                             <div className="col-lg-12">
-                              <div className="profile-container">
-                                <ImageWithBasePath
-                                  src="assets/img/users/user-08.jpg"
-                                  alt="Profile"
-                                />
-                                <div className="overlay-btn">
-                                  <Link
-                                    to="#"
-                                    className="text-white"
-                                    id="uploadTrigger"
-                                  >
-                                    <i className="ti ti-photo fs-10" />
-                                  </Link>
-                                </div>
-                                <input
-                                  type="file"
-                                  id="profileUpload"
-                                  style={{ display: "none" }}
+                              <div>
+                                <DoctorProfileUpload 
+                                  value={profileImage}
+                                  onChange={(url) => setProfileImage(url)}
+                                  disabled={!isEditing}
                                 />
                               </div>
                             </div>

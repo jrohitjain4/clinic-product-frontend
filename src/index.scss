@@ -642,6 +642,35 @@
 
 /* Global Button Overrides (Premium Design Language) - Default Theme Only */
 html[data-color="primary"] {
+  .modal-content {
+    border-radius: 12px !important;
+    overflow: hidden;
+    border: none !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .modal-header.bg-primary {
+    background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%) !important;
+    color: white !important;
+    border-bottom: none !important;
+    
+    .modal-title {
+      color: white !important;
+    }
+  }
+
+  /* Fix Settings Layout Double Border */
+  .settings-wrapper {
+    .settings-sidebar {
+      border-right: none !important;
+    }
+    > .card, > .flex-fill {
+      border-left: 1px solid #e2e8f0 !important;
+      border-radius: 0 !important;
+      background: white !important;
+    }
+  }
+
   .btn {
     display: inline-flex;
     align-items: center;
@@ -959,6 +988,7 @@ html[data-color="primary"] {
   font-weight: 600 !important;
   min-height: 60px !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  overflow: hidden !important;
 }
 
 .Toastify__toast--success {
@@ -991,6 +1021,7 @@ html[data-color="primary"] {
   color: #ffffff !important;
   opacity: 0.6;
   align-self: center !important;
+  margin: 0 !important;
 
   &:hover {
     opacity: 1;

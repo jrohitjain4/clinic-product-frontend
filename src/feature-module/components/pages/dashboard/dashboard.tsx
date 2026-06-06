@@ -109,13 +109,6 @@ const Dashboard = () => {
                 className="btn btn-primary d-inline-flex align-items-center"
               >
                 New Appointment <i className="ti ti-plus ms-2" /></Link>
-              <Link
-                to={all_routes.doctorschedule}
-                className="btn btn-outline-white bg-white d-inline-flex align-items-center"
-              >
-                <i className="ti ti-calendar-time me-1" />
-                Schedule Availability
-              </Link>
             </div>
           </div>
           {/* End Page Header */}

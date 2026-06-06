@@ -10,8 +10,8 @@ const NavbarFront = () => {
     return (
         <nav className="dy-nav">
             <div className="dy-nav-inner">
-                <Link to={all_routes.home} className="dy-brand align-items-center d-flex" style={{ height: '70px', overflow: 'visible' }}>
-                    <img src="/docyari-logo.svg" alt="DocYori" style={{ width: "450px", height: "450px", marginTop: "-175px", marginBottom: "-175px", marginLeft: "-60px", maxWidth: "none" }} />
+                <Link to={all_routes.home} className="dy-brand align-items-center d-flex" style={{ height: '70px', display: 'flex', alignItems: 'center', overflow: 'visible' }}>
+                    <img src="/logo.png" alt="DocYori" style={{ height: "65px", width: "auto", objectFit: "contain", maxWidth: "none" }} />
                 </Link>
 
                 {/* Hamburger Icon */}

@@ -89,71 +89,7 @@ const HomePage = () => {
 
           {/* RIGHT — Dashboard Mockup */}
           <div className="dy-hero-right">
-            <div className="dy-dash">
-              {/* dash header */}
-              <div className="dy-dash-top">
-                <div className="dy-dash-logo"><i className="ti ti-heartbeat" /><b>Doc</b>Yori</div>
-                <div className="dy-dash-title">Dashboard</div>
-                <div className="dy-dash-icons">
-                  <i className="ti ti-bell" />
-                  <div className="dy-dash-avatar"><i className="ti ti-user" /></div>
-                </div>
-              </div>
-              {/* dash body */}
-              <div className="dy-dash-body">
-                {/* sidebar */}
-                <div className="dy-dash-sidebar">
-                  {["Dashboard", "Patients", "Appointments", "Doctors", "Staff", "Accounts", "HRM", "Reports", "Settings"].map((item, i) => (
-                    <div key={i} className={`dy-dash-sitem${i === 0 ? " active" : ""}`}><i className={["ti ti-layout-dashboard", "ti ti-users", "ti ti-calendar", "ti ti-stethoscope", "ti ti-user-check", "ti ti-report-money", "ti ti-id-badge", "ti ti-chart-bar", "ti ti-settings"][i]} />{item}</div>
-                  ))}
-                </div>
-                {/* main content */}
-                <div className="dy-dash-main">
-                  {/* top stats */}
-                  <div className="dy-dash-stats">
-                    <div className="dy-ds"><div className="dy-ds-lbl">Total Patients</div><div className="dy-ds-val">1,248</div><div className="dy-ds-sub green">+12% from last month</div></div>
-                    <div className="dy-ds"><div className="dy-ds-lbl">Today's Appointments</div><div className="dy-ds-val">32</div><div className="dy-ds-sub green">+4% from yesterday</div></div>
-                    <div className="dy-ds"><div className="dy-ds-lbl">Total Doctors</div><div className="dy-ds-val">18</div><div className="dy-ds-sub blue">+2 new this month</div></div>
-                    <div className="dy-ds"><div className="dy-ds-lbl">Total Revenue</div><div className="dy-ds-val">₹2,45,000</div><div className="dy-ds-sub green">+18% from last month</div></div>
-                  </div>
-                  {/* two panels */}
-                  <div className="dy-dash-panels">
-                    {/* appointments */}
-                    <div className="dy-panel">
-                      <div className="dy-panel-hdr"><span>Appointments</span><a href="#">View all</a></div>
-                      {APPTS.map((a, i) => (
-                        <div key={i} className="dy-appt-row">
-                          <span className="dy-appt-time">{a.time}</span>
-                          <div><div className="dy-appt-name">{a.name}</div><div className="dy-appt-type">{a.type}</div></div>
-                        </div>
-                      ))}
-                    </div>
-                    {/* revenue chart */}
-                    <div className="dy-panel">
-                      <div className="dy-panel-hdr"><span>Revenue Overview</span><span className="dy-period">This Month ▾</span></div>
-                      <div className="dy-chart">
-                        <div className="dy-chart-labels">
-                          <span>₹2.5L</span><span>₹1.5L</span><span>₹75k</span><span>₹0</span>
-                        </div>
-                        <svg viewBox="0 0 200 80" className="dy-line-chart">
-                          <polyline points="0,70 30,55 60,60 90,35 120,45 150,20 180,30 200,25" fill="none" stroke="#2563eb" strokeWidth="2" />
-                          <polyline points="0,70 30,55 60,60 90,35 120,45 150,20 180,30 200,25 200,80 0,80" fill="url(#grad)" stroke="none" />
-                          <defs>
-                            <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#2563eb" stopOpacity="0.3" />
-                              <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
-                            </linearGradient>
-                          </defs>
-                        </svg>
-                        <div className="dy-chart-months">
-                          <span>1 May</span><span>8 May</span><span>15 May</span><span>22 May</span><span>28 May</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <img src="/hero-image.png" alt="DocYori Dashboard Mockup" style={{ width: '100%', height: 'auto', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)', display: 'block', marginBottom: '30px' }} />
             {/* 3 bottom stat cards */}
             <div className="dy-hero-bottom-cards">
               <div className="dy-hbc blue"><div className="dy-hbc-icon"><i className="ti ti-calendar-plus" /></div><div><div className="dy-hbc-val">+24</div><div className="dy-hbc-lbl">New Appointment Today</div></div></div>

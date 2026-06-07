@@ -110,9 +110,9 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
                   <input
                     type="text"
                     className="form-control"
+                    placeholder="Enter Specialization"
                     value={addName}
                     onChange={(e) => setAddName(e.target.value)}
-                    placeholder="e.g. Cardiology"
                     required
                   />
                 </div>
@@ -121,24 +121,24 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
                   <textarea
                     className="form-control"
                     rows={3}
+                    placeholder="Enter Description"
                     value={addDesc}
                     onChange={(e) => setAddDesc(e.target.value)}
-                    placeholder="Optional description"
                   />
                 </div>
-              </div>
-              <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                <button
-                  type="button"
-                  className="btn btn-light px-4 shadow-sm"
-                  data-bs-dismiss="modal"
-                  style={{ borderRadius: '6px' }}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" style={{ borderRadius: '6px' }}>
-                  Add Specialization
-                </button>
+                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                  <button
+                    type="button"
+                    className="btn btn-light px-4 shadow-sm"
+                    data-bs-dismiss="modal"
+                    style={{ borderRadius: '6px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" style={{ borderRadius: '6px' }}>
+                    Add Specialization
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -169,9 +169,9 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
                   <input
                     type="text"
                     className="form-control"
+                    placeholder="Enter Specialization"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    placeholder="e.g. Cardiology"
                     required
                   />
                 </div>
@@ -180,9 +180,9 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
                   <textarea
                     className="form-control"
                     rows={3}
+                    placeholder="Enter Description"
                     value={editDesc}
                     onChange={(e) => setEditDesc(e.target.value)}
-                    placeholder="Optional description"
                   />
                 </div>
                 <div className="mb-0">
@@ -196,19 +196,19 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
                     onChange={(val) => setEditStatus(val)}
                   />
                 </div>
-              </div>
-              <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                <button
-                  type="button"
-                  className="btn btn-light px-4 shadow-sm"
-                  data-bs-dismiss="modal"
-                  style={{ borderRadius: '6px' }}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" style={{ borderRadius: '6px' }}>
-                  Save Changes
-                </button>
+                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                  <button
+                    type="button"
+                    className="btn btn-light px-4 shadow-sm"
+                    data-bs-dismiss="modal"
+                    style={{ borderRadius: '6px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" style={{ borderRadius: '6px' }}>
+                    Save Changes
+                  </button>
+                </div>
               </div>
             </form>
           </div>

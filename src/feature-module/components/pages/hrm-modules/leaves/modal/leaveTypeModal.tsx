@@ -78,14 +78,14 @@ const LeaveTypeModal = ({ currentRecord, handleCreate, handleUpdate, handleDelet
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label">Leave Type<span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" value={name} onChange={e => setName(e.target.value)} required />
+                  <input type="text" className="form-control" placeholder="Enter Leave Type" value={name} onChange={e => setName(e.target.value)} required />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">Leave Quota (Days)<span className="text-danger ms-1">*</span></label>
-                  <input type="number" className="form-control" value={quota} onChange={e => setQuota(e.target.value)} required />
+                  <input type="number" className="form-control" placeholder="Enter Leave Quota" value={quota} onChange={e => setQuota(e.target.value)} required />
                 </div>
               </div>
-              <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+              <div className="d-flex justify-content-end gap-2 px-4 pb-4 pt-3 mt-4 border-top">
                 <button type="button" className="btn btn-light px-4 shadow-sm" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Cancel</button>
                 <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" style={{ borderRadius: '6px' }}>Add New Leave Type</button>
               </div>
@@ -105,11 +105,11 @@ const LeaveTypeModal = ({ currentRecord, handleCreate, handleUpdate, handleDelet
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label">Leave Type<span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" value={name} onChange={e => setName(e.target.value)} required />
+                  <input type="text" className="form-control" placeholder="Enter Leave Type" value={name} onChange={e => setName(e.target.value)} required />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Leave Quota (Days)<span className="text-danger ms-1">*</span></label>
-                  <input type="number" className="form-control" value={quota} onChange={e => setQuota(e.target.value)} required />
+                  <input type="number" className="form-control" placeholder="Enter Leave Quota" value={quota} onChange={e => setQuota(e.target.value)} required />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">Status</label>
@@ -121,7 +121,7 @@ const LeaveTypeModal = ({ currentRecord, handleCreate, handleUpdate, handleDelet
                   />
                 </div>
               </div>
-              <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+              <div className="d-flex justify-content-end gap-2 px-4 pb-4 pt-3 mt-4 border-top">
                 <button type="button" className="btn btn-light px-4 shadow-sm" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Cancel</button>
                 <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" style={{ borderRadius: '6px' }}>Save Changes</button>
               </div>

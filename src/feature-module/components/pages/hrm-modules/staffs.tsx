@@ -133,8 +133,9 @@ const StaffsList = () => {
     },
     {
       title: "Action",
+      align: "center",
       render: (_: unknown, record: (typeof tableData)[0]) => (
-        <div className="d-flex align-items-center justify-content-start gap-2">
+        <div className="d-flex align-items-center justify-content-center gap-2">
           {/* View Icon */}
           <button
             type="button"
@@ -144,7 +145,7 @@ const StaffsList = () => {
             data-bs-target="#view_staff"
             onClick={() => setViewStaff(record._raw)}
           >
-            <i className="fa fa-eye fs-16"></i>
+            <i className="ti ti-eye fs-18"></i>
           </button>
 
           <button
@@ -155,7 +156,7 @@ const StaffsList = () => {
             data-bs-target="#edit_staff"
             onClick={() => openStaff(record._raw)}
           >
-            <i className="fa fa-edit fs-16" />
+            <i className="ti ti-edit fs-18" />
           </button>
           <button
             type="button"
@@ -165,7 +166,7 @@ const StaffsList = () => {
             data-bs-target="#delete_staff"
             onClick={() => openStaff(record._raw)}
           >
-            <i className="fa fa-trash-alt fs-16" />
+            <i className="ti ti-trash fs-18" />
           </button>
         </div>
       ),
@@ -188,7 +189,7 @@ const StaffsList = () => {
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
 
               <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap" style={{ width: '150px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap w-100" style={{ minWidth: '150px', minHeight: '38px' }} data-bs-toggle="dropdown">
                   <span className="text-truncate"><span className="text-muted">Designation:</span> {filterDesignation}</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
@@ -199,7 +200,7 @@ const StaffsList = () => {
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap" style={{ width: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap w-100" style={{ minWidth: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
                   <span className="text-truncate"><span className="text-muted">Role:</span> {filterRole}</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
@@ -210,7 +211,7 @@ const StaffsList = () => {
               </div>
 
               <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap" style={{ width: '130px', minHeight: '38px' }} data-bs-toggle="dropdown">
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap w-100" style={{ minWidth: '130px', minHeight: '38px' }} data-bs-toggle="dropdown">
                   <span className="text-truncate"><span className="text-muted">Status:</span> {filterStatus}</span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
@@ -223,7 +224,7 @@ const StaffsList = () => {
               <div className="dropdown">
                 <button
                   type="button"
-                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '100px', minHeight: '38px', background: '#fff' }}
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between w-100" style={{ minWidth: '100px', minHeight: '38px', background: '#fff' }}
                   data-bs-toggle="dropdown"
                 >
                   <span>Export</span>
@@ -290,7 +291,7 @@ const StaffsList = () => {
           )}
 
           {selectedIds.length > 0 && (
-            <div className="d-flex justify-content-center mt-auto pt-4 pb-4">
+            <div className="d-flex justify-content-center pt-4 pb-4 sticky-delete-bar">
               <button
                 className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
                 data-bs-toggle="modal"
@@ -319,68 +320,101 @@ const StaffsList = () => {
 
       {/* ===== VIEW STAFF MODAL ===== */}
       <div id="view_staff" className="modal fade" role="dialog">
-        <div className="modal-dialog modal-dialog-centered modal-lg">
+        <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
-            <div className="modal-header bg-info text-white">
+            <div className="modal-header bg-primary text-white">
               <h5 className="modal-title fw-bold">View Staff Profile</h5>
               <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={() => setViewStaff(null)}></button>
             </div>
             <div className="modal-body">
               {viewStaff && (
-                <div className="row g-3">
-                  <div className="col-md-12 text-center mb-3">
-                    <div className="avatar avatar-xxl bg-light p-1 rounded-circle shadow-sm mx-auto">
+                <>
+                  <h6 className="fw-bold mb-3">Staff Information</h6>
+                  <div className="mb-3 d-flex align-items-center">
+                    <label className="form-label me-3">Profile Image</label>
+                    <div className="avatar avatar-lg bg-light p-1 rounded shadow-sm">
                       <ImageWithBasePath
                         src={viewStaff.profileImage?.startsWith('/') ? viewStaff.profileImage : `assets/img/users/${viewStaff.profileImage || 'avatar-21.jpg'}`}
                         alt={viewStaff.fullName}
-                        className="rounded-circle"
+                        className="rounded"
                       />
                     </div>
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">Full Name</label>
-                    <input type="text" className="form-control bg-light" value={viewStaff.fullName || ""} readOnly />
+                  <div className="mb-3">
+                    <label className="form-label">Name</label>
+                    <input type="text" className="form-control bg-light" disabled value={viewStaff.fullName || ""} />
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">Role</label>
-                    <input type="text" className="form-control bg-light" value={viewStaff.role || ""} readOnly />
+                  <div className="row mb-3 border-bottom pb-3">
+                    <div className="col-lg-6">
+                      <div className="mb-3 mb-lg-0">
+                        <label className="form-label">Role</label>
+                        <input type="text" className="form-control bg-light" disabled value={viewStaff.role || ""} />
+                      </div>
+                    </div>
+                    <div className="col-lg-6">
+                      <div className="mb-0">
+                        <label className="form-label">Designation</label>
+                        <input type="text" className="form-control bg-light" disabled value={viewStaff.designationName || viewStaff.designation?.name || "--"} />
+                      </div>
+                    </div>
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">Email</label>
-                    <input type="text" className="form-control bg-light" value={viewStaff.email || ""} readOnly />
+                  
+                  <h6 className="fw-bold mb-3">Contact Information</h6>
+                  <div className="row row-gap-2">
+                    <div className="col-md-6">
+                      <label className="form-label">Phone Number</label>
+                      <input type="text" className="form-control bg-light" disabled value={viewStaff.phone || ""} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Email</label>
+                      <input type="text" className="form-control bg-light" disabled value={viewStaff.email || ""} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">DOB</label>
+                      <div className="input-icon-end position-relative">
+                        <input type="text" className="form-control bg-light w-100" disabled value={viewStaff.dob ? new Date(viewStaff.dob).toLocaleDateString("en-GB") : "--"} />
+                        <span className="input-icon-addon">
+                          <i className="ti ti-calendar" />
+                        </span>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Gender</label>
+                      <input type="text" className="form-control bg-light" disabled value={viewStaff.gender || ""} />
+                    </div>
+                    <div className="col-md-12">
+                      <label className="form-label">Blood Group</label>
+                      <input type="text" className="form-control bg-light" disabled value={viewStaff.bloodGroup || "--"} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Address 1</label>
+                      <input type="text" className="form-control bg-light" disabled value={viewStaff.address1 || ""} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Address 2</label>
+                      <input type="text" className="form-control bg-light" disabled value={viewStaff.address2 || ""} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Country</label>
+                      <input type="text" className="form-control bg-light" disabled value={viewStaff.country || ""} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">State</label>
+                      <input type="text" className="form-control bg-light" disabled value={viewStaff.state || ""} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">City</label>
+                      <input type="text" className="form-control bg-light" disabled value={viewStaff.city || ""} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Pincode</label>
+                      <input type="text" className="form-control bg-light" disabled value={viewStaff.pincode || ""} />
+                    </div>
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">Phone</label>
-                    <input type="text" className="form-control bg-light" value={viewStaff.phone || ""} readOnly />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label fw-bold small text-uppercase text-muted">Designation</label>
-                    <input type="text" className="form-control bg-light" value={viewStaff.designationName || "--"} readOnly />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label fw-bold small text-uppercase text-muted">Gender</label>
-                    <input type="text" className="form-control bg-light" value={viewStaff.gender || ""} readOnly />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label fw-bold small text-uppercase text-muted">Blood Group</label>
-                    <input type="text" className="form-control bg-light text-danger fw-bold" value={viewStaff.bloodGroup || "--"} readOnly />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">Date of Birth</label>
-                    <input type="text" className="form-control bg-light" value={viewStaff.dob ? new Date(viewStaff.dob).toLocaleDateString("en-GB") : "--"} readOnly />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">Joined Date</label>
-                    <input type="text" className="form-control bg-light" value={new Date(viewStaff.createdAt).toLocaleDateString("en-GB")} readOnly />
-                  </div>
-                  <div className="col-md-12">
-                    <label className="form-label fw-bold small text-uppercase text-muted">Address</label>
-                    <textarea className="form-control bg-light" rows={2} value={`${viewStaff.address1 || ""} ${viewStaff.address2 || ""} ${viewStaff.city || ""}, ${viewStaff.state || ""} - ${viewStaff.pincode || ""}`} readOnly />
-                  </div>
-                </div>
+                </>
               )}
             </div>
-            <div className="modal-footer border-top pt-3">
+            <div className="d-flex justify-content-end px-4 pb-4 pt-3 mt-4 border-top">
               <button type="button" className="btn btn-primary px-5" data-bs-dismiss="modal" onClick={() => setViewStaff(null)} style={{ borderRadius: '6px' }}>Close</button>
             </div>
           </div>

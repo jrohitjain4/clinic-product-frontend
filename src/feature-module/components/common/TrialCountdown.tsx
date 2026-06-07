@@ -159,7 +159,7 @@ const TrialCountdown = () => {
                 <style>{premiumStyles}</style>
                 <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight" overlayClassName="premium-dropdown shadow-lg border-0">
                     <div
-                        className="d-flex align-items-center px-3 py-1.5 rounded-pill me-3 shadow-sm border bg-success-subtle border-success text-success-emphasis cursor-pointer hover-shadow transition-all"
+                        className="d-flex align-items-center px-3 py-1.5 rounded-pill me-3 shadow-sm border bg-success-subtle border-success text-success-emphasis cursor-pointer hover-shadow transition-all text-nowrap flex-shrink-0"
                         style={{ fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}
                     >
                         <i className="ti ti-rosette-discount-check-filled me-2" style={{ fontSize: '16px' }} />

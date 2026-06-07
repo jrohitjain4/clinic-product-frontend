@@ -149,7 +149,7 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                 {/* Earnings & Deductions Details */}
                 <div className="row row-gap-2">
                   <div className="col-md-6">
-                    <h6 className="mb-3">Earnings ($)</h6>
+                    <h6 className="mb-3">Earnings (₹)</h6>
                     <div className="mb-3">
                       <label className="form-label">Basic Salary <span className="text-danger ms-1">*</span></label>
                       <input type="number" className="form-control" value={basicSalary} onChange={(e) => setBasicSalary(Number(e.target.value))} required />
@@ -161,7 +161,7 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     <div className="mb-0"><label className="form-label">Others</label><input type="number" className="form-control" value={otherEarnings} onChange={(e) => setOtherEarnings(Number(e.target.value))} /></div>
                   </div>
                   <div className="col-md-6">
-                    <h6 className="mb-3">Deductions ($)</h6>
+                    <h6 className="mb-3">Deductions (₹)</h6>
                     <div className="mb-3"><label className="form-label">TDS</label><input type="number" className="form-control" value={tds} onChange={(e) => setTds(Number(e.target.value))} /></div>
                     <div className="mb-3"><label className="form-label">ESI</label><input type="number" className="form-control" value={esi} onChange={(e) => setEsi(Number(e.target.value))} /></div>
                     <div className="mb-3"><label className="form-label">PF</label><input type="number" className="form-control" value={pf} onChange={(e) => setPf(Number(e.target.value))} /></div>
@@ -211,7 +211,7 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                 </div>
                 <div className="row row-gap-2">
                   <div className="col-md-6">
-                    <h6 className="mb-3">Earnings ($)</h6>
+                    <h6 className="mb-3">Earnings (₹)</h6>
                     <div className="mb-3">
                       <label className="form-label">Basic Salary <span className="text-danger ms-1">*</span></label>
                       <input type="number" className="form-control" value={basicSalary} onChange={(e) => setBasicSalary(Number(e.target.value))} required />
@@ -223,7 +223,7 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     <div className="mb-0"><label className="form-label">Others</label><input type="number" className="form-control" value={otherEarnings} onChange={(e) => setOtherEarnings(Number(e.target.value))} /></div>
                   </div>
                   <div className="col-md-6">
-                    <h6 className="mb-3">Deductions ($)</h6>
+                    <h6 className="mb-3">Deductions (₹)</h6>
                     <div className="mb-3"><label className="form-label">TDS</label><input type="number" className="form-control" value={tds} onChange={(e) => setTds(Number(e.target.value))} /></div>
                     <div className="mb-3"><label className="form-label">ESI</label><input type="number" className="form-control" value={esi} onChange={(e) => setEsi(Number(e.target.value))} /></div>
                     <div className="mb-3"><label className="form-label">PF</label><input type="number" className="form-control" value={pf} onChange={(e) => setPf(Number(e.target.value))} /></div>

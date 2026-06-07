@@ -1,22 +1,31 @@
 import { useState } from "react";
 import Modals from "./modals/modals";
-import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import Datatable from "../../../../../core/common/dataTable";
 import { Link } from "react-router";
 import { useClinicSpecializations } from "../../../../../core/hooks/useClinicSpecializations";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
-import { DatePicker, Select } from "antd";
+import { DatePicker } from "antd";
 import { Specialization, StatusActive } from "../../../../../core/common/selectOption";
 
 const Specializations = () => {
-  const { specializations, refetch } = useClinicSpecializations();
+  const { specializations, refetch, loading, error } = useClinicSpecializations();
   const [selectedSpecialization, setSelectedSpecialization] = useState<any>(null);
   const [viewSpec, setViewSpec] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  
+  const [filterSpecialization, setFilterSpecialization] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("All");
 
-  const data = specializations.map((spec) => ({
+  const filteredData = specializations.filter((spec) => {
+    const matchSpec = filterSpecialization === "All" || spec.name === filterSpecialization;
+    const matchStatus = filterStatus === "All" || spec.status === filterStatus;
+    return matchSpec && matchStatus;
+  });
+
+  const data = filteredData.map((spec, index) => ({
     key: spec.id,
     id: spec.id,
+    S_No: index + 1,
     img: spec.image || "specialization-01.jpg",
     Specialization: spec.name,
     CreatedDate: new Date(spec.createdAt).toLocaleDateString("en-GB", {
@@ -32,140 +41,159 @@ const Specializations = () => {
   const columns = [
     {
       title: "S.No",
-      render: (_text: any, _record: any, index: number) => index + 1,
+      dataIndex: "S_No",
+      render: (text: number) => (
+        <span className="text-dark fw-medium">{text}</span>
+      ),
+      sorter: (a: any, b: any) => a.S_No - b.S_No,
+      width: 60,
     },
     {
       title: "Specialization",
       dataIndex: "Specialization",
-      render: (text: any, render: any) => {
-        const imageSrc = render.img.startsWith("http") || render.img.startsWith("/uploads")
-          ? render.img
-          : `assets/img/doctors/${render.img}`;
-
+      render: (text: string) => {
         return (
           <div className="d-flex align-items-center">
-
             <div>
-              <h6 className="mb-0 fs-14 fw-semibold">
-                <Link to="#">
-                  {text}
-                </Link>
+              <h6 className="mb-0 fs-14 fw-semibold text-dark">
+                <Link to="#">{text}</Link>
               </h6>
             </div>
           </div>
         );
       },
       sorter: (a: any, b: any) =>
-        a.Specialization.length - b.Specialization.length,
+        a.Specialization.localeCompare(b.Specialization),
     },
     {
       title: "Created Date",
       dataIndex: "CreatedDate",
-      sorter: (a: any, b: any) => a.CreatedDate.length - b.CreatedDate.length,
+      render: (text: string) => <span className="text-dark">{text}</span>,
+      sorter: (a: any, b: any) =>
+        new Date(a.raw.createdAt).getTime() -
+        new Date(b.raw.createdAt).getTime(),
     },
     {
       title: "No of Doctor",
       dataIndex: "NoofDoctor",
-      sorter: (a: any, b: any) => a.NoofDoctor.length - b.NoofDoctor.length,
+      render: (text: string) => (
+        <span className="text-dark fw-medium">{text}</span>
+      ),
+      sorter: (a: any, b: any) =>
+        parseInt(a.NoofDoctor) - parseInt(b.NoofDoctor),
     },
     {
       title: "Status",
       dataIndex: "Status",
       render: (text: string) => (
         <span
-          className={`badge ${text === "Active"
-            ? "badge-soft-success border-success"
-            : "badge-soft-danger border-danger"
-            }  border  px-2 py-1 fs-13 fw-medium`}
+          className={`badge border ${
+            text === "Active"
+              ? "badge-soft-success border-success"
+              : "badge-soft-danger border-danger"
+          } px-2 py-1 fs-13 fw-medium`}
         >
           {text}
         </span>
       ),
-      sorter: (a: any, b: any) => a.Status.length - b.Status.length,
+      sorter: (a: any, b: any) => a.Status.localeCompare(b.Status),
     },
     {
       title: "Action",
-      render: (_text: string, render: any) => (
-        <div className="d-flex align-items-center justify-content-start gap-2">
+      align: "center" as const,
+      render: (_text: string, record: any) => (
+        <div className="d-flex align-items-center justify-content-center gap-2">
           {/* View Icon */}
           <button
             className="bg-transparent border-0 text-info p-1"
             title="View Details"
             data-bs-toggle="modal"
             data-bs-target="#view_specialization"
-            onClick={() => setViewSpec(render.raw)}
+            onClick={() => setViewSpec(record.raw)}
           >
-            <i className="fa fa-eye fs-16"></i>
+            <i className="ti ti-eye fs-18"></i>
           </button>
 
+          {/* Edit Icon */}
           <button
             className="bg-transparent border-0 text-primary p-1"
             data-bs-toggle="modal"
             data-bs-target="#edit_specialization"
-            onClick={() => setSelectedSpecialization(render.raw)}
+            onClick={() => setSelectedSpecialization(record.raw)}
             title="Edit"
           >
-            <i className="fa fa-edit fs-16"></i>
+            <i className="ti ti-edit fs-18"></i>
           </button>
+
+          {/* Delete Icon */}
           <button
             className="bg-transparent border-0 text-danger p-1"
             data-bs-toggle="modal"
             data-bs-target="#delete_specialization"
-            onClick={() => setSelectedSpecialization(render.raw)}
+            onClick={() => setSelectedSpecialization(record.raw)}
             title="Delete"
           >
-            <i className="fa fa-trash-alt fs-16"></i>
+            <i className="ti ti-trash fs-18"></i>
           </button>
         </div>
       ),
-      sorter: (a: any, b: any) => a.Status.length - b.Status.length,
+      width: 100,
     },
   ];
-  const [searchText, setSearchText] = useState<string>("");
 
-  const handleSearch = (value: string) => {
-    setSearchText(value);
-  };
-  const getModalContainer = () => {
-    const modalElement = document.getElementById("modal-datepicker");
-    return modalElement ? modalElement : document.body; // Fallback to document.body if modalElement is null
-  };
   return (
     <>
-      {/* ========================
-			Start Page Content
-		========================= */}
       <div className="page-wrapper">
-        {/* Start Content */}
         <div className="content">
-          {/* Start Page Header */}
+          {/* Page Header */}
           <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
             <div className="flex-grow-1">
               <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
                 Specializations
                 <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                  Total Specializations : {specializations.length}
+                  Total : {loading ? "" : filteredData.length}
                 </span>
               </h4>
             </div>
-            <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
 
-              {/* Inline Header Filters as Clones */}
+            {/* Filter and Action Buttons */}
+            <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
+              {/* Specialization Filter */}
               <div className="dropdown">
                 <Link
                   to="#"
-                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '160px', minHeight: '38px' }}
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "160px", minHeight: "38px" }}
                   data-bs-toggle="dropdown"
                 >
-                  <span><span className="text-muted">Specialization:</span> All</span>
+                  <span className="text-truncate">
+                    <span className="text-muted">Specialization:</span>{" "}
+                    {filterSpecialization}
+                  </span>
                 </Link>
-                <ul className="dropdown-menu  dropdown-menu-end p-2">
+                <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li>
-                    <Link to="#" className="dropdown-item rounded-1">All</Link>
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterSpecialization("All");
+                      }}
+                    >
+                      All
+                    </Link>
                   </li>
                   {Specialization.map((spec, idx) => (
                     <li key={idx}>
-                      <Link to="#" className="dropdown-item rounded-1">
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterSpecialization(spec.label);
+                        }}
+                      >
                         {spec.label}
                       </Link>
                     </li>
@@ -173,40 +201,41 @@ const Specializations = () => {
                 </ul>
               </div>
 
+              {/* Status Filter */}
               <div className="dropdown">
                 <Link
                   to="#"
-                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '130px', minHeight: '38px' }}
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "130px", minHeight: "38px" }}
                   data-bs-toggle="dropdown"
                 >
-                  <span><span className="text-muted">Date:</span> Select</span>
+                  <span className="text-truncate">
+                    <span className="text-muted">Status:</span> {filterStatus}
+                  </span>
                 </Link>
-                <div className="dropdown-menu dropdown-menu-end p-2">
-                  <DatePicker
-                    format={{ format: "DD-MM-YYYY", type: "mask" }}
-                    getPopupContainer={getModalContainer}
-                    placeholder="DD-MM-YYYY"
-                    suffixIcon={<i className="ti ti-calendar" />}
-                    style={{ width: "100%" }}
-                  />
-                </div>
-              </div>
-
-              <div className="dropdown">
-                <Link
-                  to="#"
-                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between" style={{ width: '120px', minHeight: '38px' }}
-                  data-bs-toggle="dropdown"
-                >
-                  <span><span className="text-muted">Status:</span> All</span>
-                </Link>
-                <ul className="dropdown-menu  dropdown-menu-end p-2">
+                <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li>
-                    <Link to="#" className="dropdown-item rounded-1">All</Link>
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterStatus("All");
+                      }}
+                    >
+                      All
+                    </Link>
                   </li>
                   {StatusActive.map((status, idx) => (
                     <li key={idx}>
-                      <Link to="#" className="dropdown-item rounded-1">
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterStatus(status.label);
+                        }}
+                      >
                         {status.label}
                       </Link>
                     </li>
@@ -214,37 +243,77 @@ const Specializations = () => {
                 </ul>
               </div>
 
-
-
+              {/* Add Specialization Button */}
               <button
                 className="btn btn-primary d-flex align-items-center justify-content-center"
-                style={{ minHeight: '38px', whiteSpace: 'nowrap' }}
+                style={{ minHeight: "38px", whiteSpace: "nowrap" }}
                 data-bs-toggle="modal"
                 data-bs-target="#add_specialization"
+                onClick={() => setSelectedSpecialization(null)}
               >
-                Add New Specialization
-                <i className="fa fa-plus ms-2" />
+                Add Specialization <i className="fa fa-plus ms-2" />
               </button>
             </div>
           </div>
-          {/* End Page Header */}
 
-          <div className="table-responsive">
-            <Datatable
-              columns={columns}
-              dataSource={data}
-              Selection={true}
-              searchText={searchText}
-              onSelectionChange={(keys) => setSelectedIds(keys as string[])}
-            />
-          </div>
+          {/* Error Alert */}
+          {error && (
+            <div className="alert alert-danger d-flex align-items-center justify-content-between mb-3">
+              <span>{error}</span>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => refetch()}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          {/* Table or Empty State */}
+          {loading ? (
+            <div className="text-center py-5">
+              <span className="spinner-border text-primary" role="status" />
+              <p className="text-muted mt-2 mb-0">Loading specializations</p>
+            </div>
+          ) : specializations.length === 0 && !error ? (
+            <div className="text-center py-5 border rounded bg-white">
+              <i className="ti ti-stethoscope fs-1 text-muted d-block mb-2" />
+              <h6 className="fw-bold">No specializations yet</h6>
+              <p className="text-muted mb-3">Add your first specialization.</p>
+              <button
+                className="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#add_specialization"
+                onClick={() => setSelectedSpecialization(null)}
+              >
+                Add Specialization <i className="ti ti-plus ms-2" />
+              </button>
+            </div>
+          ) : (
+            <div className="table-responsive">
+              <Datatable
+                columns={columns}
+                dataSource={data}
+                Selection={true}
+                searchText=""
+                onSelectionChange={(keys) => setSelectedIds(keys as string[])}
+              />
+            </div>
+          )}
+
+          {/* Delete Selected Bar */}
           {selectedIds.length > 0 && (
-            <div className="d-flex justify-content-center mt-auto pt-4 pb-4">
+            <div className="d-flex justify-content-center pt-4 pb-4 sticky-delete-bar">
               <button
                 className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
                 data-bs-toggle="modal"
                 data-bs-target="#delete_specialization"
-                style={{ borderRadius: '8px', minHeight: '42px', fontWeight: 'bold' }}
+                style={{
+                  borderRadius: "8px",
+                  minHeight: "42px",
+                  fontWeight: "bold",
+                }}
               >
                 <i className="ti ti-trash fs-18"></i>
                 Delete Selected ({selectedIds.length})
@@ -252,8 +321,8 @@ const Specializations = () => {
             </div>
           )}
         </div>
-        {/* End Content */}
-        {/* Footer Start */}
+
+        {/* Footer */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
             2025
@@ -263,60 +332,73 @@ const Specializations = () => {
             , All Rights Reserved
           </p>
         </div>
-        {/* Footer End */}
       </div>
-      {/* ========================
-			End Page Content
-		========================= */}
+
       <Modals selectedSpecialization={selectedSpecialization} refetch={refetch} />
 
-      {/* ===== VIEW MODAL ===== */}
+      {/* ===== VIEW SPECIALIZATION MODAL ===== */}
       <div id="view_specialization" className="modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
-            <div className="modal-header bg-info text-white">
-              <h5 className="modal-title fw-bold">View Specialization</h5>
-              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={() => setViewSpec(null)}></button>
+          <div
+            className="modal-content border-0 shadow-lg"
+            style={{ borderRadius: "12px", overflow: "hidden" }}
+          >
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title fw-bold">Specialization Details</h5>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                onClick={() => setViewSpec(null)}
+              ></button>
             </div>
             <div className="modal-body">
               {viewSpec && (
-                <div className="row g-3">
-                  <div className="col-md-12 text-center mb-3">
-                    <div className="avatar avatar-xxl bg-light p-1 rounded-circle shadow-sm mx-auto">
-                      <ImageWithBasePath
-                        src={viewSpec.image?.startsWith("http") || viewSpec.image?.startsWith("/uploads")
-                          ? viewSpec.image
-                          : `assets/img/doctors/${viewSpec.image || "specialization-01.jpg"}`}
-                        alt={viewSpec.name}
-                        className="rounded-circle"
-                      />
-                    </div>
+                <>
+                  <div className="mb-3">
+                    <label className="form-label">
+                      Specialization
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control bg-light"
+                      value={viewSpec.name || ""}
+                      readOnly
+                    />
                   </div>
-                  <div className="col-md-12">
-                    <label className="form-label fw-bold">Specialization Name</label>
-                    <input type="text" className="form-control bg-light" value={viewSpec.name || ""} readOnly />
+                  <div className="mb-3">
+                    <label className="form-label">Description</label>
+                    <textarea
+                      className="form-control bg-light"
+                      rows={3}
+                      value={viewSpec.description || ""}
+                      readOnly
+                    />
                   </div>
-                  <div className="col-md-12">
-                    <label className="form-label fw-bold">Description</label>
-                    <textarea className="form-control bg-light" rows={3} value={viewSpec.description || "No description provided"} readOnly />
+                  <div className="mb-0">
+                    <label className="form-label">
+                      Status
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control bg-light"
+                      value={viewSpec.status || ""}
+                      readOnly
+                    />
                   </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold">No. of Doctors</label>
-                    <input type="text" className="form-control bg-light" value={viewSpec.noOfDoctor || 0} readOnly />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold">Status</label>
-                    <input type="text" className="form-control bg-light" value={viewSpec.status || ""} readOnly />
-                  </div>
-                  <div className="col-md-12">
-                    <label className="form-label fw-bold small text-muted">CREATED ON</label>
-                    <div className="text-dark fw-medium small">{new Date(viewSpec.createdAt).toLocaleDateString("en-GB", { day: '2-digit', month: 'long', year: 'numeric' })}</div>
-                  </div>
-                </div>
+                </>
               )}
             </div>
             <div className="modal-footer border-top pt-3">
-              <button type="button" className="btn btn-primary px-5" data-bs-dismiss="modal" onClick={() => setViewSpec(null)} style={{ borderRadius: '6px' }}>Close</button>
+              <button
+                type="button"
+                className="btn btn-primary px-5"
+                data-bs-dismiss="modal"
+                onClick={() => setViewSpec(null)}
+                style={{ borderRadius: "6px" }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

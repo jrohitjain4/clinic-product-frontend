@@ -127,9 +127,9 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch 
                   <textarea
                     className="form-control"
                     rows={3}
+                    placeholder="Enter Description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Optional description"
                   />
                 </div>
                 <div className="row mb-0">
@@ -210,9 +210,9 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch 
                   <input
                     type="text"
                     className="form-control"
+                    placeholder="Enter Title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Christmas Day"
                     required
                   />
                 </div>
@@ -221,9 +221,9 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch 
                   <textarea
                     className="form-control"
                     rows={3}
+                    placeholder="Enter Description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Optional description"
                   />
                 </div>
                 <div className="row mb-0">

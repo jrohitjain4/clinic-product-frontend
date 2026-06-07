@@ -16,8 +16,11 @@ type AttendanceRecord = {
 export const useAttendance = (month: number, year: number) => {
     const [data, setData] = useState<AttendanceRecord[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchAttendance = useCallback(async () => {
+        setLoading(true);
+        setError(null);
         try {
             const resp = await fetch(apiUrl(`/api/attendance?month=${month}&year=${year}`), {
                 headers: {
@@ -27,9 +30,12 @@ export const useAttendance = (month: number, year: number) => {
             if (resp.ok) {
                 const result = await resp.json();
                 setData(result);
+            } else {
+                setError("Failed to fetch attendance data");
             }
         } catch (e) {
             console.error(e);
+            setError("Error fetching attendance");
         } finally {
             setLoading(false);
         }
@@ -71,5 +77,5 @@ export const useAttendance = (month: number, year: number) => {
         }
     };
 
-    return { data, loading, markAttendance };
+    return { data, loading, error, markAttendance, refetch: fetchAttendance };
 };

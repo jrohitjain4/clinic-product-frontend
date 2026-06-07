@@ -6,6 +6,7 @@ import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
+import ImageWithBasePath from "../../../../core/imageWithBasePath";
 
 interface Department {
   id: string;
@@ -70,6 +71,7 @@ const DesignationList = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       setDesignations(data);
+      setError("");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -106,19 +108,37 @@ const DesignationList = () => {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     setAddError("");
-    if (!addName.trim()) { setAddError("Designation name is required"); return; }
-    if (!addDeptId) { setAddError("Please select a department"); return; }
+    if (!addName.trim()) {
+      setAddError("Designation name is required");
+      return;
+    }
+    if (!addDeptId) {
+      setAddError("Please select a department");
+      return;
+    }
     setAddLoading(true);
     try {
       const res = await fetch(apiUrl("/api/designations"), {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: addName, type: addType, description: addDesc, departmentId: addDeptId }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: addName,
+          type: addType,
+          description: addDesc,
+          departmentId: addDeptId,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       toast.success("Designation added successfully");
-      setAddName(""); setAddType("Staff"); setAddDeptId(""); setAddDesc("");
+      setAddName("");
+      setAddType("Staff");
+      setAddDeptId("");
+      setAddDesc("");
+      setAddError("");
       fetchDesignations();
       document.getElementById("btn-close-add-desig")?.click();
     } catch (err: any) {
@@ -130,26 +150,46 @@ const DesignationList = () => {
   };
 
   const openEdit = (d: Designation) => {
-    setEditId(d.id); setEditName(d.name); setEditType(d.type);
-    setEditDeptId(d.departmentId || ""); setEditDesc(d.description || "");
-    setEditStatus(d.status); setEditError("");
+    setEditId(d.id);
+    setEditName(d.name);
+    setEditType(d.type);
+    setEditDeptId(d.departmentId || "");
+    setEditDesc(d.description || "");
+    setEditStatus(d.status);
+    setEditError("");
   };
 
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     setEditError("");
-    if (!editName.trim()) { setEditError("Designation name is required"); return; }
-    if (!editDeptId) { setEditError("Please select a department"); return; }
+    if (!editName.trim()) {
+      setEditError("Designation name is required");
+      return;
+    }
+    if (!editDeptId) {
+      setEditError("Please select a department");
+      return;
+    }
     setEditLoading(true);
     try {
       const res = await fetch(apiUrl(`/api/designations/${editId}`), {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: editName, type: editType, description: editDesc, departmentId: editDeptId, status: editStatus }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: editName,
+          type: editType,
+          description: editDesc,
+          departmentId: editDeptId,
+          status: editStatus,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       toast.success("Designation updated successfully");
+      setEditError("");
       fetchDesignations();
       document.getElementById("btn-close-edit-desig")?.click();
     } catch (err: any) {
@@ -160,7 +200,10 @@ const DesignationList = () => {
     }
   };
 
-  const openDelete = (d: Designation) => { setDeleteId(d.id); setDeleteName(d.name); };
+  const openDelete = (d: Designation) => {
+    setDeleteId(d.id);
+    setDeleteName(d.name);
+  };
 
   const handleDelete = async () => {
     setDeleteLoading(true);
@@ -171,7 +214,6 @@ const DesignationList = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-
       toast.success("Designation deleted successfully");
       fetchDesignations();
       document.getElementById("btn-close-delete-desig")?.click();
@@ -209,81 +251,125 @@ const DesignationList = () => {
     }
   };
 
-  const getModalContainer = () => document.getElementById("modal-datepicker") || document.body;
+  const getModalContainer = () =>
+    document.getElementById("modal-datepicker") || document.body;
 
   const columns = [
     {
       title: "S.No",
-      render: (_text: any, _record: any, index: number) => index + 1,
+      render: (_text: any, _record: any, index: number) => (
+        <span className="text-dark fw-medium">{index + 1}</span>
+      ),
+      width: 60,
     },
     {
       title: "Designation",
       dataIndex: "name",
-      sorter: (a: Designation, b: Designation) => a.name.localeCompare(b.name),
+      render: (text: string) => (
+        <span className="text-dark fw-medium">{text}</span>
+      ),
+      sorter: (a: Designation, b: Designation) =>
+        a.name.localeCompare(b.name),
     },
     {
       title: "Type",
       dataIndex: "type",
       render: (text: string) => (
-        <span className={`badge border ${text === "Doctor" ? "badge-soft-primary border-primary" : "badge-soft-secondary border-secondary"} px-2 py-1 fs-13 fw-medium`}>
+        <span
+          className={`badge border ${
+            text === "Doctor"
+              ? "badge-soft-primary border-primary"
+              : "badge-soft-secondary border-secondary"
+          } px-2 py-1 fs-13 fw-medium`}
+        >
           {text}
         </span>
       ),
+      sorter: (a: Designation, b: Designation) =>
+        a.type.localeCompare(b.type),
     },
     {
       title: "Department",
       dataIndex: "departmentName",
-      render: (text: string) => text || <span className="text-muted">--</span>,
+      render: (text: string) => (
+        <span className="text-dark">
+          {text || <span className="text-muted">--</span>}
+        </span>
+      ),
+      sorter: (a: Designation, b: Designation) =>
+        (a.departmentName || "").localeCompare(b.departmentName || ""),
     },
     {
       title: "Created Date",
       dataIndex: "createdAt",
-      render: (val: string) => new Date(val).toLocaleDateString("en-GB"),
-      sorter: (a: Designation, b: Designation) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      render: (val: string) => (
+        <span className="text-dark">
+          {new Date(val).toLocaleDateString("en-GB")}
+        </span>
+      ),
+      sorter: (a: Designation, b: Designation) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     },
     {
       title: "Status",
       dataIndex: "status",
       render: (text: string) => (
-        <span className={`badge border ${text === "Active" ? "badge-soft-success border-success" : "badge-soft-danger border-danger"} px-2 py-1 fs-13 fw-medium`}>
+        <span
+          className={`badge border ${
+            text === "Active"
+              ? "badge-soft-success border-success"
+              : "badge-soft-danger border-danger"
+          } px-2 py-1 fs-13 fw-medium`}
+        >
           {text}
         </span>
       ),
+      sorter: (a: Designation, b: Designation) =>
+        a.status.localeCompare(b.status),
     },
     {
       title: "Action",
+      align: "center" as const,
       render: (_: any, record: Designation) => (
-        <div className="d-flex align-items-center justify-content-start gap-2">
+        <div className="d-flex align-items-center justify-content-center gap-2">
           {/* View Icon */}
           <button
+            type="button"
             className="bg-transparent border-0 text-info p-1"
             title="View Details"
             data-bs-toggle="modal"
             data-bs-target="#view_designation"
             onClick={() => setViewDesig(record)}
           >
-            <i className="fa fa-eye fs-16"></i>
+            <i className="ti ti-eye fs-18"></i>
           </button>
+
+          {/* Edit Icon */}
           <button
+            type="button"
             className="bg-transparent border-0 text-primary p-1"
             title="Edit"
             data-bs-toggle="modal"
             data-bs-target="#edit_designation"
             onClick={() => openEdit(record)}
           >
-            <i className="fa fa-edit fs-16"></i>
+            <i className="ti ti-edit fs-18"></i>
           </button>
+
+          {/* Delete Icon */}
           <button
+            type="button"
             className="bg-transparent border-0 text-danger p-1"
             title="Delete"
             data-bs-toggle="modal"
             data-bs-target="#delete_designation"
             onClick={() => openDelete(record)}
           >
-            <i className="fa fa-trash-alt fs-16"></i>
+            <i className="ti ti-trash fs-18"></i>
           </button>
         </div>
       ),
+      width: 100,
     },
   ];
 
@@ -291,20 +377,24 @@ const DesignationList = () => {
     <>
       <div className="page-wrapper">
         <div className="content">
+          {/* Page Header */}
           <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
             <div className="flex-grow-1">
               <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
                 Designation
                 <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                  Total Designations: {filteredData.length}
+                  Total Designations : {loading ? "" : filteredData.length}
                 </span>
               </h4>
             </div>
+
+            {/* Filter and Action Buttons */}
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
+              {/* Date Filter */}
               <DatePicker
                 placeholder="Select Date"
                 className="form-select text-dark text-nowrap"
-                style={{ width: '130px', minHeight: '38px', paddingTop: '7px' }}
+                style={{ width: "150px", minHeight: "38px", paddingTop: "7px" }}
                 format="DD-MM-YYYY"
                 allowClear={true}
                 getPopupContainer={getModalContainer}
@@ -313,74 +403,201 @@ const DesignationList = () => {
                 value={filterDate}
               />
 
-              {selectedIds.length > 0 && (
-                <button
-                  className="btn btn-danger d-flex align-items-center justify-content-center"
-                  style={{ minHeight: '38px', whiteSpace: 'nowrap' }}
-                  onClick={handleBulkDelete}
-                  disabled={deleteLoading}
-                >
-                  {deleteLoading ? (
-                    <i className="fa fa-spinner fa-spin me-2" />
-                  ) : (
-                    <i className="ti ti-trash me-2" />
-                  )}
-                  Delete Selected ({selectedIds.length})
-                </button>
-              )}
-
+              {/* Type Filter */}
               <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap" style={{ width: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
-                  <span className="text-truncate"><span className="text-muted">Type:</span> {filterType}</span>
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "120px", minHeight: "38px" }}
+                  data-bs-toggle="dropdown"
+                >
+                  <span className="text-truncate">
+                    <span className="text-muted">Type:</span> {filterType}
+                  </span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item rounded-1" onClick={() => setFilterType("All")}>All</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1" onClick={() => setFilterType("Doctor")}>Doctor</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1" onClick={() => setFilterType("Staff")}>Staff</Link></li>
+                  <li>
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterType("All");
+                      }}
+                    >
+                      All
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterType("Doctor");
+                      }}
+                    >
+                      Doctor
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterType("Staff");
+                      }}
+                    >
+                      Staff
+                    </Link>
+                  </li>
                 </ul>
               </div>
 
+              {/* Department Filter */}
               <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap" style={{ width: '160px', minHeight: '38px' }} data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                  <span className="text-truncate"><span className="text-muted">Department:</span> {filterDept}</span>
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "160px", minHeight: "38px" }}
+                  data-bs-toggle="dropdown"
+                  data-bs-auto-close="outside"
+                >
+                  <span className="text-truncate">
+                    <span className="text-muted">Department:</span> {filterDept}
+                  </span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2" style={{ minWidth: "180px" }}>
-                  <li><Link to="#" className="dropdown-item rounded-1" onClick={() => setFilterDept("All")}>All</Link></li>
-                  {departments.map(d => (
+                  <li>
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterDept("All");
+                      }}
+                    >
+                      All
+                    </Link>
+                  </li>
+                  {departments.map((d) => (
                     <li key={d.id}>
-                      <Link to="#" className="dropdown-item rounded-1" onClick={() => setFilterDept(d.name)}>{d.name}</Link>
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterDept(d.name);
+                        }}
+                      >
+                        {d.name}
+                      </Link>
                     </li>
                   ))}
                 </ul>
               </div>
 
+              {/* Status Filter */}
               <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap" style={{ width: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
-                  <span className="text-truncate"><span className="text-muted">Status:</span> {filterStatus}</span>
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "130px", minHeight: "38px" }}
+                  data-bs-toggle="dropdown"
+                >
+                  <span className="text-truncate">
+                    <span className="text-muted">Status:</span> {filterStatus}
+                  </span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item rounded-1" onClick={() => setFilterStatus("All")}>All</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1" onClick={() => setFilterStatus("Active")}>Active</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1" onClick={() => setFilterStatus("Inactive")}>Inactive</Link></li>
+                  <li>
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterStatus("All");
+                      }}
+                    >
+                      All
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterStatus("Active");
+                      }}
+                    >
+                      Active
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterStatus("Inactive");
+                      }}
+                    >
+                      Inactive
+                    </Link>
+                  </li>
                 </ul>
               </div>
 
+              {/* Add Designation Button */}
               <button
                 className="btn btn-primary d-flex align-items-center justify-content-center"
-                style={{ minHeight: '38px', whiteSpace: 'nowrap' }}
+                style={{ minHeight: "38px", whiteSpace: "nowrap" }}
                 data-bs-toggle="modal"
                 data-bs-target="#add_designation"
               >
-                Add New Designation <i className="fa fa-plus ms-2" />
+                Add Designation <i className="fa fa-plus ms-2" />
               </button>
             </div>
           </div>
 
+          {/* Error Alert */}
+          {error && (
+            <div className="alert alert-danger d-flex align-items-center justify-content-between mb-3">
+              <span>{error}</span>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => fetchDesignations()}
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
-          <div className="table-responsive">
-            {loading ? (
-              <div className="text-center py-5"><div className="spinner-border text-primary" /></div>
-            ) : (
+          {/* Table or Empty State */}
+          {loading ? (
+            <div className="text-center py-5">
+              <span className="spinner-border text-primary" role="status" />
+              <p className="text-muted mt-2 mb-0">Loading designations</p>
+            </div>
+          ) : designations.length === 0 && !error ? (
+            <div className="text-center py-5 border rounded bg-white">
+              <i className="ti ti-briefcase fs-1 text-muted d-block mb-2" />
+              <h6 className="fw-bold">No designations yet</h6>
+              <p className="text-muted mb-3">Add your first designation.</p>
+              <button
+                type="button"
+                className="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#add_designation"
+              >
+                Add Designation <i className="ti ti-plus ms-2" />
+              </button>
+            </div>
+          ) : (
+            <div className="table-responsive">
               <Datatable
                 columns={columns}
                 dataSource={filteredData}
@@ -388,16 +605,22 @@ const DesignationList = () => {
                 searchText=""
                 onSelectionChange={(keys) => setSelectedIds(keys as string[])}
               />
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Delete Selected Bar */}
           {selectedIds.length > 0 && (
-            <div className="d-flex justify-content-center mt-auto pt-4 pb-4">
+            <div className="d-flex justify-content-center pt-4 pb-4 sticky-delete-bar">
               <button
                 className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
                 data-bs-toggle="modal"
                 data-bs-target="#delete_designation"
                 onClick={() => setDeleteId("")}
-                style={{ borderRadius: '8px', minHeight: '42px', fontWeight: 'bold' }}
+                style={{
+                  borderRadius: "8px",
+                  minHeight: "42px",
+                  fontWeight: "bold",
+                }}
               >
                 <i className="ti ti-trash fs-18"></i>
                 Delete Selected ({selectedIds.length})
@@ -405,59 +628,136 @@ const DesignationList = () => {
             </div>
           )}
         </div>
+
+        {/* Footer */}
         <div className="footer text-center bg-white p-2 border-top">
-          <p className="text-dark mb-0">2025  <Link to="#" className="link-primary">Docyari</Link>, All Rights Reserved</p>
+          <p className="text-dark mb-0">
+            2025
+            <Link to="#" className="link-primary">
+              Docyari
+            </Link>
+            , All Rights Reserved
+          </p>
         </div>
       </div>
 
       {/* ===== ADD MODAL ===== */}
       <div id="add_designation" className="modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+          <div
+            className="modal-content border-0 shadow-lg"
+            style={{ borderRadius: "12px", overflow: "hidden" }}
+          >
             <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title">Add New Designation</h5>
-              <button id="btn-close-add-desig" type="button" className="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+              <h5 className="modal-title fw-bold">Add New Designation</h5>
+              <button
+                id="btn-close-add-desig"
+                type="button"
+                className="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+              ></button>
             </div>
             <div className="modal-body">
               <form onSubmit={handleAdd}>
-                {addError && <div className="alert alert-danger py-2 fs-13">{addError}</div>}
+                {addError && (
+                  <div className="alert alert-danger py-2 fs-13">{addError}</div>
+                )}
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Type <span className="text-danger ms-1">*</span></label>
+                  <label className="form-label fw-semibold">
+                    Type <span className="text-danger ms-1">*</span>
+                  </label>
                   <div className="d-flex align-items-center gap-3">
                     <div className="form-check d-flex align-items-center">
-                      <input className="form-check-input me-2" type="radio" name="addType" id="add-type-staff"
-                        checked={addType === "Staff"} onChange={() => setAddType("Staff")} />
-                      <label className="form-check-label fs-13" htmlFor="add-type-staff">Staff</label>
+                      <input
+                        className="form-check-input me-2"
+                        type="radio"
+                        name="addType"
+                        id="add-type-staff"
+                        checked={addType === "Staff"}
+                        onChange={() => setAddType("Staff")}
+                      />
+                      <label className="form-check-label fs-13" htmlFor="add-type-staff">
+                        Staff
+                      </label>
                     </div>
                     <div className="form-check d-flex align-items-center">
-                      <input className="form-check-input me-2" type="radio" name="addType" id="add-type-doctor"
-                        checked={addType === "Doctor"} onChange={() => setAddType("Doctor")} />
-                      <label className="form-check-label fs-13" htmlFor="add-type-doctor">Doctor</label>
+                      <input
+                        className="form-check-input me-2"
+                        type="radio"
+                        name="addType"
+                        id="add-type-doctor"
+                        checked={addType === "Doctor"}
+                        onChange={() => setAddType("Doctor")}
+                      />
+                      <label className="form-check-label fs-13" htmlFor="add-type-doctor">
+                        Doctor
+                      </label>
                     </div>
                   </div>
                 </div>
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Designation Name <span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" value={addName}
-                    onChange={e => setAddName(e.target.value)} placeholder="e.g. Senior Nurse" />
+                  <label className="form-label fw-semibold">
+                    Designation Name <span className="text-danger ms-1">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={addName}
+                    onChange={(e) => setAddName(e.target.value)}
+                    placeholder="e.g. Senior Nurse"
+                  />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Department <span className="text-danger ms-1">*</span></label>
-                  <select className="form-select" value={addDeptId} onChange={e => setAddDeptId(e.target.value)}>
+                  <label className="form-label fw-semibold">
+                    Department <span className="text-danger ms-1">*</span>
+                  </label>
+                  <select
+                    className="form-select"
+                    value={addDeptId}
+                    onChange={(e) => setAddDeptId(e.target.value)}
+                  >
                     <option value="">-- Select Department --</option>
-                    {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Description</label>
-                  <textarea className="form-control" rows={3} value={addDesc}
-                    onChange={e => setAddDesc(e.target.value)} placeholder="Optional description" />
+                  <label className="form-label fw-semibold">Description</label>
+                  <textarea
+                    className="form-control"
+                    rows={3}
+                    value={addDesc}
+                    onChange={(e) => setAddDesc(e.target.value)}
+                    placeholder="Optional description"
+                  />
                 </div>
-                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                  <button type="button" className="btn btn-light px-4 shadow-sm" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Cancel</button>
-                  <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" disabled={addLoading} style={{ borderRadius: '6px' }}>
-                    {addLoading && <i className="fa fa-spinner fa-spin me-2" />}
-                    {addLoading ? 'Saving...' : 'Add Designation'}
+                <div className="modal-footer d-flex align-items-center gap-2 pt-3 border-top">
+                  <button
+                    type="button"
+                    className="btn btn-light border"
+                    data-bs-dismiss="modal"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={addLoading}
+                  >
+                    {addLoading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <i className="ti ti-check me-2" />
+                        Add Designation
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
@@ -469,26 +769,54 @@ const DesignationList = () => {
       {/* ===== EDIT MODAL ===== */}
       <div id="edit_designation" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+          <div
+            className="modal-content border-0 shadow-lg"
+            style={{ borderRadius: "12px", overflow: "hidden" }}
+          >
             <div className="modal-header bg-primary text-white">
-              <h4 className="modal-title fw-bold">Edit Designation</h4>
-              <button id="btn-close-edit-desig" type="button" className="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+              <h5 className="modal-title fw-bold">Edit Designation</h5>
+              <button
+                id="btn-close-edit-desig"
+                type="button"
+                className="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+              ></button>
             </div>
             <form onSubmit={handleEdit}>
               <div className="modal-body">
-                {editError && <div className="alert alert-danger py-2 fs-13">{editError}</div>}
+                {editError && (
+                  <div className="alert alert-danger py-2 fs-13">{editError}</div>
+                )}
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Type <span className="text-danger ms-1">*</span></label>
+                  <label className="form-label fw-semibold">
+                    Type <span className="text-danger ms-1">*</span>
+                  </label>
                   <div className="d-flex align-items-center gap-3">
                     <div className="form-check d-flex align-items-center">
-                      <input className="form-check-input me-2" type="radio" name="editType" id="edit-type-staff"
-                        checked={editType === "Staff"} onChange={() => setEditType("Staff")} />
-                      <label className="form-check-label fs-13" htmlFor="edit-type-staff">Staff</label>
+                      <input
+                        className="form-check-input me-2"
+                        type="radio"
+                        name="editType"
+                        id="edit-type-staff"
+                        checked={editType === "Staff"}
+                        onChange={() => setEditType("Staff")}
+                      />
+                      <label className="form-check-label fs-13" htmlFor="edit-type-staff">
+                        Staff
+                      </label>
                     </div>
                     <div className="form-check d-flex align-items-center">
-                      <input className="form-check-input me-2" type="radio" name="editType" id="edit-type-doctor"
-                        checked={editType === "Doctor"} onChange={() => setEditType("Doctor")} />
-                      <label className="form-check-label fs-13" htmlFor="edit-type-doctor">Doctor</label>
+                      <input
+                        className="form-check-input me-2"
+                        type="radio"
+                        name="editType"
+                        id="edit-type-doctor"
+                        checked={editType === "Doctor"}
+                        onChange={() => setEditType("Doctor")}
+                      />
+                      <label className="form-check-label fs-13" htmlFor="edit-type-doctor">
+                        Doctor
+                      </label>
                     </div>
                   </div>
                 </div>
@@ -497,10 +825,20 @@ const DesignationList = () => {
                   <input type="text" className="form-control" value={editName} onChange={e => setEditName(e.target.value)} placeholder="e.g. Senior Nurse" />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Department <span className="text-danger ms-1">*</span></label>
-                  <select className="form-select" value={editDeptId} onChange={e => setEditDeptId(e.target.value)}>
+                  <label className="form-label fw-semibold">
+                    Department <span className="text-danger ms-1">*</span>
+                  </label>
+                  <select
+                    className="form-select"
+                    value={editDeptId}
+                    onChange={(e) => setEditDeptId(e.target.value)}
+                  >
                     <option value="">-- Select Department --</option>
-                    {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="mb-3">
@@ -508,17 +846,41 @@ const DesignationList = () => {
                   <textarea className="form-control" rows={3} value={editDesc} onChange={e => setEditDesc(e.target.value)} placeholder="Optional description" />
                 </div>
                 <div className="mb-0">
-                  <label className="form-label fw-bold">Status</label>
-                  <select className="form-select" value={editStatus} onChange={e => setEditStatus(e.target.value)}>
+                  <label className="form-label fw-semibold">Status</label>
+                  <select
+                    className="form-select"
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                  >
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                   </select>
                 </div>
               </div>
-              <div className="modal-footer d-flex align-items-center gap-2 border-top">
-                <button type="button" className="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" className="btn btn-primary px-4" disabled={editLoading}>
-                  {editLoading ? <><span className="spinner-border spinner-border-sm me-1" />Saving...</> : "Save Changes"}
+              <div className="modal-footer d-flex align-items-center gap-2 pt-3 border-top">
+                <button
+                  type="button"
+                  className="btn btn-light border"
+                  data-bs-dismiss="modal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={editLoading}
+                >
+                  {editLoading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <i className="ti ti-check me-2" />
+                      Save Changes
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -529,19 +891,56 @@ const DesignationList = () => {
       {/* ===== DELETE MODAL ===== */}
       <div className="modal fade" id="delete_designation">
         <div className="modal-dialog modal-dialog-centered modal-sm">
-          <div className="modal-content">
-            <div className="modal-body text-center py-4">
+          <div
+            className="modal-content border-0 shadow-lg"
+            style={{ borderRadius: "12px", overflow: "hidden" }}
+          >
+            <div className="modal-body text-center position-relative z-1 pt-5 pb-5">
+              <ImageWithBasePath
+                src="assets/img/bg/delete-modal-bg-01.png"
+                alt=""
+                className="img-fluid position-absolute top-0 start-0 z-n1"
+              />
+              <ImageWithBasePath
+                src="assets/img/bg/delete-modal-bg-02.png"
+                alt=""
+                className="img-fluid position-absolute bottom-0 end-0 z-n1"
+              />
               <div className="mb-3">
-                <span className="avatar bg-danger rounded-circle d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px', margin: '0 auto' }}>
-                  <i className="ti ti-trash fs-24 text-white" />
+                <span className="avatar avatar-lg bg-danger text-white">
+                  <i className="ti ti-trash fs-24"></i>
                 </span>
               </div>
-              <h5 className="fw-bold mb-1">Delete Designation</h5>
-              <p className="mb-3 text-muted">Are you sure you want to delete <strong>{deleteName}</strong>?</p>
+              <h5 className="fw-bold mb-2">Delete Designation</h5>
+              <p className="text-muted mb-4">
+                Are you sure you want to delete <strong>{deleteName}</strong>?
+              </p>
               <div className="d-flex justify-content-center gap-2">
-                <button id="btn-close-delete-desig" type="button" className="btn btn-light px-3" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" className="btn btn-danger px-3" onClick={handleDelete} disabled={deleteLoading}>
-                  {deleteLoading ? "Deleting..." : "Yes, Delete"}
+                <button
+                  id="btn-close-delete-desig"
+                  type="button"
+                  className="btn btn-light position-relative z-1 px-4"
+                  data-bs-dismiss="modal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger position-relative z-1 px-4"
+                  onClick={handleDelete}
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <i className="ti ti-trash me-2" />
+                      Yes, Delete
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -551,44 +950,104 @@ const DesignationList = () => {
 
       {/* ===== VIEW MODAL ===== */}
       <div id="view_designation" className="modal fade" role="dialog">
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+        <div className="modal-dialog modal-dialog-centered modal-lg">
+          <div
+            className="modal-content border-0 shadow-lg"
+            style={{ borderRadius: "12px", overflow: "hidden" }}
+          >
             <div className="modal-header bg-info text-white">
               <h5 className="modal-title fw-bold">View Designation</h5>
-              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={() => setViewDesig(null)}></button>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                onClick={() => setViewDesig(null)}
+              ></button>
             </div>
             <div className="modal-body">
               {viewDesig && (
                 <div className="row g-3">
                   <div className="col-md-12">
-                    <label className="form-label fw-bold">Designation Name</label>
-                    <input type="text" className="form-control bg-light" value={viewDesig.name || ""} readOnly />
-                  </div>
-                  <div className="col-md-12">
-                    <label className="form-label fw-bold">Department</label>
-                    <input type="text" className="form-control bg-light" value={viewDesig.departmentName || "--"} readOnly />
-                  </div>
-                  <div className="col-md-12">
-                    <label className="form-label fw-bold">Type</label>
-                    <input type="text" className="form-control bg-light" value={viewDesig.type || ""} readOnly />
-                  </div>
-                  <div className="col-md-12">
-                    <label className="form-label fw-bold">Description</label>
-                    <textarea className="form-control bg-light" rows={3} value={viewDesig.description || "No description provided"} readOnly />
+                    <label className="form-label fw-bold small text-uppercase text-muted">
+                      Designation Name
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control bg-light"
+                      value={viewDesig.name || ""}
+                      readOnly
+                    />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label fw-bold">Status</label>
-                    <input type="text" className="form-control bg-light" value={viewDesig.status || ""} readOnly />
+                    <label className="form-label fw-bold small text-uppercase text-muted">
+                      Type
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control bg-light"
+                      value={viewDesig.type || ""}
+                      readOnly
+                    />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label fw-bold">Created On</label>
-                    <input type="text" className="form-control bg-light" value={new Date(viewDesig.createdAt).toLocaleDateString("en-GB")} readOnly />
+                    <label className="form-label fw-bold small text-uppercase text-muted">
+                      Department
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control bg-light"
+                      value={viewDesig.departmentName || "--"}
+                      readOnly
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">
+                      Status
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control bg-light"
+                      value={viewDesig.status || ""}
+                      readOnly
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">
+                      Created On
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control bg-light"
+                      value={new Date(viewDesig.createdAt).toLocaleDateString(
+                        "en-GB"
+                      )}
+                      readOnly
+                    />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label fw-bold small text-uppercase text-muted">
+                      Description
+                    </label>
+                    <textarea
+                      className="form-control bg-light"
+                      rows={3}
+                      value={viewDesig.description || "No description provided"}
+                      readOnly
+                    />
                   </div>
                 </div>
               )}
             </div>
             <div className="modal-footer border-top pt-3">
-              <button type="button" className="btn btn-primary px-5" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Close</button>
+              <button
+                type="button"
+                className="btn btn-primary px-5"
+                data-bs-dismiss="modal"
+                onClick={() => setViewDesig(null)}
+                style={{ borderRadius: "6px" }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

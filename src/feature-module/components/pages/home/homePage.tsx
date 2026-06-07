@@ -1,63 +1,64 @@
-import { Link } from "react-router";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { all_routes } from "../../../routes/all_routes";
 import FooterFront from "./FooterFront";
 import FloatingActions from "./FloatingActions";
 import NavbarFront from "./NavbarFront";
+import { DemoBookingModal } from "./DemoBookingModal";
+import CtaBanner from "./CtaBanner";
 import "./homePage.scss";
 
+const ABOUT_ICONS = [
+  { icon: "ti ti-file-text", name: "Patient Records" },
+  { icon: "ti ti-calendar", name: "Appointment Scheduling" },
+  { icon: "ti ti-users", name: "Doctor Management" },
+  { icon: "ti ti-briefcase", name: "HR & Payroll" },
+  { icon: "ti ti-wallet", name: "Accounts & Finance" },
+  { icon: "ti ti-box", name: "Asset Tracking" },
+];
+
 const MODULES = [
-  { icon: "ti ti-users", name: "Patient\nManagement", desc: "Manage records, history, documents and patient profiles." },
-  { icon: "ti ti-calendar-event", name: "Appointment\nManagement", desc: "Schedule appointments, manage queues, and reduce no-shows." },
-  { icon: "ti ti-stethoscope", name: "Doctor\nManagement", desc: "Manage doctor profiles, schedules, and consultation fees." },
-  { icon: "ti ti-report-money", name: "Accounts &\nFinance", desc: "Track income, expenses, invoices and payment transactions." },
-  { icon: "ti ti-id-badge", name: "HRM", desc: "Manage attendance, leaves, payroll and employee performance." },
-  { icon: "ti ti-user-check", name: "Staff\nManagement", desc: "Organise staff information, roles and responsibilities." },
+  { icon: "ti ti-users", name: "Patient Management", desc: "Manage records, history, documents and patient profiles." },
+  { icon: "ti ti-calendar-event", name: "Appointment Management", desc: "Schedule appointments, manage queues, and reduce no-shows." },
+  { icon: "ti ti-user", name: "Doctor Management", desc: "Manage doctor profiles, schedules, and consultation fees." },
+  { icon: "ti ti-currency-rupee", name: "Accounts & Finance", desc: "Track income, expenses, invoices and payment transactions." },
+  { icon: "ti ti-users", name: "HRM", desc: "Manage attendance, leaves, payroll and employee performance." },
+  { icon: "ti ti-users-group", name: "Staff Management", desc: "Organise staff information, roles and responsibilities." },
 ];
 
 const STEPS = [
   { no: "01", icon: "ti ti-building-hospital", title: "Create Your Clinic", desc: "Set up clinic details and departments." },
   { no: "02", icon: "ti ti-user-plus", title: "Add Doctors & Staff", desc: "Manage doctors, schedules, and employees." },
-  { no: "03", icon: "ti ti-calendar-plus", title: "Manage Appointments", desc: "Start accepting and organising appointments." },
+  { no: "03", icon: "ti ti-calendar-plus", title: "Manage Appointments", desc: "Start accepting and organizing appointments." },
   { no: "04", icon: "ti ti-chart-arrows", title: "Grow Your Practice", desc: "Track performance and improve operations." },
 ];
 
 const WHY = [
   { icon: "ti ti-layout-dashboard", title: "Centralized Management", desc: "Manage everything from a single dashboard." },
   { icon: "ti ti-clock", title: "Save Time", desc: "Automate tasks and reduce manual paperwork." },
-  { icon: "ti ti-heart-handshake", title: "Improve Patient Experience", desc: "Deliver faster and more organised services." },
+  { icon: "ti ti-heart-handshake", title: "Improve Patient Experience", desc: "Deliver faster and more organized services." },
   { icon: "ti ti-shield-lock", title: "Secure & Reliable", desc: "Advanced data protection and role-based access." },
-  { icon: "ti ti-chart-arrows", title: "Scalable Platform", desc: "Suitable for both small clinics and large healthcare centres." },
+  { icon: "ti ti-chart-arrows", title: "Scalable Platform", desc: "Suitable for both small clinics and large healthcare centers." },
   { icon: "ti ti-device-mobile", title: "Easy To Use", desc: "Simple interface for doctors, receptionists, and admins." },
 ];
 
 const FAQS = [
-  { q: "Is DocYori suitable for small clinics?" },
-  { q: "Can I manage multiple doctors?" },
-  { q: "Does DocYori include payroll management?" },
-  { q: "Can patients book appointments online?" },
-  { q: "Is training provided?" },
-  { q: "Is my clinic data secure?" },
+  { q: "Is DocYori suitable for small clinics?", a: "Absolutely! DocYori is designed for clinics of all sizes, from solo practitioners to large healthcare centers." },
+  { q: "Can I manage multiple doctors?", a: "Yes, you can easily add, manage, and schedule multiple doctors and staff members from the single dashboard." },
+  { q: "Does DocYori include payroll management?", a: "Yes, our HR & Payroll module helps you manage employee attendance, leaves, and salary processing seamlessly." },
+  { q: "Can patients book appointments online?", a: "Yes, patients can book appointments directly through your clinic's landing page provided by DocYori." },
+  { q: "Is training provided?", a: "We provide comprehensive video tutorials, documentation, and dedicated onboarding support to help you get started." },
+  { q: "Is my clinic data secure?", a: "Security is our top priority. DocYori uses enterprise-grade encryption to protect your sensitive patient data." },
 ];
 
 const TESTIMONIALS = [
-  { quote: "DocYori has transformed the way we manage appointments. It is very efficient, and significantly reduced our administration workload.", name: "Dr. Anita Verma", role: "Clinic Owner", img: "https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=80" },
-  { quote: "Managing doctors, staff, and finances is so effortless. The software is simple, professional and perfectly suited for modern clinics.", name: "Dr. Priya Sharma", role: "Medical Director", img: "https://images.pexels.com/photos/5214949/pexels-photo-5214949.jpeg?auto=compress&cs=tinysrgb&w=80" },
-  { quote: "Excellent software that has helped us scale from 1 to 4 branches without any chaos. Customer support is outstanding.", name: "Dr. Rahul Mehta", role: "Senior Doctor", img: "https://images.pexels.com/photos/4173251/pexels-photo-4173251.jpeg?auto=compress&cs=tinysrgb&w=80" },
+  { quote: "DocYori has transformed the way we manage appointments and patient records. It is very efficient.", name: "Dr. Anita Verma", role: "Clinic Owner", img: "https://images.pexels.com/photos/5452293/pexels-photo-5452293.jpeg?auto=compress&cs=tinysrgb&w=80" },
+  { quote: "Managing doctors, staff, and finances is now effortless. Everything is available in one place.", name: "Dr. Priya Sharma", role: "Dental Specialist", img: "https://images.pexels.com/photos/5214949/pexels-photo-5214949.jpeg?auto=compress&cs=tinysrgb&w=80" },
+  { quote: "The software is simple, professional, and perfectly suited for modern clinics.", name: "Dr. Rahul Mehta", role: "Physiotherapist", img: "https://images.pexels.com/photos/4173251/pexels-photo-4173251.jpeg?auto=compress&cs=tinysrgb&w=80" },
 ];
-
-const HRM_FEATURES = ["Staffs", "Departments", "Designations", "Attendance", "Leaves", "Holidays", "Payroll", "Appraisals", "To Do", "Notes"];
-const CLINIC_FEATURES = ["Clinic", "Services & Products", "Doctors", "Specializations", "Patients", "Assets", "Appointments"];
-
-const APPTS = [
-  { time: "09:30 AM", name: "John Doe", type: "General Consultation" },
-  { time: "10:00 AM", name: "Priya Sharma", type: "Dental Checkup" },
-  { time: "10:30 AM", name: "Rahul Verma", type: "Follow Up" },
-  { time: "11:00 AM", name: "Ananya Singh", type: "General Consultation" },
-];
-
-import { DemoBookingModal } from "./DemoBookingModal";
 
 const HomePage = () => {
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   return (
     <div className="dy-landing">
@@ -65,163 +66,162 @@ const HomePage = () => {
       <NavbarFront />
 
       {/* ── HERO ───────────────────────────────── */}
-      <section className="dy-hero">
-        <div className="dy-hero-wrap">
-          {/* LEFT */}
-          {/* LEFT */}
-          <div className="dy-hero-left" style={{ paddingRight: '2rem' }}>
-            <div className="dy-hero-tag" style={{ background: '#eef2ff', color: '#4338ca', padding: '6px 16px', borderRadius: '50px', fontSize: '12px', fontWeight: 700, display: 'inline-block', marginBottom: '20px', letterSpacing: '1px' }}>ABOUT DOCYORI</div>
-            <h1 style={{ color: '#0f172a', fontWeight: 800, fontSize: '3.5rem', lineHeight: 1.2, marginBottom: '20px' }}>
-              About Us<br />
-              <span style={{ color: '#0f172a' }}>Empowering Clinics</span><br />
-              <span style={{ color: '#0f172a' }}>For A </span><span style={{ background: 'linear-gradient(90deg, #0ea5e9, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Better Tomorrow</span>
-            </h1>
-            <p style={{ color: '#64748b', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '30px', maxWidth: '500px' }}>
-              DocYori is a modern clinic management software built to simplify healthcare operations and help clinics deliver smarter care and better health.
-            </p>
-            <div className="dy-hero-btns" style={{ display: 'flex', gap: '15px' }}>
-              <Link to={all_routes.registerbasic} className="hero-btn-solid" style={{ background: '#2563eb', color: '#fff', padding: '12px 28px', borderRadius: '8px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', border: 'none' }}>
-                Start Free Trial <i className="ti ti-arrow-right" />
-              </Link>
-              <Link to="#demo" className="hero-btn-outline" style={{ background: '#fff', color: '#0ea5e9', border: '1px solid #0ea5e9', padding: '12px 28px', borderRadius: '8px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-                Book Demo <i className="ti ti-player-play" style={{ color: '#0ea5e9' }} />
-              </Link>
-            </div>
-          </div>
+      <section className="dy-hero position-relative" style={{ padding: '2.5rem 0 10rem 0', background: 'radial-gradient(circle at 0% 100%, #e0f2fe 0%, #f8fafc 60%, #ffffff 100%)', overflow: 'hidden' }}>
+        
+        {/* Bottom Curve SVG */}
+        <div style={{ position: 'absolute', bottom: '-2px', left: 0, width: '100%', overflow: 'hidden', lineHeight: 0, zIndex: 0 }}>
+          <svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block', width: '100%', height: 'auto', minHeight: '150px' }}>
+            <defs>
+              <pattern id="dyDots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="1.5" fill="#94a3b8" opacity="0.4"/>
+              </pattern>
+            </defs>
+            <rect x="0" y="100" width="250" height="200" fill="url(#dyDots)" />
+            <path fill="#e0f2fe" fillOpacity="0.8" d="M0,160L80,176C160,192,320,224,480,213.3C640,203,800,149,960,138.7C1120,128,1280,160,1360,176L1440,192L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
+            <path fill="#ffffff" fillOpacity="1" d="M0,224L80,234.7C160,245,320,267,480,250.7C640,235,800,181,960,149.3C1120,117,1280,107,1360,101.3L1440,96L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
+          </svg>
+        </div>
 
-          {/* RIGHT — Dashboard Mockup */}
-          <div className="dy-hero-right" style={{ position: 'relative' }}>
-            <img src="/hero-image.png" alt="DocYori Dashboard Mockup" style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '16px' }} />
-            
-            {/* Vertical Floating Cards */}
-            <div style={{ position: 'absolute', top: '10%', right: '-30px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <div className="container" style={{ position: 'relative', zIndex: 2, maxWidth: '1320px' }}>
+          <div className="row align-items-center">
+            {/* LEFT */}
+            <div className="col-lg-6 mb-5 mb-lg-0 pe-lg-5">
+              <div className="dy-hero-tag" style={{ background: '#e0f2fe', color: '#0284c7', padding: '6px 16px', borderRadius: '50px', fontSize: '12px', fontWeight: 700, display: 'inline-block', marginBottom: '20px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                SMART CLINIC MANAGEMENT SOFTWARE
+              </div>
               
-              <div style={{ background: '#fff', padding: '15px 25px', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '15px', minWidth: '220px' }}>
-                <div style={{ color: '#3b82f6' }}><i className="ti ti-building-hospital fs-24" /></div>
-                <div>
-                  <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Clinics Onboarded</div>
-                  <div style={{ fontSize: '20px', color: '#0f172a', fontWeight: 800 }}>500+</div>
-                </div>
+              <h1 style={{ color: '#0f172a', fontWeight: 800, fontSize: '3.2rem', lineHeight: 1.25, marginBottom: '20px', letterSpacing: '-1px' }}>
+                Manage Your Entire Clinic<br />
+                From One <span style={{ color: '#0ea5e9' }}>Powerful Platform</span>
+              </h1>
+              
+              <p className="fs-15 lh-lg" style={{ color: '#334155', marginBottom: '25px', maxWidth: '540px' }}>
+                DocYori helps healthcare providers manage patients, appointments, doctors, staff, payroll, and finances while delivering a seamless patient experience.
+              </p>
+              
+              <div className="d-flex flex-wrap gap-3 mb-4">
+                <Link to={all_routes.registerbasic} className="btn btn-primary d-inline-flex align-items-center justify-content-center" style={{ padding: '12px 28px', fontSize: '16px', fontWeight: 600, borderRadius: '8px' }}>
+                  Start Free Trial <i className="ti ti-arrow-right ms-2" />
+                </Link>
+                <Link to="#demo" className="btn btn-outline-info d-inline-flex align-items-center justify-content-center bg-white" style={{ padding: '12px 28px', fontSize: '16px', fontWeight: 600, borderRadius: '8px', border: '1px solid #0ea5e9', color: '#0ea5e9' }}>
+                  Book Live Demo <i className="ti ti-player-play ms-2" />
+                </Link>
               </div>
 
-              <div style={{ background: '#fff', padding: '15px 25px', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '15px', minWidth: '220px' }}>
-                <div style={{ color: '#3b82f6' }}><i className="ti ti-users fs-24" /></div>
-                <div>
-                  <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Patients Managed</div>
-                  <div style={{ fontSize: '20px', color: '#0f172a', fontWeight: 800 }}>50,000+</div>
+              {/* Features line */}
+              <div className="d-flex align-items-center gap-3 flex-wrap mt-2">
+                <div className="d-flex align-items-center gap-2 fs-13 fw-bold text-secondary">
+                  <i className="ti ti-circle-check fs-18 text-info" /> Easy Setup
+                </div>
+                <div className="d-flex align-items-center gap-2 fs-13 fw-bold text-secondary">
+                  <i className="ti ti-shield-check fs-18 text-success" /> Secure Data
+                </div>
+                <div className="d-flex align-items-center gap-2 fs-13 fw-bold text-secondary">
+                  <i className="ti ti-users fs-18 text-primary" /> Multi-Doctor Support
+                </div>
+                <div className="d-flex align-items-center gap-2 fs-13 fw-bold text-secondary">
+                  <i className="ti ti-cloud fs-18 text-info" /> Cloud Based
                 </div>
               </div>
+            </div>
 
-              <div style={{ background: '#fff', padding: '15px 25px', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '15px', minWidth: '220px' }}>
-                <div style={{ color: '#3b82f6' }}><i className="ti ti-calendar-event fs-24" /></div>
-                <div>
-                  <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Appointments</div>
-                  <div style={{ fontSize: '20px', color: '#0f172a', fontWeight: 800 }}>1,00,000+</div>
+            {/* RIGHT */}
+            <div className="col-lg-6 position-relative">
+              <img src="/hero-image.png" alt="Dashboard Mockup" className="w-100 h-auto rounded-4 d-block bg-white" style={{ border: '2px solid #e2e8f0', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.2)' }} />
+              
+              {/* Horizontal Floating Cards */}
+              <div className="d-none d-lg-flex flex-wrap flex-md-nowrap justify-content-center" style={{ position: 'absolute', bottom: '-45px', left: '50%', transform: 'translateX(-50%)', gap: '10px', zIndex: 2, width: '105%' }}>
+                
+                <div className="bg-white shadow-sm" style={{ padding: '12px 18px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 auto', minWidth: '130px' }}>
+                  <div style={{ background: '#eef2ff', width: '40px', height: '40px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5', flexShrink: 0 }}>
+                    <i className="ti ti-calendar-event fs-20 m-auto" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>New Appointment</div>
+                    <div className="d-flex align-items-baseline gap-1">
+                      <div style={{ fontSize: '16px', color: '#0f172a', fontWeight: 800 }}>+24</div>
+                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Today</div>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
+                <div className="bg-white shadow-sm" style={{ padding: '12px 18px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 auto', minWidth: '130px' }}>
+                  <div style={{ background: '#e0f2fe', width: '40px', height: '40px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7', flexShrink: 0 }}>
+                    <i className="ti ti-user fs-20 m-auto" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>Patient Registered</div>
+                    <div className="d-flex align-items-baseline gap-1">
+                      <div style={{ fontSize: '16px', color: '#0f172a', fontWeight: 800 }}>+18</div>
+                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Today</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white shadow-sm" style={{ padding: '12px 18px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 auto', minWidth: '130px' }}>
+                  <div style={{ background: '#ccfbf1', width: '40px', height: '40px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0d9488', flexShrink: 0 }}>
+                    <i className="ti ti-wallet fs-20 m-auto" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>Payment Received</div>
+                    <div className="d-flex align-items-baseline gap-1">
+                      <div style={{ fontSize: '16px', color: '#0f172a', fontWeight: 800 }}>₹45,600</div>
+                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Today</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── ABOUT / OUR STORY ──────────────────────────────── */}
-      <section id="features" style={{ padding: '5rem 0', background: '#fff' }}>
-        <div className="dy-container" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center', marginBottom: '4rem' }}>
-          {/* LEFT Image */}
-          <div>
-            <img src="/Doc_new.png" alt="DocYori Clinic" style={{ width: '100%', height: 'auto', display: 'block' }} />
-          </div>
-          {/* RIGHT Content */}
-          <div>
-            <div style={{ color: '#2563eb', fontSize: '0.8rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '1rem' }}>OUR STORY</div>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>Why We Built DocYori</h2>
-            <p style={{ fontSize: '1rem', color: '#475569', lineHeight: 1.7, marginBottom: '1.5rem' }}>
-              Healthcare professionals spend too much time managing paperwork, appointments, staff, and administrative tasks.
-            </p>
-            <p style={{ fontSize: '1rem', color: '#475569', lineHeight: 1.7, marginBottom: '1.5rem' }}>
-              We created DocYori to simplify clinic operations through a single, easy-to-use platform that allows healthcare providers to focus more on patient care and less on manual management.
-            </p>
-            <p style={{ fontSize: '1rem', color: '#475569', lineHeight: 1.7, marginBottom: '2rem' }}>
-              Our goal is to help clinics become more organized, productive, and digitally empowered.
-            </p>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, background: 'linear-gradient(90deg, #2563eb, #0ea5e9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              Smarter Care, Better Health.
+      {/* ── ABOUT SECTION ──────────────────────────────── */}
+      <section className="py-4 bg-white">
+        <div className="container" style={{ maxWidth: '1320px' }}>
+          <div className="row align-items-center g-4">
+            <div className="col-lg-5 text-center">
+              <img src="/Doc_new.png" alt="Clinic Setup" className="img-fluid" style={{ maxWidth: '100%', height: 'auto' }} />
             </div>
-          </div>
-        </div>
-
-        {/* ── OUR JOURNEY ─────────────────────────── */}
-        <div className="dy-container" style={{ marginBottom: '2rem' }}>
-          <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: '24px', padding: '3rem 2rem', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.05)', position: 'relative' }}>
-            <div style={{ textAlign: 'center', color: '#2563eb', fontSize: '0.8rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '3rem' }}>OUR JOURNEY</div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-              {/* Horizontal Line */}
-              <div style={{ position: 'absolute', top: '40px', left: '10%', right: '10%', height: '2px', background: '#2563eb', zIndex: -1 }} />
-
-              {[
-                { icon: 'ti ti-device-analytics', title: 'Identify Challenges', desc: 'Understanding the real problems faced by clinics every day.', color: '#2563eb' },
-                { icon: 'ti ti-edit', title: 'Design Solutions', desc: 'Designing smart workflows and digital solutions for every department.', color: '#2563eb' },
-                { icon: 'ti ti-code', title: 'Build DocYori', desc: 'Developing a complete clinic management platform.', color: '#2563eb' },
-                { icon: 'ti ti-chart-arrows', title: 'Empower Clinics', desc: 'Helping clinics grow with better management and smarter decisions.', color: '#0ea5e9' },
-              ].map((s, i) => (
-                <div key={i} style={{ width: '22%', textAlign: 'center', background: '#fff' }}>
-                  <div style={{ width: 80, height: 80, background: '#fff', border: `3px solid ${s.color}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', fontSize: '2rem', color: s.color }}>
-                    <i className={s.icon} />
+            <div className="col-lg-7">
+              <div className="fw-bold fs-12 mb-2 text-uppercase letter-spacing-1" style={{ color: '#2563eb' }}>ABOUT DOCYORI</div>
+              <h2 className="fw-bold mb-3 text-dark" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a', lineHeight: '1.25' }}>Everything Your Clinic<br/>Needs in One Platform</h2>
+              <p className="fs-15 lh-base mb-4" style={{ color: '#334155' }}>
+                DocYori is a complete clinic management solution designed for modern healthcare providers. Whether you operate a single clinic or manage multiple locations, DocYori helps simplify daily operations and improve patient care.
+              </p>
+              
+              <div className="d-flex flex-wrap flex-lg-nowrap gap-2 justify-content-between">
+                {ABOUT_ICONS.map((i, idx) => (
+                  <div key={idx} className="flex-fill text-center p-3 bg-white border rounded-3 d-flex flex-column align-items-center justify-content-center shadow-sm" style={{ minWidth: '100px', borderColor: '#e2e8f0', borderRadius: '12px' }}>
+                    <i className={`${i.icon} text-primary fs-24 mb-2`} />
+                    <div className="fw-semibold text-dark" style={{ fontSize: '11px', lineHeight: '1.3' }}>{i.name}</div>
                   </div>
-                  <div style={{ fontSize: '0.9rem', color: s.color, fontWeight: 800, marginBottom: '0.5rem' }}>0{i + 1}</div>
-                  <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem' }}>{s.title}</h4>
-                  <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0, lineHeight: 1.5 }}>{s.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ── OUR MISSION & VISION ───────────────────── */}
-        <div className="dy-container">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-            
-            {/* MISSION */}
-            <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: '24px', padding: '2.5rem', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.05)', display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-              <div style={{ fontSize: '3.5rem', color: '#2563eb', lineHeight: 1 }}><i className="ti ti-target" /></div>
-              <div>
-                <div style={{ color: '#2563eb', fontSize: '0.8rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.8rem' }}>OUR MISSION</div>
-                <p style={{ fontSize: '1rem', color: '#475569', lineHeight: 1.6, margin: 0 }}>
-                  To simplify clinic management through technology and automation, allowing healthcare professionals to focus on what matters most — patient care.
-                </p>
+                ))}
               </div>
             </div>
-
-            {/* VISION */}
-            <div style={{ background: '#fff', border: '1px solid #e0f2fe', borderRadius: '24px', padding: '2.5rem', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.05)', display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-              <div style={{ fontSize: '3.5rem', color: '#0ea5e9', lineHeight: 1 }}><i className="ti ti-eye" /></div>
-              <div>
-                <div style={{ color: '#0ea5e9', fontSize: '0.8rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.8rem' }}>OUR VISION</div>
-                <p style={{ fontSize: '1rem', color: '#475569', lineHeight: 1.6, margin: 0 }}>
-                  To become a trusted healthcare technology partner for clinics across India and empower every healthcare provider with modern digital tools.
-                </p>
-              </div>
-            </div>
-
           </div>
         </div>
       </section>
 
       {/* ── STEPS ──────────────────────────────── */}
-      <section className="dy-steps">
-        <div className="dy-container">
-          <div className="dy-tag-sm center">TAKE YOUR CLINIC ONLINE</div>
-          <h2 className="dy-sec-h2">In 4 Simple Steps</h2>
-          <div className="dy-steps-row">
+      <section className="py-4" style={{ background: '#f8fafc' }}>
+        <div className="container" style={{ maxWidth: '1320px' }}>
+          <div className="fw-bold fs-12 mb-2 text-uppercase text-center letter-spacing-1" style={{ color: '#2563eb' }}>TAKE YOUR CLINIC ONLINE</div>
+          <h2 className="fw-bold text-center text-dark mb-5" style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a' }}>In 4 Simple Steps</h2>
+          
+          <div className="row position-relative g-4">
+            {/* Desktop Connecting Line */}
+            <div className="d-none d-lg-block position-absolute" style={{ top: '40px', left: '12%', right: '12%', height: '2px', background: '#e2e8f0', zIndex: 0 }} />
+            
             {STEPS.map((s, i) => (
-              <div key={i} className="dy-step">
-                <div className={`dy-step-circle${i === 2 ? " active" : ""}`}><i className={s.icon} /></div>
-                {i < 3 && <div className="dy-step-line" />}
-                <div className="dy-step-tag">STEP {s.no}</div>
-                <h4>{s.title}</h4>
-                <p>{s.desc}</p>
+              <div key={i} className="col-lg-3 col-md-6 text-center position-relative" style={{ zIndex: 1 }}>
+                <div className="bg-white rounded-circle d-inline-flex align-items-center justify-content-center border border-2 border-primary mb-3" style={{ width: 80, height: 80, color: '#2563eb' }}>
+                  <i className={`${s.icon} fs-32`} />
+                </div>
+                <div className="fw-bold fs-12 mb-2 text-uppercase" style={{ color: '#2563eb' }}>STEP {s.no}</div>
+                <h5 className="fw-bold mb-2 text-dark">{s.title}</h5>
+                <p className="fs-14 mb-0" style={{ color: '#475569' }}>{s.desc}</p>
               </div>
             ))}
           </div>
@@ -229,17 +229,20 @@ const HomePage = () => {
       </section>
 
       {/* ── MODULES ────────────────────────────── */}
-      <section className="dy-modules" id="modules">
-        <div className="dy-container">
-          <div className="dy-tag-sm center">OUR CORE MODULES</div>
-          <h2 className="dy-sec-h2">Powerful Modules Built For Modern Clinics</h2>
-          <div className="dy-modules-row">
+      <section className="py-4 bg-white">
+        <div className="container" style={{ maxWidth: '1320px' }}>
+          <div className="fw-bold fs-12 mb-2 text-uppercase text-center letter-spacing-1" style={{ color: '#2563eb' }}>OUR CORE MODULES</div>
+          <h2 className="fw-bold text-center text-dark mb-4" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>Powerful Modules Built For Modern Clinics</h2>
+          
+          <div className="d-flex flex-wrap flex-lg-nowrap gap-3">
             {MODULES.map((m, i) => (
-              <div key={i} className="dy-mod-card">
-                <div className="dy-mod-icon"><i className={m.icon} /></div>
-                <h4>{m.name}</h4>
-                <p>{m.desc}</p>
-                <span className="dy-arrow">→</span>
+              <div key={i} className="flex-fill bg-white border p-4 rounded-4 d-flex flex-column text-start shadow-sm" style={{ minWidth: '180px', borderColor: '#e2e8f0', flex: '1 1 0px' }}>
+                <div className="rounded-3 d-flex align-items-center justify-content-center mb-4" style={{ width: 48, height: 48, background: i % 2 === 0 ? '#2563eb' : '#0d9488', color: '#fff', flexShrink: 0 }}>
+                  <i className={`${m.icon} fs-24`} />
+                </div>
+                <h5 className="fw-bold mb-2 text-dark" style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>{m.name}</h5>
+                <p className="text-muted fs-13 mb-4 flex-grow-1" style={{ color: '#475569', lineHeight: '1.5' }}>{m.desc}</p>
+                <div style={{ color: i % 2 === 0 ? '#2563eb' : '#0d9488' }}><i className="ti ti-arrow-right fs-20" /></div>
               </div>
             ))}
           </div>
@@ -247,47 +250,97 @@ const HomePage = () => {
       </section>
 
       {/* ── ALL FEATURES ───────────────────────── */}
-      <section className="dy-allfeats">
-        <div className="dy-container">
-          <div className="dy-tag-sm center">EVERYTHING INCLUDES</div>
-          <h2 className="dy-sec-h2">All The Features You Need</h2>
-          <div className="dy-feats-grid">
-            <div className="dy-feat-col">
-              <div className="dy-feat-header">
-                <div className="dy-feat-icon-wrap"><i className="ti ti-users" /></div>
-                <h4>Human Resource Management</h4>
+      <section className="py-4" style={{ background: '#f8fafc' }}>
+        <div className="container" style={{ maxWidth: '1320px' }}>
+          <div className="fw-bold fs-12 mb-2 text-uppercase text-center letter-spacing-1" style={{ color: '#2563eb' }}>EVERYTHING INCLUDED</div>
+          <h2 className="fw-bold text-center text-dark mb-4" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>All The Features You Need</h2>
+          
+          <div className="row g-4">
+            {/* HR Card */}
+            <div className="col-lg-6">
+              <div className="card h-100 border shadow-sm rounded-4 overflow-hidden bg-white" style={{ borderColor: '#e2e8f0' }}>
+                <div className="card-body p-0 d-flex flex-column flex-sm-row">
+                  <div className="p-4 d-flex align-items-center justify-content-center" style={{ minWidth: '180px', background: '#eff6ff' }}>
+                     <div className="rounded-circle bg-white d-flex align-items-center justify-content-center shadow-sm" style={{ width: 80, height: 80, color: '#2563eb' }}>
+                       <i className="ti ti-users fs-32" />
+                     </div>
+                  </div>
+                  <div className="p-4 flex-grow-1">
+                    <h5 className="fw-bold mb-4 text-dark" style={{ color: '#0f172a', fontSize: '18px' }}>Human Resource Management</h5>
+                    <div className="row g-2">
+                      <div className="col-6">
+                        <div className="d-flex flex-column gap-3">
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Staffs</div>
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Departments</div>
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Designations</div>
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Attendance</div>
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Leaves</div>
+                        </div>
+                      </div>
+                      <div className="col-6">
+                        <div className="d-flex flex-column gap-3">
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Holidays</div>
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Payroll</div>
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Applications</div>
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> To Do</div>
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Notes</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <ul className="dy-feat-list">
-                {HRM_FEATURES.map((f, i) => <li key={i}><i className="ti ti-circle-check" />{f}</li>)}
-              </ul>
             </div>
-            <div className="dy-feat-center-img">
-              <img src="https://images.pexels.com/photos/4386466/pexels-photo-4386466.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Features" />
-            </div>
-            <div className="dy-feat-col">
-              <div className="dy-feat-header">
-                <div className="dy-feat-icon-wrap green"><i className="ti ti-building-hospital" /></div>
-                <h4>Clinic Operations</h4>
+
+            {/* Clinic Card */}
+            <div className="col-lg-6">
+              <div className="card h-100 border shadow-sm rounded-4 overflow-hidden bg-white" style={{ borderColor: '#e2e8f0' }}>
+                <div className="card-body p-0 d-flex flex-column flex-sm-row">
+                  <div className="p-4 d-flex align-items-center justify-content-center" style={{ minWidth: '180px', background: '#eff6ff' }}>
+                     <div className="rounded-circle bg-white d-flex align-items-center justify-content-center shadow-sm" style={{ width: 80, height: 80, color: '#2563eb' }}>
+                       <i className="ti ti-building-hospital fs-32" />
+                     </div>
+                  </div>
+                  <div className="p-4 flex-grow-1">
+                    <h5 className="fw-bold mb-4 text-dark" style={{ color: '#0f172a', fontSize: '18px' }}>Clinic Operations</h5>
+                    <div className="row g-2">
+                      <div className="col-6">
+                        <div className="d-flex flex-column gap-3">
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Clinic</div>
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Doctors</div>
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Patients</div>
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Appointments</div>
+                        </div>
+                      </div>
+                      <div className="col-6">
+                        <div className="d-flex flex-column gap-3">
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Services & Products</div>
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Specializations</div>
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Assets</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <ul className="dy-feat-list">
-                {CLINIC_FEATURES.map((f, i) => <li key={i}><i className="ti ti-circle-check" />{f}</li>)}
-              </ul>
             </div>
+
           </div>
         </div>
       </section>
 
-      {/* ── WHY DOCYORI ────────────────────────── */}
-      <section className="dy-why">
-        <div className="dy-container">
-          <div className="dy-tag-sm center">WHY CHOOSE DOCYORI</div>
-          <h2 className="dy-sec-h2">Why Clinics Choose DocYori</h2>
-          <div className="dy-why-grid">
+      {/* ── WHY CHOOSE DOCYORI ────────────────────────── */}
+      <section className="py-4 bg-white">
+        <div className="container" style={{ maxWidth: '1320px' }}>
+          <div className="fw-bold fs-12 mb-2 text-uppercase text-center letter-spacing-1" style={{ color: '#2563eb' }}>WHY CHOOSE DOCYORI</div>
+          <h2 className="fw-bold text-center text-dark mb-4" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>Why Clinics Choose DocYori</h2>
+          
+          <div className="d-flex flex-wrap flex-lg-nowrap gap-3">
             {WHY.map((w, i) => (
-              <div key={i} className="dy-why-card">
-                <div className="dy-why-icon"><i className={w.icon} /></div>
-                <h4>{w.title}</h4>
-                <p>{w.desc}</p>
+              <div key={i} className="flex-fill bg-white border p-3 rounded-4 text-center shadow-sm d-flex flex-column align-items-center" style={{ minWidth: '140px', borderColor: '#e2e8f0', flex: '1 1 0px' }}>
+                <i className={`${w.icon} mb-3`} style={{ fontSize: '40px', color: i % 2 === 0 ? '#2563eb' : '#0d9488' }} />
+                <h6 className="fw-bold mb-2 text-dark" style={{ fontSize: '15px', color: '#0f172a' }}>{w.title}</h6>
+                <p className="fs-12 mb-0 px-1" style={{ color: '#475569', lineHeight: '1.4' }}>{w.desc}</p>
               </div>
             ))}
           </div>
@@ -295,61 +348,63 @@ const HomePage = () => {
       </section>
 
       {/* ── TESTIMONIALS + FAQ ─────────────────── */}
-      <section className="dy-tf">
-        <div className="dy-container dy-tf-grid">
-          {/* Testimonials */}
-          <div>
-            <div className="dy-tag-sm">TESTIMONIALS</div>
-            <h2 className="dy-tf-h2">Trusted By Healthcare Professionals</h2>
-            <div className="dy-test-list">
-              {TESTIMONIALS.map((t, i) => (
-                <div key={i} className="dy-test-card">
-                  <div className="dy-quote-icon">"</div>
-                  <p>{t.quote}</p>
-                  <div className="dy-test-author">
-                    <img src={t.img} alt={t.name} />
-                    <div>
-                      <strong>{t.name}</strong>
-                      <span>{t.role}</span>
+      <section className="py-4 bg-white">
+        <div className="container" style={{ maxWidth: '1320px' }}>
+          <div className="row g-4">
+            {/* Testimonials */}
+            <div className="col-lg-7">
+              <div className="fw-bold fs-12 mb-2 text-uppercase letter-spacing-1" style={{ color: '#2563eb' }}>TESTIMONIALS</div>
+              <h2 className="fw-bold mb-4 text-dark" style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a' }}>Trusted By Healthcare Professionals</h2>
+              <div className="row g-3">
+                {TESTIMONIALS.map((t, i) => (
+                  <div key={i} className="col-md-4">
+                    <div className="card h-100 border shadow-sm rounded-4 bg-white" style={{ borderColor: '#e2e8f0' }}>
+                      <div className="card-body p-3 d-flex flex-column">
+                        <div className="fs-24 mb-3" style={{ color: '#2563eb' }}><i className="ti ti-quote" /></div>
+                        <p className="fs-12 flex-grow-1 mb-4" style={{ color: '#475569', lineHeight: '1.6' }}>{t.quote}</p>
+                        <div className="d-flex align-items-center gap-2 mt-auto">
+                          <img src={t.img} alt={t.name} className="rounded-circle shadow-sm" style={{ width: 36, height: 36, objectFit: 'cover' }} />
+                          <div>
+                            <div className="fw-bold text-dark" style={{ fontSize: '12px', color: '#0f172a' }}>{t.name}</div>
+                            <div style={{ fontSize: '10px', color: '#64748b' }}>{t.role}</div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* FAQ */}
-          <div id="faq">
-            <div className="dy-tag-sm">FREQUENTLY ASKED QUESTIONS</div>
-            <h2 className="dy-tf-h2">We've Got Answers</h2>
-            <div className="dy-faq-list">
-              {FAQS.map((f, i) => (
-                <details key={i} className="dy-faq-item">
-                  <summary>{f.q}<i className="ti ti-chevron-down" /></summary>
-                  <p>Yes, DocYori is designed to handle this efficiently and seamlessly for all clinic types and sizes.</p>
-                </details>
-              ))}
+            {/* FAQ */}
+            <div className="col-lg-5">
+              <div className="fw-bold fs-12 mb-3 text-uppercase letter-spacing-1" style={{ color: '#2563eb' }}>FREQUENTLY ASKED QUESTIONS</div>
+              <div className="border rounded-4 bg-white shadow-sm" style={{ borderColor: '#e2e8f0', marginTop: '38px' }}>
+                {FAQS.map((f, i) => (
+                  <div key={i} className="border-bottom" style={{ borderColor: '#e2e8f0' }}>
+                    <button
+                      onClick={() => setExpandedFaq(expandedFaq === i ? null : i)}
+                      className="w-100 px-4 py-3 d-flex justify-content-between align-items-center bg-white border-0 text-start"
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <span className="fw-bold text-dark" style={{ fontSize: '14px', color: '#0f172a' }}>{f.q}</span>
+                      <i className="ti ti-plus" style={{ color: '#0f172a', fontWeight: 'bold', transform: expandedFaq === i ? 'rotate(45deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }} />
+                    </button>
+                    {expandedFaq === i && (
+                      <div className="px-4 pb-3">
+                        <p className="fs-14 text-muted m-0 lh-lg">{f.a}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ── CTA BANNER ─────────────────────────── */}
-      <section className="dy-cta">
-        <div className="dy-container dy-cta-grid">
-          <div className="dy-cta-img">
-            <img src="https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Ready" />
-          </div>
-          <div className="dy-cta-text">
-            <h2>Ready To Digitize Your Clinic?</h2>
-            <p>Join modern healthcare providers who trust DocYori to simplify operations and improve patient care.</p>
-            <div className="dy-cta-btns">
-              <Link to={all_routes.registerbasic} className="cta-btn-solid">Start Free Trial</Link>
-              <Link to="#demo" className="cta-btn-outline">Book Demo</Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <CtaBanner />
 
       {/* ── FOOTER ─────────────────────────────── */}
       <FooterFront />

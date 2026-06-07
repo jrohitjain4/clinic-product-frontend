@@ -38,9 +38,9 @@ const FooterFront = () => {
                 <div className="dy-footer-col">
                     <h5>LEGAL</h5>
                     <ul>
-                        <li><Link to={all_routes.privacyPolicy}>Privacy Policy</Link></li>
-                        <li><Link to={all_routes.termsCondition}>Terms & Conditions</Link></li>
-                        <li><a href="#">Refund Policy</a></li>
+                        <li><Link to={all_routes.privacyPolicyFront}>Privacy Policy</Link></li>
+                        <li><Link to={all_routes.termsConditionFront}>Terms & Conditions</Link></li>
+                        <li><Link to={all_routes.refundPolicyFront}>Refund Policy</Link></li>
                     </ul>
                 </div>
                 <div className="dy-footer-col">

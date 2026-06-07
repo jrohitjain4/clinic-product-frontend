@@ -88,29 +88,29 @@ export const DemoBookingModal = () => {
                     <form onSubmit={handleSubmit}>
                         <div className="mb-3">
                             <label className="form-label">Full Name</label>
-                            <input type="text" className="form-control" name="name" value={formData.name} onChange={handleChange} required />
+                            <input type="text" className="form-control" name="name" placeholder="Enter your full name" value={formData.name} onChange={handleChange} required />
                         </div>
                         <div className="row mb-3">
                             <div className="col-md-6">
                                 <label className="form-label">Email Address <span className="text-danger">*</span></label>
-                                <input type="email" className="form-control" name="email" value={formData.email} onChange={handleChange} required />
+                                <input type="email" className="form-control" name="email" placeholder="Enter your email address" value={formData.email} onChange={handleChange} required />
                             </div>
                             <div className="col-md-6">
                                 <label className="form-label">Phone Number <span className="text-danger">*</span></label>
-                                <input type="tel" className="form-control" name="phone" value={formData.phone} onChange={handleChange} required />
+                                <input type="tel" className="form-control" name="phone" placeholder="Enter your phone number" value={formData.phone} onChange={handleChange} required />
                             </div>
                         </div>
                         <div className="mb-3">
                             <label className="form-label">Clinic Name</label>
-                            <input type="text" className="form-control" name="clinicName" value={formData.clinicName} onChange={handleChange} />
+                            <input type="text" className="form-control" name="clinicName" placeholder="Enter your clinic name" value={formData.clinicName} onChange={handleChange} />
                         </div>
                         <div className="mb-3">
                             <label className="form-label">Location (City, Country)</label>
-                            <input type="text" className="form-control" name="location" value={formData.location} onChange={handleChange} />
+                            <input type="text" className="form-control" name="location" placeholder="e.g. New York, USA" value={formData.location} onChange={handleChange} />
                         </div>
                         <div className="mb-3">
                             <label className="form-label">Preferred Date & Time</label>
-                            <input type="datetime-local" className="form-control" name="dateTime" value={formData.dateTime} onChange={handleChange} required />
+                            <input type="datetime-local" className="form-control" name="dateTime" placeholder="Select preferred date & time" value={formData.dateTime} onChange={handleChange} required />
                         </div>
                         <div className="text-end mt-4">
                             <button type="button" className="btn btn-light me-2" onClick={() => setShow(false)}>Cancel</button>

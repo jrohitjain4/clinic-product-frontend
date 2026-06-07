@@ -22,6 +22,8 @@ export const all_routes = {
   servicesFront: "/front-services",
   contactUs: "/contact-us",
   privacyPolicyFront: "/privacy-policy-front",
+  termsConditionFront: "/terms-conditions-front",
+  refundPolicyFront: "/refund-policy-front",
   clinicLandingPage: "/c/:username",
   //Auth routes
   login: "/login",
@@ -95,6 +97,8 @@ export const all_routes = {
   domain: "/super-admin/domain",
   purchaseTransaction: "/super-admin/purchase-transaction",
   privacyPolicyAdmin: "/super-admin/privacy-policy",
+  termsConditionAdmin: "/super-admin/terms-conditions",
+  refundPolicyAdmin: "/super-admin/refund-policy",
   demoBookings: "/super-admin/demo-bookings",
 
   //Application routes

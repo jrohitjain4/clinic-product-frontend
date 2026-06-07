@@ -12,6 +12,8 @@ import AboutUs from "../components/pages/home/aboutUs";
 import ServicesFront from "../components/pages/home/servicesFront";
 import ContactUs from "../components/pages/home/contactUs";
 import PrivacyPolicyFront from "../components/pages/home/privacyPolicyFront";
+import TermsConditionFront from "../components/pages/home/termsConditionFront";
+import RefundPolicyFront from "../components/pages/home/refundPolicyFront";
 import Login from "../components/auth/login/login";
 import LoginBasic from "../components/auth/login/loginBasic";
 import LoginCover from "../components/auth/login/loginCover";
@@ -36,6 +38,8 @@ import RolesAndPermissions from "../components/pages/administration-modules/user
 import PackagesAdmin from "../components/pages/super-admin/packages/PackagesAdmin";
 import TenantsAdmin from "../components/pages/super-admin/tenants/TenantsAdmin";
 import PrivacyPolicyAdmin from "../components/pages/super-admin/settings/PrivacyPolicyAdmin";
+import TermsConditionAdmin from "../components/pages/super-admin/settings/TermsConditionAdmin";
+import RefundPolicyAdmin from "../components/pages/super-admin/settings/RefundPolicyAdmin";
 import DemoBookingsAdmin from "../components/pages/super-admin/demo-bookings/DemoBookingsAdmin";
 import Calendars from "../components/pages/application-modules/application/calendar/calendar";
 import CallHistory from "../components/pages/application-modules/application/calls/callHistory";
@@ -374,6 +378,18 @@ export const publicRoutes = [
     path: all_routes.privacyPolicyAdmin,
     name: "privacy-policy-admin",
     element: <PrivacyPolicyAdmin />,
+    route: Route,
+  },
+  {
+    path: all_routes.termsConditionAdmin,
+    name: "terms-conditions-admin",
+    element: <TermsConditionAdmin />,
+    route: Route,
+  },
+  {
+    path: all_routes.refundPolicyAdmin,
+    name: "refund-policy-admin",
+    element: <RefundPolicyAdmin />,
     route: Route,
   },
   {
@@ -1447,6 +1463,16 @@ export const authRoutes = [
   {
     path: routes.privacyPolicyFront,
     element: <PrivacyPolicyFront />,
+    route: Route,
+  },
+  {
+    path: routes.termsConditionFront,
+    element: <TermsConditionFront />,
+    route: Route,
+  },
+  {
+    path: routes.refundPolicyFront,
+    element: <RefundPolicyFront />,
     route: Route,
   },
   {

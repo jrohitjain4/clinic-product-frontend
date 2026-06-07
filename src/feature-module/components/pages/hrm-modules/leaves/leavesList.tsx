@@ -6,12 +6,14 @@ import { useLeaves } from "../../../../../core/hooks/useLeaves";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 dayjs.extend(isBetween);
-import { Modal, Input, DatePicker, Switch } from "antd";
+import { Modal, Input, DatePicker, Switch, Popconfirm } from "antd";
+import { toast } from "react-toastify";
 const { TextArea } = Input;
 
 const LeavesList = () => {
-  const { leaves, updateStatus, withdrawLeave } = useLeaves();
+  const { leaves, updateStatus, withdrawLeave, deleteLeave } = useLeaves();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [viewRecord, setViewRecord] = useState<any>(null);
 
   const [filterType, setFilterType] = useState("All");
   const [filterEmpType, setFilterEmpType] = useState("All");
@@ -39,7 +41,7 @@ const LeavesList = () => {
   });
 
   const handleApprove = async () => {
-    await updateStatus(approveModal.id, {
+    const ok = await updateStatus(approveModal.id, {
       status: "APPROVED",
       startDate: approveModal.startDate,
       endDate: approveModal.endDate,
@@ -47,11 +49,16 @@ const LeavesList = () => {
       adminNotes: approveModal.adminNotes
     });
     setApproveModal({ ...approveModal, open: false });
+    if (ok) toast.success("Leave approved successfully");
+    else toast.error("Failed to approve leave");
   };
 
   const handleReject = async () => {
-    await updateStatus(rejectModal.id, { status: "REJECTED", rejectRemark: rejectModal.remark });
+    if (!rejectModal.remark.trim()) { toast.error("Please enter a rejection reason"); return; }
+    const ok = await updateStatus(rejectModal.id, { status: "REJECTED", rejectRemark: rejectModal.remark });
     setRejectModal({ ...rejectModal, open: false });
+    if (ok) toast.success("Leave rejected");
+    else toast.error("Failed to reject leave");
   };
 
   const filteredData = useMemo(() => {
@@ -115,60 +122,122 @@ const LeavesList = () => {
     {
       title: "Actions",
       render: (_: any, record: any) => {
-        const isAdmin = localStorage.getItem("role") === "ADMIN" || localStorage.getItem("role") === "SUPER_ADMIN";
-        const isSelf = record.email === JSON.parse(localStorage.getItem("user") || "{}").email;
+        // Role can be stored at top-level or nested inside 'user' JSON
+        const storedRole = localStorage.getItem("role") ||
+          (() => { try { return JSON.parse(localStorage.getItem("user") || "{}").role; } catch { return ""; } })();
+        const isAdmin = storedRole === "ADMIN" || storedRole === "SUPER_ADMIN";
+        const currentUserEmail = (() => { try { return JSON.parse(localStorage.getItem("user") || "{}").email; } catch { return ""; } })();
+        const isSelf = record.email === currentUserEmail;
         const canWithdraw = (record.rawStatus === "APPLIED" || record.rawStatus === "APPROVED") && dayjs().isBefore(dayjs(record.startDate));
         const canCancel = isAdmin && record.rawStatus === "APPROVED" && dayjs().isBefore(dayjs(record.endDate));
 
         return (
-          <div className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center justify-content-start gap-2">
+            {/* Always visible: View */}
+            <button
+              className="bg-transparent border-0 text-info p-1"
+              data-bs-toggle="modal"
+              data-bs-target="#view_leave"
+              onClick={(e) => { e.preventDefault(); setViewRecord(record); }}
+              title="View Details"
+            >
+              <i className="fa fa-eye fs-16" />
+            </button>
+
+            {/* Always visible: Delete with confirm */}
+            <Popconfirm
+              title="Permanently delete this leave record?"
+              onConfirm={async () => {
+                const ok = await deleteLeave(record.id);
+                if (ok) toast.success("Leave record deleted");
+                else toast.error("Failed to delete leave record");
+              }}
+              okText="Yes, Delete"
+              cancelText="No"
+              okButtonProps={{ danger: true }}
+            >
+              <button
+                className="bg-transparent border-0 text-danger p-1"
+                title="Delete"
+              >
+                <i className="fa fa-trash-alt fs-16" />
+              </button>
+            </Popconfirm>
+
+            {/* Admin: Approve (only for APPLIED) */}
+            {record.rawStatus === "APPLIED" && isAdmin && (
+              <button
+                className="bg-transparent border-0 text-success p-1"
+                onClick={(e) => { e.preventDefault(); setApproveModal({ open: true, id: record.id, startDate: record.startDate, endDate: record.endDate, isPaid: record.isPaid ?? true, adminNotes: record.adminNotes || "" }); }}
+                title="Approve"
+              >
+                <i className="fa fa-check-circle fs-16" />
+              </button>
+            )}
+
+            {/* Admin: Edit/Review (APPLIED or APPROVED) */}
             {(record.rawStatus === "APPLIED" || record.rawStatus === "APPROVED") && isAdmin && (
-              <>
-                <button
-                  className="avatar avatar-sm border border-primary text-primary rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle p-0"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setApproveModal({
-                      open: true,
-                      id: record.id,
-                      startDate: record.startDate,
-                      endDate: record.endDate,
-                      isPaid: record.isPaid,
-                      adminNotes: record.adminNotes || ""
-                    });
-                  }}
-                  title="Approve / Edit"
-                >
-                  <i className="ti ti-edit fs-14" />
-                </button>
-                <button
-                  className="avatar avatar-sm border border-danger text-danger rounded-circle d-flex align-items-center justify-content-center bg-danger-subtle p-0"
-                  onClick={(e) => { e.preventDefault(); setRejectModal({ open: true, id: record.id, remark: "" }) }}
-                  title="Reject"
-                >
-                  <i className="ti ti-trash fs-14" />
-                </button>
-              </>
+              <button
+                className="bg-transparent border-0 text-primary p-1"
+                onClick={(e) => { e.preventDefault(); setApproveModal({ open: true, id: record.id, startDate: record.startDate, endDate: record.endDate, isPaid: record.isPaid ?? true, adminNotes: record.adminNotes || "" }); }}
+                title="Edit / Review"
+              >
+                <i className="fa fa-edit fs-16" />
+              </button>
             )}
 
+            {/* Admin: Reject */}
+            {isAdmin && record.rawStatus === "APPLIED" && (
+              <button
+                className="bg-transparent border-0 text-warning p-1"
+                onClick={(e) => { e.preventDefault(); setRejectModal({ open: true, id: record.id, remark: "" }); }}
+                title="Reject"
+              >
+                <i className="fa fa-times-circle fs-16" />
+              </button>
+            )}
+
+            {/* Self: Withdraw */}
             {canWithdraw && isSelf && (
-              <button
-                className="avatar avatar-sm border border-warning text-warning rounded-circle d-flex align-items-center justify-content-center bg-warning-subtle p-0"
-                onClick={(e) => { e.preventDefault(); if (window.confirm("Withdraw this leave?")) withdrawLeave(record.id) }}
-                title="Withdraw"
+              <Popconfirm
+                title="Withdraw this leave request?"
+                onConfirm={async () => {
+                  const ok = await withdrawLeave(record.id);
+                  if (ok) toast.success("Leave withdrawn successfully");
+                  else toast.error("Failed to withdraw leave");
+                }}
+                okText="Yes, Withdraw"
+                cancelText="No"
               >
-                <i className="ti ti-rotate-2 fs-14" />
-              </button>
+                <button
+                  className="bg-transparent border-0 text-warning p-1"
+                  title="Withdraw"
+                >
+                  <i className="fa fa-undo fs-16" />
+                </button>
+              </Popconfirm>
             )}
 
+            {/* Admin: Cancel approved leave */}
             {canCancel && (
-              <button
-                className="avatar avatar-sm border border-dark text-dark rounded-circle d-flex align-items-center justify-content-center bg-dark-subtle p-0"
-                onClick={(e) => { e.preventDefault(); if (window.confirm("Cancel this approved leave?")) updateStatus(record.id, { status: "CANCELLED" }) }}
-                title="Cancel Leave"
+              <Popconfirm
+                title="Cancel this approved leave?"
+                onConfirm={async () => {
+                  const ok = await updateStatus(record.id, { status: "CANCELLED" });
+                  if (ok) toast.success("Leave cancelled successfully");
+                  else toast.error("Failed to cancel leave");
+                }}
+                okText="Yes, Cancel"
+                cancelText="No"
+                okButtonProps={{ danger: true }}
               >
-                <i className="ti ti-ban fs-14" />
-              </button>
+                <button
+                  className="bg-transparent border-0 text-dark p-1"
+                  title="Cancel Leave"
+                >
+                  <i className="fa fa-ban fs-16" />
+                </button>
+              </Popconfirm>
             )}
           </div>
         );
@@ -329,6 +398,81 @@ const LeavesList = () => {
           </div>
         </div>
       </Modal>
+
+      {/* View Leave Details Modal */}
+      <div id="view_leave" className="modal fade" role="dialog">
+        <div className="modal-dialog modal-dialog-centered modal-lg">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-info text-white">
+              <h5 className="modal-title fw-bold">Leave Application Details</h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={() => setViewRecord(null)}></button>
+            </div>
+            <div className="modal-body">
+              {viewRecord && (
+                <div className="row g-3">
+                  <div className="col-md-12 text-center mb-3">
+                    <div className="avatar avatar-xxl bg-light p-1 rounded-circle shadow-sm mx-auto">
+                      <ImageWithBasePath
+                        src={viewRecord.Image?.startsWith('/') ? viewRecord.Image : `assets/img/users/${viewRecord.Image || 'avatar-21.jpg'}`}
+                        alt={viewRecord.Employee}
+                        className="rounded-circle"
+                      />
+                    </div>
+                    <h5 className="mt-2 fw-bold">{viewRecord.Employee}</h5>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Leave Type</label>
+                    <input type="text" className="form-control bg-light" value={viewRecord.LeaveType || ""} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Status</label>
+                    <input type="text" className="form-control bg-light fw-bold" value={viewRecord.Status || ""} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Start Date</label>
+                    <input type="text" className="form-control bg-light" value={dayjs(viewRecord.startDate).format("DD MMM YYYY")} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">End Date</label>
+                    <input type="text" className="form-control bg-light" value={dayjs(viewRecord.endDate).format("DD MMM YYYY")} readOnly />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Total Days</label>
+                    <input type="text" className="form-control bg-light" value={viewRecord.Day || ""} readOnly />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Applied On</label>
+                    <input type="text" className="form-control bg-light" value={viewRecord.AppliedOn || ""} readOnly />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Payment Type</label>
+                    <input type="text" className="form-control bg-light" value={viewRecord.isPaid ? "Paid Leave" : "Unpaid Leave"} readOnly />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Reason</label>
+                    <textarea className="form-control bg-light" rows={2} value={viewRecord.reason || "No reason provided"} readOnly />
+                  </div>
+                  {viewRecord.rejectRemark && (
+                    <div className="col-md-12">
+                      <label className="form-label fw-bold small text-uppercase text-danger">Rejection Remark</label>
+                      <textarea className="form-control bg-danger-subtle text-danger border-danger-subtle" rows={2} value={viewRecord.rejectRemark} readOnly />
+                    </div>
+                  )}
+                  {viewRecord.adminNotes && (
+                    <div className="col-md-12">
+                      <label className="form-label fw-bold small text-uppercase text-info">Internal Admin Notes</label>
+                      <textarea className="form-control bg-info-subtle text-info border-info-subtle" rows={2} value={viewRecord.adminNotes} readOnly />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="modal-footer border-top pt-3">
+              <button type="button" className="btn btn-primary px-5" data-bs-dismiss="modal" onClick={() => setViewRecord(null)} style={{ borderRadius: '6px' }}>Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 };

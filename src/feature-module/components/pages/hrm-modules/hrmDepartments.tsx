@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router";
 import Datatable from "../../../../core/common/dataTable";
-import { DatePicker } from "antd";
+import { DatePicker, Modal } from "antd";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { apiUrl } from "../../../../core/config/api";
+import { toast } from "react-toastify";
 
 interface Department {
   id: string;
@@ -21,6 +22,7 @@ const HrmDepartments = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [viewDept, setViewDept] = useState<Department | null>(null);
 
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterDate, setFilterDate] = useState<Dayjs | null>(null);
@@ -85,11 +87,13 @@ const HrmDepartments = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
+      toast.success("Department added successfully");
       setAddName(""); setAddDesc("");
       fetchDepartments();
       document.getElementById("btn-close-add-dept")?.click();
     } catch (err: any) {
       setAddError(err.message);
+      toast.error(err.message || "Failed to add department");
     } finally {
       setAddLoading(false);
     }
@@ -114,10 +118,12 @@ const HrmDepartments = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
+      toast.success("Department updated successfully");
       fetchDepartments();
       document.getElementById("btn-close-edit-dept")?.click();
     } catch (err: any) {
       setEditError(err.message);
+      toast.error(err.message || "Failed to update department");
     } finally {
       setEditLoading(false);
     }
@@ -136,10 +142,12 @@ const HrmDepartments = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
+
+      toast.success("Department deleted successfully");
       fetchDepartments();
       document.getElementById("close_delete_modal")?.click();
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message || "Failed to delete department");
     } finally {
       setDeleteLoading(false);
     }
@@ -157,13 +165,17 @@ const HrmDepartments = () => {
         },
         body: JSON.stringify({ ids: selectedIds }),
       });
+      const data = await res.json();
       if (res.ok) {
+        toast.success(data.message || "Selected departments deleted");
         setDepartments(departments.filter((d) => !selectedIds.includes(d.id)));
         setSelectedIds([]);
         document.getElementById("close_delete_modal")?.click();
+      } else {
+        throw new Error(data.message);
       }
-    } catch (error) {
-      alert("Bulk delete failed");
+    } catch (error: any) {
+      toast.error(error.message || "Bulk delete failed");
     } finally {
       setDeleteLoading(false);
     }
@@ -209,24 +221,36 @@ const HrmDepartments = () => {
     {
       title: "Action",
       render: (_: any, record: Department) => (
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center justify-content-start gap-2">
+          {/* View Icon */}
           <button
-            className="avatar avatar-sm border border-primary text-primary rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle p-0"
+            className="bg-transparent border-0 text-info p-1"
+            title="View Details"
+            data-bs-toggle="modal"
+            data-bs-target="#view_department"
+            onClick={() => setViewDept(record)}
+          >
+            <i className="fa fa-eye fs-16"></i>
+          </button>
+          {/* Edit Icon */}
+          <button
+            className="bg-transparent border-0 text-primary p-1"
             title="Edit Department"
             data-bs-toggle="modal"
             data-bs-target="#edit_department"
             onClick={() => openEdit(record)}
           >
-            <i className="ti ti-edit fs-14"></i>
+            <i className="fa fa-edit fs-16"></i>
           </button>
+          {/* Delete Icon */}
           <button
-            className="avatar avatar-sm border border-danger text-danger rounded-circle d-flex align-items-center justify-content-center bg-danger-subtle p-0"
+            className="bg-transparent border-0 text-danger p-1"
             title="Delete Department"
             data-bs-toggle="modal"
             data-bs-target="#delete_modal"
             onClick={() => openDelete(record)}
           >
-            <i className="ti ti-trash fs-14"></i>
+            <i className="fa fa-trash-alt fs-16"></i>
           </button>
         </div>
       ),
@@ -426,6 +450,43 @@ const HrmDepartments = () => {
                   {deleteLoading ? 'Deleting...' : 'Yes, Delete'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== VIEW MODAL ===== */}
+      <div id="view_department" className="modal fade" role="dialog">
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-info text-white">
+              <h5 className="modal-title fw-bold">View Department</h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={() => setViewDept(null)}></button>
+            </div>
+            <div className="modal-body">
+              {viewDept && (
+                <div className="row g-3">
+                  <div className="col-md-12">
+                    <label className="form-label fw-bold">Department Name</label>
+                    <input type="text" className="form-control bg-light" value={viewDept.name || ""} readOnly />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label fw-bold">Description</label>
+                    <textarea className="form-control bg-light" rows={3} value={viewDept.description || "No description provided"} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold">Status</label>
+                    <input type="text" className="form-control bg-light" value={viewDept.status || ""} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold">Created On</label>
+                    <input type="text" className="form-control bg-light" value={new Date(viewDept.createdAt).toLocaleDateString("en-GB")} readOnly />
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer border-top pt-3">
+              <button type="button" className="btn btn-primary px-5" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Close</button>
             </div>
           </div>
         </div>

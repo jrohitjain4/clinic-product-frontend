@@ -5,7 +5,7 @@ import Datatable from "../../../../core/common/dataTable";
 import PayrollListModal from "./modal/payrollListModal";
 import { usePayroll } from "../../../../core/hooks/usePayroll";
 import { useClinicStaff } from "../../../../core/hooks/useClinicStaff";
-import { DatePicker } from "antd";
+import { DatePicker, Modal } from "antd";
 import dayjs from "dayjs";
 
 const PayrollList = () => {
@@ -13,6 +13,7 @@ const PayrollList = () => {
   const { staffs } = useClinicStaff();
   const [selectedPayroll, setSelectedPayroll] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [viewPayroll, setViewPayroll] = useState<any>(null);
 
   const [filterRole, setFilterRole] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
@@ -122,22 +123,35 @@ const PayrollList = () => {
     {
       title: "Action",
       render: (_: string, record: any) => (
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center justify-content-start gap-2">
+          {/* View Icon */}
           <button
-            className="avatar avatar-sm border border-primary text-primary rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle p-0"
+            className="bg-transparent border-0 text-info p-1"
+            title="View Details"
+            data-bs-toggle="modal"
+            data-bs-target="#view_payroll"
+            onClick={() => setViewPayroll(record.raw)}
+          >
+            <i className="fa fa-eye fs-16"></i>
+          </button>
+
+          <button
+            className="bg-transparent border-0 text-primary p-1"
+            title="Edit"
             data-bs-toggle="modal"
             data-bs-target="#edit_payroll"
             onClick={() => setSelectedPayroll(record.raw)}
           >
-            <i className="ti ti-edit fs-14" />
+            <i className="fa fa-edit fs-16" />
           </button>
           <button
-            className="avatar avatar-sm border border-danger text-danger rounded-circle d-flex align-items-center justify-content-center bg-danger-subtle p-0"
+            className="bg-transparent border-0 text-danger p-1"
+            title="Delete"
             data-bs-toggle="modal"
             data-bs-target="#delete_payroll"
             onClick={() => setSelectedPayroll(record.raw)}
           >
-            <i className="ti ti-trash fs-14" />
+            <i className="fa fa-trash-alt fs-16" />
           </button>
         </div>
       ),
@@ -228,6 +242,73 @@ const PayrollList = () => {
         </div>
       </div>
       <PayrollListModal selectedPayroll={selectedPayroll} refetch={refetch} staffs={staffs} />
+
+      {/* ===== VIEW PAYROLL MODAL ===== */}
+      <div id="view_payroll" className="modal fade" role="dialog">
+        <div className="modal-dialog modal-dialog-centered modal-lg">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-info text-white">
+              <h5 className="modal-title fw-bold">View Payroll Details</h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={() => setViewPayroll(null)}></button>
+            </div>
+            <div className="modal-body">
+              {viewPayroll && (
+                <div className="row g-3">
+                  <div className="col-md-12 text-center mb-3">
+                    <div className="avatar avatar-xxl bg-light p-1 rounded-circle shadow-sm mx-auto">
+                      <ImageWithBasePath
+                        src={viewPayroll.staff?.profileImage?.startsWith('/') ? viewPayroll.staff.profileImage : `assets/img/users/${viewPayroll.staff?.profileImage || 'avatar-21.jpg'}`}
+                        alt={viewPayroll.staff?.fullName}
+                        className="rounded-circle"
+                      />
+                    </div>
+                    <h5 className="mt-2 fw-bold">{viewPayroll.staff?.fullName}</h5>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Basic Salary</label>
+                    <input type="text" className="form-control bg-light" value={`$${viewPayroll.basicSalary}`} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Net Salary</label>
+                    <input type="text" className="form-control bg-light fw-bold text-success" value={`$${viewPayroll.netSalary}`} readOnly />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Allowances</label>
+                    <input type="text" className="form-control bg-light" value={`$${viewPayroll.allowance || 0}`} readOnly />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Medical</label>
+                    <input type="text" className="form-control bg-light" value={`$${viewPayroll.medical || 0}`} readOnly />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Deductions</label>
+                    <input type="text" className="form-control bg-light text-danger" value={`$${viewPayroll.deduction || 0}`} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Payment Method</label>
+                    <input type="text" className="form-control bg-light" value={viewPayroll.paymentMethod || ""} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Status</label>
+                    <input type="text" className="form-control bg-light" value={viewPayroll.status?.replace('_', ' ') || ""} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Created Date</label>
+                    <input type="text" className="form-control bg-light" value={new Date(viewPayroll.createdAt).toLocaleDateString("en-GB")} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Paid Date</label>
+                    <input type="text" className="form-control bg-light" value={viewPayroll.paidDate ? new Date(viewPayroll.paidDate).toLocaleDateString("en-GB") : "Pending"} readOnly />
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer border-top pt-3">
+              <button type="button" className="btn btn-primary px-5" data-bs-dismiss="modal" onClick={() => setViewPayroll(null)} style={{ borderRadius: '6px' }}>Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 };

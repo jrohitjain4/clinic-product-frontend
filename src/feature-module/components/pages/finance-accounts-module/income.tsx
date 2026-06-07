@@ -1,14 +1,26 @@
-import  { useState } from "react";
+import { useState } from "react";
 import FilterIndex from "../../../../core/common/filter/filterIndex";
 import SearchInput from "../../../../core/common/dataTable/dataTableSearch";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { Link } from "react-router";
 import { IncomeListData } from "../../../../core/json/incomeListData";
+import { PaymentsListData } from "../../../../core/json/paymetsListData";
 import Datatable from "../../../../core/common/dataTable";
 import IncomeModal from "./modal/incomeModal";
 
 const IncomeList = () => {
-  const data = IncomeListData;
+  // Merge Paid payments into Income
+  const paidPayments = PaymentsListData.filter(p => p.Status === "Paid").map(p => ({
+    IncomeName: `Payment for ${p.InvoiceID}`,
+    Amount: p.Amount,
+    Date: p.PaidDate,
+    Image: p.Image,
+    ReceivedFrom: p.Patient,
+    PaymentMethod: p.PaymentMethod,
+    Status: "Received", // "Paid" in payments is "Received" in income
+  }));
+
+  const data = [...IncomeListData, ...paidPayments];
   const columns = [
     {
       title: "Income Name",
@@ -61,11 +73,10 @@ const IncomeList = () => {
       dataIndex: "Status",
       render: (text: any) => (
         <span
-          className={`badge border ${
-            text === "Received"
-              ? "badge-soft-success border-success text-success"
-              : "badge-soft-warning border-warning text-warning"
-          } rounded fw-medium`}
+          className={`badge border ${text === "Received"
+            ? "badge-soft-success border-success text-success"
+            : "badge-soft-warning border-warning text-warning"
+            } rounded fw-medium`}
         >
           {text}
         </span>
@@ -126,7 +137,7 @@ const IncomeList = () => {
                 {" "}
                 Income{" "}
                 <span className="badge badge-soft-primary fw-medium border py-1 px-2 border-primary fs-13 ms-1">
-                  Total Income : 565
+                  Total Income : {data.length}
                 </span>{" "}
               </h4>
             </div>
@@ -152,7 +163,7 @@ const IncomeList = () => {
                   </li>
                 </ul>
               </div>
-              
+
               {/* dropdown*/}
               <div className="dropdown me-1">
                 <Link
@@ -176,7 +187,7 @@ const IncomeList = () => {
                   </li>
                 </ul>
               </div>
-              
+
               <div className="dropdown me-2">
                 <Link
                   to="#"
@@ -216,7 +227,7 @@ const IncomeList = () => {
           </div>
           {/* End Page Header */}
           {/*  Start Filter */}
-          
+
           {/*  End Filter */}
           {/*  Start Table */}
           <div className="table-responsive">

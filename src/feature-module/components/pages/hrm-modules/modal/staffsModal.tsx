@@ -13,6 +13,7 @@ import CommonSelect from "../../../../../core/common/common-select/commonSelect"
 import StaffProfileUpload from "../../../../../core/common/staff-profile-upload/StaffProfileUpload";
 import { apiUrl } from "../../../../../core/config/api";
 import type { ClinicStaff } from "../../../../../core/types/clinicStaff";
+import { toast } from "react-toastify";
 import {
   STAFF_STATUS_OPTIONS,
   emptyStaffForm,
@@ -60,7 +61,7 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
   }, []);
 
   const desigOptions = designations.map((d) => ({ value: d.id, label: d.name }));
-  const defaultRoles = ["front desk","Nurse", "Receptionist", "Pharmacist", "Lab Technician", "Accountant", "Manager", "Other"];
+  const defaultRoles = ["front desk", "Nurse", "Receptionist", "Pharmacist", "Lab Technician", "Accountant", "Manager", "Other"];
   const dynamicRoleOptions = clinicRoles.length > 0
     ? clinicRoles.map(r => ({ value: r.name, label: r.name }))
     : defaultRoles.map(r => ({ value: r, label: r }));
@@ -148,11 +149,14 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Failed to add staff");
       }
+      toast.success("Staff member added successfully");
       closeBootstrapModal("add_staff");
       resetAddForm();
       onSaved();
     } catch (err: unknown) {
-      setFormError(err instanceof Error ? err.message : "Failed to add staff");
+      const msg = err instanceof Error ? err.message : "Failed to add staff";
+      setFormError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -182,10 +186,13 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Failed to update staff");
       }
+      toast.success("Staff member updated successfully");
       closeBootstrapModal("edit_staff");
       onSaved();
     } catch (err: unknown) {
-      setFormError(err instanceof Error ? err.message : "Failed to update staff");
+      const msg = err instanceof Error ? err.message : "Failed to update staff";
+      setFormError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -204,11 +211,12 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Failed to delete");
       }
+      toast.success(`${selected.fullName} deleted successfully`);
       closeBootstrapModal("delete_staff");
       onSelect(null);
       onSaved();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Delete failed");
+      toast.error(err instanceof Error ? err.message : "Delete failed");
     } finally {
       setDeleting(false);
     }

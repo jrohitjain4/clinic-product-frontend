@@ -105,7 +105,9 @@ const Notes = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string | null) => {
+    if (!id) return;
+    setLoading(true);
     try {
       const res = await fetch(apiUrl(`/api/notes/${id}`), {
         method: "DELETE",
@@ -114,13 +116,17 @@ const Notes = () => {
         },
       });
       if (res.ok) {
-        setNotes(notes.filter(n => n._id !== id && n.id !== id));
-        toast.success("Note deleted", { position: "top-center" });
+        setNotes(prev => prev.filter(n => (n._id !== id && n.id !== id)));
+        toast.success("Note deleted successfully", { position: "top-center" });
         const closeBtn = document.getElementById("close_delete_modal");
         if (closeBtn) closeBtn.click();
+      } else {
+        toast.error("Failed to delete note");
       }
     } catch (error) {
-      toast.error("Delete failed", { position: "top-center" });
+      toast.error("An error occurred while deleting");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -221,7 +227,8 @@ const Notes = () => {
             title="View Note"
             data-bs-toggle="modal"
             data-bs-target="#add_note"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
               setEditNote(record);
               setNewNote({ title: record.title, content: record.content, priority: record.priority, noteDate: record.noteDate ? record.noteDate.split('T')[0] : "" });
               setIsViewMode(true);
@@ -234,7 +241,8 @@ const Notes = () => {
             title="Edit Note"
             data-bs-toggle="modal"
             data-bs-target="#add_note"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
               setEditNote(record);
               setNewNote({ title: record.title, content: record.content, priority: record.priority, noteDate: record.noteDate ? record.noteDate.split('T')[0] : "" });
               setIsViewMode(false);
@@ -247,7 +255,10 @@ const Notes = () => {
             title="Delete Note"
             data-bs-toggle="modal"
             data-bs-target="#delete_modal"
-            onClick={() => setDeleteId(record.id || record._id)}
+            onClick={(e) => {
+              e.preventDefault();
+              setDeleteId(record.id || record._id);
+            }}
           >
             <i className="fa fa-trash-alt fs-16"></i>
           </button>

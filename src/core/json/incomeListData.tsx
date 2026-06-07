@@ -60,7 +60,7 @@ export const IncomeListData = [
     Image: "user-07.jpg",
     ReceivedFrom: "Michael Thompson",
     PaymentMethod: "Debit Card",
-    Status: "Recerived",
+    Status: "Received",
   },
   {
     IncomeName: "Thyroid Test",

@@ -4,6 +4,7 @@ import CommonSelect from "../../../../../core/common/common-select/commonSelect"
 import { useState, useEffect } from "react";
 import { apiPost, apiPut, apiDelete } from "../../../../../core/utils/apiClient";
 import { Spin } from "antd";
+import { toast } from "react-toastify";
 
 interface PayrollModalProps {
   selectedPayroll?: any;
@@ -74,11 +75,12 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
     setLoading(true);
     try {
       await apiPost("/api/payroll", constructPayload());
+      toast.success("Payroll record added successfully");
       refetch();
       resetForm();
       document.querySelector<HTMLElement>("#add_payroll .btn-close")?.click();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to add payroll");
     }
     setLoading(false);
   };
@@ -89,10 +91,11 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
     setLoading(true);
     try {
       await apiPut(`/api/payroll/${selectedPayroll.id}`, constructPayload());
+      toast.success("Payroll record updated successfully");
       refetch();
       document.querySelector<HTMLElement>("#edit_payroll .btn-close")?.click();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update payroll");
     }
     setLoading(false);
   };
@@ -103,10 +106,11 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
     setLoading(true);
     try {
       await apiDelete(`/api/payroll/${selectedPayroll.id}`);
+      toast.success("Payroll record deleted successfully");
       refetch();
       document.querySelector<HTMLElement>("#delete_payroll .btn-close")?.click();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete payroll");
     }
     setLoading(false);
   };

@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import Datatable from "../../../../core/common/dataTable";
 import StaffsModal from "./modal/staffsModal";
-import { DatePicker } from "antd";
+import { DatePicker, Modal } from "antd";
 import type { Dayjs } from "dayjs";
 import { useClinicStaff } from "../../../../core/hooks/useClinicStaff";
 import type { ClinicStaff } from "../../../../core/types/clinicStaff";
@@ -13,6 +13,7 @@ const StaffsList = () => {
   const { staffs, loading, error, refetch, reload } = useClinicStaff();
   const [selected, setSelected] = useState<ClinicStaff | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [viewStaff, setViewStaff] = useState<any>(null);
 
   const [filterDesignation, setFilterDesignation] = useState("All");
   const [filterRole, setFilterRole] = useState("All");
@@ -133,24 +134,38 @@ const StaffsList = () => {
     {
       title: "Action",
       render: (_: unknown, record: (typeof tableData)[0]) => (
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center justify-content-start gap-2">
+          {/* View Icon */}
           <button
             type="button"
-            className="avatar avatar-sm border border-primary text-primary rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle p-0"
+            className="bg-transparent border-0 text-info p-1"
+            title="View Details"
+            data-bs-toggle="modal"
+            data-bs-target="#view_staff"
+            onClick={() => setViewStaff(record._raw)}
+          >
+            <i className="fa fa-eye fs-16"></i>
+          </button>
+
+          <button
+            type="button"
+            className="bg-transparent border-0 text-primary p-1"
+            title="Edit"
             data-bs-toggle="modal"
             data-bs-target="#edit_staff"
             onClick={() => openStaff(record._raw)}
           >
-            <i className="ti ti-edit fs-14" />
+            <i className="fa fa-edit fs-16" />
           </button>
           <button
             type="button"
-            className="avatar avatar-sm border border-danger text-danger rounded-circle d-flex align-items-center justify-content-center bg-danger-subtle p-0"
+            className="bg-transparent border-0 text-danger p-1"
+            title="Delete"
             data-bs-toggle="modal"
             data-bs-target="#delete_staff"
             onClick={() => openStaff(record._raw)}
           >
-            <i className="ti ti-trash fs-14" />
+            <i className="fa fa-trash-alt fs-16" />
           </button>
         </div>
       ),
@@ -301,6 +316,76 @@ const StaffsList = () => {
       </div>
 
       <StaffsModal selected={selected} onSelect={setSelected} onSaved={refetch} />
+
+      {/* ===== VIEW STAFF MODAL ===== */}
+      <div id="view_staff" className="modal fade" role="dialog">
+        <div className="modal-dialog modal-dialog-centered modal-lg">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-info text-white">
+              <h5 className="modal-title fw-bold">View Staff Profile</h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={() => setViewStaff(null)}></button>
+            </div>
+            <div className="modal-body">
+              {viewStaff && (
+                <div className="row g-3">
+                  <div className="col-md-12 text-center mb-3">
+                    <div className="avatar avatar-xxl bg-light p-1 rounded-circle shadow-sm mx-auto">
+                      <ImageWithBasePath
+                        src={viewStaff.profileImage?.startsWith('/') ? viewStaff.profileImage : `assets/img/users/${viewStaff.profileImage || 'avatar-21.jpg'}`}
+                        alt={viewStaff.fullName}
+                        className="rounded-circle"
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Full Name</label>
+                    <input type="text" className="form-control bg-light" value={viewStaff.fullName || ""} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Role</label>
+                    <input type="text" className="form-control bg-light" value={viewStaff.role || ""} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Email</label>
+                    <input type="text" className="form-control bg-light" value={viewStaff.email || ""} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Phone</label>
+                    <input type="text" className="form-control bg-light" value={viewStaff.phone || ""} readOnly />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Designation</label>
+                    <input type="text" className="form-control bg-light" value={viewStaff.designationName || "--"} readOnly />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Gender</label>
+                    <input type="text" className="form-control bg-light" value={viewStaff.gender || ""} readOnly />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Blood Group</label>
+                    <input type="text" className="form-control bg-light text-danger fw-bold" value={viewStaff.bloodGroup || "--"} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Date of Birth</label>
+                    <input type="text" className="form-control bg-light" value={viewStaff.dob ? new Date(viewStaff.dob).toLocaleDateString("en-GB") : "--"} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Joined Date</label>
+                    <input type="text" className="form-control bg-light" value={new Date(viewStaff.createdAt).toLocaleDateString("en-GB")} readOnly />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Address</label>
+                    <textarea className="form-control bg-light" rows={2} value={`${viewStaff.address1 || ""} ${viewStaff.address2 || ""} ${viewStaff.city || ""}, ${viewStaff.state || ""} - ${viewStaff.pincode || ""}`} readOnly />
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer border-top pt-3">
+              <button type="button" className="btn btn-primary px-5" data-bs-dismiss="modal" onClick={() => setViewStaff(null)} style={{ borderRadius: '6px' }}>Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 };

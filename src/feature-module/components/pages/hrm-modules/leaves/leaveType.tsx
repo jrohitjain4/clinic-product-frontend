@@ -71,22 +71,24 @@ const LeaveType = () => {
     {
       title: "Action",
       render: (_text: any, record: any) => (
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center justify-content-start gap-2">
           <button
-            className="avatar avatar-sm border border-primary text-primary rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle p-0"
+            className="bg-transparent border-0 text-primary p-1"
+            title="Edit"
             data-bs-toggle="modal"
             data-bs-target="#edit_leave_type"
             onClick={() => setCurrentRecord(leaveTypes.find(l => l.id === record.id) || null)}
           >
-            <i className="ti ti-edit fs-14" />
+            <i className="fa fa-edit fs-16" />
           </button>
           <button
-            className="avatar avatar-sm border border-danger text-danger rounded-circle d-flex align-items-center justify-content-center bg-danger-subtle p-0"
+            className="bg-transparent border-0 text-danger p-1"
+            title="Delete"
             data-bs-toggle="modal"
             data-bs-target="#delete_leave_type"
             onClick={() => setCurrentRecord(leaveTypes.find(l => l.id === record.id) || null)}
           >
-            <i className="ti ti-trash fs-14" />
+            <i className="fa fa-trash-alt fs-16" />
           </button>
         </div>
       ),

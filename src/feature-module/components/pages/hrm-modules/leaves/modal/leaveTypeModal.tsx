@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import { StatusActive } from "../../../../../../core/common/selectOption";
+import { toast } from "react-toastify";
 
 type Props = {
   currentRecord: any;
-  handleCreate: (data: any) => Promise<boolean>;
-  handleUpdate: (id: string, data: any) => Promise<boolean>;
-  handleDelete: (id: string) => Promise<boolean>;
+  handleCreate: (data: any) => Promise<{ success: boolean; message: string }>;
+  handleUpdate: (id: string, data: any) => Promise<{ success: boolean; message: string }>;
+  handleDelete: (id: string) => Promise<{ success: boolean; message: string }>;
 };
 
 const LeaveTypeModal = ({ currentRecord, handleCreate, handleUpdate, handleDelete }: Props) => {
@@ -28,30 +29,39 @@ const LeaveTypeModal = ({ currentRecord, handleCreate, handleUpdate, handleDelet
 
   const onSubmitAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await handleCreate({ name, quota: parseInt(quota, 10), status });
-    if (success) {
+    const result = await handleCreate({ name, quota: parseInt(quota, 10), status });
+    if (result.success) {
+      toast.success(result.message);
       const btn = document.querySelector("#add_leave_type .btn-close") as HTMLButtonElement;
       if (btn) btn.click();
+    } else {
+      toast.error(result.message);
     }
   };
 
   const onSubmitEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentRecord) return;
-    const success = await handleUpdate(currentRecord.id, { name, quota: parseInt(quota, 10), status });
-    if (success) {
+    const result = await handleUpdate(currentRecord.id, { name, quota: parseInt(quota, 10), status });
+    if (result.success) {
+      toast.success(result.message);
       const btn = document.querySelector("#edit_leave_type .btn-close") as HTMLButtonElement;
       if (btn) btn.click();
+    } else {
+      toast.error(result.message);
     }
   };
 
   const onConfirmDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!currentRecord) return;
-    const success = await handleDelete(currentRecord.id);
-    if (success) {
+    const result = await handleDelete(currentRecord.id);
+    if (result.success) {
+      toast.success(result.message);
       const btn = document.querySelector("#delete_leave_type_cancel") as HTMLAnchorElement;
       if (btn) btn.click();
+    } else {
+      toast.error(result.message);
     }
   };
 
@@ -75,14 +85,14 @@ const LeaveTypeModal = ({ currentRecord, handleCreate, handleUpdate, handleDelet
                   <input type="number" className="form-control" value={quota} onChange={e => setQuota(e.target.value)} required />
                 </div>
               </div>
-                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                  <button type="button" className="btn btn-light px-4 shadow-sm" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Cancel</button>
-                  <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" style={{ borderRadius: '6px' }}>Add New Leave Type</button>
-                </div>
-              </form>
-            </div>
+              <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                <button type="button" className="btn btn-light px-4 shadow-sm" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Cancel</button>
+                <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" style={{ borderRadius: '6px' }}>Add New Leave Type</button>
+              </div>
+            </form>
           </div>
         </div>
+      </div>
 
       <div id="edit_leave_type" className="modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
@@ -111,14 +121,14 @@ const LeaveTypeModal = ({ currentRecord, handleCreate, handleUpdate, handleDelet
                   />
                 </div>
               </div>
-                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                  <button type="button" className="btn btn-light px-4 shadow-sm" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Cancel</button>
-                  <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" style={{ borderRadius: '6px' }}>Save Changes</button>
-                </div>
-              </form>
-            </div>
+              <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                <button type="button" className="btn btn-light px-4 shadow-sm" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Cancel</button>
+                <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" style={{ borderRadius: '6px' }}>Save Changes</button>
+              </div>
+            </form>
           </div>
         </div>
+      </div>
 
       <div className="modal fade" id="delete_leave_type">
         <div className="modal-dialog modal-dialog-centered modal-sm">

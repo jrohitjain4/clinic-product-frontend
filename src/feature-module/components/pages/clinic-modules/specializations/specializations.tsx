@@ -11,6 +11,7 @@ import { Specialization, StatusActive } from "../../../../../core/common/selectO
 const Specializations = () => {
   const { specializations, refetch } = useClinicSpecializations();
   const [selectedSpecialization, setSelectedSpecialization] = useState<any>(null);
+  const [viewSpec, setViewSpec] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const data = specializations.map((spec) => ({
@@ -43,7 +44,7 @@ const Specializations = () => {
 
         return (
           <div className="d-flex align-items-center">
-         
+
             <div>
               <h6 className="mb-0 fs-14 fw-semibold">
                 <Link to="#">
@@ -85,7 +86,18 @@ const Specializations = () => {
     {
       title: "Action",
       render: (_text: string, render: any) => (
-        <div className="text-end d-flex align-items-center justify-content-end gap-2">
+        <div className="d-flex align-items-center justify-content-start gap-2">
+          {/* View Icon */}
+          <button
+            className="bg-transparent border-0 text-info p-1"
+            title="View Details"
+            data-bs-toggle="modal"
+            data-bs-target="#view_specialization"
+            onClick={() => setViewSpec(render.raw)}
+          >
+            <i className="fa fa-eye fs-16"></i>
+          </button>
+
           <button
             className="bg-transparent border-0 text-primary p-1"
             data-bs-toggle="modal"
@@ -257,6 +269,58 @@ const Specializations = () => {
 			End Page Content
 		========================= */}
       <Modals selectedSpecialization={selectedSpecialization} refetch={refetch} />
+
+      {/* ===== VIEW MODAL ===== */}
+      <div id="view_specialization" className="modal fade" role="dialog">
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-info text-white">
+              <h5 className="modal-title fw-bold">View Specialization</h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={() => setViewSpec(null)}></button>
+            </div>
+            <div className="modal-body">
+              {viewSpec && (
+                <div className="row g-3">
+                  <div className="col-md-12 text-center mb-3">
+                    <div className="avatar avatar-xxl bg-light p-1 rounded-circle shadow-sm mx-auto">
+                      <ImageWithBasePath
+                        src={viewSpec.image?.startsWith("http") || viewSpec.image?.startsWith("/uploads")
+                          ? viewSpec.image
+                          : `assets/img/doctors/${viewSpec.image || "specialization-01.jpg"}`}
+                        alt={viewSpec.name}
+                        className="rounded-circle"
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label fw-bold">Specialization Name</label>
+                    <input type="text" className="form-control bg-light" value={viewSpec.name || ""} readOnly />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label fw-bold">Description</label>
+                    <textarea className="form-control bg-light" rows={3} value={viewSpec.description || "No description provided"} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold">No. of Doctors</label>
+                    <input type="text" className="form-control bg-light" value={viewSpec.noOfDoctor || 0} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold">Status</label>
+                    <input type="text" className="form-control bg-light" value={viewSpec.status || ""} readOnly />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label fw-bold small text-muted">CREATED ON</label>
+                    <div className="text-dark fw-medium small">{new Date(viewSpec.createdAt).toLocaleDateString("en-GB", { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer border-top pt-3">
+              <button type="button" className="btn btn-primary px-5" data-bs-dismiss="modal" onClick={() => setViewSpec(null)} style={{ borderRadius: '6px' }}>Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 };

@@ -4,6 +4,7 @@ import { DatePicker, Spin } from "antd";
 import { useState, useEffect } from "react";
 import { apiPost, apiPut, apiDelete } from "../../../../../core/utils/apiClient";
 import dayjs from "dayjs";
+import { toast } from "react-toastify";
 
 interface HolidaysModalProps {
   selectedHoliday?: any;
@@ -49,11 +50,12 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch 
         date: date.format("YYYY-MM-DD"),
         endDate: endDate ? endDate.format("YYYY-MM-DD") : undefined
       });
+      toast.success("Holiday added successfully");
       refetch();
       resetForm();
       document.querySelector<HTMLElement>("#add_holiday .btn-close")?.click();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to add holiday");
     }
     setLoading(false);
   };
@@ -69,10 +71,11 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch 
         date: date.format("YYYY-MM-DD"),
         endDate: endDate ? endDate.format("YYYY-MM-DD") : undefined
       });
+      toast.success("Holiday updated successfully");
       refetch();
       document.querySelector<HTMLElement>("#edit_holiday .btn-close")?.click();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update holiday");
     }
     setLoading(false);
   };
@@ -83,10 +86,11 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch 
     setLoading(true);
     try {
       await apiDelete(`/api/holidays/${selectedHoliday.id}`);
+      toast.success("Holiday deleted successfully");
       refetch();
       document.querySelector<HTMLElement>("#delete_holiday .btn-close")?.click();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete holiday");
     }
     setLoading(false);
   };

@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import Datatable from "../../../../core/common/dataTable";
 import HolidaysModal from "./modal/holidaysModal";
 import { useHolidays } from "../../../../core/hooks/useHolidays";
-import { Calendar, DatePicker } from "antd";
+import { Calendar, DatePicker, Modal } from "antd";
 import type { Dayjs } from 'dayjs';
 import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
@@ -19,6 +19,7 @@ const HolidaysList = () => {
   const [selectedHoliday, setSelectedHoliday] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterDate, setFilterDate] = useState<Dayjs | null>(null);
+  const [viewHoliday, setViewHoliday] = useState<any>(null);
 
   const filteredData = useMemo(() => {
     return holidays.filter(h => {
@@ -74,22 +75,35 @@ const HolidaysList = () => {
     {
       title: "Action",
       render: (_: string, record: any) => (
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center justify-content-start gap-2">
+          {/* View Icon */}
           <button
-            className="avatar avatar-sm border border-primary text-primary rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle p-0"
+            className="bg-transparent border-0 text-info p-1"
+            title="View Details"
+            data-bs-toggle="modal"
+            data-bs-target="#view_holiday"
+            onClick={() => setViewHoliday(record.raw)}
+          >
+            <i className="fa fa-eye fs-16"></i>
+          </button>
+
+          <button
+            className="bg-transparent border-0 text-primary p-1"
+            title="Edit"
             data-bs-toggle="modal"
             data-bs-target="#edit_holiday"
             onClick={() => setSelectedHoliday(record.raw)}
           >
-            <i className="ti ti-edit fs-14" />
+            <i className="fa fa-edit fs-16" />
           </button>
           <button
-            className="avatar avatar-sm border border-danger text-danger rounded-circle d-flex align-items-center justify-content-center bg-danger-subtle p-0"
+            className="bg-transparent border-0 text-danger p-1"
+            title="Delete"
             data-bs-toggle="modal"
             data-bs-target="#delete_holiday"
             onClick={() => setSelectedHoliday(record.raw)}
           >
-            <i className="ti ti-trash fs-14" />
+            <i className="fa fa-trash-alt fs-16" />
           </button>
         </div>
       ),
@@ -195,6 +209,53 @@ const HolidaysList = () => {
         </div>
       </div>
       <HolidaysModal selectedHoliday={selectedHoliday} refetch={refetch} />
+
+      {/* ===== VIEW HOLIDAY MODAL ===== */}
+      <div id="view_holiday" className="modal fade" role="dialog">
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-info text-white">
+              <h5 className="modal-title fw-bold">View Holiday Details</h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={() => setViewHoliday(null)}></button>
+            </div>
+            <div className="modal-body">
+              {viewHoliday && (
+                <div className="row g-3">
+                  <div className="col-md-12">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Holiday Name</label>
+                    <input type="text" className="form-control bg-light" value={viewHoliday.title || ""} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Start Date</label>
+                    <input type="text" className="form-control bg-light" value={new Date(viewHoliday.date).toLocaleDateString("en-GB")} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold small text-uppercase text-muted">End Date</label>
+                    <input type="text" className="form-control bg-light" value={viewHoliday.endDate ? new Date(viewHoliday.endDate).toLocaleDateString("en-GB") : "--"} readOnly />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label fw-bold small text-uppercase text-muted">Description</label>
+                    <textarea className="form-control bg-light" rows={3} value={viewHoliday.description || "No description provided"} readOnly />
+                  </div>
+                  <div className="col-md-12">
+                    <div className="p-2 bg-light rounded text-center fw-bold text-primary shadow-sm border">
+                      {(() => {
+                        const start = new Date(viewHoliday.date);
+                        const end = viewHoliday.endDate ? new Date(viewHoliday.endDate) : start;
+                        const diff = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                        return diff > 1 ? `${diff} Days Duration` : `${viewHoliday.dayName || "Single Day"}`;
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer border-top pt-3">
+              <button type="button" className="btn btn-primary px-5" data-bs-dismiss="modal" onClick={() => setViewHoliday(null)} style={{ borderRadius: '6px' }}>Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 };

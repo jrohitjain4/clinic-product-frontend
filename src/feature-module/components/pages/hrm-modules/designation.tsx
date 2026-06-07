@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router";
 import Datatable from "../../../../core/common/dataTable";
-import { DatePicker } from "antd";
+import { DatePicker, Modal } from "antd";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { apiUrl } from "../../../../core/config/api";
+import { toast } from "react-toastify";
 
 interface Department {
   id: string;
@@ -33,6 +34,7 @@ const DesignationList = () => {
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterDate, setFilterDate] = useState<Dayjs | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [viewDesig, setViewDesig] = useState<Designation | null>(null);
 
   // Add modal state
   const [addName, setAddName] = useState("");
@@ -115,11 +117,13 @@ const DesignationList = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
+      toast.success("Designation added successfully");
       setAddName(""); setAddType("Staff"); setAddDeptId(""); setAddDesc("");
       fetchDesignations();
       document.getElementById("btn-close-add-desig")?.click();
     } catch (err: any) {
       setAddError(err.message);
+      toast.error(err.message || "Failed to add designation");
     } finally {
       setAddLoading(false);
     }
@@ -145,10 +149,12 @@ const DesignationList = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
+      toast.success("Designation updated successfully");
       fetchDesignations();
       document.getElementById("btn-close-edit-desig")?.click();
     } catch (err: any) {
       setEditError(err.message);
+      toast.error(err.message || "Failed to update designation");
     } finally {
       setEditLoading(false);
     }
@@ -165,10 +171,39 @@ const DesignationList = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
+
+      toast.success("Designation deleted successfully");
       fetchDesignations();
       document.getElementById("btn-close-delete-desig")?.click();
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message || "Failed to delete designation");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(apiUrl("/api/designations/bulk-delete"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ids: selectedIds }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message || "Selected designations deleted");
+        setDesignations(designations.filter((d) => !selectedIds.includes(d.id)));
+        setSelectedIds([]);
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Bulk delete failed");
     } finally {
       setDeleteLoading(false);
     }
@@ -218,24 +253,34 @@ const DesignationList = () => {
     {
       title: "Action",
       render: (_: any, record: Designation) => (
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center justify-content-start gap-2">
+          {/* View Icon */}
           <button
-            className="avatar avatar-sm border border-primary text-primary rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle p-0"
+            className="bg-transparent border-0 text-info p-1"
+            title="View Details"
+            data-bs-toggle="modal"
+            data-bs-target="#view_designation"
+            onClick={() => setViewDesig(record)}
+          >
+            <i className="fa fa-eye fs-16"></i>
+          </button>
+          <button
+            className="bg-transparent border-0 text-primary p-1"
             title="Edit"
             data-bs-toggle="modal"
             data-bs-target="#edit_designation"
             onClick={() => openEdit(record)}
           >
-            <i className="ti ti-edit fs-14"></i>
+            <i className="fa fa-edit fs-16"></i>
           </button>
           <button
-            className="avatar avatar-sm border border-danger text-danger rounded-circle d-flex align-items-center justify-content-center bg-danger-subtle p-0"
+            className="bg-transparent border-0 text-danger p-1"
             title="Delete"
             data-bs-toggle="modal"
             data-bs-target="#delete_designation"
             onClick={() => openDelete(record)}
           >
-            <i className="ti ti-trash fs-14"></i>
+            <i className="fa fa-trash-alt fs-16"></i>
           </button>
         </div>
       ),
@@ -267,6 +312,22 @@ const DesignationList = () => {
                 onChange={(date) => setFilterDate(date)}
                 value={filterDate}
               />
+
+              {selectedIds.length > 0 && (
+                <button
+                  className="btn btn-danger d-flex align-items-center justify-content-center"
+                  style={{ minHeight: '38px', whiteSpace: 'nowrap' }}
+                  onClick={handleBulkDelete}
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? (
+                    <i className="fa fa-spinner fa-spin me-2" />
+                  ) : (
+                    <i className="ti ti-trash me-2" />
+                  )}
+                  Delete Selected ({selectedIds.length})
+                </button>
+              )}
 
               <div className="dropdown">
                 <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap" style={{ width: '120px', minHeight: '38px' }} data-bs-toggle="dropdown">
@@ -483,6 +544,51 @@ const DesignationList = () => {
                   {deleteLoading ? "Deleting..." : "Yes, Delete"}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== VIEW MODAL ===== */}
+      <div id="view_designation" className="modal fade" role="dialog">
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-info text-white">
+              <h5 className="modal-title fw-bold">View Designation</h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={() => setViewDesig(null)}></button>
+            </div>
+            <div className="modal-body">
+              {viewDesig && (
+                <div className="row g-3">
+                  <div className="col-md-12">
+                    <label className="form-label fw-bold">Designation Name</label>
+                    <input type="text" className="form-control bg-light" value={viewDesig.name || ""} readOnly />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label fw-bold">Department</label>
+                    <input type="text" className="form-control bg-light" value={viewDesig.departmentName || "--"} readOnly />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label fw-bold">Type</label>
+                    <input type="text" className="form-control bg-light" value={viewDesig.type || ""} readOnly />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label fw-bold">Description</label>
+                    <textarea className="form-control bg-light" rows={3} value={viewDesig.description || "No description provided"} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold">Status</label>
+                    <input type="text" className="form-control bg-light" value={viewDesig.status || ""} readOnly />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold">Created On</label>
+                    <input type="text" className="form-control bg-light" value={new Date(viewDesig.createdAt).toLocaleDateString("en-GB")} readOnly />
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer border-top pt-3">
+              <button type="button" className="btn btn-primary px-5" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Close</button>
             </div>
           </div>
         </div>

@@ -39,49 +39,64 @@ export const useLeaveTypes = () => {
     }, [fetchLeaveTypes]);
 
     const createLeaveType = async (data: Partial<LeaveType>) => {
-        const res = await fetch(apiUrl("/api/leave-types"), {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify(data),
-        });
-        if (res.ok) {
-            await fetchLeaveTypes();
-            return true;
+        try {
+            const res = await fetch(apiUrl("/api/leave-types"), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify(data),
+            });
+            const json = await res.json().catch(() => ({}));
+            if (res.ok) {
+                await fetchLeaveTypes();
+                return { success: true, message: "Leave type added successfully" };
+            }
+            return { success: false, message: json.message || "Failed to add leave type" };
+        } catch (e: any) {
+            return { success: false, message: e.message || "Failed to add leave type" };
         }
-        return false;
     };
 
     const updateLeaveType = async (id: string, data: Partial<LeaveType>) => {
-        const res = await fetch(apiUrl(`/api/leave-types/${id}`), {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify(data),
-        });
-        if (res.ok) {
-            await fetchLeaveTypes();
-            return true;
+        try {
+            const res = await fetch(apiUrl(`/api/leave-types/${id}`), {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify(data),
+            });
+            const json = await res.json().catch(() => ({}));
+            if (res.ok) {
+                await fetchLeaveTypes();
+                return { success: true, message: "Leave type updated successfully" };
+            }
+            return { success: false, message: json.message || "Failed to update leave type" };
+        } catch (e: any) {
+            return { success: false, message: e.message || "Failed to update leave type" };
         }
-        return false;
     };
 
     const deleteLeaveType = async (id: string) => {
-        const res = await fetch(apiUrl(`/api/leave-types/${id}`), {
-            method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-        });
-        if (res.ok) {
-            await fetchLeaveTypes();
-            return true;
+        try {
+            const res = await fetch(apiUrl(`/api/leave-types/${id}`), {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+            });
+            const json = await res.json().catch(() => ({}));
+            if (res.ok) {
+                await fetchLeaveTypes();
+                return { success: true, message: "Leave type deleted successfully" };
+            }
+            return { success: false, message: json.message || "Failed to delete leave type" };
+        } catch (e: any) {
+            return { success: false, message: e.message || "Failed to delete leave type" };
         }
-        return false;
     };
 
     return { leaveTypes, loading, error, createLeaveType, updateLeaveType, deleteLeaveType, reload: fetchLeaveTypes };

@@ -129,7 +129,9 @@ const TodoList = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string | null) => {
+    if (!id) return;
+    setLoading(true);
     try {
       const res = await fetch(apiUrl(`/api/todos/${id}`), {
         method: "DELETE",
@@ -138,13 +140,17 @@ const TodoList = () => {
         },
       });
       if (res.ok) {
-        setTodos(todos.filter(t => t.id !== id));
-        toast.success("Task deleted", { position: "top-center" });
+        setTodos(prev => prev.filter(t => t.id !== id));
+        toast.success("Task deleted successfully", { position: "top-center" });
         const closeBtn = document.getElementById("close_delete_modal");
         if (closeBtn) closeBtn.click();
+      } else {
+        toast.error("Failed to delete task");
       }
     } catch (error) {
-      toast.error("Delete failed", { position: "top-center" });
+      toast.error("An error occurred during deletion");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -269,7 +275,8 @@ const TodoList = () => {
             title="View Task"
             data-bs-toggle="modal"
             data-bs-target="#add_todo"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
               setEditTodo(record);
               setNewTodo({ title: record.title, priority: record.priority, taskDate: record.taskDate ? record.taskDate.split('T')[0] : "" });
               setIsViewMode(true);
@@ -282,7 +289,8 @@ const TodoList = () => {
             title="Edit Task"
             data-bs-toggle="modal"
             data-bs-target="#add_todo"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
               setEditTodo(record);
               setNewTodo({ title: record.title, priority: record.priority, taskDate: record.taskDate ? record.taskDate.split('T')[0] : "" });
               setIsViewMode(false);
@@ -295,7 +303,10 @@ const TodoList = () => {
             title="Delete Task"
             data-bs-toggle="modal"
             data-bs-target="#delete_modal"
-            onClick={() => setDeleteId(record.id)}
+            onClick={(e) => {
+              e.preventDefault();
+              setDeleteId(record.id);
+            }}
           >
             <i className="fa fa-trash-alt fs-16"></i>
           </button>

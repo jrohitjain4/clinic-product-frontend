@@ -14,6 +14,8 @@ import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import Datatable from "../../../../../core/common/dataTable";
 import Modals from "../doctors/modals/modals";
 import { useClinicDoctors } from "../../../../../core/hooks/useClinicDoctors";
+import { apiUrl } from "../../../../../core/config/api";
+import { toast } from "react-toastify";
 
 const PLACEHOLDER_IMAGES = [
   "doctor-01.jpg",
@@ -27,16 +29,43 @@ const DoctorsList = () => {
   const { doctors, loading, error, refetch } = useClinicDoctors();
   const [searchText, setSearchText] = useState<string>("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [doctorToDelete, setDoctorToDelete] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    const idsToDelete = doctorToDelete ? [doctorToDelete] : selectedIds;
+    if (idsToDelete.length === 0) {
+      toast.warning("Please select at least one doctor to delete");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    try {
+      for (const id of idsToDelete) {
+        const res = await fetch(apiUrl(`/api/doctors/${id}`), {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Failed to delete");
+      }
+      toast.success(idsToDelete.length > 1 ? "Doctors deleted successfully" : "Doctor deleted successfully");
+      setSelectedIds([]);
+      setDoctorToDelete(null);
+      refetch();
+    } catch (err) {
+      toast.error("Error deleting doctor(s)");
+    }
+  };
 
   const tableData = useMemo(
     () =>
       doctors.map((d, i) => ({
         key: d.id,
+        SrNo: i + 1,
         Name_Designation: d.fullName,
         Department: d.department?.name || "",
         Phone: d.phone || "",
         Email: d.email || "",
-        Fees: d.consultationCharge != null ? `$${d.consultationCharge}` : "",
+        Fees: d.consultationCharge != null ? `₹${d.consultationCharge}` : "—",
         Status: d.status === "Active" ? "Available" : d.status,
         img:
           d.profileImage ||
@@ -46,6 +75,13 @@ const DoctorsList = () => {
   );
 
   const columns = [
+    {
+      title: "Sr No",
+      dataIndex: "SrNo",
+      render: (text: number) => <span className="fs-13 fw-medium">{text}</span>,
+      sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+        a.SrNo - b.SrNo,
+    },
     {
       title: "Name & Designation",
       dataIndex: "Name_Designation",
@@ -111,16 +147,9 @@ const DoctorsList = () => {
     {
       title: "Action",
       dataIndex: "action",
-      align: "right",
+      align: "center",
       render: (_: unknown, record: (typeof tableData)[0]) => (
-        <div className="text-end d-flex align-items-center justify-content-end gap-2">
-          <Link
-            to={all_routes.appointmentCalendar}
-            className="btn btn-icon btn-sm btn-soft-info"
-            title="Appointment Calendar"
-          >
-            <i className="ti ti-calendar-cog"></i>
-          </Link>
+        <div className="text-center d-flex align-items-center justify-content-center gap-2">
           <Link
             to={doctorDetailsPath(record.key)}
             className="btn btn-icon btn-sm btn-soft-secondary"
@@ -140,6 +169,7 @@ const DoctorsList = () => {
             title="Delete Doctor"
             data-bs-toggle="modal"
             data-bs-target="#delete_modal"
+            onClick={() => setDoctorToDelete(record.key)}
           >
             <i className="ti ti-trash"></i>
           </button>
@@ -207,11 +237,12 @@ const DoctorsList = () => {
               <div className="dropdown">
                 <Link
                   to="#"
-                  className="btn btn-white bg-white fs-14 py-1 border d-inline-flex text-dark align-items-center"
+                  className="btn btn-white fw-medium bg-white fs-14 border d-inline-flex align-items-center justify-content-center shadow-sm"
+                  style={{ minHeight: "38px", borderRadius: "8px" }}
                   data-bs-toggle="dropdown"
                   data-bs-auto-close="outside"
                 >
-                  <i className="ti ti-filter text-gray-5 me-1" />
+                  <i className="ti ti-adjustments-horizontal me-2 text-primary fs-16" />
                   Filters
                 </Link>
                 <div className="dropdown-menu dropdown-lg dropdown-menu-end filter-dropdown p-0">
@@ -285,8 +316,8 @@ const DoctorsList = () => {
                   </form>
                 </div>
               </div>
-              <Link 
-                to={all_routes.addDoctors} 
+              <Link
+                to={all_routes.addDoctors}
                 className="btn btn-primary d-flex align-items-center justify-content-center ms-1"
                 style={{ minHeight: '38px', whiteSpace: 'nowrap' }}
               >
@@ -313,8 +344,8 @@ const DoctorsList = () => {
           ) : tableData.length === 0 && !error ? (
             <div className="text-center py-5 border rounded bg-white">
               <p className="text-muted mb-3">No doctors found. Add a doctor to get started.</p>
-              <Link 
-                to={all_routes.addDoctors} 
+              <Link
+                to={all_routes.addDoctors}
                 className="btn btn-primary d-flex align-items-center justify-content-center ms-1"
                 style={{ minHeight: '38px', whiteSpace: 'nowrap' }}
               >
@@ -332,13 +363,14 @@ const DoctorsList = () => {
               />
             </div>
           )}
-          
+
           {selectedIds.length > 0 && (
             <div className="d-flex justify-content-center mt-auto pt-4 pb-4">
               <button
                 className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
                 data-bs-toggle="modal"
                 data-bs-target="#delete_modal"
+                onClick={() => setDoctorToDelete(null)}
                 style={{ borderRadius: '8px', minHeight: '42px', fontWeight: 'bold' }}
               >
                 <i className="ti ti-trash fs-18"></i>
@@ -357,7 +389,7 @@ const DoctorsList = () => {
           </p>
         </div>
       </div>
-      <Modals />
+      <Modals onDelete={handleDelete} />
     </>
   );
 };

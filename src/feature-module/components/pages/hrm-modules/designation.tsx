@@ -494,7 +494,7 @@ const DesignationList = () => {
                 </div>
                 <div className="mb-3">
                   <label className="form-label fw-bold">Designation Name <span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" value={editName} onChange={e => setEditName(e.target.value)} />
+                  <input type="text" className="form-control" value={editName} onChange={e => setEditName(e.target.value)} placeholder="e.g. Senior Nurse" />
                 </div>
                 <div className="mb-3">
                   <label className="form-label fw-bold">Department <span className="text-danger ms-1">*</span></label>
@@ -505,7 +505,7 @@ const DesignationList = () => {
                 </div>
                 <div className="mb-3">
                   <label className="form-label fw-bold">Description</label>
-                  <textarea className="form-control" rows={3} value={editDesc} onChange={e => setEditDesc(e.target.value)} />
+                  <textarea className="form-control" rows={3} value={editDesc} onChange={e => setEditDesc(e.target.value)} placeholder="Optional description" />
                 </div>
                 <div className="mb-0">
                   <label className="form-label fw-bold">Status</label>

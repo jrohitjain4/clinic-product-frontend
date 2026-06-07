@@ -120,7 +120,7 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch 
                   <label className="form-label">
                     Title<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" value={title} onChange={(e) => setTitle(e.target.value)} required />
+                  <input type="text" className="form-control" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Christmas Day" required />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Description</label>
@@ -129,6 +129,7 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch 
                     rows={3}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Optional description"
                   />
                 </div>
                 <div className="row mb-0">
@@ -211,6 +212,7 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch 
                     className="form-control"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. Christmas Day"
                     required
                   />
                 </div>
@@ -221,6 +223,7 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch 
                     rows={3}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Optional description"
                   />
                 </div>
                 <div className="row mb-0">

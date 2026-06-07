@@ -11,6 +11,11 @@ import {
   type StoredAward,
   type StoredEducation,
 } from "../../../../../core/utils/doctorProfile";
+import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppointments";
+import { appointmentToTableRow, statusBadgeClass } from "../../../../../core/utils/appointmentForm";
+import Datatable from "../../../../../core/common/dataTable";
+import type { ClinicAppointment } from "../../../../../core/types/clinicAppointment";
+import AppointmentsModals from "../appointments/appointmentsModals";
 
 type ScheduleSlot = { session?: string; from: string; to: string };
 
@@ -54,7 +59,9 @@ interface DoctorDetail {
   medicalRegCertificate?: string | null;
   qualificationCertificate?: string | null;
   aadhaarCard?: string | null;
+  aadhaarCardBack?: string | null;
   panCard?: string | null;
+  alternateMobile?: string | null;
 }
 
 const WEEKDAYS = [
@@ -99,6 +106,11 @@ const DoctorDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeDay, setActiveDay] = useState("Monday");
+  const { appointments, loading: appointmentsLoading, refetch: refetchAppointments } = useClinicAppointments({ doctorId: id });
+  const [selectedAppointment, setSelectedAppointment] = useState<ClinicAppointment | null>(null);
+
+  const patientPath = (patientId: string) =>
+    all_routes.patientDetails.replace(":id", patientId);
 
   useEffect(() => {
     if (!id || id === ":id") {
@@ -167,11 +179,75 @@ const DoctorDetails = () => {
   );
 
   const profileImg =
-    doctor?.profileImage || "assets/img/doctors/doctor-06.jpg";
-  const statusLabel = doctor?.status === "Active" ? "Available" : doctor?.status;
+    doctor?.profileImage || "assets/img/doctor-placeholder.png";
+  const statusLabel = doctor?.status === "Active" ? "Available" : (doctor?.status === "Inactive" ? "Unable" : doctor?.status);
   const location = [doctor?.address1, doctor?.city, doctor?.state, doctor?.country]
     .filter(Boolean)
     .join(", ");
+
+  const appointmentColumns = [
+    {
+      title: "ID",
+      dataIndex: "Code",
+      render: (text: string, record: any) => (
+        <Link
+          to="#"
+          className="text-primary fw-medium"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#view_details"
+          onClick={() => setSelectedAppointment(record._raw)}
+        >
+          {text}
+        </Link>
+      ),
+      sorter: (a: any, b: any) => a.Code.localeCompare(b.Code),
+    },
+    {
+      title: "Patient",
+      dataIndex: "Patient",
+      render: (text: string, record: any) => (
+        <div className="d-flex align-items-center">
+          <Link to={patientPath(record._raw.patientId)} className="avatar avatar-sm me-2 flex-shrink-0">
+            <ImageWithBasePath
+              src={record.Patient_Image}
+              alt="Patient"
+              className="rounded-circle"
+            />
+          </Link>
+          <h6 className="fs-14 mb-0">
+            <Link to={patientPath(record._raw.patientId)} className="text-dark fw-semibold">
+              {text}
+            </Link>
+          </h6>
+        </div>
+      ),
+      sorter: (a: any, b: any) => a.Patient.localeCompare(b.Patient),
+    },
+    {
+      title: "Date & Time",
+      dataIndex: "Date_Time",
+      sorter: (a: any, b: any) => a.Date_Time.localeCompare(b.Date_Time),
+    },
+    {
+      title: "Mode",
+      dataIndex: "Mode",
+      sorter: (a: any, b: any) => a.Mode.localeCompare(b.Mode),
+    },
+    {
+      title: "Status",
+      dataIndex: "Status",
+      render: (text: string) => (
+        <span className={`fs-12 badge rounded-pill fw-medium ${statusBadgeClass(text)}`}>
+          {text}
+        </span>
+      ),
+      sorter: (a: any, b: any) => a.Status.localeCompare(b.Status),
+    },
+  ];
+
+  const appointmentTableData = useMemo(() => {
+    return appointments.map((a, i) => appointmentToTableRow(a, i));
+  }, [appointments]);
 
   if (loading) {
     return (
@@ -200,8 +276,8 @@ const DoctorDetails = () => {
 
   return (
     <div className="page-wrapper">
-      <div className="content pb-0">
-        <div className="mb-3">
+      <div className="content pb-0 pt-1">
+        <div className="mb-2">
           <h6 className="fw-semibold fs-14 mb-0">
             <Link to={doctorsListPath()}>
               <i className="ti ti-chevron-left me-1" />
@@ -210,7 +286,7 @@ const DoctorDetails = () => {
           </h6>
         </div>
 
-        <div className="card">
+        <div className="card mb-2">
           <div className="card-body d-flex align-items-center justify-content-between flex-wrap row-gap-3">
             <div className="d-flex align-items-center flex-sm-nowrap flex-wrap row-gap-3">
               <div className="me-3 doctor-profile-img">
@@ -258,7 +334,7 @@ const DoctorDetails = () => {
             <div>
               <p className="mb-2">Consultation Charge</p>
               <h6 className="fs-18 fw-bold mb-3">
-                ${doctor.consultationCharge ?? "—"}
+                ₹{doctor.consultationCharge ?? "—"}
                 <span className="fw-normal text-body fs-14">
                   {" "}
                   / {doctor.appointmentDuration ?? 30} Min
@@ -275,9 +351,9 @@ const DoctorDetails = () => {
           </div>
         </div>
 
-        <div className="row">
+        <div className="row gx-3">
           <div className="col-lg-8">
-            <div className="card">
+            <div className="card mb-2">
               <div className="card-body">
                 <h5 className="fw-bold mb-3">Availability</h5>
                 {scheduleDays.length > 0 ? (
@@ -315,7 +391,7 @@ const DoctorDetails = () => {
               </div>
             </div>
 
-            <div className="card">
+            <div className="card mb-2">
               <div className="card-body">
                 <h5 className="fw-bold mb-3">Short Bio</h5>
                 <p className="mb-0">{doctor.bio || "No bio provided."}</p>
@@ -351,7 +427,7 @@ const DoctorDetails = () => {
               </div>
             )}
 
-            <div className="card">
+            <div className="card mb-2">
               <div className="card-body">
                 <h5 className="fw-bold mb-3">Education Information</h5>
                 {educationList.length > 0 ? (
@@ -377,7 +453,7 @@ const DoctorDetails = () => {
               </div>
             </div>
 
-            <div className="card">
+            <div className="card mb-2">
               <div className="card-body">
                 <h5 className="fw-bold mb-3">Awards &amp; Recognition</h5>
                 {awardsList.length > 0 ? (
@@ -403,7 +479,7 @@ const DoctorDetails = () => {
               </div>
             </div>
 
-            <div className="card">
+            <div className="card mb-2">
               <div className="card-body">
                 <h5 className="fw-bold mb-3">Certifications</h5>
                 {certificationsList.length > 0 ? (
@@ -428,10 +504,37 @@ const DoctorDetails = () => {
                 )}
               </div>
             </div>
+
+            <div className="card">
+              <div className="card-body">
+                <div className="d-flex align-items-center justify-content-between mb-3">
+                  <h5 className="fw-bold mb-0">Recent Appointments</h5>
+                  <Link to={all_routes.appointments} className="btn btn-sm btn-soft-primary">
+                    View All
+                  </Link>
+                </div>
+                {appointmentsLoading ? (
+                  <div className="text-center py-4">
+                    <span className="spinner-border spinner-border-sm text-primary" />
+                  </div>
+                ) : appointmentTableData.length > 0 ? (
+                  <div className="appointment-table doctor-appointments">
+                    <Datatable
+                      columns={appointmentColumns}
+                      dataSource={appointmentTableData}
+                      Selection={false}
+                      searchText=""
+                    />
+                  </div>
+                ) : (
+                  <p className="text-muted mb-0">No appointments found for this doctor.</p>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div className="col-xl-4 theiaStickySidebar">
-            <div className="card">
+          <div className="col-lg-4 theiaStickySidebar">
+            <div className="card mb-2">
               <div className="card-body">
                 <h6 className="fw-bold mb-3">About</h6>
                 <AboutRow
@@ -440,6 +543,7 @@ const DoctorDetails = () => {
                   value={doctor.medicalLicenseNumber || "—"}
                 />
                 <AboutRow icon="ti-phone" label="Phone Number" value={doctor.phone || "—"} />
+                <AboutRow icon="ti-phone-call" label="Alternate Mobile" value={doctor.alternateMobile || "—"} />
                 <AboutRow icon="ti-mail" label="Email Address" value={doctor.email || "—"} />
                 <AboutRow icon="ti-map-pin-check" label="Location" value={location || "—"} />
                 <AboutRow icon="ti-calendar-event" label="DOB" value={formatDob(doctor.dob)} />
@@ -465,14 +569,15 @@ const DoctorDetails = () => {
                 )}
               </div>
             </div>
-            <div className="card mt-3">
-              <div className="card-body">
+            <div className="card mb-2">
+              <div className="card-body p-3">
                 <h6 className="fw-bold mb-3">Documents & Certificates</h6>
                 <div className="d-flex flex-column gap-3">
                   <DocumentRow label="Doctor Signature" url={doctor.signatureImage} />
                   <DocumentRow label="Medical Registration" url={doctor.medicalRegCertificate} />
                   <DocumentRow label="Qualification Certificate" url={doctor.qualificationCertificate} />
-                  <DocumentRow label="Aadhaar Card" url={doctor.aadhaarCard} />
+                  <DocumentRow label="Aadhaar Card (Front)" url={doctor.aadhaarCard} />
+                  <DocumentRow label="Aadhaar Card (Back)" url={doctor.aadhaarCardBack} />
                   <DocumentRow label="PAN Card" url={doctor.panCard} />
                 </div>
               </div>
@@ -486,6 +591,12 @@ const DoctorDetails = () => {
           2025 © <Link to="#" className="link-primary">Docyori</Link>, All Rights Reserved
         </p>
       </div>
+
+      <AppointmentsModals
+        selected={selectedAppointment}
+        onClear={() => setSelectedAppointment(null)}
+        onDeleted={refetchAppointments}
+      />
     </div>
   );
 };

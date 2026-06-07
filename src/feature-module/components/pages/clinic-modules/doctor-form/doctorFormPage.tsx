@@ -82,6 +82,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   const [designationId, setDesignationId] = useState("");
   const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
   const [medicalLicenseNumber, setMedicalLicenseNumber] = useState("");
+  const [alternateMobile, setAlternateMobile] = useState("");
   const [maritalStatus, setMaritalStatus] = useState("");
   const [qualification, setQualification] = useState("");
   const [tags, setTags] = useState<string[]>(["English"]);
@@ -93,7 +94,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   // Address
   const [address1, setAddress1] = useState("");
   const [address2, setAddress2] = useState("");
-  const [country, setCountry] = useState("");
+  const [country, setCountry] = useState("India");
   const [city, setCity] = useState("");
   const [stateVal, setStateVal] = useState("");
   const [pincode, setPincode] = useState("");
@@ -120,10 +121,17 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
     "Saturday",
     "Sunday",
   ] as const;
-  const [schedules, setSchedules] = useState<Record<string, RowType[]>>({});
+  const [schedules, setSchedules] = useState<Record<string, RowType[]>>({
+    Monday: [],
+    Tuesday: [],
+    Wednesday: [],
+    Thursday: [],
+    Friday: [],
+    Saturday: [],
+    Sunday: [],
+  });
+  const [lockedDays, setLockedDays] = useState<Record<string, boolean>>({});
   const [activeScheduleDay, setActiveScheduleDay] = useState<string>("Monday");
-  const [scheduleVersion, setScheduleVersion] = useState(0);
-  const [scheduleApplyMsg, setScheduleApplyMsg] = useState("");
 
   const [educations, setEducations] = useState<EducationEntry[]>([]);
   const [awards, setAwards] = useState<AwardEntry[]>([]);
@@ -133,13 +141,16 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   const [medicalRegCertificate, setMedicalRegCertificate] = useState<string | null>(null);
   const [qualificationCertificate, setQualificationCertificate] = useState<string | null>(null);
   const [aadhaarCard, setAadhaarCard] = useState<string | null>(null);
+  const [aadhaarCardBack, setAadhaarCardBack] = useState<string | null>(null);
   const [panCard, setPanCard] = useState<string | null>(null);
+  const [status, setStatus] = useState("Active");
 
   const [formReady, setFormReady] = useState(!isEdit);
   const [loadingDoctor, setLoadingDoctor] = useState(isEdit);
   const [educationKey, setEducationKey] = useState(0);
   const [awardsKey, setAwardsKey] = useState(0);
   const [certsKey, setCertsKey] = useState(0);
+  const [showErrorModal, setShowErrorModal] = useState(false);
 
   const serializeSchedules = (raw: Record<string, RowType[]>) => {
     const out: Record<string, { session: string; from: string; to: string }[]> = {};
@@ -154,22 +165,6 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
     return Object.keys(out).length ? out : null;
   };
 
-  const handleApplyAllSchedule = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const source = schedules[activeScheduleDay];
-    if (!source?.length) {
-      setScheduleApplyMsg("Pehle is din ka session set karo, phir Apply All dabao.");
-      return;
-    }
-    const next: Record<string, RowType[]> = {};
-    WEEKDAYS.forEach((day) => {
-      next[day] = cloneScheduleRows(source);
-    });
-    setSchedules(next);
-    setScheduleVersion((v) => v + 1);
-    setScheduleApplyMsg(`"${activeScheduleDay}" ka schedule saat dinon par apply ho gaya.`);
-    setTimeout(() => setScheduleApplyMsg(""), 4000);
-  };
 
   // UI state
   const [submitting, setSubmitting] = useState(false);
@@ -210,6 +205,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
             : []
         );
         setMedicalLicenseNumber(d.medicalLicenseNumber || "");
+        setAlternateMobile(d.alternateMobile || "");
         setMaritalStatus(d.maritalStatus || "");
         setQualification(d.qualification || "");
         setTags(
@@ -226,7 +222,9 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         setMedicalRegCertificate(d.medicalRegCertificate || null);
         setQualificationCertificate(d.qualificationCertificate || null);
         setAadhaarCard(d.aadhaarCard || null);
+        setAadhaarCardBack(d.aadhaarCardBack || null);
         setPanCard(d.panCard || null);
+        setStatus(d.status || "Active");
         setAddress1(d.address1 || "");
         setAddress2(d.address2 || "");
         setCountry(d.country || "");
@@ -257,12 +255,19 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         setFreeFollowUpLimit(
           d.freeFollowUpLimit != null ? String(d.freeFollowUpLimit) : ""
         );
-        setSchedules(
-          parseSchedulesFromApi(
-            d.schedules as Record<string, { session?: string; from: string; to: string }[]>
-          )
+        const parsedSchedules = parseSchedulesFromApi(
+          d.schedules as Record<string, { session?: string; from: string; to: string }[]>
         );
-        setScheduleVersion((v) => v + 1);
+        setSchedules(parsedSchedules);
+
+        // Auto-lock days that have schedules
+        const loadedLockedDays: Record<string, boolean> = {};
+        Object.keys(parsedSchedules).forEach(day => {
+          if (parsedSchedules[day] && parsedSchedules[day].length > 0) {
+            loadedLockedDays[day] = true;
+          }
+        });
+        setLockedDays(loadedLockedDays);
         const edu = toEducationEntries(d.educations);
         const aw = toAwardEntries(d.awards);
         const cert = toAwardEntries(d.certifications);
@@ -355,8 +360,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
     if (!isLoadingDepartments && departments.length === 0) {
       const msg = "To add a doctor, you need to first add at least one Department and one Designation in the system.";
       setError(msg);
-      // Optional: Show a one-time popup alert as requested
-      window.alert(msg);
+      setShowErrorModal(true);
     }
   }, [isLoadingDepartments, departments]);
 
@@ -396,37 +400,66 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
     setError(null);
 
     if (!fullName.trim()) {
-      setError("Doctor name is required.");
-      window.scrollTo(0, 0);
+      toast.error("Doctor name is required.");
       return;
     }
 
     if (departments.length === 0 || allDesignations.length === 0) {
       const msg = "To add a doctor, you need to first add at least one Department and one Designation in the system.";
-      setError(msg);
-      window.scrollTo(0, 0);
+      toast.error(msg);
       return;
     }
 
     if (!departmentId) {
-      setError("Please select a Department.");
-      window.scrollTo(0, 0);
+      toast.error("Please select a Department.");
       return;
     }
 
     if (!designationId) {
-      setError("Please select a Designation.");
-      window.scrollTo(0, 0);
+      toast.error("Please select a Designation.");
       return;
     }
 
     if (dob) {
-      const age = dayjs().diff(dob, 'year');
+      const age = dayjs().diff(dob, "year");
       if (age < 18) {
-        setError("Doctor must be at least 18 years old.");
-        window.scrollTo(0, 0);
+        toast.error("Doctor must be at least 18 years old.");
         return;
       }
+    }
+
+    if (!address1.trim()) {
+      toast.error("Address 1 involves house/street details and is required.");
+      return;
+    }
+    if (!city || city === "Select") {
+      toast.error("Please select a city.");
+      return;
+    }
+    if (!stateVal || stateVal === "Select") {
+      toast.error("Please select a state.");
+      return;
+    }
+    if (!pincode.trim()) {
+      toast.error("Pincode is required.");
+      return;
+    }
+
+    // Filter schedules: only send locked days
+    const activeSchedules: Record<string, RowType[]> = {};
+    Object.keys(lockedDays).forEach((day) => {
+      if (lockedDays[day]) {
+        // If locked but empty, it might be the default row that hasn't been "changed" yet
+        // In reality, DuplicateForms should have data if we initialized it correctly
+        if (schedules[day]?.length > 0) {
+          activeSchedules[day] = schedules[day];
+        }
+      }
+    });
+
+    if (Object.keys(activeSchedules).length === 0) {
+      toast.error("Please save and lock at least one day in the schedule.");
+      return;
     }
 
     setSubmitting(true);
@@ -443,19 +476,21 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         designationId,
         specializations: selectedSpecializations,
         medicalLicenseNumber,
+        alternateMobile,
         maritalStatus,
         qualification,
         languagesSpoken: tags,
         bloodGroup,
         gender,
         bio,
-        featureOnWebsite,
         profileImage: profileImage || null,
         signatureImage: signatureImage || null,
         medicalRegCertificate: medicalRegCertificate || null,
         qualificationCertificate: qualificationCertificate || null,
         aadhaarCard: aadhaarCard || null,
+        aadhaarCardBack: aadhaarCardBack || null,
         panCard: panCard || null,
+        status: status,
         address1,
         address2,
         country,
@@ -471,7 +506,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         followUpEnabled: followUpEnabled,
         followUpValidityDays: followUpEnabled ? followUpValidityDays : null,
         freeFollowUpLimit: followUpEnabled ? freeFollowUpLimit : null,
-        schedules: serializeSchedules(schedules),
+        schedules: serializeSchedules(activeSchedules),
         educations: serializeEducations(educations),
         awards: serializeAwards(awards),
         certifications: serializeAwards(certifications),
@@ -496,10 +531,11 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         );
       }
 
+      toast.success(isEdit ? "Doctor updated successfully!" : "Doctor added successfully!");
       setSuccess(true);
       setTimeout(() => navigate(all_routes.doctors), 1500);
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -510,7 +546,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
       <div className="page-wrapper">
         <div className="content text-center py-5">
           <span className="spinner-border text-primary" role="status" />
-          <p className="text-muted mt-2 mb-0">Loading doctor�</p>
+          <p className="text-muted mt-2 mb-0">Loading doctor...</p>
         </div>
       </div>
     );
@@ -547,22 +583,6 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                 </div>
               </div>
 
-              {/* Error / Success alerts */}
-              {error && (
-                <div className="alert alert-danger d-flex align-items-center gap-2 mb-3">
-                  <i className="ti ti-alert-circle" />
-                  {error}
-                </div>
-              )}
-              {success && (
-                <div className="alert alert-success d-flex align-items-center gap-2 mb-3">
-                  <i className="ti ti-circle-check" />
-                  {isEdit
-                    ? "Doctor updated successfully! Redirecting�"
-                    : "Doctor added successfully! Redirecting�"}
-                </div>
-              )}
-
               <div className="card">
                 <div className="card-body">
                   <div className="border-bottom d-flex align-items-center justify-content-between pb-3 mb-3">
@@ -580,12 +600,43 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       <div className="row">
                         {/* Profile Image */}
                         <div className="col-lg-12">
-                          <div className="mb-3 d-flex align-items-center">
-                            <label className="form-label">Profile Image</label>
-                            <DoctorProfileUpload
-                              value={profileImage}
-                              onChange={setProfileImage}
-                            />
+                          <div className="mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div className="d-flex align-items-center">
+                              <label className="form-label me-3 mb-0">Profile Image</label>
+                              <DoctorProfileUpload
+                                value={profileImage}
+                                onChange={setProfileImage}
+                              />
+                            </div>
+                            <div className="d-flex align-items-center border rounded p-2 bg-white shadow-sm">
+                              <label className="form-label me-3 mb-0 fw-bold">Availability Status:</label>
+                              <div className="form-check form-check-inline mb-0">
+                                <input
+                                  className="form-check-input"
+                                  type="radio"
+                                  name="dr_status"
+                                  id="status_active"
+                                  checked={status === "Active"}
+                                  onChange={() => setStatus("Active")}
+                                />
+                                <label className="form-check-label text-success fw-medium" htmlFor="status_active">
+                                  Available
+                                </label>
+                              </div>
+                              <div className="form-check form-check-inline mb-0">
+                                <input
+                                  className="form-check-input"
+                                  type="radio"
+                                  name="dr_status"
+                                  id="status_inactive"
+                                  checked={status === "Inactive"}
+                                  onChange={() => setStatus("Inactive")}
+                                />
+                                <label className="form-check-label text-danger fw-medium" htmlFor="status_inactive">
+                                  Unable
+                                </label>
+                              </div>
+                            </div>
                           </div>
                         </div>
 
@@ -712,7 +763,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                 {isLoadingDepartments ? (
                                   <div className="form-control text-muted d-flex align-items-center gap-2">
                                     <span className="spinner-border spinner-border-sm" role="status" />
-                                    Loading departments�
+                                    Loading departments...
                                   </div>
                                 ) : deptOptions.length > 0 ? (
                                   <CommonSelect
@@ -747,7 +798,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                   <div className="form-control text-muted py-2">
                                     {!departmentId
                                       ? "Select a department first"
-                                      : "No designations for this department � add one in Designation settings"}
+                                      : "No designations for this department – add one in Designation settings"}
                                   </div>
                                 )}
                               </div>
@@ -822,7 +873,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                             <div className="col-lg-6">
                               <div className="mb-3">
                                 <label className="form-label">
-                                  Medical License Number <span className="text-danger">*</span>
+                                  Medical License Number
                                 </label>
                                 <input
                                   type="text"
@@ -843,10 +894,20 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                 />
                               </div>
                             </div>
+                            <div className="col-lg-6">
+                              <div className="mb-3">
+                                <label className="form-label">Alternative Contact No</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  value={alternateMobile}
+                                  onChange={(e) => setAlternateMobile(e.target.value)}
+                                  placeholder="e.g. 9876543210"
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
-
-
 
                         {/* Blood Group + Gender */}
                         <div className="col-lg-12">
@@ -894,18 +955,51 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               onChange={(e) => setBio(e.target.value)}
                             />
                           </div>
-                          <div className="form-check form-switch mb-3">
-                            <label className="form-check-label" htmlFor="featureOnWebsite">
-                              Feature On Website
-                            </label>
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              role="switch"
-                              id="featureOnWebsite"
-                              checked={featureOnWebsite}
-                              onChange={(e) => setFeatureOnWebsite(e.target.checked)}
-                            />
+                        </div>
+
+                        {/* Moved Sections */}
+                        <div className="col-lg-12 mb-4 px-3">
+                          <div className="border rounded bg-white">
+                            <div className="px-3 py-2 border-bottom">
+                              <h6 className="fw-bold mb-0 text-primary">Educational Information</h6>
+                            </div>
+                            <div className="p-4">
+                              <EducationForms
+                                key={`edu-${educationKey}`}
+                                initialRows={educations.length ? educations : undefined}
+                                onChange={setEducations}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="col-lg-12 mb-4 px-3">
+                          <div className="border rounded bg-white">
+                            <div className="px-3 py-2 border-bottom">
+                              <h6 className="fw-bold mb-0 text-success">Awards &amp; Recognition</h6>
+                            </div>
+                            <div className="p-4">
+                              <RewardsForms
+                                key={`aw-${awardsKey}`}
+                                initialRows={awards.length ? awards : undefined}
+                                onChange={setAwards}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="col-lg-12 mb-4 px-3">
+                          <div className="border rounded bg-white">
+                            <div className="px-3 py-2 border-bottom">
+                              <h6 className="fw-bold mb-0 text-warning">Certifications</h6>
+                            </div>
+                            <div className="p-4">
+                              <RewardsForms
+                                key={`cert-${certsKey}`}
+                                initialRows={certifications.length ? certifications : undefined}
+                                onChange={setCertifications}
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -915,27 +1009,60 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                     <div className="bg-light px-3 py-2 mb-3">
                       <h6 className="fw-bold mb-0">Documents Upload</h6>
                     </div>
-                    <div className="pb-0">
+                    <div className="p-3">
                       <div className="row">
+                        {/* Row 1 */}
                         <div className="col-lg-6 mb-3">
-                          <label className="form-label">Doctor Signature</label>
-                          <DoctorProfileUpload value={signatureImage} onChange={setSignatureImage} />
+                          <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                            <label className="form-label mb-0 fw-bold text-dark">Doctor Signature (Optional)</label>
+                            <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                              <DoctorProfileUpload value={signatureImage} onChange={setSignatureImage} />
+                            </div>
+                          </div>
                         </div>
                         <div className="col-lg-6 mb-3">
-                          <label className="form-label">Medical Registration Certificate</label>
-                          <DoctorProfileUpload value={medicalRegCertificate} onChange={setMedicalRegCertificate} />
+                          <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                            <label className="form-label mb-0 fw-bold text-dark">Medical Reg. Certificate (Optional)</label>
+                            <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                              <DoctorProfileUpload value={medicalRegCertificate} onChange={setMedicalRegCertificate} />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Row 2 */}
+                        <div className="col-lg-6 mb-3">
+                          <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                            <label className="form-label mb-0 fw-bold text-dark">Qualification Certificate (Optional)</label>
+                            <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                              <DoctorProfileUpload value={qualificationCertificate} onChange={setQualificationCertificate} />
+                            </div>
+                          </div>
                         </div>
                         <div className="col-lg-6 mb-3">
-                          <label className="form-label">Qualification Certificate</label>
-                          <DoctorProfileUpload value={qualificationCertificate} onChange={setQualificationCertificate} />
+                          <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                            <label className="form-label mb-0 fw-bold text-dark">Aadhaar Card Front (Optional)</label>
+                            <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                              <DoctorProfileUpload value={aadhaarCard} onChange={setAadhaarCard} />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Row 3 */}
+                        <div className="col-lg-6 mb-3">
+                          <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                            <label className="form-label mb-0 fw-bold text-dark">PAN Card (Optional)</label>
+                            <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                              <DoctorProfileUpload value={panCard} onChange={setPanCard} />
+                            </div>
+                          </div>
                         </div>
                         <div className="col-lg-6 mb-3">
-                          <label className="form-label">Aadhaar Card (Optional)</label>
-                          <DoctorProfileUpload value={aadhaarCard} onChange={setAadhaarCard} />
-                        </div>
-                        <div className="col-lg-6 mb-3">
-                          <label className="form-label">PAN Card (Optional)</label>
-                          <DoctorProfileUpload value={panCard} onChange={setPanCard} />
+                          <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                            <label className="form-label mb-0 fw-bold text-dark">Aadhaar Card Back (Optional)</label>
+                            <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                              <DoctorProfileUpload value={aadhaarCardBack} onChange={setAadhaarCardBack} />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -948,23 +1075,25 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       <div className="row">
                         <div className="col-lg-6">
                           <div className="mb-3">
-                            <label className="form-label">Address 1</label>
+                            <label className="form-label">Address 1 <span className="text-danger ms-1">*</span></label>
                             <input
                               type="text"
                               className="form-control"
                               value={address1}
                               onChange={(e) => setAddress1(e.target.value)}
+                              placeholder="House No, Building, Street Name"
                             />
                           </div>
                         </div>
                         <div className="col-lg-6">
                           <div className="mb-3">
-                            <label className="form-label">Address 2</label>
+                            <label className="form-label">Address 2 (Optional)</label>
                             <input
                               type="text"
                               className="form-control"
                               value={address2}
                               onChange={(e) => setAddress2(e.target.value)}
+                              placeholder="Landmark, Area, Colony"
                             />
                           </div>
                         </div>
@@ -974,14 +1103,14 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                             <CommonSelect
                               options={Country}
                               className="select"
-                              value={findSelectOption(Country, country) || Country[0]}
+                              value={findSelectOption(Country, country) || { value: "India", label: "India" }}
                               onChange={(opt: any) => setCountry(opt?.value || "")}
                             />
                           </div>
                         </div>
                         <div className="col-lg-6">
                           <div className="mb-3">
-                            <label className="form-label">City</label>
+                            <label className="form-label">City <span className="text-danger ms-1">*</span></label>
                             <CommonSelect
                               options={City}
                               className="select"
@@ -992,7 +1121,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         </div>
                         <div className="col-lg-6">
                           <div className="mb-3">
-                            <label className="form-label">State</label>
+                            <label className="form-label">State <span className="text-danger ms-1">*</span></label>
                             <CommonSelect
                               options={State}
                               className="select"
@@ -1003,7 +1132,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         </div>
                         <div className="col-lg-6">
                           <div className="mb-3">
-                            <label className="form-label">Pincode</label>
+                            <label className="form-label">Pincode <span className="text-danger ms-1">*</span></label>
                             <input
                               type="text"
                               className="form-control"
@@ -1019,13 +1148,25 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                     <div className="bg-light px-3 py-2 mb-3">
                       <h6 className="fw-bold mb-0">Schedule</h6>
                     </div>
-                    <div className="p-3">
-                      <ul className="nav nav-pills schedule-tab mb-3" id="pills-tab" role="tablist">
+                    <div className="p-3 bg-white rounded shadow-sm border mx-3 my-3" style={{ overflow: "visible" }}>
+                      <div className="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+                        <h6 className="fw-bold mb-0 text-dark d-flex align-items-center">
+                          <i className="ti ti-calendar-event me-2 text-primary fs-18" /> Weekly Schedule Setup
+                        </h6>
+                        <span className="badge badge-soft-info border border-info px-3 py-2 rounded-pill">
+                          {WEEKDAYS.length} Days Available
+                        </span>
+                      </div>
+
+                      <ul className="nav nav-pills schedule-tab mb-4 gap-2" id="pills-tab" role="tablist">
                         {WEEKDAYS.map((day, i) => (
-                          <li key={day} className="nav-item me-1" role="presentation">
+                          <li key={day} className="nav-item" role="presentation">
                             <button
-                              className={`nav-link btn btn-sm btn-icon p-2 d-flex align-items-center justify-content-center w-auto${activeScheduleDay === day ? " active" : ""
+                              className={`nav-link btn px-4 py-2 border rounded-pill transition-all d-flex align-items-center gap-2 ${activeScheduleDay === day
+                                ? "active btn-primary text-white shadow"
+                                : "btn-light text-dark hover-bg-light"
                                 }`}
+                              style={{ fontWeight: "600", fontSize: "14px" }}
                               data-bs-toggle="pill"
                               data-bs-target={`#schedule-${i + 1}`}
                               type="button"
@@ -1034,11 +1175,13 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               onClick={() => setActiveScheduleDay(day)}
                             >
                               {day}
+                              {lockedDays[day] && <i className="ti ti-circle-check-filled fs-14 text-warning shadow-sm" />}
                             </button>
                           </li>
                         )
                         )}
                       </ul>
+
                       <div className="tab-content" id="pills-tabContent">
                         {WEEKDAYS.map((day, i) => (
                           <div
@@ -1048,163 +1191,132 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                             id={`schedule-${i + 1}`}
                             role="tabpanel"
                           >
-                            <div className="add-schedule-list">
-                              <DuplicateForms
-                                key={`${day}-${scheduleVersion}`}
-                                initialRows={schedules[day]}
-                                onChange={(rows) =>
-                                  setSchedules((prev) => ({ ...prev, [day]: rows }))
-                                }
-                              />
+                            <div className="add-schedule-list border rounded p-4 bg-light border-dashed mb-3 position-relative">
+                              <div className="d-flex align-items-center justify-content-between mb-4">
+                                <div>
+                                  <h6 className="fw-bold mb-1 text-primary">{day} Working Hours</h6>
+                                  <p className="text-muted fs-12 mb-0">Define session timings for this specific day</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  className={`btn ${lockedDays[day] ? "btn-outline-primary" : "btn-primary"} d-flex align-items-center gap-2 px-4 shadow-sm`}
+                                  style={{ minHeight: '40px', fontWeight: 'bold', borderRadius: '8px' }}
+                                  onClick={() => setLockedDays(prev => ({ ...prev, [day]: !prev[day] }))}
+                                >
+                                  {lockedDays[day] ? (
+                                    <>
+                                      <i className="ti ti-edit fs-18" /> Edit Schedule
+                                    </>
+                                  ) : (
+                                    <>
+                                      <i className="ti ti-circle-check fs-18" /> Save & Lock Day
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+
+                              <div className={`${lockedDays[day] ? "opacity-75" : ""}`}>
+                                <DuplicateForms
+                                  key={`${day}-${lockedDays[day]}`}
+                                  initialRows={schedules[day]}
+                                  onChange={(rows) =>
+                                    setSchedules((prev) => ({ ...prev, [day]: rows }))
+                                  }
+                                  disabled={lockedDays[day]}
+                                />
+                              </div>
                             </div>
                           </div>
                         )
                         )}
                       </div>
-                      <div className="mb-3 d-flex align-items-center gap-3 flex-wrap">
-                        <button
-                          type="button"
-                          className="btn btn-dark"
-                          onClick={handleApplyAllSchedule}
-                        >
-                          Apply All
-                        </button>
-                        {scheduleApplyMsg && (
-                          <span className="text-success fs-13">{scheduleApplyMsg}</span>
-                        )}
-                        <span className="text-muted fs-12">
-                          Active day: <strong>{activeScheduleDay}</strong> � isi din ka time sab
-                          par copy hoga
+                      <div className="mt-2 p-3 bg-soft-warning rounded border border-warning border-dashed d-flex align-items-center gap-2">
+                        <i className="ti ti-alert-circle text-warning fs-18" />
+                        <span className="text-dark fs-12 fw-medium">
+                          <strong>Note:</strong> Progress is only saved for days you explicitly click "Save & Lock". Unlocked days will not be submitted.
                         </span>
                       </div>
                     </div>
 
-                    {/* -- Appointment Information ------------- */}
                     <div className="bg-light px-3 py-2 mb-3 d-flex align-items-center justify-content-between">
                       <h6 className="fw-bold mb-0">Appointment Information</h6>
-                      <div className="form-check form-switch m-0">
-                        <label className="form-check-label me-5 mt-1" htmlFor="acceptAppointments">
-                          Accept Appointments?
+                      <div className="form-check form-switch mb-0">
+                        <label className="form-check-label fs-14 fw-medium me-2" htmlFor="acceptingAppointments">
+                          Accept Appointments
                         </label>
                         <input
-                          className="form-check-input mt-2"
+                          className="form-check-input"
                           type="checkbox"
                           role="switch"
-                          id="acceptAppointments"
+                          id="acceptingAppointments"
                           checked={acceptingAppointments}
                           onChange={(e) => setAcceptingAppointments(e.target.checked)}
                         />
                       </div>
                     </div>
-                    {acceptingAppointments && (
-                      <div className="pb-0">
-                        <div className="row">
-                          {/* Appointment Type */}
-                          <div className="col-lg-6">
-                            <div className="mb-3">
-                              <label className="form-label">Appointment Type</label>
-                              <CommonSelect
-                                options={Appointment_Type}
-                                className="select"
-                                value={
-                                  findSelectOption(Appointment_Type, appointmentType) ||
-                                  Appointment_Type[0]
-                                }
-                                onChange={(opt: any) => setAppointmentType(opt?.value || "")}
-                              />
-                            </div>
+                    <div className={`pb-0 ${!acceptingAppointments ? "opacity-50 pointer-events-none" : ""}`}>
+                      <div className="row">
+                        {/* All 4 fields on one row to reduce empty space */}
+                        <div className="col-lg-3">
+                          <div className="mb-3">
+                            <label className="form-label">Appointment Type</label>
+                            <CommonSelect
+                              options={Appointment_Type}
+                              className="select"
+                              isDisabled={!acceptingAppointments}
+                              value={
+                                findSelectOption(Appointment_Type, appointmentType) ||
+                                Appointment_Type[0]
+                              }
+                              onChange={(opt: any) => setAppointmentType(opt?.value || "")}
+                            />
                           </div>
-                          <div className="col-lg-6" />
-
-                          {/* Accept bookings in advance */}
-                          <div className="col-lg-6">
-                            <div className="mb-3">
-                              <label className="form-label">Accept bookings (in Advance)</label>
-                              <div className="input-group">
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  min={0}
-                                  value={acceptBookingsInAdvance}
-                                  onChange={(e) => setAcceptBookingsInAdvance(e.target.value)}
-                                  placeholder="0"
-                                />
-                                <span className="input-group-text bg-transparent text-dark fs-14">Days</span>
-                              </div>
-                            </div>
+                        </div>
+                        <div className="col-lg-3">
+                          <div className="mb-3">
+                            <label className="form-label">Accept bookings (in Advance)</label>
+                            <input
+                              type="number"
+                              className="form-control"
+                              min={0}
+                              disabled={!acceptingAppointments}
+                              value={acceptBookingsInAdvance}
+                              onChange={(e) => setAcceptBookingsInAdvance(e.target.value)}
+                              placeholder="Enter days (e.g. 15)"
+                            />
                           </div>
-
-                          {/* Appointment Duration */}
-                          <div className="col-lg-6">
-                            <div className="mb-3">
-                              <label className="form-label">Appointment Duration</label>
-                              <div className="input-group">
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  min={0}
-                                  value={appointmentDuration}
-                                  onChange={(e) => setAppointmentDuration(e.target.value)}
-                                  placeholder="30"
-                                />
-                                <span className="input-group-text bg-transparent text-dark fs-14">Mins</span>
-                              </div>
-                            </div>
+                        </div>
+                        <div className="col-lg-3">
+                          <div className="mb-3">
+                            <label className="form-label">Appointment Duration</label>
+                            <input
+                              type="number"
+                              className="form-control"
+                              min={0}
+                              disabled={!acceptingAppointments}
+                              value={appointmentDuration}
+                              onChange={(e) => setAppointmentDuration(e.target.value)}
+                              placeholder="Enter minutes (e.g. 30)"
+                            />
                           </div>
-
-                          {/* Consultation Charge */}
-                          <div className="col-lg-6">
-                            <div className="mb-3">
-                              <label className="form-label">Consultation Charge</label>
-                              <div className="input-group">
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  min={0}
-                                  step="0.01"
-                                  value={consultationCharge}
-                                  onChange={(e) => setConsultationCharge(e.target.value)}
-                                  placeholder="0.00"
-                                />
-                                <span className="input-group-text bg-transparent text-dark fs-14">$</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Max Bookings Per Slot */}
-                          <div className="col-lg-6">
-                            <div className="mb-3">
-                              <label className="form-label">Max Bookings Per Slot</label>
-                              <input
-                                type="number"
-                                className="form-control"
-                                min={1}
-                                value={maxBookingsPerSlot}
-                                onChange={(e) => setMaxBookingsPerSlot(e.target.value)}
-                                placeholder="1"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Display on Booking Page toggle */}
-                          <div className="col-md-6">
-                            <div className="form-check form-switch mb-3">
-                              <label className="form-check-label" htmlFor="displayOnBookingPage">
-                                Display on Booking Page
-                              </label>
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                role="switch"
-                                id="displayOnBookingPage"
-                                checked={displayOnBookingPage}
-                                onChange={(e) => setDisplayOnBookingPage(e.target.checked)}
-                              />
-                            </div>
+                        </div>
+                        <div className="col-lg-3">
+                          <div className="mb-3">
+                            <label className="form-label">Consultation Charge</label>
+                            <input
+                              type="number"
+                              className="form-control"
+                              min={0}
+                              step="0.01"
+                              disabled={!acceptingAppointments}
+                              value={consultationCharge}
+                              onChange={(e) => setConsultationCharge(e.target.value)}
+                              placeholder="Enter amount (e.g. 500.00)"
+                            />
                           </div>
                         </div>
                       </div>
-                    )}
+                    </div>
 
                     {/* -- Follow-up Information ------------- */}
                     <div className="bg-light px-3 py-2 mb-3">
@@ -1232,119 +1344,127 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                             <div className="col-lg-6">
                               <div className="mb-3">
                                 <label className="form-label">Follow-up Validity</label>
-                                <div className="input-group">
-                                  <input
-                                    type="number"
-                                    className="form-control"
-                                    value={followUpValidityDays}
-                                    onChange={(e) => setFollowUpValidityDays(e.target.value)}
-                                    placeholder="e.g. 15"
-                                    min={0}
-                                  />
-                                  <span className="input-group-text bg-transparent text-dark fs-14">Days</span>
-                                </div>
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  value={followUpValidityDays}
+                                  onChange={(e) => setFollowUpValidityDays(e.target.value)}
+                                  placeholder="Enter validity in days (e.g. 15)"
+                                  min={0}
+                                />
                               </div>
                             </div>
                             <div className="col-lg-6">
                               <div className="mb-3">
-                                <label className="form-label">Free Follow-up Limit</label>
-                                <div className="input-group">
-                                  <input
-                                    type="number"
-                                    className="form-control"
-                                    value={freeFollowUpLimit}
-                                    onChange={(e) => setFreeFollowUpLimit(e.target.value)}
-                                    placeholder="e.g. 4"
-                                    min={0}
-                                  />
-                                  <span className="input-group-text bg-transparent text-dark fs-14">Visits</span>
-                                </div>
+                                <label className="form-label d-flex align-items-center gap-2">
+                                  Free Follow-up Limit
+                                  <span className="badge bg-soft-info text-info fw-normal fs-12">
+                                    <i className="ti ti-info-circle me-1" />0 = Unlimited
+                                  </span>
+                                </label>
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  value={freeFollowUpLimit}
+                                  onChange={(e) => setFreeFollowUpLimit(e.target.value)}
+                                  placeholder="Enter visit limit (e.g. 4)"
+                                  min={0}
+                                />
                               </div>
                             </div>
                           </>
                         )}
                       </div>
                     </div>
-                    {/* -- Educational Information ------------- */}
-                    <div className="bg-light px-3 py-2 mb-3">
-                      <h6 className="fw-bold mb-0">Educational Information</h6>
-                    </div>
-                    <div className="pb-0">
-                      <div className="add-education-list">
-                        <EducationForms
-                          key={`edu-${educationKey}`}
-                          initialRows={educations.length ? educations : undefined}
-                          onChange={setEducations}
-                        />
-                      </div>
-                    </div>
-
-                    {/* -- Awards & Recognition --------------- */}
-                    <div className="bg-light px-3 py-2 mb-3">
-                      <h6 className="fw-bold mb-0">Awards &amp; Recognition</h6>
-                    </div>
-                    <div className="pb-0">
-                      <div className="add-award-list">
-                        <RewardsForms
-                          key={`aw-${awardsKey}`}
-                          initialRows={awards.length ? awards : undefined}
-                          onChange={setAwards}
-                        />
-                      </div>
-                    </div>
-
-                    {/* -- Certifications --------------------- */}
-                    <div className="bg-light px-3 py-2">
-                      <h6 className="fw-bold mb-0">Certifications</h6>
-                    </div>
-                    <div className="pb-3 mb-3 border-bottom">
-                      <div className="add-certification-list">
-                        <RewardsForms
-                          key={`cert-${certsKey}`}
-                          initialRows={certifications.length ? certifications : undefined}
-                          onChange={setCertifications}
-                        />
-                      </div>
-                    </div>
 
                     {/* -- Actions ---------------------------- */}
-                    <div className="d-flex justify-content-end gap-2">
-                      <Link to={all_routes.doctors} className="btn btn-light btm-md">
-                        Cancel
+                    <div className="mt-2 pb-2 d-flex justify-content-center gap-3 border-top pt-3">
+                      <Link
+                        to={all_routes.doctors}
+                        className="btn btn-outline-secondary btn-lg px-5 d-flex align-items-center gap-2"
+                        style={{ borderRadius: "10px", fontWeight: "600" }}
+                      >
+                        <i className="ti ti-arrow-left fs-18" /> Cancel
                       </Link>
                       <button
                         type="submit"
-                        className="btn btn-primary btm-md d-flex align-items-center gap-2"
+                        className="btn btn-primary btn-lg px-5 shadow-lg d-flex align-items-center gap-3 transition-all"
+                        style={{ borderRadius: "10px", minWidth: "220px", fontWeight: "bold" }}
                         disabled={submitting}
                       >
-                        {submitting && (
-                          <span className="spinner-border spinner-border-sm" role="status" />
+                        {submitting ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm" role="status" />
+                            <span>Processing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <i className={isEdit ? "ti ti-device-floppy fs-20" : "ti ti-user-plus fs-20"} />
+                            <span>{isEdit ? "Update Doctor" : "Create Doctor"}</span>
+                          </>
                         )}
-                        {submitting
-                          ? "Saving�"
-                          : isEdit
-                            ? "Save Changes"
-                            : "Add Doctor"}
                       </button>
                     </div>
                   </form>
                 </div>
               </div>
             </div>
-          </div >
-        </div >
+          </div>
+        </div>
 
         {/* Footer */}
-        < div className="footer text-center bg-white p-2 border-top" >
+        <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 �{" "}
+            2025 –{" "}
             <Link to="#" className="link-primary">
               Docyari
             </Link>
             , All Rights Reserved
           </p>
-        </div >
-      </div >
+        </div>
+      </div>
+
+      {/* --- Error Modal for missing Dept/Desig --- */}
+      {showErrorModal && (
+        <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }} role="dialog">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title d-flex align-items-center gap-2">
+                  <i className="ti ti-info-circle fs-22" />
+                  Configuration Required
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowErrorModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body p-4 text-center">
+                <div className="mb-3">
+                  <span className="avatar avatar-xl bg-primary-light text-primary rounded-circle">
+                    <i className="ti ti-briefcase fs-36" />
+                  </span>
+                </div>
+                <h5 className="fw-bold mb-2">Setup Incomplete</h5>
+                <p className="text-muted mb-0">
+                  To add a doctor, you need to first add at least one <strong>Department</strong> and one <strong>Designation</strong> in the system.
+                </p>
+              </div>
+              <div className="modal-footer border-top-0 pt-0 pb-4 justify-content-center">
+                <button
+                  type="button"
+                  className="btn btn-primary px-5 shadow-sm"
+                  onClick={() => setShowErrorModal(false)}
+                  style={{ borderRadius: '8px' }}
+                >
+                  Understood
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

@@ -206,7 +206,7 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
   }, [patients, isPatientRole, currentUser?.email]);
 
   const doctorOptions = useMemo(() => {
-    let list = doctors.filter((d: any) => d.id);
+    let list = doctors.filter((d: any) => d.id && d.status === "Active");
     if (form.departmentId) {
       list = list.filter(
         (d: any) =>

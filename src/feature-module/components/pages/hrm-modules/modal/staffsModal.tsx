@@ -246,6 +246,7 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
         <input
           type="text"
           className="form-control"
+          placeholder="Enter full name"
           value={form.fullName}
           onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
         />
@@ -313,6 +314,7 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
           <input
             type="text"
             className="form-control"
+            placeholder="Enter phone number"
             value={form.phone}
             onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
           />
@@ -324,6 +326,7 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
           <input
             type="email"
             className="form-control"
+            placeholder="Enter email address"
             value={form.email}
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
           />
@@ -374,6 +377,7 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
           <input
             type="text"
             className="form-control"
+            placeholder="Enter address line 1"
             value={form.address1}
             onChange={(e) => setForm((f) => ({ ...f, address1: e.target.value }))}
           />
@@ -383,6 +387,7 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
           <input
             type="text"
             className="form-control"
+            placeholder="Enter address line 2"
             value={form.address2}
             onChange={(e) => setForm((f) => ({ ...f, address2: e.target.value }))}
           />
@@ -419,6 +424,7 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
           <input
             type="text"
             className="form-control"
+            placeholder="Enter pincode"
             value={form.pincode}
             onChange={(e) => setForm((f) => ({ ...f, pincode: e.target.value }))}
           />

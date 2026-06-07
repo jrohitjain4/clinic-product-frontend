@@ -19,10 +19,14 @@ import DuplicateForms from "../../../../../../core/common/duplicate-forms/duplic
 import EducationForms from "../../../../../../core/common/duplicate-forms/educationForm";
 import RewardsForms from "../../../../../../core/common/duplicate-forms/rewardsForm";
 
-const Modals = () => {
+interface ModalsProps {
+  onDelete?: () => void;
+}
+
+const Modals = ({ onDelete }: ModalsProps) => {
   const getModalContainer = () => {
     const modalElement = document.getElementById("modal-datepicker");
-    return modalElement ? modalElement : document.body; // Fallback to document.body if modalElement is null
+    return modalElement ? modalElement : document.body;
   };
 
   const [tags, setTags] = useState<string[]>(["English", "French"]);
@@ -32,7 +36,6 @@ const Modals = () => {
 
   return (
     <>
-      {/* Start Add Doctor */}
       <div
         className="offcanvas offcanvas-offset offcanvas-end offcanvas-large"
         tabIndex={-1}
@@ -190,7 +193,6 @@ const Modals = () => {
                       <div className="mb-3">
                         <label className="form-label">
                           Medical License Number
-                          <span className="text-danger">*</span>
                         </label>
                         <input type="text" className="form-control" />
                       </div>
@@ -202,6 +204,12 @@ const Modals = () => {
                           initialTags={tags}
                           onTagsChange={handleTagsChange}
                         />
+                      </div>
+                    </div>
+                    <div className="col-lg-6">
+                      <div className="mb-3">
+                        <label className="form-label">Alternative Contact No</label>
+                        <input type="text" className="form-control" placeholder="e.g. 9876543210" />
                       </div>
                     </div>
                   </div>
@@ -323,7 +331,7 @@ const Modals = () => {
               </div>
             </div>
             <div className="bg-light px-3 py-2">
-              <h6 className="fw-bold mb-0">Address Information</h6>
+              <h6 className="fw-bold mb-0">Schedule Information</h6>
             </div>
             <div className="p-3">
               <ul
@@ -515,7 +523,7 @@ const Modals = () => {
                     <div className="input-group">
                       <input type="text" className="form-control" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
-                        $
+                        ₹
                       </span>
                     </div>
                   </div>
@@ -773,7 +781,6 @@ const Modals = () => {
                       <div className="mb-3">
                         <label className="form-label">
                           Medical License Number
-                          <span className="text-danger">*</span>
                         </label>
                         <input
                           type="text"
@@ -789,6 +796,12 @@ const Modals = () => {
                           initialTags={tags}
                           onTagsChange={handleTagsChange}
                         />
+                      </div>
+                    </div>
+                    <div className="col-lg-6">
+                      <div className="mb-3">
+                        <label className="form-label">Alternative Contact No</label>
+                        <input type="text" className="form-control" placeholder="e.g. 9876543210" />
                       </div>
                     </div>
                   </div>
@@ -924,7 +937,7 @@ const Modals = () => {
               </div>
             </div>
             <div className="bg-light px-3 py-2">
-              <h6 className="fw-bold mb-0">Address Information</h6>
+              <h6 className="fw-bold mb-0">Schedule Information</h6>
             </div>
             <div className="p-3">
               <ul
@@ -1125,10 +1138,10 @@ const Modals = () => {
                       <input
                         type="text"
                         className="form-control"
-                        defaultValue="$100"
+                        defaultValue="100"
                       />
                       <span className="input-group-text bg-transparent text-dark fs-14">
-                        $
+                        ₹
                       </span>
                     </div>
                   </div>
@@ -1225,19 +1238,21 @@ const Modals = () => {
               <h5 className="fw-bold mb-1">Delete Confirmation</h5>
               <p className="mb-3">Are you sure want to delete?</p>
               <div className="d-flex justify-content-center">
-                <Link
-                  to="#"
+                <button
+                  type="button"
                   className="btn btn-light position-relative z-1 me-3"
                   data-bs-dismiss="modal"
                 >
                   Cancel
-                </Link>
-                <Link
-                  to={all_routes.doctorsList}
+                </button>
+                <button
+                  type="button"
                   className="btn btn-danger position-relative z-1"
+                  data-bs-dismiss="modal"
+                  onClick={onDelete}
                 >
                   Yes, Delete
-                </Link>
+                </button>
               </div>
             </div>
           </div>

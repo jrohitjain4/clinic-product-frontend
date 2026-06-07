@@ -20,9 +20,10 @@ interface DoctorsGridProps {
   loading: boolean;
   error: string | null;
   onRetry: () => void;
+  onDelete: (id: string) => void;
 }
 
-const DoctorsGrid = ({ doctors, loading, error, onRetry }: DoctorsGridProps) => {
+const DoctorsGrid = ({ doctors, loading, error, onRetry, onDelete }: DoctorsGridProps) => {
   if (loading) {
     return (
       <div className="text-center py-5">
@@ -59,83 +60,88 @@ const DoctorsGrid = ({ doctors, loading, error, onRetry }: DoctorsGridProps) => 
     <>
       <div className="row g-2">
         {doctors.map((doctor, index) => {
-          const img =
-            doctor.profileImage ||
-            `assets/img/doctors/${PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length]}`;
+          const img = doctor.profileImage || "assets/img/doctor-placeholder.png";
           const designation = doctor.designation?.name || "Doctor";
           const fee = doctor.consultationCharge
-            ? `$${doctor.consultationCharge}`
+            ? `₹${doctor.consultationCharge}`
             : "—";
-          const statusLabel = doctor.status === "Active" ? "Available" : doctor.status;
+          const statusLabel = doctor.status === "Active" ? "Available" : (doctor.status === "Inactive" ? "Unable" : doctor.status);
 
           return (
-            <div key={doctor.id} className="col-xl-4 col-md-6">
-              <div className="card">
-                <div className="card-body d-flex align-items-center flex-sm-nowrap flex-wrap row-gap-3">
-                  <div className="me-3 doctor-profile-img">
-                    <Link to={doctorDetailsPath(doctor.id)}>
-                      <ImageWithBasePath src={img} className="rounded" alt={doctor.fullName} />
+            <div key={doctor.id} className="col-xl-3 col-lg-4 col-md-6 mb-3">
+              <div className="card h-100 shadow-sm border-0 border-top border-3 border-primary transition-all doctor-grid-card">
+                <div className="card-body d-flex align-items-center flex-sm-nowrap flex-wrap row-gap-3 p-2">
+                  <div className="me-2 ps-1">
+                    <Link to={doctorDetailsPath(doctor.id)} className="d-block overflow-hidden rounded-circle border border-2 border-primary-light p-1" style={{ width: "85px", height: "85px" }}>
+                      <ImageWithBasePath
+                        src={img}
+                        className="w-100 h-100 rounded-circle"
+                        alt={doctor.fullName}
+                        style={{ objectFit: "cover" }}
+                      />
                     </Link>
                   </div>
-                  <div className="flex-fill">
+                  <div className="flex-fill pe-2">
                     <div className="d-flex align-items-center justify-content-between mb-1">
-                      <h6 className="mb-0 fw-semibold">
-                        <Link to={doctorDetailsPath(doctor.id)}>{doctor.fullName}</Link>
-                      </h6>
+                      <h5 className="mb-0 fw-bold">
+                        <Link to={doctorDetailsPath(doctor.id)} className="text-dark">{doctor.fullName}</Link>
+                      </h5>
                       <div className="action-item">
-                        <Link 
-                          to="#" 
+                        <Link
+                          to="#"
                           data-bs-toggle="dropdown"
-                          className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
+                          className="avatar avatar-xs border text-muted rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent"
                         >
                           <i className="ti ti-dots-vertical" />
                         </Link>
-                        <ul className="dropdown-menu">
+                        <ul className="dropdown-menu dropdown-menu-end shadow-lg border-0">
                           <li>
                             <Link
                               to={editDoctorPath(doctor.id)}
-                              className="dropdown-item d-flex align-items-center"
+                              className="dropdown-item d-flex align-items-center py-2"
                             >
-                              Edit
+                              <i className="ti ti-edit me-2 text-primary" /> Edit
                             </Link>
                           </li>
                           <li>
                             <Link
                               to="#"
-                              className="dropdown-item d-flex align-items-center"
+                              className="dropdown-item d-flex align-items-center py-2 text-danger"
                               data-bs-toggle="modal"
                               data-bs-target="#delete_modal"
+                              onClick={() => onDelete(doctor.id)}
                             >
-                              Delete
+                              <i className="ti ti-trash me-2" /> Delete
                             </Link>
                           </li>
                         </ul>
                       </div>
                     </div>
-                    <span className="d-block mb-2 fs-13">{designation}</span>
-                    <p className="mb-2 fs-13">
-                      {doctor.department?.name || "—"} ·{" "}
+                    <span className="d-block mb-1 fs-14 text-primary fw-medium">{designation}</span>
+                    <p className="mb-2 fs-13 d-flex align-items-center gap-2">
+                      <span className="text-muted fw-medium">{doctor.department?.name || "—"}</span>
+                      <span className="text-muted">|</span>
                       <span
-                        className={
-                          statusLabel === "Available"
-                            ? "text-success"
-                            : "text-muted"
-                        }
+                        className={`badge ${statusLabel === "Available"
+                          ? "badge-soft-success"
+                          : "badge-soft-danger"
+                          } rounded-pill fs-12`}
                       >
                         {statusLabel}
                       </span>
                     </p>
-                    <div className="d-flex align-items-center justify-content-between">
-                      <h6 className="text-primary fs-14 mb-0">
+                    <div className="d-flex align-items-center justify-content-between border-top pt-2 mt-2">
+                      <h6 className="text-dark fs-15 mb-0 fw-bold">
                         <span className="text-muted fs-13 fw-normal">Starts From : </span>
                         {fee}
                       </h6>
-                      <Link
-                        to={all_routes.appointmentCalendar}
-                        className="avatar avatar-xs border text-muted fs-14"
+                      <div
+                        className="d-flex align-items-center justify-content-center border-primary border-2 border rounded-circle text-primary fw-bold"
+                        style={{ width: "38px", height: "38px", fontSize: "10px", backgroundColor: "#f0f0ff" }}
+                        title="Profile Completion"
                       >
-                        <i className="ti ti-calendar-cog" />
-                      </Link>
+                        85%
+                      </div>
                     </div>
                   </div>
                 </div>

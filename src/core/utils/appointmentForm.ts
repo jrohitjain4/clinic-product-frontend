@@ -57,6 +57,7 @@ export const appointmentToTableRow = (a: ClinicAppointment, index: number) => {
     role: a.doctorRole || a.doctor.designation?.name || "—",
     Mode: a.mode,
     Status: a.status,
+    Code: a.appointmentCode || "—",
     _raw: a,
   };
 };

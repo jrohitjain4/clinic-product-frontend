@@ -310,7 +310,7 @@ const MultiStepRegister: React.FC = () => {
                                                                 label="Owner / Your Name"
                                                                 required
                                                                 type="text"
-                                                                placeholder="Dr. Rahul Sharma"
+                                                                placeholder="e.g. Dr. Rahul Sharma"
                                                                 leftAddon={<User size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                 value={form.ownerName}
                                                                 onChange={e => setForm({ ...form, ownerName: e.target.value })}
@@ -322,7 +322,7 @@ const MultiStepRegister: React.FC = () => {
                                                                 label="Mobile Number"
                                                                 required
                                                                 type="tel"
-                                                                placeholder="9876543210"
+                                                                placeholder="e.g. 9876543210"
                                                                 maxLength={10}
                                                                 leftAddon={<Phone size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                 value={form.mobileNumber}
@@ -339,7 +339,7 @@ const MultiStepRegister: React.FC = () => {
                                                                 label="Email Address"
                                                                 required
                                                                 type="email"
-                                                                placeholder="doctor@clinic.com"
+                                                                placeholder="e.g. doctor@clinic.com"
                                                                 leftAddon={<Mail size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                 value={form.emailId}
                                                                 onChange={e => setForm({ ...form, emailId: e.target.value })}
@@ -350,13 +350,13 @@ const MultiStepRegister: React.FC = () => {
                                                             <Input
                                                                 label="WhatsApp Number"
                                                                 type="tel"
-                                                                placeholder="9876543210"
+                                                                placeholder="e.g. 9876543210"
                                                                 maxLength={10}
                                                                 disabled={form.sameAsMobile}
                                                                 leftAddon={<MessageCircle size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                 rightIcon={
                                                                     <div className="d-flex align-items-center h-100 pe-2">
-                                                                        <button 
+                                                                        <button
                                                                             type="button"
                                                                             onClick={() => setForm({ ...form, sameAsMobile: !form.sameAsMobile })}
                                                                             className={`btn btn-sm ${form.sameAsMobile ? 'btn-primary' : 'btn-light border text-muted'} rounded-pill`}
@@ -386,7 +386,7 @@ const MultiStepRegister: React.FC = () => {
                                                                     label="Clinic Name"
                                                                     required
                                                                     type="text"
-                                                                    placeholder="Apollo Clinic"
+                                                                    placeholder="e.g. Apollo Clinic"
                                                                     leftAddon={<Home size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                     value={form.clinicName}
                                                                     onChange={e => setForm({ ...form, clinicName: e.target.value })}
@@ -397,7 +397,7 @@ const MultiStepRegister: React.FC = () => {
                                                                     label="Clinic Username"
                                                                     required
                                                                     type="text"
-                                                                    placeholder="apollo_clinic"
+                                                                    placeholder="e.g. apollo_clinic"
                                                                     leftAddon={<AtSign size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                     value={form.username}
                                                                     onChange={e => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })}
@@ -410,7 +410,7 @@ const MultiStepRegister: React.FC = () => {
                                                                 label="Address Line 1"
                                                                 required
                                                                 type="text"
-                                                                placeholder="Shop No. 12, MG Road"
+                                                                placeholder="e.g. Shop No. 12, MG Road"
                                                                 leftAddon={<MapPin size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                 value={form.addressLine1}
                                                                 onChange={e => setForm({ ...form, addressLine1: e.target.value })}
@@ -421,7 +421,7 @@ const MultiStepRegister: React.FC = () => {
                                                             <Input
                                                                 label="Address Line 2 (Optional)"
                                                                 type="text"
-                                                                placeholder="Near City Hospital"
+                                                                placeholder="e.g. Near City Hospital"
                                                                 leftAddon={<MapPin size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                 value={form.addressLine2}
                                                                 onChange={e => setForm({ ...form, addressLine2: e.target.value })}
@@ -430,22 +430,22 @@ const MultiStepRegister: React.FC = () => {
 
                                                         <div className="row mb-3">
                                                             <div className="col-md-4 mb-3 mb-md-0">
-                                                                <Input label="District" type="text" placeholder="Indore" leftAddon={<Map size={20} strokeWidth={2.5} color="#0f172a" />} value={form.district} onChange={e => setForm({ ...form, district: e.target.value })} />
+                                                                <Input label="District" type="text" placeholder="e.g. Indore" leftAddon={<Map size={20} strokeWidth={2.5} color="#0f172a" />} value={form.district} onChange={e => setForm({ ...form, district: e.target.value })} />
                                                             </div>
                                                             <div className="col-md-4 mb-3 mb-md-0">
-                                                                <Input label="City" type="text" placeholder="Indore" leftAddon={<MapPin size={20} strokeWidth={2.5} color="#0f172a" />} value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} />
+                                                                <Input label="City" type="text" placeholder="e.g. Indore" leftAddon={<MapPin size={20} strokeWidth={2.5} color="#0f172a" />} value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} />
                                                             </div>
                                                             <div className="col-md-4">
-                                                                <Input label="Pincode" type="text" placeholder="452001" maxLength={6} leftAddon={<Hash size={20} strokeWidth={2.5} color="#0f172a" />} value={form.pincode} onChange={e => setForm({ ...form, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) })} />
+                                                                <Input label="Pincode" type="text" placeholder="e.g. 452001" maxLength={6} leftAddon={<Hash size={20} strokeWidth={2.5} color="#0f172a" />} value={form.pincode} onChange={e => setForm({ ...form, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) })} />
                                                             </div>
                                                         </div>
 
                                                         <div className="row mb-3">
                                                             <div className="col-md-6 mb-3 mb-md-0">
-                                                                <Input label="State" type="text" placeholder="Madhya Pradesh" leftAddon={<Map size={20} strokeWidth={2.5} color="#0f172a" />} value={form.state} onChange={e => setForm({ ...form, state: e.target.value })} />
+                                                                <Input label="State" type="text" placeholder="e.g. Madhya Pradesh" leftAddon={<Map size={20} strokeWidth={2.5} color="#0f172a" />} value={form.state} onChange={e => setForm({ ...form, state: e.target.value })} />
                                                             </div>
                                                             <div className="col-md-6">
-                                                                <Input label="No. of Doctors" type="number" placeholder="5" min={1} leftAddon={<Users size={20} strokeWidth={2.5} color="#0f172a" />} value={form.doctorCount} onChange={e => setForm({ ...form, doctorCount: e.target.value })} />
+                                                                <Input label="No. of Doctors" type="number" placeholder="e.g. 5" min={1} leftAddon={<Users size={20} strokeWidth={2.5} color="#0f172a" />} value={form.doctorCount} onChange={e => setForm({ ...form, doctorCount: e.target.value })} />
                                                             </div>
                                                         </div>
 
@@ -506,8 +506,8 @@ const MultiStepRegister: React.FC = () => {
                                                             </div>
                                                         )}
                                                         {packages.map((p) => (
-                                                            <div 
-                                                                key={p.id} 
+                                                            <div
+                                                                key={p.id}
                                                                 className={`pkg-card ${p.price === 0 ? "free" : ""} ${selectedPkgId === p.id ? "border-primary" : ""}`}
                                                                 style={{ ...(selectedPkgId === p.id ? { borderColor: '#7c3aed', boxShadow: '0 4px 16px rgba(124,58,237,0.1)' } : {}) }}
                                                                 onClick={() => setSelectedPkgId(p.id)}
@@ -545,16 +545,16 @@ const MultiStepRegister: React.FC = () => {
                                                                 </div>
                                                             </div>
                                                         ))}
-                                                        
+
                                                         {packages.length > 0 && selectedPkgId && (
                                                             <div className="mt-4">
                                                                 {(() => {
                                                                     const selectedPkg = packages.find(p => p.id === selectedPkgId);
                                                                     return selectedPkg ? (
-                                                                        <Button 
-                                                                            variant="primary" 
-                                                                            size="large" 
-                                                                            className="w-100 fs-15 btn-primary-grad d-flex align-items-center justify-content-center gap-2" 
+                                                                        <Button
+                                                                            variant="primary"
+                                                                            size="large"
+                                                                            className="w-100 fs-15 btn-primary-grad d-flex align-items-center justify-content-center gap-2"
                                                                             style={{ minHeight: "50px" }}
                                                                             onClick={() => handleComplete(selectedPkgId)}
                                                                             disabled={loading}

@@ -35,12 +35,28 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
   );
 
   const [form, setForm] = useState(emptyPatientForm);
+  const [doctors, setDoctors] = useState<{ id: string; fullName: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [phoneWarning, setPhoneWarning] = useState<string | null>(null);
 
   const getModalContainer = () =>
     document.getElementById("modal-datepicker") || document.body;
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch(apiUrl("/api/doctors"), {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => setDoctors(Array.isArray(data) ? data : []))
+      .catch(console.error);
+  }, []);
+
+  const doctorOptions = doctors.map((d) => ({
+    value: d.id,
+    label: d.fullName,
+  }));
 
   useEffect(() => {
     if (mode === "edit" && patient) {
@@ -70,6 +86,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
         emergencyContactName: patient.emergencyContactName || "",
         emergencyContactRelation: patient.emergencyContactRelation || "",
         emergencyContactPhone: patient.emergencyContactPhone || "",
+        primaryDoctorId: patient.primaryDoctorId || "",
       });
     }
   }, [mode, patient?.id]);
@@ -128,6 +145,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
     emergencyContactName: form.emergencyContactName || null,
     emergencyContactRelation: form.emergencyContactRelation || null,
     emergencyContactPhone: form.emergencyContactPhone || null,
+    primaryDoctorId: form.primaryDoctorId || null,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -142,6 +160,10 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
     }
     if (!form.address1.trim()) {
       setFormError("Address Line 1 is required.");
+      return;
+    }
+    if (!form.primaryDoctorId) {
+      setFormError("Primary doctor is required.");
       return;
     }
 
@@ -340,6 +362,21 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                           value={findSelectOption(PATIENT_STATUS_OPTIONS, form.status)}
                           placeholder="Select Status"
                           onChange={(opt) => setForm((f) => ({ ...f, status: opt?.value || "Active" }))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="col-md-12">
+                      <div className="mb-3">
+                        <label className="form-label mb-1 fw-medium">
+                          Primary Doctor<span className="text-danger ms-1">*</span>
+                        </label>
+                        <CommonSelect
+                          options={doctorOptions}
+                          className="select"
+                          value={findSelectOption(doctorOptions, form.primaryDoctorId)}
+                          placeholder="Select Primary Doctor"
+                          onChange={(opt) => setForm((f) => ({ ...f, primaryDoctorId: opt?.value || "" }))}
                         />
                       </div>
                     </div>

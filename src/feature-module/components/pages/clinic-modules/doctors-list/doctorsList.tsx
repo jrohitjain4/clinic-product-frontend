@@ -1,35 +1,51 @@
-import { Select } from "antd";
-import {
-  Amount,
-  Department,
-  Designation,
-  Doctor,
-  Status,
-} from "../../../../../core/common/selectOption";
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes, doctorDetailsPath, editDoctorPath } from "../../../../routes/all_routes";
-import { useMemo, useState } from "react";
-import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import Datatable from "../../../../../core/common/dataTable";
 import Modals from "../doctors/modals/modals";
 import { useClinicDoctors } from "../../../../../core/hooks/useClinicDoctors";
 import { apiUrl } from "../../../../../core/config/api";
 import { toast } from "react-toastify";
 
-const PLACEHOLDER_IMAGES = [
-  "doctor-01.jpg",
-  "doctor-02.jpg",
-  "doctor-03.jpg",
-  "doctor-04.jpg",
-  "doctor-05.jpg",
-];
+interface DeptItem { id: string; name: string; status?: string; }
+interface DesigItem { id: string; name: string; type?: string; }
 
 const DoctorsList = () => {
   const { doctors, loading, error, refetch } = useClinicDoctors();
   const [searchText, setSearchText] = useState<string>("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [doctorToDelete, setDoctorToDelete] = useState<string | null>(null);
+
+  // HRM-style filters
+  const [filterDept, setFilterDept] = useState("All");
+  const [filterDesig, setFilterDesig] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("All");
+
+  // Fetch departments & designations for filter dropdowns
+  const [departments, setDepartments] = useState<DeptItem[]>([]);
+  const [designations, setDesignations] = useState<DesigItem[]>([]);
+
+  const fetchFilterData = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    try {
+      const [deptRes, desigRes] = await Promise.all([
+        fetch(apiUrl("/api/departments"), { headers }),
+        fetch(apiUrl("/api/designations"), { headers }),
+      ]);
+      if (deptRes.ok) {
+        const data = await deptRes.json();
+        setDepartments(Array.isArray(data) ? data : []);
+      }
+      if (desigRes.ok) {
+        const data = await desigRes.json();
+        setDesignations(Array.isArray(data) ? data : []);
+      }
+    } catch { }
+  }, []);
+
+  useEffect(() => { fetchFilterData(); }, [fetchFilterData]);
 
   const handleDelete = async () => {
     const idsToDelete = doctorToDelete ? [doctorToDelete] : selectedIds;
@@ -56,22 +72,31 @@ const DoctorsList = () => {
     }
   };
 
+  // Filtered data
+  const filteredDoctors = useMemo(() => {
+    return doctors.filter((d) => {
+      const matchDept = filterDept === "All" || d.department?.name === filterDept;
+      const matchDesig = filterDesig === "All" || d.designation?.name === filterDesig;
+      const matchStatus = filterStatus === "All" || d.status === filterStatus;
+      return matchDept && matchDesig && matchStatus;
+    });
+  }, [doctors, filterDept, filterDesig, filterStatus]);
+
   const tableData = useMemo(
     () =>
-      doctors.map((d, i) => ({
+      filteredDoctors.map((d, i) => ({
         key: d.id,
         SrNo: i + 1,
         Name_Designation: d.fullName,
         Department: d.department?.name || "",
+        DesignationName: d.designation?.name || "",
         Phone: d.phone || "",
         Email: d.email || "",
         Fees: d.consultationCharge != null ? `₹${d.consultationCharge}` : "—",
-        Status: d.status === "Active" ? "Available" : d.status,
-        img:
-          d.profileImage ||
-          `assets/img/doctors/${PLACEHOLDER_IMAGES[i % PLACEHOLDER_IMAGES.length]}`,
+        Status: d.status === "Active" ? "Available" : (d.status === "Inactive" ? "Unable" : d.status),
+        img: d.profileImage || "assets/img/doctor-placeholder.png",
       })),
-    [doctors]
+    [filteredDoctors]
   );
 
   const columns = [
@@ -98,7 +123,7 @@ const DoctorsList = () => {
             <h6 className="mb-1 fs-14 fw-semibold">
               <Link to={doctorDetailsPath(record.key)}>{text}</Link>
             </h6>
-            <span className="fs-13 d-block">{record.Department}</span>
+            <span className="fs-13 d-block">{record.DesignationName || record.Department}</span>
           </div>
         </div>
       ),
@@ -135,8 +160,7 @@ const DoctorsList = () => {
       dataIndex: "Status",
       render: (text: string) => (
         <span
-          className={`badge ${text === "Available" ? "badge-soft-success" : "badge-soft-danger"
-            } border border-success`}
+          className={`badge ${text === "Available" ? "badge-soft-success border-success" : "badge-soft-danger border-danger"} border`}
         >
           {text}
         </span>
@@ -178,9 +202,16 @@ const DoctorsList = () => {
     },
   ];
 
-  const handleSearch = (value: string) => {
-    setSearchText(value);
-  };
+  // Unique values for filter dropdowns from actual data
+  const uniqueDepts = useMemo(
+    () => [...new Set(departments.map((d) => d.name))].filter(Boolean).sort(),
+    [departments]
+  );
+
+  const uniqueDesigs = useMemo(
+    () => [...new Set(designations.map((d) => d.name))].filter(Boolean).sort(),
+    [designations]
+  );
 
   return (
     <>
@@ -191,33 +222,101 @@ const DoctorsList = () => {
               <h4 className="page-title fw-bold mb-0">
                 Doctor List
                 <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                  Total Doctors : {loading ? "" : doctors.length}
+                  Total Doctors : {loading ? "" : filteredDoctors.length}
                 </span>
               </h4>
             </div>
-            <div className="text-end d-flex align-items-center gap-2">
+            <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
+              {/* Department Filter */}
               <div className="dropdown">
                 <Link
                   to="#"
-                  className="btn btn-md fs-14 fw-normal border bg-white rounded text-dark d-inline-flex align-items-center"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "160px", minHeight: "38px" }}
+                  data-bs-toggle="dropdown"
+                  data-bs-auto-close="outside"
+                >
+                  <span className="text-truncate">
+                    <span className="text-muted">Department:</span> {filterDept}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2" style={{ minWidth: "180px" }}>
+                  <li>
+                    <Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterDept("All"); }}>
+                      All
+                    </Link>
+                  </li>
+                  {uniqueDepts.map((name) => (
+                    <li key={name}>
+                      <Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterDept(name); }}>
+                        {name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Designation Filter */}
+              <div className="dropdown">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "160px", minHeight: "38px" }}
+                  data-bs-toggle="dropdown"
+                  data-bs-auto-close="outside"
+                >
+                  <span className="text-truncate">
+                    <span className="text-muted">Designation:</span> {filterDesig}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2" style={{ minWidth: "180px" }}>
+                  <li>
+                    <Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterDesig("All"); }}>
+                      All
+                    </Link>
+                  </li>
+                  {uniqueDesigs.map((name) => (
+                    <li key={name}>
+                      <Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterDesig(name); }}>
+                        {name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Status Filter */}
+              <div className="dropdown">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "130px", minHeight: "38px" }}
                   data-bs-toggle="dropdown"
                 >
-                  Export
-                  <i className="ti ti-chevron-down ms-2" />
+                  <span className="text-truncate">
+                    <span className="text-muted">Status:</span> {filterStatus === "All" ? "All" : filterStatus === "Active" ? "Available" : "Unable"}
+                  </span>
                 </Link>
-                <ul className="dropdown-menu p-2">
+                <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li>
-                    <Link className="dropdown-item" to="#">
-                      Download as PDF
+                    <Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterStatus("All"); }}>
+                      All
                     </Link>
                   </li>
                   <li>
-                    <Link className="dropdown-item" to="#">
-                      Download as Excel
+                    <Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterStatus("Active"); }}>
+                      Available
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterStatus("Inactive"); }}>
+                      Unable
                     </Link>
                   </li>
                 </ul>
               </div>
+
+              {/* View Toggle */}
               <div className="d-flex align-items-center gap-2">
                 <Link
                   to={all_routes.doctorsList}
@@ -234,88 +333,7 @@ const DoctorsList = () => {
                   <i className="ti ti-layout-grid fs-16" />
                 </Link>
               </div>
-              <div className="dropdown">
-                <Link
-                  to="#"
-                  className="btn btn-white fw-medium bg-white fs-14 border d-inline-flex align-items-center justify-content-center shadow-sm"
-                  style={{ minHeight: "38px", borderRadius: "8px" }}
-                  data-bs-toggle="dropdown"
-                  data-bs-auto-close="outside"
-                >
-                  <i className="ti ti-adjustments-horizontal me-2 text-primary fs-16" />
-                  Filters
-                </Link>
-                <div className="dropdown-menu dropdown-lg dropdown-menu-end filter-dropdown p-0">
-                  <div className="d-flex align-items-center justify-content-between border-bottom filter-header">
-                    <h4 className="mb-0">Filter</h4>
-                    <Link to="#" className="link-danger text-decoration-underline">
-                      Clear All
-                    </Link>
-                  </div>
-                  <form action="#">
-                    <div className="filter-body pb-0">
-                      <div className="mb-3">
-                        <label className="form-label">Doctor</label>
-                        <Select
-                          mode="multiple"
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Please select"
-                          options={Doctor}
-                        />
-                      </div>
-                      <div className="mb-3">
-                        <label className="form-label">Designation</label>
-                        <Select
-                          mode="multiple"
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Please select"
-                          options={Designation}
-                        />
-                      </div>
-                      <div className="mb-3">
-                        <label className="form-label">Department</label>
-                        <Select
-                          mode="multiple"
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Please select"
-                          options={Department}
-                        />
-                      </div>
-                      <div className="mb-3">
-                        <label className="form-label">Amount</label>
-                        <Select
-                          mode="multiple"
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Please select"
-                          options={Amount}
-                        />
-                      </div>
-                      <div className="mb-3">
-                        <label className="form-label">Status</label>
-                        <Select
-                          mode="multiple"
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Please select"
-                          options={Status}
-                        />
-                      </div>
-                    </div>
-                    <div className="filter-footer d-flex align-items-center justify-content-end border-top">
-                      <Link to="#" className="btn btn-light btn-md me-2">
-                        Close
-                      </Link>
-                      <button type="submit" className="btn btn-primary btn-md">
-                        Filter
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
+
               <Link
                 to={all_routes.addDoctors}
                 className="btn btn-primary d-flex align-items-center justify-content-center ms-1"
@@ -334,8 +352,6 @@ const DoctorsList = () => {
               </button>
             </div>
           )}
-
-
 
           {loading ? (
             <div className="text-center py-5">

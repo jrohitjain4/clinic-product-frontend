@@ -249,105 +249,64 @@ const PatientDetails = () => {
             </div>
             <div className="col-xl-7 d-flex">
               <div className="card shadow-sm flex-fill w-100">
-                <div className="card-header">
+                <div className="card-header border-bottom">
                   <h5 className="fw-bold mb-0">
-                    <i className="ti ti-book me-1" />
-                    Vital Signs
+                    <i className="ti ti-id me-1" />
+                    Additional Information
                   </h5>
                 </div>
                 <div className="card-body pb-0">
-                  <div className="row g-2">
+                  <div className="row g-3">
                     <div className="col-sm-4">
-                      <div className="d-flex align-items-center mb-3">
-                        <span className="avatar rounded-2 bg-light text-dark flex-shrink-0 me-2 border">
-                          <i className="ti ti-droplet fs-16" />
-                        </span>
-                        <div>
-                          <h6 className="fs-13 fw-bold mb-1 text-truncate">
-                            Blood Pressure
-                          </h6>
-                          <p className="mb-0 d-inline-flex align-items-center text-truncate">
-                            <i className="ti ti-point-filled me-1 text-success fs-18" />
-                            100/67 mmHg
-                          </p>
-                        </div>
+                      <div className="mb-1">
+                        <p className="mb-0 fs-12 text-muted">Blood Group</p>
+                        <h6 className="fs-14 fw-bold mb-0 text-dark">{patient.bloodGroup || "NULL"}</h6>
+                      </div>
+                      <div className="mb-1">
+                        <p className="mb-0 fs-12 text-muted">Aadhaar Number</p>
+                        <h6 className="fs-14 fw-bold mb-0 text-dark">{patient.aadhaarNumber || "NULL"}</h6>
                       </div>
                     </div>
                     <div className="col-sm-4">
-                      <div className="d-flex align-items-center mb-3">
-                        <span className="avatar rounded-2 bg-light text-dark flex-shrink-0 me-2 border">
-                          <i className="ti ti-heart-rate-monitor fs-16" />
-                        </span>
-                        <div>
-                          <h6 className="fs-13 fw-bold mb-1 text-truncate">
-                            Heart Rate
-                          </h6>
-                          <p className="mb-0 d-inline-flex align-items-center text-truncate">
-                            <i className="ti ti-point-filled me-1 text-danger fs-18" />
-                            89 Bpm
-                          </p>
-                        </div>
+                      <div className="mb-1">
+                        <p className="mb-0 fs-12 text-muted">Marital Status</p>
+                        <h6 className="fs-14 fw-bold mb-0 text-dark">{patient.maritalStatus || "NULL"}</h6>
+                      </div>
+                      <div className="mb-1">
+                        <p className="mb-0 fs-12 text-muted">Passport Number</p>
+                        <h6 className="fs-14 fw-bold mb-0 text-dark">{patient.passportNumber || "NULL"}</h6>
                       </div>
                     </div>
                     <div className="col-sm-4">
-                      <div className="d-flex align-items-center mb-3">
-                        <span className="avatar rounded-2 bg-light text-dark flex-shrink-0 me-2 border">
-                          <i className="ti ti-hexagons fs-16" />
-                        </span>
-                        <div>
-                          <h6 className="fs-13 fw-bold mb-1">SPO2</h6>
-                          <p className="mb-0 d-inline-flex align-items-center text-truncate">
-                            <i className="ti ti-point-filled me-1 text-success fs-18" />
-                            98 %
-                          </p>
-                        </div>
+                      <div className="mb-1">
+                        <p className="mb-0 fs-12 text-muted">Occupation</p>
+                        <h6 className="fs-14 fw-bold mb-0 text-dark text-truncate">{patient.occupation || "NULL"}</h6>
+                      </div>
+                      <div className="mb-1">
+                        <p className="mb-0 fs-12 text-muted">Referred By</p>
+                        <h6 className="fs-14 fw-bold mb-0 text-dark text-truncate">{patient.referredBy || "NULL"}</h6>
                       </div>
                     </div>
-                    <div className="col-sm-4">
-                      <div className="d-flex align-items-center mb-3">
-                        <span className="avatar rounded-2 bg-light text-dark flex-shrink-0 me-2 border">
-                          <i className="ti ti-temperature fs-16" />
-                        </span>
-                        <div>
-                          <h6 className="fs-13 fw-bold mb-1 text-truncate">
-                            Temperature
-                          </h6>
-                          <p className="mb-0 d-inline-flex align-items-center text-truncate">
-                            <i className="ti ti-point-filled me-1 text-success fs-18" />
-                            101 C
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-sm-4">
-                      <div className="d-flex align-items-center mb-3">
-                        <span className="avatar rounded-2 bg-light text-dark flex-shrink-0 me-2 border">
-                          <i className="ti ti-activity fs-16" />
-                        </span>
-                        <div>
-                          <h6 className="fs-13 fw-bold mb-1 text-truncate">
-                            Respiratory Rate
-                          </h6>
-                          <p className="mb-0 d-inline-flex align-items-center text-truncate">
-                            <i className="ti ti-point-filled me-1 text-danger fs-18" />
-                            24 rpm
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-sm-4">
-                      <div className="d-flex align-items-center mb-3">
-                        <span className="avatar rounded-2 bg-light text-dark flex-shrink-0 me-2 border">
-                          <i className="ti ti-weight fs-16" />
-                        </span>
-                        <div>
-                          <h6 className="fs-13 fw-bold mb-1 text-truncate">
-                            Weight
-                          </h6>
-                          <p className="mb-0 d-inline-flex align-items-center text-truncate">
-                            <i className="ti ti-point-filled me-1 text-success fs-18" />
-                            100 kg
-                          </p>
+
+                    <div className="col-12 mt-0">
+                      <div className="border-top pt-2 mb-2">
+                        <h6 className="fs-13 fw-bold text-primary mb-1">
+                          <i className="ti ti-phone-outgoing me-1" />
+                          Emergency Contact
+                        </h6>
+                        <div className="row g-2">
+                          <div className="col-md-4">
+                            <p className="mb-0 fs-12 text-muted">Name</p>
+                            <h6 className="fs-14 fw-bold text-dark">{patient.emergencyContactName || "NULL"}</h6>
+                          </div>
+                          <div className="col-md-4">
+                            <p className="mb-0 fs-12 text-muted">Relation</p>
+                            <h6 className="fs-14 fw-bold text-dark">{patient.emergencyContactRelation || "NULL"}</h6>
+                          </div>
+                          <div className="col-md-4">
+                            <p className="mb-0 fs-12 text-muted">Phone</p>
+                            <h6 className="fs-14 fw-bold text-dark">{patient.emergencyContactPhone || "NULL"}</h6>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -389,7 +348,7 @@ const PatientDetails = () => {
                 <div className="d-flex align-items-center gap-2">
                   <div className="search-set mb-3">
                     <div className="d-flex align-items-center flex-wrap gap-2">
-                      
+                      <SearchInput value={searchText} onChange={handleSearch} />
                     </div>
                   </div>
                   <div className="d-flex right-content align-items-center flex-wrap mb-3">
@@ -910,75 +869,84 @@ const PatientDetails = () => {
               {/*  Start Table */}
               <div className="table-responsive">
                 <table className="table datatable table-nowrap">
-                  <thead className="">
+                  <thead className="thead-light">
                     <tr>
-                      <th className="no-sort">Date &amp; Time</th>
-                      <th>Doctor Name</th>
-                      <th>Mode</th>
-                      <th>Status</th>
-                      <th />
+                      <th className="fw-bold text-dark">Sr No</th>
+                      <th className="fw-bold text-dark">Date & Time</th>
+                      <th className="fw-bold text-dark">Doctor Name</th>
+                      <th className="fw-bold text-dark">Department</th>
+                      <th className="fw-bold text-dark text-center">Mode</th>
+                      <th className="fw-bold text-dark text-center">Status</th>
+                      <th className="text-end">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {apptLoading ? (
                       <tr>
-                        <td colSpan={5} className="text-center py-4">
+                        <td colSpan={8} className="text-center py-4">
                           <span className="spinner-border spinner-border-sm text-primary" role="status" />
                         </td>
                       </tr>
                     ) : filteredAppointments.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="text-center py-4 text-muted">
+                        <td colSpan={8} className="text-center py-4 text-muted">
                           No appointments found
                         </td>
                       </tr>
                     ) : (
-                      filteredAppointments.map((appt) => {
-                        const doctorImage = appt.doctor?.profileImage || "assets/img/users/user-08.jpg";
-                        const doctorName = appt.doctorName || appt.doctor?.fullName || "";
-                        const doctorRole = appt.doctorRole || appt.doctor?.designation?.name || appt.doctor?.department?.name || "";
+                      filteredAppointments.map((appt, idx) => {
+                        const doctorImage = appt.doctor?.profileImage || "assets/img/doctor-placeholder.png";
+                        const doctorName = appt.doctorName || appt.doctor?.fullName || "NULL";
+                        const designation = appt.doctor?.designation?.name || "Doctor";
+
                         return (
                           <tr key={appt.id}>
-                            <td>{appt.dateTimeLabel || appt.scheduledAt}</td>
-                            <td>
+                            <td className="fw-bold text-dark py-1">{(idx + 1).toString().padStart(2, '0')}</td>
+                            <td className="text-dark fw-medium py-1 fs-13">{dayjs(appt.scheduledAt).format("DD MMM YYYY - hh:mm A")}</td>
+                            <td className="py-1">
                               <div className="d-flex align-items-center">
-                                <span className="avatar me-2 flex-shrink-0">
+                                <span className="avatar avatar-sm me-2 flex-shrink-0">
                                   <ImageWithBasePath
                                     src={doctorImage}
                                     alt={doctorName}
-                                    className="rounded-circle"
+                                    className="rounded-circle border"
                                   />
                                 </span>
                                 <div>
-                                  <h6 className="fs-14 mb-1 text-truncate">
-                                    <span className="fw-semibold">{doctorName}</span>
+                                  <h6 className="fs-13 mb-0 text-truncate text-dark fw-bold">
+                                    {doctorName}
                                   </h6>
-                                  <p className="mb-0 fs-13 text-truncate">{doctorRole}</p>
+                                  <p className="mb-0 fs-11 text-muted">{designation}</p>
                                 </div>
                               </div>
                             </td>
-                            <td>{appt.mode}</td>
-                            <td>
+                            <td className="text-center py-1">
+                              <span className={`badge border ${appt.mode === 'Online' ? 'badge-soft-info border-info' : 'badge-soft-secondary border-secondary'} rounded-pill fs-11`}>
+                                {appt.mode}
+                              </span>
+                            </td>
+                            <td className="text-center py-1">
                               <span
-                                className={`badge fs-13 rounded fw-medium ${statusBadgeClass(appt.status)}`}
+                                className={`badge fs-11 rounded-pill fw-bold border ${statusBadgeClass(appt.status)}`}
                               >
                                 {appt.status}
                               </span>
                             </td>
-                            <td className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
-                              <Link to="#" data-bs-toggle="dropdown">
-                                <i className="ti ti-dots-vertical" />
-                              </Link>
-                              <ul className="dropdown-menu p-2">
-                                <li>
-                                  <Link
-                                    to={all_routes.appointments}
-                                    className="dropdown-item d-flex align-items-center"
-                                  >
-                                    View
+                            <td className="text-end py-1">
+                              <div className="d-flex align-items-center justify-content-end gap-2">
+                                <Link to="#" className="btn btn-icon btn-sm bg-primary-subtle text-primary rounded-circle">
+                                  <i className="ti ti-eye fs-13" />
+                                </Link>
+                                <div className="dropdown">
+                                  <Link to="#" className="avatar avatar-xs border text-muted rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent" data-bs-toggle="dropdown">
+                                    <i className="ti ti-dots-vertical" />
                                   </Link>
-                                </li>
-                              </ul>
+                                  <ul className="dropdown-menu dropdown-menu-end shadow-lg border-0">
+                                    <li><Link to="#" className="dropdown-item py-1 fs-13"><i className="ti ti-file-text me-2 text-primary" />Prescription</Link></li>
+                                    <li><Link to="#" className="dropdown-item py-1 fs-13 text-danger"><i className="ti ti-x me-2" />Cancel</Link></li>
+                                  </ul>
+                                </div>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -995,7 +963,7 @@ const PatientDetails = () => {
                 <div className="d-flex align-items-center gap-2">
                   <div className="search-set mb-3">
                     <div className="d-flex align-items-center flex-wrap gap-2">
-                      
+
                     </div>
                   </div>
                   <div className="d-flex right-content align-items-center flex-wrap mb-3">
@@ -1538,7 +1506,7 @@ const PatientDetails = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 
+            2025
             <Link to="#" className="link-primary">
               Docyari
             </Link>

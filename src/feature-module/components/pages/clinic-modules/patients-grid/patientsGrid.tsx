@@ -16,13 +16,17 @@ const PatientsGrid = () => {
   const editPatientPath = (id: string) =>
     all_routes.editPatient.replace(":id", id);
 
-  const placeholders = [
-    "user-08.jpg",
-    "user-16.jpg",
-    "user-06.jpg",
-    "user-25.jpg",
-    "user-39.jpg",
-  ];
+  if (loading) {
+    return (
+      <div className="page-wrapper">
+        <div className="content">
+          <div className="text-center py-5">
+            <span className="spinner-border text-primary" role="status" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -30,15 +34,15 @@ const PatientsGrid = () => {
         <div className="content">
           <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
             <div className="flex-grow-1">
-              <h4 className="fw-bold mb-0">
-                Patient Grid
-                <span className="badge badge-soft-primary fw-medium border py-1 px-2 border-primary fs-13 ms-1">
-                  Total Patients : {loading ? "…" : patients.length}
+              <h4 className="fw-bold mb-0 text-dark">
+                Patients Grid
+                <span className="badge badge-soft-primary fw-bold border py-1 px-2 border-primary fs-13 ms-1">
+                  Total Patients : {patients.length}
                 </span>
               </h4>
             </div>
-            <div className="text-end d-flex">
-              <div className="d-flex align-items-center gap-2 me-2">
+            <div className="text-end d-flex align-items-center gap-2">
+              <div className="d-flex align-items-center gap-2">
                 <Link
                   to={all_routes.patients}
                   className="btn btn-icon btn-sm bg-white text-dark border d-flex align-items-center justify-content-center"
@@ -57,9 +61,10 @@ const PatientsGrid = () => {
               <HasPermission module="Patients" action="CREATE">
                 <Link
                   to={all_routes.createPatient}
-                  className="btn btn-primary ms-2 fs-13 btn-md"
+                  className="btn btn-primary ms-1 fw-bold fs-13"
+                  style={{ height: '38px' }}
                 >
-                  New Patient <i className="ti ti-plus ms-2" /></Link>
+                  New Patient <i className="ti ti-plus ms-1" /></Link>
               </HasPermission>
             </div>
           </div>
@@ -73,111 +78,117 @@ const PatientsGrid = () => {
             </div>
           )}
 
-          {loading ? (
-            <div className="text-center py-5">
-              <span className="spinner-border text-primary" role="status" />
-            </div>
-          ) : (
-            <div className="row g-2">
-              {patients.map((p, index) => {
-                const img =
-                  p.profileImage ||
-                  `assets/img/users/${placeholders[index % placeholders.length]}`;
-                const location =
-                  p.fullAddress && p.fullAddress !== "—"
-                    ? p.fullAddress
-                    : p.addressShort || "—";
-                return (
-                  <div key={p.id} className="col-xl-4 col-md-6">
-                    <div className="card">
-                      <div className="card-body">
-                        <div className="d-flex justify-content-between align-items-start mb-3">
-                          <div className="d-flex align-items-center">
-                            <Link
-                              to={patientDetailsPath(p.id)}
-                              className="avatar avatar-lg me-2"
-                            >
-                              <ImageWithBasePath
-                                src={img}
-                                alt={p.fullName || "Patient"}
-                                className="rounded-circle"
-                              />
-                            </Link>
-                            <Link
-                              to={patientDetailsPath(p.id)}
-                              className="text-dark fw-semibold"
-                            >
+          <div className="row g-2">
+            {patients.map((p) => {
+              const hasImage = p.profileImage && p.profileImage.trim() !== "" && !p.profileImage.includes("300x300");
+              const img = hasImage ? p.profileImage : "assets/img/patient-placeholder.png";
+
+              // Ensure location is concise and doesn't include emails
+              const location =
+                p.city && p.city !== "—"
+                  ? `${p.city}${p.state ? `, ${p.state}` : ""}`
+                  : p.addressShort || "—";
+
+              const statusLabel = p.status === "Active" ? "Available" : (p.status === "Inactive" ? "Unavailable" : p.status);
+
+              return (
+                <div key={p.id} className="col-xl-3 col-lg-4 col-md-6 mb-2">
+                  <div className="card h-100 shadow-sm border-0 border-top border-3 border-primary transition-all position-relative">
+                    <div className="card-body d-flex align-items-center p-2 overflow-hidden">
+                      <div className="me-2 ps-1">
+                        <Link to={patientDetailsPath(p.id)} className="d-block overflow-hidden rounded-circle border border-2 border-primary-light p-1" style={{ width: "85px", height: "85px" }}>
+                          <ImageWithBasePath
+                            src={img}
+                            className="w-100 h-100 rounded-circle"
+                            alt={p.fullName || "Patient"}
+                            style={{ objectFit: "cover" }}
+                            fallback="assets/img/patient-placeholder.png"
+                          />
+                        </Link>
+                      </div>
+                      <div className="flex-fill pe-2 overflow-hidden">
+                        <div className="d-flex align-items-center justify-content-between mb-1">
+                          <h5 className="mb-0 fw-bold">
+                            <Link to={patientDetailsPath(p.id)} className="text-dark text-truncate d-block" style={{ maxWidth: '140px' }}>
                               {p.fullName || `${p.firstName} ${p.lastName}`}
-                              <span className="text-body fs-13 fw-normal d-block">
-                                {p.ageGenderLabel || "—"}
-                              </span>
                             </Link>
-                          </div>
+                          </h5>
                           <div className="dropdown">
-                            <button
-                              type="button"
-                              className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
+                            <Link
+                              to="#"
                               data-bs-toggle="dropdown"
+                              className="avatar avatar-xs border text-muted rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent"
                             >
                               <i className="ti ti-dots-vertical" />
-                            </button>
-                            <ul className="dropdown-menu p-2">
+                            </Link>
+                            <ul className="dropdown-menu dropdown-menu-end shadow-lg border-0 p-1">
                               <HasPermission module="Patients" action="EDIT">
                                 <li>
-                                  <Link
-                                    to={editPatientPath(p.id)}
-                                    className="dropdown-item"
-                                  >
-                                    Edit
+                                  <Link to={editPatientPath(p.id)} className="dropdown-item d-flex align-items-center py-2">
+                                    <i className="ti ti-edit me-2 text-primary" /> Edit
                                   </Link>
                                 </li>
                               </HasPermission>
+                              <li>
+                                <Link to={all_routes.appointments} className="dropdown-item d-flex align-items-center py-2">
+                                  <i className="ti ti-calendar-event me-2 text-info" /> Appointment
+                                </Link>
+                              </li>
                               <HasPermission module="Patients" action="DELETE">
                                 <li>
-                                  <button
-                                    type="button"
-                                    className="dropdown-item"
+                                  <Link
+                                    to="#"
+                                    className="dropdown-item d-flex align-items-center py-2 text-danger"
                                     data-bs-toggle="modal"
                                     data-bs-target="#delete_patient_modal"
                                     onClick={() => setSelected(p)}
                                   >
-                                    Delete
-                                  </button>
+                                    <i className="ti ti-trash me-2" /> Delete
+                                  </Link>
                                 </li>
                               </HasPermission>
-                              <li>
-                                <Link
-                                  to={all_routes.appointments}
-                                  className="dropdown-item"
-                                >
-                                  Appointment
-                                </Link>
-                              </li>
                             </ul>
                           </div>
                         </div>
-                        <p className="mb-2 text-truncate fs-13 d-flex align-items-center">
-                          <i className="ti ti-calendar me-1 text-dark" />
-                          Last Visit : {p.lastVisitLabel || "—"}
-                        </p>
-                        <p className="mb-0 text-truncate fs-13 d-flex align-items-center">
-                          <i className="ti ti-location-pin me-1 text-dark" />
-                          {location}
-                        </p>
+                        <span className="d-block mb-1 fs-13 text-primary fw-medium text-truncate">
+                          {p.ageGenderLabel || "—"} {p.bloodGroup ? `| ${p.bloodGroup}` : ""}
+                        </span>
+                        <div className="mb-2 d-flex align-items-center gap-2">
+                          <span
+                            className={`badge ${statusLabel === "Available"
+                              ? "badge-soft-success border-success"
+                              : "badge-soft-danger border-danger"
+                              } border rounded-pill fs-11 fw-bold`}
+                          >
+                            {statusLabel}
+                          </span>
+                        </div>
+                        <div className="border-top pt-2 mt-1">
+                          <p className="mb-1 text-truncate fs-12 d-flex align-items-center text-muted">
+                            <i className="ti ti-calendar me-1" />
+                            Last Visit: <span className="text-dark ms-1 fw-medium text-truncate">{p.lastVisitLabel || "—"}</span>
+                          </p>
+                          <p className="mb-0 text-truncate fs-12 d-flex align-items-center text-muted w-100">
+                            <i className="ti ti-location-pin me-1" />
+                            <span className="text-dark text-truncate d-block flex-fill" title={location}>{location}</span>
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
+                </div>
+              );
+            })}
+          </div>
 
           {!loading && patients.length === 0 && !error && (
-            <div className="text-center py-5">
-              <p className="text-muted mb-3">No patients found.</p>
+            <div className="text-center py-5 border rounded bg-white">
+              <i className="ti ti-users fs-1 text-muted d-block mb-2" />
+              <h6 className="fw-bold">No patients yet</h6>
+              <p className="text-muted mb-3">Add your first patient to see them here.</p>
               <HasPermission module="Patients" action="CREATE">
                 <Link to={all_routes.createPatient} className="btn btn-primary">
-                  New Patient
+                  New Patient <i className="ti ti-plus ms-1" />
                 </Link>
               </HasPermission>
             </div>

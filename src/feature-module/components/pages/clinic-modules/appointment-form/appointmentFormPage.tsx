@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
-import { DatePicker, TimePicker } from "antd";
+import { DatePicker } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import { all_routes } from "../../../../routes/all_routes";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
@@ -165,6 +165,25 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
     });
 
     return slots;
+  }, [availability, form.appointmentDate]);
+
+  // ── Build session options for the Shift/Session dropdown ────────
+  const sessionOptions = useMemo(() => {
+    if (!availability || !form.appointmentDate) return [];
+    const dayName = form.appointmentDate.format("dddd");
+    const daySchedule = availability.schedules?.[dayName];
+    if (!Array.isArray(daySchedule) || daySchedule.length === 0) return [];
+
+    return daySchedule.map((session: any, idx: number) => {
+      const sessionLabel = session.label || (idx === 0 ? "Morning Session" : idx === 1 ? "Evening Session" : `Session ${idx + 1}`);
+      const fromFormatted = dayjs(session.from, "HH:mm").format("hh:mm A");
+      const toFormatted = dayjs(session.to, "HH:mm").format("hh:mm A");
+
+      return {
+        value: session.from,
+        label: `${sessionLabel}: ${fromFormatted} – ${toFormatted}`,
+      };
+    });
   }, [availability, form.appointmentDate]);
 
   // ── Auto-check for Follow-up status ────────────────────────────
@@ -360,36 +379,6 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
     return info.originNode;
   };
 
-  // Helper to determine if a time is within doctor's available slots
-  const isTimeAvailable = (time: Dayjs) => {
-    if (!availability || !form.appointmentDate) return true;
-    const dayName = form.appointmentDate.format("dddd");
-    const dateStr = form.appointmentDate.format("YYYY-MM-DD");
-    const daySchedule = availability.schedules?.[dayName];
-    if (!Array.isArray(daySchedule)) return false;
-
-    const timeStr = time.format("HH:mm");
-
-    // Check if within clinic working hours (optional, but keep for safety)
-    const clinicOffDays = availability.clinicWorkingDays || [0];
-    if (clinicOffDays.includes(time.day())) return false;
-
-    // Check if within doctor working hours
-    const isWorking = daySchedule.some((slot: any) => {
-      return timeStr >= slot.from && timeStr <= slot.to;
-    });
-    if (!isWorking) return false;
-
-    // Check if booked
-    const isBooked = availability.appointments?.some((a: any) => {
-      return (
-        dayjs(a.start).format("YYYY-MM-DD") === dateStr &&
-        dayjs(a.start).format("HH:mm") === timeStr
-      );
-    });
-
-    return !isBooked;
-  };
 
   if (mode === "edit" && loadingAppt) {
     return (
@@ -601,45 +590,31 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
-                          Time<span className="text-danger ms-1">*</span>
+                          Shift / Session<span className="text-danger ms-1">*</span>
                         </label>
-                        <div className="input-icon-end position-relative">
-                          <TimePicker
-                            className={`form-control w-100 ${form.appointmentTime && isTimeAvailable(form.appointmentTime) ? 'border-success' : ''}`}
-                            use12Hours
-                            format="hh:mm A"
-                            value={form.appointmentTime}
-                            status={form.appointmentTime && !isTimeAvailable(form.appointmentTime) ? 'warning' : undefined}
-                            onChange={(t: Dayjs | null) =>
-                              setForm((f) => ({ ...f, appointmentTime: t }))
+                        <CommonSelect
+                          key={`session-${sessionOptions.length}-${form.appointmentDate?.toString()}`}
+                          options={sessionOptions}
+                          className="select"
+                          value={sessionOptions.find(opt => opt.value === form.appointmentTime?.format("HH:mm"))}
+                          placeholder={
+                            !form.appointmentDate
+                              ? "Select date first"
+                              : sessionOptions.length > 0
+                                ? "Select session"
+                                : "No shifts available on this day"
+                          }
+                          isDisabled={!form.appointmentDate || sessionOptions.length === 0}
+                          onChange={(opt: any) => {
+                            if (opt?.value) {
+                              setForm(f => ({ ...f, appointmentTime: dayjs(opt.value, "HH:mm") }));
                             }
-                            getPopupContainer={getModalContainer}
-                          />
-                          <span className="input-icon-addon">
-                            <i className={`ti ti-clock ${form.appointmentTime && isTimeAvailable(form.appointmentTime) ? 'text-success' : 'text-gray-7'}`} />
-                          </span>
-                        </div>
-                        {form.appointmentTime && !isTimeAvailable(form.appointmentTime) && (
-                          <div className="text-warning fs-12 mt-1">
-                            <i className="ti ti-alert-triangle me-1" />
-                            Doctor may not be available at this time.
-                          </div>
-                        )}
-                        {form.appointmentTime && isTimeAvailable(form.appointmentTime) && (
+                          }}
+                        />
+                        {form.appointmentTime && sessionOptions.length > 0 && (
                           <div className="text-success fs-12 mt-1">
                             <i className="ti ti-check me-1" />
-                            Doctor is available.
-                          </div>
-                        )}
-
-                        {availability && availability.schedules && form.appointmentDate && (
-                          <div className="mb-2">
-                            {availability.schedules[form.appointmentDate.format("dddd")]?.map((s: any, idx: number) => (
-                              <span key={idx} className="badge badge-soft-info me-2 p-2 border border-info mb-2 fs-11">
-                                <i className="ti ti-info-circle me-1" />
-                                {s.label || (idx === 0 ? "Session 1" : "Session 2")}: {dayjs(s.from, "HH:mm").format("hh:mm A")} - {dayjs(s.to, "HH:mm").format("hh:mm A")}
-                              </span>
-                            ))}
+                            Slot selected: {form.appointmentTime.format("hh:mm A")}
                           </div>
                         )}
                       </div>

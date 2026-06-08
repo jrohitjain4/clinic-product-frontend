@@ -110,6 +110,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   const [followUpEnabled, setFollowUpEnabled] = useState(false);
   const [followUpValidityDays, setFollowUpValidityDays] = useState("");
   const [freeFollowUpLimit, setFreeFollowUpLimit] = useState("");
+  const [followUpFee, setFollowUpFee] = useState("");
 
   // Schedule
   const WEEKDAYS = [
@@ -254,6 +255,9 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         );
         setFreeFollowUpLimit(
           d.freeFollowUpLimit != null ? String(d.freeFollowUpLimit) : ""
+        );
+        setFollowUpFee(
+          d.followUpFee != null ? String(d.followUpFee) : ""
         );
         const parsedSchedules = parseSchedulesFromApi(
           d.schedules as Record<string, { session?: string; from: string; to: string }[]>
@@ -506,6 +510,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         followUpEnabled: followUpEnabled,
         followUpValidityDays: followUpEnabled ? followUpValidityDays : null,
         freeFollowUpLimit: followUpEnabled ? freeFollowUpLimit : null,
+        followUpFee: followUpEnabled ? followUpFee : null,
         schedules: serializeSchedules(activeSchedules),
         educations: serializeEducations(educations),
         awards: serializeAwards(awards),
@@ -1370,6 +1375,21 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                   placeholder="Enter visit limit (e.g. 4)"
                                   min={0}
                                 />
+                              </div>
+                            </div>
+                            <div className="col-lg-6">
+                              <div className="mb-3">
+                                <label className="form-label">Follow-up Fee (₹)</label>
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  value={followUpFee}
+                                  onChange={(e) => setFollowUpFee(e.target.value)}
+                                  placeholder="Enter amount (e.g. 500.00)"
+                                  min={0}
+                                  step="0.01"
+                                />
+                                <small className="text-muted">Charged after free follow-up limit is exhausted</small>
                               </div>
                             </div>
                           </>

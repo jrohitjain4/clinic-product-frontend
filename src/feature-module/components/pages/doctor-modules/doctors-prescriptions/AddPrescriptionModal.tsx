@@ -14,6 +14,10 @@ interface Medicine {
 interface Props {
     onClose: () => void;
     onSubmit: (data: Record<string, any>) => Promise<void>;
+    initialPatientId?: string;
+    initialDoctorId?: string;
+    initialAppointmentId?: string;
+    linkedAppointments?: any[];
 }
 
 const FREQUENCY_OPTIONS = ["1-0-1", "1-1-1", "0-0-1", "1-0-0", "0-1-0", "1-1-0", "SOS"];
@@ -28,7 +32,7 @@ const emptyMedicine = (): Medicine => ({
     timings: "After meal",
 });
 
-const AddPrescriptionModal = ({ onClose, onSubmit }: Props) => {
+const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoctorId, initialAppointmentId, linkedAppointments }: Props) => {
     const { appointments } = useClinicAppointments();
 
     // Get logged-in user from localStorage
@@ -59,9 +63,9 @@ const AddPrescriptionModal = ({ onClose, onSubmit }: Props) => {
         return match?.doctor || null;
     }, [scheduledAppointments, isDoctor]);
 
-    const [patientId, setPatientId] = useState("");
-    const [doctorId, setDoctorId] = useState(loggedDoctorFromAppointment?.id || "");
-    const [appointmentId, setAppointmentId] = useState("");
+    const [patientId, setPatientId] = useState(initialPatientId || "");
+    const [doctorId, setDoctorId] = useState(initialDoctorId || loggedDoctorFromAppointment?.id || "");
+    const [appointmentId, setAppointmentId] = useState(initialAppointmentId || "");
     const [advice, setAdvice] = useState("");
     const [followUpDate, setFollowUpDate] = useState<any>(null);
     const [followUpNotes, setFollowUpNotes] = useState("");
@@ -131,9 +135,9 @@ const AddPrescriptionModal = ({ onClose, onSubmit }: Props) => {
             />
             {/* Modal */}
             <div className="modal fade show d-block" style={{ zIndex: 1050 }} tabIndex={-1}>
-                <div className="modal-dialog modal-xl modal-dialog-scrollable">
-                    <div className="modal-content">
-                        <div className="modal-header bg-primary text-white">
+                <div className="modal-dialog modal-xl modal-dialog-centered">
+                    <div className="modal-content" style={{ maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
+                        <div className="modal-header bg-primary text-white" style={{ flexShrink: 0 }}>
                             <h5 className="modal-title fw-bold text-white">
                                 <i className="ti ti-file-plus me-2" />
                                 Add New Prescription
@@ -141,8 +145,8 @@ const AddPrescriptionModal = ({ onClose, onSubmit }: Props) => {
                             <button type="button" className="btn-close btn-close-white" onClick={onClose} />
                         </div>
 
-                        <form onSubmit={handleSubmit}>
-                            <div className="modal-body">
+                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                            <div className="modal-body" style={{ overflowY: 'auto', flex: 1 }}>
                                 {/* Patient & Doctor */}
                                 <div className="row g-3 mb-4">
                                     <div className="col-md-6">
@@ -150,10 +154,11 @@ const AddPrescriptionModal = ({ onClose, onSubmit }: Props) => {
                                             Patient (Scheduled Only) <span className="text-danger">*</span>
                                         </label>
                                         <select
-                                            className="form-select"
+                                            className="form-select text-dark"
                                             value={patientId}
                                             onChange={(e) => handlePatientChange(e.target.value)}
                                             required
+                                            disabled={!!initialPatientId}
                                         >
                                             <option value="">-- Select Patient --</option>
                                             {scheduledPatients.map((p: any) => (
@@ -161,6 +166,10 @@ const AddPrescriptionModal = ({ onClose, onSubmit }: Props) => {
                                                     {p.firstName} {p.lastName} {p.patientCode ? `(${p.patientCode})` : ""}
                                                 </option>
                                             ))}
+                                            {/* Fallback if initial patient is not in scheduled list */}
+                                            {initialPatientId && !scheduledPatients.find(p => p.id === initialPatientId) && (
+                                                <option value={initialPatientId}>Current Patient</option>
+                                            )}
                                         </select>
                                         {scheduledPatients.length === 0 && (
                                             <small className="text-muted mt-1 d-block">
@@ -175,11 +184,11 @@ const AddPrescriptionModal = ({ onClose, onSubmit }: Props) => {
                                             Doctor <span className="text-danger">*</span>
                                         </label>
                                         <select
-                                            className="form-select"
+                                            className="form-select text-dark"
                                             value={doctorId}
                                             onChange={(e) => setDoctorId(e.target.value)}
                                             required
-                                            disabled={isDoctor || availableDoctors.length === 0}
+                                            disabled={isDoctor || !!initialDoctorId || availableDoctors.length === 0}
                                         >
                                             <option value="">-- Select Doctor --</option>
                                             {// If it's a doctor, we make sure they appear even if availableDoctors is somehow missing them 
@@ -189,15 +198,48 @@ const AddPrescriptionModal = ({ onClose, onSubmit }: Props) => {
                                                         {d.fullName}
                                                     </option>
                                                 ))}
+                                            {/* Fallback if initial doctor is not in filtered list */}
+                                            {initialDoctorId && !availableDoctors.find(d => d.id === initialDoctorId) && (
+                                                <option value={initialDoctorId}>Selected Doctor</option>
+                                            )}
                                         </select>
-                                        {(isDoctor || (patientId && availableDoctors.length > 0)) && (
-                                            <small className="text-success mt-1 d-block">
-                                                <i className="ti ti-check me-1" />
-                                                {isDoctor ? "Locked to your account." : "Doctor auto-filled from scheduled appointment."}
-                                            </small>
-                                        )}
                                     </div>
                                 </div>
+
+                                {/* Appointment Link (New Section) */}
+                                {(linkedAppointments && linkedAppointments.length > 0) && (
+                                    <div className="mb-4 p-3 border rounded bg-info-subtle border-info-subtle">
+                                        <label className="form-label fw-bold text-info-emphasis d-flex align-items-center">
+                                            <i className="ti ti-link me-2" />
+                                            Select Visit for this Prescription
+                                        </label>
+                                        <div className="row g-2">
+                                            {linkedAppointments.sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()).map((apt) => (
+                                                <div className="col-md-4" key={apt.id}>
+                                                    <div
+                                                        className={`card h-100 cursor-pointer border-2 transition-all ${appointmentId === apt.id ? 'border-primary bg-primary-subtle' : 'border-light-subtle'}`}
+                                                        onClick={() => setAppointmentId(apt.id)}
+                                                        style={{ cursor: 'pointer' }}
+                                                    >
+                                                        <div className="card-body p-2 d-flex align-items-center gap-2">
+                                                            <div className={`rounded-circle p-1 ${appointmentId === apt.id ? 'bg-primary text-white' : 'bg-light text-muted'}`}>
+                                                                <i className={`ti ${appointmentId === apt.id ? 'ti-check' : 'ti-circle'}`} />
+                                                            </div>
+                                                            <div>
+                                                                <span className="d-block fw-bold fs-12">
+                                                                    {apt.status === 'Follow-up' ? 'Follow-up Visit' : 'Main Consultation'}
+                                                                </span>
+                                                                <small className="text-muted d-block fs-11">
+                                                                    {dayjs(apt.scheduledAt).format('DD MMM, YYYY')}
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Medicines Table */}
                                 <div className="mb-4">
@@ -341,15 +383,15 @@ const AddPrescriptionModal = ({ onClose, onSubmit }: Props) => {
                                 </div>
                             </div>
 
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-light me-2" onClick={onClose} disabled={submitting}>
+                            <div className="modal-footer bg-light border-top py-3 px-4" style={{ flexShrink: 0 }}>
+                                <button type="button" className="btn btn-outline-secondary fw-bold px-4 me-2" onClick={onClose} disabled={submitting}>
                                     Cancel
                                 </button>
-                                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                                <button type="submit" className="btn btn-primary fw-bold px-4 shadow-sm" disabled={submitting}>
                                     {submitting ? (
-                                        <><span className="spinner-border spinner-border-sm me-2" />Saving...</>
+                                        <><span className="spinner-border spinner-border-sm me-2" />Processing...</>
                                     ) : (
-                                        <><i className="ti ti-check me-1" /> Create Prescription</>
+                                        <><i className="ti ti-plus me-1" /> Add Prescription</>
                                     )}
                                 </button>
                             </div>

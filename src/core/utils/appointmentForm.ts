@@ -25,26 +25,16 @@ export const statusBadgeClass = (status: string) => {
 };
 
 export const appointmentToTableRow = (a: ClinicAppointment, index: number) => {
-  const patientPlaceholders = [
-    "user-01.jpg",
-    "user-02.jpg",
-    "user-03.jpg",
-    "user-04.jpg",
-    "user-05.jpg",
-  ];
-  const doctorPlaceholders = [
-    "doctor-01.jpg",
-    "doctor-02.jpg",
-    "doctor-03.jpg",
-    "doctor-04.jpg",
-    "doctor-05.jpg",
-  ];
-  const patientImg =
-    a.patient.profileImage ||
-    `assets/img/users/${patientPlaceholders[index % patientPlaceholders.length]}`;
-  const doctorImg =
-    a.doctor.profileImage ||
-    `assets/img/doctors/${doctorPlaceholders[index % doctorPlaceholders.length]}`;
+  const isInvalidImage = (img?: string | null) =>
+    !img || img.trim() === "" || img.includes("300x300") || img.includes("placeholder");
+
+  const patientImg = isInvalidImage(a.patient.profileImage)
+    ? "assets/img/patient-placeholder.png"
+    : a.patient.profileImage!;
+
+  const doctorImg = isInvalidImage(a.doctor.profileImage)
+    ? "assets/img/doctor-placeholder.png"
+    : a.doctor.profileImage!;
 
   return {
     key: a.id,

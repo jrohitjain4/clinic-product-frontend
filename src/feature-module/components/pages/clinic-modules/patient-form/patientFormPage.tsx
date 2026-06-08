@@ -23,8 +23,6 @@ import {
 import { findSelectOption } from "../../../../../core/utils/doctorSchedule";
 import { toast } from "react-toastify";
 
-type DoctorOption = { id: string; fullName: string };
-
 interface PatientFormPageProps {
   mode: "create" | "edit";
 }
@@ -37,25 +35,12 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
   );
 
   const [form, setForm] = useState(emptyPatientForm);
-  const [doctors, setDoctors] = useState<DoctorOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [phoneWarning, setPhoneWarning] = useState<string | null>(null);
 
   const getModalContainer = () =>
     document.getElementById("modal-datepicker") || document.body;
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch(apiUrl("/api/doctors"), {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then((r) => r.json())
-      .then((data: DoctorOption[]) =>
-        setDoctors(Array.isArray(data) ? data.filter((d) => d.id) : [])
-      )
-      .catch(console.error);
-  }, []);
 
   useEffect(() => {
     if (mode === "edit" && patient) {
@@ -67,7 +52,6 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
         profileImage: patient.profileImage || null,
         phone: patient.phone || "",
         email: patient.email || "",
-        primaryDoctorId: patient.primaryDoctorId || "",
         dob: patient.dob ? dayjs(patient.dob) : null,
         gender: patient.gender || "",
         bloodGroup: patient.bloodGroup || "",
@@ -118,11 +102,6 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
       .catch(() => setPhoneWarning(null));
   }, [form.phone, mode, id]);
 
-  const doctorOptions = doctors.map((d) => ({
-    value: d.id,
-    label: d.fullName,
-  }));
-
   const buildPayload = () => ({
     firstName: form.firstName.trim(),
     middleName: form.middleName || null,
@@ -130,7 +109,6 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
     profileImage: form.profileImage,
     phone: form.phone || null,
     email: form.email || null,
-    primaryDoctorId: form.primaryDoctorId || null,
     dob: form.dob ? form.dob.toISOString() : null,
     gender: form.gender || null,
     bloodGroup: form.bloodGroup || null,
@@ -162,8 +140,8 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
       setFormError("Last name is required.");
       return;
     }
-    if (!form.primaryDoctorId) {
-      setFormError("Primary doctor is required.");
+    if (!form.address1.trim()) {
+      setFormError("Address Line 1 is required.");
       return;
     }
 
@@ -187,9 +165,12 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Failed to save patient");
       }
+      toast.success(mode === "create" ? "Patient created successfully" : "Patient updated successfully");
       navigate(all_routes.patients, { replace: true });
     } catch (err: unknown) {
-      setFormError(err instanceof Error ? err.message : "Failed to save patient");
+      const msg = err instanceof Error ? err.message : "Failed to save patient";
+      setFormError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -244,13 +225,13 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1 fw-medium">
                           First Name<span className="text-danger ms-1">*</span>
                         </label>
-                        <input type="text" className="form-control" value={form.firstName} onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))} />
+                        <input type="text" className="form-control" placeholder="Enter First Name" value={form.firstName} onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))} />
                       </div>
                     </div>
                     <div className="col-md-4">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">Middle Name</label>
-                        <input type="text" className="form-control" value={form.middleName} onChange={(e) => setForm((f) => ({ ...f, middleName: e.target.value }))} />
+                        <input type="text" className="form-control" placeholder="Enter Middle Name" value={form.middleName} onChange={(e) => setForm((f) => ({ ...f, middleName: e.target.value }))} />
                       </div>
                     </div>
                     <div className="col-md-4">
@@ -258,7 +239,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1 fw-medium">
                           Last Name<span className="text-danger ms-1">*</span>
                         </label>
-                        <input type="text" className="form-control" value={form.lastName} onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))} />
+                        <input type="text" className="form-control" placeholder="Enter Last Name" value={form.lastName} onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))} />
                       </div>
                     </div>
                     <div className="col-md-4">
@@ -266,7 +247,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1 fw-medium">
                           Phone Number<span className="text-danger ms-1">*</span>
                         </label>
-                        <PhoneInput defaultCountry="IN" value={form.phone} onChange={(v) => setForm((f) => ({ ...f, phone: v || "" }))} />
+                        <PhoneInput defaultCountry="IN" placeholder="Enter Phone Number" value={form.phone} onChange={(v) => setForm((f) => ({ ...f, phone: v || "" }))} />
                         {phoneWarning && (
                           <div className="text-warning fs-12 mt-1"><i className="ti ti-alert-triangle me-1" />{phoneWarning}</div>
                         )}
@@ -275,7 +256,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     <div className="col-md-4">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">Alternate Mobile</label>
-                        <PhoneInput defaultCountry="IN" value={form.alternateMobile} onChange={(v) => setForm((f) => ({ ...f, alternateMobile: v || "" }))} />
+                        <PhoneInput defaultCountry="IN" placeholder="Enter Alternate Mobile" value={form.alternateMobile} onChange={(v) => setForm((f) => ({ ...f, alternateMobile: v || "" }))} />
                       </div>
                     </div>
                     <div className="col-md-4">
@@ -283,37 +264,10 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1 fw-medium">
                           Email Address<span className="text-danger ms-1">*</span>
                         </label>
-                        <input type="email" className="form-control" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+                        <input type="email" className="form-control" placeholder="Enter Email Address" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
                       </div>
                     </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">
-                          Primary Doctor<span className="text-danger ms-1">*</span>
-                        </label>
-                        {doctorOptions.length > 0 ? (
-                          <CommonSelect
-                            options={doctorOptions}
-                            className="select"
-                            value={findSelectOption(
-                              doctorOptions,
-                              form.primaryDoctorId
-                            )}
-                            placeholder="Select doctor"
-                            onChange={(opt) =>
-                              setForm((f) => ({
-                                ...f,
-                                primaryDoctorId: opt?.value || "",
-                              }))
-                            }
-                          />
-                        ) : (
-                          <div className="form-control text-muted py-2 fs-13">
-                            No doctors — add a doctor first
-                          </div>
-                        )}
-                      </div>
-                    </div>
+
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
@@ -346,6 +300,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                           options={Gender}
                           className="select"
                           value={findSelectOption(Gender, form.gender) || Gender[0]}
+                          placeholder="Select Gender"
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, gender: opt?.value || "" }))
                           }
@@ -355,7 +310,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
-                          Blood Group<span className="text-danger ms-1">*</span>
+                          Blood Group <span className="text-muted fw-normal fs-12">(Optional)</span>
                         </label>
                         <CommonSelect
                           options={Blood_Group}
@@ -364,6 +319,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                             findSelectOption(Blood_Group, form.bloodGroup) ||
                             Blood_Group[0]
                           }
+                          placeholder="Select Blood Group"
                           onChange={(opt) =>
                             setForm((f) => ({
                               ...f,
@@ -382,6 +338,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                           options={PATIENT_STATUS_OPTIONS}
                           className="select"
                           value={findSelectOption(PATIENT_STATUS_OPTIONS, form.status)}
+                          placeholder="Select Status"
                           onChange={(opt) => setForm((f) => ({ ...f, status: opt?.value || "Active" }))}
                         />
                       </div>
@@ -404,22 +361,22 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">Occupation</label>
-                        <input type="text" className="form-control" value={form.occupation} onChange={(e) => setForm((f) => ({ ...f, occupation: e.target.value }))} />
+                        <input type="text" className="form-control" placeholder="Enter Occupation" value={form.occupation} onChange={(e) => setForm((f) => ({ ...f, occupation: e.target.value }))} />
                       </div>
                     </div>
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">Aadhaar Number</label>
-                        <input type="text" className="form-control" value={form.aadhaarNumber} onChange={(e) => setForm((f) => ({ ...f, aadhaarNumber: e.target.value }))} />
+                        <input type="text" className="form-control" placeholder="Enter Aadhaar Number" value={form.aadhaarNumber} onChange={(e) => setForm((f) => ({ ...f, aadhaarNumber: e.target.value }))} />
                       </div>
                     </div>
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">Passport Number</label>
-                        <input type="text" className="form-control" value={form.passportNumber} onChange={(e) => setForm((f) => ({ ...f, passportNumber: e.target.value }))} />
+                        <input type="text" className="form-control" placeholder="Enter Passport Number" value={form.passportNumber} onChange={(e) => setForm((f) => ({ ...f, passportNumber: e.target.value }))} />
                       </div>
                     </div>
-                    <div className="col-md-6">
+                    <div className="col-md-12">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">Referred By</label>
                         <input type="text" className="form-control" placeholder="e.g. Google, Walk-in, Doctor Name" value={form.referredBy} onChange={(e) => setForm((f) => ({ ...f, referredBy: e.target.value }))} />
@@ -434,7 +391,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     <div className="col-md-4">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">Name</label>
-                        <input type="text" className="form-control" value={form.emergencyContactName} onChange={(e) => setForm((f) => ({ ...f, emergencyContactName: e.target.value }))} />
+                        <input type="text" className="form-control" placeholder="Enter Contact Name" value={form.emergencyContactName} onChange={(e) => setForm((f) => ({ ...f, emergencyContactName: e.target.value }))} />
                       </div>
                     </div>
                     <div className="col-md-4">
@@ -446,7 +403,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     <div className="col-md-4">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">Phone Number</label>
-                        <PhoneInput defaultCountry="IN" value={form.emergencyContactPhone} onChange={(v) => setForm((f) => ({ ...f, emergencyContactPhone: v || "" }))} />
+                        <PhoneInput defaultCountry="IN" placeholder="Enter Phone Number" value={form.emergencyContactPhone} onChange={(v) => setForm((f) => ({ ...f, emergencyContactPhone: v || "" }))} />
                       </div>
                     </div>
                   </div>
@@ -462,6 +419,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <input
                           type="text"
                           className="form-control"
+                          placeholder="House No, Building, Street Name"
                           value={form.address1}
                           onChange={(e) =>
                             setForm((f) => ({ ...f, address1: e.target.value }))
@@ -472,11 +430,12 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
-                          Address 2<span className="text-danger ms-1">*</span>
+                          Address 2 <span className="text-muted fw-normal fs-12">(Optional)</span>
                         </label>
                         <input
                           type="text"
                           className="form-control"
+                          placeholder="Area, Landmark, Suite"
                           value={form.address2}
                           onChange={(e) =>
                             setForm((f) => ({ ...f, address2: e.target.value }))
@@ -484,7 +443,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         />
                       </div>
                     </div>
-                    <div className="col-lg-6">
+                    <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1">
                           Country<span className="text-danger ms-1">*</span>
@@ -495,13 +454,14 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                           value={
                             findSelectOption(Country, form.country) || Country[0]
                           }
+                          placeholder="Select Country"
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, country: opt?.value || "" }))
                           }
                         />
                       </div>
                     </div>
-                    <div className="col-lg-6">
+                    <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1">
                           State<span className="text-danger ms-1">*</span>
@@ -510,13 +470,14 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                           options={State}
                           className="select"
                           value={findSelectOption(State, form.state) || State[0]}
+                          placeholder="Select State"
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, state: opt?.value || "" }))
                           }
                         />
                       </div>
                     </div>
-                    <div className="col-lg-6">
+                    <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1">
                           City<span className="text-danger ms-1">*</span>
@@ -525,13 +486,14 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                           options={City}
                           className="select"
                           value={findSelectOption(City, form.city) || City[0]}
+                          placeholder="Select City"
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, city: opt?.value || "" }))
                           }
                         />
                       </div>
                     </div>
-                    <div className="col-lg-6">
+                    <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1">
                           Pincode<span className="text-danger ms-1">*</span>
@@ -539,6 +501,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <input
                           type="text"
                           className="form-control"
+                          placeholder="Enter Pincode"
                           value={form.pincode}
                           onChange={(e) =>
                             setForm((f) => ({ ...f, pincode: e.target.value }))

@@ -12,6 +12,7 @@ interface HeroForm {
   address1: string; address2: string; city: string; state: string; pincode: string;
   headerImage: string;
   aboutImage: string;
+  logo: string;
 }
 
 const EMPTY: HeroForm = {
@@ -20,6 +21,7 @@ const EMPTY: HeroForm = {
   address1: "", address2: "", city: "", state: "", pincode: "",
   headerImage: "",
   aboutImage: "",
+  logo: "",
 }
 
 // Reusable image uploader component
@@ -170,6 +172,7 @@ const OrganizationSettings = () => {
           pincode: "",
           headerImage: data.headerImage || "",
           aboutImage: data.aboutImage || "",
+          logo: data.logo || "",
         })
       })
       .catch(() => { })
@@ -199,6 +202,7 @@ const OrganizationSettings = () => {
           mapUrl: form.mapUrl,
           headerImage: form.headerImage,
           aboutImage: form.aboutImage,
+          logo: form.logo,
         }),
       })
       if (!r.ok) {
@@ -305,27 +309,14 @@ const OrganizationSettings = () => {
                       </div>
 
                       {/* ── Clinic Logo ── */}
-                      <div className="row mb-3 pb-2">
-                        <div className="col-12 mb-3">
-                          <h6 className="fw-semibold text-muted">Clinic Logo</h6>
-                        </div>
-                        <div className="col-lg-12">
-                          <div className="d-flex align-items-center mb-3">
-                            <div className="profile-upload me-3">
-                              <div className="profile-container d-flex align-items-center justify-content-center bg-light" style={{ width: '150px', height: '60px', border: '1px dashed #ccc', borderRadius: '8px', overflow: 'hidden' }}>
-                                <img src={`${API}/logo.png`} alt="Logo" className="img-fluid object-fit-contain p-1 w-100 h-100" onError={(e) => { e.currentTarget.style.display = 'none' }} />
-                              </div>
-                            </div>
-                            <div className="profile-upload-content">
-                              <div className="profile-upload-btn mb-2">
-                                <label className="btn btn-primary btn-sm" style={{ position: 'relative', cursor: 'pointer' }}>
-                                  <input type="file" className="upload" style={{ position: 'absolute', opacity: 0, top: 0, left: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
-                                  <i className="ti ti-upload me-1" /> Browse
-                                </label>
-                              </div>
-                              <p className="fs-12 text-muted mb-0">Recommended image size is 250px x 100px.</p>
-                            </div>
-                          </div>
+                      <div className="row mb-3 pb-4">
+                        <div className="col-12">
+                          <LandingImageUpload
+                            label="Clinic Logo"
+                            value={form.logo}
+                            onChange={(url) => setForm(p => ({ ...p, logo: url }))}
+                            hint="Recommended image size is 250px x 100px. Used in prescription headers and landing page."
+                          />
                         </div>
                       </div>
 

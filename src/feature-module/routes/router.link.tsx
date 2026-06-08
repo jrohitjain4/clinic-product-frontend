@@ -256,12 +256,19 @@ import UiScrollbar from "../components/pages/ui-modules/ui-interface/ui-advance/
 import { all_routes } from "./all_routes";
 import { Route } from "react-router";
 
+import AppointmentDetails from "../components/pages/clinic-modules/appointments/appointmentDetails";
+
 const routes = all_routes;
 
 export const publicRoutes = [
   {
     path: routes.packages,
     element: <PackagesAdmin />,
+    route: Route,
+  },
+  {
+    path: routes.appointmentDetails,
+    element: <AppointmentDetails />,
     route: Route,
   },
   {

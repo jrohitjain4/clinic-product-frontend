@@ -149,6 +149,7 @@ export const all_routes = {
   appointments: "/appointments",
   newAppointment: "/new-appointment",
   editAppointment: "/edit-appointment/:id",
+  appointmentDetails: "/appointment-details/:id",
   appointmentCalendar: "/appointment-calendar",
   locations: "/locations",
   services: "/services",

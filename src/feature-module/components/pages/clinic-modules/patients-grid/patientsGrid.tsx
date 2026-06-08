@@ -98,11 +98,10 @@ const PatientsGrid = () => {
                       <div className="me-2 ps-1">
                         <Link to={patientDetailsPath(p.id)} className="d-block overflow-hidden rounded-circle border border-2 border-primary-light p-1" style={{ width: "85px", height: "85px" }}>
                           <ImageWithBasePath
-                            src={img}
+                            src={img || "assets/img/patient-placeholder.png"}
                             className="w-100 h-100 rounded-circle"
                             alt={p.fullName || "Patient"}
                             style={{ objectFit: "cover" }}
-                            fallback="assets/img/patient-placeholder.png"
                           />
                         </Link>
                       </div>

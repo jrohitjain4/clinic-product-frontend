@@ -25,16 +25,20 @@ export type Leave = {
 export const useLeaves = () => {
     const [leaves, setLeaves] = useState<Leave[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchLeaves = useCallback(async () => {
         try {
             setLoading(true);
+            setError(null);
             const res = await fetch(apiUrl("/api/leaves"), {
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
             });
             if (res.ok) setLeaves(await res.json());
+            else setError("Failed to load leaves");
         } catch (e) {
             console.error(e);
+            setError("Failed to load leaves");
         } finally {
             setLoading(false);
         }
@@ -104,5 +108,5 @@ export const useLeaves = () => {
         return 0;
     };
 
-    return { leaves, loading, applyLeave, updateStatus, withdrawLeave, deleteLeave, getWorkingDays, reload: fetchLeaves };
+    return { leaves, loading, error, applyLeave, updateStatus, withdrawLeave, deleteLeave, getWorkingDays, reload: fetchLeaves };
 };

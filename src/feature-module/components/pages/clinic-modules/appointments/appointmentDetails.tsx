@@ -839,7 +839,7 @@ const AppointmentDetails = () => {
                                         {/* Follow-up Policy Section */}
                                         <div className="mt-4 p-3 bg-primary-subtle rounded-4 border border-dashed border-primary shadow-sm position-relative overflow-hidden">
                                             <div className="position-absolute top-0 end-0 p-2 opacity-10">
-                                                <i className="ti ti-calendar-stats fs-40 text-primary" strokeWidth={1} style={{ transform: 'rotate(-15deg)' }} />
+                                                <i className="ti ti-calendar-stats fs-40 text-primary" style={{ transform: 'rotate(-15deg)' }} />
                                             </div>
                                             <h6 className="fw-bold text-primary mb-3 text-uppercase fs-12 letter-spacing-1 d-flex align-items-center gap-2">
                                                 <i className="ti ti-repeat text-primary fs-14" /> Follow-up Policy
@@ -862,7 +862,7 @@ const AppointmentDetails = () => {
                                                         </div>
                                                         <span className="text-dark fw-medium fs-12">Validity Period</span>
                                                     </div>
-                                                    <span className="badge bg-info text-white fw-bold fs-12 px-2">{appointment.doctor?.followUpValidity || 0} Days</span>
+                                                    <span className="badge bg-info text-white fw-bold fs-12 px-2">{appointment.doctor?.followUpValidityDays || 0} Days</span>
                                                 </div>
 
                                                 <div className="d-flex justify-content-between align-items-center bg-white p-2 rounded-3 border border-light-subtle shadow-xs">

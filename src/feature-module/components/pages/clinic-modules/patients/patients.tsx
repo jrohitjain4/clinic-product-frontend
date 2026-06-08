@@ -123,7 +123,6 @@ const Patients = () => {
               src={record.Patient_img}
               alt="Patient"
               className="rounded-circle border"
-              fallback="assets/img/patient-placeholder.png"
             />
           </Link>
           <div>

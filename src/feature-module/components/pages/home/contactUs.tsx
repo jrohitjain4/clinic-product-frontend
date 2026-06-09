@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { all_routes } from "../../../routes/all_routes";
 import FloatingActions from "./FloatingActions";
@@ -7,13 +7,45 @@ import FooterFront from "./FooterFront";
 import CtaBanner from "./CtaBanner";
 import "./homePage.scss";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 const ContactUs = () => {
-    const siteSettings = { 
+    const [siteSettings, setSiteSettings] = useState({ 
         whatsapp: "+919876543210", 
         phone: "+91 98765 43210",
         email: "hello@docyori.com",
-        address: "DocYori Technologies Pvt. Ltd.\n123, Healthcare Street, Sector 62,\nNoida, Uttar Pradesh - 201301, India"
-    };
+        address: "DocYori Technologies Pvt. Ltd.\n123, Healthcare Street, Sector 62,\nNoida, Uttar Pradesh - 201301, India",
+        website: "www.docyori.com"
+    });
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const keys = ["contact_address", "contact_phone", "contact_email", "contact_website", "contact_whatsapp"];
+                const fetched = await Promise.all(
+                    keys.map(async (key) => {
+                        const res = await fetch(`${API}/api/settings/${key}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            return { [key]: data.value || "" };
+                        }
+                        return { [key]: "" };
+                    })
+                );
+                const mergedSettings = fetched.reduce((acc, curr) => ({ ...acc, ...curr }), {});
+                setSiteSettings(prev => ({
+                    address: mergedSettings.contact_address || prev.address,
+                    phone: mergedSettings.contact_phone || prev.phone,
+                    email: mergedSettings.contact_email || prev.email,
+                    website: mergedSettings.contact_website || prev.website,
+                    whatsapp: mergedSettings.contact_whatsapp || prev.whatsapp,
+                }));
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
@@ -158,7 +190,7 @@ const ContactUs = () => {
                     <div className="row g-4">
                         {/* Get In Touch Form */}
                         <div className="col-lg-5">
-                            <h3 className="fw-bold text-dark mb-2" style={{ fontSize: '1.8rem' }}>Get In Touch</h3>
+                            <h3 className="fw-bold text-dark mb-2" style={{ fontSize: '1.8rem' }}>Get In <span style={{ color: '#0ea5e9' }}>Touch</span></h3>
                             <p className="text-muted fs-14 mb-4">Fill out the form and our team will get back to you as soon as possible.</p>
                             
                             <form className="d-flex flex-column gap-3">
@@ -189,7 +221,7 @@ const ContactUs = () => {
 
                         {/* Contact Information */}
                         <div className="col-lg-4">
-                            <h3 className="fw-bold text-dark mb-2" style={{ fontSize: '1.8rem' }}>Contact Information</h3>
+                            <h3 className="fw-bold text-dark mb-2" style={{ fontSize: '1.8rem' }}>Contact <span style={{ color: '#0ea5e9' }}>Information</span></h3>
                             <p className="text-muted fs-14 mb-4">Reach out to us through any of these channels.</p>
 
                             <div className="d-flex flex-column gap-4">
@@ -228,7 +260,7 @@ const ContactUs = () => {
                                     </div>
                                     <div>
                                         <div className="fw-bold text-success" style={{ fontSize: '12px' }}>Website</div>
-                                        <div className="fw-bold text-dark mt-1" style={{ fontSize: '14px' }}>www.docyori.com</div>
+                                        <div className="fw-bold text-dark mt-1" style={{ fontSize: '14px' }}>{siteSettings.website}</div>
                                         <div className="text-muted" style={{ fontSize: '12px' }}>Visit our website for more information</div>
                                     </div>
                                 </div>
@@ -257,7 +289,7 @@ const ContactUs = () => {
                 <div className="container" style={{ maxWidth: '1320px' }}>
                     <div className="text-center mb-4">
                         <div className="fw-bold fs-12 mb-2 text-uppercase letter-spacing-1 bg-primary bg-opacity-10 text-primary d-inline-block px-3 py-1 rounded-pill">FAQ</div>
-                        <h2 className="fw-bold text-dark mb-2" style={{ fontSize: '2.4rem' }}>Frequently Asked Questions</h2>
+                        <h2 className="fw-bold text-dark mb-2" style={{ fontSize: '2.4rem' }}>Frequently Asked <span style={{ color: '#0ea5e9' }}>Questions</span></h2>
                         <p className="text-muted fs-15">Quick answers to common questions.</p>
                     </div>
 

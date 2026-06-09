@@ -1,12 +1,14 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router";
-import SearchInput from "../../../../core/common/dataTable/dataTableSearch";
 import { useClinicInvoices } from "../../../../core/hooks/useClinicInvoices";
+import Datatable from "../../../../core/common/dataTable";
+import { DatePicker } from "antd";
 import dayjs from "dayjs";
 
 const TransactionsList = () => {
-  const { invoices, loading } = useClinicInvoices();
-  const [searchText, setSearchText] = useState<string>("");
+  const { invoices, loading, error } = useClinicInvoices();
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState("All");
+  const [filterDate, setFilterDate] = useState<dayjs.Dayjs | null>(null);
 
   // Only show Paid invoices as Transactions
   const transactions = useMemo(() => {
@@ -15,61 +17,233 @@ const TransactionsList = () => {
     );
   }, [invoices]);
 
-  const filtered = useMemo(() => {
-    if (!searchText) return transactions;
-    const q = searchText.toLowerCase();
-    return transactions.filter((inv) => {
-      const patientName = inv.patient
-        ? `${inv.patient.firstName || ""} ${inv.patient.lastName || ""}`.toLowerCase()
-        : "";
-      return (
-        inv.invoiceCode.toLowerCase().includes(q) ||
-        patientName.includes(q) ||
-        (inv.paymentMethod || "").toLowerCase().includes(q) ||
-        (inv.items?.[0]?.description || "").toLowerCase().includes(q)
-      );
-    });
-  }, [transactions, searchText]);
+  const paymentMethods = useMemo(() => {
+    const list = Array.from(
+      new Set(
+        transactions
+          .map((inv) => inv.paymentMethod)
+          .filter((method) => method && method !== "")
+      )
+    );
+    return ["All", ...list];
+  }, [transactions]);
 
-  const getInitials = (inv: any) => {
-    if (!inv.patient) return "?";
-    const f = inv.patient.firstName?.[0] || "";
-    const l = inv.patient.lastName?.[0] || "";
-    return `${f}${l}`.toUpperCase();
-  };
+  const filteredData = useMemo(() => {
+    return transactions.filter((inv) => {
+      const matchPaymentMethod =
+        filterPaymentMethod === "All" ||
+        inv.paymentMethod === filterPaymentMethod;
+      const matchDate =
+        !filterDate || dayjs(inv.invoiceDate).isSame(filterDate, "day");
+
+      return matchPaymentMethod && matchDate;
+    });
+  }, [transactions, filterPaymentMethod, filterDate]);
+
+  const data = filteredData.map((inv, index) => {
+    const patientName = inv.patient
+      ? `${inv.patient.firstName || ""} ${inv.patient.lastName || ""}`.trim()
+      : "—";
+    const description = inv.items?.[0]?.description || "Invoice";
+
+    return {
+      key: inv.id,
+      id: inv.id,
+      S_No: index + 1,
+      TransactionID: inv.invoiceCode,
+      Patient: patientName,
+      Image: inv.patient?.profileImage || "avatar-01.jpg",
+      Description: description,
+      PaidDate: dayjs(inv.invoiceDate).format("DD MMM YYYY"),
+      PaymentMethod: inv.paymentMethod || "—",
+      Amount: `
+$$
+{inv.totalAmount.toFixed(2)}`,
+      Status: inv.paymentStatus,
+      raw: inv,
+    };
+  });
+
+  const columns = [
+    {
+      title: "S.No",
+      dataIndex: "S_No",
+      render: (text: number) => (
+        <span className="text-dark fw-medium">{text}</span>
+      ),
+      sorter: (a: any, b: any) => a.S_No - b.S_No,
+      width: 60,
+    },
+    {
+      title: "Transaction ID",
+      dataIndex: "TransactionID",
+      render: (text: string) => (
+        <Link to="#" className="text-dark fw-medium">
+          {text}
+        </Link>
+      ),
+      sorter: (a: any, b: any) =>
+        a.TransactionID.localeCompare(b.TransactionID),
+    },
+    {
+      title: "Patient",
+      dataIndex: "Patient",
+      render: (text: string, record: any) => (
+        <div className="d-flex align-items-center">
+          <div className="avatar avatar-sm me-2">
+            {record.Image && record.Image !== "avatar-01.jpg" ? (
+              <img
+                src={record.Image}
+                alt={text}
+                className="rounded-circle"
+                style={{ width: 36, height: 36, objectFit: "cover" }}
+              />
+            ) : (
+              <span className="avatar avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-13">
+                {text
+                  ?.split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase() || "?"}
+              </span>
+            )}
+          </div>
+          <span className="text-dark fw-medium">{text}</span>
+        </div>
+      ),
+      sorter: (a: any, b: any) => a.Patient.localeCompare(b.Patient),
+    },
+    {
+      title: "Description",
+      dataIndex: "Description",
+      render: (text: string) => <span className="text-dark">{text}</span>,
+      sorter: (a: any, b: any) => a.Description.localeCompare(b.Description),
+    },
+    {
+      title: "Paid Date",
+      dataIndex: "PaidDate",
+      render: (text: string) => <span className="text-dark">{text}</span>,
+      sorter: (a: any, b: any) =>
+        new Date(a.raw.invoiceDate).getTime() -
+        new Date(b.raw.invoiceDate).getTime(),
+    },
+    {
+      title: "Payment Method",
+      dataIndex: "PaymentMethod",
+      render: (text: string) => <span className="text-dark">{text}</span>,
+      sorter: (a: any, b: any) =>
+        a.PaymentMethod.localeCompare(b.PaymentMethod),
+    },
+    {
+      title: "Amount",
+      dataIndex: "Amount",
+      render: (text: string) => (
+        <span className="fw-semibold text-dark">{text}</span>
+      ),
+      sorter: (a: any, b: any) =>
+        parseFloat(a.Amount.replace("$", "")) -
+        parseFloat(b.Amount.replace("$", "")),
+    },
+    {
+      title: "Status",
+      dataIndex: "Status",
+      render: (text: string) => (
+        <span className="badge border badge-soft-success border-success fw-medium">
+          {text}
+        </span>
+      ),
+      sorter: (a: any, b: any) => a.Status.localeCompare(b.Status),
+    },
+  ];
 
   return (
     <>
       <div className="page-wrapper">
         <div className="content">
           {/* Page Header */}
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
+          <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
             <div className="flex-grow-1">
-              <h4 className="fw-bold mb-0">
-                Transactions{" "}
-                <span className="badge badge-soft-primary fw-medium border py-1 px-2 border-primary fs-13 ms-1">
-                  Total Transactions : {loading ? "…" : transactions.length}
+              <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
+                Transactions
+                <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
+                  Total : {loading ? "" : filteredData.length}
                 </span>
               </h4>
             </div>
-            <div className="text-end d-flex">
-              <div className="dropdown me-1">
+
+            {/* Filter and Action Buttons */}
+            <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
+              {/* Payment Method Filter */}
+              <div className="dropdown">
                 <Link
                   to="#"
-                  className="btn btn-md fs-14 fw-normal border bg-white rounded text-dark d-inline-flex align-items-center"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "160px", minHeight: "38px" }}
                   data-bs-toggle="dropdown"
                 >
-                  Export
-                  <i className="ti ti-chevron-down ms-2" />
+                  <span className="text-truncate">
+                    <span className="text-muted">Method:</span>{" "}
+                    {filterPaymentMethod}
+                  </span>
                 </Link>
-                <ul className="dropdown-menu p-2">
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  {paymentMethods.map((method) => (
+                    <li key={method}>
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterPaymentMethod(method);
+                        }}
+                      >
+                        {method}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Date Filter */}
+              <DatePicker
+                placeholder="Select Date"
+                className="form-select text-dark text-nowrap"
+                style={{ width: "130px", minHeight: "38px", paddingTop: "7px" }}
+                format="DD-MM-YYYY"
+                allowClear={true}
+                suffixIcon={<i className="ti ti-calendar" />}
+                onChange={(date) => setFilterDate(date)}
+                value={filterDate}
+              />
+
+              {/* Export Dropdown */}
+              <div className="dropdown">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "100px", minHeight: "38px" }}
+                  data-bs-toggle="dropdown"
+                >
+                  <span className="text-truncate">
+                    <i className="ti  me-1" /> Export
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li>
-                    <Link className="dropdown-item" to="#">
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => e.preventDefault()}
+                    >
                       Download as PDF
                     </Link>
                   </li>
                   <li>
-                    <Link className="dropdown-item" to="#">
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => e.preventDefault()}
+                    >
                       Download as Excel
                     </Link>
                   </li>
@@ -77,104 +251,49 @@ const TransactionsList = () => {
               </div>
             </div>
           </div>
-          {/* Search */}
-          <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
-            <div className="d-flex align-items-center gap-2">
-              <div className="search-set">
-                <div className="d-flex align-items-center flex-wrap gap-2">
-                  
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* Table */}
-          <div className="table-responsive">
-            <table className="table table-nowrap datatable">
-              <thead className="thead-light">
-                <tr>
-                  <th>Transaction ID</th>
-                  <th>Patient</th>
-                  <th>Description</th>
-                  <th>Paid Date</th>
-                  <th>Payment Method</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} className="text-center py-4">
-                      <span className="spinner-border spinner-border-sm text-primary" role="status" />
-                    </td>
-                  </tr>
-                ) : filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="text-center py-4 text-muted">
-                      No transactions found. Mark invoices as <strong>Paid</strong> to see them here.
-                    </td>
-                  </tr>
-                ) : (
-                  filtered.map((inv) => {
-                    const patientName = inv.patient
-                      ? `${inv.patient.firstName || ""} ${inv.patient.lastName || ""}`.trim()
-                      : "—";
-                    const description = inv.items?.[0]?.description || "Invoice";
 
-                    return (
-                      <tr key={inv.id}>
-                        <td>
-                          <Link to="#" className="fw-semibold text-primary">
-                            {inv.invoiceCode}
-                          </Link>
-                        </td>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <span
-                              className="avatar avatar-md me-2 rounded-circle d-flex align-items-center justify-content-center bg-primary text-white fw-bold fs-13 flex-shrink-0"
-                              style={{ width: 36, height: 36 }}
-                            >
-                              {inv.patient?.profileImage ? (
-                                <img
-                                  src={inv.patient.profileImage}
-                                  alt={patientName}
-                                  className="rounded-circle"
-                                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                />
-                              ) : (
-                                getInitials(inv)
-                              )}
-                            </span>
-                            <span className="text-dark fw-semibold">{patientName}</span>
-                          </div>
-                        </td>
-                        <td className="text-dark">{description}</td>
-                        <td className="text-dark">
-                          {dayjs(inv.invoiceDate).format("DD MMM YYYY")}
-                        </td>
-                        <td className="text-dark">{inv.paymentMethod || "—"}</td>
-                        <td className="text-dark fw-semibold">
-                          ${inv.totalAmount.toFixed(2)}
-                        </td>
-                        <td>
-                          <span className="badge border badge-soft-success border-success text-success rounded fw-medium">
-                            {inv.paymentStatus}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+          {/* Error Alert */}
+          {error && (
+            <div className="alert alert-danger d-flex align-items-center justify-content-between mb-3">
+              <span>{error}</span>
+              <button type="button" className="btn btn-sm btn-outline-danger">
+                Retry
+              </button>
+            </div>
+          )}
+
+          {/* Table or Empty State */}
+          {loading ? (
+            <div className="text-center py-5">
+              <span className="spinner-border text-primary" role="status" />
+              <p className="text-muted mt-2 mb-0">Loading transactions</p>
+            </div>
+          ) : transactions.length === 0 && !error ? (
+            <div className="text-center py-5 border rounded bg-white">
+              <i className="ti ti-receipt-2 fs-1 text-muted d-block mb-2" />
+              <h6 className="fw-bold">No transactions yet</h6>
+              <p className="text-muted mb-0">
+                Mark invoices as <strong>Paid</strong> to see them here.
+              </p>
+            </div>
+          ) : (
+            <div className="table-responsive">
+              <Datatable
+                columns={columns}
+                dataSource={data}
+                Selection={false}
+                searchText=""
+              />
+            </div>
+          )}
         </div>
+
         {/* Footer */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©{" "}
+            2025
             <Link to="#" className="link-primary">
-              Docyori
+              Docyari
             </Link>
             , All Rights Reserved
           </p>

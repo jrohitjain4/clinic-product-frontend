@@ -125,7 +125,7 @@ const ServicesFront = () => {
       <section className="py-4 bg-white">
         <div className="container" style={{ maxWidth: '1320px' }}>
           <div className="fw-bold fs-12 mb-2 text-uppercase text-center letter-spacing-1" style={{ color: '#2563eb' }}>WHAT WE OFFER</div>
-          <h2 className="fw-bold text-center text-dark mb-3" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>Our Core Services</h2>
+          <h2 className="fw-bold text-center text-dark mb-3" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>Our Core <span style={{ color: '#0ea5e9' }}>Services</span></h2>
           <p className="text-center mx-auto mb-4" style={{ color: '#475569', maxWidth: '600px' }}>
             Everything you need to manage your clinic efficiently from one powerful platform.
           </p>
@@ -151,7 +151,7 @@ const ServicesFront = () => {
       <section className="py-4" style={{ background: '#f8fafc' }}>
         <div className="container" style={{ maxWidth: '1320px' }}>
           <div className="fw-bold fs-12 mb-2 text-uppercase text-center letter-spacing-1" style={{ color: '#2563eb' }}>ADDITIONAL SERVICES</div>
-          <h2 className="fw-bold text-center text-dark mb-5" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>Everything You Need To Run A Clinic</h2>
+          <h2 className="fw-bold text-center text-dark mb-5" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>Everything You Need To <span style={{ color: '#0ea5e9' }}>Run A Clinic</span></h2>
           
           <div className="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3">
             {ADDITIONAL_SERVICES.map((item, idx) => (
@@ -172,7 +172,7 @@ const ServicesFront = () => {
           <div className="row align-items-center g-5">
             <div className="col-lg-5">
               <div className="fw-bold fs-12 mb-2 text-uppercase letter-spacing-1" style={{ color: '#2563eb' }}>WHY CHOOSE DOCYORI SERVICES?</div>
-              <h2 className="fw-bold mb-4 text-dark" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a', lineHeight: '1.25' }}>Smart Services For Better Healthcare</h2>
+              <h2 className="fw-bold mb-4 text-dark" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a', lineHeight: '1.25' }}>Smart Services For <span style={{ color: '#0ea5e9' }}>Better Healthcare</span></h2>
               <p className="fs-15 lh-lg mb-4" style={{ color: '#334155' }}>
                 Our services are built with the goal of simplifying clinic operations and enhancing patient experiences.
               </p>

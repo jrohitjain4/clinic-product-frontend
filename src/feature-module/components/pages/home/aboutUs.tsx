@@ -81,7 +81,7 @@ const AboutUs = () => {
                         {/* RIGHT Content */}
                         <div className="col-lg-6">
                             <div className="fw-bold fs-12 mb-2 text-uppercase letter-spacing-1 text-primary">OUR STORY</div>
-                            <h2 className="fw-bold text-dark mb-4" style={{ fontSize: '2.4rem', fontWeight: 800 }}>Why We Built DocYori</h2>
+                            <h2 className="fw-bold text-dark mb-4" style={{ fontSize: '2.4rem', fontWeight: 800 }}>Why We Built <span style={{ color: '#0ea5e9' }}>DocYori</span></h2>
                             <p className="fs-15 lh-lg text-muted mb-3">
                                 Healthcare professionals spend too much time managing paperwork, appointments, staff, and administrative tasks.
                             </p>
@@ -158,7 +158,7 @@ const AboutUs = () => {
                 <div className="container" style={{ maxWidth: '1320px' }}>
                     <div className="text-center mb-5">
                         <div className="fw-bold fs-12 mb-2 text-uppercase letter-spacing-1 text-primary">WHAT WE OFFER</div>
-                        <h2 className="fw-bold text-dark mb-3" style={{ fontSize: '2.4rem', fontWeight: 800 }}>Complete Healthcare Management Solution</h2>
+                        <h2 className="fw-bold text-dark mb-3" style={{ fontSize: '2.4rem', fontWeight: 800 }}>Complete Healthcare Management <span style={{ color: '#0ea5e9' }}>Solution</span></h2>
                         <p className="text-muted fs-15 mx-auto" style={{ maxWidth: '600px' }}>Everything your clinic needs in one powerful, easy-to-use platform.</p>
                     </div>
                     
@@ -190,7 +190,7 @@ const AboutUs = () => {
                 <div className="container" style={{ maxWidth: '1320px' }}>
                     <div className="text-center mb-5">
                         <div className="fw-bold fs-12 mb-2 text-uppercase letter-spacing-1 text-primary">WHY CHOOSE DOCYORI</div>
-                        <h2 className="fw-bold text-dark mb-3" style={{ fontSize: '2.4rem', fontWeight: 800 }}>Why Clinics Choose DocYori</h2>
+                        <h2 className="fw-bold text-dark mb-3" style={{ fontSize: '2.4rem', fontWeight: 800 }}>Why Clinics Choose <span style={{ color: '#0ea5e9' }}>DocYori</span></h2>
                     </div>
                     
                     <div className="row g-4">

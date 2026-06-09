@@ -31,7 +31,7 @@ const InvoiceDetails = () => {
                 <div className="card-body">
                   {/* Items */}
                   <div className="d-flex align-items-center justify-content-between border-1 border-bottom pb-3 mb-3">
-                    <ImageWithBasePath src="assets/img/logo.svg" alt="" />
+                    <ImageWithBasePath src="assets/img/logo.svg" alt="" style={{ maxHeight: "55px", width: "auto", objectFit: "contain" }} />
                     <span className="badge bg-info-subtle text-info-emphasis">
                       
                       #PRE0025
@@ -263,7 +263,7 @@ const InvoiceDetails = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 ï¿½
             <Link to="#" className="link-primary">
               Docyari
             </Link>

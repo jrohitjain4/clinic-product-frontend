@@ -41,6 +41,7 @@ import PrivacyPolicyAdmin from "../components/pages/super-admin/settings/Privacy
 import TermsConditionAdmin from "../components/pages/super-admin/settings/TermsConditionAdmin";
 import RefundPolicyAdmin from "../components/pages/super-admin/settings/RefundPolicyAdmin";
 import DemoBookingsAdmin from "../components/pages/super-admin/demo-bookings/DemoBookingsAdmin";
+import ContactSettingsAdmin from "../components/pages/super-admin/settings/ContactSettingsAdmin";
 import Calendars from "../components/pages/application-modules/application/calendar/calendar";
 import CallHistory from "../components/pages/application-modules/application/calls/callHistory";
 import IncomingCall from "../components/pages/application-modules/application/calls/incomingCall";
@@ -397,6 +398,12 @@ export const publicRoutes = [
     path: all_routes.refundPolicyAdmin,
     name: "refund-policy-admin",
     element: <RefundPolicyAdmin />,
+    route: Route,
+  },
+  {
+    path: all_routes.contactSettingsAdmin,
+    name: "contact-settings-admin",
+    element: <ContactSettingsAdmin />,
     route: Route,
   },
   {

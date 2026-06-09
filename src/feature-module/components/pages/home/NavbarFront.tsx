@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from "react-router";
+import { Link, NavLink } from "react-router-dom";
 import { all_routes } from "../../../routes/all_routes";
 
 const NavbarFront = () => {
@@ -20,11 +20,11 @@ const NavbarFront = () => {
                 </div>
 
                 <ul className={`dy-nav-links ${isOpen ? 'show' : ''}`}>
-                    <li><Link to={all_routes.home} onClick={() => setIsOpen(false)}>Home</Link></li>
+                    <li><NavLink to={all_routes.home} end onClick={() => setIsOpen(false)}>Home</NavLink></li>
                     {/* <li><a href="#pricing" onClick={() => setIsOpen(false)}>Pricing</a></li> */}
-                    <li><Link to={all_routes.aboutUs} onClick={() => setIsOpen(false)}>About Us</Link></li>
-                    <li><Link to={all_routes.servicesFront} onClick={() => setIsOpen(false)}>Services</Link></li>
-                    <li><Link to={all_routes.contactUs} onClick={() => setIsOpen(false)}>Contact Us</Link></li>
+                    <li><NavLink to={all_routes.aboutUs} onClick={() => setIsOpen(false)}>About Us</NavLink></li>
+                    <li><NavLink to={all_routes.servicesFront} onClick={() => setIsOpen(false)}>Services</NavLink></li>
+                    <li><NavLink to={all_routes.contactUs} onClick={() => setIsOpen(false)}>Contact Us</NavLink></li>
 
                     {/* Mobile Only Actions */}
                     <div className="dy-nav-mobile-btns mt-3 gap-2 d-flex flex-column px-3 d-lg-none">

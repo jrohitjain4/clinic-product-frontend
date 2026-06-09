@@ -12,10 +12,17 @@ interface PayrollModalProps {
   staffs?: any[];
 }
 
+const STATUS_OPTIONS = [
+  { value: "Paid", label: "Paid" },
+  { value: "Due", label: "Due" },
+  { value: "Pending", label: "Pending" }
+];
+
 const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetch, staffs = [] }) => {
   const staffOptions = staffs.map((s) => ({ value: s.id, label: s.fullName }));
 
   const [staffId, setStaffId] = useState<any>(null);
+  const [status, setStatus] = useState<any>({ value: "Paid", label: "Paid" });
   const [basicSalary, setBasicSalary] = useState(0);
   const [da, setDa] = useState(0);
   const [hra, setHra] = useState(0);
@@ -38,6 +45,8 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
   useEffect(() => {
     if (selectedPayroll) {
       setStaffId(staffOptions.find(o => o.value === selectedPayroll.staffId) || null);
+      const curStatus = selectedPayroll.status || "Paid";
+      setStatus(STATUS_OPTIONS.find(o => o.value === curStatus) || { value: curStatus, label: curStatus });
       setBasicSalary(selectedPayroll.basicSalary || 0);
       setDa(selectedPayroll.da || 0);
       setHra(selectedPayroll.hra || 0);
@@ -58,6 +67,7 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
 
   const resetForm = () => {
     setStaffId(null);
+    setStatus({ value: "Paid", label: "Paid" });
     setBasicSalary(0); setDa(0); setHra(0); setConveyance(0); setMedicalAllowance(0); setOtherEarnings(0);
     setTds(0); setEsi(0); setPf(0); setProfTax(0); setLabourWelfare(0); setOtherDeductions(0);
   };
@@ -66,12 +76,16 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
     staffId: staffId?.value,
     netSalary,
     basicSalary, da, hra, conveyance, medicalAllowance, otherEarnings,
-    tds, esi, pf, profTax, labourWelfare, otherDeductions
+    tds, esi, pf, profTax, labourWelfare, otherDeductions,
+    status: status?.value || "Paid"
   });
 
   const handleAdd = async (e: any) => {
     e.preventDefault();
-    if (!staffId?.value) return;
+    if (!staffId?.value) {
+      toast.error("Please select a staff member");
+      return;
+    }
     setLoading(true);
     try {
       await apiPost("/api/payroll", constructPayload());
@@ -87,7 +101,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
 
   const handleEdit = async (e: any) => {
     e.preventDefault();
-    if (!selectedPayroll || !staffId?.value) return;
+    if (!selectedPayroll || !staffId?.value) {
+      toast.error("Please select a staff member");
+      return;
+    }
     setLoading(true);
     try {
       await apiPut(`/api/payroll/${selectedPayroll.id}`, constructPayload());
@@ -122,34 +139,46 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
             <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title">Add Employee Salary</h5>
+              <h5 className="modal-title fw-bold">Add Employee Salary</h5>
               <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form onSubmit={handleAdd}>
               <div className="modal-body">
                 <div className="row row-gap-2 mb-3">
                   <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">Select Staff</label>
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">Select Staff <span className="text-danger">*</span></label>
                       <CommonSelect
                         options={staffOptions}
                         className="select"
                         value={staffId}
                         onChange={(val: any) => setStaffId(val)}
+                        placeholder="Select Employee"
                       />
                     </div>
                   </div>
                   <div className="col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">Status <span className="text-danger">*</span></label>
+                      <CommonSelect
+                        options={STATUS_OPTIONS}
+                        className="select"
+                        value={status}
+                        onChange={(val: any) => setStatus(val)}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-12">
                     <div className="mb-0">
-                      <label className="form-label">Net Salary</label>
-                      <input type="text" className="form-control bg-light" disabled value={netSalary} />
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">Net Salary</label>
+                      <input type="text" className="form-control bg-light fw-bold text-success" disabled value={`₹${netSalary}`} />
                     </div>
                   </div>
                 </div>
                 {/* Earnings & Deductions Details */}
                 <div className="row row-gap-2">
                   <div className="col-md-6">
-                    <h6 className="mb-3">Earnings (₹)</h6>
+                    <h6 className="mb-3 fw-bold">Earnings (₹)</h6>
                     <div className="mb-3">
                       <label className="form-label">Basic Salary <span className="text-danger ms-1">*</span></label>
                       <input type="number" className="form-control" value={basicSalary} onChange={(e) => setBasicSalary(Number(e.target.value))} required />
@@ -161,7 +190,7 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     <div className="mb-0"><label className="form-label">Others</label><input type="number" className="form-control" value={otherEarnings} onChange={(e) => setOtherEarnings(Number(e.target.value))} /></div>
                   </div>
                   <div className="col-md-6">
-                    <h6 className="mb-3">Deductions (₹)</h6>
+                    <h6 className="mb-3 fw-bold">Deductions (₹)</h6>
                     <div className="mb-3"><label className="form-label">TDS</label><input type="number" className="form-control" value={tds} onChange={(e) => setTds(Number(e.target.value))} /></div>
                     <div className="mb-3"><label className="form-label">ESI</label><input type="number" className="form-control" value={esi} onChange={(e) => setEsi(Number(e.target.value))} /></div>
                     <div className="mb-3"><label className="form-label">PF</label><input type="number" className="form-control" value={pf} onChange={(e) => setPf(Number(e.target.value))} /></div>
@@ -185,33 +214,45 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
             <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title">Edit Employee Salary</h5>
+              <h5 className="modal-title fw-bold">Edit Employee Salary</h5>
               <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form onSubmit={handleEdit}>
               <div className="modal-body">
                 <div className="row row-gap-2 mb-3">
                   <div className="col-md-6">
-                    <div className="mb-0">
-                      <label className="form-label">Select Staff</label>
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">Select Staff <span className="text-danger">*</span></label>
                       <CommonSelect
                         options={staffOptions}
                         className="select"
                         value={staffId}
                         onChange={(val: any) => setStaffId(val)}
+                        placeholder="Select Employee"
                       />
                     </div>
                   </div>
                   <div className="col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">Status <span className="text-danger">*</span></label>
+                      <CommonSelect
+                        options={STATUS_OPTIONS}
+                        className="select"
+                        value={status}
+                        onChange={(val: any) => setStatus(val)}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-12">
                     <div className="mb-0">
-                      <label className="form-label">Net Salary</label>
-                      <input type="text" className="form-control bg-light" disabled value={netSalary} />
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">Net Salary</label>
+                      <input type="text" className="form-control bg-light fw-bold text-success" disabled value={`₹${netSalary}`} />
                     </div>
                   </div>
                 </div>
                 <div className="row row-gap-2">
                   <div className="col-md-6">
-                    <h6 className="mb-3">Earnings (₹)</h6>
+                    <h6 className="mb-3 fw-bold">Earnings (₹)</h6>
                     <div className="mb-3">
                       <label className="form-label">Basic Salary <span className="text-danger ms-1">*</span></label>
                       <input type="number" className="form-control" value={basicSalary} onChange={(e) => setBasicSalary(Number(e.target.value))} required />
@@ -223,7 +264,7 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     <div className="mb-0"><label className="form-label">Others</label><input type="number" className="form-control" value={otherEarnings} onChange={(e) => setOtherEarnings(Number(e.target.value))} /></div>
                   </div>
                   <div className="col-md-6">
-                    <h6 className="mb-3">Deductions (₹)</h6>
+                    <h6 className="mb-3 fw-bold">Deductions (₹)</h6>
                     <div className="mb-3"><label className="form-label">TDS</label><input type="number" className="form-control" value={tds} onChange={(e) => setTds(Number(e.target.value))} /></div>
                     <div className="mb-3"><label className="form-label">ESI</label><input type="number" className="form-control" value={esi} onChange={(e) => setEsi(Number(e.target.value))} /></div>
                     <div className="mb-3"><label className="form-label">PF</label><input type="number" className="form-control" value={pf} onChange={(e) => setPf(Number(e.target.value))} /></div>
@@ -257,8 +298,8 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
               <h5 className="fw-bold mb-1">Delete Confirmation</h5>
               <p className="mb-3">Are you sure you want to delete this payroll record?</p>
               <div className="d-flex justify-content-center">
-                <Link to="#" className="btn btn-light position-relative z-1 me-3" data-bs-dismiss="modal">Cancel</Link>
-                <Link to="#" onClick={handleDelete} className="btn btn-danger position-relative z-1">{loading ? <Spin size="small" /> : "Yes, Delete"}</Link>
+                <button type="button" className="btn btn-light position-relative z-1 me-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" onClick={handleDelete} className="btn btn-danger position-relative z-1">{loading ? <Spin size="small" /> : "Yes, Delete"}</button>
               </div>
             </div>
           </div>

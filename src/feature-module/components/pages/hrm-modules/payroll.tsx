@@ -133,7 +133,7 @@ const PayrollList = () => {
         let badgeClass = "badge-soft-secondary border border-secondary";
         if (text === "Salary_Paid" || text === "Paid")
           badgeClass = "badge-soft-success border border-success";
-        else if (text === "Salary_Created" || text === "Created")
+        else if (text === "Salary_Created" || text === "Created" || text === "Pending")
           badgeClass = "badge-soft-warning border border-warning";
         else if (text === "Due")
           badgeClass = "badge-soft-danger border border-danger";
@@ -288,6 +288,18 @@ const PayrollList = () => {
                       }}
                     >
                       Due
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterStatus("Pending");
+                      }}
+                    >
+                      Pending
                     </Link>
                   </li>
                 </ul>

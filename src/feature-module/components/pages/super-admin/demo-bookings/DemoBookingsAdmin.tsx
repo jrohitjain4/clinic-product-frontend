@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 const DemoBookingsAdmin = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const fetchBookings = async () => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/demo-booking`);
+            const response = await fetch(`${API}/api/demo-booking`);
             if (response.ok) {
                 const data = await response.json();
                 setBookings(data);
@@ -26,7 +28,7 @@ const DemoBookingsAdmin = () => {
 
     const handleStatusChange = async (id: string, newStatus: string) => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/demo-booking/${id}/status`, {
+            const response = await fetch(`${API}/api/demo-booking/${id}/status`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",

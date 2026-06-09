@@ -100,6 +100,7 @@ export const all_routes = {
   termsConditionAdmin: "/super-admin/terms-conditions",
   refundPolicyAdmin: "/super-admin/refund-policy",
   demoBookings: "/super-admin/demo-bookings",
+  contactSettingsAdmin: "/super-admin/contact-settings",
 
   //Application routes
   chat: "/application/chat",

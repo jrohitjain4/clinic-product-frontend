@@ -1,270 +1,425 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import FilterIndex from "../../../../../core/common/filter/filterIndex";
-import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import { all_routes } from "../../../../routes/all_routes";
 import { useClinicInvoices } from "../../../../../core/hooks/useClinicInvoices";
 import Datatable from "../../../../../core/common/dataTable";
+import { DatePicker } from "antd";
 import dayjs from "dayjs";
 
 const InvoicesList = () => {
-  const { invoices } = useClinicInvoices();
-  const data = invoices.map(inv => ({
+  const { invoices, loading, error, refetch } = useClinicInvoices();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterDate, setFilterDate] = useState<dayjs.Dayjs | null>(null);
+
+  const filteredData = useMemo(() => {
+    return invoices.filter((inv) => {
+      const matchStatus =
+        filterStatus === "All" || inv.paymentStatus === filterStatus;
+      const matchDate =
+        !filterDate || dayjs(inv.invoiceDate).isSame(filterDate, "day");
+
+      return matchStatus && matchDate;
+    });
+  }, [invoices, filterStatus, filterDate]);
+
+  const data = filteredData.map((inv, index) => ({
+    key: inv.id,
     id: inv.id,
+    S_No: index + 1,
     InvoiceID: inv.invoiceCode,
-    Patient: inv.patient ? `${inv.patient.firstName} ${inv.patient.lastName}` : "Unknown",
+    Patient: inv.patient
+      ? `${inv.patient.firstName} ${inv.patient.lastName}`
+      : "Unknown",
     Image: inv.patient?.profileImage || "avatar-01.jpg",
     CreatedDate: dayjs(inv.invoiceDate).format("DD MMM YYYY"),
     DueDate: dayjs(inv.dueDate).format("DD MMM YYYY"),
-    Amount: `$${inv.totalAmount.toFixed(2)}`,
-    Status: inv.paymentStatus
+    Amount: `
+$$
+{inv.totalAmount.toFixed(2)}`,
+    Status: inv.paymentStatus,
+    raw: inv,
   }));
+
   const columns = [
+    {
+      title: "S.No",
+      dataIndex: "S_No",
+      render: (text: number) => (
+        <span className="text-dark fw-medium">{text}</span>
+      ),
+      sorter: (a: any, b: any) => a.S_No - b.S_No,
+      width: 60,
+    },
     {
       title: "Invoice ID",
       dataIndex: "InvoiceID",
       render: (text: string, record: any) => (
-        <Link to={all_routes.invoicesDetails.replace(":id", record.id)}>{text}</Link>
+        <Link
+          to={all_routes.invoicesDetails.replace(":id", record.id)}
+          className="text-dark fw-medium"
+        >
+          {text}
+        </Link>
       ),
-      sorter: (a: any, b: any) => a.InvoiceID.length - b.InvoiceID.length,
+      sorter: (a: any, b: any) => a.InvoiceID.localeCompare(b.InvoiceID),
     },
     {
       title: "Patient",
       dataIndex: "Patient",
-      render: (text: any, record: any) => (
+      render: (text: string, record: any) => (
         <div className="d-flex align-items-center">
-          <Link to="#" className="avatar avatar-md me-2">
+          <div className="avatar avatar-sm me-2">
             <img
               src={
                 record.Image && record.Image !== "avatar-01.jpg"
                   ? record.Image
-                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(record.Patient)}&background=4f46e5&color=fff&rounded=true&size=64`
+                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    record.Patient
+                  )}&background=4f46e5&color=fff&rounded=true&size=64`
               }
               alt={record.Patient}
               className="rounded-circle"
               style={{ width: 36, height: 36, objectFit: "cover" }}
             />
-          </Link>
-          <Link to="#" className="text-dark fw-semibold">
-            {text}
-          </Link>
+          </div>
+          <span className="text-dark fw-medium">{text}</span>
         </div>
       ),
-      sorter: (a: any, b: any) => a.Patient.length - b.Patient.length,
+      sorter: (a: any, b: any) => a.Patient.localeCompare(b.Patient),
     },
     {
       title: "Created Date",
       dataIndex: "CreatedDate",
-      render: (text: any) => <div className="text-dark"> {text} </div>,
-      sorter: (a: any, b: any) => a.CreatedDate.length - b.CreatedDate.length,
+      render: (text: string) => <span className="text-dark">{text}</span>,
+      sorter: (a: any, b: any) =>
+        new Date(a.raw.invoiceDate).getTime() -
+        new Date(b.raw.invoiceDate).getTime(),
     },
     {
       title: "Due Date",
       dataIndex: "DueDate",
-      render: (text: any) => <div className="text-dark"> {text} </div>,
-      sorter: (a: any, b: any) => a.DueDate.length - b.DueDate.length,
+      render: (text: string) => <span className="text-dark">{text}</span>,
+      sorter: (a: any, b: any) =>
+        new Date(a.raw.dueDate).getTime() - new Date(b.raw.dueDate).getTime(),
     },
     {
       title: "Amount",
       dataIndex: "Amount",
-      render: (text: any) => (
-        <div className="fw-semibold text-dark"> {text} </div>
+      render: (text: string) => (
+        <span className="fw-semibold text-dark">{text}</span>
       ),
-      sorter: (a: any, b: any) => a.Amount.length - b.Amount.length,
+      sorter: (a: any, b: any) =>
+        parseFloat(a.Amount.replace("$", "")) -
+        parseFloat(b.Amount.replace("$", "")),
     },
     {
       title: "Status",
       dataIndex: "Status",
-      render: (text: any) => (
-        <span
-          className={`badge border ${text === "Paid"
-            ? "badge-soft-success border-success text-success"
-            : text === "Partially Paid"
-              ? "badge-soft-warning border-warning text-warning"
-              : "badge-soft-danger border-danger text-danger"
-            } rounded fw-medium`}
-        >
-          {text}
-        </span>
-      ),
-      sorter: (a: any, b: any) => a.Status.length - b.Status.length,
+      render: (text: string) => {
+        let badgeClass = "badge-soft-danger border-danger";
+        if (text === "Paid") badgeClass = "badge-soft-success border-success";
+        else if (text === "Partially Paid")
+          badgeClass = "badge-soft-warning border-warning";
+
+        return (
+          <span className={`badge border ${badgeClass} fw-medium`}>
+            {text}
+          </span>
+        );
+      },
+      sorter: (a: any, b: any) => a.Status.localeCompare(b.Status),
     },
     {
-      title: "",
+      title: "Action",
+      align: "center" as const,
       render: (_: any, record: any) => (
-        <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
-          <Link to="#" data-bs-toggle="dropdown">
-            <i className="ti ti-dots-vertical" />
+        <div className="d-flex align-items-center justify-content-center gap-2">
+          {/* View Icon */}
+          <Link
+            to={all_routes.invoicesDetails.replace(":id", record.id)}
+            className="bg-transparent border-0 text-info p-1"
+            title="View Details"
+          >
+            <i className="ti ti-eye fs-18"></i>
           </Link>
-          <ul className="dropdown-menu p-2">
-            <li>
-              <Link
-                to={all_routes.invoicesDetails.replace(":id", record.id)}
-                className="dropdown-item d-flex align-items-center"
-              >
-                View details
-              </Link>
-            </li>
-            <li>
-              <Link
-                to={all_routes.editInvoices.replace(":id", record.id)}
-                className="dropdown-item d-flex align-items-center"
-              >
-                Edit
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="#"
-                className="dropdown-item d-flex align-items-center"
-                data-bs-toggle="modal"
-                data-bs-target="#delete_modal"
-              >
-                Delete
-              </Link>
-            </li>
-          </ul>
+
+          {/* Edit Icon */}
+          <Link
+            to={all_routes.editInvoices.replace(":id", record.id)}
+            className="bg-transparent border-0 text-primary p-1"
+            title="Edit"
+          >
+            <i className="ti ti-edit fs-18"></i>
+          </Link>
+
+          {/* Delete Icon */}
+          <button
+            className="bg-transparent border-0 text-danger p-1"
+            title="Delete"
+            data-bs-toggle="modal"
+            data-bs-target="#delete_invoice"
+          >
+            <i className="ti ti-trash fs-18"></i>
+          </button>
         </div>
       ),
+      width: 100,
     },
   ];
-  const [searchText, setSearchText] = useState<string>("");
 
-  const handleSearch = (value: string) => {
-    setSearchText(value);
-  };
   return (
     <>
-      {/* ========================
-			Start Page Content
-		========================= */}
       <div className="page-wrapper">
-        {/* Start Content */}
         <div className="content">
-          {/* Start Page Header */}
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
+          {/* Page Header */}
+          <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
             <div className="flex-grow-1">
-              <h4 className="fw-bold mb-0">
-                {" "}
-                Invoices{" "}
-                <span className="badge badge-soft-primary fw-medium border py-1 px-2 border-primary fs-13 ms-1">
-                  Total Invoices : 565
-                </span>{" "}
+              <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
+                Invoices
+                <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
+                  Total : {loading ? "" : filteredData.length}
+                </span>
               </h4>
             </div>
-            <div className="text-end d-flex">
+
+            {/* Filter and Action Buttons */}
+            <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
+              {/* Status Filter */}
               <div className="dropdown">
                 <Link
                   to="#"
-                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "130px", minHeight: "38px" }}
                   data-bs-toggle="dropdown"
                 >
-                  <span className="me-1"> Sort By : </span> Recent
+                  <span className="text-truncate">
+                    <span className="text-muted">Status:</span> {filterStatus}
+                  </span>
                 </Link>
-                <ul className="dropdown-menu  dropdown-menu-end p-2">
+                <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Recent
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterStatus("All");
+                      }}
+                    >
+                      All
                     </Link>
                   </li>
                   <li>
-                    <Link to="#" className="dropdown-item rounded-1">
-                      Oldest
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterStatus("Paid");
+                      }}
+                    >
+                      Paid
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterStatus("Pending");
+                      }}
+                    >
+                      Pending
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterStatus("Partially Paid");
+                      }}
+                    >
+                      Partially Paid
                     </Link>
                   </li>
                 </ul>
               </div>
-              
-              {/* dropdown*/}
-              <div className="dropdown me-1">
+
+              {/* Date Filter */}
+              <DatePicker
+                placeholder="Select Date"
+                className="form-select text-dark text-nowrap"
+                style={{ width: "130px", minHeight: "38px", paddingTop: "7px" }}
+                format="DD-MM-YYYY"
+                allowClear={true}
+                suffixIcon={<i className="ti ti-calendar" />}
+                onChange={(date) => setFilterDate(date)}
+                value={filterDate}
+              />
+
+              {/* Export Dropdown */}
+              <div className="dropdown">
                 <Link
                   to="#"
-                  className="btn btn-md fs-14 fw-normal border bg-white rounded text-dark d-inline-flex align-items-center"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "100px", minHeight: "38px" }}
                   data-bs-toggle="dropdown"
                 >
-                  Export
-                  <i className="ti ti-chevron-down ms-2" />
+                  <span className="text-truncate">
+                    <i className="ti ti-download me-1" /> Export
+                  </span>
                 </Link>
-                <ul className="dropdown-menu p-2">
+                <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li>
-                    <Link className="dropdown-item" to="#">
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => e.preventDefault()}
+                    >
                       Download as PDF
                     </Link>
                   </li>
                   <li>
-                    <Link className="dropdown-item" to="#">
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1"
+                      onClick={(e) => e.preventDefault()}
+                    >
                       Download as Excel
                     </Link>
                   </li>
                 </ul>
               </div>
-              
-              <div className="dropdown me-2">
-                <Link
-                  to="#"
-                  className="bg-white border rounded btn btn-md text-dark fs-14 py-1 align-items-center d-flex fw-normal"
-                  data-bs-toggle="dropdown"
-                  data-bs-auto-close="outside"
-                >
-                  <i className="ti ti-filter text-gray-5 me-1" />
-                  Filters
-                </Link>
-                <div
-                  className="dropdown-menu dropdown-lg dropdown-menu-end filter-dropdown p-0"
-                  id="filter-dropdown"
-                >
-                  <div className="d-flex align-items-center justify-content-between border-bottom filter-header">
-                    <h4 className="mb-0 fw-bold">Filter</h4>
-                    <div className="d-flex align-items-center">
-                      <Link
-                        to="#"
-                        className="link-danger text-decoration-underline"
-                      >
-                        Clear All
-                      </Link>
-                    </div>
-                  </div>
-                  <FilterIndex />
-                </div>
-              </div>
+
+              {/* New Invoice Button */}
               <Link
                 to={all_routes.addInvoices}
-                className="btn btn-primary ms-2 fs-13 btn-md"
+                className="btn btn-primary d-flex align-items-center justify-content-center"
+                style={{ minHeight: "38px", whiteSpace: "nowrap" }}
               >
-                New Invoices{" "} <i className="ti ti-plus ms-2" /></Link>
+                New Invoice <i className="fa fa-plus ms-2" />
+              </Link>
             </div>
           </div>
-          {/* End Page Header */}
-          {/*  Start Filter */}
-          
-          {/*  End Filter */}
-          {/*  Start Table */}
-          <div className="table-responsive">
-            <Datatable
-              columns={columns}
-              dataSource={data}
-              Selection={false}
-              searchText={searchText}
-            />
-          </div>
-          {/*  End Table */}
+
+          {/* Error Alert */}
+          {error && (
+            <div className="alert alert-danger d-flex align-items-center justify-content-between mb-3">
+              <span>{error}</span>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => refetch()}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
+          {/* Table or Empty State */}
+          {loading ? (
+            <div className="text-center py-5">
+              <span className="spinner-border text-primary" role="status" />
+              <p className="text-muted mt-2 mb-0">Loading invoices</p>
+            </div>
+          ) : invoices.length === 0 && !error ? (
+            <div className="text-center py-5 border rounded bg-white">
+              <i className="ti ti-file-invoice fs-1 text-muted d-block mb-2" />
+              <h6 className="fw-bold">No invoices yet</h6>
+              <p className="text-muted mb-3">Create your first invoice.</p>
+              <Link
+                to={all_routes.addInvoices}
+                className="btn btn-primary"
+              >
+                New Invoice <i className="ti ti-plus ms-2" />
+              </Link>
+            </div>
+          ) : (
+            <div className="table-responsive">
+              <Datatable
+                columns={columns}
+                dataSource={data}
+                Selection={true}
+                searchText=""
+                onSelectionChange={(keys) => setSelectedIds(keys as string[])}
+              />
+            </div>
+          )}
+
+          {/* Delete Selected Bar */}
+          {selectedIds.length > 0 && (
+            <div className="d-flex justify-content-center pt-4 pb-4 sticky-delete-bar">
+              <button
+                className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
+                data-bs-toggle="modal"
+                data-bs-target="#delete_invoice"
+                style={{
+                  borderRadius: "8px",
+                  minHeight: "42px",
+                  fontWeight: "bold",
+                }}
+              >
+                <i className="ti ti-trash fs-18"></i>
+                Delete Selected ({selectedIds.length})
+              </button>
+            </div>
+          )}
         </div>
-        {/* End Content */}
-        {/* Footer Start */}
+
+        {/* Footer */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 {" "}
+            2025
             <Link to="#" className="link-primary">
               Docyari
             </Link>
             , All Rights Reserved
           </p>
         </div>
-        {/* Footer End */}
       </div>
-      {/* ========================
-			End Page Content
-		========================= */}
+
+      {/* Delete Modal */}
+      <div id="delete_invoice" className="modal fade">
+        <div className="modal-dialog modal-dialog-centered modal-sm">
+          <div
+            className="modal-content border-0 shadow-lg"
+            style={{ borderRadius: "12px", overflow: "hidden" }}
+          >
+            <div className="modal-body text-center position-relative z-1 pt-5 pb-5">
+              <div className="mb-3">
+                <span className="avatar avatar-lg bg-danger text-white">
+                  <i className="ti ti-trash fs-24"></i>
+                </span>
+              </div>
+              <h5 className="fw-bold mb-2">Delete Invoice</h5>
+              <p className="text-muted mb-4">
+                Are you sure you want to delete this invoice?
+              </p>
+              <div className="d-flex justify-content-center gap-2">
+                <button
+                  type="button"
+                  className="btn btn-light position-relative z-1 px-4"
+                  data-bs-dismiss="modal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger position-relative z-1 px-4"
+                  data-bs-dismiss="modal"
+                >
+                  <i className="ti ti-trash me-2" />
+                  Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 };

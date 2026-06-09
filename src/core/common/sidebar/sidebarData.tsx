@@ -108,6 +108,17 @@ export const SidebarData = [
         dot: true,
         submenuItems: [],
       },
+      {
+        label: "Contact Settings",
+        link: routes.contactSettingsAdmin,
+        submenu: false,
+        showSubRoute: false,
+        icon: "phone",
+        base: "settings",
+        materialicons: "start",
+        dot: true,
+        submenuItems: [],
+      },
     ],
   },
   {

@@ -1,15 +1,51 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { all_routes } from '../../../routes/all_routes';
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 const FooterFront = () => {
-    const siteSettings = { whatsapp: "+91 99999 99999", phone: "+91 99999 99999" };
+    const [siteSettings, setSiteSettings] = useState({ 
+        whatsapp: "+91 99999 99999", 
+        phone: "+91 99999 99999",
+        email: "hello@docyori.com",
+        website: "www.docyori.com"
+    });
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const keys = ["contact_phone", "contact_email", "contact_website", "contact_whatsapp"];
+                const fetched = await Promise.all(
+                    keys.map(async (key) => {
+                        const res = await fetch(`${API}/api/settings/${key}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            return { [key]: data.value || "" };
+                        }
+                        return { [key]: "" };
+                    })
+                );
+                const mergedSettings = fetched.reduce((acc, curr) => ({ ...acc, ...curr }), {});
+                setSiteSettings(prev => ({
+                    phone: mergedSettings.contact_phone || prev.phone,
+                    email: mergedSettings.contact_email || prev.email,
+                    website: mergedSettings.contact_website || prev.website,
+                    whatsapp: mergedSettings.contact_whatsapp || prev.whatsapp,
+                }));
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchSettings();
+    }, []);
+
     return (
         <footer className="dy-footer" id="contact">
             <div className="dy-container dy-footer-grid">
                 <div className="dy-footer-brand">
-                    <div className="footer-logo">
-                        <i className="ti ti-heartbeat" style={{ color: '#007bff' }} />
-                        <b style={{ color: '#fff' }}>Doc</b><span style={{ color: '#fff' }}>Yori</span>
+                    <div className="footer-logo" style={{ marginBottom: "1rem" }}>
+                        <img src="/logo.png" alt="DocYori" style={{ height: "60px", width: "auto", objectFit: "contain" }} />
                     </div>
                     <p className="tag-line">Smarter Care. Better Health.</p>
                     <p>All-in-one clinic management software to automate operations, manage staff, and deliver better patient care.</p>
@@ -54,9 +90,9 @@ const FooterFront = () => {
                 <div className="dy-footer-col">
                     <h5>CONTACT</h5>
                     <ul>
-                        <li><a href="mailto:hello@docyori.com"><i className="ti ti-mail" />hello@docyori.com</a></li>
+                        <li><a href={`mailto:${siteSettings.email}`}><i className="ti ti-mail" />{siteSettings.email}</a></li>
                         <li><a href={`tel:${siteSettings.phone.replace(/\s+/g, '')}`}><i className="ti ti-phone" />{siteSettings.phone}</a></li>
-                        <li><a href="#"><i className="ti ti-world" />www.docyori.com</a></li>
+                        <li><a href="#"><i className="ti ti-world" />{siteSettings.website}</a></li>
                     </ul>
                 </div>
             </div>

@@ -127,7 +127,7 @@ const HomePage = () => {
 
             {/* RIGHT */}
             <div className="col-lg-6 position-relative">
-              <img src="/hero-image.png" alt="Dashboard Mockup" className="w-100 h-auto rounded-4 d-block bg-white" style={{ border: '2px solid #e2e8f0', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.2)' }} />
+              <img src="/hero-image.png" alt="Dashboard Mockup" className="w-100 h-auto rounded-4 d-block bg-white" style={{ border: '4px solid #0ea5e9', boxShadow: '0 20px 45px rgba(14, 165, 233, 0.25), 0 25px 50px -12px rgba(0, 0, 0, 0.15)' }} />
               
               {/* Horizontal Floating Cards */}
               <div className="d-none d-lg-flex flex-wrap flex-md-nowrap justify-content-center" style={{ position: 'absolute', bottom: '-45px', left: '50%', transform: 'translateX(-50%)', gap: '10px', zIndex: 2, width: '105%' }}>
@@ -186,7 +186,7 @@ const HomePage = () => {
             </div>
             <div className="col-lg-7">
               <div className="fw-bold fs-12 mb-2 text-uppercase letter-spacing-1" style={{ color: '#2563eb' }}>ABOUT DOCYORI</div>
-              <h2 className="fw-bold mb-3 text-dark" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a', lineHeight: '1.25' }}>Everything Your Clinic<br/>Needs in One Platform</h2>
+              <h2 className="fw-bold mb-3 text-dark" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a', lineHeight: '1.25' }}>Everything Your Clinic<br/>Needs in <span style={{ color: '#0ea5e9' }}>One Platform</span></h2>
               <p className="fs-15 lh-base mb-4" style={{ color: '#334155' }}>
                 DocYori is a complete clinic management solution designed for modern healthcare providers. Whether you operate a single clinic or manage multiple locations, DocYori helps simplify daily operations and improve patient care.
               </p>
@@ -208,7 +208,7 @@ const HomePage = () => {
       <section className="py-4" style={{ background: '#f8fafc' }}>
         <div className="container" style={{ maxWidth: '1320px' }}>
           <div className="fw-bold fs-12 mb-2 text-uppercase text-center letter-spacing-1" style={{ color: '#2563eb' }}>TAKE YOUR CLINIC ONLINE</div>
-          <h2 className="fw-bold text-center text-dark mb-5" style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a' }}>In 4 Simple Steps</h2>
+          <h2 className="fw-bold text-center text-dark mb-5" style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a' }}>In 4 <span style={{ color: '#0ea5e9' }}>Simple Steps</span></h2>
           
           <div className="row position-relative g-4">
             {/* Desktop Connecting Line */}
@@ -232,7 +232,7 @@ const HomePage = () => {
       <section className="py-4 bg-white">
         <div className="container" style={{ maxWidth: '1320px' }}>
           <div className="fw-bold fs-12 mb-2 text-uppercase text-center letter-spacing-1" style={{ color: '#2563eb' }}>OUR CORE MODULES</div>
-          <h2 className="fw-bold text-center text-dark mb-4" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>Powerful Modules Built For Modern Clinics</h2>
+          <h2 className="fw-bold text-center text-dark mb-4" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>Powerful Modules Built For <span style={{ color: '#0ea5e9' }}>Modern Clinics</span></h2>
           
           <div className="d-flex flex-wrap flex-lg-nowrap gap-3">
             {MODULES.map((m, i) => (
@@ -253,7 +253,7 @@ const HomePage = () => {
       <section className="py-4" style={{ background: '#f8fafc' }}>
         <div className="container" style={{ maxWidth: '1320px' }}>
           <div className="fw-bold fs-12 mb-2 text-uppercase text-center letter-spacing-1" style={{ color: '#2563eb' }}>EVERYTHING INCLUDED</div>
-          <h2 className="fw-bold text-center text-dark mb-4" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>All The Features You Need</h2>
+          <h2 className="fw-bold text-center text-dark mb-4" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>All The Features <span style={{ color: '#0ea5e9' }}>You Need</span></h2>
           
           <div className="row g-4">
             {/* HR Card */}
@@ -333,7 +333,7 @@ const HomePage = () => {
       <section className="py-4 bg-white">
         <div className="container" style={{ maxWidth: '1320px' }}>
           <div className="fw-bold fs-12 mb-2 text-uppercase text-center letter-spacing-1" style={{ color: '#2563eb' }}>WHY CHOOSE DOCYORI</div>
-          <h2 className="fw-bold text-center text-dark mb-4" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>Why Clinics Choose DocYori</h2>
+          <h2 className="fw-bold text-center text-dark mb-4" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>Why Clinics Choose <span style={{ color: '#0ea5e9' }}>DocYori</span></h2>
           
           <div className="d-flex flex-wrap flex-lg-nowrap gap-3">
             {WHY.map((w, i) => (
@@ -354,7 +354,7 @@ const HomePage = () => {
             {/* Testimonials */}
             <div className="col-lg-7">
               <div className="fw-bold fs-12 mb-2 text-uppercase letter-spacing-1" style={{ color: '#2563eb' }}>TESTIMONIALS</div>
-              <h2 className="fw-bold mb-4 text-dark" style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a' }}>Trusted By Healthcare Professionals</h2>
+              <h2 className="fw-bold mb-4 text-dark" style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a' }}>Trusted By <span style={{ color: '#0ea5e9' }}>Healthcare Professionals</span></h2>
               <div className="row g-3">
                 {TESTIMONIALS.map((t, i) => (
                   <div key={i} className="col-md-4">

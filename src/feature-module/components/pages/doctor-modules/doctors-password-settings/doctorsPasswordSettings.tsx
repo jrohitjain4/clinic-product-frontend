@@ -1,39 +1,77 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
-type PasswordField = "password" | "confirmPassword";
+import { toast } from "react-toastify";
+import { apiUrl } from "../../../../../core/config/api";
 
 const DoctorsPasswordSettings = () => {
-  const [passwordVisibility, setPasswordVisibility] = useState({
-    password: false,
-    confirmPassword: false,
+  const [passwords, setPasswords] = useState({
+    newPassword: "",
+    confirmPassword: "",
   });
 
-  const togglePasswordVisibility = (field: PasswordField) => {
-    setPasswordVisibility((prevState) => ({
-      ...prevState,
-      [field]: !prevState[field],
-    }));
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!passwords.newPassword || !passwords.confirmPassword) {
+      toast.error("Please fill all fields");
+      return;
+    }
+
+    if (passwords.newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await fetch(apiUrl("/api/auth/change-password"), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({
+          newPassword: passwords.newPassword
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Password updated successfully");
+        setPasswords({ newPassword: "", confirmPassword: "" });
+      } else {
+        toast.error(data.message || "Failed to update password");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred while updating password");
+    } finally {
+      setSaving(false);
+    }
   };
+
   return (
     <>
-      {/* ========================
-			Start Page Content
-		========================= */}
       <div className="page-wrapper">
-        {/* Start Content */}
         <div className="content">
-          {/* Page Header */}
           <div className="mb-3 border-bottom pb-3">
             <h4 className="fw-bold mb-0">Settings</h4>
           </div>
-          {/* End Page Header */}
           <div className="card">
             <div className="card-body">
-              {/* end card body */}
-              <div className="row g-2">
+              <div className="row g-3">
                 <div className="col-lg-3">
-                  <div className="text-start">
+                  <div className="text-start sticky-top" style={{ top: '20px' }}>
                     <Link
                       to={all_routes.doctorsprofilesettings}
                       className="btn btn-md rounded fs-14 fw-medium text-dark mb-1 w-100 justify-content-start"
@@ -48,150 +86,91 @@ const DoctorsPasswordSettings = () => {
                       <i className="ti ti-lock-star me-2 text-primary"> </i>{" "}
                       Change Password
                     </Link>
-                    <Link
-                      to={all_routes.doctorsnotificationsettings}
-                      className="btn btn-md rounded fs-14 fw-medium text-dark mb-1 w-100 justify-content-start"
-                    >
-                      <i className="ti ti-bell me-2 text-dark"></i>{" "}
-                      Notifications
-                    </Link>
                   </div>
                 </div>
-                {/* end col */}
                 <div className="col-lg-9">
                   <div className="border-1 border-start ps-4">
                     <h5 className="fw-bold pb-3 mb-4 border-1 border-bottom">
                       Change Password
                     </h5>
-                    {/* start row */}
-                    <div className="row g-2 border-bottom mb-3">
-                      <div className="col-lg-6">
-                        {/* start row */}
-                        <div className="row g-2 align-items-center mb-3">
-                          <div className="col-lg-5">
-                            <label className="form-label mb-0">
-                              New Password{" "}
-                              <span className="text-danger">*</span>
-                            </label>
+                    <form onSubmit={handleSave}>
+                      <div className="row g-3 border-bottom pb-4 mb-4">
+                        <div className="col-lg-6">
+                          <label className="form-label">
+                            New Password <span className="text-danger">*</span>
+                          </label>
+                          <div className="position-relative">
+                            <input
+                              type={showNew ? "text" : "password"}
+                              className="form-control pe-5"
+                              placeholder="Enter new password"
+                              value={passwords.newPassword}
+                              onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
+                            />
+                            <span
+                              className="position-absolute top-50 end-0 translate-middle-y me-3"
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => setShowNew(!showNew)}
+                            >
+                              <i className={`ti ${showNew ? "ti-eye" : "ti-eye-off"} text-muted fs-16`} />
+                            </span>
                           </div>
-                          {/* end col */}
-                          <div className="col-lg-7">
-                            <div className="position-relative">
-                              <div className="pass-group input-group position-relative border rounded">
-                                <span className="input-group-text bg-white border-0">
-                                  <i className="ti ti-lock text-dark fs-14" />
-                                </span>
-                                <input
-                                  type={
-                                    passwordVisibility.password
-                                      ? "text"
-                                      : "password"
-                                  }
-                                  className="pass-input form-control border-start-0 ps-0"
-                                  placeholder="****************"
-                                />
-                                <span
-                                  className={`ti toggle-password fs-14 ${
-                                    passwordVisibility.password
-                                      ? "ti-eye"
-                                      : "ti-eye-off"
-                                  }`}
-                                  onClick={() =>
-                                    togglePasswordVisibility("password")
-                                  }
-                                ></span>
-                              </div>
-                            </div>
-                          </div>
-                          {/* end col */}
                         </div>
-                        {/* end row */}
-                      </div>
-                      {/* end col */}
-                      <div className="col-lg-6">
-                        {/* start row */}
-                        <div className="row g-2 align-items-center mb-3">
-                          <div className="col-lg-5">
-                            <label className="form-label mb-0">
-                              Confirm Password
-                              <span className="text-danger">*</span>
-                            </label>
+                        <div className="col-lg-6">
+                          <label className="form-label">
+                            Confirm Password <span className="text-danger">*</span>
+                          </label>
+                          <div className="position-relative">
+                            <input
+                              type={showConfirm ? "text" : "password"}
+                              className="form-control pe-5"
+                              placeholder="Re-enter new password"
+                              value={passwords.confirmPassword}
+                              onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                            />
+                            <span
+                              className="position-absolute top-50 end-0 translate-middle-y me-3"
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => setShowConfirm(!showConfirm)}
+                            >
+                              <i className={`ti ${showConfirm ? "ti-eye" : "ti-eye-off"} text-muted fs-16`} />
+                            </span>
                           </div>
-                          {/* end col */}
-                          <div className="col-lg-7">
-                            <div className="position-relative">
-                              <div className="pass-group input-group position-relative border rounded">
-                                <span className="input-group-text bg-white border-0">
-                                  <i className="ti ti-lock text-dark fs-14" />
-                                </span>
-                                <input
-                                  type={
-                                    passwordVisibility.confirmPassword
-                                      ? "text"
-                                      : "password"
-                                  }
-                                  className="pass-input form-control border-start-0 ps-0"
-                                  placeholder="****************"
-                                />
-                                <span
-                                  className={`ti toggle-password fs-14 ${
-                                    passwordVisibility.confirmPassword
-                                      ? "ti-eye"
-                                      : "ti-eye-off"
-                                  }`}
-                                  onClick={() =>
-                                    togglePasswordVisibility("confirmPassword")
-                                  }
-                                ></span>
-                              </div>
-                            </div>
-                          </div>
-                          {/* end col */}
                         </div>
-                        {/* end row */}
                       </div>
-                      {/* end col */}
-                    </div>
-                    {/* end row */}
-                    <div className="d-flex justify-content-end align-items-center gap-2">
-                      <Link
-                        to=""
-                        className="btn btn-light btn-md fs-13 fw-medium rounded"
-                      >
-                        Cancel
-                      </Link>
-                      <Link
-                        to=""
-                        className="btn btn-primary btn-md fs-13 fw-medium rounded"
-                      >
-                        Save Changes
-                      </Link>
-                    </div>
+                      <div className="d-flex justify-content-end align-items-center gap-2">
+                        <button
+                          type="button"
+                          className="btn btn-light btn-md"
+                          onClick={() => setPasswords({ newPassword: "", confirmPassword: "" })}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="btn btn-primary btn-md"
+                          disabled={saving}
+                        >
+                          {saving ? "Saving..." : "Save Changes"}
+                        </button>
+                      </div>
+                    </form>
                   </div>
                 </div>
-                {/* end col */}
               </div>
             </div>
-            {/* end card body */}
           </div>
-          {/* end card */}
         </div>
-        {/* End Content */}
-        {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 
+            2025 ©
             <Link to="#" className="link-primary">
               Docyari
             </Link>
             , All Rights Reserved
           </p>
         </div>
-        {/* Footer End */}
       </div>
-      {/* ========================
-			End Page Content
-		========================= */}
     </>
   );
 };

@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
 import Datatable from "../../../../../core/common/dataTable";
@@ -19,6 +19,9 @@ import { toast } from "react-toastify";
 import html2pdf from 'html2pdf.js';
 import { useNotes } from "../../../../../core/hooks/useNotes";
 import Footer from "../../../../../core/common/footer/footer";
+import CommonSelect from "../../../../../core/common/common-select/commonSelect";
+import { APPOINTMENT_STATUS_OPTIONS } from "../../../../../core/utils/appointmentForm";
+import { authHeaders } from "../../../../../core/utils/apiClient";
 
 const AppointmentDetails = () => {
     const { id } = useParams<{ id: string }>();
@@ -35,11 +38,14 @@ const AppointmentDetails = () => {
     const [selectedPresKeys, setSelectedPresKeys] = useState<any[]>([]);
     const [selectedFollowUpKeys, setSelectedFollowUpKeys] = useState<any[]>([]);
 
-    // Follow-up state
     const [showFollowUpModal, setShowFollowUpModal] = useState(false);
     const [followUpDate, setFollowUpDate] = useState<dayjs.Dayjs | null>(null);
+    const [followUpTimeSlot, setFollowUpTimeSlot] = useState<string | null>(null);
+    const [followUpStatus, setFollowUpStatus] = useState("Schedule");
+    const [followUpPayment, setFollowUpPayment] = useState("Unpaid");
     const [followUpReason, setFollowUpReason] = useState("");
     const [isSubmittingFollowUp, setIsSubmittingFollowUp] = useState(false);
+    const [doctorAvailability, setDoctorAvailability] = useState<any>(null);
 
     const { notes, addNote, loading: loadingNotes } = useNotes({ appointmentId: id });
 
@@ -99,14 +105,59 @@ const AppointmentDetails = () => {
         }
     };
 
+    // ── Fetch Doctor Availability for Follow-up ──────────────
+    useEffect(() => {
+        if (showFollowUpModal && appointment?.doctorId) {
+            const start = dayjs().startOf("month").subtract(1, "month").toISOString();
+            const end = dayjs().endOf("month").add(3, "month").toISOString();
+            fetch(apiUrl(`/api/doctors/${appointment.doctorId}/availability?startDate=${start}&endDate=${end}`), {
+                headers: authHeaders(),
+            })
+                .then(r => r.json())
+                .then(setDoctorAvailability)
+                .catch(console.error);
+        }
+    }, [showFollowUpModal, appointment?.doctorId]);
+
+    // ── Reset defaults when modal opens ──────────────
+    useEffect(() => {
+        if (showFollowUpModal) {
+            setFollowUpStatus("Schedule");
+            // Auto-detect payment status recommendation based on full treatment chain
+            const freeLimit = appointment?.doctor?.freeFollowUpLimit || 0;
+            const currentCount = chainAppointments?.length || 0;
+            const isFree = freeLimit === 0 || currentCount <= freeLimit;
+            setFollowUpPayment(isFree ? "Free" : "Unpaid");
+        }
+    }, [showFollowUpModal, appointment]);
+
+    const sessionOptions = useMemo(() => {
+        if (!doctorAvailability || !followUpDate) return [];
+        const dayName = followUpDate.format("dddd"); // Match main form logic
+        const daySchedule = doctorAvailability.schedules?.[dayName] || [];
+
+        return daySchedule.map((session: any, idx: number) => {
+            const sessionLabel = session.label || (idx === 0 ? "Morning Session" : idx === 1 ? "Evening Session" : `Session ${idx + 1}`);
+            const fromFormatted = dayjs(session.from, "HH:mm").format("hh:mm A");
+            const toFormatted = dayjs(session.to, "HH:mm").format("hh:mm A");
+
+            return {
+                value: session.from,
+                label: `${sessionLabel}: ${fromFormatted} – ${toFormatted}`,
+            };
+        });
+    }, [doctorAvailability, followUpDate]);
+
     const handleFollowUpSubmit = async () => {
-        if (!id || !followUpDate) {
-            toast.error("Please select a date and time for the follow-up");
+        if (!id || !followUpDate || !followUpTimeSlot) {
+            toast.error("Please select a date and time slot for the follow-up");
             return;
         }
         setIsSubmittingFollowUp(true);
         try {
             const token = localStorage.getItem("token");
+            const scheduledAt = dayjs(followUpDate.format("YYYY-MM-DD") + " " + followUpTimeSlot).toISOString();
+
             const res = await fetch(apiUrl(`/api/appointments/${id}/follow-up`), {
                 method: "POST",
                 headers: {
@@ -114,8 +165,11 @@ const AppointmentDetails = () => {
                     "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    scheduledAt: followUpDate.toISOString(),
-                    reason: followUpReason
+                    scheduledAt,
+                    reason: followUpReason,
+                    status: followUpStatus,
+                    paymentStatus: followUpPayment,
+                    followUpStatus: followUpPayment === "Free" ? "Free Follow-up" : "Paid Follow-up"
                 })
             });
 
@@ -127,6 +181,7 @@ const AppointmentDetails = () => {
             toast.success("Follow-up scheduled successfully!");
             setShowFollowUpModal(false);
             setFollowUpDate(null);
+            setFollowUpTimeSlot(null);
             setFollowUpReason("");
             refetch(); // Reload appointment to show new follow-ups
         } catch (err: any) {
@@ -425,15 +480,19 @@ const AppointmentDetails = () => {
             title: "Appointment ID",
             dataIndex: "appointmentCode",
             render: (text: string, record: any, index: number) => {
-                const isParent = record.id === appointment?.id;
+                const isRoot = !record.parentAppointmentId;
+                const isCurrent = record.id === appointment?.id;
                 const ordinal = index;
                 const suffix = ordinal === 1 ? 'st' : ordinal === 2 ? 'nd' : ordinal === 3 ? 'rd' : 'th';
 
                 return (
                     <div className="d-flex flex-column">
-                        <span className="badge badge-soft-info fs-12 mb-1" style={{ width: 'fit-content' }}>{text || record.id?.substring(0, 8)}</span>
-                        {isParent ? (
-                            <span className="text-secondary fs-10 fw-bold text-uppercase tracking-wider">Parent Visit</span>
+                        <span className={`badge ${isCurrent ? 'bg-primary text-white' : 'badge-soft-info'} fs-12 mb-1`} style={{ width: 'fit-content' }}>
+                            {text || record.id?.substring(0, 8)}
+                            {isCurrent && <span className="ms-1" style={{ fontSize: '8px' }}>(CURRENT)</span>}
+                        </span>
+                        {isRoot ? (
+                            <span className="text-secondary fs-10 fw-bold text-uppercase tracking-wider">Original Visit</span>
                         ) : (
                             <span className="text-primary fs-10 fw-bold text-uppercase tracking-wider">{ordinal}{suffix} Follow-up</span>
                         )}
@@ -443,7 +502,11 @@ const AppointmentDetails = () => {
         },
         {
             title: "Original Date",
-            render: () => dayjs(appointment?.scheduledAt).format('DD MMM YYYY'),
+            render: () => {
+                const chain = (appointment as any)?.followUpChain;
+                const root = chain && chain.length > 0 ? chain[0] : appointment;
+                return dayjs(root?.scheduledAt).format('DD MMM YYYY');
+            },
         },
         {
             title: "Follow-up Date",
@@ -482,12 +545,23 @@ const AppointmentDetails = () => {
             ),
         },
         {
-            title: "Fee Status",
-            dataIndex: "followUpPaymentStatus",
+            title: "Follow-up Type",
+            dataIndex: "followUpStatus",
             render: (text: string, record: any) => {
-                if (record.id === appointment?.id) return <span className="badge badge-soft-secondary">Standard</span>;
-                const cls = text === 'Free' ? 'badge-soft-success' : text === 'Paid' ? 'badge-soft-info' : 'badge-soft-danger';
-                return <span className={`badge ${cls}`}>{text || 'Unpaid'}</span>;
+                if (record.id === appointment?.id && !record.isFollowUp) return <span className="badge badge-soft-secondary">Standard Visit</span>;
+                const status = text || (record.isFollowUp ? "Follow-up" : "Standard");
+                const cls = status.includes("Free") ? "badge-soft-success" : "badge-soft-info";
+                return <span className={`badge ${cls}`}>{status}</span>;
+            }
+        },
+        {
+            title: "Payment Status",
+            dataIndex: "paymentStatus",
+            render: (text: string, record: any) => {
+                if (record.id === appointment?.id && !record.isFollowUp) return <span className="badge badge-soft-light text-dark">N/A</span>;
+                const status = text || "Unpaid";
+                const cls = status === "Paid" ? "badge-soft-success" : status === "Free" ? "badge-soft-info" : "badge-soft-danger";
+                return <span className={`badge ${cls}`}>{status}</span>;
             }
         },
         {
@@ -691,7 +765,12 @@ const AppointmentDetails = () => {
                         <div className="card shadow-sm border rounded-4 mb-0 h-100 overflow-hidden bg-white border-primary-light hover-shadow transition-all position-relative">
                             <div className="card-body p-4 position-relative z-index-1">
                                 <div className="d-flex justify-content-between align-items-start mb-3">
-                                    <div className="badge bg-soft-primary text-primary fw-bold text-uppercase fs-10 tracking-wider px-2 py-1">Visit Slot</div>
+                                    <div className="d-flex flex-column gap-1">
+                                        <div className="badge bg-soft-primary text-primary fw-bold text-uppercase fs-10 tracking-wider px-2 py-1" style={{ width: 'fit-content' }}>Visit Slot</div>
+                                        {appointment.isFollowUp && (
+                                            <span className="badge bg-soft-success text-success fw-bold text-uppercase fs-10 tracking-wider px-2 py-1 animate__animated animate__pulse animate__infinite">Follow-up ✓</span>
+                                        )}
+                                    </div>
                                     <span className={`badge ${statusBadgeClass(appointment.status)} rounded-pill px-3 py-1 fw-bold border-0 fs-11 shadow-xs`}>
                                         {appointment.status}
                                     </span>
@@ -722,8 +801,10 @@ const AppointmentDetails = () => {
                                         <i className="ti ti-map-pin text-muted fs-14" />
                                         <span className="text-muted fs-12 fw-medium text-truncate">{appointment.location || "Room 102, OPD"}</span>
                                     </div>
-                                    <div className="bg-success-soft px-2 py-1 rounded-2 border-dashed flex-shrink-0">
-                                        <span className="fs-10 fw-bold text-success text-uppercase">Payment: PAID ✓</span>
+                                    <div className={`${appointment.isFollowUp && appointment.paymentStatus === 'Unpaid' ? 'bg-danger-soft' : 'bg-success-soft'} px-2 py-1 rounded-2 border-dashed flex-shrink-0`}>
+                                        <span className={`fs-10 fw-bold ${appointment.isFollowUp && appointment.paymentStatus === 'Unpaid' ? 'text-danger' : 'text-success'} text-uppercase`}>
+                                            Payment: {appointment.isFollowUp ? (appointment.paymentStatus || 'FREE').toUpperCase() : 'PAID'} {appointment.paymentStatus === 'Unpaid' ? '✗' : '✓'}
+                                        </span>
                                     </div>
                                 </div>
 
@@ -732,9 +813,14 @@ const AppointmentDetails = () => {
                                         <span className="fs-10 fw-bold text-muted text-uppercase">Support:</span>
                                         <span className="fs-11 fw-bold text-primary">+1 (800) MED-HELP</span>
                                     </div>
-                                    <div className="d-flex align-items-center gap-1">
-                                        <i className="ti ti-shield-check text-success fs-14" />
-                                        <span className="fs-10 fw-bold text-muted text-uppercase">Secured Access</span>
+                                    <div className="d-flex align-items-center gap-2">
+                                        {appointment.isFollowUp && (
+                                            <span className="badge bg-soft-info text-info border-dashed fs-10 fw-bold">{appointment.followUpStatus}</span>
+                                        )}
+                                        <div className="d-flex align-items-center gap-1">
+                                            <i className="ti ti-shield-check text-success fs-14" />
+                                            <span className="fs-10 fw-bold text-muted text-uppercase">Secured Access</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -755,7 +841,7 @@ const AppointmentDetails = () => {
 
                             <li className="nav-item border-0">
                                 <button className="nav-link fw-bold py-2 px-3 fs-13 border-0" data-bs-toggle="pill" data-bs-target="#followup" type="button" role="tab">
-                                    Follow-ups {(appointment?.followUps?.length || 0) > 0 ? `(${appointment?.followUps?.length})` : ""}
+                                    Follow-ups {(appointment as any)?.followUpChain?.length > 1 ? `(${(appointment as any).followUpChain.length - 1})` : ""}
                                 </button>
                             </li>
                         </ul>
@@ -1130,7 +1216,7 @@ const AppointmentDetails = () => {
                                 <div className="p-0 border-0 bg-transparent">
                                     <Datatable
                                         columns={followUpColumns}
-                                        dataSource={appointment ? [appointment, ...(appointment.followUps || [])] : []}
+                                        dataSource={(appointment as any)?.followUpChain || (appointment ? [appointment, ...(appointment.followUps || [])] : [])}
                                         Selection={true}
                                         onSelectionChange={(keys) => setSelectedFollowUpKeys(keys)}
                                         searchText=""
@@ -1155,61 +1241,135 @@ const AppointmentDetails = () => {
             )}
 
             {/* Follow-up Modal */}
-            <Modal
-                title={
-                    <div className="d-flex align-items-center gap-2">
-                        <i className="ti ti-calendar-plus text-primary fs-20" />
-                        <span className="fw-bold">Schedule Follow-up Visit</span>
-                    </div>
-                }
-                open={showFollowUpModal}
-                onCancel={() => setShowFollowUpModal(false)}
-                onOk={handleFollowUpSubmit}
-                confirmLoading={isSubmittingFollowUp}
-                okText="Confirm & Schedule"
-                centered
-                width={600}
-                okButtonProps={{ className: "btn-primary px-4 fw-bold shadow-sm" }}
-                cancelButtonProps={{ className: "px-4" }}
-            >
-                <div className="py-2">
-                    <div className="alert bg-success-subtle border-dashed border-success mb-4 fs-13 text-success-emphasis">
-                        <i className="ti ti-info-circle me-1" />
-                        Doctor <strong>{appointment?.doctor?.fullName}</strong> offers
-                        <strong> {appointment?.doctor?.freeFollowUpLimit === 0 ? 'Unlimited' : appointment?.doctor?.freeFollowUpLimit}</strong> free visits
-                        within <strong>{appointment?.doctor?.followUpValidityDays}</strong> days.
-                        {(appointment?.followUps?.length || 0) >= (appointment?.doctor?.freeFollowUpLimit || 0) && appointment?.doctor?.freeFollowUpLimit !== 0 ? (
-                            <div className="mt-1 text-danger fw-bold">Note: Free limit reached. This visit will be marked as PAID (₹{appointment?.doctor?.followUpFee}).</div>
-                        ) : (
-                            <div className="mt-1 text-success fw-bold">This visit qualifies as a FREE follow-up.</div>
-                        )}
-                    </div>
+            {showFollowUpModal && (
+                <div className="modal fade show d-block" style={{ zIndex: 1050 }}>
+                    <div className="modal-backdrop fade show" style={{ zIndex: 1040 }} onClick={() => setShowFollowUpModal(false)} />
+                    <div className="modal-dialog modal-dialog-centered modal-lg" style={{ zIndex: 1050 }}>
+                        <div className="modal-content border-0 shadow-lg animate__animated animate__zoomIn animate__faster">
+                            <div className="modal-header bg-primary text-white py-3 px-4">
+                                <h5 className="modal-title fw-bold text-white mb-0 d-flex align-items-center">
+                                    <i className="ti ti-calendar-event me-2 fs-20" />
+                                    Schedule Follow-up Visit
+                                </h5>
+                                <button className="btn-close btn-close-white" onClick={() => setShowFollowUpModal(false)} />
+                            </div>
+                            <div className="modal-body p-4">
+                                <div className="alert bg-success-subtle border-dashed border-success mb-4 fs-13 text-success-emphasis py-3 px-4 rounded-3 shadow-sm">
+                                    <div className="d-flex align-items-start gap-3">
+                                        <div className="bg-success text-white rounded-circle p-2 d-flex align-items-center justify-content-center mt-1" style={{ width: '32px', height: '32px' }}>
+                                            <i className="ti ti-info-circle fs-18" />
+                                        </div>
+                                        <div className="flex-grow-1">
+                                            <div className="fw-bold mb-1 fs-14">Follow-up Policy for Dr. {appointment?.doctor?.fullName}</div>
+                                            <p className="mb-0 opacity-90">
+                                                Offers <strong>{appointment?.doctor?.freeFollowUpLimit === 0 ? 'Unlimited' : appointment?.doctor?.freeFollowUpLimit}</strong> free visits
+                                                within <strong>{appointment?.doctor?.followUpValidityDays}</strong> days.
+                                            </p>
+                                            {(chainAppointments?.length || 0) >= (appointment?.doctor?.freeFollowUpLimit || 0) && appointment?.doctor?.freeFollowUpLimit !== 0 ? (
+                                                <div className="mt-2 text-danger fw-heavy d-flex align-items-center gap-1">
+                                                    <i className="ti ti-alert-triangle" /> Note: Free limit reached. Marked as PAID (₹{appointment?.doctor?.followUpFee}).
+                                                </div>
+                                            ) : (
+                                                <div className="mt-2 text-success fw-heavy d-flex align-items-center gap-1">
+                                                    <i className="ti ti-gift" /> This visit qualifies as a FREE follow-up.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
 
-                    <div className="mb-4">
-                        <label className="form-label fw-bold small text-muted text-uppercase mb-2">Select Date & Time</label>
-                        <DatePicker
-                            showTime={{ format: 'HH:mm', minuteStep: 15 }}
-                            format="YYYY-MM-DD HH:mm"
-                            className="w-100 py-2 border rounded"
-                            value={followUpDate}
-                            onChange={(d) => setFollowUpDate(d)}
-                            disabledDate={(current) => current && current < dayjs().startOf('day')}
-                            getPopupContainer={(trigger) => trigger.parentElement!}
-                        />
-                    </div>
+                                <div className="row g-4 mb-4">
+                                    <div className="col-md-6">
+                                        <div className="form-group mb-0">
+                                            <label className="form-label fw-bold text-dark small text-uppercase mb-2 letter-spacing-1">
+                                                <i className="ti ti-calendar-check me-1 text-primary" /> Select Date
+                                            </label>
+                                            <DatePicker
+                                                format="YYYY-MM-DD"
+                                                className="form-control py-2 fs-14 border-primary-light"
+                                                value={followUpDate}
+                                                onChange={(d) => { setFollowUpDate(d); setFollowUpTimeSlot(null); }}
+                                                disabledDate={(current) => current && current < dayjs().startOf('day')}
+                                                getPopupContainer={(trigger) => trigger.parentElement!}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="form-group mb-0">
+                                            <label className="form-label fw-bold text-dark small text-uppercase mb-2 letter-spacing-1">
+                                                <i className="ti ti-clock-hour-4 me-1 text-primary" /> Select Shift
+                                            </label>
+                                            <CommonSelect
+                                                options={sessionOptions}
+                                                value={sessionOptions.find((o: any) => o.value === followUpTimeSlot)}
+                                                onChange={(opt: any) => setFollowUpTimeSlot(opt?.value)}
+                                                placeholder={followUpDate ? "Choose slot" : "Select date first"}
+                                                isDisabled={!followUpDate || sessionOptions.length === 0}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
 
-                    <div className="mb-3">
-                        <label className="form-label fw-bold small text-muted text-uppercase mb-2">Follow-up Reason</label>
-                        <textarea
-                            className="form-control"
-                            rows={3}
-                            placeholder="e.g. Review blood report, Routine check-up..."
-                            value={followUpReason}
-                            onChange={(e) => setFollowUpReason(e.target.value)}
-                        />
+                                <div className="row g-4 mb-4">
+                                    <div className="col-md-6">
+                                        <div className="form-group mb-0">
+                                            <label className="form-label fw-bold text-dark small text-uppercase mb-2 letter-spacing-1">
+                                                <i className="ti ti-chart-bar me-1 text-primary" /> Appointment Status
+                                            </label>
+                                            <CommonSelect
+                                                options={APPOINTMENT_STATUS_OPTIONS}
+                                                value={APPOINTMENT_STATUS_OPTIONS.find((o: any) => o.value === followUpStatus)}
+                                                onChange={(opt: any) => setFollowUpStatus(opt?.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="form-group mb-0">
+                                            <label className="form-label fw-bold text-dark small text-uppercase mb-2 letter-spacing-1">
+                                                <i className="ti ti-coin me-1 text-primary" /> Payment Status
+                                            </label>
+                                            <CommonSelect
+                                                options={[
+                                                    { value: "Free", label: "Free" },
+                                                    { value: "Paid", label: "Paid" },
+                                                    { value: "Unpaid", label: "Unpaid" },
+                                                ]}
+                                                value={{ value: followUpPayment, label: followUpPayment }}
+                                                onChange={(opt: any) => setFollowUpPayment(opt?.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="form-group mb-0">
+                                    <label className="form-label fw-bold text-dark small text-uppercase mb-2 letter-spacing-1">
+                                        <i className="ti ti-message-2 me-1 text-primary" /> Follow-up Reason
+                                    </label>
+                                    <textarea
+                                        className="form-control fs-14 p-3 border-primary-light bg-light-subtle"
+                                        rows={3}
+                                        placeholder="e.g. Review blood report, Routine check-up..."
+                                        value={followUpReason}
+                                        onChange={(e) => setFollowUpReason(e.target.value)}
+                                        style={{ borderRadius: '8px' }}
+                                    />
+                                </div>
+                            </div>
+                            <div className="modal-footer bg-light p-3 border-top-0 rounded-bottom-4">
+                                <button className="btn btn-white border fw-bold px-4" onClick={() => setShowFollowUpModal(false)}>Cancel</button>
+                                <button
+                                    className="btn btn-primary fw-bold px-4 shadow-sm"
+                                    onClick={handleFollowUpSubmit}
+                                    disabled={isSubmittingFollowUp || !followUpDate || !followUpTimeSlot}
+                                >
+                                    {isSubmittingFollowUp ? <span className="spinner-border spinner-border-sm me-2" /> : <i className="ti ti-check me-2" />}
+                                    Confirm & Schedule Follow-up
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </Modal>
+            )}
 
             {showNoteModal && (
                 <div className="modal fade show d-block" style={{ zIndex: 1050 }}>
@@ -1392,6 +1552,9 @@ const AppointmentDetails = () => {
                         <div className="d-flex justify-content-between align-items-end">
                             <div>
                                 <p className="mb-1 text-dark fs-12"><strong>Follow Up:</strong> {appointment?.followUps?.[0]?.scheduledAt ? dayjs(appointment.followUps[0].scheduledAt).format('DD MMMM YYYY') : "As needed"}</p>
+                                {appointment.isFollowUp && (
+                                    <p className="mb-1 text-dark fs-12"><strong>Follow-up Type:</strong> {appointment.followUpStatus || "Regular"} ({appointment.paymentStatus || "Unpaid"})</p>
+                                )}
                                 <p className="mb-0 text-muted fs-11">Notes: Patient to review if symptoms persist.</p>
                             </div>
                             <div className="text-end" style={{ width: '200px' }}>

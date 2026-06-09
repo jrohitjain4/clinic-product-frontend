@@ -84,8 +84,10 @@ export const all_routes = {
   onlineconsultations: "/doctor/online-consultations",
   doctorsappointments: "/doctor/doctors-appointments",
   doctorspatientdetails: "/doctor/doctors-patient-details",
-  doctorsappointmentdetails: "/doctor/doctors-appointment-details",
+  doctorsappointmentdetails: "/doctor/doctors-appointment-details/:id",
   doctorsprescriptiondetails: "/doctor/doctors-prescription-details",
+  doctorPatients: "/doctor/my-patients",
+  doctorAttendance: "/doctor/my-attendance",
 
   //Super Admin routes
   superAdminDashboard: "/super-admin/super-admin-dashboard",

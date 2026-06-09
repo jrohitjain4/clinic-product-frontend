@@ -6,7 +6,6 @@ export const APPOINTMENT_STATUS_OPTIONS = [
   { value: "Checked In", label: "Checked In" },
   { value: "Checked Out", label: "Checked Out" },
   { value: "Cancelled", label: "Cancelled" },
-  { value: "Follow-up", label: "Follow-up" },
 ];
 
 export const APPOINTMENT_TYPE_OPTIONS = [
@@ -61,6 +60,10 @@ export const emptyAppointmentForm = () => ({
   appointmentType: "Offline Consultation",
   status: "Schedule",
   reason: "",
+  isFollowUp: false,
+  followUpStatus: "Free Follow-up",
+  paymentStatus: "Free",
+  parentAppointmentId: "",
 });
 
 export const formatAppointmentDate = (iso?: string | null) => {

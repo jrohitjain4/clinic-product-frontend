@@ -60,6 +60,8 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
   const [form, setForm] = useState(emptyAppointmentForm);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [showFollowUp, setShowFollowUp] = useState(false);
+  const [followUpCount, setFollowUpCount] = useState(0);
   const [showAddPatient, setShowAddPatient] = useState(false);
   const [availability, setAvailability] = useState<{
     schedules: any;
@@ -106,7 +108,14 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
         appointmentType: appointment.appointmentType || "Offline Consultation",
         status: appointment.status,
         reason: appointment.reason || "",
+        isFollowUp: appointment.isFollowUp || false,
+        followUpStatus: appointment.followUpStatus || "Free Follow-up",
+        paymentStatus: appointment.paymentStatus || "Free",
+        parentAppointmentId: appointment.parentAppointmentId || "",
       });
+      if (appointment.isFollowUp) {
+        setShowFollowUp(true);
+      }
     }
   }, [mode, appointment?.id]);
 
@@ -188,14 +197,17 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
 
   // ── Auto-check for Follow-up status ────────────────────────────
   useEffect(() => {
-    if (mode === "create" && form.patientId && form.doctorId) {
-      const scheduledAt = buildScheduledAt();
+    if (mode === "create" && form.patientId && form.doctorId && form.appointmentDate) {
+      let scheduledAt = buildScheduledAt();
+      if (!scheduledAt) {
+        // Use noon of the selected date as a safe fallback for checking range
+        scheduledAt = form.appointmentDate.hour(12).minute(0).second(0).toISOString();
+      }
+
       const query = new URLSearchParams();
       query.append("patientId", form.patientId);
       query.append("doctorId", form.doctorId);
-      if (scheduledAt) {
-        query.append("date", scheduledAt);
-      }
+      query.append("date", scheduledAt);
 
       fetch(apiUrl(`/api/appointments/check-followup?${query.toString()}`), {
         headers: authHeaders(),
@@ -203,13 +215,25 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
         .then((r) => r.json())
         .then((data) => {
           if (data.isFollowup) {
-            setForm((f) => ({ ...f, status: "Follow-up" }));
-          } else if (form.status === "Follow-up") {
-            // Revert if it's no longer a follow-up (e.g. doctor changed)
-            setForm((f) => ({ ...f, status: "Schedule" }));
+            setShowFollowUp(true);
+            setFollowUpCount(data.existingCount || 0);
+            setForm((f) => ({
+              ...f,
+              isFollowUp: false, // Default to OFF as requested by user
+              parentAppointmentId: data.lastApptId,
+              followUpStatus: data.recommendedStatus || "Free Follow-up",
+              paymentStatus: data.recommendedPayment || "Free"
+            }));
+          } else {
+            setShowFollowUp(false);
+            setFollowUpCount(0);
+            setForm((f) => ({ ...f, isFollowUp: false, parentAppointmentId: "" }));
           }
         })
         .catch(console.error);
+    } else if (mode === "create") {
+      // Hide if patient, doctor or date is missing
+      setShowFollowUp(false);
     }
   }, [mode, form.patientId, form.doctorId, form.appointmentDate, form.appointmentTime]);
 
@@ -291,6 +315,10 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
           appointmentType: form.appointmentType,
           status: form.status,
           reason: form.reason,
+          isFollowUp: form.isFollowUp,
+          followUpStatus: form.isFollowUp ? form.followUpStatus : null,
+          paymentStatus: form.isFollowUp ? form.paymentStatus : null,
+          parentAppointmentId: form.isFollowUp ? form.parentAppointmentId : null,
         }),
       });
       if (!res.ok) {
@@ -621,6 +649,15 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                     </div>
                   </div>
                   <div className="mb-3">
+                    <label className="form-label mb-1 fw-medium">Appointment Status</label>
+                    <CommonSelect
+                      options={APPOINTMENT_STATUS_OPTIONS}
+                      className="select"
+                      value={APPOINTMENT_STATUS_OPTIONS.find(opt => opt.value === form.status)}
+                      onChange={(opt: any) => setForm(f => ({ ...f, status: opt?.value }))}
+                    />
+                  </div>
+                  <div className="mb-3">
                     <label className="form-label mb-1 fw-medium">
                       Appointment Reason<span className="text-danger ms-1">*</span>
                     </label>
@@ -633,6 +670,59 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                       }
                     />
                   </div>
+
+                  {showFollowUp && (
+                    <div className="mb-4">
+                      <div className="p-3 rounded border" style={{ backgroundColor: form.isFollowUp ? '#f0f9ff' : '#f8f9fa', borderColor: form.isFollowUp ? '#bae6fd' : '#e2e8f0' }}>
+                        <div className="form-check form-switch mb-0">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="followUpToggle"
+                            checked={form.isFollowUp}
+                            onChange={(e) => setForm(f => ({ ...f, isFollowUp: e.target.checked }))}
+                          />
+                          <label className="form-check-label fw-bold" htmlFor="followUpToggle">
+                            This is a Follow-up Appointment
+                          </label>
+                        </div>
+                        {followUpCount > 0 && (
+                          <div className="mt-2 text-primary fs-11 fw-medium opacity-75">
+                            <i className="ti ti-info-circle me-1" />
+                            This patient already has {followUpCount} follow-up visit(s) linked to this treatment.
+                          </div>
+                        )}
+
+                        {form.isFollowUp && (
+                          <div className="mt-3 pt-3 border-top border-info-subtle">
+                            <div className="row g-3">
+                              <div className="col-md-6">
+                                <label className="form-label mb-1 fs-12 fw-bold text-uppercase text-muted">Follow-up Type</label>
+                                <div className="mt-1">
+                                  <span className={`badge ${form.followUpStatus.includes('Free') ? 'badge-soft-success' : 'badge-soft-info'} px-2 py-1 fs-12 w-100 text-start border`}>
+                                    <i className="ti ti-check-circle me-1" /> {form.followUpStatus}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="col-md-6">
+                                <label className="form-label mb-1 fs-12 fw-bold text-uppercase text-muted">Payment Status</label>
+                                <CommonSelect
+                                  options={[
+                                    { value: "Paid", label: "Paid" },
+                                    { value: "Free", label: "Free" },
+                                    { value: "Unpaid", label: "Unpaid" },
+                                  ]}
+                                  className="select select-sm"
+                                  value={{ value: form.paymentStatus, label: form.paymentStatus }}
+                                  onChange={(opt: any) => setForm(f => ({ ...f, paymentStatus: opt?.value }))}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="mb-0">
                     <label className="form-label mb-1 fw-medium">

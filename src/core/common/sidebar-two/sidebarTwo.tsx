@@ -37,7 +37,6 @@ const SidebarTwo = () => {
       settings: isAnyActive([
         all_routes.doctorsprofilesettings,
         all_routes.doctorspasswordsettings,
-        all_routes.doctorsnotificationsettings,
       ]),
     }));
     // eslint-disable-next-line
@@ -132,59 +131,17 @@ const SidebarTwo = () => {
                   </li>
                   {/* Appointments Submenu */}
                   <li
-                    className={`submenu${openSubmenus.appointments ? " active" : ""
-                      }`}
+                    className={
+                      isActive(all_routes.doctorsappointments) ||
+                        isActive(all_routes.doctorsappointmentdetails)
+                        ? "active"
+                        : ""
+                    }
                   >
-                    <Link
-                      to="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleToggle("appointments");
-                      }}
-                    >
+                    <Link to={all_routes.doctorsappointments}>
                       <i className="ti ti-calendar-check" />
                       <span>Appointments</span>
-                      <span className="menu-arrow">
-                        <i
-                          className={
-                            openSubmenus.appointments
-                              ? "ti ti-chevron-down"
-                              : "ti ti-chevron-right"
-                          }
-                        />
-                      </span>
                     </Link>
-                    <ul
-                      style={{
-                        display: openSubmenus.appointments ? "block" : "none",
-                      }}
-                    >
-                      <li>
-                        <Link
-                          to={all_routes.doctorsappointments}
-                          className={
-                            isActive(all_routes.doctorsappointments) ||
-                              isActive(all_routes.doctorsappointmentdetails)
-                              ? "active"
-                              : ""
-                          }
-                        >
-                          Appointments
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to={all_routes.onlineconsultations}
-                          className={
-                            isActive(all_routes.onlineconsultations)
-                              ? "active"
-                              : ""
-                          }
-                        >
-                          Online Consultations
-                        </Link>
-                      </li>
-                    </ul>
                   </li>
                   <li
                     className={
@@ -196,18 +153,16 @@ const SidebarTwo = () => {
                       <span>My Schedule</span>
                     </Link>
                   </li>
-                  <li
-                    className={
-                      isActive(all_routes.doctorsprescriptions)
-                        ? "active"
-                        : isActive(all_routes.doctorsprescriptiondetails)
-                          ? "active"
-                          : ""
-                    }
-                  >
-                    <Link to={all_routes.doctorsprescriptions}>
-                      <i className="ti ti-prescription" />
-                      <span>Prescriptions</span>
+                  <li className={isActive(all_routes.doctorPatients) ? "active" : ""}>
+                    <Link to={all_routes.doctorPatients}>
+                      <i className="ti ti-users" />
+                      <span>My Patients</span>
+                    </Link>
+                  </li>
+                  <li className={isActive(all_routes.doctorAttendance) ? "active" : ""}>
+                    <Link to={all_routes.doctorAttendance}>
+                      <i className="ti ti-calendar-check" />
+                      <span>My Attendance</span>
                     </Link>
                   </li>
                   <li
@@ -272,18 +227,6 @@ const SidebarTwo = () => {
                           }
                         >
                           Change Password
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to={all_routes.doctorsnotificationsettings}
-                          className={
-                            isActive(all_routes.doctorsnotificationsettings)
-                              ? "active"
-                              : ""
-                          }
-                        >
-                          Notifications
                         </Link>
                       </li>
                     </ul>

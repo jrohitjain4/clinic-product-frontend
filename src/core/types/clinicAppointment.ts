@@ -56,6 +56,9 @@ export interface ClinicAppointment {
     followUpPaymentStatus?: string | null;
     reason?: string | null;
   }[];
+  isFollowUp?: boolean;
+  followUpStatus?: string | null;
+  paymentStatus?: string | null;
   followUpPaymentStatus?: string | null;
   createdAt?: string;
   updatedAt?: string;

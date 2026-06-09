@@ -25,6 +25,31 @@ const emptySchedule = (): ScheduleMap =>
 const DoctorSchedules = () => {
   const { doctors, loading: loadingDoctors } = useClinicDoctors();
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
+  const [user, setUser] = useState<any>(null);
+
+  // Initialize user
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
+  // Auto-select doctor ID from the list if current user is a doctor
+  useEffect(() => {
+    if (user?.role === "DOCTOR" && doctors.length > 0) {
+      const currentDoctor = doctors.find(
+        (d: any) =>
+          d.email === user.email ||
+          d.userId === user.id ||
+          d.id === user.id
+      );
+      if (currentDoctor && currentDoctor.id !== selectedDoctorId) {
+        setSelectedDoctorId(currentDoctor.id);
+      }
+    }
+  }, [doctors, user, selectedDoctorId]);
+
   const [schedules, setSchedules] = useState<ScheduleMap>(emptySchedule());
   const [activeDay, setActiveDay] = useState("Monday");
   const [editing, setEditing] = useState(false);
@@ -155,6 +180,25 @@ const DoctorSchedules = () => {
                 <h4 className="fw-bold mb-0">Doctor Schedule</h4>
               </div>
               <div className="text-end d-flex gap-2">
+                {user?.role === "DOCTOR" && selectedDoctorId && (
+                  <div className="d-flex gap-2">
+                    {!editing ? (
+                      <button className="btn btn-primary d-flex align-items-center gap-1 shadow-sm px-3" onClick={() => setEditing(true)}>
+                        <i className="ti ti-edit fs-16" /> Edit My Schedule
+                      </button>
+                    ) : (
+                      <>
+                        <button className="btn btn-success d-flex align-items-center gap-1 shadow-sm px-3" onClick={handleSave} disabled={saving}>
+                          {saving ? <span className="spinner-border spinner-border-sm me-1" /> : <i className="ti ti-device-floppy fs-16" />}
+                          Save Changes
+                        </button>
+                        <button className="btn btn-light border shadow-sm" onClick={() => { setEditing(false); loadSchedule(); }}>
+                          Cancel
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
                 <div className="dropdown">
                   <Link
                     to="#"
@@ -171,56 +215,58 @@ const DoctorSchedules = () => {
               </div>
             </div>
 
-            {/* Select Doctor */}
-            <div className="card mb-3">
-              <div className="card-body py-3">
-                <div className="row align-items-end g-3">
-                  <div className="col-lg-6 col-md-8">
-                    <label className="form-label fw-semibold mb-1">Select Doctor</label>
-                    <CommonSelect
-                      options={doctorOptions}
-                      className="select"
-                      placeholder={loadingDoctors ? "Loading doctors…" : "Choose a doctor to view/edit schedule"}
-                      isDisabled={loadingDoctors}
-                      value={doctorOptions.find((o: any) => o.value === selectedDoctorId) || null}
-                      onChange={(opt: any) => setSelectedDoctorId(opt?.value || "")}
-                    />
-                  </div>
-                  {selectedDoctorId && (
-                    <div className="col-auto d-flex gap-2">
-                      {!editing ? (
-                        <button
-                          className="btn btn-outline-primary d-flex align-items-center gap-1"
-                          onClick={() => setEditing(true)}
-                        >
-                          <i className="ti ti-edit fs-16" /> Edit Schedule
-                        </button>
-                      ) : (
-                        <>
-                          <button
-                            className="btn btn-primary d-flex align-items-center gap-1"
-                            onClick={handleSave}
-                            disabled={saving}
-                          >
-                            {saving ? (
-                              <><span className="spinner-border spinner-border-sm me-1" /> Saving…</>
-                            ) : (
-                              <><i className="ti ti-device-floppy fs-16" /> Save Schedule</>
-                            )}
-                          </button>
-                          <button
-                            className="btn btn-light border"
-                            onClick={() => { setEditing(false); loadSchedule(); }}
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      )}
+            {/* Select Doctor Card (Admin only) */}
+            {user?.role !== "DOCTOR" && (
+              <div className="card mb-3 shadow-sm border-0">
+                <div className="card-body py-3">
+                  <div className="row align-items-end g-3">
+                    <div className="col-lg-6 col-md-8">
+                      <label className="form-label fw-semibold mb-1">Select Doctor</label>
+                      <CommonSelect
+                        options={doctorOptions}
+                        className="select"
+                        placeholder={loadingDoctors ? "Loading doctors…" : "Choose a doctor to view/edit schedule"}
+                        isDisabled={loadingDoctors}
+                        value={doctorOptions.find((o: any) => o.value === selectedDoctorId) || null}
+                        onChange={(opt: any) => setSelectedDoctorId(opt?.value || "")}
+                      />
                     </div>
-                  )}
+                    {selectedDoctorId && (
+                      <div className="col-auto d-flex gap-2">
+                        {!editing ? (
+                          <button
+                            className="btn btn-outline-primary d-flex align-items-center gap-1"
+                            onClick={() => setEditing(true)}
+                          >
+                            <i className="ti ti-edit fs-16" /> Edit Schedule
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              className="btn btn-primary d-flex align-items-center gap-1"
+                              onClick={handleSave}
+                              disabled={saving}
+                            >
+                              {saving ? (
+                                <><span className="spinner-border spinner-border-sm me-1" /> Saving…</>
+                              ) : (
+                                <><i className="ti ti-device-floppy fs-16" /> Save Schedule</>
+                              )}
+                            </button>
+                            <button
+                              className="btn btn-light border"
+                              onClick={() => { setEditing(false); loadSchedule(); }}
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Schedule Display */}
             {!selectedDoctorId ? (

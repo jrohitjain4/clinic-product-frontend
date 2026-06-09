@@ -109,6 +109,8 @@ import DoctorsProfileSettings from "../components/pages/doctor-modules/doctors-p
 import DoctorsReviews from "../components/pages/doctor-modules/doctors-reviews/doctorsReviews";
 import DoctorSchedules from "../components/pages/doctor-modules/doctors-schedules/doctorSchedules";
 import OnlineConsultations from "../components/pages/doctor-modules/online-consultations/onlineConsultations";
+import MyPatients from "../components/pages/doctor-modules/my-patients/MyPatients";
+import MyAttendance from "../components/pages/doctor-modules/my-attendance/MyAttendance";
 import ExpenseCategory from "../components/pages/finance-accounts-module/expenses/expenseCategory";
 import ExpensesList from "../components/pages/finance-accounts-module/expenses/expenses";
 import IncomeList from "../components/pages/finance-accounts-module/income";
@@ -375,6 +377,16 @@ export const publicRoutes = [
   {
     path: routes.doctorspasswordsettings,
     element: <DoctorsPasswordSettings />,
+    route: Route,
+  },
+  {
+    path: routes.doctorPatients,
+    element: <MyPatients />,
+    route: Route,
+  },
+  {
+    path: routes.doctorAttendance,
+    element: <MyAttendance />,
     route: Route,
   },
   {

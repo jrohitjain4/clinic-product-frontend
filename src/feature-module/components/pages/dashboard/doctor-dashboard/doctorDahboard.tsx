@@ -8,6 +8,7 @@ import SCol6Chart from "./charts/scol6";
 import SCol7Chart from "./charts/scol7";
 import CircleChart2 from "./charts/circleChart2";
 import { apiPost, apiGet } from "../../../../../core/utils/apiClient";
+import { all_routes } from "../../../../routes/all_routes";
 
 const DoctorDahboard = () => {
   const [marking, setMarking] = useState(false);
@@ -105,7 +106,7 @@ const DoctorDahboard = () => {
           {/* row start */}
           <div className="row g-2">
             {/* col start */}
-            <div className="col-xl-4 d-flex">
+            <div className="col-xl-6 d-flex">
               <div className="card shadow-sm flex-fill w-100">
                 <div className="card-body">
                   <div className="d-flex align-items-center justify-content-between mb-3">
@@ -134,36 +135,9 @@ const DoctorDahboard = () => {
             </div>
             {/* col end */}
             {/* col start */}
-            <div className="col-xl-4 d-flex">
-              <div className="card shadow-sm flex-fill w-100">
-                <div className="card-body">
-                  <div className="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                      <p className="mb-1">Online Consultations</p>
-                      <div className="d-flex align-items-center gap-1">
-                        <h3 className="fw-bold mb-0">{dashData?.stats?.onlineConsultations || 0}</h3>
-                        <span className={`badge fw-medium bg-${(dashData?.stats?.onlineChange || 0) >= 0 ? "success" : "danger"} flex-shrink-0`}>
-                          {(dashData?.stats?.onlineChange || 0) >= 0 ? "+" : ""}{dashData?.stats?.onlineChange || 0}%
-                        </span>
-                      </div>
-                    </div>
-                    <span className="avatar border border-danger text-danger rounded-2 flex-shrink-0">
-                      <i className="ti ti-users fs-20" />
-                    </span>
-                  </div>
-                  <div className="d-flex align-items-end">
-                    <SCol6Chart />
-                    <span className={`badge fw-medium badge-soft-${(dashData?.stats?.onlineChange || 0) >= 0 ? "success" : "danger"} flex-shrink-0 ms-2`}>
-                      {(dashData?.stats?.onlineChange || 0) >= 0 ? "+" : ""}{dashData?.stats?.onlineChange || 0}% <i className={`ti ti-arrow-${(dashData?.stats?.onlineChange || 0) >= 0 ? "up" : "down"} ms-1`} />
-                    </span>
-                    <p className="ms-1 fs-13 text-truncate">in last 7 Days </p>
-                  </div>
-                </div>
-              </div>
-            </div>
             {/* col end */}
             {/* col start */}
-            <div className="col-xl-4 d-flex">
+            <div className="col-xl-6 d-flex">
               <div className="card shadow-sm flex-fill w-100">
                 <div className="card-body">
                   <div className="d-flex align-items-center justify-content-between mb-3">
@@ -280,18 +254,14 @@ const DoctorDahboard = () => {
                         </div>
                       </div>
                       <div className="my-3 border-bottom pb-3">
-                        <Link to="#" className="btn btn-primary w-100">
+                        <Link to={all_routes.doctorsappointmentdetails.replace(":id", dashData.todayAppointment.id)} className="btn btn-primary w-100">
                           Start Appointment
                         </Link>
                       </div>
                       <div className="d-flex align-items-center gap-2">
                         <Link to="#" className="btn btn-dark w-100">
                           <i className="ti ti-brand-hipchat me-1" />
-                          Chat Now
-                        </Link>
-                        <Link to="#" className="btn btn-outline-white w-100">
-                          <i className="ti ti-video me-1" />
-                          Video Consutation
+                          Chat with Patient
                         </Link>
                       </div>
                     </>
@@ -436,7 +406,7 @@ const DoctorDahboard = () => {
                             <td className="fw-semibold text-dark">—</td>
                             <td>
                               <Link
-                                to="#"
+                                to={all_routes.doctorsappointmentdetails.replace(":id", apt.id)}
                                 className="shadow-sm fs-14 d-inline-flex border rounded-2 p-1 me-1"
                               >
                                 <i className="ti ti-calendar-plus" />

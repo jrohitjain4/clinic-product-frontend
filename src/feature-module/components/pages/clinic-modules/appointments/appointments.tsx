@@ -61,7 +61,7 @@ const Appointments = () => {
       confirmed: appointments.filter(a => a.status === "Confirmed").length,
       checkedIn: appointments.filter(a => a.status === "Checked In").length,
       checkedOut: appointments.filter(a => a.status === "Checked Out").length,
-      followUp: appointments.filter(a => a.status === "Follow-up").length,
+      cancelled: appointments.filter(a => a.status === "Cancelled").length,
     };
   }, [appointments]);
 
@@ -353,19 +353,20 @@ const Appointments = () => {
       dataIndex: "Status",
       render: (text: string, record: any) => {
         const raw = record._raw;
-        const payStatus = raw?.followUpPaymentStatus;
         return (
           <div className="d-flex flex-column align-items-start gap-1">
-            <span className={`badge ${statusBadgeClass(text)}`}>{text}</span>
-            {text === "Follow-up" && payStatus && (
-              <span className={`badge fs-10 ${payStatus === "Free" ? "badge-soft-success" : payStatus === "Paid" ? "badge-soft-info" : "badge-soft-danger"}`}>
-                {payStatus === "Free" ? "Free" : payStatus === "Paid" ? "₹ Paid" : "₹ Unpaid"}
-              </span>
-            )}
-            {raw?.parentAppointment?.appointmentCode && (
-              <small className="text-muted fs-10">
-                <i className="ti ti-link me-1" />{raw.parentAppointment.appointmentCode}
-              </small>
+            <span className={`badge ${statusBadgeClass(text)} mb-1`}>{text}</span>
+            {raw?.isFollowUp && (
+              <div className="d-flex flex-column gap-1">
+                <span className={`badge fs-10 px-2 py-1 ${raw.paymentStatus === "Free" ? "badge-soft-success text-success" : "badge-soft-info text-info border-info-subtle"}`} style={{ border: '1px solid currentColor', opacity: 0.85 }}>
+                  {raw.followUpStatus || "Follow-up"} ({raw.paymentStatus || "Unpaid"})
+                </span>
+                {raw?.parentAppointmentId && (
+                  <div className="d-flex align-items-center gap-1 text-muted ms-1" style={{ fontSize: '9px', fontWeight: 600, letterSpacing: '0.3px', textTransform: 'uppercase' }}>
+                    <i className="ti ti-link" /> Linked Visit
+                  </div>
+                )}
+              </div>
             )}
           </div>
         );
@@ -394,16 +395,16 @@ const Appointments = () => {
           <div className="d-flex align-items-center pb-3 mb-3 border-bottom overflow-hidden" style={{ gap: '16px' }}>
             <h4 className="fw-bold mb-0 flex-shrink-0">Appointment</h4>
             <div className="d-flex align-items-center flex-nowrap" style={{ gap: '16px' }}>
-              {["All", "Schedule", "Confirmed", "Checked In"].map((s) => (
+              {["All", "Schedule", "Confirmed", "Checked Out"].map((s) => (
                 <button
                   key={s}
                   className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-2 fs-12 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
                   onClick={() => setFilterStatus(s)}
                   style={{ borderRadius: '6px', height: '36px' }}
                 >
-                  {s === "Checked In" ? "Check-in" : s}
+                  {s === "Checked Out" ? "Check-out" : s}
                   <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>
-                    {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Follow-up" ? counts.followUp : counts.checkedIn}
+                    {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked Out" ? counts.checkedOut : appointments.filter(a => a.status === s).length}
                   </span>
                 </button>
               ))}
@@ -463,9 +464,7 @@ const Appointments = () => {
               <option value="All">All Status</option>
               <option value="Schedule">Schedule</option>
               <option value="Confirmed">Confirmed</option>
-              <option value="Checked In">Checked In</option>
               <option value="Checked Out">Checked Out</option>
-              <option value="Follow-up">Follow-up</option>
             </select>
           </div>
           <div className="mb-3">

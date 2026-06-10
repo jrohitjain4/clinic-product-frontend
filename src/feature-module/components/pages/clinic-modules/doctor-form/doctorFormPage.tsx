@@ -1115,23 +1115,23 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         </div>
                         <div className="col-lg-6">
                           <div className="mb-3">
-                            <label className="form-label">City <span className="text-danger ms-1">*</span></label>
-                            <CommonSelect
-                              options={City}
-                              className="select"
-                              value={findSelectOption(City, city) || City[0]}
-                              onChange={(opt: any) => setCity(opt?.value || "")}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6">
-                          <div className="mb-3">
                             <label className="form-label">State <span className="text-danger ms-1">*</span></label>
                             <CommonSelect
                               options={State}
                               className="select"
                               value={findSelectOption(State, stateVal) || State[0]}
                               onChange={(opt: any) => setStateVal(opt?.value || "")}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-lg-6">
+                          <div className="mb-3">
+                            <label className="form-label">City <span className="text-danger ms-1">*</span></label>
+                            <CommonSelect
+                              options={City}
+                              className="select"
+                              value={findSelectOption(City, city) || City[0]}
+                              onChange={(opt: any) => setCity(opt?.value || "")}
                             />
                           </div>
                         </div>
@@ -1398,7 +1398,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                     </div>
 
                     {/* -- Actions ---------------------------- */}
-                    <div className="mt-2 pb-2 d-flex justify-content-center gap-3 border-top pt-3">
+                    <div className="mt-2 pb-2 d-flex justify-content-end gap-3 border-top pt-3">
                       <Link
                         to={all_routes.doctors}
                         className="btn btn-outline-secondary btn-lg px-5 d-flex align-items-center gap-2"

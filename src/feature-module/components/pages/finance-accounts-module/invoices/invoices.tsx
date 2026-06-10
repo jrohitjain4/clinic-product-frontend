@@ -34,9 +34,7 @@ const InvoicesList = () => {
     Image: inv.patient?.profileImage || "avatar-01.jpg",
     CreatedDate: dayjs(inv.invoiceDate).format("DD MMM YYYY"),
     DueDate: dayjs(inv.dueDate).format("DD MMM YYYY"),
-    Amount: `
-$$
-{inv.totalAmount.toFixed(2)}`,
+    Amount: `$${inv.totalAmount.toFixed(2)}`,
     Status: inv.paymentStatus,
     raw: inv,
   }));
@@ -67,25 +65,24 @@ $$
     {
       title: "Patient",
       dataIndex: "Patient",
-      render: (text: string, record: any) => (
-        <div className="d-flex align-items-center">
-          <div className="avatar avatar-sm me-2">
-            <img
-              src={
-                record.Image && record.Image !== "avatar-01.jpg"
-                  ? record.Image
-                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    record.Patient
-                  )}&background=4f46e5&color=fff&rounded=true&size=64`
-              }
-              alt={record.Patient}
-              className="rounded-circle"
-              style={{ width: 36, height: 36, objectFit: "cover" }}
-            />
+      render: (text: string, record: any) => {
+        const hasImage = record.Image && record.Image.trim() !== "" && record.Image !== "avatar-01.jpg" && !record.Image.includes("300x300") && !record.Image.includes("ui-avatars.com");
+        const patientImg = hasImage ? record.Image : "assets/img/patient-placeholder.png";
+
+        return (
+          <div className="d-flex align-items-center">
+            <div className="avatar avatar-sm me-2">
+              <img
+                src={patientImg.startsWith('assets') || patientImg.startsWith('/uploads') || patientImg.startsWith('http') ? `/${patientImg.replace(/^\//, '')}` : `/${patientImg}`}
+                alt={record.Patient}
+                className="rounded-circle border"
+                style={{ width: 36, height: 36, objectFit: "cover" }}
+              />
+            </div>
+            <span className="text-dark fw-medium">{text}</span>
           </div>
-          <span className="text-dark fw-medium">{text}</span>
-        </div>
-      ),
+        );
+      },
       sorter: (a: any, b: any) => a.Patient.localeCompare(b.Patient),
     },
     {
@@ -106,12 +103,13 @@ $$
     {
       title: "Amount",
       dataIndex: "Amount",
-      render: (text: string) => (
-        <span className="fw-semibold text-dark">{text}</span>
+      render: (text: string, record: any) => (
+        <span className={`fw-semibold ${record.Status === 'Paid' ? 'text-success' : 'text-dark'}`}>
+          ₹{record.raw.totalAmount.toLocaleString()}
+        </span>
       ),
       sorter: (a: any, b: any) =>
-        parseFloat(a.Amount.replace("$", "")) -
-        parseFloat(b.Amount.replace("$", "")),
+        a.raw.totalAmount - b.raw.totalAmount,
     },
     {
       title: "Status",

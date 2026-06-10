@@ -119,6 +119,17 @@ export const SidebarData = [
         dot: true,
         submenuItems: [],
       },
+      {
+        label: "Email Settings",
+        link: routes.superAdminEmailSettings,
+        submenu: false,
+        showSubRoute: false,
+        icon: "mail",
+        base: "settings",
+        materialicons: "start",
+        dot: true,
+        submenuItems: [],
+      },
     ],
   },
   {

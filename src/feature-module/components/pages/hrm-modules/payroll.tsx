@@ -5,12 +5,14 @@ import Datatable from "../../../../core/common/dataTable";
 import PayrollListModal from "./modal/payrollListModal";
 import { usePayroll } from "../../../../core/hooks/usePayroll";
 import { useClinicStaff } from "../../../../core/hooks/useClinicStaff";
+import { useClinicDoctors } from "../../../../core/hooks/useClinicDoctors";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
 
 const PayrollList = () => {
   const { payrolls, refetch, loading, error } = usePayroll();
   const { staffs } = useClinicStaff();
+  const { doctors } = useClinicDoctors();
   const [selectedPayroll, setSelectedPayroll] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [viewPayroll, setViewPayroll] = useState<any>(null);
@@ -21,45 +23,50 @@ const PayrollList = () => {
 
   const filteredData = useMemo(() => {
     return payrolls.filter((pr: any) => {
-      const matchRole = filterRole === "All" || pr.staff?.role === filterRole;
+      const employee = pr.staff || pr.doctor;
+      const matchRole = filterRole === "All" || (employee?.role || (pr.doctor ? "Doctor" : "")) === filterRole;
       const matchStatus =
         filterStatus === "All" ||
         (pr.displayStatus || pr.status) === filterStatus;
       const matchDate =
-        !filterDate || dayjs(pr.createdAt).isSame(filterDate, "day");
+        !filterDate || dayjs(pr.salaryDate).isSame(filterDate, "day");
       return matchRole && matchStatus && matchDate;
     });
   }, [payrolls, filterRole, filterStatus, filterDate]);
 
-  const data = filteredData.map((pr: any, index: number) => ({
-    key: pr.id,
-    id: pr.id,
-    S_No: index + 1,
-    Employee: pr.staff?.fullName || "Unknown",
-    Image:
-      pr.staff?.profileImage && !pr.staff.profileImage.startsWith("http")
-        ? pr.staff.profileImage
-        : null,
-    Email: pr.staff?.email || "--",
-    JoiningDate: pr.staff?.dateOfJoining
-      ? new Date(pr.staff.dateOfJoining).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-      : "--",
-    Role: pr.staff?.role || "--",
-    Salary: "₹" + pr.netSalary,
-    Status: pr.displayStatus || pr.status,
-    raw: pr,
-  }));
+  const data = filteredData.map((pr: any, index: number) => {
+    const employee = pr.staff || pr.doctor;
+    return {
+      key: pr.id,
+      id: pr.id,
+      S_No: index + 1,
+      Employee: employee?.fullName || "Unknown",
+      Image:
+        employee?.profileImage && !employee.profileImage.startsWith("http")
+          ? employee.profileImage
+          : null,
+      Email: employee?.email || "--",
+      SalaryDate: pr.salaryDate
+        ? new Date(pr.salaryDate).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+        : "--",
+      Role: employee?.role || (pr.doctor ? "Doctor" : "--"),
+      Salary: "₹" + pr.netSalary,
+      Status: pr.displayStatus || pr.status,
+      raw: pr,
+    };
+  });
 
   const roles = useMemo(() => {
     const list = Array.from(
-      new Set(payrolls.map((pr: any) => pr.staff?.role).filter(Boolean))
+      new Set(payrolls.map((pr: any) => (pr.staff?.role || (pr.doctor ? "Doctor" : null))).filter(Boolean))
     );
     return ["All", ...list];
   }, [payrolls]);
+
 
   const columns = [
     {
@@ -103,12 +110,12 @@ const PayrollList = () => {
       sorter: (a: any, b: any) => a.Email.localeCompare(b.Email),
     },
     {
-      title: "Joining Date",
-      dataIndex: "JoiningDate",
+      title: "Salary Date",
+      dataIndex: "SalaryDate",
       render: (text: string) => <span className="text-dark">{text}</span>,
       sorter: (a: any, b: any) =>
-        new Date(a.raw.staff.dateOfJoining).getTime() -
-        new Date(b.raw.staff.dateOfJoining).getTime(),
+        new Date(a.raw.salaryDate).getTime() -
+        new Date(b.raw.salaryDate).getTime(),
     },
     {
       title: "Role",
@@ -412,6 +419,7 @@ const PayrollList = () => {
         selectedPayroll={selectedPayroll}
         refetch={refetch}
         staffs={staffs}
+        doctors={doctors}
       />
 
       {/* ===== VIEW PAYROLL MODAL ===== */}
@@ -436,8 +444,8 @@ const PayrollList = () => {
                   <div className="row row-gap-2 mb-3">
                     <div className="col-md-6">
                       <div className="mb-0">
-                        <label className="form-label">Staff Name</label>
-                        <input type="text" className="form-control bg-light" disabled value={viewPayroll.staff?.fullName || ""} />
+                        <label className="form-label">Employee Name</label>
+                        <input type="text" className="form-control bg-light" disabled value={viewPayroll.staff?.fullName || viewPayroll.doctor?.fullName || ""} />
                       </div>
                     </div>
                     <div className="col-md-6">

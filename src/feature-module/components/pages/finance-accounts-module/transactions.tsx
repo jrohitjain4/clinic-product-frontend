@@ -1,66 +1,118 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router";
 import { useClinicInvoices } from "../../../../core/hooks/useClinicInvoices";
+import { usePayroll } from "../../../../core/hooks/usePayroll";
+import { useExpenses } from "../../../../core/hooks/useExpenses";
 import Datatable from "../../../../core/common/dataTable";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
 
 const TransactionsList = () => {
-  const { invoices, loading, error } = useClinicInvoices();
+  const { invoices, loading: invLoading, error: invError } = useClinicInvoices();
+  const { payrolls, loading: payLoading, error: payError } = usePayroll();
+  const { expenses, loading: expLoading, error: expError } = useExpenses();
+
+  const loading = invLoading || payLoading || expLoading;
+  const error = invError || payError || expError;
+
   const [filterPaymentMethod, setFilterPaymentMethod] = useState("All");
   const [filterDate, setFilterDate] = useState<dayjs.Dayjs | null>(null);
 
-  // Only show Paid invoices as Transactions
   const transactions = useMemo(() => {
-    return invoices.filter(
-      (inv) => inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed"
+    const invTrans = invoices
+      .filter((inv) => inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed")
+      .map((inv) => ({
+        id: inv.id,
+        code: inv.invoiceCode,
+        patientName: inv.patient ? `${inv.patient.firstName || ""} ${inv.patient.lastName || ""}`.trim() : "—",
+        image: inv.patient?.profileImage,
+        description: inv.items?.[0]?.description || "Invoice Payment",
+        date: inv.invoiceDate,
+        method: inv.paymentMethod || "—",
+        amount: inv.totalAmount,
+        status: inv.paymentStatus,
+        type: "INVOICE",
+        color: "success" // Green
+      }));
+
+    const payTrans = payrolls
+      .filter((p) => p.status === "Paid" || p.status === "Salary_Paid")
+      .map((p: any) => {
+        const employee = p.staff || p.doctor;
+        return {
+          id: p.id,
+          code: `PAY-${p.id.slice(0, 8).toUpperCase()}`,
+          patientName: employee?.fullName || "Staff",
+          image: employee?.profileImage,
+          description: `Salary Payment (${dayjs(p.salaryDate).format("MMM YYYY")})`,
+          date: p.createdAt,
+          method: "Bank Transfer",
+          amount: p.netSalary,
+          status: p.status,
+          type: "PAYROLL",
+          color: "danger" // Red
+        };
+      });
+
+    const expTrans = expenses
+      .filter((e) => e.status === "Paid" || e.status === "Approved")
+      .map((e) => ({
+        id: e.id,
+        code: `EXP-${e.id.slice(0, 8).toUpperCase()}`,
+        patientName: e.vendor || "Vendor",
+        image: null,
+        description: e.description || e.category?.name || "Expense",
+        date: e.expenseDate || e.createdAt,
+        method: e.paymentMethod || "—",
+        amount: e.amount,
+        status: e.status,
+        type: "EXPENSE",
+        color: "danger" // Red
+      }));
+
+    return [...invTrans, ...payTrans, ...expTrans].sort((a, b) =>
+      new Date(b.date).getTime() - new Date(a.date).getTime()
     );
-  }, [invoices]);
+  }, [invoices, payrolls, expenses]);
 
   const paymentMethods = useMemo(() => {
     const list = Array.from(
       new Set(
         transactions
-          .map((inv) => inv.paymentMethod)
-          .filter((method) => method && method !== "")
+          .map((t) => t.method)
+          .filter((method) => method && method !== "" && method !== "—")
       )
     );
     return ["All", ...list];
   }, [transactions]);
 
   const filteredData = useMemo(() => {
-    return transactions.filter((inv) => {
+    return transactions.filter((t) => {
       const matchPaymentMethod =
         filterPaymentMethod === "All" ||
-        inv.paymentMethod === filterPaymentMethod;
+        t.method === filterPaymentMethod;
       const matchDate =
-        !filterDate || dayjs(inv.invoiceDate).isSame(filterDate, "day");
+        !filterDate || dayjs(t.date).isSame(filterDate, "day");
 
       return matchPaymentMethod && matchDate;
     });
   }, [transactions, filterPaymentMethod, filterDate]);
 
-  const data = filteredData.map((inv, index) => {
-    const patientName = inv.patient
-      ? `${inv.patient.firstName || ""} ${inv.patient.lastName || ""}`.trim()
-      : "—";
-    const description = inv.items?.[0]?.description || "Invoice";
-
+  const data = filteredData.map((t, index) => {
     return {
-      key: inv.id,
-      id: inv.id,
+      key: `${t.type}-${t.id}`,
+      id: t.id,
       S_No: index + 1,
-      TransactionID: inv.invoiceCode,
-      Patient: patientName,
-      Image: inv.patient?.profileImage || "avatar-01.jpg",
-      Description: description,
-      PaidDate: dayjs(inv.invoiceDate).format("DD MMM YYYY"),
-      PaymentMethod: inv.paymentMethod || "—",
-      Amount: `
-$$
-{inv.totalAmount.toFixed(2)}`,
-      Status: inv.paymentStatus,
-      raw: inv,
+      TransactionID: t.code,
+      Patient: t.patientName,
+      Image: t.image || "avatar-01.jpg",
+      Description: t.description,
+      PaidDate: dayjs(t.date).format("DD MMM YYYY"),
+      PaymentMethod: t.method || "—",
+      Amount: `₹${t.amount.toLocaleString()}`,
+      Status: t.status,
+      color: t.color,
+      raw: t,
     };
   });
 
@@ -86,31 +138,26 @@ $$
         a.TransactionID.localeCompare(b.TransactionID),
     },
     {
-      title: "Patient",
+      title: "Name / Patient",
       dataIndex: "Patient",
-      render: (text: string, record: any) => (
-        <div className="d-flex align-items-center">
-          <div className="avatar avatar-sm me-2">
-            {record.Image && record.Image !== "avatar-01.jpg" ? (
+      render: (text: string, record: any) => {
+        const hasImage = record.Image && record.Image.trim() !== "" && record.Image !== "avatar-01.jpg" && !record.Image.includes("300x300") && !record.Image.includes("ui-avatars.com");
+        const patientImg = hasImage ? record.Image : "assets/img/patient-placeholder.png";
+
+        return (
+          <div className="d-flex align-items-center">
+            <div className="avatar avatar-sm me-2">
               <img
-                src={record.Image}
+                src={patientImg.startsWith('assets') || patientImg.startsWith('/uploads') || patientImg.startsWith('http') ? `/${patientImg.replace(/^\//, '')}` : `/${patientImg}`}
                 alt={text}
-                className="rounded-circle"
+                className="rounded-circle border"
                 style={{ width: 36, height: 36, objectFit: "cover" }}
               />
-            ) : (
-              <span className="avatar avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-13">
-                {text
-                  ?.split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .toUpperCase() || "?"}
-              </span>
-            )}
+            </div>
+            <span className="text-dark fw-medium">{text}</span>
           </div>
-          <span className="text-dark fw-medium">{text}</span>
-        </div>
-      ),
+        );
+      },
       sorter: (a: any, b: any) => a.Patient.localeCompare(b.Patient),
     },
     {
@@ -120,12 +167,12 @@ $$
       sorter: (a: any, b: any) => a.Description.localeCompare(b.Description),
     },
     {
-      title: "Paid Date",
+      title: "Transaction Date",
       dataIndex: "PaidDate",
       render: (text: string) => <span className="text-dark">{text}</span>,
       sorter: (a: any, b: any) =>
-        new Date(a.raw.invoiceDate).getTime() -
-        new Date(b.raw.invoiceDate).getTime(),
+        new Date(a.raw.date).getTime() -
+        new Date(b.raw.date).getTime(),
     },
     {
       title: "Payment Method",
@@ -137,18 +184,18 @@ $$
     {
       title: "Amount",
       dataIndex: "Amount",
-      render: (text: string) => (
-        <span className="fw-semibold text-dark">{text}</span>
+      render: (text: string, record: any) => (
+        <span className={`fw-semibold text-${record.color}`}>{text}</span>
       ),
       sorter: (a: any, b: any) =>
-        parseFloat(a.Amount.replace("$", "")) -
-        parseFloat(b.Amount.replace("$", "")),
+        parseFloat(a.Amount.replace("₹", "").replace(/,/g, "")) -
+        parseFloat(b.Amount.replace("₹", "").replace(/,/g, "")),
     },
     {
       title: "Status",
       dataIndex: "Status",
-      render: (text: string) => (
-        <span className="badge border badge-soft-success border-success fw-medium">
+      render: (text: string, record: any) => (
+        <span className={`badge border badge-soft-${record.color} border-${record.color} fw-medium`}>
           {text}
         </span>
       ),

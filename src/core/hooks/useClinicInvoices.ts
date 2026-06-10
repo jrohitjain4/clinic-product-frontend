@@ -52,5 +52,19 @@ export const useClinicInvoices = () => {
 
     const refetch = useCallback(() => fetchInvoices({ silent: true }), [fetchInvoices]);
 
-    return { invoices, loading, error, refetch, reload: fetchInvoices };
+    const getInvoiceById = useCallback(async (id: string): Promise<ClinicInvoice | null> => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(apiUrl(`/api/invoices/${id}`), {
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+            });
+            if (!res.ok) return null;
+            return await res.json();
+        } catch (e) {
+            console.error("Error fetching invoice:", e);
+            return null;
+        }
+    }, []);
+
+    return { invoices, loading, error, refetch, reload: fetchInvoices, getInvoiceById };
 };

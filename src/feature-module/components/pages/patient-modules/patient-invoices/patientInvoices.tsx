@@ -38,67 +38,110 @@ const PatientInvoices = () => {
 
   const columns = [
     {
+      title: "Sr No",
+      dataIndex: "id",
+      render: (_: any, __: any, index: number) => (
+        <span className="fw-bold d-flex align-items-center text-muted">
+          <i className="ti ti-hash me-1 fs-10" />
+          {String(index + 1).padStart(2, "0")}
+        </span>
+      ),
+    },
+    {
       title: "Invoice ID",
       dataIndex: "Invoice_ID",
+      render: (text: string, record: any) => (
+        <Link
+          to={`${all_routes.patientinvoicedetails}?id=${record.id}`}
+          className="text-primary fw-bold d-flex align-items-center"
+        >
+          <i className="ti ti-file-invoice me-2 fs-14" />
+          {text}
+        </Link>
+      ),
       sorter: (a: any, b: any) => a.Invoice_ID.localeCompare(b.Invoice_ID),
     },
     {
       title: "Description",
       dataIndex: "Description",
+      render: (text: string) => (
+        <span className="text-dark fw-medium d-flex align-items-center">
+          <i className="ti ti-notes me-2 text-muted fs-14" />
+          {text}
+        </span>
+      ),
       sorter: (a: any, b: any) => a.Description.localeCompare(b.Description),
     },
     {
       title: "Created Date",
       dataIndex: "Created_Date",
+      render: (text: string) => (
+        <span className="text-muted fw-medium d-flex align-items-center">
+          <i className="ti ti-calendar-plus me-2 fs-14" />
+          {text}
+        </span>
+      ),
       sorter: (a: any, b: any) => a.Created_Date.localeCompare(b.Created_Date),
     },
     {
       title: "Due Date",
       dataIndex: "Due_Date",
+      render: (text: string) => (
+        <span className="text-danger fw-medium d-flex align-items-center">
+          <i className="ti ti-calendar-event me-2 fs-14" />
+          {text}
+        </span>
+      ),
       sorter: (a: any, b: any) => a.Due_Date.localeCompare(b.Due_Date),
     },
     {
       title: "Amount",
       dataIndex: "Amount",
+      render: (text: string) => (
+        <span className="text-dark fw-bold d-flex align-items-center">
+          <i className="ti ti-wallet me-2 text-success fs-14" />
+          {text}
+        </span>
+      ),
       sorter: (a: any, b: any) => a.Amount.localeCompare(b.Amount),
     },
     {
       title: "Status",
       dataIndex: "Status",
-      render: (text: string) => (
-        <span
-          className={`badge ${text === "Paid"
-            ? "badge-soft-success"
-            : text === "Partially Paid"
-              ? "badge-soft-warning"
-              : "badge-soft-danger"
-            } d-inline-flex align-items-center`}
-        >
-          <i className="ti ti-point-filled me-1" />
-          {text}
-        </span>
-      ),
+      render: (text: string) => {
+        let badgeClass = "badge-soft-danger border-danger";
+        if (text === "Paid") badgeClass = "badge-soft-success border-success";
+        else if (text === "Partially Paid") badgeClass = "badge-soft-warning border-warning";
+
+        return (
+          <span className={`badge border ${badgeClass} d-inline-flex align-items-center fw-bold`}>
+            <i className={`ti ti-circle-filled me-1 fs-8`} />
+            {text}
+          </span>
+        );
+      },
       sorter: (a: any, b: any) => a.Status.localeCompare(b.Status),
     },
     {
-      title: "",
-      render: () => (
-        <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
-          <>
-            <Link to="#" data-bs-toggle="dropdown">
-              <i className="ti ti-dots-vertical" />
-            </Link>
-            <ul className="dropdown-menu p-2">
-              <li>
-                <Link
-                  to={all_routes.patientinvoicedetails}
-                  className="dropdown-item d-flex align-items-center"
-                >
-                  View
-                </Link>
-              </li>
-            </ul>
-          </>
+      title: "Action",
+      align: 'center' as const,
+      render: (record: any) => (
+        <div className="d-flex align-items-center justify-content-center gap-2">
+          <Link
+            to={`${all_routes.patientinvoicedetails}?id=${record.id}`}
+            className="btn btn-icon btn-sm btn-soft-primary border"
+            title="View Invoice"
+          >
+            <i className="ti ti-eye fs-16" />
+          </Link>
+
+          <button
+            className="btn btn-icon btn-sm btn-soft-info border"
+            title="Download PDF"
+            onClick={() => { /* Placeholder for download function */ }}
+          >
+            <i className="ti ti-download fs-16" />
+          </button>
         </div>
       ),
     },
@@ -180,7 +223,7 @@ const PatientInvoices = () => {
                       <Datatable
                         columns={columns}
                         dataSource={data}
-                        Selection={false}
+                        Selection={true}
                         searchText={searchText}
                       />
                     )}

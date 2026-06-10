@@ -1,284 +1,201 @@
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
+import { useState, useEffect } from "react";
+import { useClinicInvoices } from "../../../../../core/hooks/useClinicInvoices";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
+import dayjs from "dayjs";
 
 const PatientInvoiceDetails = () => {
-  return (
-    <>
-      {/* ========================
-			Start Page Content
-		========================= */}
-      <div className="page-wrapper">
-        {/* Start Content */}
-        <div className="content pb-0">
-          {/* start row*/}
-          <div className="row">
-            <div className="col-lg-10 mx-auto">
-              {/* start page header */}
-              <div className="d-flex align-items-sm-center flex-sm-row flex-column mb-4">
-                <div className="flex-grow-1">
-                  <h6 className="fs-14 fw-semibold mb-0 d-flex align-items-center ">
-                    <Link to={all_routes.patientinvoices} className="me-1">
-                      <i className="ti ti-chevron-left" /> Patient Invoice
-                      Details
-                    </Link>
-                  </h6>
-                </div>
-              </div>
-              {/* end page header */}
-              <div className="card">
-                <div className="card-body">
-                  {/* Items */}
-                  <div className="d-flex align-items-center justify-content-between border-1 border-bottom pb-3 mb-3">
-                    <div className="invoice-logo">
-                      <ImageWithBasePath
-                        src="assets/img/logo.svg"
-                        className="logo-white"
-                        alt="logo"
-                      />
-                      <ImageWithBasePath
-                        src="assets/img/logo-white.svg"
-                        className="logo-dark"
-                        alt="logo"
-                      />
-                    </div>
+    const [searchParams] = useSearchParams();
+    const id = searchParams.get("id");
+    const { getInvoiceById } = useClinicInvoices();
+    const [invoice, setInvoice] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
-                    <span className="badge bg-danger text-white fs-12">
-                      Due in 8 days
-                    </span>
-                  </div>
-                  {/* start row */}
-                  <div className="row pb-3 border-1 border-bottom mb-4">
-                    <div className="col-lg-4">
-                      <h5 className="mb-2 fs-16 fw-bold"> Invoice Details </h5>
-                      <p className="text-body mb-1">
-                        Invoice Number :{" "}
-                        <span className="text-dark">INV0025</span>
-                      </p>
-                      <p className="text-body mb-1">
-                        Issued On :{" "}
-                        <span className="text-dark">25 Jan 2025</span>
-                      </p>
-                      <p className="text-body mb-1">
-                        Due Date :{" "}
-                        <span className="text-dark">31 Jan 2025</span>
-                      </p>
-                      <p className="text-body mb-0">
-                        Recurring Invoice :
-                        <span className="text-dark"> Monthly</span>
-                      </p>
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-4">
-                      <h5 className="mb-2 fs-16 fw-bold"> Invoice Form </h5>
-                      <p className="text-dark fw-medium mb-1">
-                        {" "}
-                        Andrew Fletcher
-                      </p>
-                      <p className="text-body mb-1 pe-5">
-                        <span className="text-body">
-                          5754 Airport Rd Coosada, AL, 36020 United States
-                        </span>
-                      </p>
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-4 text-lg-end">
-                      <h5 className="mb-2 fs-16 fw-bold"> Invoice To </h5>
-                      <p className="text-dark fw-medium mb-1">
-                        {" "}
-                        Andrew Fletcher{" "}
-                      </p>
-                      <p className="m-0 ps-5">
-                        299 Star Trek Drive, Florida, 3240, United States
-                      </p>
-                    </div>
-                    {/* end col */}
-                  </div>
-                  {/* end row */}
-                  {/* Items */}
-                  <div className="mb-4">
-                    <h6 className="mb-3 fs-16 fw-bold">
-                      {" "}
-                      Products/Service Items{" "}
-                    </h6>
-                    <div className="">
-                      {/* Table List */}
-                      <div className="table-responsive border bg-white">
-                        <table className="table table-nowrap">
-                          <thead className="table-light">
-                            <tr>
-                              <th>#</th>
-                              <th>Product/Item</th>
-                              <th>Description</th>
-                              <th> Unit Cost</th>
-                              <th> Quantity </th>
-                              <th> Amount</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td>1</td>
-                              <td>Full body checkup</td>
-                              <td>
-                                Complete health screening covering all major
-                                systems
-                              </td>
-                              <td> $400 </td>
-                              <td> 1 </td>
-                              <td> $400 </td>
-                            </tr>
-                            <tr>
-                              <td>2</td>
-                              <td>Blood Test </td>
-                              <td>
-                                Routine blood analysis to assess overall health
-                                status
-                              </td>
-                              <td> $250</td>
-                              <td> 1 </td>
-                              <td> $250 </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      {/* /Table List */}
-                    </div>
-                  </div>
-                  {/* etart row */}
-                  <div className="row pb-3 mb-3 border-1 border-bottom">
-                    <div className="col-lg-6">
-                      <div className="">
-                        <h6 className="mb-2 fs-16 fw-bold"> Bank Details</h6>
-                        <p className="text-body mb-1">
-                          Bank Name :{" "}
-                          <span className="text-dark"> ABC Bank </span>
-                        </p>
-                        <p className="text-body mb-1">
-                          Account Number :
-                          <span className="text-dark"> 782459739212 </span>
-                        </p>
-                        <p className="text-body mb-1">
-                          IFSC Code :
-                          <span className="text-dark"> ABC0001345 </span>
-                        </p>
-                        <p className="text-body mb-1">
-                          Payment Reference :
-                          <span className="text-dark"> INV-20250220-001 </span>
-                        </p>
-                      </div>
-                    </div>
-                    {/* end col */}
-                    <div className="col-lg-6">
-                      <div className="">
-                        <div className="d-flex align-items-center justify-content-between mb-2">
-                          <h6 className="fs-14 fw-medium text-body">Amount</h6>
-                          <h6 className="fs-14 fw-semibold text-dark">
-                            $1,793.12
-                          </h6>
-                        </div>
-                        <div className="d-flex align-items-center justify-content-between mb-2">
-                          <h6 className="fs-14 fw-medium text-body">
-                            CGST (9%)
-                          </h6>
-                          <h6 className="fs-14 fw-semibold text-dark">$18</h6>
-                        </div>
-                        <div className="d-flex align-items-center justify-content-between mb-2">
-                          <h6 className="fs-14 fw-medium text-body">
-                            SGST (9%)
-                          </h6>
-                          <h6 className="fs-14 fw-semibold text-dark">$18</h6>
-                        </div>
-                        <div className="d-flex align-items-center justify-content-between border-bottom pb-3 mb-3">
-                          <h6 className="fs-14 fw-medium text-body">
-                            Discount
-                          </h6>
-                          <h6 className="fs-14 fw-semibold text-danger">$18</h6>
-                        </div>
-                        <div className="d-flex align-items-center justify-content-between mb-2">
-                          <h6 className="fs-18 fw-bold">Total (USD)</h6>
-                          <h6 className="fs-18 fw-bold">$1,972.43</h6>
-                        </div>
-                        <div>
-                          <h6 className="fs-14 text-body mb-1">
-                            Total in words
-                          </h6>
-                          <p className="fw-semibold text-dark">
-                            Dollar One thousand nine hundred seventy-two
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    {/* end col */}
-                  </div>
-                  {/* end row */}
-                  {/* Items */}
-                  <div className="pb-3 mb-3 border-1 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
-                    <div>
-                      <div className=" mb-3">
-                        <h6 className="mb-1 fs-14 fw-semibold">
-                          Terms and Conditions
-                        </h6>
-                        <p>
-                          {" "}
-                          The Payment must be returned in the same condition.{" "}
-                        </p>
-                      </div>
-                      <div className="">
-                        <h6 className="mb-1 fs-14 fw-semibold"> Notes </h6>
-                        <p>
-                          All charges are final and include applicable taxes,
-                          fees, and additional costs.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="">
-                      <ImageWithBasePath
-                        src="assets/img/icons/signature-img.svg"
-                        alt=""
-                        className="img-fluid "
-                      />
-                      <h6 className="fs-14 fw-semibold"> Ted M. Davis </h6>
-                      <p className="fs-13 fw-normal">Manager </p>
-                    </div>
-                  </div>
-                  <div className="text-center d-flex align-items-center justify-content-center">
-                    <Link
-                      to=""
-                      className="btn btn-md btn-dark me-2 d-flex align-items-center"
-                    >
-                      <i className="ti ti-printer me-1" /> Print
-                    </Link>
-                    <Link
-                      to=""
-                      className="btn btn-md btn-primary d-flex align-items-center"
-                    >
-                      <i className="ti ti-download me-1" /> Download
-                    </Link>
-                  </div>
+    useEffect(() => {
+        if (!id) { setLoading(false); return; }
+        getInvoiceById(id)
+            .then((data) => setInvoice(data))
+            .catch(() => setInvoice(null))
+            .finally(() => setLoading(false));
+    }, [id, getInvoiceById]);
+
+    const handlePrint = () => window.print();
+
+    if (loading) {
+        return (
+            <div className="page-wrapper">
+                <div className="content d-flex justify-content-center align-items-center" style={{ minHeight: "60vh" }}>
+                    <div className="spinner-border text-primary" />
                 </div>
-              </div>
             </div>
-          </div>
-          {/* end row*/}
-        </div>
-        {/* End Content */}
-        {/* Footer Start */}
-        <div className="footer text-center bg-white p-2 border-top">
-          <p className="text-dark mb-0">
-            2025 ©
-            <Link to="#" className="link-primary">
-              Docyari
-            </Link>
-            , All Rights Reserved
-          </p>
-        </div>
-        {/* Footer End */}
-      </div>
-      {/* ========================
-			End Page Content
-		========================= */}
-    </>
-  );
+        );
+    }
+
+    if (!invoice) {
+        return (
+            <div className="page-wrapper">
+                <div className="content text-center py-5">
+                    <i className="ti ti-file-off fs-1 text-muted" />
+                    <p className="text-muted mt-2">Invoice not found.</p>
+                    <Link to={all_routes.patientinvoices} className="btn btn-primary btn-sm">
+                        Back to Invoices
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    const patient = invoice.patient || {};
+    const clinic = invoice.clinic || {};
+    const items = invoice.items || [];
+
+    const dueDate = dayjs(invoice.dueDate);
+    const diffDays = dueDate.diff(dayjs(), 'day');
+
+    return (
+        <>
+            <div className="page-wrapper">
+                <div className="content">
+                    <div className="row">
+                        <div className="col-lg-10 mx-auto">
+                            <div className="card shadow-none border rounded-3 overflow-hidden">
+                                <div className="card-body p-4 p-md-5">
+                                    {/* Top Header Section */}
+                                    <div className="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+                                        <h3 className="text-primary fw-bold mb-0">{invoice.invoiceCode || "#INV-0000"}</h3>
+                                        <div className="d-flex gap-2">
+                                            <span className={`badge ${invoice.paymentStatus === 'Paid' ? 'bg-success' : 'bg-warning'} px-3 py-2 fs-12 fw-bold text-uppercase`}>
+                                                {invoice.paymentStatus || 'Status'}
+                                            </span>
+                                            {diffDays > 0 && (
+                                                <span className="badge bg-danger px-3 py-2 fs-12 fw-bold text-uppercase">
+                                                    Due in {diffDays} days
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Information Grid */}
+                                    <div className="row mb-5 gy-4">
+                                        <div className="col-lg-4 col-md-6">
+                                            <h5 className="text-dark fw-bold mb-3">Invoice Details</h5>
+                                            <div className="d-flex flex-column gap-1">
+                                                <p className="text-muted mb-0 fs-14">Invoice Number : <span className="text-dark fw-bold">{invoice.invoiceCode}</span></p>
+                                                <p className="text-muted mb-0 fs-14">Issued On : <span className="text-dark fw-bold">{dayjs(invoice.invoiceDate).format("DD MMM YYYY")}</span></p>
+                                                <p className="text-muted mb-0 fs-14">Due Date : <span className="text-dark fw-bold">{dayjs(invoice.dueDate).format("DD MMM YYYY")}</span></p>
+                                                <p className="text-muted mb-0 fs-14">Payment Method : <span className="text-dark fw-bold">{invoice.paymentMethod || "Cash"}</span></p>
+                                            </div>
+                                        </div>
+                                        <div className="col-lg-4 col-md-6">
+                                            <h5 className="text-dark fw-bold mb-3">Clinic</h5>
+                                            <div className="d-flex flex-column gap-1">
+                                                <p className="text-dark fw-bold mb-0 fs-14">{clinic.name || invoice.clinicName || "Your Clinic"}</p>
+                                                <p className="text-muted mb-0 fs-14">{clinic.landingPage?.address || "Billing address on file"}</p>
+                                            </div>
+                                        </div>
+                                        <div className="col-lg-4 col-md-6 text-lg-end">
+                                            <h5 className="text-dark fw-bold mb-3">Invoice To</h5>
+                                            <div className="d-flex flex-column gap-1">
+                                                <p className="text-dark fw-bold mb-0 fs-14">{patient.firstName} {patient.lastName}</p>
+                                                <p className="text-muted mb-0 fs-14">{patient.email || "patient@docyari.com"}</p>
+                                                <p className="text-muted mb-0 fs-14">{patient.phone || "9871234560"}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Items List */}
+                                    <div className="mb-5">
+                                        <h5 className="text-dark fw-bold mb-4">Products / Service Items</h5>
+                                        <div className="table-responsive">
+                                            <table className="table table-bordered align-middle">
+                                                <thead className="bg-light">
+                                                    <tr>
+                                                        <th className="py-3 text-center fw-bold text-dark" style={{ width: '60px' }}>#</th>
+                                                        <th className="py-3 fw-bold text-dark">Product / Item</th>
+                                                        <th className="py-3 fw-bold text-dark">Description</th>
+                                                        <th className="py-3 text-center fw-bold text-dark">Unit Cost</th>
+                                                        <th className="py-3 text-center fw-bold text-dark">Quantity</th>
+                                                        <th className="py-3 text-end fw-bold text-dark px-4">Amount</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {items.length > 0 ? items.map((item: any, i: number) => (
+                                                        <tr key={i}>
+                                                            <td className="py-3 text-center text-muted fw-medium">{i + 1}</td>
+                                                            <td className="py-3 text-dark fw-medium">{item.name || item.item || "Standard Consultation"}</td>
+                                                            <td className="py-3 text-muted">{item.description || "Consultation Services"}</td>
+                                                            <td className="py-3 text-center text-muted">${(item.unitCost || 0).toFixed(2)}</td>
+                                                            <td className="py-3 text-center text-muted">{item.quantity || 1}</td>
+                                                            <td className="py-3 text-end fw-bold text-dark px-4">${(item.amount || 0).toFixed(2)}</td>
+                                                        </tr>
+                                                    )) : (
+                                                        <tr>
+                                                            <td colSpan={6} className="text-center py-4 text-muted">No items found</td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    {/* Calculation Section */}
+                                    <div className="row justify-content-end pb-5 mt-4">
+                                        <div className="col-lg-5 col-md-7">
+                                            <div className="d-flex flex-column gap-3">
+                                                <div className="d-flex align-items-center justify-content-between">
+                                                    <span className="text-muted fw-bold">Sub Total</span>
+                                                    <span className="text-dark fw-bold fs-16">${(invoice.subTotal || 0).toFixed(2)}</span>
+                                                </div>
+                                                <div className="d-flex align-items-center justify-content-between">
+                                                    <span className="text-muted fw-bold">Tax ({invoice.tax || 0}%)</span>
+                                                    <span className="text-dark fw-bold fs-16">${((invoice.subTotal || 0) * (invoice.tax || 0) / 100).toFixed(2)}</span>
+                                                </div>
+                                                <div className="d-flex align-items-center justify-content-between border-top pt-4 mt-2">
+                                                    <h4 className="text-dark fw-bold mb-0">Total (USD)</h4>
+                                                    <h3 className="text-primary fw-bold mb-0">${(invoice.totalAmount || 0).toFixed(2)}</h3>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Footer Actions */}
+                                    <div className="d-flex align-items-center justify-content-center gap-3 d-print-none border-top pt-5">
+                                        <button onClick={handlePrint} className="btn btn-dark px-5 py-2 fw-bold d-flex align-items-center">
+                                            <i className="ti ti-printer me-2 fs-18" /> Print
+                                        </button>
+                                        <button onClick={() => { /* Download logic */ }} className="btn btn-primary px-5 py-2 fw-bold d-flex align-items-center shadow-primary">
+                                            <i className="ti ti-download me-2 fs-18" /> Download
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="footer text-center bg-white p-3 border-top mt-5">
+                    <p className="text-dark mb-0">
+                        2025 Â© <span className="text-primary fw-bold">Docyari</span>, All Rights Reserved
+                    </p>
+                </div>
+            </div>
+
+            <style>{`
+        .shadow-primary { box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39); }
+        .bg-light { background-color: #f8f9fa !important; }
+        .text-dark { color: #1f2937 !important; }
+        .border-bottom { border-bottom: 1px solid #e5e7eb !important; }
+        .table-bordered { border-color: #e5e7eb !important; }
+        @media print {
+          .page-wrapper { margin: 0; padding: 0; background: white; }
+          .card { border: none !important; }
+          .d-print-none, .footer { display: none !important; }
+        }
+      `}</style>
+        </>
+    );
 };
 
 export default PatientInvoiceDetails;

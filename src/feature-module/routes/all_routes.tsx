@@ -60,7 +60,7 @@ export const all_routes = {
   //Patient
   patientdetails: "/patient/patient-details",
   patientappointments: "/patient/patient-appointments",
-  patientappointmentdetails: "/patient/patient-appointment-details",
+  patientappointmentdetails: "/patient/patient-appointment-details/:id",
   patientdoctors: "/patient/patient-doctors",
   patientPrescriptions: "/patient/patient-prescriptions",
   patientinvoices: "/patient/patient-invoices",
@@ -103,6 +103,7 @@ export const all_routes = {
   refundPolicyAdmin: "/super-admin/refund-policy",
   demoBookings: "/super-admin/demo-bookings",
   contactSettingsAdmin: "/super-admin/contact-settings",
+  superAdminEmailSettings: "/super-admin/email-settings",
 
   //Application routes
   chat: "/application/chat",

@@ -10,6 +10,7 @@ interface PayrollModalProps {
   selectedPayroll?: any;
   refetch: () => void;
   staffs?: any[];
+  doctors?: any[];
 }
 
 const STATUS_OPTIONS = [
@@ -18,10 +19,13 @@ const STATUS_OPTIONS = [
   { value: "Pending", label: "Pending" }
 ];
 
-const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetch, staffs = [] }) => {
-  const staffOptions = staffs.map((s) => ({ value: s.id, label: s.fullName }));
+const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetch, staffs = [], doctors = [] }) => {
+  const staffOptions = [
+    ...staffs.map((s) => ({ value: `staff_${s.id}`, label: `${s.fullName} (Staff)` })),
+    ...doctors.map((d) => ({ value: `doctor_${d.id}`, label: `${d.fullName} (Doctor)` }))
+  ];
 
-  const [staffId, setStaffId] = useState<any>(null);
+  const [employeeId, setEmployeeId] = useState<any>(null);
   const [status, setStatus] = useState<any>({ value: "Paid", label: "Paid" });
   const [basicSalary, setBasicSalary] = useState(0);
   const [da, setDa] = useState(0);
@@ -37,6 +41,7 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
   const [labourWelfare, setLabourWelfare] = useState(0);
   const [otherDeductions, setOtherDeductions] = useState(0);
 
+  const [salaryDate, setSalaryDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
 
   const netSalary = (basicSalary + da + hra + conveyance + medicalAllowance + otherEarnings) -
@@ -44,7 +49,8 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
 
   useEffect(() => {
     if (selectedPayroll) {
-      setStaffId(staffOptions.find(o => o.value === selectedPayroll.staffId) || null);
+      const targetVal = selectedPayroll.staffId ? `staff_${selectedPayroll.staffId}` : `doctor_${selectedPayroll.doctorId}`;
+      setEmployeeId(staffOptions.find(o => o.value === targetVal) || null);
       const curStatus = selectedPayroll.status || "Paid";
       setStatus(STATUS_OPTIONS.find(o => o.value === curStatus) || { value: curStatus, label: curStatus });
       setBasicSalary(selectedPayroll.basicSalary || 0);
@@ -60,30 +66,38 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
       setProfTax(selectedPayroll.profTax || 0);
       setLabourWelfare(selectedPayroll.labourWelfare || 0);
       setOtherDeductions(selectedPayroll.otherDeductions || 0);
+      setSalaryDate(selectedPayroll.salaryDate ? new Date(selectedPayroll.salaryDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
     } else {
       resetForm();
     }
-  }, [selectedPayroll]);
+  }, [selectedPayroll, staffs, doctors]);
 
   const resetForm = () => {
-    setStaffId(null);
+    setEmployeeId(null);
     setStatus({ value: "Paid", label: "Paid" });
     setBasicSalary(0); setDa(0); setHra(0); setConveyance(0); setMedicalAllowance(0); setOtherEarnings(0);
     setTds(0); setEsi(0); setPf(0); setProfTax(0); setLabourWelfare(0); setOtherDeductions(0);
+    setSalaryDate(new Date().toISOString().split('T')[0]);
   };
 
-  const constructPayload = () => ({
-    staffId: staffId?.value,
-    netSalary,
-    basicSalary, da, hra, conveyance, medicalAllowance, otherEarnings,
-    tds, esi, pf, profTax, labourWelfare, otherDeductions,
-    status: status?.value || "Paid"
-  });
+  const constructPayload = () => {
+    const isDoctor = employeeId?.value?.startsWith("doctor_");
+    const rawId = employeeId?.value?.split("_")[1];
+    return {
+      staffId: isDoctor ? null : rawId,
+      doctorId: isDoctor ? rawId : null,
+      netSalary,
+      basicSalary, da, hra, conveyance, medicalAllowance, otherEarnings,
+      tds, esi, pf, profTax, labourWelfare, otherDeductions,
+      status: status?.value || "Paid",
+      salaryDate: salaryDate
+    };
+  };
 
   const handleAdd = async (e: any) => {
     e.preventDefault();
-    if (!staffId?.value) {
-      toast.error("Please select a staff member");
+    if (!employeeId?.value) {
+      toast.error("Please select an employee");
       return;
     }
     setLoading(true);
@@ -101,8 +115,8 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
 
   const handleEdit = async (e: any) => {
     e.preventDefault();
-    if (!selectedPayroll || !staffId?.value) {
-      toast.error("Please select a staff member");
+    if (!selectedPayroll || !employeeId?.value) {
+      toast.error("Please select an employee");
       return;
     }
     setLoading(true);
@@ -116,6 +130,7 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
     }
     setLoading(false);
   };
+
 
   const handleDelete = async (e: any) => {
     e.preventDefault();
@@ -147,12 +162,12 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                 <div className="row row-gap-2 mb-3">
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label className="form-label mb-1 text-dark fs-14 fw-medium">Select Staff <span className="text-danger">*</span></label>
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">Select Employee <span className="text-danger">*</span></label>
                       <CommonSelect
                         options={staffOptions}
                         className="select"
-                        value={staffId}
-                        onChange={(val: any) => setStaffId(val)}
+                        value={employeeId}
+                        onChange={(val: any) => setEmployeeId(val)}
                         placeholder="Select Employee"
                       />
                     </div>
@@ -166,6 +181,12 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                         value={status}
                         onChange={(val: any) => setStatus(val)}
                       />
+                    </div>
+                  </div>
+                  <div className="col-md-12">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">Salary Month / Date <span className="text-danger">*</span></label>
+                      <input type="date" className="form-control" value={salaryDate} onChange={(e) => setSalaryDate(e.target.value)} required />
                     </div>
                   </div>
                   <div className="col-md-12">
@@ -222,12 +243,12 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                 <div className="row row-gap-2 mb-3">
                   <div className="col-md-6">
                     <div className="mb-3">
-                      <label className="form-label mb-1 text-dark fs-14 fw-medium">Select Staff <span className="text-danger">*</span></label>
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">Select Employee <span className="text-danger">*</span></label>
                       <CommonSelect
                         options={staffOptions}
                         className="select"
-                        value={staffId}
-                        onChange={(val: any) => setStaffId(val)}
+                        value={employeeId}
+                        onChange={(val: any) => setEmployeeId(val)}
                         placeholder="Select Employee"
                       />
                     </div>
@@ -241,6 +262,12 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                         value={status}
                         onChange={(val: any) => setStatus(val)}
                       />
+                    </div>
+                  </div>
+                  <div className="col-md-12">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">Salary Month / Date <span className="text-danger">*</span></label>
+                      <input type="date" className="form-control" value={salaryDate} onChange={(e) => setSalaryDate(e.target.value)} required />
                     </div>
                   </div>
                   <div className="col-md-12">

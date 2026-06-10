@@ -30,7 +30,7 @@ export const useClinicDoctors = (clinicId?: string) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [clinicId]);
 
   useEffect(() => {
     fetchDoctors();

@@ -87,12 +87,13 @@ const ExpensesList = () => {
     {
       title: "Amount",
       dataIndex: "Amount",
-      render: (text: string) => (
-        <span className="fw-semibold text-dark">{text}</span>
+      render: (text: string, record: any) => (
+        <span className={`fw-semibold ${record.Status === 'Approved' ? 'text-danger' : 'text-dark'}`}>
+          ₹{record.raw.amount.toLocaleString()}
+        </span>
       ),
       sorter: (a: any, b: any) =>
-        parseFloat(a.Amount.replace("$", "")) -
-        parseFloat(b.Amount.replace("$", "")),
+        a.raw.amount - b.raw.amount,
     },
     {
       title: "Date",

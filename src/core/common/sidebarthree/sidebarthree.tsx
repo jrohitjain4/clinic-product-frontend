@@ -20,7 +20,6 @@ const Sidebarthree = () => {
     const isSettingsRoute = [
       routes.patientprofilesettings,
       routes.patientpasswordsettings,
-      routes.patientnotificationssettings,
     ].includes(location.pathname);
     setOpenSubmenus((prev) => ({
       ...prev,
@@ -150,14 +149,6 @@ const Sidebarthree = () => {
                     </Link>
                   </li>
                   <li
-                    className={isActive(routes.patientdoctors, "/patient/doctor-details/") ? "active" : ""}
-                  >
-                    <Link to={routes.patientdoctors}>
-                      <i className="ti ti-stethoscope" />
-                      <span>Doctors</span>
-                    </Link>
-                  </li>
-                  <li
                     className={
                       isActive(routes.patientPrescriptions) ||
                         isActive(routes.patientprescriptiondetails)
@@ -235,18 +226,7 @@ const Sidebarthree = () => {
                           Change Password
                         </Link>
                       </li>
-                      <li>
-                        <Link
-                          to={routes.patientnotificationssettings}
-                          className={
-                            isActive(routes.patientnotificationssettings)
-                              ? "active"
-                              : ""
-                          }
-                        >
-                          Notifications
-                        </Link>
-                      </li>
+
                     </ul>
                   </li>
                 </ul>

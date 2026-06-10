@@ -7,6 +7,7 @@ import Datatable from "../../../../core/common/dataTable";
 import StaffsModal from "./modal/staffsModal";
 import { DatePicker, Modal } from "antd";
 import type { Dayjs } from "dayjs";
+import { ViewModal } from "../../../../core/common/modal/ViewModal";
 import { useClinicStaff } from "../../../../core/hooks/useClinicStaff";
 import type { ClinicStaff } from "../../../../core/types/clinicStaff";
 import { staffToTableRow } from "../../../../core/utils/staffForm";
@@ -402,107 +403,35 @@ const StaffsList = () => {
       <StaffsModal selected={selected} onSelect={setSelected} onSaved={refetch} />
 
       {/* ===== VIEW STAFF MODAL ===== */}
-      <div id="view_staff" className="modal fade" role="dialog">
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
-            <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title fw-bold">View Staff Profile</h5>
-              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" onClick={() => setViewStaff(null)}></button>
-            </div>
-            <div className="modal-body">
-              {viewStaff && (
-                <>
-                  <h6 className="fw-bold mb-3">Staff Information</h6>
-                  <div className="mb-3 d-flex align-items-center">
-                    <label className="form-label me-3">Profile Image</label>
-                    <div className="avatar avatar-lg bg-light p-1 rounded shadow-sm">
-                      <ImageWithBasePath
-                        src={viewStaff.profileImage?.startsWith('/') ? viewStaff.profileImage : `assets/img/users/${viewStaff.profileImage || 'avatar-21.jpg'}`}
-                        alt={viewStaff.fullName}
-                        className="rounded"
-                      />
-                    </div>
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Name</label>
-                    <input type="text" className="form-control bg-light" disabled value={viewStaff.fullName || ""} />
-                  </div>
-                  <div className="row mb-3 border-bottom pb-3">
-                    <div className="col-lg-6">
-                      <div className="mb-3 mb-lg-0">
-                        <label className="form-label">Role</label>
-                        <input type="text" className="form-control bg-light" disabled value={viewStaff.role || ""} />
-                      </div>
-                    </div>
-                    <div className="col-lg-6">
-                      <div className="mb-0">
-                        <label className="form-label">Designation</label>
-                        <input type="text" className="form-control bg-light" disabled value={viewStaff.designationName || viewStaff.designation?.name || "--"} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <h6 className="fw-bold mb-3">Contact Information</h6>
-                  <div className="row row-gap-2">
-                    <div className="col-md-6">
-                      <label className="form-label">Phone Number</label>
-                      <input type="text" className="form-control bg-light" disabled value={viewStaff.phone || ""} />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Email</label>
-                      <input type="text" className="form-control bg-light" disabled value={viewStaff.email || ""} />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">DOB</label>
-                      <div className="input-icon-end position-relative">
-                        <input type="text" className="form-control bg-light w-100" disabled value={viewStaff.dob ? new Date(viewStaff.dob).toLocaleDateString("en-GB") : "--"} />
-                        <span className="input-icon-addon">
-                          <i className="ti ti-calendar" />
-                        </span>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Gender</label>
-                      <input type="text" className="form-control bg-light" disabled value={viewStaff.gender || ""} />
-                    </div>
-                    <div className="col-md-12">
-                      <label className="form-label">Blood Group</label>
-                      <input type="text" className="form-control bg-light" disabled value={viewStaff.bloodGroup || "--"} />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Address 1</label>
-                      <input type="text" className="form-control bg-light" disabled value={viewStaff.address1 || ""} />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Address 2</label>
-                      <input type="text" className="form-control bg-light" disabled value={viewStaff.address2 || ""} />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Country</label>
-                      <input type="text" className="form-control bg-light" disabled value={viewStaff.country || ""} />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">State</label>
-                      <input type="text" className="form-control bg-light" disabled value={viewStaff.state || ""} />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">City</label>
-                      <input type="text" className="form-control bg-light" disabled value={viewStaff.city || ""} />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Pincode</label>
-                      <input type="text" className="form-control bg-light" disabled value={viewStaff.pincode || ""} />
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="d-flex justify-content-end px-4 pb-4 pt-3 mt-4 border-top">
-              <button type="button" className="btn btn-primary px-5" data-bs-dismiss="modal" onClick={() => setViewStaff(null)} style={{ borderRadius: '6px' }}>Close</button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ViewModal
+        id="view_staff"
+        title="Staff Profile"
+        subtitle="View staff information"
+        headerIcon={<i className="ti ti-user-circle" />}
+        highlightTitle={viewStaff?.fullName || "Staff Member"}
+        highlightStatus={
+            <span className="badge bg-success-transparent text-success fw-bold px-2 py-1" style={{ fontSize: "10px", borderRadius: "10px" }}>
+                <i className="ti ti-point-filled me-1"></i>Active
+            </span>
+        }
+        highlightRightText={viewStaff?.role || "Staff"}
+        highlightRightSubText="Role"
+        highlightColor="#f3e8ff"
+        details={[
+            { icon: <i className="ti ti-mail" />, label: "Email", value: viewStaff?.email || "—" },
+            { icon: <i className="ti ti-phone" />, label: "Phone", value: viewStaff?.phone || "—" },
+            { icon: <i className="ti ti-briefcase" />, label: "Designation", value: viewStaff?.designationName || viewStaff?.designation?.name || "—" },
+            { icon: <i className="ti ti-gender-intergender" />, label: "Gender", value: viewStaff?.gender || "—" },
+            { icon: <i className="ti ti-calendar" />, label: "Date of Birth", value: viewStaff?.dob ? new Date(viewStaff.dob).toLocaleDateString("en-GB") : "—" },
+            { icon: <i className="ti ti-droplet" />, label: "Blood Group", value: viewStaff?.bloodGroup || "—" },
+            { icon: <i className="ti ti-map-pin" />, label: "Address", value: [viewStaff?.address1, viewStaff?.address2, viewStaff?.city, viewStaff?.state, viewStaff?.country, viewStaff?.pincode].filter(Boolean).join(", ") || "—", fullWidth: true }
+        ]}
+        onEdit={() => {
+            setSelected(viewStaff);
+        }}
+        editLabel="Edit Staff"
+        editModalTarget="#edit_staff"
+      />
     </>
   );
 };

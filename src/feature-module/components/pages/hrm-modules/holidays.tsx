@@ -3,6 +3,7 @@ import EmptyState from "../../../../core/common/emptyState";
 import { Link } from "react-router";
 import Datatable from "../../../../core/common/dataTable";
 import HolidaysModal from "./modal/holidaysModal";
+import { ViewModal } from "../../../../core/common/modal/ViewModal";
 import { useHolidays } from "../../../../core/hooks/useHolidays";
 import { Calendar, DatePicker } from "antd";
 import type { Dayjs } from "dayjs";
@@ -405,111 +406,38 @@ const HolidaysList = () => {
       />
 
       {/* ===== VIEW HOLIDAY MODAL ===== */}
-      <div id="view_holiday" className="modal fade" role="dialog">
-        <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div
-            className="modal-content border-0 shadow-lg"
-            style={{ borderRadius: "12px", overflow: "hidden" }}
-          >
-            <div className="modal-header bg-info text-white">
-              <h5 className="modal-title fw-bold">Holiday Details</h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-                onClick={() => setViewHoliday(null)}
-              ></button>
-            </div>
-            <div className="modal-body">
-              {viewHoliday && (
-                <div className="row g-3">
-                  <div className="col-md-12">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Holiday Name
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewHoliday.title || ""}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Start Date
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={new Date(
-                        viewHoliday.date
-                      ).toLocaleDateString("en-GB")}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      End Date
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={
-                        viewHoliday.endDate
-                          ? new Date(viewHoliday.endDate).toLocaleDateString(
-                            "en-GB"
-                          )
-                          : "--"
-                      }
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-12">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Description
-                    </label>
-                    <textarea
-                      className="form-control bg-light"
-                      rows={3}
-                      value={viewHoliday.description || "No description provided"}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-12">
-                    <div className="p-3 bg-light rounded text-center fw-bold text-primary shadow-sm border">
-                      {(() => {
-                        const start = new Date(viewHoliday.date);
-                        const end = viewHoliday.endDate
-                          ? new Date(viewHoliday.endDate)
-                          : start;
-                        const diff =
-                          Math.ceil(
-                            Math.abs(end.getTime() - start.getTime()) /
-                            (1000 * 60 * 60 * 24)
-                          ) + 1;
-                        return diff > 1
-                          ? `${diff} Days Duration`
-                          : `${viewHoliday.dayName || "Single Day"}`;
-                      })()}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="modal-footer border-top pt-3">
-              <button
-                type="button"
-                className="btn btn-primary px-5"
-                data-bs-dismiss="modal"
-                onClick={() => setViewHoliday(null)}
-                style={{ borderRadius: "6px" }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ViewModal
+        id="view_holiday"
+        title="Holiday Details"
+        subtitle="View holiday information"
+        headerIcon={<i className="ti ti-calendar-event" />}
+        highlightTitle={viewHoliday?.title || "Unknown Holiday"}
+        highlightStatus={
+            <span className="badge bg-success-transparent text-success fw-bold px-2 py-1" style={{ fontSize: "10px", borderRadius: "10px" }}>
+                <i className="ti ti-point-filled me-1"></i>Active
+            </span>
+        }
+        highlightRightText="Public Holiday"
+        highlightRightSubText="Holiday Type"
+        highlightRightIcon={<i className="ti ti-calendar" />}
+        highlightColor="#dcfce7"
+        details={[
+            { icon: <i className="ti ti-calendar-minus" />, label: "Holiday Name", value: viewHoliday?.title || "—" },
+            { icon: <i className="ti ti-circle-check" />, label: "Status", value: <span className="badge bg-success-transparent text-success fw-bold px-2 py-1" style={{ fontSize: "10px", borderRadius: "10px" }}><i className="ti ti-point-filled me-1"></i>Active</span> },
+            { icon: <i className="ti ti-tag" />, label: "Holiday Type", value: "Public Holiday" },
+            { icon: <i className="ti ti-users" />, label: "Applicable To", value: "All Staff" },
+            { icon: <i className="ti ti-calendar-due" />, label: "Start Date", value: viewHoliday?.date ? dayjs(viewHoliday.date).format("DD/MM/YYYY (dddd)") : "—" },
+            { icon: <i className="ti ti-calendar-time" />, label: "Added On", value: dayjs(viewHoliday?.createdAt || new Date()).format("DD/MM/YYYY hh:mm A") },
+            { icon: <i className="ti ti-calendar-due" />, label: "End Date", value: viewHoliday?.endDate ? dayjs(viewHoliday.endDate).format("DD/MM/YYYY (dddd)") : viewHoliday?.date ? dayjs(viewHoliday.date).format("DD/MM/YYYY (dddd)") : "—" },
+            { icon: <i className="ti ti-user" />, label: "Added By", value: "Admin" },
+            { icon: <i className="ti ti-file-description" />, label: "Description", value: viewHoliday?.description || "No description provided", fullWidth: true }
+        ]}
+        onEdit={() => {
+            setSelectedHoliday(viewHoliday);
+        }}
+        editLabel="Edit Holiday"
+        editModalTarget="#edit_holiday"
+      />
     </>
   );
 };

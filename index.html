@@ -10,7 +10,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="author" content="Dreams Technologies" />
   <!-- Favicon -->
-  <link rel="shortcut icon" type="image/x-icon" href="/docyari-logo.svg" />
+  <link rel="icon" type="image/svg+xml" href="/docyari-logo.svg" />
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -125,7 +125,34 @@
 
 
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <style>
+      #initial-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #ffffff;
+        z-index: 9999;
+      }
+      #initial-loader img {
+        height: 180px; /* Increased height as requested */
+        animation: pulse 2s infinite ease-in-out;
+      }
+      @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.8; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+    </style>
+    <div id="initial-loader">
+      <img src="/docyari-logo.svg" alt="DocYori Loading..." />
+    </div>
+  </div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 

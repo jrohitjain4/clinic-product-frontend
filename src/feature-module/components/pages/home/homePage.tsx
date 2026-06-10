@@ -61,7 +61,7 @@ const HomePage = () => {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   return (
-    <div className="dy-landing">
+    <div className="dy-landing" style={{ overflowX: 'hidden' }}>
       <DemoBookingModal />
       <NavbarFront />
 
@@ -90,7 +90,7 @@ const HomePage = () => {
                 SMART CLINIC MANAGEMENT SOFTWARE
               </div>
               
-              <h1 style={{ color: '#0f172a', fontWeight: 800, fontSize: '3.2rem', lineHeight: 1.25, marginBottom: '20px', letterSpacing: '-1px' }}>
+              <h1 style={{ color: '#0f172a', fontWeight: 800, fontSize: 'clamp(2rem, 6vw, 3.2rem)', lineHeight: 1.25, marginBottom: '20px', letterSpacing: '-1px' }}>
                 Manage Your Entire Clinic<br />
                 From One <span style={{ color: '#0ea5e9' }}>Powerful Platform</span>
               </h1>
@@ -99,28 +99,28 @@ const HomePage = () => {
                 DocYori helps healthcare providers manage patients, appointments, doctors, staff, payroll, and finances while delivering a seamless patient experience.
               </p>
               
-              <div className="d-flex flex-wrap gap-3 mb-4">
-                <Link to={all_routes.registerbasic} className="btn btn-primary d-inline-flex align-items-center justify-content-center" style={{ padding: '12px 28px', fontSize: '16px', fontWeight: 600, borderRadius: '8px' }}>
-                  Start Free Trial <i className="ti ti-arrow-right ms-2" />
+              <div className="d-flex flex-nowrap gap-2 mb-4 w-100">
+                <Link to={all_routes.registerbasic} className="btn btn-primary d-inline-flex flex-fill align-items-center justify-content-center" style={{ padding: '12px 10px', fontSize: 'clamp(13px, 3vw, 16px)', fontWeight: 600, borderRadius: '8px', whiteSpace: 'nowrap' }}>
+                  Start Free Trial <i className="ti ti-arrow-right ms-1 ms-sm-2" />
                 </Link>
-                <Link to="#demo" className="btn btn-outline-info d-inline-flex align-items-center justify-content-center bg-white" style={{ padding: '12px 28px', fontSize: '16px', fontWeight: 600, borderRadius: '8px', border: '1px solid #0ea5e9', color: '#0ea5e9' }}>
-                  Book Live Demo <i className="ti ti-player-play ms-2" />
+                <Link to="#demo" className="btn btn-outline-info d-inline-flex flex-fill align-items-center justify-content-center bg-white" style={{ padding: '12px 10px', fontSize: 'clamp(13px, 3vw, 16px)', fontWeight: 600, borderRadius: '8px', border: '1px solid #0ea5e9', color: '#0ea5e9', whiteSpace: 'nowrap' }}>
+                  Book Live Demo <i className="ti ti-player-play ms-1 ms-sm-2" />
                 </Link>
               </div>
 
               {/* Features line */}
-              <div className="d-flex align-items-center gap-3 flex-wrap mt-2">
-                <div className="d-flex align-items-center gap-2 fs-13 fw-bold text-secondary">
-                  <i className="ti ti-circle-check fs-18 text-info" /> Easy Setup
+              <div className="d-flex align-items-center gap-2 gap-sm-3 flex-wrap mt-2">
+                <div className="d-flex align-items-center gap-1 fs-12 fs-sm-13 fw-bold text-secondary">
+                  <i className="ti ti-circle-check fs-16 fs-sm-18 text-info" /> Easy Setup
                 </div>
-                <div className="d-flex align-items-center gap-2 fs-13 fw-bold text-secondary">
-                  <i className="ti ti-shield-check fs-18 text-success" /> Secure Data
+                <div className="d-flex align-items-center gap-1 fs-12 fs-sm-13 fw-bold text-secondary">
+                  <i className="ti ti-shield-check fs-16 fs-sm-18 text-success" /> Secure Data
                 </div>
-                <div className="d-flex align-items-center gap-2 fs-13 fw-bold text-secondary">
-                  <i className="ti ti-users fs-18 text-primary" /> Multi-Doctor Support
+                <div className="d-flex align-items-center gap-1 fs-12 fs-sm-13 fw-bold text-secondary">
+                  <i className="ti ti-users fs-16 fs-sm-18 text-primary" /> Multi-Doctor Support
                 </div>
-                <div className="d-flex align-items-center gap-2 fs-13 fw-bold text-secondary">
-                  <i className="ti ti-cloud fs-18 text-info" /> Cloud Based
+                <div className="d-flex align-items-center gap-1 fs-12 fs-sm-13 fw-bold text-secondary">
+                  <i className="ti ti-cloud fs-16 fs-sm-18 text-info" /> Cloud Based
                 </div>
               </div>
             </div>
@@ -186,7 +186,7 @@ const HomePage = () => {
             </div>
             <div className="col-lg-7">
               <div className="fw-bold fs-12 mb-2 text-uppercase letter-spacing-1" style={{ color: '#2563eb' }}>ABOUT DOCYORI</div>
-              <h2 className="fw-bold mb-3 text-dark" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a', lineHeight: '1.25' }}>Everything Your Clinic<br/>Needs in <span style={{ color: '#0ea5e9' }}>One Platform</span></h2>
+              <h2 className="fw-bold mb-3 text-dark" style={{ fontSize: 'clamp(1.8rem, 5vw, 2.4rem)', fontWeight: 800, color: '#0f172a', lineHeight: '1.25' }}>Everything Your Clinic<br/>Needs in <span style={{ color: '#0ea5e9' }}>One Platform</span></h2>
               <p className="fs-15 lh-base mb-4" style={{ color: '#334155' }}>
                 DocYori is a complete clinic management solution designed for modern healthcare providers. Whether you operate a single clinic or manage multiple locations, DocYori helps simplify daily operations and improve patient care.
               </p>
@@ -208,7 +208,7 @@ const HomePage = () => {
       <section className="py-4" style={{ background: '#f8fafc' }}>
         <div className="container" style={{ maxWidth: '1320px' }}>
           <div className="fw-bold fs-12 mb-2 text-uppercase text-center letter-spacing-1" style={{ color: '#2563eb' }}>TAKE YOUR CLINIC ONLINE</div>
-          <h2 className="fw-bold text-center text-dark mb-5" style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a' }}>In 4 <span style={{ color: '#0ea5e9' }}>Simple Steps</span></h2>
+          <h2 className="fw-bold text-center text-dark mb-5" style={{ fontSize: 'clamp(1.8rem, 5vw, 2.2rem)', fontWeight: 800, color: '#0f172a' }}>In 4 <span style={{ color: '#0ea5e9' }}>Simple Steps</span></h2>
           
           <div className="row position-relative g-4">
             {/* Desktop Connecting Line */}
@@ -232,7 +232,7 @@ const HomePage = () => {
       <section className="py-4 bg-white">
         <div className="container" style={{ maxWidth: '1320px' }}>
           <div className="fw-bold fs-12 mb-2 text-uppercase text-center letter-spacing-1" style={{ color: '#2563eb' }}>OUR CORE MODULES</div>
-          <h2 className="fw-bold text-center text-dark mb-4" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>Powerful Modules Built For <span style={{ color: '#0ea5e9' }}>Modern Clinics</span></h2>
+          <h2 className="fw-bold text-center text-dark mb-4" style={{ fontSize: 'clamp(1.8rem, 5vw, 2.4rem)', fontWeight: 800, color: '#0f172a' }}>Powerful Modules Built For <span style={{ color: '#0ea5e9' }}>Modern Clinics</span></h2>
           
           <div className="d-flex flex-wrap flex-lg-nowrap gap-3">
             {MODULES.map((m, i) => (
@@ -253,7 +253,7 @@ const HomePage = () => {
       <section className="py-4" style={{ background: '#f8fafc' }}>
         <div className="container" style={{ maxWidth: '1320px' }}>
           <div className="fw-bold fs-12 mb-2 text-uppercase text-center letter-spacing-1" style={{ color: '#2563eb' }}>EVERYTHING INCLUDED</div>
-          <h2 className="fw-bold text-center text-dark mb-4" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>All The Features <span style={{ color: '#0ea5e9' }}>You Need</span></h2>
+          <h2 className="fw-bold text-center text-dark mb-4" style={{ fontSize: 'clamp(1.8rem, 5vw, 2.4rem)', fontWeight: 800, color: '#0f172a' }}>All The Features <span style={{ color: '#0ea5e9' }}>You Need</span></h2>
           
           <div className="row g-4">
             {/* HR Card */}
@@ -333,7 +333,7 @@ const HomePage = () => {
       <section className="py-4 bg-white">
         <div className="container" style={{ maxWidth: '1320px' }}>
           <div className="fw-bold fs-12 mb-2 text-uppercase text-center letter-spacing-1" style={{ color: '#2563eb' }}>WHY CHOOSE DOCYORI</div>
-          <h2 className="fw-bold text-center text-dark mb-4" style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0f172a' }}>Why Clinics Choose <span style={{ color: '#0ea5e9' }}>DocYori</span></h2>
+          <h2 className="fw-bold text-center text-dark mb-4" style={{ fontSize: 'clamp(1.8rem, 5vw, 2.4rem)', fontWeight: 800, color: '#0f172a' }}>Why Clinics Choose <span style={{ color: '#0ea5e9' }}>DocYori</span></h2>
           
           <div className="d-flex flex-wrap flex-lg-nowrap gap-3">
             {WHY.map((w, i) => (
@@ -354,7 +354,7 @@ const HomePage = () => {
             {/* Testimonials */}
             <div className="col-lg-7">
               <div className="fw-bold fs-12 mb-2 text-uppercase letter-spacing-1" style={{ color: '#2563eb' }}>TESTIMONIALS</div>
-              <h2 className="fw-bold mb-4 text-dark" style={{ fontSize: '2.2rem', fontWeight: 800, color: '#0f172a' }}>Trusted By <span style={{ color: '#0ea5e9' }}>Healthcare Professionals</span></h2>
+              <h2 className="fw-bold mb-4 text-dark" style={{ fontSize: 'clamp(1.8rem, 5vw, 2.2rem)', fontWeight: 800, color: '#0f172a' }}>Trusted By <span style={{ color: '#0ea5e9' }}>Healthcare Professionals</span></h2>
               <div className="row g-3">
                 {TESTIMONIALS.map((t, i) => (
                   <div key={i} className="col-md-4">

@@ -12,7 +12,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
     show,
     onHide,
     title = "Demo Request Submitted!",
-    message = "We will reach you before your preferred time."
+    message = "Our team will reach out to you shortly."
 }) => {
     return (
         <Modal show={show} onHide={onHide} centered backdrop="static" size="sm">

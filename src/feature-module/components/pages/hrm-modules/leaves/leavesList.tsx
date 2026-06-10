@@ -6,6 +6,7 @@ import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { useLeaves } from "../../../../../core/hooks/useLeaves";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
+import { ViewModal } from "../../../../../core/common/modal/ViewModal";
 dayjs.extend(isBetween);
 import { Modal, Input, DatePicker, Switch, Popconfirm } from "antd";
 import { toast } from "react-toastify";
@@ -640,171 +641,27 @@ const LeavesList = () => {
       </Modal>
 
       {/* ===== VIEW LEAVE DETAILS MODAL ===== */}
-      <div id="view_leave" className="modal fade" role="dialog">
-        <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div
-            className="modal-content border-0 shadow-lg"
-            style={{ borderRadius: "12px", overflow: "hidden" }}
-          >
-            <div className="modal-header bg-info text-white">
-              <h5 className="modal-title fw-bold">Leave Application Details</h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-                onClick={() => setViewRecord(null)}
-              ></button>
-            </div>
-            <div className="modal-body">
-              {viewRecord && (
-                <div className="row g-3">
-                  <div className="col-md-12 text-center mb-3">
-                    <div className="avatar avatar-xxl bg-light p-1 rounded-circle shadow-sm mx-auto">
-                      <ImageWithBasePath
-                        src={
-                          viewRecord.Image?.startsWith("/")
-                            ? viewRecord.Image
-                            : `assets/img/users/${viewRecord.Image || "avatar-21.jpg"}`
-                        }
-                        alt={viewRecord.Employee}
-                        className="rounded-circle"
-                      />
-                    </div>
-                    <h5 className="mt-2 fw-bold">{viewRecord.Employee}</h5>
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Leave Type
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewRecord.LeaveType || ""}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Status
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light fw-bold"
-                      value={viewRecord.Status || ""}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Start Date
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={dayjs(viewRecord.startDate).format("DD MMM YYYY")}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      End Date
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={dayjs(viewRecord.endDate).format("DD MMM YYYY")}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Total Days
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewRecord.Day || ""}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Applied On
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewRecord.AppliedOn || ""}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Payment Type
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={
-                        viewRecord.isPaid ? "Paid Leave" : "Unpaid Leave"
-                      }
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-12">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Reason
-                    </label>
-                    <textarea
-                      className="form-control bg-light"
-                      rows={2}
-                      value={viewRecord.reason || "No reason provided"}
-                      readOnly
-                    />
-                  </div>
-                  {viewRecord.rejectRemark && (
-                    <div className="col-md-12">
-                      <label className="form-label fw-bold small text-uppercase text-danger">
-                        Rejection Remark
-                      </label>
-                      <textarea
-                        className="form-control bg-danger-subtle text-danger border-danger-subtle"
-                        rows={2}
-                        value={viewRecord.rejectRemark}
-                        readOnly
-                      />
-                    </div>
-                  )}
-                  {viewRecord.adminNotes && (
-                    <div className="col-md-12">
-                      <label className="form-label fw-bold small text-uppercase text-info">
-                        Internal Admin Notes
-                      </label>
-                      <textarea
-                        className="form-control bg-info-subtle text-info border-info-subtle"
-                        rows={2}
-                        value={viewRecord.adminNotes}
-                        readOnly
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            <div className="modal-footer border-top pt-3">
-              <button
-                type="button"
-                className="btn btn-primary px-5"
-                data-bs-dismiss="modal"
-                onClick={() => setViewRecord(null)}
-                style={{ borderRadius: "6px" }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ViewModal
+        id="view_leave"
+        title="Leave Application Details"
+        subtitle="View leave information"
+        headerIcon={<i className="ti ti-calendar-off" />}
+        highlightTitle={viewRecord?.Employee || "Employee"}
+        highlightRightText={viewRecord?.Status || "Status"}
+        highlightRightSubText="Status"
+        highlightColor="#e0f2fe"
+        details={[
+            { icon: <i className="ti ti-category" />, label: "Leave Type", value: viewRecord?.LeaveType || "—" },
+            { icon: <i className="ti ti-calendar" />, label: "Start Date", value: viewRecord?.startDate ? dayjs(viewRecord.startDate).format("DD MMM YYYY") : "—" },
+            { icon: <i className="ti ti-calendar-event" />, label: "End Date", value: viewRecord?.endDate ? dayjs(viewRecord.endDate).format("DD MMM YYYY") : "—" },
+            { icon: <i className="ti ti-clock" />, label: "Total Days", value: viewRecord?.Day || "—" },
+            { icon: <i className="ti ti-calendar-plus" />, label: "Applied On", value: viewRecord?.AppliedOn || "—" },
+            { icon: <i className="ti ti-cash" />, label: "Payment Type", value: viewRecord?.isPaid ? "Paid Leave" : "Unpaid Leave" },
+            { icon: <i className="ti ti-file-description" />, label: "Reason", value: viewRecord?.reason || "No reason provided", fullWidth: true },
+            ...(viewRecord?.rejectRemark ? [{ icon: <i className="ti ti-x" />, label: "Rejection Remark", value: viewRecord?.rejectRemark, fullWidth: true }] : []),
+            ...(viewRecord?.adminNotes ? [{ icon: <i className="ti ti-notes" />, label: "Internal Admin Notes", value: viewRecord?.adminNotes, fullWidth: true }] : [])
+        ]}
+      />
     </>
   );
 };

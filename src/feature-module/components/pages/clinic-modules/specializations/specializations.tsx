@@ -7,6 +7,7 @@ import { useClinicSpecializations } from "../../../../../core/hooks/useClinicSpe
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { DatePicker } from "antd";
 import { Specialization, StatusActive } from "../../../../../core/common/selectOption";
+import { ViewModal } from "../../../../../core/common/modal/ViewModal";
 
 const Specializations = () => {
   const { specializations, refetch, loading, error } = useClinicSpecializations();
@@ -340,72 +341,27 @@ const Specializations = () => {
       <Modals selectedSpecialization={selectedSpecialization} refetch={refetch} />
 
       {/* ===== VIEW SPECIALIZATION MODAL ===== */}
-      <div id="view_specialization" className="modal fade" role="dialog">
-        <div className="modal-dialog modal-dialog-centered">
-          <div
-            className="modal-content border-0 shadow-lg"
-            style={{ borderRadius: "12px", overflow: "hidden" }}
-          >
-            <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title fw-bold">Specialization Details</h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-                onClick={() => setViewSpec(null)}
-              ></button>
-            </div>
-            <div className="modal-body">
-              {viewSpec && (
-                <>
-                  <div className="mb-3">
-                    <label className="form-label">
-                      Specialization
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewSpec.name || ""}
-                      readOnly
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Description</label>
-                    <textarea
-                      className="form-control bg-light"
-                      rows={3}
-                      value={viewSpec.description || ""}
-                      readOnly
-                    />
-                  </div>
-                  <div className="mb-0">
-                    <label className="form-label">
-                      Status
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewSpec.status || ""}
-                      readOnly
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="modal-footer border-top pt-3">
-              <button
-                type="button"
-                className="btn btn-primary px-5"
-                data-bs-dismiss="modal"
-                onClick={() => setViewSpec(null)}
-                style={{ borderRadius: "6px" }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ViewModal
+        id="view_specialization"
+        title="Specialization Details"
+        subtitle="View specialization information"
+        headerIcon={<i className="ti ti-stethoscope" />}
+        highlightTitle={viewSpec?.name || "Specialization"}
+        highlightStatus={
+            <span className={`badge border ${viewSpec?.status === "Active" ? "bg-success-transparent text-success border-success" : "bg-danger-transparent text-danger border-danger"} fw-bold px-2 py-1`} style={{ fontSize: "10px", borderRadius: "10px" }}>
+                <i className="ti ti-point-filled me-1"></i>{viewSpec?.status || "Active"}
+            </span>
+        }
+        highlightColor="#e0e7ff"
+        details={[
+            { icon: <i className="ti ti-file-description" />, label: "Description", value: viewSpec?.description || "No description provided", fullWidth: true }
+        ]}
+        onEdit={() => {
+            setSelectedSpecialization(viewSpec);
+        }}
+        editLabel="Edit Specialization"
+        editModalTarget="#edit_specialization"
+      />
     </>
   );
 };

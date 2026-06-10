@@ -1,10 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
+import EmptyState from "../../../../core/common/emptyState";
 import { Link } from "react-router";
 import SearchInput from "../../../../core/common/dataTable/dataTableSearch";
 import Datatable from "../../../../core/common/dataTable";
 import { DatePicker, Select } from "antd";
+import type { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { apiUrl } from "../../../../core/config/api";
+import { toast } from "react-toastify";
 
 interface Department {
   id: string;
@@ -23,6 +27,8 @@ const HrmDepartments = () => {
   const [error, setError] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState("All");
+  const [filterDatePreset, setFilterDatePreset] = useState("All");
+  const [customRange, setCustomRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
   const [filteredDepartments, setFilteredDepartments] = useState<Department[]>([]);
 
   // Add modal state
@@ -67,14 +73,36 @@ const HrmDepartments = () => {
     fetchDepartments();
   }, [fetchDepartments]);
 
-  // Filter departments based on status
+  // Filter departments based on status and date
   useEffect(() => {
     const filtered = departments.filter((dept) => {
       const matchStatus = filterStatus === "All" || dept.status === filterStatus;
-      return matchStatus;
+
+      let matchDate = true;
+      const itemDate = dayjs(dept.createdAt);
+
+      if (filterDatePreset === "Today") {
+        matchDate = itemDate.isSame(dayjs(), "day");
+      } else if (filterDatePreset === "Tomorrow") {
+        matchDate = itemDate.isSame(dayjs().add(1, "day"), "day");
+      } else if (filterDatePreset === "7 Days") {
+        matchDate = itemDate.isAfter(dayjs().subtract(7, "days")) && itemDate.isBefore(dayjs().add(1, "day"), "day");
+      } else if (filterDatePreset === "Custom") {
+        if (customRange[0] && customRange[1]) {
+          matchDate = itemDate.isAfter(customRange[0].startOf("day")) && itemDate.isBefore(customRange[1].endOf("day"));
+        }
+      }
+
+      return matchStatus && matchDate;
     });
     setFilteredDepartments(filtered);
-  }, [departments, filterStatus]);
+  }, [departments, filterStatus, filterDatePreset, customRange]);
+
+  const clearFilters = () => {
+    setFilterStatus("All");
+    setFilterDatePreset("All");
+    setCustomRange([null, null]);
+  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,6 +127,7 @@ const HrmDepartments = () => {
       setAddDesc("");
       setAddError("");
       fetchDepartments();
+      toast.success("Department added successfully");
       document.getElementById("btn-close-add-dept")?.click();
     } catch (err: any) {
       setAddError(err.message);
@@ -140,6 +169,7 @@ const HrmDepartments = () => {
       if (!res.ok) throw new Error(data.message);
       setEditError("");
       fetchDepartments();
+      toast.success("Department updated successfully");
       document.getElementById("btn-close-edit-dept")?.click();
     } catch (err: any) {
       setEditError(err.message);
@@ -163,6 +193,7 @@ const HrmDepartments = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       fetchDepartments();
+      toast.success("Department deleted successfully");
       document.getElementById("btn-close-delete-dept")?.click();
     } catch (err: any) {
       alert(err.message);
@@ -220,11 +251,10 @@ const HrmDepartments = () => {
       dataIndex: "status",
       render: (text: string) => (
         <span
-          className={`badge border ${
-            text === "Active"
-              ? "badge-soft-success border-success"
-              : "badge-soft-danger border-danger"
-          }`}
+          className={`badge border ${text === "Active"
+            ? "badge-soft-success border-success"
+            : "badge-soft-danger border-danger"
+            }`}
         >
           {text}
         </span>
@@ -295,6 +325,62 @@ const HrmDepartments = () => {
 
             {/* Filter and Action Buttons */}
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
+              {/* Clear Filter Button - Only show when any filter is active */}
+              {(filterStatus !== "All" || filterDatePreset !== "All") && (
+                <button
+                  type="button"
+                  className="btn btn-white d-flex align-items-center gap-1 text-danger border"
+                  onClick={clearFilters}
+                  style={{
+                    minHeight: "38px",
+                    fontWeight: "700",
+                    fontSize: "13px",
+                    borderRadius: "6px"
+                  }}
+                >
+                  <i className="ti ti-rotate"></i> Clear All
+                </button>
+              )}
+
+              {/* Advanced Date Filter */}
+              <div className="dropdown">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "160px", minHeight: "38px" }}
+                  data-bs-toggle="dropdown"
+                >
+                  <span className="text-truncate">
+                    <span className="text-muted"><i className="ti ti-calendar me-1"></i></span> {filterDatePreset === "All" ? "Select Date" : filterDatePreset}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2" style={{ minWidth: "200px" }}>
+                  {["All", "Today", "Tomorrow", "7 Days", "Custom"].map((preset) => (
+                    <li key={preset}>
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterDatePreset(preset);
+                        }}
+                      >
+                        {preset}
+                      </Link>
+                    </li>
+                  ))}
+                  {filterDatePreset === "Custom" && (
+                    <li className="p-2 border-top mt-2">
+                      <DatePicker.RangePicker
+                        format="DD-MM-YYYY"
+                        className="w-100"
+                        value={customRange}
+                        onChange={(dates) => setCustomRange(dates ? [dates[0], dates[1]] : [null, null])}
+                      />
+                    </li>
+                  )}
+                </ul>
+              </div>
               {/* Status Filter */}
               <div className="dropdown">
                 <Link
@@ -332,6 +418,10 @@ const HrmDepartments = () => {
                 style={{ minHeight: "38px", whiteSpace: "nowrap" }}
                 data-bs-toggle="modal"
                 data-bs-target="#add_department"
+                onClick={() => {
+                  setAddName("");
+                  setAddDesc("");
+                }}
               >
                 Add Department <i className="fa fa-plus ms-2" />
               </button>
@@ -359,18 +449,21 @@ const HrmDepartments = () => {
               <p className="text-muted mt-2 mb-0">Loading departments</p>
             </div>
           ) : departments.length === 0 && !error ? (
-            <div className="text-center py-5 border rounded bg-white">
-              <i className="ti ti-building-community fs-1 text-muted d-block mb-2" />
-              <h6 className="fw-bold">No departments yet</h6>
-              <p className="text-muted mb-3">Add your first department.</p>
-              <button
-                type="button"
-                className="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#add_department"
-              >
-                Add Department <i className="ti ti-plus ms-2" />
-              </button>
+            <div className="border rounded bg-white">
+              <EmptyState
+                title="No departments yet"
+                message="Organize your clinic by creating your first department. This helps in grouping staff and medical services."
+                action={
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#add_department"
+                  >
+                    Add Department <i className="ti ti-plus ms-2" />
+                  </button>
+                }
+              />
             </div>
           ) : (
             <div className="table-responsive">

@@ -15,7 +15,7 @@ import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 
 const Modals = () => {
- const [phone, setPhone] = useState<string | undefined>()
+  const [phone, setPhone] = useState<string | undefined>()
 
   const getModalContainer = () => {
     const modalElement = document.getElementById("modal-datepicker");
@@ -27,17 +27,15 @@ const Modals = () => {
       {/* Start Add modal */}
       <div className="modal fade" id="add_modal">
         <div className="modal-dialog modal-dialog-centered modal-md">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title text-dark fw-bold">Add New Patient</h5>
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">Add New Patient</h5>
               <button
                 type="button"
-                className="btn-close custom-btn-close opacity-100"
+                className="btn-close btn-close-white"
                 data-bs-dismiss="modal"
                 aria-label="Close"
-              >
-                <i className="ti ti-x bg-white fs-16 text-dark" />
-              </button>
+              ></button>
             </div>
             <div className="modal-body pb-0">
               {/* form start */}
@@ -70,7 +68,7 @@ const Modals = () => {
                       <label className="form-label mb-1 fw-medium">
                         First Name<span className="text-danger ms-1">*</span>
                       </label>
-                      <input type="text" className="form-control" />
+                      <input type="text" className="form-control" placeholder="Enter first name" />
                     </div>
                   </div>
                   <div className="col-md-6">
@@ -78,7 +76,7 @@ const Modals = () => {
                       <label className="form-label mb-1 fw-medium">
                         Last Name<span className="text-danger ms-1">*</span>
                       </label>
-                      <input type="text" className="form-control" />
+                      <input type="text" className="form-control" placeholder="Enter last name" />
                     </div>
                   </div>
                   <div className="col-md-6">
@@ -87,10 +85,11 @@ const Modals = () => {
                         Phone Number<span className="text-danger ms-1">*</span>
                       </label>
                       <PhoneInput
-                            defaultCountry="IN"
-                            value={phone}
-                            onChange={setPhone}
-                          />
+                        defaultCountry="IN"
+                        placeholder="Enter phone number"
+                        value={phone}
+                        onChange={setPhone}
+                      />
                     </div>
                   </div>
                   <div className="col-md-6">
@@ -98,20 +97,7 @@ const Modals = () => {
                       <label className="form-label mb-1 fw-medium">
                         Email Address<span className="text-danger ms-1">*</span>
                       </label>
-                      <input type="email" className="form-control" />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="mb-3">
-                      <label className="form-label mb-1 fw-medium">
-                        Primary Doctor
-                        <span className="text-danger ms-1">*</span>
-                      </label>
-                      <CommonSelect
-                        options={Primary_Doctor}
-                        className="select"
-                        defaultValue={Primary_Doctor[0]}
-                      />
+                      <input type="email" className="form-control" placeholder="Enter email address" />
                     </div>
                   </div>
                   <div className="col-md-6">
@@ -240,21 +226,19 @@ const Modals = () => {
                 </div>
               </div>
               {/* form end */}
-            </div>
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-light btn-sm me-2 fs-13 fw-medium"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary btn-sm fs-13 fw-medium"
-              >
-                Add New Patient
-              </button>
+              <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top mb-3">
+                <button
+                  type="button"
+                  className="btn btn-light px-4 shadow-sm"
+                  data-bs-dismiss="modal"
+                  style={{ borderRadius: '6px' }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary px-4 shadow-sm" style={{ borderRadius: '6px' }}>
+                  Add Patient
+                </button>
+              </div>
             </div>
           </div>
         </div>

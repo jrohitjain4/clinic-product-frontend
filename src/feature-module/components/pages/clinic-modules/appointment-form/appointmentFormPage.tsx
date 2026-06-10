@@ -29,6 +29,8 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const prefillPatientId = searchParams.get("patientId") || "";
+  const prefillDoctorId = searchParams.get("doctorId") || "";
+  const prefillDeptId = searchParams.get("departmentId") || "";
 
   const userStr = localStorage.getItem("user");
   const currentUser = userStr ? JSON.parse(userStr) : null;
@@ -91,11 +93,14 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
         const myPatient = patients.find((p: any) => p.email === currentUser.email);
         if (myPatient) targetId = myPatient.id;
       }
-      if (targetId) {
-        setForm((f) => ({ ...f, patientId: targetId }));
-      }
+      setForm((f) => ({
+        ...f,
+        patientId: targetId || f.patientId,
+        doctorId: prefillDoctorId || f.doctorId,
+        departmentId: prefillDeptId || f.departmentId,
+      }));
     }
-  }, [mode, prefillPatientId, isPatientRole, currentUser?.email, patients]);
+  }, [mode, prefillPatientId, prefillDoctorId, prefillDeptId, isPatientRole, currentUser?.email, patients]);
 
   useEffect(() => {
     if (mode === "edit" && appointment) {
@@ -245,8 +250,48 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
     return filtered.map((p: any) => ({
       value: p.id,
       label: p.fullName || `${p.firstName} ${p.lastName}`.trim(),
+      patient: p,
     }));
   }, [patients, isPatientRole, currentUser?.email]);
+
+  const filterPatient = (option: any, inputValue: string) => {
+    if (!inputValue) return true;
+    const input = inputValue.toLowerCase();
+    const p = option.data.patient;
+    if (!p) return option.label.toLowerCase().includes(input);
+
+    return (
+      (p.fullName || "").toLowerCase().includes(input) ||
+      (p.firstName || "").toLowerCase().includes(input) ||
+      (p.lastName || "").toLowerCase().includes(input) ||
+      (p.phone || "").toLowerCase().includes(input) ||
+      (p.alternateMobile || "").toLowerCase().includes(input) ||
+      (p.emergencyContactPhone || "").toLowerCase().includes(input) ||
+      (p.patientCode || "").toLowerCase().includes(input)
+    );
+  };
+
+  const formatPatientLabel = (option: any) => {
+    const p = option.patient;
+    if (!p) return option.label;
+    return (
+      <div className="d-flex flex-column" style={{ lineHeight: '1.2' }}>
+        <span className="fw-bold fs-14">{option.label}</span>
+        <div className="d-flex align-items-center gap-2 mt-1">
+          {p.patientCode && (
+            <span className="badge badge-soft-primary border-0 px-1 py-0 fs-10">
+              {p.patientCode}
+            </span>
+          )}
+          {p.phone && (
+            <span className="text-muted fs-11">
+              <i className="ti ti-device-mobile me-1" />{p.phone}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const doctorOptions = useMemo(() => {
     let list = doctors.filter((d: any) => d.id && d.status === "Active");
@@ -257,8 +302,46 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
           d.department?.id === form.departmentId
       );
     }
-    return list.map((d: any) => ({ value: d.id, label: d.fullName }));
+    return list.map((d: any) => ({
+      value: d.id,
+      label: d.fullName,
+      doctor: d,
+    }));
   }, [doctors, form.departmentId]);
+
+  const filterDoctor = (option: any, inputValue: string) => {
+    if (!inputValue) return true;
+    const input = inputValue.toLowerCase();
+    const d = option.data.doctor;
+    if (!d) return option.label.toLowerCase().includes(input);
+
+    return (
+      (d.fullName || "").toLowerCase().includes(input) ||
+      (d.phone || "").toLowerCase().includes(input) ||
+      (d.email || "").toLowerCase().includes(input)
+    );
+  };
+
+  const formatDoctorLabel = (option: any) => {
+    const d = option.doctor;
+    if (!d) return option.label;
+    return (
+      <div className="d-flex flex-column" style={{ lineHeight: '1.2' }}>
+        <span className="fw-bold fs-14">{option.label}</span>
+        <div className="d-flex align-items-center gap-2 mt-1">
+          <span className="text-muted fs-11">
+            {d.department?.name || "—"} · {d.designation?.name || "Doctor"}
+          </span>
+          {d.phone && (
+            <span className="text-muted fs-11">
+              <i className="ti ti-device-mobile me-1" />
+              {d.phone}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const deptOptions = useMemo(
     () =>
@@ -509,6 +592,8 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, patientId: opt?.value || "" }))
                           }
+                          filterOption={filterPatient}
+                          formatOptionLabel={formatPatientLabel}
                         />
                       </div>
                     </div>
@@ -565,6 +650,8 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, doctorId: opt?.value || "" }))
                           }
+                          filterOption={filterDoctor}
+                          formatOptionLabel={formatDoctorLabel}
                         />
                       </div>
                     </div>
@@ -649,17 +736,8 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                     </div>
                   </div>
                   <div className="mb-3">
-                    <label className="form-label mb-1 fw-medium">Appointment Status</label>
-                    <CommonSelect
-                      options={APPOINTMENT_STATUS_OPTIONS}
-                      className="select"
-                      value={APPOINTMENT_STATUS_OPTIONS.find(opt => opt.value === form.status)}
-                      onChange={(opt: any) => setForm(f => ({ ...f, status: opt?.value }))}
-                    />
-                  </div>
-                  <div className="mb-3">
                     <label className="form-label mb-1 fw-medium">
-                      Appointment Reason<span className="text-danger ms-1">*</span>
+                      Appointment Reason (Optional)
                     </label>
                     <textarea
                       className="form-control"

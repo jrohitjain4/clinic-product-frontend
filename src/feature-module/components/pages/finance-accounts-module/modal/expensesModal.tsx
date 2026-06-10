@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { useExpenseCategories } from "../../../../../core/hooks/useExpenseCategories";
+import { useClinicDoctors } from "../../../../../core/hooks/useClinicDoctors";
+import { useClinicStaff } from "../../../../../core/hooks/useClinicStaff";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import { toast } from "react-toastify";
 import { apiPost, apiPut, apiDelete } from "../../../../../core/utils/apiClient";
@@ -12,11 +14,13 @@ interface ExpensesModalProps {
   refetch: () => void;
 }
 
-const PAYMENT_METHODS = ["PayPal", "Debit Card", "Cheque", "Credit Card", "Bank Transfer", "Cash"];
-const STATUSES = ["New", "Pending", "Approved", "Rejected"];
+const PAYMENT_METHODS = ["Cash", "UPI", "Credit Card", "Debit Card", "Net Banking", "Cheque", "Bank Transfer", "PayPal"];
+const STATUSES = ["Paid", "Pending"];
 
 const ExpensesModal: React.FC<ExpensesModalProps> = ({ selectedExpense, refetch }) => {
   const { categories } = useExpenseCategories();
+  const { doctors } = useClinicDoctors();
+  const { staffs } = useClinicStaff();
   const activeCategories = categories.filter((c: any) => c.status === "Active").map((c: any) => c.name);
 
   const [name, setName] = useState("");
@@ -25,7 +29,7 @@ const ExpensesModal: React.FC<ExpensesModalProps> = ({ selectedExpense, refetch 
   const [date, setDate] = useState<dayjs.Dayjs | null>(null);
   const [purchasedBy, setPurchasedBy] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
-  const [status, setStatus] = useState<string>("New");
+  const [status, setStatus] = useState<string>("Paid");
 
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -42,7 +46,7 @@ const ExpensesModal: React.FC<ExpensesModalProps> = ({ selectedExpense, refetch 
       setDate(selectedExpense.date ? dayjs(selectedExpense.date) : null);
       setPurchasedBy(selectedExpense.purchasedBy || "");
       setPaymentMethod(selectedExpense.paymentMethod || null);
-      setStatus(selectedExpense.status || "New");
+      setStatus(selectedExpense.status || "Paid");
       setFormError(null);
     } else {
       resetForm();
@@ -56,7 +60,7 @@ const ExpensesModal: React.FC<ExpensesModalProps> = ({ selectedExpense, refetch 
     setDate(null);
     setPurchasedBy("");
     setPaymentMethod(null);
-    setStatus("New");
+    setStatus("Paid");
     setFormError(null);
   };
 
@@ -74,7 +78,7 @@ const ExpensesModal: React.FC<ExpensesModalProps> = ({ selectedExpense, refetch 
     date: date?.toISOString(),
     purchasedBy: purchasedBy.trim(),
     paymentMethod: paymentMethod || "",
-    status: status || "New",
+    status: status || "Paid",
   });
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -174,6 +178,13 @@ const ExpensesModal: React.FC<ExpensesModalProps> = ({ selectedExpense, refetch 
   const paymentMethodOptions = PAYMENT_METHODS.map((m) => ({ value: m, label: m }));
   const selectedPaymentMethodOption = paymentMethod ? { value: paymentMethod, label: paymentMethod } : null;
 
+  const staffOptions = useMemo(() => {
+    const docOpts = doctors.map(d => ({ value: d.fullName, label: `${d.fullName} (Doctor)` }));
+    const staffOpts = staffs.map(s => ({ value: s.fullName, label: `${s.fullName} (Staff)` }));
+    return [...docOpts, ...staffOpts];
+  }, [doctors, staffs]);
+  const selectedPurchaserOption = purchasedBy ? { value: purchasedBy, label: purchasedBy } : null;
+
   const statusOptions = STATUSES.map((s) => ({ value: s, label: s }));
   const selectedStatusOption = status ? { value: status, label: status } : null;
 
@@ -246,12 +257,12 @@ const ExpensesModal: React.FC<ExpensesModalProps> = ({ selectedExpense, refetch 
 
         <div className="col-12">
           <label className="form-label mb-1 text-dark fs-14 fw-medium">Purchased By</label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Enter purchaser's name"
-            value={purchasedBy}
-            onChange={(e) => setPurchasedBy(e.target.value)}
+          <CommonSelect
+            options={staffOptions}
+            className="select"
+            value={selectedPurchaserOption}
+            placeholder="Select purchaser (Doctor/Staff)"
+            onChange={(opt) => setPurchasedBy(opt?.value || "")}
           />
         </div>
 
@@ -273,7 +284,7 @@ const ExpensesModal: React.FC<ExpensesModalProps> = ({ selectedExpense, refetch 
             className="select"
             value={selectedStatusOption}
             placeholder="Select status"
-            onChange={(opt) => setStatus(opt?.value || "New")}
+            onChange={(opt) => setStatus(opt?.value || "Paid")}
           />
         </div>
       </div>

@@ -86,7 +86,6 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
         emergencyContactName: patient.emergencyContactName || "",
         emergencyContactRelation: patient.emergencyContactRelation || "",
         emergencyContactPhone: patient.emergencyContactPhone || "",
-        primaryDoctorId: patient.primaryDoctorId || "",
       });
     }
   }, [mode, patient?.id]);
@@ -145,7 +144,6 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
     emergencyContactName: form.emergencyContactName || null,
     emergencyContactRelation: form.emergencyContactRelation || null,
     emergencyContactPhone: form.emergencyContactPhone || null,
-    primaryDoctorId: form.primaryDoctorId || null,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,10 +158,6 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
     }
     if (!form.address1.trim()) {
       setFormError("Address Line 1 is required.");
-      return;
-    }
-    if (!form.primaryDoctorId) {
-      setFormError("Primary doctor is required.");
       return;
     }
 
@@ -366,20 +360,6 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                       </div>
                     </div>
 
-                    <div className="col-md-12">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">
-                          Primary Doctor<span className="text-danger ms-1">*</span>
-                        </label>
-                        <CommonSelect
-                          options={doctorOptions}
-                          className="select"
-                          value={findSelectOption(doctorOptions, form.primaryDoctorId)}
-                          placeholder="Select Primary Doctor"
-                          onChange={(opt) => setForm((f) => ({ ...f, primaryDoctorId: opt?.value || "" }))}
-                        />
-                      </div>
-                    </div>
 
                     {/* New Fields Section */}
                     <div className="col-md-6">

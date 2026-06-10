@@ -322,8 +322,8 @@ const DoctorSchedules = () => {
                             type="button"
                             onClick={() => setActiveDay(day)}
                           >
-                            {day}
-                            {hasSlots && <i className="ti ti-circle-check-filled ms-1 text-success fs-12" />}
+                            {day.substring(0, 2)}..
+                            {hasSlots && <i className="ti ti-circle-check-filled ms-1 text-white fs-12" />}
                           </button>
                         </li>
                       );

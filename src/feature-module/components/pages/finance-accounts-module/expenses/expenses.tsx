@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import EmptyState from "../../../../../core/common/emptyState";
 import { Link } from "react-router";
 import Datatable from "../../../../../core/common/dataTable";
 import ExpensesModal from "../modal/expensesModal";
@@ -130,11 +131,10 @@ const ExpensesList = () => {
       dataIndex: "Status",
       render: (text: string) => {
         let badgeClass = "badge-soft-danger border-danger";
-        if (text === "Approved")
+        if (text === "Paid")
           badgeClass = "badge-soft-success border-success";
         else if (text === "Pending")
           badgeClass = "badge-soft-warning border-warning";
-        else if (text === "New") badgeClass = "badge-soft-primary border-primary";
 
         return (
           <span className={`badge border ${badgeClass} fw-medium`}>
@@ -311,18 +311,21 @@ const ExpensesList = () => {
               <p className="text-muted mt-2 mb-0">Loading expenses</p>
             </div>
           ) : expenses.length === 0 && !error ? (
-            <div className="text-center py-5 border rounded bg-white">
-              <i className="ti ti-receipt fs-1 text-muted d-block mb-2" />
-              <h6 className="fw-bold">No expenses yet</h6>
-              <p className="text-muted mb-3">Add your first expense.</p>
-              <button
-                className="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#add_new_expense"
-                onClick={() => setSelectedExpense(null)}
-              >
-                New Expense <i className="ti ti-plus ms-2" />
-              </button>
+            <div className="border rounded bg-white">
+              <EmptyState
+                title="No expenses yet"
+                message="Track your clinic's outgoing payments by recording your first expense."
+                action={
+                  <button
+                    className="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#add_new_expense"
+                    onClick={() => setSelectedExpense(null)}
+                  >
+                    New Expense <i className="ti ti-plus ms-2" />
+                  </button>
+                }
+              />
             </div>
           ) : (
             <div className="table-responsive">

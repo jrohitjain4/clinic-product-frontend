@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import EmptyState from "../../../../../core/common/emptyState";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import {
   all_routes,
@@ -46,12 +47,16 @@ const DoctorsGrid = ({ doctors, loading, error, onRetry, onDelete }: DoctorsGrid
 
   if (doctors.length === 0) {
     return (
-      <div className="text-center py-5 border rounded bg-white">
-        <i className="ti ti-stethoscope fs-1 text-muted d-block mb-2" />
-        <h6 className="fw-bold">No doctors yet</h6>
-        <p className="text-muted mb-3">Add your first doctor to see them here.</p>
-        <Link to={all_routes.addDoctors} className="btn btn-primary">
-          Add Doctor <i className="ti ti-plus ms-2" /></Link>
+      <div className="border rounded bg-white py-3">
+        <EmptyState
+          title="No doctors yet"
+          message="Every great clinic needs amazing doctors. Start by adding your first medical professional."
+          action={
+            <Link to={all_routes.addDoctors} className="btn btn-primary">
+              Add Doctor <i className="ti ti-plus ms-2" />
+            </Link>
+          }
+        />
       </div>
     );
   }
@@ -70,9 +75,9 @@ const DoctorsGrid = ({ doctors, loading, error, onRetry, onDelete }: DoctorsGrid
           return (
             <div key={doctor.id} className="col-xl-3 col-lg-4 col-md-6 mb-3">
               <div className="card h-100 shadow-sm border-0 border-top border-3 border-primary transition-all doctor-grid-card">
-                <div className="card-body d-flex align-items-center flex-sm-nowrap flex-wrap row-gap-3 p-2">
+                <div className="card-body d-flex align-items-center flex-sm-nowrap flex-wrap row-gap-3 p-3">
                   <div className="me-2 ps-1">
-                    <Link to={doctorDetailsPath(doctor.id)} className="d-block overflow-hidden rounded-circle border border-2 border-primary-light p-1" style={{ width: "85px", height: "85px" }}>
+                    <Link to={doctorDetailsPath(doctor.id)} className="d-block overflow-hidden rounded-circle border border-2 border-primary-light p-1" style={{ width: "100px", height: "100px" }}>
                       <ImageWithBasePath
                         src={img}
                         className="w-100 h-100 rounded-circle"

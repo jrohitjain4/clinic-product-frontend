@@ -6,6 +6,9 @@ export interface DashboardStats {
     patientsCount: number;
     appointmentsCount: number;
     revenue: number;
+    totalIncome: number;
+    totalExpense: number;
+    netProfit: number;
     appointmentStats: {
         total: number;
         completed: number;
@@ -16,7 +19,7 @@ export interface DashboardStats {
     topDepartments: { name: string, patientCount: number }[];
     incomeByTreatment: { name: string, income: number, appointmentCount: number }[];
     topPatients: { id: string, fullName: string, profileImage: string | null, totalPaid: number, appointmentCount: number }[];
-    recentTransactions: { id: string, invoiceCode: string | null, amount: number, status: string, patientName: string, method: string | null, createdAt: string }[];
+    recentTransactions: { id: string, type: 'income' | 'expense', description: string, invoiceCode: string | null, amount: number, status: string, method: string | null, date: string }[];
     recentAppointments: { id: string, doctor: { fullName: string, profileImage: string | null }, patient: { firstName: string, lastName: string, phone: string | null }, department: { name: string } | null, scheduledAt: string, status: string, mode: string }[];
     profileCompletion: number;
 }
@@ -27,6 +30,9 @@ export const useDashboardStats = () => {
         patientsCount: 0,
         appointmentsCount: 0,
         revenue: 0,
+        totalIncome: 0,
+        totalExpense: 0,
+        netProfit: 0,
         appointmentStats: { total: 0, completed: 0, cancelled: 0, rescheduled: 0 },
         monthlyData: [],
         topDepartments: [],

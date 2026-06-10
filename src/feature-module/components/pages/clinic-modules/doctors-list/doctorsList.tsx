@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import EmptyState from "../../../../../core/common/emptyState";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes, doctorDetailsPath, editDoctorPath } from "../../../../routes/all_routes";
 import { useMemo, useState, useEffect, useCallback } from "react";
@@ -358,15 +359,20 @@ const DoctorsList = () => {
               <span className="spinner-border text-primary" role="status" />
             </div>
           ) : tableData.length === 0 && !error ? (
-            <div className="text-center py-5 border rounded bg-white">
-              <p className="text-muted mb-3">No doctors found. Add a doctor to get started.</p>
-              <Link
-                to={all_routes.addDoctors}
-                className="btn btn-primary d-flex align-items-center justify-content-center ms-1"
-                style={{ minHeight: '38px', whiteSpace: 'nowrap' }}
-              >
-                New Doctor <i className="fa fa-plus ms-2" />
-              </Link>
+            <div className="border rounded bg-white">
+              <EmptyState
+                title="No doctors yet"
+                message="Grow your clinic's team by onboarding experienced healthcare professionals."
+                action={
+                  <Link
+                    to={all_routes.addDoctors}
+                    className="btn btn-primary d-flex align-items-center justify-content-center"
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    New Doctor <i className="fa fa-plus ms-2" />
+                  </Link>
+                }
+              />
             </div>
           ) : (
             <div className="table-responsive">

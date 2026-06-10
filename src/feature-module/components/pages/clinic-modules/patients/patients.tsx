@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import EmptyState from "../../../../../core/common/emptyState";
 import { Link } from "react-router";
 import { DatePicker } from "antd";
 import type { Dayjs } from "dayjs";
@@ -300,15 +301,18 @@ const Patients = () => {
               <span className="spinner-border text-primary" role="status" />
             </div>
           ) : filteredPatients.length === 0 && !error ? (
-            <div className="text-center py-5 border rounded bg-white">
-              <i className="ti ti-users fs-1 text-muted d-block mb-2" />
-              <h6 className="fw-bold text-dark">No records found</h6>
-              <p className="text-muted mb-3">Modify your filters or add a new patient.</p>
-              {patients.length === 0 && (
-                <HasPermission module="Patients" action="CREATE">
-                  <Link to={all_routes.createPatient} className="btn btn-primary">New Patient</Link>
-                </HasPermission>
-              )}
+            <div className="border rounded bg-white">
+              <EmptyState
+                title="No patients found"
+                message="We couldn't find any patient records matching your criteria. Add a new patient to get started."
+                action={
+                  patients.length === 0 && (
+                    <HasPermission module="Patients" action="CREATE">
+                      <Link to={all_routes.createPatient} className="btn btn-primary">New Patient <i className="ti ti-plus ms-2" /></Link>
+                    </HasPermission>
+                  )
+                }
+              />
             </div>
           ) : (
             <div className="table-responsive border rounded bg-white">

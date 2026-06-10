@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import dayjs from "dayjs";
+import EmptyState from "../../../../core/common/emptyState";
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import Datatable from "../../../../core/common/dataTable";
@@ -18,6 +20,8 @@ const StaffsList = () => {
   const [filterDesignation, setFilterDesignation] = useState("All");
   const [filterRole, setFilterRole] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [filterDatePreset, setFilterDatePreset] = useState("All");
+  const [customRange, setCustomRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
 
   const tableData = useMemo(
     () => staffs.map((s, i) => staffToTableRow(s, i)),
@@ -40,12 +44,32 @@ const StaffsList = () => {
       const matchRole = filterRole === "All" || item.Role === filterRole;
       const matchStatus = filterStatus === "All" || item.Status === filterStatus;
 
-      // Note: Add date filtering if item has a Created Date field
-      // const matchDate = !filterDate || dayjs(item.CreatedDate).isSame(filterDate, 'day');
+      let matchDate = true;
+      const itemDate = dayjs(item._raw.createdAt);
 
-      return matchDesignation && matchRole && matchStatus;
+      if (filterDatePreset === "Today") {
+        matchDate = itemDate.isSame(dayjs(), "day");
+      } else if (filterDatePreset === "Tomorrow") {
+        matchDate = itemDate.isSame(dayjs().add(1, "day"), "day");
+      } else if (filterDatePreset === "7 Days") {
+        matchDate = itemDate.isAfter(dayjs().subtract(7, "days")) && itemDate.isBefore(dayjs().add(1, "day"), "day");
+      } else if (filterDatePreset === "Custom") {
+        if (customRange[0] && customRange[1]) {
+          matchDate = itemDate.isAfter(customRange[0].startOf("day")) && itemDate.isBefore(customRange[1].endOf("day"));
+        }
+      }
+
+      return matchDesignation && matchRole && matchStatus && matchDate;
     });
-  }, [tableData, filterDesignation, filterRole, filterStatus]);
+  }, [tableData, filterDesignation, filterRole, filterStatus, filterDatePreset, customRange]);
+
+  const clearFilters = () => {
+    setFilterDesignation("All");
+    setFilterRole("All");
+    setFilterStatus("All");
+    setFilterDatePreset("All");
+    setCustomRange([null, null]);
+  };
 
   const openStaff = (staff: ClinicStaff) => setSelected(staff);
 
@@ -187,6 +211,62 @@ const StaffsList = () => {
               </h4>
             </div>
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
+              {/* Clear Filter Button - Only show when any filter is active */}
+              {(filterDesignation !== "All" || filterRole !== "All" || filterStatus !== "All" || filterDatePreset !== "All") && (
+                <button
+                  type="button"
+                  className="btn btn-white d-flex align-items-center gap-1 text-danger border"
+                  onClick={clearFilters}
+                  style={{
+                    minHeight: "38px",
+                    fontWeight: "700",
+                    fontSize: "13px",
+                    borderRadius: "6px"
+                  }}
+                >
+                  <i className="ti ti-rotate"></i> Clear All
+                </button>
+              )}
+
+              {/* Advanced Date Filter */}
+              <div className="dropdown">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "160px", minHeight: "38px" }}
+                  data-bs-toggle="dropdown"
+                >
+                  <span className="text-truncate">
+                    <span className="text-muted"><i className="ti ti-calendar me-1"></i></span> {filterDatePreset === "All" ? "Select Date" : filterDatePreset}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2" style={{ minWidth: "200px" }}>
+                  {["All", "Today", "Tomorrow", "7 Days", "Custom"].map((preset) => (
+                    <li key={preset}>
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterDatePreset(preset);
+                        }}
+                      >
+                        {preset}
+                      </Link>
+                    </li>
+                  ))}
+                  {filterDatePreset === "Custom" && (
+                    <li className="p-2 border-top mt-2">
+                      <DatePicker.RangePicker
+                        format="DD-MM-YYYY"
+                        className="w-100"
+                        value={customRange}
+                        onChange={(dates) => setCustomRange(dates ? [dates[0], dates[1]] : [null, null])}
+                      />
+                    </li>
+                  )}
+                </ul>
+              </div>
 
               <div className="dropdown">
                 <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap w-100" style={{ minWidth: '150px', minHeight: '38px' }} data-bs-toggle="dropdown">
@@ -265,18 +345,21 @@ const StaffsList = () => {
               <p className="text-muted mt-2 mb-0">Loading staff</p>
             </div>
           ) : staffs.length === 0 && !error ? (
-            <div className="text-center py-5 border rounded bg-white">
-              <i className="ti ti-users fs-1 text-muted d-block mb-2" />
-              <h6 className="fw-bold">No staff yet</h6>
-              <p className="text-muted mb-3">Add your first staff member.</p>
-              <button
-                type="button"
-                className="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#add_staff"
-              >
-                Add Staff <i className="ti ti-plus ms-2" />
-              </button>
+            <div className="border rounded bg-white">
+              <EmptyState
+                title="No staff yet"
+                message="Start by adding your first staff member to manage your clinic's team."
+                action={
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#add_staff"
+                  >
+                    Add Staff <i className="ti ti-plus ms-2" />
+                  </button>
+                }
+              />
             </div>
           ) : (
             <div className="table-responsive">
@@ -358,7 +441,7 @@ const StaffsList = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <h6 className="fw-bold mb-3">Contact Information</h6>
                   <div className="row row-gap-2">
                     <div className="col-md-6">

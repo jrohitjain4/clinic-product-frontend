@@ -61,10 +61,7 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
   }, []);
 
   const desigOptions = designations.map((d) => ({ value: d.id, label: d.name }));
-  const defaultRoles = ["front desk", "Nurse", "Receptionist", "Pharmacist", "Lab Technician", "Accountant", "Manager", "Other"];
-  const dynamicRoleOptions = clinicRoles.length > 0
-    ? clinicRoles.map(r => ({ value: r.name, label: r.name }))
-    : defaultRoles.map(r => ({ value: r, label: r }));
+  const dynamicRoleOptions = clinicRoles.map(r => ({ value: r.name, label: r.name }));
 
   const resetAddForm = () => {
     setForm(emptyStaffForm());
@@ -228,6 +225,22 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
 
   const renderFormFields = (opts?: { showStatus?: boolean }) => (
     <>
+      {(designations.length === 0 || clinicRoles.length === 0) && (
+        <div className="alert alert-soft-warning py-2 mb-3 fs-13 border-dashed">
+          <div className="d-flex align-items-center mb-1">
+            <i className="ti ti-info-circle me-2 fs-16"></i>
+            <h6 className="mb-0 fs-13 fw-bold text-warning-emphasis">Setup Required:</h6>
+          </div>
+          <ul className="ps-4 mb-0 fs-12">
+            {clinicRoles.length === 0 && (
+              <li>No roles found. Please add at least one in <strong>Roles & Permissions</strong> first.</li>
+            )}
+            {designations.length === 0 && (
+              <li>No staff designations found. Please add at least one in <strong>Designation</strong> (type: Staff) first.</li>
+            )}
+          </ul>
+        </div>
+      )}
       {formError && (
         <div className="alert alert-danger py-2 fs-13 mb-3">{formError}</div>
       )}
@@ -257,13 +270,19 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
             <label className="form-label">
               Role<span className="text-danger ms-1">*</span>
             </label>
-            <CommonSelect
-              options={dynamicRoleOptions}
-              className="select"
-              value={findSelectOption(dynamicRoleOptions, form.role)}
-              placeholder="Select role"
-              onChange={(opt) => setForm((f) => ({ ...f, role: opt?.value || "" }))}
-            />
+            {clinicRoles.length > 0 ? (
+              <CommonSelect
+                options={dynamicRoleOptions}
+                className="select"
+                value={findSelectOption(dynamicRoleOptions, form.role)}
+                placeholder="Select role"
+                onChange={(opt) => setForm((f) => ({ ...f, role: opt?.value || "" }))}
+              />
+            ) : (
+              <div className="form-control bg-light text-muted py-2 fs-13">
+                No Role
+              </div>
+            )}
           </div>
         </div>
         <div className="col-lg-6">
@@ -282,8 +301,8 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
                 }
               />
             ) : (
-              <div className="form-control text-muted py-2 fs-13">
-                No staff designations — add one in Designation (type: Staff)
+              <div className="form-control bg-light text-muted py-2 fs-13">
+                No Designation
               </div>
             )}
           </div>

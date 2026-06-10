@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import EmptyState from "../../../../../core/common/emptyState";
 import { Link } from "react-router";
 import Datatable from "../../../../../core/common/dataTable";
 import LeaveTypeModal from "./modal/leaveTypeModal";
@@ -76,11 +77,10 @@ const LeaveType = () => {
       dataIndex: "Status",
       render: (text: string) => (
         <span
-          className={`badge border ${
-            text === "Active"
+          className={`badge border ${text === "Active"
               ? "badge-soft-success border-success"
               : "badge-soft-danger border-danger"
-          } px-2 py-1 fs-13 fw-medium`}
+            } px-2 py-1 fs-13 fw-medium`}
         >
           {text}
         </span>
@@ -238,18 +238,21 @@ const LeaveType = () => {
               <p className="text-muted mt-2 mb-0">Loading leave types</p>
             </div>
           ) : leaveTypes.length === 0 && !error ? (
-            <div className="text-center py-5 border rounded bg-white">
-              <i className="ti ti-calendar-off fs-1 text-muted d-block mb-2" />
-              <h6 className="fw-bold">No leave types yet</h6>
-              <p className="text-muted mb-3">Add your first leave type.</p>
-              <button
-                className="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#add_leave_type"
-                onClick={() => setCurrentRecord(null)}
-              >
-                New Leave Type <i className="ti ti-plus ms-2" />
-              </button>
+            <div className="border rounded bg-white">
+              <EmptyState
+                title="No leave types yet"
+                message="Configure leave categories like Casual, Sick, or Earned leave to manage employee time-off requests."
+                action={
+                  <button
+                    className="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#add_leave_type"
+                    onClick={() => setCurrentRecord(null)}
+                  >
+                    New Leave Type <i className="ti ti-plus ms-2" />
+                  </button>
+                }
+              />
             </div>
           ) : (
             <div className="table-responsive">

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import EmptyState from "../../../../core/common/emptyState";
 import { Link } from "react-router";
 import Datatable from "../../../../core/common/dataTable";
 import HolidaysModal from "./modal/holidaysModal";
@@ -18,17 +19,49 @@ const HolidaysList = () => {
   const { holidays, refetch, loading, error } = useHolidays();
   const [selectedHoliday, setSelectedHoliday] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [filterDate, setFilterDate] = useState<Dayjs | null>(null);
+  const [filterDatePreset, setFilterDatePreset] = useState("All");
+  const [customRange, setCustomRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
   const [viewHoliday, setViewHoliday] = useState<any>(null);
+
+  const clearFilters = () => {
+    setFilterDatePreset("All");
+    setCustomRange([null, null]);
+  };
 
   const filteredData = useMemo(() => {
     return holidays.filter((h) => {
-      if (!filterDate) return true;
+      if (filterDatePreset === "All") return true;
+
       const hDate = dayjs(h.date);
       const hEnd = h.endDate ? dayjs(h.endDate) : hDate;
-      return filterDate.isBetween(hDate, hEnd, "day", "[]");
+
+      let matchDate = false;
+      const today = dayjs();
+
+      if (filterDatePreset === "Today") {
+        matchDate = today.isBetween(hDate.startOf("day"), hEnd.endOf("day"), "day", "[]");
+      } else if (filterDatePreset === "This Week") {
+        const startOfWeek = today.startOf("week");
+        const endOfWeek = today.endOf("week");
+        // Check if holiday overlaps with this week
+        matchDate = (hDate.isSameOrBefore(endOfWeek) && hEnd.isSameOrAfter(startOfWeek));
+      } else if (filterDatePreset === "This Month") {
+        const startOfMonth = today.startOf("month");
+        const endOfMonth = today.endOf("month");
+        matchDate = (hDate.isSameOrBefore(endOfMonth) && hEnd.isSameOrAfter(startOfMonth));
+      } else if (filterDatePreset === "This Year") {
+        const startOfYear = today.startOf("year");
+        const endOfYear = today.endOf("year");
+        matchDate = (hDate.isSameOrBefore(endOfYear) && hEnd.isSameOrAfter(startOfYear));
+      } else if (filterDatePreset === "Custom") {
+        if (customRange[0] && customRange[1]) {
+          matchDate = (hDate.isSameOrBefore(customRange[1].endOf("day")) && hEnd.isSameOrAfter(customRange[0].startOf("day")));
+        }
+      }
+
+      return matchDate;
     });
-  }, [holidays, filterDate]);
+  }, [holidays, filterDatePreset, customRange]);
 
   const data = filteredData.map((holiday, index) => {
     const start = new Date(holiday.date);
@@ -58,10 +91,9 @@ const HolidaysList = () => {
           ? startStr
           : `${startStr} - ${endStr}`,
       Days:
-        holiday.dayName ||
-        (diffDays > 1
+        diffDays > 1
           ? `${diffDays} Days`
-          : start.toLocaleDateString("en-US", { weekday: "long" })),
+          : "1 Day",
       raw: holiday,
     };
   });
@@ -186,17 +218,60 @@ const HolidaysList = () => {
 
             {/* Filter and Action Buttons */}
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
-              {/* Date Filter */}
-              <DatePicker
-                placeholder="Filter Date"
-                className="form-select text-dark text-nowrap"
-                style={{ width: "130px", minHeight: "38px", paddingTop: "7px" }}
-                onChange={(date) => setFilterDate(date)}
-                value={filterDate}
-                format="DD-MM-YYYY"
-                allowClear={true}
-                suffixIcon={<i className="ti ti-calendar" />}
-              />
+              {/* Clear Filter Button */}
+              <button
+                type="button"
+                className="btn btn-white d-flex align-items-center gap-1 text-danger border"
+                onClick={clearFilters}
+                style={{
+                  minHeight: "38px",
+                  fontWeight: "700",
+                  fontSize: "13px",
+                  borderRadius: "6px"
+                }}
+              >
+                <i className="ti ti-rotate"></i> Clear All
+              </button>
+
+              {/* Advanced Date Filter */}
+              <div className="dropdown">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "160px", minHeight: "38px" }}
+                  data-bs-toggle="dropdown"
+                >
+                  <span className="text-truncate">
+                    <span className="text-muted"><i className="ti ti-calendar me-1"></i></span> {filterDatePreset === "All" ? "Filter Date" : filterDatePreset}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2" style={{ minWidth: "200px" }}>
+                  {["All", "Today", "This Week", "This Month", "This Year", "Custom"].map((preset) => (
+                    <li key={preset}>
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterDatePreset(preset);
+                        }}
+                      >
+                        {preset}
+                      </Link>
+                    </li>
+                  ))}
+                  {filterDatePreset === "Custom" && (
+                    <li className="p-2 border-top mt-2">
+                      <DatePicker.RangePicker
+                        format="DD-MM-YYYY"
+                        className="w-100"
+                        value={customRange}
+                        onChange={(dates) => setCustomRange(dates ? [dates[0], dates[1]] : [null, null])}
+                      />
+                    </li>
+                  )}
+                </ul>
+              </div>
 
               {/* Calendar View Dropdown */}
               <div className="dropdown">
@@ -264,18 +339,21 @@ const HolidaysList = () => {
               <p className="text-muted mt-2 mb-0">Loading holidays</p>
             </div>
           ) : holidays.length === 0 && !error ? (
-            <div className="text-center py-5 border rounded bg-white">
-              <i className="ti ti-calendar-off fs-1 text-muted d-block mb-2" />
-              <h6 className="fw-bold">No holidays yet</h6>
-              <p className="text-muted mb-3">Add your first holiday.</p>
-              <button
-                className="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#add_holiday"
-                onClick={() => setSelectedHoliday(null)}
-              >
-                Add Holiday <i className="ti ti-plus ms-2" />
-              </button>
+            <div className="border rounded bg-white">
+              <EmptyState
+                title="No holidays yet"
+                message="Plan your clinic's annual calendar by adding holidays. Employees will be informed of upcoming time off."
+                action={
+                  <button
+                    className="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#add_holiday"
+                    onClick={() => setSelectedHoliday(null)}
+                  >
+                    Add Holiday <i className="ti ti-plus ms-2" />
+                  </button>
+                }
+              />
             </div>
           ) : (
             <div className="table-responsive">

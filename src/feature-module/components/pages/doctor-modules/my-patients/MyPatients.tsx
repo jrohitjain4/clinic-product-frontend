@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import EmptyState from "../../../../../core/common/emptyState";
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
@@ -35,7 +36,9 @@ const MyPatients = () => {
 
     const myPatients = useMemo(() => {
         if (!currentDoctor) return [];
-        return patients.filter(p => p.primaryDoctorId === currentDoctor.id);
+        // Since primaryDoctorId was removed, show all patients for now
+        // In the future, filter by patients who have appointments with this doctor
+        return patients;
     }, [patients, currentDoctor]);
 
     const patientDetailsPath = (id: string) =>
@@ -178,10 +181,11 @@ const MyPatients = () => {
                     </div>
 
                     {!loading && myPatients.length === 0 && !error && (
-                        <div className="text-center py-5 border rounded bg-white">
-                            <i className="ti ti-users fs-1 text-muted d-block mb-2" />
-                            <h6 className="fw-bold">No patients assigned to you yet</h6>
-                            <p className="text-muted mb-0">Your patients will appear here once they are assigned to you.</p>
+                        <div className="border rounded bg-white">
+                            <EmptyState
+                                title="No patients assigned to you yet"
+                                message="Your patients will appear here once they are assigned to you."
+                            />
                         </div>
                     )}
                 </div>

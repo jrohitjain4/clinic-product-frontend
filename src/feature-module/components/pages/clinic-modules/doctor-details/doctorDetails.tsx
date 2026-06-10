@@ -341,7 +341,7 @@ const DoctorDetails = () => {
                 </span>
               </h6>
               <Link
-                to={JSON.parse(localStorage.getItem("user") || "{}")?.role === 'PATIENT' ? all_routes.patientappointments : all_routes.appointmentCalendar}
+                to={`${all_routes.newAppointment}?doctorId=${doctor.id}&departmentId=${doctor.department?.id || ""}`}
                 className="btn btn-primary"
               >
                 <i className="ti ti-calendar-event me-1" />

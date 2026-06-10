@@ -61,8 +61,8 @@ export const emptyAppointmentForm = () => ({
   status: "Schedule",
   reason: "",
   isFollowUp: false,
-  followUpStatus: "Free Follow-up",
-  paymentStatus: "Free",
+  followUpStatus: "Paid Follow-up",
+  paymentStatus: "Unpaid",
   parentAppointmentId: "",
 });
 

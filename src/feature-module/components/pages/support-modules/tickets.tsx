@@ -18,6 +18,11 @@ const TicketsList = () => {
 
   const columns = [
     {
+      title: "Sr. No.",
+      dataIndex: "s_no",
+      render: (_: any, __: any, index: number) => index + 1,
+    },
+    {
       title: "Ticket ID",
       dataIndex: "ticketCode",
       render: (text: any) => <span className="text-primary">{text}</span>,
@@ -57,10 +62,10 @@ const TicketsList = () => {
         <span className="badge border bg-white text-dark fw-medium">
           <i
             className={`ti ti-point-filled ${text === "Low"
-                ? "text-success"
-                : text === "High"
-                  ? "text-danger"
-                  : "text-warning"
+              ? "text-success"
+              : text === "High"
+                ? "text-danger"
+                : "text-warning"
               } me-1`}
           />
           {text}
@@ -70,34 +75,34 @@ const TicketsList = () => {
     },
     {
       title: "Status",
-      dataIndex: "Status",
+      dataIndex: "status",
       render: (text: any) => (
         <span
           className={`badge fw-medium ${text === "Resolved"
-              ? "bg-soft-success text-success"
-              : text === "Inprogress"
-                ? "bg-soft-warning text-warning"
-                : text === "Open"
-                  ? "bg-soft-info text-info"
-                  : "bg-soft-danger text-danger"
+            ? "bg-soft-success text-success"
+            : text === "Inprogress" || text === "Pending"
+              ? "bg-soft-warning text-warning"
+              : text === "Open"
+                ? "bg-soft-info text-info"
+                : "bg-soft-danger text-danger"
             } border ${text === "Resolved"
               ? "border-success"
-              : text === "Inprogress"
+              : text === "Inprogress" || text === "Pending"
                 ? "border-warning"
                 : text === "Open"
                   ? "border-info"
                   : "border-danger"
             }`}
         >
-          {text}
+          {text || "Pending"}
         </span>
       ),
-      sorter: (a: any, b: any) => a.status.localeCompare(b.status),
+      sorter: (a: any, b: any) => (a.status || "").localeCompare(b.status || ""),
     },
     {
       title: "Action",
       render: (record: Ticket) => (
-        <div className="action-item">
+        <div className="action-item d-flex align-items-center">
           <Link
             to="#"
             className="btn btn-sm btn-white border me-2"
@@ -107,6 +112,16 @@ const TicketsList = () => {
           >
             <i className="ti ti-eye me-1" /> View
           </Link>
+          {record.status !== 'Resolved' && (
+            <Link
+              to="#"
+              className="btn btn-sm btn-success-light border"
+              onClick={() => updateStatus(record.id, 'Resolved')}
+              title="Mark as Resolved"
+            >
+              <i className="ti ti-check me-1" /> Checkout
+            </Link>
+          )}
         </div>
       ),
     },
@@ -117,51 +132,51 @@ const TicketsList = () => {
       {/* ========================
 			Start Page Content
 		========================= */}
-        <div className="page-wrapper">
-          <div className="content">
-            <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-3 mb-3 border-bottom">
-              <div className="d-flex align-items-center">
-                <h4 className="fw-bold mb-0 me-2">Support Tickets</h4>
-                <span className="badge badge-soft-primary border pt-1 px-2 border-primary fw-medium">
-                  Total Tickets : {tickets.length}
-                </span>
-              </div>
-              {!isSuperAdmin && (
-                <div className="d-flex align-items-center gap-2">
-                  <div className="d-flex align-items-center bg-white border rounded px-2" style={{ minHeight: '46px' }}>
-                    <i className="ti ti-search text-muted" />
-                    <input
-                      type="text"
-                      className="form-control border-0 shadow-none fs-14"
-                      placeholder="Search tickets..."
-                      value={searchText}
-                      onChange={(e) => setSearchText(e.target.value)}
-                    />
-                  </div>
-                  <Link
-                    to="#"
-                    className="btn btn-primary btn-md"
-                    style={{ minHeight: '46px' }}
-                    data-bs-toggle="modal"
-                    data-bs-target="#add_tickets"
-                    onClick={() => setSelectedTicket(null)}
-                  >
-                    <i className="ti ti-plus ms-2" />
-                    Raise New Ticket
-                  </Link>
+      <div className="page-wrapper">
+        <div className="content">
+          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-3 mb-3 border-bottom">
+            <div className="d-flex align-items-center">
+              <h4 className="fw-bold mb-0 me-2">Support Tickets</h4>
+              <span className="badge badge-soft-primary border pt-1 px-2 border-primary fw-medium">
+                Total Tickets : {tickets.length}
+              </span>
+            </div>
+            {!isSuperAdmin && (
+              <div className="d-flex align-items-center gap-2">
+                <div className="d-flex align-items-center bg-white border rounded px-2" style={{ minHeight: '46px' }}>
+                  <i className="ti ti-search text-muted" />
+                  <input
+                    type="text"
+                    className="form-control border-0 shadow-none fs-14"
+                    placeholder="Search tickets..."
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                  />
                 </div>
-              )}
-            </div>
-
-            <div className="table-responsive">
-              <Datatable
-                columns={columns}
-                dataSource={tickets}
-                Selection={false}
-                searchText={searchText}
-              />
-            </div>
+                <Link
+                  to="#"
+                  className="btn btn-primary btn-md"
+                  style={{ minHeight: '46px' }}
+                  data-bs-toggle="modal"
+                  data-bs-target="#add_tickets"
+                  onClick={() => setSelectedTicket(null)}
+                >
+                  <i className="ti ti-plus ms-2" />
+                  Raise New Ticket
+                </Link>
+              </div>
+            )}
           </div>
+
+          <div className="table-responsive">
+            <Datatable
+              columns={columns}
+              dataSource={tickets}
+              Selection={false}
+              searchText={searchText}
+            />
+          </div>
+        </div>
         {/* End Content */}
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">

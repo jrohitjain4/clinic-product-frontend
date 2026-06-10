@@ -17,6 +17,9 @@ export interface SelectProps {
   isDisabled?: boolean;
   isMulti?: boolean;
   onChange?: (option: any) => void;
+  filterOption?: (option: any, inputValue: string) => boolean;
+  formatOptionLabel?: (option: any, formatOptionLabelMeta: any) => React.ReactNode;
+  isSearchable?: boolean;
 }
 
 const CommonSelect: React.FC<SelectProps> = ({
@@ -28,26 +31,33 @@ const CommonSelect: React.FC<SelectProps> = ({
   isDisabled = false,
   isMulti = false,
   onChange,
+  filterOption,
+  formatOptionLabel,
+  isSearchable = true,
 }) => {
   const isControlled = value !== undefined;
   const [selectedOption, setSelectedOption] = useState<any>(defaultValue);
+  const [menuSearch, setMenuSearch] = useState("");
+
+  const filteredOptions = menuSearch
+    ? options.filter((opt) => opt.label.toLowerCase().includes(menuSearch.toLowerCase()))
+    : options;
 
   const customStyles = {
-    
     control: (base: any, state: any) => ({
       ...base,
-      backgroundColor: 'white',
-      border: state.isFocused ? '1.5px solid #6366f1' : '1.5px solid #6366f1',
-      boxShadow: 'none',
-      borderRadius: '12px',
-      minHeight: '46px',
-      fontSize: '15px',
-      fontWeight: '500',
-      padding: '2px 8px',
-      transition: 'all 0.2s ease-in-out',
-      '&:hover': {
-        border: '1.5px solid #6366f1'
-      }
+      backgroundColor: "white",
+      border: state.isFocused ? "1.5px solid #6366f1" : "1.5px solid #6366f1",
+      boxShadow: "none",
+      borderRadius: "12px",
+      minHeight: "46px",
+      fontSize: "15px",
+      fontWeight: "500",
+      padding: "2px 8px",
+      transition: "all 0.2s ease-in-out",
+      "&:hover": {
+        border: "1.5px solid #6366f1",
+      },
     }),
     option: (base: any, state: any) => ({
       ...base,
@@ -78,7 +88,6 @@ const CommonSelect: React.FC<SelectProps> = ({
     <Select
       classNamePrefix="react-select"
       className={className}
-      styles={customStyles}
       options={options}
       value={displayValue}
       onChange={handleChange}
@@ -86,6 +95,15 @@ const CommonSelect: React.FC<SelectProps> = ({
       isDisabled={isDisabled}
       isMulti={isMulti}
       isClearable
+      filterOption={filterOption}
+      formatOptionLabel={formatOptionLabel}
+      isSearchable={isSearchable}
+      menuPortalTarget={document.body}
+      menuPosition="fixed"
+      styles={{
+        ...customStyles,
+        menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
+      }}
     />
   );
 };

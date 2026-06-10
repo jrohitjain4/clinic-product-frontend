@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import EmptyState from "../../../../../../core/common/emptyState";
 import { Link } from "react-router";
 import { all_routes } from "../../../../../routes/all_routes";
 import { toast } from "react-toastify";
@@ -288,10 +289,10 @@ const Notes = () => {
               <option value="Low">Low</option>
             </select>
             <input type="date" className="form-control" style={{ width: '140px' }} title="Date wise" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
-            {(filterPriority || filterDate) && (
+            {(filterPriority || (filterDate !== new Date().toISOString().split("T")[0] && filterDate !== "")) && (
               <button className="btn btn-white border d-flex align-items-center" onClick={() => {
                 setFilterPriority("");
-                setFilterDate("");
+                setFilterDate(new Date().toISOString().split("T")[0]);
               }}>
                 Clear filter
               </button>
@@ -317,11 +318,16 @@ const Notes = () => {
             <span className="spinner-border text-primary" role="status" />
           </div>
         ) : tableData.length === 0 ? (
-          <div className="text-center py-5 border rounded bg-white mt-3">
-            <p className="text-muted mb-3">No notes found. Click "Add New Note" to get started!</p>
-            <button className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_note">
-              Add New Note
-            </button>
+          <div className="border rounded bg-white mt-3">
+            <EmptyState
+              title="No notes yet"
+              message="Jot down quick reminders, meeting minutes, or patient-related memos here."
+              action={
+                <button className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_note">
+                  Add New Note <i className="ti ti-plus ms-2" />
+                </button>
+              }
+            />
           </div>
         ) : (
           <div className="table-responsive">

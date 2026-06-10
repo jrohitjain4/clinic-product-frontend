@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { Select } from "antd";
+import dayjs from "dayjs";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
 import Footer from "../../../../../core/common/footer/footer";
@@ -15,7 +16,6 @@ import AppointmentsModals from "./appointmentsModals";
 import { resolveMediaUrl } from "../../../../../core/config/api";
 
 const Appointments = () => {
-  // Add direct styling for antd select to match bootstrap buttons
   const customSelectStyles = `
     .custom-select-header .ant-select-selector {
       border-color: #dee2e6 !important;
@@ -28,6 +28,21 @@ const Appointments = () => {
       font-weight: 700 !important;
       color: #6c757d !important;
     }
+    .compact-table .ant-table-tbody > tr > td {
+      padding: 8px 12px !important; /* Further reduced padding */
+    }
+    .compact-table .avatar-md {
+      width: 38px !important;
+      height: 38px !important;
+    }
+    .compact-table .avatar-xs {
+      width: 24px !important;
+      height: 24px !important;
+    }
+    .compact-table .card {
+      margin-bottom: 0 !important;
+      border-radius: 8px !important;
+    }
   `;
 
   const { appointments, loading, error, refetch, reload } = useClinicAppointments();
@@ -35,12 +50,13 @@ const Appointments = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchText, setSearchText] = useState("");
 
-  // Filters State
   const [filterPatient, setFilterPatient] = useState("");
-  const [filterDoctor, setFilterDoctor] = useState("");
+  const [filterFollowUp, setFilterFollowUp] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterDate, setFilterDate] = useState("");
+  const [datePreset, setDatePreset] = useState("All"); // All, Today, Yesterday, Last 7 Days, Custom
   const [filterDepartment, setFilterDepartment] = useState("");
+  const [filterDoctor, setFilterDoctor] = useState("");
   const [filterType, setFilterType] = useState("");
 
   const tableData = useMemo(
@@ -66,21 +82,46 @@ const Appointments = () => {
   }, [appointments]);
 
   const doctorsList = useMemo(() => {
-    const names = Array.from(new Set(appointments.map(a => a.doctorName || a.doctor.fullName)));
+    const names = Array.from(new Set(appointments.map(a => a.doctorName || a.doctor?.fullName)));
     return names.filter(n => n && n !== "—").sort();
+  }, [appointments]);
+
+  const departmentsList = useMemo(() => {
+    const names = Array.from(new Set(appointments.map(a => a.doctor?.department?.name)));
+    return names.filter(n => n).sort();
   }, [appointments]);
 
   const filteredData = useMemo(() => {
     return tableData.filter((row) => {
-      const matchDoctor = filterDoctor
-        ? row.Doctor.toLowerCase().includes(filterDoctor.toLowerCase())
-        : true;
+      const matchFollowUp = filterFollowUp === "All" || !filterFollowUp
+        ? true
+        : filterFollowUp === "Free"
+          ? row._raw.isFollowUp && row._raw.paymentStatus === "Free"
+          : filterFollowUp === "Paid"
+            ? row._raw.isFollowUp && row._raw.paymentStatus === "Paid"
+            : row._raw.followUpStatus?.toLowerCase() === filterFollowUp.toLowerCase() || (filterFollowUp === "Follow-up" && row._raw.isFollowUp);
+
       const matchStatus = filterStatus === "All" || !filterStatus
         ? true
         : row.Status.toLowerCase() === filterStatus.toLowerCase();
-      const matchDate = filterDate
-        ? row.Date_Time.includes(filterDate)
+
+      const matchDoctor = filterDoctor
+        ? row.Doctor.toLowerCase().includes(filterDoctor.toLowerCase())
         : true;
+
+      // Date Filter Logic
+      let matchDate = true;
+      const rowDate = dayjs(row._raw.scheduledAt);
+      if (datePreset === "Today") {
+        matchDate = rowDate.isSame(dayjs(), 'day');
+      } else if (datePreset === "Yesterday") {
+        matchDate = rowDate.isSame(dayjs().subtract(1, 'day'), 'day');
+      } else if (datePreset === "Last 7 Days") {
+        matchDate = rowDate.isAfter(dayjs().subtract(7, 'day'));
+      } else if (datePreset === "Custom" && filterDate) {
+        matchDate = rowDate.format("YYYY-MM-DD") === filterDate;
+      }
+
       const matchDept = filterDepartment
         ? row.department.toLowerCase().includes(filterDepartment.toLowerCase())
         : true;
@@ -88,16 +129,15 @@ const Appointments = () => {
         ? row.Mode.toLowerCase() === filterType.toLowerCase()
         : true;
 
-      return matchDoctor && matchStatus && matchDate && matchDept && matchType;
+      return matchFollowUp && matchStatus && matchDate && matchDept && matchType && matchDoctor;
     });
-  }, [tableData, filterDoctor, filterStatus, filterDate, filterDepartment, filterType]);
+  }, [tableData, filterFollowUp, filterStatus, filterDate, datePreset, filterDepartment, filterType, filterDoctor]);
 
   const handlePrintAppointment = (a: ClinicAppointment) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const html = `
-      <html>
+    const html = `<html>
         <head>
           <title>Appointment Summary - ${a.appointmentCode || 'Record'}</title>
           <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
@@ -205,8 +245,8 @@ const Appointments = () => {
             };
           </script>
         </body>
-      </html>
-    `;
+      </html >
+  `;
     printWindow.document.write(html);
     printWindow.document.close();
   };
@@ -228,7 +268,7 @@ const Appointments = () => {
     if (!printWindow) return;
 
     const reportHtml = `
-      <html>
+  < html >
         <head>
           <title>Appointments Report</title>
           <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
@@ -298,11 +338,11 @@ const Appointments = () => {
 
           <script>
             // Auto-print disabled to allow direct PDF download option
-            // window.onload = () => { setTimeout(() => { window.print(); }, 500); };
-          </script>
-        </body>
-      </html>
-    `;
+            // window.onload = () => {setTimeout(() => { window.print(); }, 500); };
+    </script>
+  </body>
+      </html >
+  `;
 
     printWindow.document.write(reportHtml);
     printWindow.document.close();
@@ -328,9 +368,9 @@ const Appointments = () => {
           <Link to={all_routes.patientDetails.replace(":id", record._raw.patientId)} className="avatar avatar-md me-2">
             <ImageWithBasePath src={record.Patient_Image} alt="Patient" className="rounded-circle" />
           </Link>
-          <div>
-            <Link to={all_routes.patientDetails.replace(":id", record._raw.patientId)} className="text-dark fw-bold d-block">{text}</Link>
-            <span className="text-muted fs-12">{record.Phone}</span>
+          <div className="lh-1">
+            <Link to={all_routes.patientDetails.replace(":id", record._raw.patientId)} className="text-dark fw-bold d-block mb-1 fs-13 text-nowrap">{text}</Link>
+            <span className="text-muted fs-11">{record.Phone}</span>
           </div>
         </div>
       ),
@@ -343,7 +383,7 @@ const Appointments = () => {
           <Link to={all_routes.doctorsDetails.replace(":id", record._raw.doctorId)} className="avatar avatar-xs me-2">
             <ImageWithBasePath src={record.Doctor_Image} alt="Doctor" className="rounded-circle" />
           </Link>
-          <Link to={all_routes.doctorsDetails.replace(":id", record._raw.doctorId)} className="text-dark fw-medium">{text}</Link>
+          <Link to={all_routes.doctorsDetails.replace(":id", record._raw.doctorId)} className="text-dark fw-medium fs-13 text-nowrap">{text}</Link>
         </div>
       ),
     },
@@ -354,18 +394,13 @@ const Appointments = () => {
       render: (text: string, record: any) => {
         const raw = record._raw;
         return (
-          <div className="d-flex flex-column align-items-start gap-1">
-            <span className={`badge ${statusBadgeClass(text)} mb-1`}>{text}</span>
+          <div className="d-flex flex-column align-items-start">
+            <span className={`badge ${statusBadgeClass(text)} `}>{text}</span>
             {raw?.isFollowUp && (
-              <div className="d-flex flex-column gap-1">
-                <span className={`badge fs-10 px-2 py-1 ${raw.paymentStatus === "Free" ? "badge-soft-success text-success" : "badge-soft-info text-info border-info-subtle"}`} style={{ border: '1px solid currentColor', opacity: 0.85 }}>
-                  {raw.followUpStatus || "Follow-up"} ({raw.paymentStatus || "Unpaid"})
+              <div className="mt-1">
+                <span className={`text - muted fw - bold`} style={{ fontSize: '10px' }}>
+                  {raw.followUpStatus || "Follow-up"}
                 </span>
-                {raw?.parentAppointmentId && (
-                  <div className="d-flex align-items-center gap-1 text-muted ms-1" style={{ fontSize: '9px', fontWeight: 600, letterSpacing: '0.3px', textTransform: 'uppercase' }}>
-                    <i className="ti ti-link" /> Linked Visit
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -395,32 +430,33 @@ const Appointments = () => {
           <div className="d-flex align-items-center pb-3 mb-3 border-bottom overflow-hidden" style={{ gap: '16px' }}>
             <h4 className="fw-bold mb-0 flex-shrink-0">Appointment</h4>
             <div className="d-flex align-items-center flex-nowrap" style={{ gap: '16px' }}>
-              {["All", "Schedule", "Confirmed", "Checked Out"].map((s) => (
+              {["All", "Schedule", "Confirmed", "Checked In"].map((s) => (
                 <button
                   key={s}
-                  className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-2 fs-12 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
+                  className={`btn btn - sm ${filterStatus === s || (s === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py - 1 px - 2 fs - 12 fw - bold flex - shrink - 0 d - flex align - items - center gap - 1`}
                   onClick={() => setFilterStatus(s)}
                   style={{ borderRadius: '6px', height: '36px' }}
                 >
-                  {s === "Checked Out" ? "Check-out" : s}
-                  <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>
-                    {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked Out" ? counts.checkedOut : appointments.filter(a => a.status === s).length}
+                  {s}
+                  <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms - 1`}>
+                    {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : appointments.filter(a => a.status === s).length}
                   </span>
                 </button>
               ))}
             </div>
 
             <div className="d-flex align-items-center" style={{ gap: '16px' }}>
-              <div className="position-relative" style={{ width: '175px' }}>
-                <input
-                  type="text"
-                  className="form-control"
-                  style={{ height: '36px', paddingLeft: '35px', fontSize: '13px', fontWeight: 'bold' }}
-                  placeholder="Search Doctor..."
-                  value={filterDoctor}
-                  onChange={(e) => setFilterDoctor(e.target.value)}
-                />
-                <i className="ti ti-search position-absolute top-50 translate-middle-y text-muted" style={{ left: '12px', fontSize: '14px' }} />
+              <div className="position-relative" style={{ width: '185px' }}>
+                <select
+                  className="form-select fs-13"
+                  style={{ height: '36px', fontSize: '13px', fontWeight: 'bold' }}
+                  value={filterFollowUp}
+                  onChange={(e) => setFilterFollowUp(e.target.value)}
+                >
+                  <option value="All">Follow-up Status</option>
+                  <option value="Free">Free Follow-up</option>
+                  <option value="Paid">Paid Follow-up</option>
+                </select>
               </div>
               <button className="btn btn-sm btn-light border d-flex align-items-center gap-2 fw-bold fs-12 flex-shrink-0 shadow-sm bg-white" style={{ height: '36px', borderRadius: '6px' }} data-bs-toggle="offcanvas" data-bs-target="#filter_drawer">
                 <i className="ti ti-filter fs-14" /> Filter
@@ -432,8 +468,16 @@ const Appointments = () => {
             </Link>
           </div>
 
-          <div className="table-responsive border rounded bg-white shadow-sm">
-            <Datatable columns={columns} dataSource={filteredData} Selection={true} onSelectionChange={(keys: any) => setSelectedIds(keys as string[])} searchText={searchText} />
+          <div className="compact-table">
+            <Datatable
+              columns={columns}
+              dataSource={filteredData}
+              Selection={true}
+              onSelectionChange={(keys: any) => setSelectedIds(keys as string[])}
+              searchText={searchText}
+              emptyTitle="No Appointments Scheduled"
+              emptyMessage="We couldn't find any appointments matching your current filters. You can try adjusting the date range or follow-up status."
+            />
           </div>
         </div>
         <Footer />
@@ -447,28 +491,59 @@ const Appointments = () => {
         </div>
         <div className="offcanvas-body">
           <div className="mb-3">
-            <label className="form-label fw-bold small">Department</label>
-            <input type="text" className="form-control fs-13" placeholder="Search Department" value={filterDepartment} onChange={(e) => setFilterDepartment(e.target.value)} />
+            <label className="form-label fw-bold small text-uppercase">Follow-up Status</label>
+            <select className="form-select fs-13" value={filterFollowUp} onChange={(e) => setFilterFollowUp(e.target.value)}>
+              <option value="All">Choose Follow-up Status</option>
+              <option value="Free">Free Follow-up</option>
+              <option value="Paid">Paid Follow-up</option>
+            </select>
           </div>
           <div className="mb-3">
-            <label className="form-label fw-bold small">Doctor</label>
-            <input type="text" className="form-control fs-13" placeholder="Search Doctor" value={filterDoctor} onChange={(e) => setFilterDoctor(e.target.value)} />
+            <label className="form-label fw-bold small text-uppercase">Department</label>
+            <select className="form-select fs-13" value={filterDepartment} onChange={(e) => setFilterDepartment(e.target.value)}>
+              <option value="">All Departments</option>
+              {departmentsList.map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
           </div>
+
           <div className="mb-3">
-            <label className="form-label fw-bold small">Date</label>
-            <input type="date" className="form-control fs-13" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
+            <label className="form-label fw-bold small text-uppercase">Doctor</label>
+            <select className="form-select fs-13" value={filterDoctor} onChange={(e) => setFilterDoctor(e.target.value)}>
+              <option value="">All Doctors</option>
+              {doctorsList.map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
           </div>
+
           <div className="mb-3">
-            <label className="form-label fw-bold small">Status</label>
+            <label className="form-label fw-bold small text-uppercase">Date Range</label>
+            <select className="form-select fs-13 mb-2" value={datePreset} onChange={(e) => setDatePreset(e.target.value)}>
+              <option value="All">All Dates</option>
+              <option value="Today">Today</option>
+              <option value="Yesterday">Yesterday</option>
+              <option value="Last 7 Days">Last 7 Days</option>
+              <option value="Custom">Choose Custom Date</option>
+            </select>
+            {datePreset === "Custom" && (
+              <input type="date" className="form-control fs-13" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
+            )}
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label fw-bold small text-uppercase">Appointment Status</label>
             <select className="form-select fs-13" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
               <option value="All">All Status</option>
               <option value="Schedule">Schedule</option>
               <option value="Confirmed">Confirmed</option>
-              <option value="Checked Out">Checked Out</option>
+              <option value="Checked In">Checked In</option>
             </select>
           </div>
+
           <div className="mb-3">
-            <label className="form-label fw-bold small">Type (Mode)</label>
+            <label className="form-label fw-bold small text-uppercase">Visit Type (Mode)</label>
             <select className="form-select fs-13" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
               <option value="">All Types</option>
               <option value="In-person">In-person</option>
@@ -479,11 +554,13 @@ const Appointments = () => {
           <hr />
 
           <div className="d-grid gap-2">
-            <button className="btn btn-soft-danger fw-bold" onClick={() => {
-              setFilterDoctor(""); setFilterDate(""); setFilterStatus("All"); setFilterDepartment(""); setFilterType("");
-            }}>Clear All Filters</button>
-            <button className="btn btn-soft-info fw-bold" onClick={handleDownloadCopy}><i className="ti ti-download me-2" />Download Appointments</button>
-            <button className="btn btn-soft-success fw-bold" onClick={handleExportCSV}><i className="ti ti-file-export me-2" />Export to CSV</button>
+            <button className="btn btn-soft-danger fw-bold py-2" onClick={() => {
+              setFilterFollowUp("All"); setFilterDate(""); setDatePreset("All"); setFilterStatus("All"); setFilterDepartment(""); setFilterType(""); setFilterDoctor("");
+            }}>
+              <i className="ti ti-refresh me-2" />Clear All Filters
+            </button>
+            <button className="btn btn-soft-info fw-bold py-2" onClick={handleDownloadCopy}><i className="ti ti-download me-2" />Download Ledger</button>
+            <button className="btn btn-soft-success fw-bold py-2" onClick={handleExportCSV}><i className="ti ti-file-export me-2" />Export CSV</button>
           </div>
         </div>
       </div>

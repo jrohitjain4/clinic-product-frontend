@@ -304,33 +304,152 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="row g-1">
-            <div className="col-xl-6">
-              <div className="card h-100">
-                <div className="card-header d-flex align-items-center justify-content-between border-0">
-                  <h5 className="fw-bold mb-0">Recent Transactions</h5>
-                  <Link to="#" className="btn btn-sm btn-link p-0 fw-bold">View All</Link>
-                </div>
-                <div className="card-body">
-                  {stats.recentTransactions?.slice(0, 4).map((tx, index) => (
-                    <div key={tx.id} className={`d-flex justify-content-between align-items-center ${index === 3 ? 'mb-0' : 'mb-3'}`}>
-                      <div className="d-flex align-items-center">
-                        <div className="avatar me-2 flex-shrink-0">
-                          <span className="avatar-title rounded-circle bg-soft-primary text-primary fs-16">
-                            <i className="ti ti-receipt" />
-                          </span>
-                        </div>
-                        <div>
-                          <h6 className="fs-13 mb-1 fw-bold text-dark">{tx.patientName}</h6>
-                          <p className="mb-0 fs-11 text-muted">{dayjs(tx.createdAt).format('DD MMM YYYY')}</p>
-                        </div>
-                      </div>
-                      <h6 className="fw-bold text-success mb-0">+${tx.amount.toLocaleString()}</h6>
-                    </div>
-                  ))}
+          {/* ── TRANSACTION ANALYTICS SECTION ────────────────── */}
+          <div className="row g-1 mb-1">
+            <div className="col-xl-4 col-md-4">
+              <div className="card h-100 border-0" style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', borderLeft: '4px solid #10b981 !important' }}>
+                <div className="card-body d-flex align-items-center gap-3">
+                  <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 52, height: 52, background: 'rgba(16, 185, 129, 0.15)' }}>
+                    <i className="ti ti-trending-up fs-24" style={{ color: '#10b981' }} />
+                  </div>
+                  <div className="flex-grow-1">
+                    <p className="mb-1 fs-12 fw-semibold text-uppercase" style={{ color: '#6b7280', letterSpacing: '0.5px' }}>Total Income</p>
+                    <h4 className="fw-bold mb-0" style={{ color: '#065f46' }}>₹{stats.totalIncome?.toLocaleString('en-IN') || '0'}</h4>
+                  </div>
+                  <div className="d-flex align-items-center gap-1 px-2 py-1 rounded-pill" style={{ background: 'rgba(16, 185, 129, 0.12)', fontSize: '11px', fontWeight: 700, color: '#10b981' }}>
+                    <i className="ti ti-arrow-up fs-12" /> Income
+                  </div>
                 </div>
               </div>
             </div>
+            <div className="col-xl-4 col-md-4">
+              <div className="card h-100 border-0" style={{ background: 'linear-gradient(135deg, #fef2f2 0%, #fecaca 100%)', borderLeft: '4px solid #ef4444 !important' }}>
+                <div className="card-body d-flex align-items-center gap-3">
+                  <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 52, height: 52, background: 'rgba(239, 68, 68, 0.12)' }}>
+                    <i className="ti ti-trending-down fs-24" style={{ color: '#ef4444' }} />
+                  </div>
+                  <div className="flex-grow-1">
+                    <p className="mb-1 fs-12 fw-semibold text-uppercase" style={{ color: '#6b7280', letterSpacing: '0.5px' }}>Total Expense</p>
+                    <h4 className="fw-bold mb-0" style={{ color: '#991b1b' }}>₹{stats.totalExpense?.toLocaleString('en-IN') || '0'}</h4>
+                  </div>
+                  <div className="d-flex align-items-center gap-1 px-2 py-1 rounded-pill" style={{ background: 'rgba(239, 68, 68, 0.12)', fontSize: '11px', fontWeight: 700, color: '#ef4444' }}>
+                    <i className="ti ti-arrow-down fs-12" /> Expense
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="col-xl-4 col-md-4">
+              <div className="card h-100 border-0" style={{ background: stats.netProfit >= 0 ? 'linear-gradient(135deg, #eff6ff 0%, #bfdbfe 100%)' : 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)', borderLeft: `4px solid ${stats.netProfit >= 0 ? '#3b82f6' : '#f97316'} !important` }}>
+                <div className="card-body d-flex align-items-center gap-3">
+                  <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 52, height: 52, background: stats.netProfit >= 0 ? 'rgba(59, 130, 246, 0.12)' : 'rgba(249, 115, 22, 0.12)' }}>
+                    <i className={`ti ${stats.netProfit >= 0 ? 'ti-chart-arrows-vertical' : 'ti-alert-triangle'} fs-24`} style={{ color: stats.netProfit >= 0 ? '#3b82f6' : '#f97316' }} />
+                  </div>
+                  <div className="flex-grow-1">
+                    <p className="mb-1 fs-12 fw-semibold text-uppercase" style={{ color: '#6b7280', letterSpacing: '0.5px' }}>Net Profit</p>
+                    <h4 className="fw-bold mb-0" style={{ color: stats.netProfit >= 0 ? '#1e40af' : '#9a3412' }}>
+                      {stats.netProfit >= 0 ? '+' : '-'}₹{Math.abs(stats.netProfit || 0).toLocaleString('en-IN')}
+                    </h4>
+                  </div>
+                  <div className="d-flex align-items-center gap-1 px-2 py-1 rounded-pill" style={{ background: stats.netProfit >= 0 ? 'rgba(59, 130, 246, 0.12)' : 'rgba(249, 115, 22, 0.12)', fontSize: '11px', fontWeight: 700, color: stats.netProfit >= 0 ? '#3b82f6' : '#f97316' }}>
+                    <i className={`ti ${stats.netProfit >= 0 ? 'ti-thumb-up' : 'ti-thumb-down'} fs-12`} /> {stats.netProfit >= 0 ? 'Profit' : 'Loss'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── TRANSACTIONS TABLE ────────────────── */}
+          <div className="row g-1 mb-1">
+            <div className="col-xl-12">
+              <div className="card">
+                <div className="card-header d-flex align-items-center justify-content-between border-0">
+                  <div>
+                    <h5 className="fw-bold mb-1">All Transactions</h5>
+                    <p className="mb-0 fs-12 text-muted">Income & Expense overview</p>
+                  </div>
+                </div>
+                <div className="card-body p-0">
+                  <div className="table-responsive">
+                    <table className="table table-nowrap mb-0 table-hover">
+                      <thead style={{ background: '#f8fafc' }}>
+                        <tr>
+                          <th className="fs-12 text-muted fw-semibold" style={{ padding: '10px 15px' }}>Type</th>
+                          <th className="fs-12 text-muted fw-semibold" style={{ padding: '10px 15px' }}>Description</th>
+                          <th className="fs-12 text-muted fw-semibold" style={{ padding: '10px 15px' }}>Reference</th>
+                          <th className="fs-12 text-muted fw-semibold" style={{ padding: '10px 15px' }}>Amount</th>
+                          <th className="fs-12 text-muted fw-semibold" style={{ padding: '10px 15px' }}>Method</th>
+                          <th className="fs-12 text-muted fw-semibold" style={{ padding: '10px 15px' }}>Status</th>
+                          <th className="fs-12 text-muted fw-semibold" style={{ padding: '10px 15px' }}>Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stats.recentTransactions?.length === 0 && (
+                          <tr>
+                            <td colSpan={7} className="text-center py-4 text-muted">
+                              <i className="ti ti-receipt-off fs-24 d-block mb-2" />
+                              No transactions found
+                            </td>
+                          </tr>
+                        )}
+                        {stats.recentTransactions?.map((tx) => (
+                          <tr key={tx.id} style={{ transition: 'background 0.2s' }}>
+                            <td style={{ padding: '10px 15px' }}>
+                              <div className="d-flex align-items-center gap-2">
+                                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{
+                                  width: 32, height: 32,
+                                  background: tx.type === 'income' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'
+                                }}>
+                                  <i className={`ti ${tx.type === 'income' ? 'ti-arrow-down-left' : 'ti-arrow-up-right'} fs-16`} style={{ color: tx.type === 'income' ? '#10b981' : '#ef4444' }} />
+                                </div>
+                                <span className={`badge rounded-pill fw-semibold px-2 py-1 fs-11`} style={{
+                                  background: tx.type === 'income' ? '#ecfdf5' : '#fef2f2',
+                                  color: tx.type === 'income' ? '#059669' : '#dc2626',
+                                  border: `1px solid ${tx.type === 'income' ? '#a7f3d0' : '#fecaca'}`
+                                }}>
+                                  {tx.type === 'income' ? 'Income' : 'Expense'}
+                                </span>
+                              </div>
+                            </td>
+                            <td style={{ padding: '10px 15px' }}>
+                              <h6 className="fs-13 mb-0 fw-semibold text-dark">{tx.description}</h6>
+                            </td>
+                            <td style={{ padding: '10px 15px' }}>
+                              <span className="fs-12 text-muted">{tx.invoiceCode || '—'}</span>
+                            </td>
+                            <td style={{ padding: '10px 15px' }}>
+                              <h6 className="fs-13 mb-0 fw-bold" style={{ color: tx.type === 'income' ? '#059669' : '#dc2626' }}>
+                                {tx.type === 'income' ? '+' : '-'}₹{tx.amount?.toLocaleString('en-IN')}
+                              </h6>
+                            </td>
+                            <td style={{ padding: '10px 15px' }}>
+                              <span className="fs-12" style={{ color: '#475569' }}>
+                                {tx.method || '—'}
+                              </span>
+                            </td>
+                            <td style={{ padding: '10px 15px' }}>
+                              <span className={`badge rounded-pill fw-medium px-2 py-1 fs-11`} style={{
+                                background: tx.status === 'Paid' ? '#ecfdf5' : tx.status === 'Pending' ? '#fffbeb' : '#f0f9ff',
+                                color: tx.status === 'Paid' ? '#059669' : tx.status === 'Pending' ? '#d97706' : '#0284c7',
+                                border: `1px solid ${tx.status === 'Paid' ? '#a7f3d0' : tx.status === 'Pending' ? '#fde68a' : '#bae6fd'}`
+                              }}>
+                                {tx.status}
+                              </span>
+                            </td>
+                            <td style={{ padding: '10px 15px' }}>
+                              <span className="fs-12 text-muted">{dayjs(tx.date).format('DD MMM YYYY')}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── STAFF STATUS ────────────────── */}
+          <div className="row g-1">
             <div className="col-xl-6">
               <div className="card h-100">
                 <div className="card-header d-flex align-items-center justify-content-between border-0">

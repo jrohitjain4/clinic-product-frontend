@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import EmptyState from "../../../../../core/common/emptyState";
 import { Link } from "react-router";
 import Datatable from "../../../../../core/common/dataTable";
 import ExpenseCategoryModal from "../modal/expenseCategoryModal";
@@ -50,11 +51,10 @@ const ExpenseCategory = () => {
       dataIndex: "Status",
       render: (text: string) => (
         <span
-          className={`badge border fw-medium ${
-            text === "Active"
+          className={`badge border fw-medium ${text === "Active"
               ? "badge-soft-success border-success"
               : "badge-soft-danger border-danger"
-          }`}
+            }`}
         >
           {text}
         </span>
@@ -207,18 +207,21 @@ const ExpenseCategory = () => {
               <p className="text-muted mt-2 mb-0">Loading categories</p>
             </div>
           ) : categories.length === 0 && !error ? (
-            <div className="text-center py-5 border rounded bg-white">
-              <i className="ti ti-folder fs-1 text-muted d-block mb-2" />
-              <h6 className="fw-bold">No categories yet</h6>
-              <p className="text-muted mb-3">Add your first expense category.</p>
-              <button
-                className="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#add_expense_category"
-                onClick={() => setSelectedCategory(null)}
-              >
-                Add Category <i className="ti ti-plus ms-2" />
-              </button>
+            <div className="border rounded bg-white">
+              <EmptyState
+                title="No categories yet"
+                message="Organize your expenses by creating categories such as Equipment, Maintenance, or Utilities."
+                action={
+                  <button
+                    className="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#add_expense_category"
+                    onClick={() => setSelectedCategory(null)}
+                  >
+                    Add Category <i className="ti ti-plus ms-2" />
+                  </button>
+                }
+              />
             </div>
           ) : (
             <div className="table-responsive">

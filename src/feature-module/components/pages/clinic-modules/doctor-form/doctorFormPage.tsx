@@ -173,6 +173,64 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   const [phoneWarning, setPhoneWarning] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const [initialUsername, setInitialUsername] = useState("");
+  const [usernameWarning, setUsernameWarning] = useState<string | null>(null);
+
+  // -- Username Availability Check -------------------------------
+  useEffect(() => {
+    if (!username || username.length < 3) {
+      setUsernameStatus("idle");
+      return;
+    }
+
+    // Validation for spaces and special characters - show error instead of auto-correcting
+    const hasSpace = /\s/.test(username);
+    const hasInvalid = /[^a-zA-Z0-9_]/.test(username); // Allow A-Z for typing, but we'll likely lowercase on submit or show warning
+
+    if (hasSpace) {
+      setUsernameWarning("Spaces are not allowed in username.");
+      setUsernameStatus("idle");
+      return;
+    }
+
+    if (hasInvalid) {
+      setUsernameWarning("Special characters are not allowed.");
+      setUsernameStatus("idle");
+      return;
+    }
+
+    setUsernameWarning(null);
+
+    // If editing and username matches original, it's available
+    if (isEdit && username === initialUsername) {
+      setUsernameStatus("available");
+      return;
+    }
+
+    const check = async () => {
+      setUsernameStatus("checking");
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(apiUrl(`/api/auth/check-username?username=${username.toLowerCase().trim()}`), {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const data = await res.json();
+        if (data.available) {
+          setUsernameStatus("available");
+        } else {
+          setUsernameStatus("taken");
+        }
+      } catch (err) {
+        console.error("Username check failed", err);
+        setUsernameStatus("idle");
+      }
+    };
+
+    const timeoutId = setTimeout(check, 500);
+    return () => clearTimeout(timeoutId);
+  }, [username, isEdit, initialUsername]);
+
   // -- Load doctor for edit -----------------------------------------
   useEffect(() => {
     if (!isEdit || !isValidDoctorId(doctorId)) return;
@@ -192,6 +250,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
       .then((d) => {
         setFullName(d.fullName || "");
         setUsername(d.username || "");
+        setInitialUsername(d.username || "");
         setPhone(d.phone || undefined);
         setEmail(d.email || "");
         setDob(d.dob ? dayjs(d.dob) : null);
@@ -408,6 +467,16 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
       return;
     }
 
+    if (usernameStatus === "taken") {
+      toast.error("Username is already taken. Please choose another.");
+      return;
+    }
+
+    if (usernameStatus === "checking") {
+      toast.error("Checking username availability. Please wait...");
+      return;
+    }
+
     if (departments.length === 0 || allDesignations.length === 0) {
       const msg = "To add a doctor, you need to first add at least one Department and one Designation in the system.";
       toast.error(msg);
@@ -471,7 +540,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
       const token = localStorage.getItem("token");
       const payload = {
         fullName,
-        username,
+        username: username.toLowerCase().trim(),
         phone,
         email,
         dob: dob ? dob.toISOString() : null,
@@ -674,6 +743,28 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                   onChange={(e) => setUsername(e.target.value)}
                                   placeholder="username"
                                 />
+                                <div className="mt-1 d-flex flex-column" style={{ minHeight: "20px" }}>
+                                  {usernameWarning && (
+                                    <span className="text-danger fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
+                                      <i className="ti ti-alert-triangle me-1" /> {usernameWarning}
+                                    </span>
+                                  )}
+                                  {usernameStatus === "checking" && !usernameWarning && (
+                                    <span className="text-muted d-flex align-items-center" style={{ fontSize: "12px" }}>
+                                      <span className="spinner-border spinner-border-sm me-1" style={{ width: "12px", height: "12px" }} /> checking...
+                                    </span>
+                                  )}
+                                  {usernameStatus === "available" && !usernameWarning && (
+                                    <span className="text-success fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
+                                      <i className="ti ti-circle-check me-1" /> Username Available
+                                    </span>
+                                  )}
+                                  {usernameStatus === "taken" && !usernameWarning && (
+                                    <span className="text-danger fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
+                                      <i className="ti ti-alert-circle me-1" /> Username Taken
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
 
@@ -715,10 +806,10 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
                         </div>
 
-                        {/* DOB + Experience */}
+                        {/* DOB + Age + Experience */}
                         <div className="col-lg-12">
                           <div className="row">
-                            <div className="col-lg-6">
+                            <div className="col-lg-4">
                               <div className="mb-3">
                                 <label className="form-label">
                                   DOB <span className="text-danger">*</span>
@@ -739,7 +830,21 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                 </div>
                               </div>
                             </div>
-                            <div className="col-lg-6">
+                            <div className="col-lg-4">
+                              <div className="mb-3">
+                                <label className="form-label">
+                                  Age
+                                </label>
+                                <input
+                                  type="text"
+                                  className="form-control bg-light"
+                                  value={dob ? `${dayjs().diff(dob, "year")} Years` : ""}
+                                  readOnly
+                                  placeholder="Auto-calculated"
+                                />
+                              </div>
+                            </div>
+                            <div className="col-lg-4">
                               <div className="mb-3">
                                 <label className="form-label">
                                   Year Of Experience <span className="text-danger">*</span>
@@ -1179,8 +1284,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               aria-selected={activeScheduleDay === day}
                               onClick={() => setActiveScheduleDay(day)}
                             >
-                              {day}
-                              {lockedDays[day] && <i className="ti ti-circle-check-filled fs-14 text-warning shadow-sm" />}
+                              {day.substring(0, 2)}..
+                              {lockedDays[day] && <i className="ti ti-circle-check-filled fs-14 text-white shadow-sm" />}
                             </button>
                           </li>
                         )
@@ -1202,22 +1307,6 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                   <h6 className="fw-bold mb-1 text-primary">{day} Working Hours</h6>
                                   <p className="text-muted fs-12 mb-0">Define session timings for this specific day</p>
                                 </div>
-                                <button
-                                  type="button"
-                                  className={`btn ${lockedDays[day] ? "btn-outline-primary" : "btn-primary"} d-flex align-items-center gap-2 px-4 shadow-sm`}
-                                  style={{ minHeight: '40px', fontWeight: 'bold', borderRadius: '8px' }}
-                                  onClick={() => setLockedDays(prev => ({ ...prev, [day]: !prev[day] }))}
-                                >
-                                  {lockedDays[day] ? (
-                                    <>
-                                      <i className="ti ti-edit fs-18" /> Edit Schedule
-                                    </>
-                                  ) : (
-                                    <>
-                                      <i className="ti ti-circle-check fs-18" /> Save & Lock Day
-                                    </>
-                                  )}
-                                </button>
                               </div>
 
                               <div className={`${lockedDays[day] ? "opacity-75" : ""}`}>
@@ -1229,6 +1318,24 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                   }
                                   disabled={lockedDays[day]}
                                 />
+                                <div className="mt-3 d-flex justify-content-end">
+                                  <button
+                                    type="button"
+                                    className={`btn ${lockedDays[day] ? "btn-outline-primary" : "btn-primary"} d-flex align-items-center gap-2 px-4 shadow-sm`}
+                                    style={{ minHeight: '40px', fontWeight: 'bold', borderRadius: '8px' }}
+                                    onClick={() => setLockedDays(prev => ({ ...prev, [day]: !prev[day] }))}
+                                  >
+                                    {lockedDays[day] ? (
+                                      <>
+                                        <i className="ti ti-edit fs-18" /> Edit Schedule
+                                      </>
+                                    ) : (
+                                      <>
+                                        <i className="ti ti-circle-check fs-18" /> Save & Lock Day
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>

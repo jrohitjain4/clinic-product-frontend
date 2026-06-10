@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import EmptyState from "../../../../../../core/common/emptyState";
 import { Link } from "react-router";
 import Datatable from "../../../../../../core/common/dataTable";
 import { all_routes } from "../../../../../routes/all_routes";
@@ -98,11 +99,10 @@ const RolesAndPermissions = () => {
       dataIndex: "Status",
       render: (text: string) => (
         <span
-          className={`badge border ${
-            text === "Active"
+          className={`badge border ${text === "Active"
               ? "badge-soft-success border-success"
               : "badge-soft-danger border-danger"
-          } px-2 py-1 fs-13 fw-medium`}
+            } px-2 py-1 fs-13 fw-medium`}
         >
           {text}
         </span>
@@ -275,22 +275,25 @@ const RolesAndPermissions = () => {
               <p className="text-muted mt-2 mb-0">Loading roles</p>
             </div>
           ) : roles.length === 0 && !error ? (
-            <div className="text-center py-5 border rounded bg-white">
-              <i className="ti ti-shield fs-1 text-muted d-block mb-2" />
-              <h6 className="fw-bold">No roles yet</h6>
-              <p className="text-muted mb-3">Create your first role.</p>
-              <button
-                className="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#add_role"
-                onClick={() => {
-                  setSelectedRole(null);
-                  setName("");
-                  setStatus({ value: "Active", label: "Active" });
-                }}
-              >
-                New Role <i className="ti ti-plus ms-2" />
-              </button>
+            <div className="border rounded bg-white">
+              <EmptyState
+                title="No roles yet"
+                message="Define clear access levels by creating roles like Receptionist, Doctor, or Manager."
+                action={
+                  <button
+                    className="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#add_role"
+                    onClick={() => {
+                      setSelectedRole(null);
+                      setName("");
+                      setStatus({ value: "Active", label: "Active" });
+                    }}
+                  >
+                    New Role <i className="ti ti-plus ms-2" />
+                  </button>
+                }
+              />
             </div>
           ) : (
             <div className="table-responsive">

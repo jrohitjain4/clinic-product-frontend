@@ -1,4 +1,5 @@
 import { useState } from "react";
+import EmptyState from "../../../../../core/common/emptyState";
 import Modals from "./modals/modals";
 import Datatable from "../../../../../core/common/dataTable";
 import { Link } from "react-router";
@@ -12,7 +13,7 @@ const Specializations = () => {
   const [selectedSpecialization, setSelectedSpecialization] = useState<any>(null);
   const [viewSpec, setViewSpec] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  
+
   const [filterSpecialization, setFilterSpecialization] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
 
@@ -87,11 +88,10 @@ const Specializations = () => {
       dataIndex: "Status",
       render: (text: string) => (
         <span
-          className={`badge border ${
-            text === "Active"
+          className={`badge border ${text === "Active"
               ? "badge-soft-success border-success"
               : "badge-soft-danger border-danger"
-          } px-2 py-1 fs-13 fw-medium`}
+            } px-2 py-1 fs-13 fw-medium`}
         >
           {text}
         </span>
@@ -277,18 +277,21 @@ const Specializations = () => {
               <p className="text-muted mt-2 mb-0">Loading specializations</p>
             </div>
           ) : specializations.length === 0 && !error ? (
-            <div className="text-center py-5 border rounded bg-white">
-              <i className="ti ti-stethoscope fs-1 text-muted d-block mb-2" />
-              <h6 className="fw-bold">No specializations yet</h6>
-              <p className="text-muted mb-3">Add your first specialization.</p>
-              <button
-                className="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#add_specialization"
-                onClick={() => setSelectedSpecialization(null)}
-              >
-                Add Specialization <i className="ti ti-plus ms-2" />
-              </button>
+            <div className="border rounded bg-white">
+              <EmptyState
+                title="No specializations yet"
+                message="Categorize your clinical services by adding specializations like Cardiology or Pediatrics."
+                action={
+                  <button
+                    className="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#add_specialization"
+                    onClick={() => setSelectedSpecialization(null)}
+                  >
+                    Add Specialization <i className="ti ti-plus ms-2" />
+                  </button>
+                }
+              />
             </div>
           ) : (
             <div className="table-responsive">

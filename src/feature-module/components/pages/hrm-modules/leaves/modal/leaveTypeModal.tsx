@@ -27,11 +27,27 @@ const LeaveTypeModal = ({ currentRecord, handleCreate, handleUpdate, handleDelet
     }
   }, [currentRecord]);
 
+  // Handle manual reset when add modal is opened
+  useEffect(() => {
+    const addModal = document.getElementById("add_leave_type");
+    const handleShow = () => {
+      if (!currentRecord) {
+        setName("");
+        setQuota("");
+        setStatus("Active");
+      }
+    };
+    addModal?.addEventListener("show.bs.modal", handleShow);
+    return () => addModal?.removeEventListener("show.bs.modal", handleShow);
+  }, [currentRecord]);
+
   const onSubmitAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = await handleCreate({ name, quota: parseInt(quota, 10), status });
     if (result.success) {
       toast.success(result.message);
+      setName("");
+      setQuota("");
       const btn = document.querySelector("#add_leave_type .btn-close") as HTMLButtonElement;
       if (btn) btn.click();
     } else {

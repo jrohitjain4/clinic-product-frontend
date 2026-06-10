@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import EmptyState from "../../../../core/common/emptyState";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { Link } from "react-router";
 import { useAttendance } from "../../../../core/hooks/useAttendance";
@@ -324,12 +325,11 @@ const AttendanceList = () => {
                 <span className="text-muted">Loading attendance...</span>
               </div>
             ) : filteredData.length === 0 && !error ? (
-              <div className="text-center p-5">
-                <i className="ti ti-calendar-x fs-1 text-muted d-block mb-2" />
-                <h6 className="fw-bold">No attendance records found</h6>
-                <p className="text-muted">
-                  Try adjusting your filters or date range.
-                </p>
+              <div className="py-3">
+                <EmptyState
+                  title="No attendance records found"
+                  message="We couldn't find any attendance logs for the selected criteria. Try adjusting your filters or date range."
+                />
               </div>
             ) : (
               <table className="table table-nowrap mb-0 attendance-table">
@@ -382,8 +382,8 @@ const AttendanceList = () => {
                                 emp.img?.startsWith("/")
                                   ? emp.img
                                   : emp.img
-                                  ? `assets/img/users/${emp.img}`
-                                  : "assets/img/users/avatar-21.jpg"
+                                    ? `assets/img/users/${emp.img}`
+                                    : "assets/img/users/avatar-21.jpg"
                               }
                               alt="User"
                               className="rounded-circle"
@@ -411,13 +411,12 @@ const AttendanceList = () => {
                       </td>
                       <td className="text-center">
                         <span
-                          className={`badge border fw-medium ${
-                            parseInt(emp.percentage) < 50
+                          className={`badge border fw-medium ${parseInt(emp.percentage) < 50
                               ? "badge-soft-danger border-danger"
                               : parseInt(emp.percentage) < 80
-                              ? "badge-soft-warning border-warning"
-                              : "badge-soft-success border-success"
-                          }`}
+                                ? "badge-soft-warning border-warning"
+                                : "badge-soft-success border-success"
+                            }`}
                         >
                           {emp.percentage}%
                         </span>

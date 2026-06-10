@@ -18,6 +18,7 @@ const MultiStepRegister: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+    const [usernameWarning, setUsernameWarning] = useState<string | null>(null);
 
     const [form, setForm] = useState({
         ownerName: "",
@@ -67,10 +68,28 @@ const MultiStepRegister: React.FC = () => {
             return;
         }
 
+        // Validation for spaces and special characters - show error instead of auto-correcting
+        const hasSpace = /\s/.test(form.username);
+        const hasInvalid = /[^a-zA-Z0-9_]/.test(form.username);
+
+        if (hasSpace) {
+            setUsernameWarning("Spaces are not allowed in username.");
+            setUsernameStatus("idle");
+            return;
+        }
+
+        if (hasInvalid) {
+            setUsernameWarning("Special characters are not allowed.");
+            setUsernameStatus("idle");
+            return;
+        }
+
+        setUsernameWarning(null);
+
         const check = async () => {
             setUsernameStatus("checking");
             try {
-                const res = await fetch(apiUrl(`/api/auth/check-username?username=${form.username}`));
+                const res = await fetch(apiUrl(`/api/auth/check-username?username=${form.username.toLowerCase().trim()}`));
                 const data = await res.json();
                 if (data.available) {
                     setUsernameStatus("available");
@@ -130,7 +149,7 @@ const MultiStepRegister: React.FC = () => {
                     body: JSON.stringify({
                         email: form.emailId,
                         phone: form.mobileNumber,
-                        username: form.username,
+                        username: form.username.toLowerCase().trim(),
                     }),
                 });
 
@@ -167,7 +186,7 @@ const MultiStepRegister: React.FC = () => {
                     phone: form.mobileNumber,
                     whatsappNumber: form.sameAsMobile ? form.mobileNumber : form.whatsappNumber,
                     clinicName: form.clinicName,
-                    username: form.username,
+                    username: form.username.toLowerCase().trim(),
                     addressLine1: form.addressLine1,
                     addressLine2: form.addressLine2,
                     district: form.district,
@@ -450,20 +469,28 @@ const MultiStepRegister: React.FC = () => {
                                                                     placeholder="e.g. apollo_clinic"
                                                                     leftAddon={<AtSign size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                     value={form.username}
-                                                                    onChange={e => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })}
+                                                                    onChange={e => {
+                                                                        const val = e.target.value;
+                                                                        setForm({ ...form, username: val });
+                                                                    }}
                                                                 />
-                                                                <div className="mt-1 ms-1 d-flex align-items-center" style={{ minHeight: "20px" }}>
-                                                                    {usernameStatus === "checking" && (
+                                                                <div className="mt-1 ms-1 d-flex flex-column" style={{ minHeight: "20px" }}>
+                                                                    {usernameWarning && (
+                                                                        <span className="text-danger fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
+                                                                            <i className="ti ti-alert-triangle me-1" /> {usernameWarning}
+                                                                        </span>
+                                                                    )}
+                                                                    {usernameStatus === "checking" && !usernameWarning && (
                                                                         <span className="text-muted d-flex align-items-center" style={{ fontSize: "12px" }}>
                                                                             <span className="spinner-border spinner-border-sm me-1" style={{ width: "12px", height: "12px" }} /> checking...
                                                                         </span>
                                                                     )}
-                                                                    {usernameStatus === "available" && (
+                                                                    {usernameStatus === "available" && !usernameWarning && (
                                                                         <span className="text-success fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
                                                                             <CheckCircle size={12} className="me-1" /> Username Available
                                                                         </span>
                                                                     )}
-                                                                    {usernameStatus === "taken" && (
+                                                                    {usernameStatus === "taken" && !usernameWarning && (
                                                                         <span className="text-danger fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
                                                                             <i className="ti ti-alert-circle me-1"></i> Username Taken
                                                                         </span>

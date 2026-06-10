@@ -171,7 +171,7 @@ export default function ClinicLandingPage() {
                     <img src="/docyari-logo.svg" alt="DocYori" style={{ width: 180, marginBottom: 40 }} />
                     <div style={{ background: '#fff9db', border: '1px solid #ffec99', padding: 32, borderRadius: 24, textAlign: 'left' }}>
                         <h4 style={{ fontWeight: 800, color: '#856404', marginBottom: 16 }}>
-                            🚀 Welome to Your Clinic Page!
+                            🚀 Welcome to Your Clinic Page!
                         </h4>
                         <p style={{ color: '#856404', opacity: 0.9, lineHeight: 1.6 }}>
                             This is your public landing page where patients can find you and book appointments.

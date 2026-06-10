@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import EmptyState from "../../../../core/common/emptyState";
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import Datatable from "../../../../core/common/dataTable";
@@ -19,7 +20,15 @@ const PayrollList = () => {
 
   const [filterRole, setFilterRole] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
-  const [filterDate, setFilterDate] = useState<dayjs.Dayjs | null>(null);
+  const [filterDatePreset, setFilterDatePreset] = useState("All");
+  const [customRange, setCustomRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([null, null]);
+
+  const clearFilters = () => {
+    setFilterRole("All");
+    setFilterStatus("All");
+    setFilterDatePreset("All");
+    setCustomRange([null, null]);
+  };
 
   const filteredData = useMemo(() => {
     return payrolls.filter((pr: any) => {
@@ -28,11 +37,29 @@ const PayrollList = () => {
       const matchStatus =
         filterStatus === "All" ||
         (pr.displayStatus || pr.status) === filterStatus;
-      const matchDate =
-        !filterDate || dayjs(pr.salaryDate).isSame(filterDate, "day");
+
+      let matchDate = true;
+      if (filterDatePreset !== "All") {
+        const prDate = dayjs(pr.salaryDate);
+        const today = dayjs();
+        if (filterDatePreset === "Today") {
+          matchDate = prDate.isSame(today, "day");
+        } else if (filterDatePreset === "This Week") {
+          matchDate = prDate.isSame(today, "week");
+        } else if (filterDatePreset === "This Month") {
+          matchDate = prDate.isSame(today, "month");
+        } else if (filterDatePreset === "This Year") {
+          matchDate = prDate.isSame(today, "year");
+        } else if (filterDatePreset === "Custom") {
+          if (customRange[0] && customRange[1]) {
+            matchDate = prDate.isBetween(customRange[0].startOf("day"), customRange[1].endOf("day"), "day", "[]");
+          }
+        }
+      }
+
       return matchRole && matchStatus && matchDate;
     });
-  }, [payrolls, filterRole, filterStatus, filterDate]);
+  }, [payrolls, filterRole, filterStatus, filterDatePreset, customRange]);
 
   const data = filteredData.map((pr: any, index: number) => {
     const employee = pr.staff || pr.doctor;
@@ -215,6 +242,22 @@ const PayrollList = () => {
 
             {/* Filter and Action Buttons */}
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
+              {/* Clear Filter Button - Only show when any filter is active */}
+              {(filterRole !== "All" || filterStatus !== "All" || filterDatePreset !== "All") && (
+                <button
+                  type="button"
+                  className="btn btn-white d-flex align-items-center gap-1 text-danger border"
+                  onClick={clearFilters}
+                  style={{
+                    minHeight: "38px",
+                    fontWeight: "700",
+                    fontSize: "13px",
+                    borderRadius: "6px"
+                  }}
+                >
+                  <i className="ti ti-rotate"></i> Clear All
+                </button>
+              )}
               {/* Role Filter */}
               <div className="dropdown">
                 <Link
@@ -312,17 +355,45 @@ const PayrollList = () => {
                 </ul>
               </div>
 
-              {/* Date Filter */}
-              <DatePicker
-                placeholder="Select Date"
-                className="form-select text-dark text-nowrap"
-                style={{ width: "130px", minHeight: "38px", paddingTop: "7px" }}
-                format="DD-MM-YYYY"
-                allowClear={true}
-                suffixIcon={<i className="ti ti-calendar" />}
-                onChange={(date) => setFilterDate(date)}
-                value={filterDate}
-              />
+              {/* Advanced Date Filter */}
+              <div className="dropdown">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "160px", minHeight: "38px" }}
+                  data-bs-toggle="dropdown"
+                >
+                  <span className="text-truncate">
+                    <span className="text-muted"><i className="ti ti-calendar me-1"></i></span> {filterDatePreset === "All" ? "Select Date" : filterDatePreset}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2" style={{ minWidth: "200px" }}>
+                  {["All", "Today", "This Week", "This Month", "This Year", "Custom"].map((preset) => (
+                    <li key={preset}>
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterDatePreset(preset);
+                        }}
+                      >
+                        {preset}
+                      </Link>
+                    </li>
+                  ))}
+                  {filterDatePreset === "Custom" && (
+                    <li className="p-2 border-top mt-2">
+                      <DatePicker.RangePicker
+                        format="DD-MM-YYYY"
+                        className="w-100"
+                        value={customRange}
+                        onChange={(dates) => setCustomRange(dates ? [dates[0], dates[1]] : [null, null])}
+                      />
+                    </li>
+                  )}
+                </ul>
+              </div>
 
               {/* Add Salary Button */}
               <button
@@ -358,18 +429,21 @@ const PayrollList = () => {
               <p className="text-muted mt-2 mb-0">Loading payroll</p>
             </div>
           ) : payrolls.length === 0 && !error ? (
-            <div className="text-center py-5 border rounded bg-white">
-              <i className="ti ti-wallet fs-1 text-muted d-block mb-2" />
-              <h6 className="fw-bold">No payroll yet</h6>
-              <p className="text-muted mb-3">Add employee salary records.</p>
-              <button
-                className="btn btn-primary"
-                data-bs-toggle="modal"
-                data-bs-target="#add_payroll"
-                onClick={() => setSelectedPayroll(null)}
-              >
-                Add Employee Salary <i className="ti ti-plus ms-2" />
-              </button>
+            <div className="border rounded bg-white">
+              <EmptyState
+                title="No payroll yet"
+                message="Configure salary records for your employees to start managing payroll efficiently."
+                action={
+                  <button
+                    className="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#add_payroll"
+                    onClick={() => setSelectedPayroll(null)}
+                  >
+                    Add Employee Salary <i className="ti ti-plus ms-2" />
+                  </button>
+                }
+              />
             </div>
           ) : (
             <div className="table-responsive">

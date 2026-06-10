@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import EmptyState from "../../../../../core/common/emptyState";
 import { Link } from "react-router";
 import Datatable from "../../../../../core/common/dataTable";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
@@ -508,10 +509,11 @@ const LeavesList = () => {
               <p className="text-muted mt-2 mb-0">Loading leave requests</p>
             </div>
           ) : leaves.length === 0 ? (
-            <div className="text-center py-5 border rounded bg-white">
-              <i className="ti ti-calendar-x fs-1 text-muted d-block mb-2" />
-              <h6 className="fw-bold">No leave requests yet</h6>
-              <p className="text-muted mb-0">No leave applications found.</p>
+            <div className="border rounded bg-white">
+              <EmptyState
+                title="No leave requests yet"
+                message="There are no leave applications to review. Leave requests from staff and doctors will appear here."
+              />
             </div>
           ) : (
             <div className="table-responsive">

@@ -45,19 +45,9 @@ export const patientToTableRow = (p: ClinicPatient, index: number) => {
     "user-25.jpg",
     "user-39.jpg",
   ];
-  const doctorPlaceholders = [
-    "doctor-01.jpg",
-    "doctor-02.jpg",
-    "doctor-03.jpg",
-    "doctor-04.jpg",
-    "doctor-05.jpg",
-  ];
   const img =
     p.profileImage ||
     `assets/img/users/${placeholders[index % placeholders.length]}`;
-  const doctorImg =
-    p.primaryDoctor?.profileImage ||
-    `assets/img/doctors/${doctorPlaceholders[index % doctorPlaceholders.length]}`;
 
   return {
     key: p.id,
@@ -89,7 +79,7 @@ export const emptyPatientForm = () => ({
   aadhaarNumber: "",
   passportNumber: "",
   referredBy: "",
-  primaryDoctorId: "",
+
   emergencyContactName: "",
   emergencyContactRelation: "",
   emergencyContactPhone: "",

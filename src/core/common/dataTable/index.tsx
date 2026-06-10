@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Select, Table } from "antd";
 import type { DatatableProps } from "../../data/interface";
+import EmptyState from "../emptyState";
 
 const { Option } = Select;
 
@@ -12,6 +13,8 @@ const Datatable: React.FC<DatatableProps> = ({
   searchText,
   loading,
   onSelectionChange,
+  emptyTitle,
+  emptyMessage,
 }) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
   const [Selections, setSelections] = useState<any>(true);
@@ -54,6 +57,15 @@ const Datatable: React.FC<DatatableProps> = ({
         rowHoverable={false}
         dataSource={filteredDataSource}
         loading={loading}
+        locale={{
+          emptyText: (
+            <EmptyState
+              title={emptyTitle}
+              message={emptyMessage}
+              action={null}
+            />
+          ),
+        }}
         pagination={{
           showSizeChanger: false,
           pageSize,

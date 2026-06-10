@@ -1,4 +1,5 @@
 import { useState } from "react";
+import EmptyState from "../../../../../core/common/emptyState";
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
@@ -181,15 +182,18 @@ const PatientsGrid = () => {
           </div>
 
           {!loading && patients.length === 0 && !error && (
-            <div className="text-center py-5 border rounded bg-white">
-              <i className="ti ti-users fs-1 text-muted d-block mb-2" />
-              <h6 className="fw-bold">No patients yet</h6>
-              <p className="text-muted mb-3">Add your first patient to see them here.</p>
-              <HasPermission module="Patients" action="CREATE">
-                <Link to={all_routes.createPatient} className="btn btn-primary">
-                  New Patient <i className="ti ti-plus ms-1" />
-                </Link>
-              </HasPermission>
+            <div className="border rounded bg-white">
+              <EmptyState
+                title="No patients yet"
+                message="Add your first patient to see them grouped here."
+                action={
+                  <HasPermission module="Patients" action="CREATE">
+                    <Link to={all_routes.createPatient} className="btn btn-primary">
+                      New Patient <i className="ti ti-plus ms-1" />
+                    </Link>
+                  </HasPermission>
+                }
+              />
             </div>
           )}
         </div>

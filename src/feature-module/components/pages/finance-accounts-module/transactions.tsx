@@ -1,14 +1,18 @@
 import { useState, useMemo } from "react";
+import EmptyState from "../../../../core/common/emptyState";
 import { Link } from "react-router";
 import { useClinicInvoices } from "../../../../core/hooks/useClinicInvoices";
 import { usePayroll } from "../../../../core/hooks/usePayroll";
 import { useExpenses } from "../../../../core/hooks/useExpenses";
 import Datatable from "../../../../core/common/dataTable";
-import { DatePicker } from "antd";
+import { DatePicker, message } from "antd";
 import dayjs from "dayjs";
+import { apiUrl } from "../../../../core/config/api";
+import { authHeaders } from "../../../../core/utils/apiClient";
+import { all_routes } from "../../../routes/all_routes";
 
 const TransactionsList = () => {
-  const { invoices, loading: invLoading, error: invError } = useClinicInvoices();
+  const { invoices, loading: invLoading, error: invError, refetch } = useClinicInvoices();
   const { payrolls, loading: payLoading, error: payError } = usePayroll();
   const { expenses, loading: expLoading, error: expError } = useExpenses();
 
@@ -20,7 +24,7 @@ const TransactionsList = () => {
 
   const transactions = useMemo(() => {
     const invTrans = invoices
-      .filter((inv) => inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed")
+      .filter((inv) => inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed" || inv.paymentStatus === "Pending")
       .map((inv) => ({
         id: inv.id,
         code: inv.invoiceCode,
@@ -32,7 +36,7 @@ const TransactionsList = () => {
         amount: inv.totalAmount,
         status: inv.paymentStatus,
         type: "INVOICE",
-        color: "success" // Green
+        color: inv.paymentStatus === "Pending" ? "warning" : "success"
       }));
 
     const payTrans = payrolls
@@ -115,6 +119,23 @@ const TransactionsList = () => {
       raw: t,
     };
   });
+
+  const stats = useMemo(() => {
+    let input = 0;
+    let output = 0;
+    filteredData.forEach((t: any) => {
+      if (t.type === "INVOICE") {
+        input += t.amount;
+      } else if (t.type === "EXPENSE" || t.type === "PAYROLL") {
+        output += t.amount;
+      }
+    });
+    return {
+      input,
+      output,
+      profit: input - output
+    };
+  }, [filteredData]);
 
   const columns = [
     {
@@ -201,6 +222,25 @@ const TransactionsList = () => {
       ),
       sorter: (a: any, b: any) => a.Status.localeCompare(b.Status),
     },
+    {
+      title: "Action",
+      dataIndex: "Action",
+      render: (_: any, record: any) => {
+        if (record.raw.type !== "INVOICE") return null;
+        return (
+          <div className="d-flex align-items-center">
+            <Link
+              to={all_routes.editInvoices.replace(":id", record.id)}
+              className="btn btn-icon btn-sm btn-soft-primary"
+              title="Full Edit"
+              style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <i className="ti ti-edit" />
+            </Link>
+          </div>
+        );
+      },
+    },
   ];
 
   return (
@@ -216,6 +256,37 @@ const TransactionsList = () => {
                   Total : {loading ? "" : filteredData.length}
                 </span>
               </h4>
+            </div>
+
+            {/* Compact Stats in Header */}
+            <div className="d-none d-xl-flex align-items-center justify-content-center gap-4 mx-3">
+              <div className="d-flex align-items-center">
+                <span className="badge badge-soft-success border border-success rounded-pill p-1 me-2">
+                  <i className="ti ti-arrow-up-right fs-14"></i>
+                </span>
+                <div>
+                  <p className="mb-0 fs-11 text-muted lh-1">Input</p>
+                  <h6 className="fw-bold mb-0 text-dark fs-14">₹{stats.input.toLocaleString()}</h6>
+                </div>
+              </div>
+              <div className="d-flex align-items-center">
+                <span className="badge badge-soft-danger border border-danger rounded-pill p-1 me-2">
+                  <i className="ti ti-arrow-down-left fs-14"></i>
+                </span>
+                <div>
+                  <p className="mb-0 fs-11 text-muted lh-1">Output</p>
+                  <h6 className="fw-bold mb-0 text-dark fs-14">₹{stats.output.toLocaleString()}</h6>
+                </div>
+              </div>
+              <div className="d-flex align-items-center">
+                <span className="badge badge-soft-primary border border-primary rounded-pill p-1 me-2">
+                  <i className="ti ti-wallet fs-14"></i>
+                </span>
+                <div>
+                  <p className="mb-0 fs-11 text-muted lh-1">Profit</p>
+                  <h6 className="fw-bold mb-0 text-primary fs-14">₹{stats.profit.toLocaleString()}</h6>
+                </div>
+              </div>
             </div>
 
             {/* Filter and Action Buttons */}
@@ -299,6 +370,7 @@ const TransactionsList = () => {
             </div>
           </div>
 
+
           {/* Error Alert */}
           {error && (
             <div className="alert alert-danger d-flex align-items-center justify-content-between mb-3">
@@ -316,12 +388,11 @@ const TransactionsList = () => {
               <p className="text-muted mt-2 mb-0">Loading transactions</p>
             </div>
           ) : transactions.length === 0 && !error ? (
-            <div className="text-center py-5 border rounded bg-white">
-              <i className="ti ti-receipt-2 fs-1 text-muted d-block mb-2" />
-              <h6 className="fw-bold">No transactions yet</h6>
-              <p className="text-muted mb-0">
-                Mark invoices as <strong>Paid</strong> to see them here.
-              </p>
+            <div className="border rounded bg-white">
+              <EmptyState
+                title="No transactions yet"
+                message="Mark invoices as Paid to see transaction records here. All payment history will be tracked automatically."
+              />
             </div>
           ) : (
             <div className="table-responsive">

@@ -85,6 +85,8 @@ export const Session = [
   { value: "Select", label: "Select" },
   { value: "Morning", label: "Morning" },
   { value: "Noon", label: "Noon" },
+  { value: "Afternoon", label: "Afternoon" },
+  { value: "Evening", label: "Evening" },
 ];
 export const Location = [{ value: "Select", label: "Select" }];
 export const Country = [

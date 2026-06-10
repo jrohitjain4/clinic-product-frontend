@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import EmptyState from "../../../../../core/common/emptyState";
 import { Link } from "react-router-dom";
 import { all_routes } from "../../../../routes/all_routes";
 import { useClinicInvoices } from "../../../../../core/hooks/useClinicInvoices";
@@ -325,16 +326,19 @@ const InvoicesList = () => {
               <p className="text-muted mt-2 mb-0">Loading invoices</p>
             </div>
           ) : invoices.length === 0 && !error ? (
-            <div className="text-center py-5 border rounded bg-white">
-              <i className="ti ti-file-invoice fs-1 text-muted d-block mb-2" />
-              <h6 className="fw-bold">No invoices yet</h6>
-              <p className="text-muted mb-3">Create your first invoice.</p>
-              <Link
-                to={all_routes.addInvoices}
-                className="btn btn-primary"
-              >
-                New Invoice <i className="ti ti-plus ms-2" />
-              </Link>
+            <div className="border rounded bg-white">
+              <EmptyState
+                title="No invoices yet"
+                message="Invoice your patients for consultations, treatments, or medicines to maintain financial records."
+                action={
+                  <Link
+                    to={all_routes.addInvoices}
+                    className="btn btn-primary"
+                  >
+                    New Invoice <i className="ti ti-plus ms-2" />
+                  </Link>
+                }
+              />
             </div>
           ) : (
             <div className="table-responsive">

@@ -600,6 +600,7 @@ const PatientAppointmentDetails = () => {
                         <Datatable
                           columns={columns}
                           dataSource={linkedPrescriptions}
+                          searchText=""
                         />
                       </div>
                     ) : (
@@ -766,6 +767,7 @@ const PatientAppointmentDetails = () => {
                     <Datatable
                       columns={followUpColumns}
                       dataSource={sortedChain}
+                      searchText=""
                     />
                   </div>
                 ) : (

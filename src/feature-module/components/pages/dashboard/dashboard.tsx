@@ -92,9 +92,9 @@ const Dashboard = () => {
             padding: 15px !important;
           }
           .dashboard-page-wrapper .card {
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 10px !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+            border: 1px solid #94a3b8 !important;
+            border-radius: 12px !important;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.04) !important;
             background-color: #ffffff;
             margin-bottom: 0 !important;
           }
@@ -135,7 +135,7 @@ const Dashboard = () => {
 
           <div className="row g-1 mb-1">
             <div className="col-xl-3 col-md-6">
-              <div className="card h-100 border-0">
+              <div className="card h-100">
                 <div className="card-body">
                   <div className="d-flex align-items-center mb-2 justify-content-between">
                     <span className="avatar avatar-md bg-primary rounded-circle">
@@ -151,7 +151,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="col-xl-3 col-md-6">
-              <div className="card h-100 border-0">
+              <div className="card h-100">
                 <div className="card-body">
                   <div className="d-flex align-items-center mb-2 justify-content-between">
                     <span className="avatar avatar-md bg-danger rounded-circle">
@@ -167,7 +167,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="col-xl-3 col-md-6">
-              <div className="card h-100 border-0">
+              <div className="card h-100">
                 <div className="card-body">
                   <div className="d-flex align-items-center mb-2 justify-content-between">
                     <span className="avatar avatar-md bg-info rounded-circle">
@@ -183,7 +183,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="col-xl-3 col-md-6">
-              <div className="card h-100 border-0">
+              <div className="card h-100">
                 <div className="card-body">
                   <div className="d-flex align-items-center mb-2 justify-content-between">
                     <span className="avatar avatar-md bg-success rounded-circle">

@@ -17,6 +17,7 @@ const MultiStepRegister: React.FC = () => {
     const [selectedPkgId, setSelectedPkgId] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
 
     const [form, setForm] = useState({
         ownerName: "",
@@ -59,34 +60,70 @@ const MultiStepRegister: React.FC = () => {
         }
     }, [form.clinicName]);
 
+    // Real-time username availability check
+    useEffect(() => {
+        if (!form.username || form.username.length < 3) {
+            setUsernameStatus("idle");
+            return;
+        }
+
+        const check = async () => {
+            setUsernameStatus("checking");
+            try {
+                const res = await fetch(apiUrl(`/api/auth/check-username?username=${form.username}`));
+                const data = await res.json();
+                if (data.available) {
+                    setUsernameStatus("available");
+                } else {
+                    setUsernameStatus("taken");
+                }
+            } catch (err) {
+                console.error("Username check failed", err);
+                setUsernameStatus("idle");
+            }
+        };
+
+        const timeoutId = setTimeout(check, 500);
+        return () => clearTimeout(timeoutId);
+    }, [form.username]);
+
     const handleNext = async () => {
         setError("");
+
         if (step === 1) {
-            if (!form.ownerName || !form.mobileNumber || !form.emailId) {
-                setError("Please fill all required fields");
-                return;
-            }
+            // Field-specific validation for Step 1
+            if (!form.ownerName) { setError("Owner name is required"); return; }
+            if (!form.mobileNumber) { setError("Mobile number is required"); return; }
+            if (!form.emailId) { setError("Email address is required"); return; }
+
             if (!/^[6-9]\d{9}$/.test(form.mobileNumber)) {
                 setError("Please enter a valid 10-digit Indian mobile number");
                 return;
             }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailId)) {
+                setError("Please enter a valid email address");
+                return;
+            }
             setStep(2);
         } else if (step === 2) {
-            if (!form.clinicName || !form.addressLine1 || !form.username || !form.password) {
-                setError("Please fill all required clinic details");
+            // Field-specific validation for Step 2
+            if (!form.clinicName) { setError("Clinic name is required"); return; }
+            if (!form.username) { setError("Clinic username is required"); return; }
+            if (!form.addressLine1) { setError("Primary address (Line 1) is required"); return; }
+            if (!form.password) { setError("Account password is required"); return; }
+
+            if (form.password.length < 8) {
+                setError("Password must be at least 8 characters long");
                 return;
             }
             if (form.password !== form.confirmPassword) {
                 setError("Passwords do not match");
                 return;
             }
-            if (form.password.length < 8) {
-                setError("Password must be at least 8 characters");
-                return;
-            }
+
             setLoading(true);
             try {
-                // Now only validates uniqueness of email, phone, and username
+                // Validate uniqueness of email, phone, and username before proceeding
                 const res = await fetch(apiUrl("/api/auth/register-draft"), {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -96,13 +133,18 @@ const MultiStepRegister: React.FC = () => {
                         username: form.username,
                     }),
                 });
+
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.message || "Validation failed");
+                if (!res.ok) {
+                    throw new Error(data.message || "Email, Phone or Username already exists");
+                }
 
                 setStep(3);
+                window.scrollTo(0, 0);
             } catch (err: any) {
-                setError(err.message);
-                toast.error(err.message || "Validation failed");
+                const errMsg = err.message || "Identity validation failed";
+                setError(errMsg);
+                toast.error(errMsg);
             } finally {
                 setLoading(false);
             }
@@ -292,12 +334,20 @@ const MultiStepRegister: React.FC = () => {
                                                 </div>
 
                                                 {error && (
-                                                    <div className="alert alert-danger alert-dismissible fade show p-2 mb-3 rounded text-start" role="alert" style={{ fontSize: "13px" }}>
-                                                        <i className="ti ti-alert-triangle me-1"></i> {error}
+                                                    <div className="alert alert-danger alert-dismissible fade show p-3 mb-4 rounded text-start shadow-sm border-danger" role="alert" style={{ fontSize: "14px", borderLeft: "4px solid #dc2626" }}>
+                                                        <div className="d-flex align-items-center">
+                                                            <i className="ti ti-alert-circle fs-20 me-2"></i>
+                                                            <div>
+                                                                <strong className="d-block">Registration Issue</strong>
+                                                                {error}
+                                                            </div>
+                                                        </div>
+                                                        <button type="button" className="btn-close" onClick={() => setError("")} aria-label="Close"></button>
                                                     </div>
                                                 )}
                                                 {success && (
-                                                    <div className="alert alert-success alert-dismissible fade show p-3 mb-3 rounded text-center fw-medium" role="alert">
+                                                    <div className="alert alert-success alert-dismissible p-3 mb-4 rounded text-center fw-medium border-success shadow-sm" role="alert" style={{ borderLeft: "4px solid #16a34a" }}>
+                                                        <i className="ti ti-circle-check fs-20 me-2"></i>
                                                         {success}
                                                     </div>
                                                 )}
@@ -402,6 +452,23 @@ const MultiStepRegister: React.FC = () => {
                                                                     value={form.username}
                                                                     onChange={e => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })}
                                                                 />
+                                                                <div className="mt-1 ms-1 d-flex align-items-center" style={{ minHeight: "20px" }}>
+                                                                    {usernameStatus === "checking" && (
+                                                                        <span className="text-muted d-flex align-items-center" style={{ fontSize: "12px" }}>
+                                                                            <span className="spinner-border spinner-border-sm me-1" style={{ width: "12px", height: "12px" }} /> checking...
+                                                                        </span>
+                                                                    )}
+                                                                    {usernameStatus === "available" && (
+                                                                        <span className="text-success fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
+                                                                            <CheckCircle size={12} className="me-1" /> Username Available
+                                                                        </span>
+                                                                    )}
+                                                                    {usernameStatus === "taken" && (
+                                                                        <span className="text-danger fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
+                                                                            <i className="ti ti-alert-circle me-1"></i> Username Taken
+                                                                        </span>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         </div>
 

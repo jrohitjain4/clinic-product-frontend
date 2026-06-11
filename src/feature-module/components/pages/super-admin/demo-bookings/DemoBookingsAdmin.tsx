@@ -97,7 +97,7 @@ const DemoBookingsAdmin = () => {
                                         <table className="table table-center mb-0 custom-table" style={{ overflow: 'visible' }}>
                                             <thead className="thead-light">
                                                 <tr>
-                                                    <th>Date & Time</th>
+                                                    <th>Submission Date</th>
                                                     <th>Name</th>
                                                     <th>Email</th>
                                                     <th>Phone</th>
@@ -112,12 +112,8 @@ const DemoBookingsAdmin = () => {
                                                         <tr key={booking.id}>
                                                             <td>
                                                                 <span className="fw-medium">
-                                                                    {booking.dateTime ? new Date(booking.dateTime).toLocaleString() : "-"}
+                                                                    {new Date(booking.createdAt).toLocaleString()}
                                                                 </span>
-                                                                <br />
-                                                                <small className="text-muted">
-                                                                    Sub: {new Date(booking.createdAt).toLocaleDateString()}
-                                                                </small>
                                                             </td>
                                                             <td>{booking.name || "-"}</td>
                                                             <td>{booking.email}</td>

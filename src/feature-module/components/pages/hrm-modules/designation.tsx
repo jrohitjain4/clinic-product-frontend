@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
+import { ViewModal } from "../../../../core/common/modal/ViewModal";
 
 interface Department {
   id: string;
@@ -1024,109 +1025,34 @@ const DesignationList = () => {
       </div>
 
       {/* ===== VIEW MODAL ===== */}
-      <div id="view_designation" className="modal fade" role="dialog">
-        <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div
-            className="modal-content border-0 shadow-lg"
-            style={{ borderRadius: "12px", overflow: "hidden" }}
-          >
-            <div className="modal-header bg-info text-white">
-              <h5 className="modal-title fw-bold">View Designation</h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-                onClick={() => setViewDesig(null)}
-              ></button>
-            </div>
-            <div className="modal-body">
-              {viewDesig && (
-                <div className="row g-3">
-                  <div className="col-md-12">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Designation Name
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewDesig.name || ""}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Type
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewDesig.type || ""}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Department
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewDesig.departmentName || "--"}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Status
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewDesig.status || ""}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Created On
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={new Date(viewDesig.createdAt).toLocaleDateString(
-                        "en-GB"
-                      )}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-12">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Description
-                    </label>
-                    <textarea
-                      className="form-control bg-light"
-                      rows={3}
-                      value={viewDesig.description || "No description provided"}
-                      readOnly
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="modal-footer border-top pt-3">
-              <button
-                type="button"
-                className="btn btn-primary px-5"
-                data-bs-dismiss="modal"
-                onClick={() => setViewDesig(null)}
-                style={{ borderRadius: "6px" }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ViewModal
+        id="view_designation"
+        title="Designation Details"
+        subtitle="View designation information"
+        headerIcon={<i className="ti ti-briefcase" />}
+        highlightTitle={viewDesig?.name || "Designation"}
+        highlightStatus={
+            <span className={`badge border ${viewDesig?.status === "Active" ? "bg-success-transparent text-success border-success" : "bg-danger-transparent text-danger border-danger"} fw-bold px-2 py-1`} style={{ fontSize: "10px", borderRadius: "10px" }}>
+                <i className="ti ti-point-filled me-1"></i>{viewDesig?.status || "Active"}
+            </span>
+        }
+        highlightRightText={viewDesig?.type || "Type"}
+        highlightRightSubText="Type"
+        highlightColor="#e0f2fe"
+        details={[
+            { icon: <i className="ti ti-bookmark" />, label: "Designation Name", value: viewDesig?.name || "—" },
+            { icon: <i className="ti ti-category" />, label: "Type", value: viewDesig?.type || "—" },
+            { icon: <i className="ti ti-building" />, label: "Department", value: viewDesig?.departmentName || "—" },
+            { icon: <i className="ti ti-circle-check" />, label: "Status", value: viewDesig?.status || "—" },
+            { icon: <i className="ti ti-calendar" />, label: "Created On", value: viewDesig?.createdAt ? new Date(viewDesig.createdAt).toLocaleDateString("en-GB") : "—" },
+            { icon: <i className="ti ti-file-description" />, label: "Description", value: viewDesig?.description || "No description provided", fullWidth: true }
+        ]}
+        onEdit={() => {
+            if (viewDesig) openEdit(viewDesig);
+        }}
+        editLabel="Edit Designation"
+        editModalTarget="#edit_designation"
+      />
     </>
   );
 };

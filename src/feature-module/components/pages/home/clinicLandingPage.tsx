@@ -62,6 +62,7 @@ export default function ClinicLandingPage() {
     const [showModal, setShowModal] = useState(false);
     const [preselectedDoctor, setPreselectedDoctor] = useState("");
     const [bookForm, setBookForm] = useState({ name: "", phone: "", doctorId: "", date: "", time: "", reason: "" });
+    const [bookFormErrors, setBookFormErrors] = useState<any>({});
     const [bookLoading, setBookLoading] = useState(false);
     const [bookSuccess, setBookSuccess] = useState<string | null>(null);
     const [bookError, setBookError] = useState<string | null>(null);
@@ -81,10 +82,26 @@ export default function ClinicLandingPage() {
 
     const handleBookSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!clinic?.id) return;
-        setBookLoading(true);
+        setBookFormErrors({});
         setBookError(null);
         setBookSuccess(null);
+
+        let hasError = false;
+        const newErrors: any = {};
+        
+        if (!bookForm.name.trim()) { newErrors.name = "Name is required"; hasError = true; }
+        if (!bookForm.phone.trim()) { newErrors.phone = "Phone number is required"; hasError = true; }
+        if (!bookForm.doctorId) { newErrors.doctorId = "Please select a doctor"; hasError = true; }
+        if (!bookForm.date) { newErrors.date = "Please select a date"; hasError = true; }
+        if (!bookForm.time) { newErrors.time = "Please select a time slot"; hasError = true; }
+
+        if (hasError) {
+            setBookFormErrors(newErrors);
+            return;
+        }
+
+        if (!clinic?.id) return;
+        setBookLoading(true);
         try {
             const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/landing/id/${clinic?.id}/book`, {
                 method: "POST",
@@ -201,7 +218,14 @@ export default function ClinicLandingPage() {
     const realDoctors = clinic.doctors;
 
     return (
-        <div className="dy-landing" style={{ minHeight: "100vh" }}>
+        <div className="dy-landing" style={{ minHeight: "100vh", overflowX: "hidden" }}>
+            <style>{`
+                .dy-landing .card, 
+                .dy-landing img:not(.dy-brand img) { 
+                    border: 1px solid rgba(29, 78, 216, 0.25) !important; 
+                    box-shadow: 0 4px 12px rgba(29, 78, 216, 0.08) !important;
+                }
+            `}</style>
             {isAdminOfThisClinic && isIncomplete && (
                 <div className="alert alert-warning border-0 rounded-0 m-0 py-3 text-center" style={{ background: '#fff9db', borderBottom: '1px solid #ffec99 !important' }}>
                     <div className="container d-flex align-items-center justify-content-center flex-wrap gap-2">
@@ -232,13 +256,13 @@ export default function ClinicLandingPage() {
                     </ul>
 
                     <div className="dy-nav-actions">
-                        <button
-                            onClick={() => openBooking()}
-                            className="nav-trial px-4 py-2"
-                            style={{ background: "#007bff", fontSize: "15px", border: "none", cursor: "pointer" }}
+                        <Link
+                            to={all_routes.login}
+                            className="btn btn-primary px-4 py-2 fw-semibold d-flex align-items-center justify-content-center"
+                            style={{ borderRadius: '8px', minHeight: '44px' }}
                         >
                             Book Appointment
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </nav>
@@ -302,8 +326,8 @@ export default function ClinicLandingPage() {
 
                                 {/* Top Hero Card */}
                                 <div className="card border-0 shadow-sm mb-4">
-                                    <div className="card-body p-4 d-flex align-items-center justify-content-between flex-wrap row g-2-gap-3">
-                                        <div className="d-flex align-items-center flex-sm-nowrap flex-wrap row g-2-gap-3">
+                                    <div className="card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+                                        <div className="d-flex align-items-center flex-sm-nowrap flex-wrap gap-3">
                                             <div className="me-3 doctor-profile-img">
                                                 <img
                                                     src={selectedDocDetails.photo ? (
@@ -353,20 +377,20 @@ export default function ClinicLandingPage() {
                                                     / 30 Min
                                                 </span>
                                             </h6>
-                                            <button
-                                                onClick={() => openBooking(selectedDocDetails.id)}
+                                            <Link
+                                                to={all_routes.login}
                                                 className="btn btn-primary"
                                             >
                                                 <i className="ti ti-calendar-event me-1" />
                                                 Book Appointment
-                                            </button>
+                                            </Link>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="row g-2">
-                                    <div className="col-lg-12">
-                                        <div className="card">
+                                <div className="row g-3">
+                                    <div className="col-lg-8">
+                                        <div className="card mb-3">
                                             <div className="card-body">
                                                 <h5 className="fw-bold mb-3">Availability</h5>
                                                 <ul className="nav nav-tabs nav-bordered nav-border-bottom mb-3">
@@ -405,14 +429,14 @@ export default function ClinicLandingPage() {
                                             </div>
                                         </div>
 
-                                        <div className="card">
+                                        <div className="card mb-3">
                                             <div className="card-body">
                                                 <h5 className="fw-bold mb-3">Short Bio</h5>
                                                 <p className="mb-0 text-muted">{selectedDocDetails.bio || "No bio provided."}</p>
                                             </div>
                                         </div>
 
-                                        <div className="card">
+                                        <div className="card mb-3">
                                             <div className="card-body">
                                                 <h5 className="fw-bold mb-3">Education Information</h5>
                                                 {((selectedDocDetails as any).educations || []).length > 0 ? (
@@ -432,7 +456,7 @@ export default function ClinicLandingPage() {
                                             </div>
                                         </div>
 
-                                        <div className="card">
+                                        <div className="card mb-3">
                                             <div className="card-body">
                                                 <h5 className="fw-bold mb-3">Awards &amp; Recognition</h5>
                                                 {((selectedDocDetails as any).awards || []).length > 0 ? (
@@ -492,27 +516,7 @@ export default function ClinicLandingPage() {
 
                                                     <div className="d-flex align-items-center">
                                                         <span className="avatar rounded-circle bg-light text-dark fs-16 flex-shrink-0 me-3 d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                                                            <i className="ti ti-phone" />
-                                                        </span>
-                                                        <div>
-                                                            <h6 className="fw-semibold fs-13 mb-1">Phone Number</h6>
-                                                            <p className="mb-0 text-secondary" style={{ fontSize: "14px" }}>{(selectedDocDetails as any).phone || "—"}</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="avatar rounded-circle bg-light text-dark fs-16 flex-shrink-0 me-3 d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                                                            <i className="ti ti-mail" />
-                                                        </span>
-                                                        <div>
-                                                            <h6 className="fw-semibold fs-13 mb-1">Email Address</h6>
-                                                            <p className="mb-0 text-secondary text-break" style={{ fontSize: "14px" }}>{(selectedDocDetails as any).email || "—"}</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="avatar rounded-circle bg-light text-dark fs-16 flex-shrink-0 me-3 d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                                                            <i className="ti ti-map-marker-pin" />
+                                                            <i className="ti ti-map-pin" />
                                                         </span>
                                                         <div>
                                                             <h6 className="fw-semibold fs-13 mb-1">Location</h6>
@@ -652,7 +656,7 @@ export default function ClinicLandingPage() {
                                                 </div>
                                                 <div className="d-flex gap-3">
                                                     <button className="btn btn-light fw-bold px-4">Contact Support</button>
-                                                    <button onClick={() => openBooking(selectedDocDetails.id)} className="btn btn-warning fw-bold px-4">Book Now</button>
+                                                    <Link to={all_routes.login} className="btn btn-warning fw-bold px-4">Book Appointment</Link>
                                                 </div>
                                             </div>
                                         </div>
@@ -710,13 +714,12 @@ export default function ClinicLandingPage() {
                                     </div>
 
                                     <div className="d-flex flex-wrap gap-3">
-                                        <button
-                                            onClick={() => openBooking()}
-                                            className="btn px-4 py-2 fw-semibold d-flex align-items-center gap-2 rounded-3 text-white shadow"
-                                            style={{ background: "#1d4ed8", fontSize: "15px", border: "none", cursor: "pointer" }}
+                                        <Link
+                                            to={all_routes.login}
+                                            className="btn btn-primary px-4 py-2 fw-semibold d-flex align-items-center gap-2 rounded-3 text-white shadow"
                                         >
                                             <i className="ti ti-calendar-event" /> Book Appointment
-                                        </button>
+                                        </Link>
                                         <a
                                             href={`tel:${clinic.phone}`}
                                             className="btn bg-white px-4 py-2 fw-semibold d-flex align-items-center gap-2 rounded-3 shadow-sm"
@@ -866,13 +869,13 @@ export default function ClinicLandingPage() {
                                                 </div>
                                             </div>
                                             <div className="px-3 pb-4 mt-auto">
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); openBooking((doc as any).id || ""); }}
-                                                    className="btn w-100 fw-bold rounded-3 text-white"
-                                                    style={{ background: "#1d4ed8", padding: "10px 0", border: "none", cursor: "pointer" }}
+                                                <Link
+                                                    to={all_routes.login}
+                                                    onClick={(e) => { e.stopPropagation(); }}
+                                                    className="btn btn-primary w-100 fw-bold rounded-3"
                                                 >
                                                     Book Appointment
-                                                </button>
+                                                </Link>
                                             </div>
                                         </div>
                                     </div>
@@ -925,58 +928,73 @@ export default function ClinicLandingPage() {
                                 <div className="col-lg-4">
                                     <div id="booking-widget" className="card h-100 p-4 border-0 rounded-4 shadow-sm" style={{ background: "#1d4ed8" }}>
                                         <h6 className="fw-bold mb-4 text-white" style={{ letterSpacing: "0.5px" }}>BOOK APPOINTMENT ONLINE</h6>
-                                        <form onSubmit={handleBookSubmit}>
+                                        <form onSubmit={handleBookSubmit} noValidate>
                                             <div className="d-flex flex-column gap-3 mb-4">
-                                                <input
-                                                    type="text"
-                                                    className="form-control py-2 border-0 rounded-3 shadow-none"
-                                                    placeholder="Your Name"
-                                                    style={{ fontSize: "14px" }}
-                                                    value={bookForm.name}
-                                                    onChange={(e) => setBookForm({ ...bookForm, name: e.target.value })}
-                                                    required
-                                                />
-                                                <input
-                                                    type="text"
-                                                    className="form-control py-2 border-0 rounded-3 shadow-none"
-                                                    placeholder="Phone Number"
-                                                    style={{ fontSize: "14px" }}
-                                                    value={bookForm.phone}
-                                                    onChange={(e) => setBookForm({ ...bookForm, phone: e.target.value })}
-                                                    required
-                                                />
-                                                <select
-                                                    className="form-select py-2 border-0 rounded-3 shadow-none text-secondary"
-                                                    style={{ fontSize: "14px" }}
-                                                    value={bookForm.doctorId}
-                                                    onChange={(e) => setBookForm({ ...bookForm, doctorId: e.target.value })}
-                                                    required
-                                                >
-                                                    <option value="">Select Doctor</option>
-                                                    {clinic.doctors.map(doc => (
-                                                        <option key={doc.id} value={doc.id}>{doc.name}</option>
-                                                    ))}
-                                                </select>
-                                                <input
-                                                    type="date"
-                                                    className="form-control py-2 border-0 rounded-3 shadow-none text-secondary"
-                                                    style={{ fontSize: "14px" }}
-                                                    value={bookForm.date}
-                                                    onChange={(e) => setBookForm({ ...bookForm, date: e.target.value })}
-                                                    required
-                                                />
-                                                <select
-                                                    className="form-select py-2 border-0 rounded-3 shadow-none text-secondary"
-                                                    style={{ fontSize: "14px" }}
-                                                    value={bookForm.time}
-                                                    onChange={(e) => setBookForm({ ...bookForm, time: e.target.value })}
-                                                    required
-                                                >
-                                                    <option value="">Select Time Slot</option>
-                                                    {["09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM"].map(t => (
-                                                        <option key={t} value={t}>{t}</option>
-                                                    ))}
-                                                </select>
+                                                <div>
+                                                    <input
+                                                        type="text"
+                                                        className={`form-control py-2 border-0 rounded-3 shadow-none ${bookFormErrors.name ? 'is-invalid' : ''}`}
+                                                        placeholder="Your Name"
+                                                        style={{ fontSize: "14px" }}
+                                                        value={bookForm.name}
+                                                        onChange={(e) => setBookForm({ ...bookForm, name: e.target.value })}
+                                                        required
+                                                    />
+                                                    {bookFormErrors.name && <div className="invalid-feedback d-block">{bookFormErrors.name}</div>}
+                                                </div>
+                                                <div>
+                                                    <input
+                                                        type="text"
+                                                        className={`form-control py-2 border-0 rounded-3 shadow-none ${bookFormErrors.phone ? 'is-invalid' : ''}`}
+                                                        placeholder="Phone Number"
+                                                        style={{ fontSize: "14px" }}
+                                                        value={bookForm.phone}
+                                                        onChange={(e) => setBookForm({ ...bookForm, phone: e.target.value })}
+                                                        required
+                                                    />
+                                                    {bookFormErrors.phone && <div className="invalid-feedback d-block">{bookFormErrors.phone}</div>}
+                                                </div>
+                                                <div>
+                                                    <select
+                                                        className={`form-select py-2 border-0 rounded-3 shadow-none text-secondary ${bookFormErrors.doctorId ? 'is-invalid' : ''}`}
+                                                        style={{ fontSize: "14px" }}
+                                                        value={bookForm.doctorId}
+                                                        onChange={(e) => setBookForm({ ...bookForm, doctorId: e.target.value })}
+                                                        required
+                                                    >
+                                                        <option value="">Select Doctor</option>
+                                                        {clinic.doctors.map(doc => (
+                                                            <option key={doc.id} value={doc.id}>{doc.name}</option>
+                                                        ))}
+                                                    </select>
+                                                    {bookFormErrors.doctorId && <div className="invalid-feedback d-block">{bookFormErrors.doctorId}</div>}
+                                                </div>
+                                                <div>
+                                                    <input
+                                                        type="date"
+                                                        className={`form-control py-2 border-0 rounded-3 shadow-none text-secondary ${bookFormErrors.date ? 'is-invalid' : ''}`}
+                                                        style={{ fontSize: "14px" }}
+                                                        value={bookForm.date}
+                                                        onChange={(e) => setBookForm({ ...bookForm, date: e.target.value })}
+                                                        required
+                                                    />
+                                                    {bookFormErrors.date && <div className="invalid-feedback d-block">{bookFormErrors.date}</div>}
+                                                </div>
+                                                <div>
+                                                    <select
+                                                        className={`form-select py-2 border-0 rounded-3 shadow-none text-secondary ${bookFormErrors.time ? 'is-invalid' : ''}`}
+                                                        style={{ fontSize: "14px" }}
+                                                        value={bookForm.time}
+                                                        onChange={(e) => setBookForm({ ...bookForm, time: e.target.value })}
+                                                        required
+                                                    >
+                                                        <option value="">Select Time Slot</option>
+                                                        {["09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM"].map(t => (
+                                                            <option key={t} value={t}>{t}</option>
+                                                        ))}
+                                                    </select>
+                                                    {bookFormErrors.time && <div className="invalid-feedback d-block">{bookFormErrors.time}</div>}
+                                                </div>
                                             </div>
 
                                             {bookError && <div className="alert alert-danger py-2 fs-12 mb-3">{bookError}</div>}
@@ -1182,12 +1200,29 @@ export default function ClinicLandingPage() {
                             <div className="row g-2 justify-content-center mb-3">
                                 <div className="col-lg-12">
                                     <div className="row g-2">
-                                        {['How can I book an appointment?', 'What are the consultation charges?', 'Do you provide online consultation?', 'Is walk-in consultation available?', 'When will I get my test reports?', 'Do you provide home sample collection?'].map((q, i) => (
+                                        {[
+                                            { q: 'How can I book an appointment?', a: 'You can book an appointment online through our portal or by calling our clinic reception directly.' },
+                                            { q: 'What are the consultation charges?', a: 'Consultation charges vary by doctor and specialty. Please check the doctor profile for exact fees.' },
+                                            { q: 'Do you provide online consultation?', a: 'Yes, we offer video consultations for selected specialties to help you consult from home.' },
+                                            { q: 'Is walk-in consultation available?', a: 'Walk-ins are welcome, but we highly recommend booking an appointment online to avoid waiting.' },
+                                            { q: 'When will I get my test reports?', a: 'Most standard test reports are available within 24 hours online or can be collected at the clinic.' },
+                                            { q: 'Do you provide home sample collection?', a: 'Yes, we provide home sample collection for lab tests within a 10km radius.' }
+                                        ].map((faq, i) => (
                                             <div key={i} className="col-md-6">
                                                 <div className="card shadow-none rounded-2 border" style={{ borderColor: "#f1f5f9" }}>
-                                                    <div className="d-flex justify-content-between align-items-center py-2 px-3 text-dark fw-medium" style={{ fontSize: "12px" }}>
-                                                        <span>{q}</span>
-                                                        <i className="ti ti-plus text-secondary" style={{ fontSize: "12px" }} />
+                                                    <div 
+                                                        className="d-flex justify-content-between align-items-center py-2 px-3 text-dark fw-medium" 
+                                                        style={{ fontSize: "12px", cursor: "pointer" }}
+                                                        data-bs-toggle="collapse"
+                                                        data-bs-target={`#faq-${i}`}
+                                                    >
+                                                        <span>{faq.q}</span>
+                                                        <i className="ti ti-chevron-down text-secondary" style={{ fontSize: "12px" }} />
+                                                    </div>
+                                                    <div id={`faq-${i}`} className="collapse">
+                                                        <div className="card-body pt-0 pb-2 px-3 text-secondary" style={{ fontSize: "11.5px" }}>
+                                                            {faq.a}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1324,36 +1359,38 @@ export default function ClinicLandingPage() {
                                     </div>
                                 ) : (
                                     /* Form State */
-                                    <form onSubmit={handleBookSubmit}>
+                                    <form onSubmit={handleBookSubmit} noValidate>
                                         <div className="row g-3">
                                             <div className="col-12">
                                                 <label className="form-label fw-bold text-dark" style={{ fontSize: "13px" }}>Full Name <span className="text-danger">*</span></label>
                                                 <input
                                                     type="text"
-                                                    className="form-control rounded-3"
+                                                    className={`form-control rounded-3 ${bookFormErrors.name ? 'is-invalid' : ''}`}
                                                     placeholder="Enter your full name"
                                                     value={bookForm.name}
                                                     onChange={e => setBookForm(f => ({ ...f, name: e.target.value }))}
                                                     required
                                                     style={{ fontSize: "14px" }}
                                                 />
+                                                {bookFormErrors.name && <div className="invalid-feedback">{bookFormErrors.name}</div>}
                                             </div>
                                             <div className="col-12">
                                                 <label className="form-label fw-bold text-dark" style={{ fontSize: "13px" }}>Phone Number <span className="text-danger">*</span></label>
                                                 <input
                                                     type="tel"
-                                                    className="form-control rounded-3"
+                                                    className={`form-control rounded-3 ${bookFormErrors.phone ? 'is-invalid' : ''}`}
                                                     placeholder="+91 XXXXX XXXXX"
                                                     value={bookForm.phone}
                                                     onChange={e => setBookForm(f => ({ ...f, phone: e.target.value }))}
                                                     required
                                                     style={{ fontSize: "14px" }}
                                                 />
+                                                {bookFormErrors.phone && <div className="invalid-feedback">{bookFormErrors.phone}</div>}
                                             </div>
                                             <div className="col-12">
                                                 <label className="form-label fw-bold text-dark" style={{ fontSize: "13px" }}>Select Doctor</label>
                                                 <select
-                                                    className="form-select rounded-3 text-secondary"
+                                                    className={`form-select rounded-3 text-secondary ${bookFormErrors.doctorId ? 'is-invalid' : ''}`}
                                                     value={bookForm.doctorId || preselectedDoctor}
                                                     onChange={e => setBookForm(f => ({ ...f, doctorId: e.target.value }))}
                                                     style={{ fontSize: "14px" }}
@@ -1363,23 +1400,25 @@ export default function ClinicLandingPage() {
                                                         <option key={d.id} value={d.id}>{d.name} — {d.specialization}</option>
                                                     ))}
                                                 </select>
+                                                {bookFormErrors.doctorId && <div className="invalid-feedback">{bookFormErrors.doctorId}</div>}
                                             </div>
                                             <div className="col-6">
                                                 <label className="form-label fw-bold text-dark" style={{ fontSize: "13px" }}>Date <span className="text-danger">*</span></label>
                                                 <input
                                                     type="date"
-                                                    className="form-control rounded-3"
+                                                    className={`form-control rounded-3 ${bookFormErrors.date ? 'is-invalid' : ''}`}
                                                     value={bookForm.date}
                                                     min={new Date().toISOString().split("T")[0]}
                                                     onChange={e => setBookForm(f => ({ ...f, date: e.target.value }))}
                                                     required
                                                     style={{ fontSize: "14px" }}
                                                 />
+                                                {bookFormErrors.date && <div className="invalid-feedback">{bookFormErrors.date}</div>}
                                             </div>
                                             <div className="col-6">
                                                 <label className="form-label fw-bold text-dark" style={{ fontSize: "13px" }}>Time Slot <span className="text-danger">*</span></label>
                                                 <select
-                                                    className="form-select rounded-3 text-secondary"
+                                                    className={`form-select rounded-3 text-secondary ${bookFormErrors.time ? 'is-invalid' : ''}`}
                                                     value={bookForm.time}
                                                     onChange={e => setBookForm(f => ({ ...f, time: e.target.value }))}
                                                     required
@@ -1390,6 +1429,7 @@ export default function ClinicLandingPage() {
                                                         <option key={t} value={t}>{t}</option>
                                                     ))}
                                                 </select>
+                                                {bookFormErrors.time && <div className="invalid-feedback">{bookFormErrors.time}</div>}
                                             </div>
                                             <div className="col-12">
                                                 <label className="form-label fw-bold text-dark" style={{ fontSize: "13px" }}>Reason / Symptoms</label>

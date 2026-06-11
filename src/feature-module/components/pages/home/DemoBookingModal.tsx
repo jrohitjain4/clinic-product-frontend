@@ -6,20 +6,6 @@ import { SuccessModal } from "./SuccessModal";
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export const DemoBookingModal = () => {
-    const getNextDayDateTimeString = () => {
-        const nextDay = new Date();
-        nextDay.setDate(nextDay.getDate() + 1);
-        nextDay.setHours(10, 0, 0, 0); // Default to 10:00 AM next day
-        
-        const year = nextDay.getFullYear();
-        const month = String(nextDay.getMonth() + 1).padStart(2, '0');
-        const day = String(nextDay.getDate()).padStart(2, '0');
-        const hours = String(nextDay.getHours()).padStart(2, '0');
-        const minutes = String(nextDay.getMinutes()).padStart(2, '0');
-        
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
-    };
-
     const [show, setShow] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
@@ -29,8 +15,8 @@ export const DemoBookingModal = () => {
         phone: "",
         clinicName: "",
         location: "",
-        dateTime: getNextDayDateTimeString(),
     });
+    const [formErrors, setFormErrors] = useState<{name?: string; email?: string; phone?: string}>({});
 
     const location = useLocation();
 
@@ -63,6 +49,29 @@ export const DemoBookingModal = () => {
 
     const handleSubmit = async (e: any) => {
         e.preventDefault();
+        setFormErrors({});
+
+        let hasError = false;
+        const newErrors: any = {};
+        
+        if (!formData.name.trim()) {
+            newErrors.name = "Please enter your full name.";
+            hasError = true;
+        }
+        if (!formData.email.trim()) {
+            newErrors.email = "Please enter your email address.";
+            hasError = true;
+        }
+        if (!formData.phone.trim()) {
+            newErrors.phone = "Please enter your phone number.";
+            hasError = true;
+        }
+
+        if (hasError) {
+            setFormErrors(newErrors);
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -84,7 +93,6 @@ export const DemoBookingModal = () => {
                 phone: "",
                 clinicName: "",
                 location: "",
-                dateTime: getNextDayDateTimeString(),
             });
         } catch (error) {
             alert("An error occurred. Please try again.");
@@ -104,19 +112,22 @@ export const DemoBookingModal = () => {
                     </div>
                     <div className="modal-body p-4">
                         <p className="text-muted mb-4">Please fill in your details below to schedule a live demo of DocYori.</p>
-                        <form onSubmit={handleSubmit}>
+                        <form onSubmit={handleSubmit} noValidate>
                             <div className="mb-3">
                                 <label className="form-label fw-semibold text-dark">Full Name</label>
-                                <input type="text" className="form-control" name="name" placeholder="Enter your full name" value={formData.name} onChange={handleChange} required style={{ borderRadius: '8px', padding: '10px 14px' }} />
+                                <input type="text" className={`form-control ${formErrors.name ? 'is-invalid' : ''}`} name="name" placeholder="Enter your full name" value={formData.name} onChange={handleChange} required style={{ borderRadius: '8px', padding: '10px 14px' }} />
+                                {formErrors.name && <div className="invalid-feedback d-block">{formErrors.name}</div>}
                             </div>
                             <div className="row mb-3">
                                 <div className="col-md-6">
                                     <label className="form-label fw-semibold text-dark">Email Address <span className="text-danger">*</span></label>
-                                    <input type="email" className="form-control" name="email" placeholder="Enter your email address" value={formData.email} onChange={handleChange} required style={{ borderRadius: '8px', padding: '10px 14px' }} />
+                                    <input type="email" className={`form-control ${formErrors.email ? 'is-invalid' : ''}`} name="email" placeholder="Enter your email address" value={formData.email} onChange={handleChange} required style={{ borderRadius: '8px', padding: '10px 14px' }} />
+                                    {formErrors.email && <div className="invalid-feedback d-block">{formErrors.email}</div>}
                                 </div>
-                                <div className="col-md-6">
+                                <div className="col-md-6 mt-3 mt-md-0">
                                     <label className="form-label fw-semibold text-dark">Phone Number <span className="text-danger">*</span></label>
-                                    <input type="tel" className="form-control" name="phone" placeholder="Enter your phone number" value={formData.phone} onChange={handleChange} required style={{ borderRadius: '8px', padding: '10px 14px' }} />
+                                    <input type="tel" className={`form-control ${formErrors.phone ? 'is-invalid' : ''}`} name="phone" placeholder="Enter your phone number" value={formData.phone} onChange={handleChange} required style={{ borderRadius: '8px', padding: '10px 14px' }} />
+                                    {formErrors.phone && <div className="invalid-feedback d-block">{formErrors.phone}</div>}
                                 </div>
                             </div>
                             <div className="mb-3">
@@ -127,10 +138,7 @@ export const DemoBookingModal = () => {
                                 <label className="form-label fw-semibold text-dark">Location (City, Country)</label>
                                 <input type="text" className="form-control" name="location" placeholder="e.g. New York, USA" value={formData.location} onChange={handleChange} style={{ borderRadius: '8px', padding: '10px 14px' }} />
                             </div>
-                            <div className="mb-3">
-                                <label className="form-label fw-semibold text-dark">Preferred Date & Time</label>
-                                <input type="datetime-local" className="form-control" name="dateTime" placeholder="Select preferred date & time" value={formData.dateTime} onChange={handleChange} required style={{ borderRadius: '8px', padding: '10px 14px' }} />
-                            </div>
+
                             <div className="text-end mt-4">
                                 <button type="button" className="btn btn-light me-2 fw-semibold px-4 py-2" onClick={() => setShow(false)} style={{ borderRadius: '8px' }}>Cancel</button>
                                 <button type="submit" className="btn btn-primary fw-semibold px-4 py-2" disabled={loading} style={{ borderRadius: '8px' }}>
@@ -145,8 +153,8 @@ export const DemoBookingModal = () => {
             <SuccessModal 
                 show={showSuccess} 
                 onHide={() => setShowSuccess(false)}
-                title="demo request submitted"
-                message="we will rich you before youre refered time"
+                title="Demo Request Submitted"
+                message="We will reach out to you shortly."
             />
         </>
     );

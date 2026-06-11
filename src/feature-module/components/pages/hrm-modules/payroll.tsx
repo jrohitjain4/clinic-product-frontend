@@ -9,6 +9,7 @@ import { useClinicStaff } from "../../../../core/hooks/useClinicStaff";
 import { useClinicDoctors } from "../../../../core/hooks/useClinicDoctors";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
+import { ViewModal } from "../../../../core/common/modal/ViewModal";
 
 const PayrollList = () => {
   const { payrolls, refetch, loading, error } = usePayroll();
@@ -497,79 +498,35 @@ const PayrollList = () => {
       />
 
       {/* ===== VIEW PAYROLL MODAL ===== */}
-      <div id="view_payroll" className="modal fade" role="dialog">
-        <div className="modal-dialog modal-dialog-centered">
-          <div
-            className="modal-content border-0 shadow-lg"
-            style={{ borderRadius: "12px", overflow: "hidden" }}
-          >
-            <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title fw-bold">Payroll Details</h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-                onClick={() => setViewPayroll(null)}
-              ></button>
-            </div>
-            <div className="modal-body">
-              {viewPayroll && (
-                <>
-                  <div className="row row-gap-2 mb-3">
-                    <div className="col-md-6">
-                      <div className="mb-0">
-                        <label className="form-label">Employee Name</label>
-                        <input type="text" className="form-control bg-light" disabled value={viewPayroll.staff?.fullName || viewPayroll.doctor?.fullName || ""} />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-0">
-                        <label className="form-label">Net Salary</label>
-                        <input type="text" className="form-control bg-light text-success fw-bold" disabled value={`₹${viewPayroll.netSalary || 0}`} />
-                      </div>
-                    </div>
-                  </div>
-                  {/* Earnings & Deductions Details */}
-                  <div className="row row-gap-2">
-                    <div className="col-md-6">
-                      <h6 className="mb-3">Earnings (₹)</h6>
-                      <div className="mb-3">
-                        <label className="form-label">Basic Salary</label>
-                        <input type="number" className="form-control bg-light" disabled value={viewPayroll.basicSalary || 0} />
-                      </div>
-                      <div className="mb-3"><label className="form-label">DA (40%)</label><input type="number" className="form-control bg-light" disabled value={viewPayroll.da || 0} /></div>
-                      <div className="mb-3"><label className="form-label">HRA (15%)</label><input type="number" className="form-control bg-light" disabled value={viewPayroll.hra || 0} /></div>
-                      <div className="mb-3"><label className="form-label">Conveyance</label><input type="number" className="form-control bg-light" disabled value={viewPayroll.conveyance || 0} /></div>
-                      <div className="mb-3"><label className="form-label">Medical Allowance</label><input type="number" className="form-control bg-light" disabled value={viewPayroll.medicalAllowance || 0} /></div>
-                      <div className="mb-0"><label className="form-label">Others</label><input type="number" className="form-control bg-light" disabled value={viewPayroll.otherEarnings || 0} /></div>
-                    </div>
-                    <div className="col-md-6">
-                      <h6 className="mb-3">Deductions (₹)</h6>
-                      <div className="mb-3"><label className="form-label">TDS</label><input type="number" className="form-control bg-light" disabled value={viewPayroll.tds || 0} /></div>
-                      <div className="mb-3"><label className="form-label">ESI</label><input type="number" className="form-control bg-light" disabled value={viewPayroll.esi || 0} /></div>
-                      <div className="mb-3"><label className="form-label">PF</label><input type="number" className="form-control bg-light" disabled value={viewPayroll.pf || 0} /></div>
-                      <div className="mb-3"><label className="form-label">Prof Tax</label><input type="number" className="form-control bg-light" disabled value={viewPayroll.profTax || 0} /></div>
-                      <div className="mb-3"><label className="form-label">Labour Welfare</label><input type="number" className="form-control bg-light" disabled value={viewPayroll.labourWelfare || 0} /></div>
-                      <div className="mb-0"><label className="form-label">Others</label><input type="number" className="form-control bg-light" disabled value={viewPayroll.otherDeductions || 0} /></div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="modal-footer border-top pt-3">
-              <button
-                type="button"
-                className="btn btn-primary px-5"
-                data-bs-dismiss="modal"
-                onClick={() => setViewPayroll(null)}
-                style={{ borderRadius: "6px" }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ViewModal
+        id="view_payroll"
+        title="Payroll Details"
+        subtitle="View salary information"
+        headerIcon={<i className="ti ti-cash" />}
+        highlightTitle={viewPayroll?.staff?.fullName || viewPayroll?.doctor?.fullName || "Employee"}
+        highlightRightText={`₹${viewPayroll?.netSalary || 0}`}
+        highlightRightSubText="Net Salary"
+        highlightColor="#dcfce7"
+        details={[
+            { icon: <i className="ti ti-currency-rupee" />, label: "Basic Salary", value: `₹${viewPayroll?.basicSalary || 0}` },
+            { icon: <i className="ti ti-currency-rupee" />, label: "DA (40%)", value: `₹${viewPayroll?.da || 0}` },
+            { icon: <i className="ti ti-currency-rupee" />, label: "HRA (15%)", value: `₹${viewPayroll?.hra || 0}` },
+            { icon: <i className="ti ti-currency-rupee" />, label: "Conveyance", value: `₹${viewPayroll?.conveyance || 0}` },
+            { icon: <i className="ti ti-currency-rupee" />, label: "Medical Allowance", value: `₹${viewPayroll?.medicalAllowance || 0}` },
+            { icon: <i className="ti ti-currency-rupee" />, label: "Other Earnings", value: `₹${viewPayroll?.otherEarnings || 0}` },
+            { icon: <i className="ti ti-minus" />, label: "TDS", value: `₹${viewPayroll?.tds || 0}` },
+            { icon: <i className="ti ti-minus" />, label: "ESI", value: `₹${viewPayroll?.esi || 0}` },
+            { icon: <i className="ti ti-minus" />, label: "PF", value: `₹${viewPayroll?.pf || 0}` },
+            { icon: <i className="ti ti-minus" />, label: "Prof Tax", value: `₹${viewPayroll?.profTax || 0}` },
+            { icon: <i className="ti ti-minus" />, label: "Labour Welfare", value: `₹${viewPayroll?.labourWelfare || 0}` },
+            { icon: <i className="ti ti-minus" />, label: "Other Deductions", value: `₹${viewPayroll?.otherDeductions || 0}` }
+        ]}
+        onEdit={() => {
+            setSelectedPayroll(viewPayroll);
+        }}
+        editLabel="Edit Payroll"
+        editModalTarget="#edit_payroll"
+      />
     </>
   );
 };

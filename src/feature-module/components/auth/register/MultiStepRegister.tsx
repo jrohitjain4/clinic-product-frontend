@@ -5,7 +5,8 @@ import { toast } from "react-toastify";
 import { apiUrl } from "../../../../core/config/api";
 import { Input } from "../../../../core/common/input/Input";
 import { Button } from "../../../../core/common/button/Button";
-import { UserPlus, User, Phone, Mail, MessageCircle, MapPin, Hash, Lock, CheckCircle, ArrowRight, ArrowLeft, Eye, EyeOff, Home, AtSign, Map, Users, Calendar, Star, Zap } from "react-feather";
+import { UserPlus, User, Phone, Mail, MessageCircle, MapPin, Hash, Lock, CheckCircle, ArrowRight, ArrowLeft, Eye, EyeOff, Home, AtSign, Map, Users, Calendar, Star, Zap, ChevronDown } from "react-feather";
+import { Country, State, City } from "country-state-city";
 
 const MultiStepRegister: React.FC = () => {
     const navigate = useNavigate();
@@ -13,12 +14,44 @@ const MultiStepRegister: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [packages, setPackages] = useState<any[]>([]);
     const [error, setError] = useState("");
+    const [formErrors, setFormErrors] = useState<any>({});
     const [success, setSuccess] = useState("");
     const [selectedPkgId, setSelectedPkgId] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
     const [usernameWarning, setUsernameWarning] = useState<string | null>(null);
+    const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
+    
+    // Location Data
+    const [selectedCountryCode, setSelectedCountryCode] = useState("IN");
+    const [selectedStateCode, setSelectedStateCode] = useState("");
+    const [countries, setCountries] = useState<any[]>([]);
+    const [states, setStates] = useState<any[]>([]);
+    const [cities, setCities] = useState<any[]>([]);
+
+    useEffect(() => {
+        setCountries(Country.getAllCountries());
+        setStates(State.getStatesOfCountry("IN"));
+    }, []);
+
+    const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const isoCode = e.target.value;
+        setSelectedCountryCode(isoCode);
+        setStates(State.getStatesOfCountry(isoCode));
+        setCities([]);
+        setSelectedStateCode("");
+        const countryName = Country.getCountryByCode(isoCode)?.name || "";
+        setForm(f => ({ ...f, country: countryName, state: "", city: "" }));
+    };
+
+    const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const isoCode = e.target.value;
+        setSelectedStateCode(isoCode);
+        setCities(City.getCitiesOfState(selectedCountryCode, isoCode));
+        const stateName = State.getStateByCodeAndCountry(isoCode, selectedCountryCode)?.name || "";
+        setForm(f => ({ ...f, state: stateName, city: "" }));
+    };
 
     const [form, setForm] = useState({
         ownerName: "",
@@ -93,8 +126,15 @@ const MultiStepRegister: React.FC = () => {
                 const data = await res.json();
                 if (data.available) {
                     setUsernameStatus("available");
+                    setUsernameSuggestions([]);
                 } else {
                     setUsernameStatus("taken");
+                    const base = form.username;
+                    setUsernameSuggestions([
+                        `${base}123`,
+                        `${base}_clinic`,
+                        `${base}${Math.floor(Math.random() * 1000)}`
+                    ]);
                 }
             } catch (err) {
                 console.error("Username check failed", err);
@@ -108,35 +148,48 @@ const MultiStepRegister: React.FC = () => {
 
     const handleNext = async () => {
         setError("");
+        setFormErrors({});
+
+        let hasError = false;
+        const newErrors: any = {};
 
         if (step === 1) {
-            // Field-specific validation for Step 1
-            if (!form.ownerName) { setError("Owner name is required"); return; }
-            if (!form.mobileNumber) { setError("Mobile number is required"); return; }
-            if (!form.emailId) { setError("Email address is required"); return; }
+            if (!form.ownerName) { newErrors.ownerName = "Owner name is required"; hasError = true; }
 
-            if (!/^[6-9]\d{9}$/.test(form.mobileNumber)) {
-                setError("Please enter a valid 10-digit Indian mobile number");
-                return;
+            if (!form.mobileNumber) { newErrors.mobileNumber = "Mobile number is required"; hasError = true; }
+            else if (!/^[6-9]\d{9}$/.test(form.mobileNumber)) {
+                newErrors.mobileNumber = "Enter a valid 10-digit number";
+                hasError = true;
             }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailId)) {
-                setError("Please enter a valid email address");
+
+            if (!form.emailId) { newErrors.emailId = "Email address is required"; hasError = true; }
+            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailId)) {
+                newErrors.emailId = "Enter a valid email address";
+                hasError = true;
+            }
+
+            if (hasError) {
+                setFormErrors(newErrors);
                 return;
             }
             setStep(2);
         } else if (step === 2) {
-            // Field-specific validation for Step 2
-            if (!form.clinicName) { setError("Clinic name is required"); return; }
-            if (!form.username) { setError("Clinic username is required"); return; }
-            if (!form.addressLine1) { setError("Primary address (Line 1) is required"); return; }
-            if (!form.password) { setError("Account password is required"); return; }
+            if (!form.clinicName) { newErrors.clinicName = "Clinic name is required"; hasError = true; }
+            if (!form.username) { newErrors.username = "Clinic username is required"; hasError = true; }
+            if (!form.addressLine1) { newErrors.addressLine1 = "Primary address is required"; hasError = true; }
 
-            if (form.password.length < 8) {
-                setError("Password must be at least 8 characters long");
-                return;
+            if (!form.password) { newErrors.password = "Password is required"; hasError = true; }
+            else if (form.password.length < 8) {
+                newErrors.password = "Min 8 characters required";
+                hasError = true;
             }
             if (form.password !== form.confirmPassword) {
-                setError("Passwords do not match");
+                newErrors.confirmPassword = "Passwords do not match";
+                hasError = true;
+            }
+
+            if (hasError) {
+                setFormErrors(newErrors);
                 return;
             }
 
@@ -273,6 +326,7 @@ const MultiStepRegister: React.FC = () => {
                 .signin-link a:hover { text-decoration: underline; }
                 .tag-recommended { background: linear-gradient(135deg, #10b981, #059669); color: white; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 100px; display: inline-block; margin-top: 8px; }
                 .phone-note { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+                .form-gap-fix .docyori-input-group { margin-bottom: 0 !important; }
             `}</style>
 
             <div className="container-fuild position-relative z-1" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -345,7 +399,7 @@ const MultiStepRegister: React.FC = () => {
                                                             return (
                                                                 <div key={i} className={`step-pill ${cls}`}>
                                                                     <span className="step-pill-num">{s < step ? "✓" : s}</span>
-                                                                    <span>{title}</span>
+                                                                    <span className="d-none d-md-inline">{title}</span>
                                                                 </div>
                                                             );
                                                         })}
@@ -373,7 +427,7 @@ const MultiStepRegister: React.FC = () => {
 
                                                 {/* ─── STEP 1: Personal Details ─── */}
                                                 {step === 1 && (
-                                                    <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="text-start">
+                                                    <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="text-start form-gap-fix" noValidate>
                                                         <div className="mb-3 text-start">
                                                             <Input
                                                                 label="Owner / Your Name"
@@ -383,6 +437,7 @@ const MultiStepRegister: React.FC = () => {
                                                                 leftAddon={<User size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                 value={form.ownerName}
                                                                 onChange={e => setForm({ ...form, ownerName: e.target.value })}
+                                                                error={formErrors.ownerName}
                                                             />
                                                         </div>
 
@@ -399,6 +454,7 @@ const MultiStepRegister: React.FC = () => {
                                                                     const val = e.target.value.replace(/\D/g, "").slice(0, 10);
                                                                     setForm({ ...form, mobileNumber: val, ...(form.sameAsMobile ? { whatsappNumber: val } : {}) });
                                                                 }}
+                                                                error={formErrors.mobileNumber}
                                                             />
                                                             <div className="phone-note">Enter 10-digit Indian mobile number</div>
                                                         </div>
@@ -412,6 +468,7 @@ const MultiStepRegister: React.FC = () => {
                                                                 leftAddon={<Mail size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                 value={form.emailId}
                                                                 onChange={e => setForm({ ...form, emailId: e.target.value })}
+                                                                error={formErrors.emailId}
                                                             />
                                                         </div>
 
@@ -448,7 +505,7 @@ const MultiStepRegister: React.FC = () => {
 
                                                 {/* ─── STEP 2: Clinic Details ─── */}
                                                 {step === 2 && (
-                                                    <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="text-start">
+                                                    <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="text-start form-gap-fix" noValidate>
                                                         <div className="row mb-3">
                                                             <div className="col-md-6 mb-3 mb-md-0">
                                                                 <Input
@@ -459,41 +516,55 @@ const MultiStepRegister: React.FC = () => {
                                                                     leftAddon={<Home size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                     value={form.clinicName}
                                                                     onChange={e => setForm({ ...form, clinicName: e.target.value })}
+                                                                    error={formErrors.clinicName}
                                                                 />
                                                             </div>
                                                             <div className="col-md-6">
-                                                                <Input
-                                                                    label="Clinic Username"
-                                                                    required
-                                                                    type="text"
-                                                                    placeholder="e.g. apollo_clinic"
-                                                                    leftAddon={<AtSign size={20} strokeWidth={2.5} color="#0f172a" />}
-                                                                    value={form.username}
-                                                                    onChange={e => {
-                                                                        const val = e.target.value;
-                                                                        setForm({ ...form, username: val });
-                                                                    }}
-                                                                />
-                                                                <div className="mt-1 ms-1 d-flex flex-column" style={{ minHeight: "20px" }}>
-                                                                    {usernameWarning && (
-                                                                        <span className="text-danger fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
-                                                                            <i className="ti ti-alert-triangle me-1" /> {usernameWarning}
-                                                                        </span>
-                                                                    )}
-                                                                    {usernameStatus === "checking" && !usernameWarning && (
-                                                                        <span className="text-muted d-flex align-items-center" style={{ fontSize: "12px" }}>
-                                                                            <span className="spinner-border spinner-border-sm me-1" style={{ width: "12px", height: "12px" }} /> checking...
-                                                                        </span>
-                                                                    )}
-                                                                    {usernameStatus === "available" && !usernameWarning && (
-                                                                        <span className="text-success fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
-                                                                            <CheckCircle size={12} className="me-1" /> Username Available
-                                                                        </span>
-                                                                    )}
-                                                                    {usernameStatus === "taken" && !usernameWarning && (
-                                                                        <span className="text-danger fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
-                                                                            <i className="ti ti-alert-circle me-1"></i> Username Taken
-                                                                        </span>
+                                                                <div className="position-relative">
+                                                                    <Input
+                                                                        label="Clinic Username"
+                                                                        required
+                                                                        type="text"
+                                                                        placeholder="e.g. apollo_clinic"
+                                                                        leftAddon={<AtSign size={20} strokeWidth={2.5} color={usernameStatus === 'available' ? '#16a34a' : '#0f172a'} />}
+                                                                        rightIcon={
+                                                                            <div className="d-flex align-items-center h-100 pe-2">
+                                                                                {usernameStatus === "checking" && <span className="spinner-border spinner-border-sm text-primary" />}
+                                                                                {usernameStatus === "available" && <CheckCircle size={18} color="#16a34a" />}
+                                                                                {usernameStatus === "taken" && <i className="ti ti-alert-circle text-danger fs-5" />}
+                                                                            </div>
+                                                                        }
+                                                                        style={usernameStatus === "available" ? { color: "#16a34a", fontWeight: "600" } : {}}
+                                                                        value={form.username}
+                                                                        onChange={e => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })}
+                                                                        error={formErrors.username}
+                                                                    />
+
+                                                                    {usernameStatus === "taken" && usernameSuggestions.length > 0 && (
+                                                                        <div className="position-absolute w-100 bg-white border rounded-3 shadow p-2" style={{ top: "100%", left: 0, marginTop: "4px", zIndex: 10 }}>
+                                                                            <div className="text-danger fw-bold d-flex align-items-center mb-2 pb-2 border-bottom" style={{ fontSize: "12px" }}>
+                                                                                Username Not Available
+                                                                            </div>
+                                                                            <div className="text-muted fw-semibold mb-2" style={{ fontSize: "11px" }}>Suggested Usernames:</div>
+                                                                            <div className="d-flex flex-column gap-1">
+                                                                                {usernameSuggestions.map(s => (
+                                                                                    <div
+                                                                                        key={s}
+                                                                                        className="d-flex align-items-center justify-content-between p-2 rounded"
+                                                                                        style={{ fontSize: "13px", cursor: "pointer", transition: "background 0.2s" }}
+                                                                                        onMouseOver={(e) => e.currentTarget.style.background = "#f1f5f9"}
+                                                                                        onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
+                                                                                        onClick={() => {
+                                                                                            setForm({ ...form, username: s });
+                                                                                            setUsernameStatus("idle");
+                                                                                        }}
+                                                                                    >
+                                                                                        <span className="fw-medium text-dark">{s}</span>
+                                                                                        <span className="badge bg-primary text-white" style={{ fontSize: "10px" }}>Apply</span>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
                                                                     )}
                                                                 </div>
                                                             </div>
@@ -508,6 +579,7 @@ const MultiStepRegister: React.FC = () => {
                                                                 leftAddon={<MapPin size={20} strokeWidth={2.5} color="#0f172a" />}
                                                                 value={form.addressLine1}
                                                                 onChange={e => setForm({ ...form, addressLine1: e.target.value })}
+                                                                error={formErrors.addressLine1}
                                                             />
                                                         </div>
 
@@ -523,27 +595,67 @@ const MultiStepRegister: React.FC = () => {
                                                         </div>
 
                                                         <div className="row mb-3">
-                                                            <div className="col-md-4 mb-3 mb-md-0">
-                                                                <Input label="District" type="text" placeholder="e.g. Indore" leftAddon={<Map size={20} strokeWidth={2.5} color="#0f172a" />} value={form.district} onChange={e => setForm({ ...form, district: e.target.value })} />
+                                                            <div className="col-md-6 mb-3 mb-md-0">
+                                                                <div className={`docyori-input-group`}>
+                                                                    <label className="docyori-label">Country <span className="docyori-required">*</span></label>
+                                                                    <div className={`docyori-input-wrapper ${formErrors.country ? 'has-error' : ''}`}>
+                                                                        <div className="docyori-input-addon-left"><Map size={20} strokeWidth={2.5} color="#0f172a" /></div>
+                                                                        <select className="docyori-input border-0 shadow-none bg-transparent" style={{ width: "100%", outline: "none", color: "#1a1a2e", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }} value={selectedCountryCode} onChange={handleCountryChange}>
+                                                                            <option value="">Select Country</option>
+                                                                            {countries.map(c => (
+                                                                                <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                        <div className="docyori-input-icon-right pe-3"><ChevronDown size={18} color="#64748b" /></div>
+                                                                    </div>
+                                                                    {formErrors.country && <span className="docyori-error-text">{formErrors.country}</span>}
+                                                                </div>
                                                             </div>
-                                                            <div className="col-md-4 mb-3 mb-md-0">
-                                                                <Input label="City" type="text" placeholder="e.g. Indore" leftAddon={<MapPin size={20} strokeWidth={2.5} color="#0f172a" />} value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} />
-                                                            </div>
-                                                            <div className="col-md-4">
-                                                                <Input label="Pincode" type="text" placeholder="e.g. 452001" maxLength={6} leftAddon={<Hash size={20} strokeWidth={2.5} color="#0f172a" />} value={form.pincode} onChange={e => setForm({ ...form, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) })} />
+                                                            <div className="col-md-6">
+                                                                <div className={`docyori-input-group`}>
+                                                                    <label className="docyori-label">State <span className="docyori-required">*</span></label>
+                                                                    <div className={`docyori-input-wrapper ${formErrors.state ? 'has-error' : ''}`}>
+                                                                        <div className="docyori-input-addon-left"><Map size={20} strokeWidth={2.5} color="#0f172a" /></div>
+                                                                        <select className="docyori-input border-0 shadow-none bg-transparent" style={{ width: "100%", outline: "none", color: "#1a1a2e", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }} value={selectedStateCode} onChange={handleStateChange}>
+                                                                            <option value="">Select State</option>
+                                                                            {states.map(s => (
+                                                                                <option key={s.isoCode} value={s.isoCode}>{s.name}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                        <div className="docyori-input-icon-right pe-3"><ChevronDown size={18} color="#64748b" /></div>
+                                                                    </div>
+                                                                    {formErrors.state && <span className="docyori-error-text">{formErrors.state}</span>}
+                                                                </div>
                                                             </div>
                                                         </div>
 
                                                         <div className="row mb-3">
                                                             <div className="col-md-6 mb-3 mb-md-0">
-                                                                <Input label="State" type="text" placeholder="e.g. Madhya Pradesh" leftAddon={<Map size={20} strokeWidth={2.5} color="#0f172a" />} value={form.state} onChange={e => setForm({ ...form, state: e.target.value })} />
+                                                                <div className={`docyori-input-group`}>
+                                                                    <label className="docyori-label">City <span className="docyori-required">*</span></label>
+                                                                    <div className={`docyori-input-wrapper ${formErrors.city ? 'has-error' : ''}`}>
+                                                                        <div className="docyori-input-addon-left"><MapPin size={20} strokeWidth={2.5} color="#0f172a" /></div>
+                                                                        <select className="docyori-input border-0 shadow-none bg-transparent" style={{ width: "100%", outline: "none", color: "#1a1a2e", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }} value={form.city} onChange={e => setForm({ ...form, city: e.target.value })}>
+                                                                            <option value="">Select City</option>
+                                                                            {cities.map(c => (
+                                                                                <option key={c.name} value={c.name}>{c.name}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                        <div className="docyori-input-icon-right pe-3"><ChevronDown size={18} color="#64748b" /></div>
+                                                                    </div>
+                                                                    {formErrors.city && <span className="docyori-error-text">{formErrors.city}</span>}
+                                                                </div>
                                                             </div>
                                                             <div className="col-md-6">
-                                                                <Input label="No. of Doctors" type="number" placeholder="e.g. 5" min={1} leftAddon={<Users size={20} strokeWidth={2.5} color="#0f172a" />} value={form.doctorCount} onChange={e => setForm({ ...form, doctorCount: e.target.value })} />
+                                                                <Input label="Pincode" type="text" placeholder="e.g. 452001" maxLength={6} leftAddon={<Hash size={20} strokeWidth={2.5} color="#0f172a" />} value={form.pincode} onChange={e => setForm({ ...form, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) })} error={formErrors.pincode} />
                                                             </div>
                                                         </div>
 
-                                                        <hr className="divider" />
+                                                        <div className="row mb-3">
+                                                            <div className="col-md-12">
+                                                                <Input label="No. of Doctors" type="number" placeholder="e.g. 5" min={1} leftAddon={<Users size={20} strokeWidth={2.5} color="#0f172a" />} value={form.doctorCount} onChange={e => setForm({ ...form, doctorCount: e.target.value })} />
+                                                            </div>
+                                                        </div>
 
                                                         <div className="row mb-3">
                                                             <div className="col-md-6 mb-3 mb-md-0">
@@ -560,6 +672,7 @@ const MultiStepRegister: React.FC = () => {
                                                                     }
                                                                     value={form.password}
                                                                     onChange={e => setForm({ ...form, password: e.target.value })}
+                                                                    error={formErrors.password}
                                                                 />
                                                             </div>
                                                             <div className="col-md-6">
@@ -576,6 +689,7 @@ const MultiStepRegister: React.FC = () => {
                                                                     }
                                                                     value={form.confirmPassword}
                                                                     onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
+                                                                    error={formErrors.confirmPassword}
                                                                 />
                                                             </div>
                                                         </div>

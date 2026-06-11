@@ -27,11 +27,31 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [formErrors, setFormErrors] = useState<{ identifier?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setFormErrors({});
+
+    let hasError = false;
+    const newErrors: { identifier?: string; password?: string } = {};
+
+    if (!identifier.trim()) {
+      newErrors.identifier = "Please enter your username, mobile, or email.";
+      hasError = true;
+    }
+    if (!password) {
+      newErrors.password = "Please enter your password.";
+      hasError = true;
+    }
+
+    if (hasError) {
+      setFormErrors(newErrors);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -106,7 +126,7 @@ const Login = () => {
                     <img src="/logo.png" className="img-fluid" alt="DocYori Logo" style={{ maxHeight: "60px", width: "auto" }} />
                   </div>
 
-                  <form onSubmit={handleLogin} className="d-flex justify-content-center align-items-center">
+                  <form onSubmit={handleLogin} className="d-flex justify-content-center align-items-center" noValidate>
                     <div className="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill">
 
                       <div className="card border-1 p-lg-3 shadow-md rounded-3 m-0">
@@ -139,6 +159,7 @@ const Login = () => {
                             onChange={(e) => setIdentifier(e.target.value)}
                             placeholder="Enter Username, Mobile or Email"
                             leftAddon={<User size={20} strokeWidth={2.5} color="#0f172a" />}
+                            error={formErrors.identifier}
                           />
 
                           <Input
@@ -149,6 +170,7 @@ const Login = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="****************"
                             leftAddon={<Lock size={20} strokeWidth={2.5} color="#0f172a" />}
+                            error={formErrors.password}
                             rightIcon={
                               <div
                                 onClick={() => setShowPassword(!showPassword)}

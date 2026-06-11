@@ -312,12 +312,6 @@ const DoctorsAppointmentDetails = () => {
             <h3 className="fw-bold mb-0">Visit # {appointment.appointmentCode || id?.slice(-6).toUpperCase()}</h3>
           </div>
           <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
-            <button className="btn btn-outline-light border bg-white text-dark d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={() => window.print()}>
-              <i className="ti ti-printer" /> Print
-            </button>
-            <button className="btn btn-outline-light border bg-white text-dark d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={handleDownload}>
-              <i className="ti ti-download" /> Download
-            </button>
             <button className="btn btn-soft-primary d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={() => { setClinicalNote(""); setShowNoteModal(true); }}>
               <i className="ti ti-notes" /> Add Note
             </button>

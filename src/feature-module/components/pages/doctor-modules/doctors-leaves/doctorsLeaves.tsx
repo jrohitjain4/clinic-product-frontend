@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router";
 import Datatable from "../../../../../core/common/dataTable";
 import { useLeaves } from "../../../../../core/hooks/useLeaves";
@@ -17,6 +17,8 @@ const DoctorsLeaves = () => {
   const [reason, setReason] = useState("");
   const [workingDays, setWorkingDays] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterDate, setFilterDate] = useState<dayjs.Dayjs | null>(null);
 
 
   useEffect(() => {
@@ -63,18 +65,32 @@ const DoctorsLeaves = () => {
   const getModalContainer = () => document.body;
 
   const statusBadge = (status: string) => {
-    if (status === "APPLIED") return "badge-soft-info border-info text-info";
-    if (status === "APPROVED") return "badge-soft-success border-success text-success";
-    if (status === "REJECTED") return "badge-soft-danger border-danger text-danger";
-    if (status === "COMPLETED") return "badge-soft-secondary border-secondary text-secondary";
-    if (status === "WITHDRAWN") return "badge-soft-warning border-warning text-warning";
-    if (status === "CANCELLED") return "badge-soft-dark border-dark text-dark";
-    return "badge-soft-light border-light text-muted";
+    const s = status.toUpperCase();
+    if (s === "APPLIED") return "badge-soft-info border-info";
+    if (s === "APPROVED") return "badge-soft-success border-success";
+    if (s === "REJECTED") return "badge-soft-danger border-danger";
+    if (s === "COMPLETED") return "badge-soft-secondary border-secondary";
+    if (s === "WITHDRAWN") return "badge-soft-warning border-warning";
+    if (s === "CANCELLED") return "badge-soft-dark border-dark";
+    return "badge-soft-light border-light";
   };
 
-  const data = leaves.map((l) => ({
+  const filteredLeaves = useMemo(() => {
+    return leaves.filter((l) => {
+      const matchStatus = filterStatus === "All" || l.status.toUpperCase() === filterStatus.toUpperCase();
+      const matchDate =
+        !filterDate ||
+        dayjs(l.startDate).isSame(filterDate, 'day') ||
+        dayjs(l.endDate).isSame(filterDate, 'day') ||
+        (filterDate.isAfter(dayjs(l.startDate)) && filterDate.isBefore(dayjs(l.endDate)));
+      return matchStatus && matchDate;
+    });
+  }, [leaves, filterStatus, filterDate]);
+
+  const data = filteredLeaves.map((l, index) => ({
     key: l.id,
     ...l,
+    sr_no: index + 1,
     Date: `${dayjs(l.startDate).format("DD MMM YYYY")} - ${dayjs(l.endDate).format("DD MMM YYYY")}`,
     Leave_Type: l.leaveTypeName,
     Day: l.workingDays === l.days ? `${l.days} Day${l.days > 1 ? "s" : ""}` : `${l.workingDays} / ${l.days} Days`,
@@ -83,66 +99,154 @@ const DoctorsLeaves = () => {
   }));
 
   const columns = [
-    { title: "Date", dataIndex: "Date", sorter: (a: any, b: any) => a.Date.localeCompare(b.Date) },
-    { title: "Leave Type", dataIndex: "Leave_Type", sorter: (a: any, b: any) => a.Leave_Type.localeCompare(b.Leave_Type) },
-    { title: "Day", dataIndex: "Day" },
-    { title: "Applied On", dataIndex: "Applied_On" },
     {
-      title: "Status", dataIndex: "Status",
+      title: "S.No",
+      dataIndex: "sr_no",
+      render: (text: number) => <span className="text-dark fw-medium">{text}</span>,
+      sorter: (a: any, b: any) => a.sr_no - b.sr_no,
+      width: 70,
+    },
+    { title: "Date", dataIndex: "Date", render: (text: string) => <span className="text-dark">{text}</span>, sorter: (a: any, b: any) => a.Date.localeCompare(b.Date) },
+    { title: "Leave Type", dataIndex: "Leave_Type", render: (text: string) => <span className="text-dark">{text}</span>, sorter: (a: any, b: any) => a.Leave_Type.localeCompare(b.Leave_Type) },
+    { title: "Days", dataIndex: "Day", render: (text: string) => <span className="text-dark">{text}</span> },
+    { title: "Applied On", dataIndex: "Applied_On", render: (text: string) => <span className="text-dark">{text}</span> },
+    {
+      title: "Status",
+      dataIndex: "Status",
       render: (text: string, record: any) => (
-        <span className={`badge badge-sm border rounded ${statusBadge(record.status)}`}>{text}</span>
+        <span className={`badge border fw-medium px-2 py-1 fs-12 ${statusBadge(record.status)}`}>
+          {text}
+        </span>
       ),
     },
     {
-      title: "",
+      title: "Action",
+      align: "center" as const,
       render: (_: any, record: any) => (
-        record.status === "APPLIED" ? (
-          <div className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent">
-            <Link to="#" data-bs-toggle="dropdown"><i className="ti ti-dots-vertical" /></Link>
-            <ul className="dropdown-menu p-2">
-              <li>
-                <Link to="#" className="dropdown-item text-danger d-flex align-items-center"
-                  onClick={() => deleteLeave(record.id)}>
-                  <i className="ti ti-trash me-1" /> Delete
-                </Link>
-              </li>
-              {(record.status === "APPLIED" || record.status === "APPROVED") && dayjs().isBefore(dayjs(record.startDate)) && (
-                <li>
-                  <Link to="#" className="dropdown-item text-warning d-flex align-items-center"
-                    onClick={() => { if (window.confirm("Withdraw this leave?")) withdrawLeave(record.id) }}>
-                    <i className="ti ti-arrow-back-up me-1" /> Withdraw
-                  </Link>
-                </li>
-              )}
-            </ul>
-          </div>
-        ) : null
+        <div className="d-flex align-items-center justify-content-center gap-2">
+          {record.status === "APPLIED" && (
+            <>
+              <Link
+                to="#"
+                className="bg-transparent border-0 text-primary p-1"
+                title="Edit"
+                data-bs-toggle="modal"
+                data-bs-target="#add-leave"
+                onClick={() => {
+                  setLeaveTypeId(record.leaveTypeId);
+                  setStartDate(dayjs(record.startDate));
+                  setEndDate(dayjs(record.endDate));
+                  setReason(record.reason || "");
+                }}
+              >
+                <i className="ti ti-edit fs-18" />
+              </Link>
+              <Link
+                to="#"
+                className="bg-transparent border-0 text-danger p-1"
+                title="Delete"
+                onClick={() => { if (window.confirm("Are you sure you want to delete this leave?")) deleteLeave(record.id) }}
+              >
+                <i className="ti ti-trash fs-18" />
+              </Link>
+            </>
+          )}
+        </div>
       ),
+      width: 100,
     },
   ];
 
   return (
     <>
-      <div className="page-wrapper">
-        <div className="content">
+      <div className="page-wrapper" style={{ background: '#f4f7fe', minHeight: '100vh' }}>
+        <div className="content pb-0">
           <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-bottom">
             <div className="flex-grow-1">
-              <h4 className="fw-bold mb-0">Leaves</h4>
+              <h4 className="fw-bold mb-0 text-dark d-flex align-items-center">
+                Leaves
+                <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
+                  Total : {filteredLeaves.length}
+                </span>
+              </h4>
             </div>
-            <div className="text-end d-flex">
-              <Link to="#" className="btn btn-primary ms-2 fs-13 btn-md" data-bs-toggle="modal" data-bs-target="#add-leave">
-                Add New Leave <i className="ti ti-plus ms-2" /></Link>
+            <div className="d-flex align-items-center gap-2 flex-wrap">
+              {/* Date Filter */}
+              <DatePicker
+                placeholder="Filter by Date"
+                className="form-control"
+                style={{ width: "150px", height: "40px" }}
+                format="DD-MM-YYYY"
+                allowClear={true}
+                suffixIcon={<i className="ti ti-calendar" />}
+                onChange={(date) => setFilterDate(date)}
+                value={filterDate}
+              />
+              {/* Status Filter */}
+              <div className="dropdown">
+                <Link
+                  to="#"
+                  className="btn btn-white dropdown-toggle border d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "140px", height: "40px" }}
+                  data-bs-toggle="dropdown"
+                >
+                  <span><span className="text-muted small">Status:</span> {filterStatus}</span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2">
+                  <li><Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterStatus("All"); }}>All</Link></li>
+                  {["Applied", "Approved", "Rejected", "Completed", "Withdrawn", "Cancelled"].map(s => (
+                    <li key={s}><Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterStatus(s); }}>{s}</Link></li>
+                  ))}
+                </ul>
+              </div>
+              {/* Add Leave Button */}
+              <Link to="#" className="btn btn-primary d-flex align-items-center gap-2" style={{ height: "40px" }} data-bs-toggle="modal" data-bs-target="#add-leave">
+                <i className="ti ti-plus fs-18" /> Add New Leave
+              </Link>
             </div>
           </div>
-          <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-3">
-            <div className="search-set">
-              <div className="d-flex align-items-center">
 
+          {/* Admin Style Clone Table */}
+          <div className="card border-0 shadow-none mb-0 bg-transparent">
+            <div className="card-body p-0">
+              <style>{`
+                .custom-table .ant-table { background: #ffffff; border: 1px solid #e2e8f0 !important; border-radius: 8px; overflow: hidden; }
+                .custom-table .ant-table-container { border: 0 !important; }
+                .custom-table .ant-table-thead > tr > th { 
+                  background: #f8fafc !important; 
+                  color: #475569 !important; 
+                  font-weight: 700 !important; 
+                  text-transform: uppercase; 
+                  font-size: 11px; 
+                  letter-spacing: 0.5px;
+                  border-bottom: 2px solid #e2e8f0 !important;
+                  padding: 12px 16px !important;
+                }
+                .custom-table .ant-table-tbody > tr > td { 
+                  padding: 12px 16px !important; 
+                  border-bottom: 1px solid #f1f5f9 !important;
+                }
+                .custom-table .ant-table-tbody > tr:hover > td { 
+                  background: #f8fafc !important; 
+                }
+                .custom-table .ant-pagination { 
+                  margin: 0 !important; 
+                  padding: 16px !important;
+                  border-top: 1px solid #f1f5f9;
+                }
+                /* Seal the bottom */
+                .content { padding: 20px !important; background: transparent !important; }
+                .page-wrapper { background: #f4f7fe !important; min-height: 100vh; }
+              `}</style>
+              <div className="table-responsive custom-table">
+                <Datatable
+                  columns={columns}
+                  dataSource={data}
+                  Selection={true}
+                  searchText=""
+                />
               </div>
             </div>
-          </div>
-          <div className="table-responsive">
-            <Datatable columns={columns} dataSource={data} Selection={false} searchText="" />
           </div>
         </div>
       </div>
@@ -151,9 +255,9 @@ const DoctorsLeaves = () => {
       <div id="add-leave" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="text-dark modal-title fw-bold">Apply for Leave</h5>
-              <button type="button" className="btn-close custom-btn-close" data-bs-dismiss="modal" />
+            <div className="modal-header bg-primary px-4">
+              <h5 className="text-white modal-title fw-bold">Apply for Leave</h5>
+              <button type="button" className="btn-close btn-close-white opacity-100" data-bs-dismiss="modal" />
             </div>
             <form onSubmit={handleApply}>
               <div className="modal-body">

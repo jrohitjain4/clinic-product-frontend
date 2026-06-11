@@ -137,12 +137,15 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
             <div className="modal fade show d-block" style={{ zIndex: 1050 }} tabIndex={-1}>
                 <div className="modal-dialog modal-xl modal-dialog-centered">
                     <div className="modal-content" style={{ maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
-                        <div className="modal-header bg-primary text-white" style={{ flexShrink: 0 }}>
+                        <div className="modal-header bg-primary border-bottom p-3 px-4 d-flex align-items-center justify-content-between" style={{ flexShrink: 0 }}>
                             <h5 className="modal-title fw-bold text-white">
-                                <i className="ti ti-file-plus me-2" />
                                 Add New Prescription
                             </h5>
-                            <button type="button" className="btn-close btn-close-white" onClick={onClose} />
+                            <button
+                                type="button"
+                                className="btn-close btn-close-white opacity-100"
+                                onClick={onClose}
+                            />
                         </div>
 
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>

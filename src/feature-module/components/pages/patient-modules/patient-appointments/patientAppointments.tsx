@@ -1,31 +1,71 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { DatePicker } from "antd";
+import { Select } from "antd";
 import dayjs from "dayjs";
-import Datatable from "../../../../../core/common/dataTable/index";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
+import Footer from "../../../../../core/common/footer/footer";
 import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppointments";
-import { statusBadgeClass } from "../../../../../core/utils/appointmentForm";
+import type { ClinicAppointment } from "../../../../../core/types/clinicAppointment";
+import {
+  appointmentToTableRow,
+  statusBadgeClass,
+} from "../../../../../core/utils/appointmentForm";
+import Datatable from "../../../../../core/common/dataTable";
 import Modals from "./modals/modals";
 import { resolveMediaUrl } from "../../../../../core/config/api";
 
 const PatientAppointments = () => {
-  const { appointments, loading } = useClinicAppointments();
-  const [searchText, setSearchText] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
-  const [filterDoctor, setFilterDoctor] = useState("");
-  const [filterDate, setFilterDate] = useState<dayjs.Dayjs | null>(null);
-  const [filterType, setFilterType] = useState("");
-  const [filterDepartment, setFilterDepartment] = useState("");
-
-  // Helper for profile images
-  const getProfileImage = (img?: string | null) => {
-    if (!img || img.trim() === "" || img.includes("placeholder") || img.includes("300x300")) {
-      return "assets/img/doctors/doctor-01.jpg";
+  const customSelectStyles = `
+    .custom-select-header .ant-select-selector {
+      border-color: #dee2e6 !important;
+      font-weight: 700 !important;
+      font-size: 13px !important;
+      color: #333 !important;
+      background-color: #fff !important;
     }
-    return resolveMediaUrl(img);
-  };
+    .custom-select-header .ant-select-selection-placeholder {
+      font-weight: 700 !important;
+      color: #6c757d !important;
+    }
+    .compact-table .ant-table-tbody > tr > td {
+      padding: 8px 12px !important; /* Further reduced padding */
+    }
+    .compact-table .avatar-md {
+      width: 38px !important;
+      height: 38px !important;
+    }
+    .compact-table .avatar-xs {
+      width: 24px !important;
+      height: 24px !important;
+    }
+    .compact-table .card {
+      margin-bottom: 0 !important;
+      border-radius: 8px !important;
+    }
+  `;
+
+  const { appointments, loading, refetch } = useClinicAppointments();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchText, setSearchText] = useState("");
+
+  const [filterFollowUp, setFilterFollowUp] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterDate, setFilterDate] = useState("");
+  const [datePreset, setDatePreset] = useState("All"); // All, Today, Yesterday, Last 7 Days, Custom
+  const [filterDepartment, setFilterDepartment] = useState("");
+  const [filterDoctor, setFilterDoctor] = useState("");
+  const [filterType, setFilterType] = useState("");
+
+  const tableData = useMemo(
+    () => appointments.map((a, i) => ({
+      ...appointmentToTableRow(a, i),
+      SrNo: i + 1,
+      key: a.id,
+      department: a.doctor?.department?.name || "N/A"
+    })),
+    [appointments]
+  );
 
   // Status Counts
   const counts = useMemo(() => {
@@ -39,64 +79,267 @@ const PatientAppointments = () => {
     };
   }, [appointments]);
 
+  const doctorsList = useMemo(() => {
+    const names = Array.from(new Set(appointments.map(a => a.doctorName || a.doctor?.fullName)));
+    return names.filter(n => n && n !== "—").sort();
+  }, [appointments]);
+
+  const departmentsList = useMemo(() => {
+    const names = Array.from(new Set(appointments.map(a => a.doctor?.department?.name)));
+    return names.filter(n => n).sort();
+  }, [appointments]);
+
   const filteredData = useMemo(() => {
-    return appointments
-      .filter((a) => {
-        const matchStatus = filterStatus === "All" || a.status === filterStatus;
-        const matchDoctor = filterDoctor
-          ? (a.doctor?.fullName?.toLowerCase().includes(filterDoctor.toLowerCase()) ||
-            a.doctorName?.toLowerCase().includes(filterDoctor.toLowerCase()))
-          : true;
-        const matchDate = filterDate
-          ? dayjs(a.scheduledAt).format("YYYY-MM-DD") === filterDate.format("YYYY-MM-DD")
-          : true;
-        const matchSearch = searchText
-          ? (a.doctorName?.toLowerCase().includes(searchText.toLowerCase()) ||
-            a.appointmentCode?.toLowerCase().includes(searchText.toLowerCase()))
-          : true;
-        const matchType = filterType
-          ? a.mode === filterType
-          : true;
-        const matchDepartment = filterDepartment
-          ? a.department?.name?.toLowerCase().includes(filterDepartment.toLowerCase())
-          : true;
+    return tableData.filter((row) => {
+      const matchFollowUp = filterFollowUp === "All" || !filterFollowUp
+        ? true
+        : filterFollowUp === "Free"
+          ? row._raw.isFollowUp && row._raw.paymentStatus === "Free"
+          : filterFollowUp === "Paid"
+            ? row._raw.isFollowUp && row._raw.paymentStatus === "Paid"
+            : row._raw.followUpStatus?.toLowerCase() === filterFollowUp.toLowerCase() || (filterFollowUp === "Follow-up" && row._raw.isFollowUp);
 
-        return matchStatus && matchDoctor && matchDate && matchSearch && matchType && matchDepartment;
-      })
-      .map((app, index) => {
-        let expectedTime = "NULL";
-        let queueStatus = "NULL";
+      const matchStatus = filterStatus === "All" || !filterStatus
+        ? true
+        : row.Status.toLowerCase() === filterStatus.toLowerCase();
 
-        // Use backend provided queue info if available
-        const pos = (app as any).queuePosition;
-        const co = (app as any).queueCheckoutCount;
-        const firstTime = (app as any).queueFirstScheduledAt;
+      const matchDoctor = filterDoctor
+        ? row.Doctor.toLowerCase().includes(filterDoctor.toLowerCase())
+        : true;
 
-        if (pos && (app.status === "Confirmed" || app.status === "Checked Out")) {
-          if (firstTime) {
-            const start = dayjs(firstTime);
-            expectedTime = start.add((pos - 1) * 20, 'minute').format("hh:mm A");
-          }
-          queueStatus = `${co} / ${pos}`;
-        }
+      // Date Filter Logic
+      let matchDate = true;
+      const rowDate = dayjs(row._raw.scheduledAt);
+      if (datePreset === "Today") {
+        matchDate = rowDate.isSame(dayjs(), 'day');
+      } else if (datePreset === "Yesterday") {
+        matchDate = rowDate.isSame(dayjs().subtract(1, 'day'), 'day');
+      } else if (datePreset === "Last 7 Days") {
+        matchDate = rowDate.isAfter(dayjs().subtract(7, 'day'));
+      } else if (datePreset === "Custom" && filterDate) {
+        matchDate = rowDate.format("YYYY-MM-DD") === filterDate;
+      }
 
-        return {
-          key: app.id,
-          id: app.id,
-          SrNo: index + 1,
-          Date_Time: app.dateTimeLabel,
-          Doctor: app.doctorName,
-          img: getProfileImage(app.doctor?.profileImage),
-          role: app.doctorRole || "Doctor",
-          Mode: app.mode,
-          Status: app.status,
-          ExpectedTime: expectedTime,
-          QueueStatus: queueStatus,
-          _raw: app
-        };
-      });
-  }, [appointments, filterStatus, filterDoctor, filterDate, searchText, filterType, filterDepartment]);
+      const matchDept = filterDepartment
+        ? row.department.toLowerCase().includes(filterDepartment.toLowerCase())
+        : true;
+      const matchType = filterType
+        ? row.Mode.toLowerCase() === filterType.toLowerCase()
+        : true;
 
+      return matchFollowUp && matchStatus && matchDate && matchDept && matchType && matchDoctor;
+    });
+  }, [tableData, filterFollowUp, filterStatus, filterDate, datePreset, filterDepartment, filterType, filterDoctor]);
+
+  const handlePrintAppointment = (a: ClinicAppointment) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const html = `<html>
+        <head>
+          <title>Appointment Summary - ${a.appointmentCode || 'Record'}</title>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+          <style>
+            body { background: #fff; padding: 40px; font-family: 'Inter', sans-serif; color: #000; }
+            .logo-box { width: 80px; height: 80px; border: 1px dashed #4f46e5; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fff; }
+            .patient-infobar { background: #f8f9fa; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 10px 20px; margin-bottom: 30px; }
+            .section-title { font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 15px; font-size: 11px; color: #64748b; letter-spacing: 0.5px; }
+            @media print { .no-print { display: none; } body { padding: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="d-flex justify-content-between align-items-start mb-4">
+            <div class="d-flex gap-3">
+              <div class="logo-box" style="width: 80px; height: 80px; border: 1px dashed #4f46e5; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fff;">
+                <img src="${resolveMediaUrl(a.clinic?.landingPage?.logo) || '/logo.png'}" alt="logo" style="max-height: 60px; max-width: 60px; object-fit: contain;">
+              </div>
+              <div>
+                <h4 class="fw-bold mb-1 mt-1" style="font-size: 20px;">${a.clinic?.name || a.clinicName || "DocYari Clinical Network"}</h4>
+                <p class="mb-1 text-muted small"><i class="ti ti-map-pin"></i> ${a.clinic?.landingPage?.address || a.location || "Clinic Address"}</p>
+                <h6 class="fw-bold mb-0" style="font-size: 14px;">${a.doctorName || a.doctor?.fullName}</h6>
+                <p class="text-muted small mb-0">${a.doctor?.designation?.name || "Consultant"} · ${a.doctor?.department?.name || "Medicine"}</p>
+              </div>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-white text-primary border border-primary-subtle fw-bold px-3 py-2 mb-2" style="font-size: 11px; border-radius: 4px;">
+                ${a.appointmentCode || "#---"}
+              </span>
+              <div class="text-muted small mt-1">
+                <div class="mb-1 text-dark"><strong>Dept:</strong> ${a.doctor?.department?.name || "General"}</div>
+                <div class="text-dark"><strong>Date:</strong> ${new Date(a.scheduledAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <h6 class="fw-bold text-uppercase border-bottom pb-2" style="font-size: 10px; color: #64748b; letter-spacing: 1px;">Patient Clinical Profile</h6>
+            <table class="table table-bordered mb-0" style="font-size: 11px; border-color: #cbd5e1;">
+              <thead style="background: #1e293b;">
+                <tr>
+                  <th class="py-3 text-white">PATIENT NAME</th>
+                  <th class="py-3 text-center text-white">AGE / GENDER</th>
+                  <th class="py-3 text-center text-white">BLOOD GROUP</th>
+                  <th class="py-3 text-center text-white">PATIENT ID</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="py-3 fw-bold text-primary" style="font-size: 14px;">${a.patientName}</td>
+                  <td class="py-3 text-center fw-bold text-dark">${a.patient?.dob ? Math.floor((new Date().getTime() - new Date(a.patient.dob).getTime()) / 31557600000) : '--'}Y / ${a.patient?.gender || '--'}</td>
+                  <td class="py-3 text-center fw-bold text-dark">${a.patient?.bloodGroup || 'N/A'}</td>
+                  <td class="py-3 text-center fw-bold text-dark">${a.patient?.patientCode || a.patientId?.slice(-6).toUpperCase()}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="text-center mb-4 pt-3">
+            <h5 class="fw-bold text-dark text-uppercase tracking-wider" style="border-bottom: 3px solid #1e293b; display: inline-block; padding-bottom: 8px;">
+              Clinical Appointment Summary
+            </h5>
+          </div>
+
+          <div class="mb-4">
+            <h6 class="fw-bold text-uppercase border-bottom pb-2" style="font-size: 10px; color: #64748b; letter-spacing: 1px;">Appointment Registration Details</h6>
+            <table class="table table-bordered mb-0" style="font-size: 11px; border-color: #cbd5e1;">
+              <thead style="background: #1e293b;">
+                <tr>
+                  <th class="py-3 text-center text-white fw-bold">S.NO</th>
+                  <th class="py-3 text-white fw-bold">APPOINT ID</th>
+                  <th class="py-3 text-white fw-bold">PATIENT NAME</th>
+                  <th class="py-3 text-white fw-bold">DOCTOR NAME</th>
+                  <th class="py-3 text-center text-white fw-bold">MODE</th>
+                  <th class="py-3 text-center text-white fw-bold">STATUS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="py-3 text-center text-muted fw-bold">01</td>
+                  <td class="py-3 fw-bold text-dark">${a.appointmentCode}</td>
+                  <td class="py-3 fw-bold text-primary">${a.patientName}</td>
+                  <td class="py-3 fw-bold text-dark">${a.doctorName || a.doctor?.fullName}</td>
+                  <td class="py-3 text-center fw-bold text-dark">${a.mode}</td>
+                  <td class="py-3 text-center"><span class="badge bg-light text-dark border px-2 py-1 text-uppercase" style="font-size: 10px;">${a.status}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mb-5">
+            <h6 class="fw-bold text-uppercase border-bottom pb-2" style="font-size: 10px; color: #64748b; letter-spacing: 1px;">Clinical Findings / Assessment</h6>
+            <div style="padding: 15px; border: 1px solid #e2e8f0; background: #fff; min-height: 120px; line-height: 1.6; font-size: 13px;">
+              ${a.reason || "Patient presented for follow-up review. Clinical status stable."}
+            </div>
+          </div>
+
+          <div class="mt-auto pt-4 border-top text-center text-muted small">
+            <p class="mb-1 fw-bold" style="color: #64748b; letter-spacing: 0.5px;">2025 &copy; <span style="color: #4f46e5;">Docyari</span>, All Rights Reserved</p>
+            <p class="mb-0 italic opacity-50" style="font-size: 10px;">This is a computer-generated clinical summary and does not require a physical signature.</p>
+          </div>
+
+          <script>
+            window.onload = () => {
+              setTimeout(() => { window.print(); window.close(); }, 500);
+            };
+          </script>
+        </body>
+      </html >
+  `;
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
+  const handleExportCSV = () => {
+    const headers = ["Sr No", "Date & Time", "Patient", "Doctor", "Department", "Mode", "Status"];
+    const csvData = filteredData.map(row => [
+      row.SrNo, row.Date_Time, row.Patient, row.Doctor, row.department, row.Mode, row.Status
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...csvData].map(e => e.join(",")).join("\n");
+    const link = document.createElement("a");
+    link.href = encodeURI(csvContent);
+    link.download = "appointments_report.csv";
+    link.click();
+  };
+
+  const handleDownloadCopy = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const reportHtml = `
+  <html>
+        <head>
+          <title>Appointments Report</title>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+          <style>
+            body { padding: 40px; background: #fff; font-family: 'Inter', sans-serif; color: #1e293b; }
+            .report-header { border-bottom: 3px solid #4f46e5; margin-bottom: 30px; padding-bottom: 20px; }
+            th { background-color: #1e293b !important; color: #ffffff !important; text-transform: uppercase; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; border-color: #334155 !important; }
+            td { font-size: 12px; vertical-align: middle; border-color: #e2e8f0 !important; color: #475569; }
+            .fw-heavy { font-weight: 800; color: #0f172a; }
+            .badge-custom { padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 10px; border: 1px solid #cbd5e1; background: #f8fafc; }
+            @media print { body { padding: 1.5cm; } .no-print { display: none; } }
+          </style>
+        </head>
+        <body>
+          <div class="d-flex justify-content-between align-items-start mb-5 pb-4 border-bottom">
+            <div class="d-flex gap-3">
+              <div style="width: 80px; height: 80px; border: 1px dashed #4f46e5; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fff;">
+                <img src="${resolveMediaUrl(appointments[0]?.clinic?.landingPage?.logo) || '/logo.png'}" alt="logo" style="max-height: 60px; max-width: 60px; object-fit: contain;">
+              </div>
+              <div>
+                <h4 class="fw-bold mb-1 mt-1" style="color: #000; font-size: 24px;">${appointments[0]?.clinic?.name || appointments[0]?.clinicName || "DocYari Clinic"}</h4>
+                <p class="mb-1 text-muted small"><i class="ti ti-map-pin"></i> ${appointments[0]?.clinic?.landingPage?.address || appointments[0]?.location || "Clinic Address"}</p>
+                <h6 class="fw-bold fs-14 mb-0 text-dark">APPOINTMENTS MASTER LEDGER</h6>
+                <p class="text-primary small fw-bold mb-0">TOTAL RECORDS: ${filteredData.length}</p>
+              </div>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-dark text-white fw-bold px-3 py-2 mb-2" style="font-size: 11px; border-radius: 4px; letter-spacing: 1px;">
+                GEN_ID_${new Date().getTime().toString().slice(-6)}
+              </span>
+              <div class="text-muted small mt-1">
+                <div class="mb-1 text-dark"><strong>Generated On:</strong> ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                <div class="text-dark"><strong>Domain:</strong> Healthcare Master Log</div>
+              </div>
+            </div>
+          </div>
+
+          <table class="table table-bordered shadow-sm">
+            <thead>
+              <tr>
+                <th class="py-3 px-3 text-center">SR NO</th>
+                <th class="py-3 px-3">DATE & TIME</th>
+                <th class="py-3 px-3">PATIENT NAME</th>
+                <th class="py-3 px-3">CONSULTING DOCTOR</th>
+                <th class="py-3 px-3 text-center">MODE</th>
+                <th class="py-3 px-3 text-center">STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredData.map(r => `
+                <tr style="background: ${r.SrNo % 2 === 0 ? '#fcfcfc' : '#ffffff'};">
+                  <td class="text-center fw-heavy">#${r.SrNo}</td>
+                  <td class="fw-bold text-dark">${r.Date_Time}</td>
+                  <td class="fw-heavy text-primary" style="font-size: 13px;">${r.Patient}</td>
+                  <td class="fw-bold">${r.Doctor}</td>
+                  <td class="text-center fw-medium">${r.Mode}</td>
+                  <td class="text-center"><span class="badge-custom text-uppercase">${r.Status}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="mt-5 pt-4 text-center border-top text-muted small">
+            <p class="mb-1 fw-bold" style="color: #64748b; letter-spacing: 0.5px;">2025 &copy; <span style="color: #4f46e5;">Docyari</span>, All Rights Reserved</p>
+            <p class="mt-1 opacity-50" style="font-size: 10px;">End of Report. Confidential Clinical Document.</p>
+          </div>
+        </body>
+      </html>
+  `;
+
+    printWindow.document.write(reportHtml);
+    printWindow.document.close();
+  };
 
   const columns = [
     {
@@ -115,180 +358,105 @@ const PatientAppointments = () => {
       dataIndex: "Doctor",
       render: (text: string, record: any) => (
         <div className="d-flex align-items-center">
-          <Link to={all_routes.patientappointmentdetails.replace(":id", record.id)} className="avatar avatar-md me-2">
-            {record.img.startsWith("http") || record.img.startsWith("/") || record.img.startsWith("assets") ? (
-              <img
-                src={record.img.startsWith("assets") ? `${window.location.host.includes('localhost') ? '' : ''}/${record.img}` : record.img}
-                alt="doctor"
-                className="rounded-circle"
-                onError={(e: any) => { e.target.src = "assets/img/doctors/doctor-01.jpg"; }}
-              />
-            ) : (
-              <ImageWithBasePath
-                src={record.img}
-                alt="doctor"
-                className="rounded-circle"
-              />
-            )}
+          <Link to={all_routes.patientappointmentdetails.replace(":id", record._raw.id)} className="avatar avatar-xs me-2">
+            <ImageWithBasePath src={record.Doctor_Image} alt="Doctor" className="rounded-circle" />
           </Link>
-          <div>
-            <Link to={all_routes.patientappointmentdetails.replace(":id", record.id)} className="fw-bold text-dark d-block mb-0">{text}</Link>
-            <span className="text-muted fs-11 d-block fw-medium">{record.role}</span>
-          </div>
+          <Link to={all_routes.patientappointmentdetails.replace(":id", record._raw.id)} className="text-dark fw-medium fs-13 text-nowrap">{text}</Link>
         </div>
       ),
-      sorter: (a: any, b: any) => a.Doctor.localeCompare(b.Doctor),
     },
-    {
-      title: "Expected Time",
-      dataIndex: "ExpectedTime",
-      render: (text: string) => (
-        <div className="d-flex align-items-center gap-1">
-          <i className="ti ti-clock text-primary fs-14" />
-          <span className={`fw-bold ${text === 'NULL' ? 'text-muted' : 'text-dark'}`}>{text}</span>
-        </div>
-      ),
-      sorter: (a: any, b: any) => a.ExpectedTime.localeCompare(b.ExpectedTime),
-    },
-    {
-      title: "Queue (CO/POS)",
-      dataIndex: "QueueStatus",
-      render: (text: string) => (
-        <span className={`badge ${text === 'NULL' ? 'badge-soft-secondary text-secondary' : 'badge-soft-info text-info'} border border-info-subtle px-3 py-2 fw-bold`} style={{ fontSize: '11px' }}>
-          {text}
-        </span>
-      ),
-      sorter: (a: any, b: any) => a.QueueStatus.localeCompare(b.QueueStatus),
-    },
-    {
-      title: "Mode",
-      dataIndex: "Mode",
-      render: (text: string) => (
-        <span className="fw-medium text-dark-emphasis small">{text}</span>
-      ),
-      sorter: (a: any, b: any) => a.Mode.localeCompare(b.Mode),
-    },
+    { title: "Mode", dataIndex: "Mode" },
     {
       title: "Status",
       dataIndex: "Status",
       render: (text: string, record: any) => {
         const raw = record._raw;
         return (
-          <div className="d-flex flex-column align-items-start gap-1">
-            <span className={`badge ${statusBadgeClass(text)} px-2 py-1 text-uppercase`} style={{ fontSize: '10px' }}>
-              {text}
-            </span>
+          <div className="d-flex flex-column align-items-start">
+            <span className={`badge ${statusBadgeClass(text)} `}>{text}</span>
             {raw?.isFollowUp && (
-              <div className="d-flex flex-column gap-1 mt-1">
-                <span className={`badge fs-10 px-2 py-1 ${raw.paymentStatus === "Free" ? "badge-soft-success text-success" : "badge-soft-info text-info border-info-subtle"}`} style={{ border: '1px solid currentColor', opacity: 0.85 }}>
-                  {raw.followUpStatus || "Follow-up"} ({raw.paymentStatus || "Unpaid"})
+              <div className="mt-1">
+                <span className={`text-muted fw-bold`} style={{ fontSize: '10px' }}>
+                  {raw.followUpStatus || "Follow-up"}
                 </span>
-                {raw?.parentAppointmentId && (
-                  <div className="d-flex align-items-center gap-1 text-muted ms-1" style={{ fontSize: '9px', fontWeight: 600, letterSpacing: '0.3px', textTransform: 'uppercase' }}>
-                    <i className="ti ti-link" /> Linked Visit
-                  </div>
-                )}
               </div>
             )}
           </div>
         );
       },
-      sorter: (a: any, b: any) => a.Status.localeCompare(b.Status),
     },
     {
       title: "Action",
       className: "text-center",
-      render: (_text: string, record: any) => (
+      align: "center" as const,
+      render: (_: any, record: any) => (
         <div className="d-flex align-items-center gap-1 justify-content-center">
-          <Link to={all_routes.patientappointmentdetails.replace(":id", record.id)} className="btn btn-icon btn-sm btn-soft-info border-0 shadow-none">
-            <i className="ti ti-eye" />
-          </Link>
+          <Link to={all_routes.patientappointmentdetails.replace(":id", record._raw.id)} className="btn btn-icon btn-sm btn-soft-info"><i className="ti ti-eye" /></Link>
+          <button className="btn btn-icon btn-sm btn-soft-secondary" onClick={() => handlePrintAppointment(record._raw)}><i className="ti ti-printer" /></button>
         </div>
-      ),
-    },
+      )
+    }
   ];
 
   return (
     <>
+      <style>{customSelectStyles}</style>
       <div className="page-wrapper">
         <div className="content">
-          <div className="alert alert-soft-primary d-flex align-items-center border-0 mb-4 shadow-sm" style={{ borderRadius: '8px' }}>
-            <i className="ti ti-info-circle fs-20 me-2" />
-            <div className="fs-13">
-              <p className="mb-1 fw-medium">
-                To see the <strong>Expected Timing</strong> and <strong>Booking No.</strong>, please contact administration to make your status <strong>Confirmed</strong>.
-              </p>
-              <p className="mb-0 text-muted small">
-                <strong>CO/POS Meaning:</strong> <span className="text-primary-emphasis">CO</span> = Checked-out patients today, <span className="text-primary-emphasis">POS</span> = Your confirmed position in doctor's queue.
-              </p>
-            </div>
-          </div>
           <div className="d-flex align-items-center pb-3 mb-3 border-bottom overflow-hidden" style={{ gap: '16px' }}>
             <h4 className="fw-bold mb-0 flex-shrink-0">Appointment</h4>
-
-            <div className="d-flex align-items-center flex-nowrap overflow-auto hide-scrollbar" style={{ gap: '12px' }}>
-              {["All", "Schedule", "Confirmed", "Checked Out"].map((s) => (
+            <div className="d-flex align-items-center flex-nowrap" style={{ gap: '16px' }}>
+              {["All", "Schedule", "Confirmed", "Checked In"].map((s) => (
                 <button
                   key={s}
-                  className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "All") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-2 fs-12 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
+                  className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-2 fs-12 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
                   onClick={() => setFilterStatus(s)}
                   style={{ borderRadius: '6px', height: '36px' }}
                 >
-                  {s === "Checked Out" ? "Check-out" : s}
-                  <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "All") ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>
-                    {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked Out" ? counts.checkedOut : counts.all}
+                  {s}
+                  <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>
+                    {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : appointments.filter(a => a.status === s).length}
                   </span>
                 </button>
               ))}
             </div>
 
-            <div className="ms-auto d-flex align-items-center" style={{ gap: '12px' }}>
-              <div className="position-relative" style={{ width: '180px' }}>
-                <input
-                  type="text"
-                  className="form-control bg-white"
-                  style={{ height: '36px', paddingLeft: '35px', fontSize: '13px', fontWeight: 'bold', border: '1px solid #e2e8f0' }}
-                  placeholder="Search Doctor..."
-                  value={filterDoctor}
-                  onChange={(e) => setFilterDoctor(e.target.value)}
-                />
-                <i className="ti ti-search position-absolute top-50 translate-middle-y text-muted" style={{ left: '12px', fontSize: '14px' }} />
+            <div className="d-flex align-items-center" style={{ gap: '16px' }}>
+              <div className="position-relative" style={{ width: '185px' }}>
+                <select
+                  className="form-select fs-13"
+                  style={{ height: '36px', fontSize: '13px', fontWeight: 'bold' }}
+                  value={filterFollowUp}
+                  onChange={(e) => setFilterFollowUp(e.target.value)}
+                >
+                  <option value="All">Follow-up Status</option>
+                  <option value="Free">Free Follow-up</option>
+                  <option value="Paid">Paid Follow-up</option>
+                </select>
               </div>
-
-              <button
-                className="btn btn-sm btn-light border d-flex align-items-center gap-2 fw-bold fs-12 flex-shrink-0 shadow-sm bg-white"
-                style={{ height: '36px', borderRadius: '6px' }}
-                data-bs-toggle="offcanvas"
-                data-bs-target="#filter_drawer"
-              >
-                <i className="ti ti-filter fs-14" /> Filters
+              <button className="btn btn-sm btn-light border d-flex align-items-center gap-2 fw-bold fs-12 flex-shrink-0 shadow-sm bg-white" style={{ height: '36px', borderRadius: '6px' }} data-bs-toggle="offcanvas" data-bs-target="#filter_drawer">
+                <i className="ti ti-filter fs-14" /> Filter
               </button>
-
-              <Link
-                to={all_routes.newAppointment}
-                className="btn btn-sm btn-primary fw-bold fs-12 d-flex align-items-center shadow-sm flex-shrink-0 text-nowrap"
-                style={{ height: '36px', borderRadius: '6px' }}
-              >
-                <i className="ti ti-plus me-1" /> New Appointment
-              </Link>
             </div>
+
+            <Link to={all_routes.newAppointment} className="btn btn-sm btn-primary fw-bold fs-12 d-flex align-items-center shadow-sm flex-shrink-0 text-nowrap" style={{ height: '36px', borderRadius: '6px' }}>
+              <i className="ti ti-plus me-1" /> New Appointment
+            </Link>
           </div>
 
-          <div className="table-responsive border rounded bg-white shadow-sm p-0">
+          <div className="compact-table">
             <Datatable
               columns={columns}
               dataSource={filteredData}
-              Selection={false}
+              Selection={true}
+              onSelectionChange={(keys: any) => setSelectedIds(keys as string[])}
               searchText={searchText}
+              emptyTitle="No Appointments Scheduled"
+              emptyMessage="We couldn't find any appointments matching your current filters. You can try adjusting the date range or follow-up status."
             />
           </div>
         </div>
-
-        <div className="footer text-center bg-white p-3 border-top mt-auto">
-          <p className="mb-0 fs-13 text-muted fw-medium">
-            2025 &copy; <span className="text-primary fw-bold">Docyari</span>, All Rights Reserved
-          </p>
-        </div>
+        <Footer />
       </div>
 
       {/* Advanced Filter Drawer */}
@@ -299,64 +467,76 @@ const PatientAppointments = () => {
         </div>
         <div className="offcanvas-body">
           <div className="mb-3">
-            <label className="form-label fw-bold small text-muted text-uppercase mb-2">Doctor's Name</label>
-            <input
-              type="text"
-              className="form-control fs-13 py-2"
-              placeholder="Search Name"
-              value={filterDoctor}
-              onChange={(e) => setFilterDoctor(e.target.value)}
-            />
+            <label className="form-label fw-bold small text-uppercase">Follow-up Status</label>
+            <select className="form-select fs-13" value={filterFollowUp} onChange={(e) => setFilterFollowUp(e.target.value)}>
+              <option value="All">Choose Follow-up Status</option>
+              <option value="Free">Free Follow-up</option>
+              <option value="Paid">Paid Follow-up</option>
+            </select>
           </div>
           <div className="mb-3">
-            <label className="form-label fw-bold small text-muted text-uppercase mb-2">Department</label>
-            <input
-              type="text"
-              className="form-control fs-13 py-2"
-              placeholder="Search Subject / Dept"
-              value={filterDepartment}
-              onChange={(e) => setFilterDepartment(e.target.value)}
-            />
+            <label className="form-label fw-bold small text-uppercase">Department</label>
+            <select className="form-select fs-13" value={filterDepartment} onChange={(e) => setFilterDepartment(e.target.value)}>
+              <option value="">All Departments</option>
+              {departmentsList.map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
           </div>
+
           <div className="mb-3">
-            <label className="form-label fw-bold small text-muted text-uppercase mb-2">Appointment Date</label>
-            <DatePicker
-              className="form-control w-100 py-2 fs-13"
-              style={{ border: '1px solid #7D8BB3' }}
-              onChange={(d) => setFilterDate(d)}
-              value={filterDate}
-              placeholder="Select Date"
-            />
+            <label className="form-label fw-bold small text-uppercase">Doctor</label>
+            <select className="form-select fs-13" value={filterDoctor} onChange={(e) => setFilterDoctor(e.target.value)}>
+              <option value="">All Doctors</option>
+              {doctorsList.map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
           </div>
+
           <div className="mb-3">
-            <label className="form-label fw-bold small text-muted text-uppercase mb-2">Status</label>
-            <select className="form-select fs-13 py-2" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+            <label className="form-label fw-bold small text-uppercase">Date Range</label>
+            <select className="form-select fs-13 mb-2" value={datePreset} onChange={(e) => setDatePreset(e.target.value)}>
+              <option value="All">All Dates</option>
+              <option value="Today">Today</option>
+              <option value="Yesterday">Yesterday</option>
+              <option value="Last 7 Days">Last 7 Days</option>
+              <option value="Custom">Choose Custom Date</option>
+            </select>
+            {datePreset === "Custom" && (
+              <input type="date" className="form-control fs-13" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
+            )}
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label fw-bold small text-uppercase">Appointment Status</label>
+            <select className="form-select fs-13" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
               <option value="All">All Status</option>
               <option value="Schedule">Schedule</option>
               <option value="Confirmed">Confirmed</option>
-              <option value="Checked Out">Checked Out</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
-          </div>
-          <div className="mb-3">
-            <label className="form-label fw-bold small text-muted text-uppercase mb-2">Type (Mode)</label>
-            <select className="form-select fs-13 py-2" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-              <option value="">All Types</option>
-              <option value="In-person">In-person</option>
+              <option value="Checked In">Checked In</option>
             </select>
           </div>
 
-          <hr className="my-4" />
+          <div className="mb-3">
+            <label className="form-label fw-bold small text-uppercase">Visit Type (Mode)</label>
+            <select className="form-select fs-13" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+              <option value="">All Types</option>
+              <option value="In-person">In-person</option>
+              <option value="Online">Online</option>
+            </select>
+          </div>
+
+          <hr />
 
           <div className="d-grid gap-2">
             <button className="btn btn-soft-danger fw-bold py-2" onClick={() => {
-              setFilterDoctor(""); setFilterDate(null); setFilterStatus("All"); setFilterType(""); setFilterDepartment("");
+              setFilterFollowUp("All"); setFilterDate(""); setDatePreset("All"); setFilterStatus("All"); setFilterDepartment(""); setFilterType(""); setFilterDoctor("");
             }}>
-              <i className="ti ti-refresh me-2" /> Reset All Filters
+              <i className="ti ti-refresh me-2" />Clear All Filters
             </button>
-            <button className="btn btn-soft-success fw-bold py-2" data-bs-dismiss="offcanvas">
-              <i className="ti ti-check me-2" /> Apply Filters
-            </button>
+            <button className="btn btn-soft-info fw-bold py-2" onClick={handleDownloadCopy}><i className="ti ti-download me-2" />Download Ledger</button>
+            <button className="btn btn-soft-success fw-bold py-2" onClick={handleExportCSV}><i className="ti ti-file-export me-2" />Export CSV</button>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import EmptyState from "../../../../../core/common/emptyState";
 import { Link } from "react-router";
+import { toast } from "react-toastify";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
 import { useClinicPatients } from "../../../../../core/hooks/useClinicPatients";
@@ -111,42 +112,24 @@ const MyPatients = () => {
                                             <div className="flex-fill pe-2 overflow-hidden">
                                                 <div className="d-flex align-items-center justify-content-between mb-1">
                                                     <h5 className="mb-0 fw-bold">
-                                                        <Link to={patientDetailsPath(p.id)} className="text-dark text-truncate d-block" style={{ maxWidth: '140px' }}>
+                                                        <Link
+                                                            to="#"
+                                                            className="text-dark text-truncate d-block"
+                                                            style={{ maxWidth: '140px' }}
+                                                            onClick={(e) => { e.preventDefault(); toast.info("You can only view patient information."); }}
+                                                        >
                                                             {p.fullName || `${p.firstName} ${p.lastName}`}
                                                         </Link>
                                                     </h5>
-                                                    <div className="dropdown">
+                                                    <div className="action-view">
                                                         <Link
                                                             to="#"
-                                                            data-bs-toggle="dropdown"
                                                             className="avatar avatar-xs border text-muted rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent"
+                                                            onClick={(e) => { e.preventDefault(); toast.info("You can only view patient information."); }}
+                                                            title="View Details"
                                                         >
-                                                            <i className="ti ti-dots-vertical" />
+                                                            <i className="ti ti-info-circle" />
                                                         </Link>
-                                                        <ul className="dropdown-menu dropdown-menu-end shadow-lg border-0 p-1">
-                                                            <li>
-                                                                <Link to={patientDetailsPath(p.id)} className="dropdown-item d-flex align-items-center py-2">
-                                                                    <i className="ti ti-eye me-2 text-info" /> View Details
-                                                                </Link>
-                                                            </li>
-                                                            <li>
-                                                                <Link to={all_routes.doctorsappointments} className="dropdown-item d-flex align-items-center py-2">
-                                                                    <i className="ti ti-calendar-event me-2 text-success" /> Appointments
-                                                                </Link>
-                                                            </li>
-                                                            <li>
-                                                                <Link
-                                                                    to="#"
-                                                                    className="dropdown-item d-flex align-items-center py-2"
-                                                                    onClick={() => {
-                                                                        setPrescriptionPatientId(p.id);
-                                                                        setShowPrescriptionModal(true);
-                                                                    }}
-                                                                >
-                                                                    <i className="ti ti-file-plus me-2 text-primary" /> Add Prescription
-                                                                </Link>
-                                                            </li>
-                                                        </ul>
                                                     </div>
                                                 </div>
                                                 <span className="d-block mb-1 fs-13 text-primary fw-medium text-truncate">

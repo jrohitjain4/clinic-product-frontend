@@ -45,10 +45,20 @@ const Appointments = () => {
     }
   `;
 
-  const { appointments, loading, error, refetch, reload } = useClinicAppointments();
+  const { appointments, loading, error, refetch, reload, updateAppointmentStatus } = useClinicAppointments();
   const [selected, setSelected] = useState<ClinicAppointment | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchText, setSearchText] = useState("");
+
+  const handleStatusToggle = async (appointmentId: string, currentStatus: string) => {
+    if (currentStatus === "Checked In") {
+      try {
+        await updateAppointmentStatus(appointmentId, "Checked Out");
+      } catch (err) {
+        console.error("Error updating status:", err);
+      }
+    }
+  };
 
   const [filterPatient, setFilterPatient] = useState("");
   const [filterFollowUp, setFilterFollowUp] = useState("All");
@@ -394,8 +404,21 @@ const Appointments = () => {
       render: (text: string, record: any) => {
         const raw = record._raw;
         return (
-          <div className="d-flex flex-column align-items-start">
+          <div className="d-flex flex-column align-items-start gap-1">
             <span className={`badge ${statusBadgeClass(text)} `}>{text}</span>
+            {text === "Checked In" && (
+              <div className="form-check form-switch p-0 ms-2" style={{ minHeight: 'auto' }}>
+                <input
+                  className="form-check-input ms-0"
+                  type="checkbox"
+                  role="switch"
+                  checked={false}
+                  onChange={() => handleStatusToggle(raw.id, text)}
+                  style={{ cursor: 'pointer', width: '30px', height: '16px' }}
+                />
+                <label className="text-muted small ms-1" style={{ fontSize: '10px' }}>Checkout</label>
+              </div>
+            )}
             {raw?.isFollowUp && (
               <div className="mt-1">
                 <span className={`text - muted fw - bold`} style={{ fontSize: '10px' }}>
@@ -412,11 +435,11 @@ const Appointments = () => {
       className: "text-center",
       align: "center" as const,
       render: (_: any, record: any) => (
-        <div className="d-flex align-items-center gap-1 justify-content-center">
-          <Link to={all_routes.appointmentDetails.replace(":id", record._raw.id)} className="btn btn-icon btn-sm btn-soft-info"><i className="ti ti-eye" /></Link>
-          <Link to={all_routes.editAppointment.replace(":id", record._raw.id)} className="btn btn-icon btn-sm btn-soft-primary"><i className="ti ti-edit" /></Link>
-          <button className="btn btn-icon btn-sm btn-soft-secondary" onClick={() => handlePrintAppointment(record._raw)}><i className="ti ti-printer" /></button>
-          <button className="btn btn-icon btn-sm btn-soft-danger" data-bs-toggle="modal" data-bs-target="#delete_appointment_modal" onClick={() => setSelected(record._raw)}><i className="ti ti-trash" /></button>
+        <div className="d-flex align-items-center gap-2 justify-content-center">
+          <Link to={all_routes.appointmentDetails.replace(":id", record._raw.id)} className="text-info p-1" title="View"><i className="ti ti-eye fs-18" /></Link>
+          <Link to={all_routes.editAppointment.replace(":id", record._raw.id)} className="text-primary p-1" title="Edit"><i className="ti ti-edit fs-18" /></Link>
+          <button className="bg-transparent border-0 text-secondary p-1" onClick={() => handlePrintAppointment(record._raw)} title="Print"><i className="ti ti-printer fs-18" /></button>
+          <button className="bg-transparent border-0 text-danger p-1" data-bs-toggle="modal" data-bs-target="#delete_appointment_modal" onClick={() => setSelected(record._raw)} title="Delete"><i className="ti ti-trash fs-18" /></button>
         </div>
       )
     }
@@ -433,12 +456,12 @@ const Appointments = () => {
               {["All", "Schedule", "Confirmed", "Checked In"].map((s) => (
                 <button
                   key={s}
-                  className={`btn btn - sm ${filterStatus === s || (s === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py - 1 px - 2 fs - 12 fw - bold flex - shrink - 0 d - flex align - items - center gap - 1`}
+                  className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-2 fs-12 fw-bold flex-shrink-0 d-flex align-items-center gap-1 text-nowrap`}
                   onClick={() => setFilterStatus(s)}
                   style={{ borderRadius: '6px', height: '36px' }}
                 >
                   {s}
-                  <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms - 1`}>
+                  <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>
                     {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : appointments.filter(a => a.status === s).length}
                   </span>
                 </button>
@@ -446,7 +469,7 @@ const Appointments = () => {
             </div>
 
             <div className="d-flex align-items-center" style={{ gap: '16px' }}>
-              <div className="position-relative" style={{ width: '185px' }}>
+              <div className="position-relative" style={{ width: '165px' }}>
                 <select
                   className="form-select fs-13"
                   style={{ height: '36px', fontSize: '13px', fontWeight: 'bold' }}

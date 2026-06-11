@@ -1,17 +1,11 @@
 import { Link } from "react-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Datatable from "../../../../../core/common/dataTable";
-import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import { useClinics } from "../../../../../core/hooks/useClinics";
 import { all_routes } from "../../../../routes/all_routes";
 
 const PatientClinics = () => {
     const { clinics, loading } = useClinics();
-    const [searchText, setSearchText] = useState<string>("");
-
-    const handleSearch = (value: string) => {
-        setSearchText(value);
-    };
 
     const columns = [
         {
@@ -36,7 +30,11 @@ const PatientClinics = () => {
         {
             title: "Address",
             dataIndex: "address",
-            render: (text: string) => text || "—",
+            render: (text: string) => {
+                if (!text || text === "N/A") return "—";
+                const words = text.split(" ");
+                return words.length > 3 ? `${words.slice(0, 3).join(" ")}...` : text;
+            },
             sorter: (a: any, b: any) => (a.address || "").localeCompare(b.address || ""),
         },
         {
@@ -56,6 +54,24 @@ const PatientClinics = () => {
             sorter: (a: any, b: any) => (a.doctorsCount || 0) - (b.doctorsCount || 0),
         },
         {
+            title: "Website",
+            dataIndex: "subdomain",
+            render: (subdomain: string) => {
+                return subdomain ? (
+                    <Link
+                        to={`/c/${subdomain}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-sm btn-outline-primary fw-bold"
+                    >
+                        View
+                    </Link>
+                ) : (
+                    <span className="text-muted small">Not available</span>
+                );
+            }
+        },
+        {
             title: "Action",
             render: (record: any) => (
                 <Link
@@ -69,22 +85,21 @@ const PatientClinics = () => {
     ];
 
     return (
-        <div className="page-wrapper">
+        <div className="page-wrapper" style={{ background: '#f4f7fe', minHeight: '100vh' }}>
             <div className="content">
-                <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-1 mb-4 border-bottom">
-                    <div className="flex-grow-1">
+                <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-3 mb-3 border-bottom">
+                    <div>
                         <h6 className="fw-bold mb-1 d-flex align-items-center text-muted fs-12 text-uppercase">
                             <Link to={all_routes.patientdashboard} className="text-muted hover-primary">Dashboard</Link>
                             <i className="ti ti-chevron-right mx-2" />
                             <span className="text-primary">Explore Clinics</span>
                         </h6>
-                        <h3 className="fw-bold mb-0">Clinic Directory</h3>
-                    </div>
-                </div>
-
-                <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-4">
-                    <div className="search-set">
-                        <SearchInput value={searchText} onChange={handleSearch} />
+                        <h4 className="fw-bold mb-0 d-flex align-items-center">
+                            Clinic Directory
+                            <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
+                                Total : {clinics.length}
+                            </span>
+                        </h4>
                     </div>
                 </div>
 
@@ -94,7 +109,7 @@ const PatientClinics = () => {
                         dataSource={clinics}
                         loading={loading}
                         Selection={true}
-                        searchText={searchText}
+                        searchText=""
                     />
                 </div>
             </div>

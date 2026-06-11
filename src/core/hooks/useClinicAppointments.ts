@@ -72,5 +72,23 @@ export const useClinicAppointments = (params?: {
     return data;
   };
 
-  return { appointments, loading, error, refetch, reload: fetchAppointments, createAppointment };
+  const updateAppointmentStatus = async (id: string, status: string) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(apiUrl(`/api/appointments/${id}`), {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ status }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to update status");
+    }
+    await refetch();
+    return data;
+  };
+
+  return { appointments, loading, error, refetch, reload: fetchAppointments, createAppointment, updateAppointmentStatus };
 };

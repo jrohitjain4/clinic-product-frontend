@@ -192,34 +192,117 @@ const AppointmentDetails = () => {
     };
 
     const handleDownload = () => {
-        const element = document.getElementById('print-appointment');
-        if (!element) return;
+        const printWindow = window.open('', '_blank');
+        if (!printWindow || !appointment) return;
 
-        const opt = {
-            margin: 0.3,
-            filename: `appointment_${appointment?.appointmentCode || 'report'}.pdf`,
-            image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false },
-            jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
-        };
+        const html = `<html>
+            <head>
+              <title>Clinical Report - ${appointment.appointmentCode || 'Record'}</title>
+              <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+              <style>
+                body { background: #fff; padding: 40px; font-family: 'Inter', sans-serif; color: #1e293b; }
+                .report-header { border-bottom: 2px solid #4f46e5; margin-bottom: 30px; padding-bottom: 20px; }
+                .logo-box { width: 80px; height: 80px; border: 1px dashed #4f46e5; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fff; }
+                .section-title { font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 15px; font-size: 11px; color: #64748b; letter-spacing: 1px; }
+                .info-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; font-weight: 700; }
+                .info-value { font-size: 13px; font-weight: 700; color: #1e293b; }
+                @media print { body { padding: 0; } .no-print { display: none; } }
+              </style>
+            </head>
+            <body>
+              <div class="d-flex justify-content-between align-items-center report-header">
+                <div class="d-flex gap-3 align-items-center">
+                  <div class="logo-box">
+                    <img src="${resolveMediaUrl((appointment as any)?.clinic?.landingPage?.logo) || '/logo.png'}" alt="logo" style="max-height: 60px; max-width: 60px; object-fit: contain;">
+                  </div>
+                  <div>
+                    <h4 class="fw-bold mb-1" style="color: #1e293b; font-size: 22px;">${appointment.clinicName || "DocYari Health Hub"}</h4>
+                    <p class="mb-0 text-muted small">${appointment.location || "Clinic Location"}</p>
+                  </div>
+                </div>
+                <div class="text-end">
+                   <h6 class="fw-bold mb-1">CLINICAL VISIT REPORT</h6>
+                   <span class="badge bg-primary px-3 py-1 fw-bold fs-10 text-uppercase">${appointment.status || 'Scheduled'}</span>
+                </div>
+              </div>
 
-        // Ensure visibility during capture
-        const originalStyle = element.getAttribute('style') || '';
-        element.style.display = 'block';
-        element.style.visibility = 'visible';
-        element.style.position = 'fixed';
-        element.style.left = '-9999px'; // Hide it off-screen but keep it 'visible' for capture
-        element.style.background = 'white';
-        element.style.padding = '30px';
+              <div class="row g-4 mb-5">
+                <div class="col-6">
+                   <h6 class="section-title">Patient Profile</h6>
+                   <div class="p-3 border rounded bg-light-subtle">
+                      <div class="row g-3">
+                         <div class="col-6">
+                            <div class="info-label">Full Name</div>
+                            <div class="info-value">${appointment.patient?.firstName} ${appointment.patient?.lastName}</div>
+                         </div>
+                         <div class="col-6">
+                            <div class="info-label">Patient ID</div>
+                            <div class="info-value">#${appointment.patient?.patientCode || appointment.patientId?.slice(-6).toUpperCase()}</div>
+                         </div>
+                         <div class="col-6">
+                            <div class="info-label">Age / Gender</div>
+                            <div class="info-value">${appointment.patient?.dob ? dayjs().diff(appointment.patient.dob, 'year') : '--'}Y / ${appointment.patient?.gender || '--'}</div>
+                         </div>
+                         <div class="col-6">
+                            <div class="info-label">Contact</div>
+                            <div class="info-value">${appointment.patient?.phone || 'N/A'}</div>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+                <div class="col-6">
+                   <h6 class="section-title">Visit Summary</h6>
+                   <div class="p-3 border rounded bg-light-subtle h-100">
+                      <div class="row g-3">
+                         <div class="col-6">
+                            <div class="info-label">Visit ID</div>
+                            <div class="info-value text-primary">${appointment.appointmentCode || 'N/A'}</div>
+                         </div>
+                         <div class="col-6">
+                            <div class="info-label">Visit Date</div>
+                            <div class="info-value">${dayjs(appointment.scheduledAt).format('DD MMM YYYY')}</div>
+                         </div>
+                         <div class="col-6">
+                            <div class="info-label">Practitioner</div>
+                            <div class="info-value">${appointment.doctor?.fullName?.startsWith('Dr.') ? appointment.doctor.fullName : `Dr. ${appointment.doctor?.fullName}`}</div>
+                         </div>
+                         <div class="col-6">
+                            <div class="info-label">Department</div>
+                            <div class="info-value">${appointment.doctor?.department?.name || 'General'}</div>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+              </div>
 
-        toast.info("Generating PDF, please wait...");
+              <div class="mb-5">
+                <h6 class="section-title">Clinical Findings & Advice</h6>
+                <div class="p-4 border rounded" style="min-height: 150px; background: #fff; line-height: 1.6;">
+                   ${(notes && notes.length > 0) ? notes.map((n: any) => `<div class="mb-3"><strong>${n.title || 'Note'}:</strong> ${n.content}</div>`).join('') : '<p class="text-muted italic">No clinical findings recorded for this visit.</p>'}
+                </div>
+              </div>
 
-        setTimeout(() => {
-            html2pdf().set(opt).from(element).save().finally(() => {
-                element.setAttribute('style', originalStyle);
-                toast.success("Download started!");
-            });
-        }, 500);
+              <div class="mt-auto pt-5 text-center border-top">
+                <p class="mb-1 fw-bold fs-11 text-muted text-uppercase letter-spacing-1">Generated via Docyari PHR System</p>
+                <div class="d-flex justify-content-center gap-5 mt-4">
+                    <div class="text-center">
+                        <p class="info-label mb-1">Authorised Signatory</p>
+                        <p class="fw-bold small mb-0">${appointment.doctor?.fullName?.startsWith('Dr.') ? appointment.doctor.fullName : `Dr. ${appointment.doctor?.fullName}`}</p>
+                    </div>
+                </div>
+                <p class="mb-0 text-muted small mt-4">This is a system generated document. For any discrepancies, please contact the clinic.</p>
+              </div>
+
+              <script>
+                window.onload = () => {
+                  setTimeout(() => { window.print(); window.close(); }, 500);
+                };
+              </script>
+            </body>
+          </html>`;
+
+        printWindow.document.write(html);
+        printWindow.document.close();
     };
 
     const handleBulkDelete = async () => {

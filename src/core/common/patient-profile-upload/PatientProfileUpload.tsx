@@ -5,18 +5,18 @@ interface PatientProfileUploadProps {
   value?: string | null;
   onChange: (url: string) => void;
   fallbackSrc?: string;
+  disabled?: boolean;
 }
 
 const PatientProfileUpload = ({
   value,
   onChange,
-  fallbackSrc = "assets/img/users/user-08.jpg",
+  fallbackSrc = "assets/img/patient-placeholder.png",
+  disabled = false,
 }: PatientProfileUploadProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const displaySrc = value ? resolveMediaUrl(value) : resolveMediaUrl(fallbackSrc);
 
   const handleFile = async (file: File) => {
     setError(null);
@@ -49,11 +49,11 @@ const PatientProfileUpload = ({
 
   return (
     <div
-      className="position-relative d-inline-block ms-4 mb-2 profile-upload-wrapper"
-      onClick={() => !uploading && inputRef.current?.click()}
-      style={{ cursor: "pointer" }}
+      className={`position-relative d-inline-block mb-3 profile-upload-wrapper ${disabled ? 'opacity-75' : ''}`}
+      onClick={() => !uploading && !disabled && inputRef.current?.click()}
+      style={{ cursor: disabled || uploading ? "default" : "pointer" }}
     >
-      <div className="avatar avatar-xxl rounded-circle bg-light text-primary position-relative overflow-hidden z-1 p-0 d-flex align-items-center justify-content-center" style={{ border: '3px solid #fff', boxShadow: '0 4px 14px rgba(0,0,0,0.08)' }}>
+      <div className="avatar avatar-xxl rounded-circle bg-light text-primary position-relative overflow-hidden z-1 p-0 d-flex align-items-center justify-content-center" style={{ width: '80px', height: '80px', border: '3px solid #fff', boxShadow: '0 4px 14px rgba(0,0,0,0.08)' }}>
         {value ? (
           <>
             <img
@@ -68,7 +68,7 @@ const PatientProfileUpload = ({
           </>
         ) : (
           <div className="d-flex align-items-center justify-content-center w-100 h-100" style={{ backgroundColor: "#f3f4f6" }}>
-            <i className="ti ti-camera-plus" style={{ fontSize: "36px", color: "#6366f1" }} />
+            <i className="ti ti-camera-plus" style={{ fontSize: "32px", color: "#6366f1" }} />
           </div>
         )}
 
@@ -86,13 +86,13 @@ const PatientProfileUpload = ({
         type="file"
         style={{ display: "none" }}
         accept="image/jpeg,image/png,image/webp,image/gif"
-        disabled={uploading}
+        disabled={uploading || disabled}
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) handleFile(file);
         }}
       />
-      {error && <p className="text-danger fs-12 mt-2 position-absolute w-100 text-center mb-0">{error}</p>}
+      {error && <p className="text-danger fs-12 mt-2 position-absolute w-100 text-center mb-0" style={{ bottom: '-20px' }}>{error}</p>}
     </div>
   );
 };

@@ -8,15 +8,18 @@ import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppoin
 import { useClinicDoctors } from "../../../../../core/hooks/useClinicDoctors";
 import { usePrescriptions } from "../../../../../core/hooks/usePrescriptions";
 import { useClinicInvoices } from "../../../../../core/hooks/useClinicInvoices";
+import { useClinics } from "../../../../../core/hooks/useClinics";
 import { all_routes, doctorDetailsPath } from "../../../../routes/all_routes";
 
 const PatientDashboard = () => {
+  const { clinics } = useClinics();
   const { appointments } = useClinicAppointments();
   const { doctors } = useClinicDoctors();
   const { prescriptions } = usePrescriptions();
   const { invoices } = useClinicInvoices();
 
   const totalAppointments = appointments?.length || 0;
+  const totalClinics = clinics?.length || 0;
   const recentAppointments = appointments?.slice(0, 5) || [];
 
   return (
@@ -26,13 +29,6 @@ const PatientDashboard = () => {
 		========================= */}
       <div className="page-wrapper">
         <div className="content pb-0">
-          {/* Appointment Confirmation Alert */}
-          <div className="alert alert-info border-info border-2 d-flex align-items-center mb-4 shadow-sm" role="alert">
-            <i className="ti ti-info-circle fs-20 me-2"></i>
-            <div>
-              <span className="fw-bold">Notice:</span> Please contact the clinic owner to confirm your appointment and complete the payment process.
-            </div>
-          </div>
           {/* Page Header */}
           <div className="d-flex align-items-sm-center justify-content-between flex-wrap gap-2 mb-4">
             <div>
@@ -81,8 +77,8 @@ const PatientDashboard = () => {
                       <i className="ti ti-users" />
                     </span>
                     <div className="ms-2">
-                      <p className="mb-1 text-truncate">Online Consultations</p>
-                      <h3 className="fw-bold mb-0">36</h3>
+                      <p className="mb-1 text-truncate">Total Clinics</p>
+                      <h3 className="fw-bold mb-0">{totalClinics}</h3>
                     </div>
                   </div>
                   <div className="d-flex align-items-center">

@@ -318,12 +318,13 @@ const DoctorSchedules = () => {
                       return (
                         <li key={day} className="nav-item">
                           <button
-                            className={`nav-link border ${activeDay === day ? "active" : ""}`}
+                            className={`nav-link border fw-bold px-4 py-2 ${activeDay === day ? "active shadow-sm" : "bg-white text-dark"}`}
                             type="button"
                             onClick={() => setActiveDay(day)}
+                            style={{ borderRadius: '10px', minWidth: '120px' }}
                           >
-                            {day.substring(0, 2)}..
-                            {hasSlots && <i className="ti ti-circle-check-filled ms-1 text-white fs-12" />}
+                            {day}
+                            {hasSlots && <i className="ti ti-circle-check-filled ms-2 text-white fs-12" />}
                           </button>
                         </li>
                       );

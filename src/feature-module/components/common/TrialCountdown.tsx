@@ -21,6 +21,11 @@ const premiumStyles = `
 `;
 
 const TrialCountdown = () => {
+    const userStr = localStorage.getItem("user");
+    const user = userStr ? JSON.parse(userStr) : null;
+
+    if (user?.role === 'PATIENT') return null;
+
     const [timeLeft, setTimeLeft] = useState<string>("");
     const [isExpired, setIsExpired] = useState(false);
     const [isPremium, setIsPremium] = useState(false);

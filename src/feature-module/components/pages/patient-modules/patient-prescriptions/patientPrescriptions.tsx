@@ -1,35 +1,41 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import {
-  Amount,
-  Department,
-  Designation,
-  Doctor,
-  Status,
-} from "../../../../../core/common/selectOption";
-import { DatePicker, Select } from "antd";
-import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
-import { all_routes, doctorDetailsPath } from "../../../../routes/all_routes";
+import { Select } from "antd";
+import dayjs from "dayjs";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
+import { all_routes, doctorDetailsPath } from "../../../../routes/all_routes";
 import { usePrescriptions } from "../../../../../core/hooks/usePrescriptions";
-import { useState } from "react";
 import Datatable from "../../../../../core/common/dataTable";
 import Modals from "./modals/modals";
-import dayjs from "dayjs";
+import Footer from "../../../../../core/common/footer/footer";
 
 const PatientPrescriptions = () => {
-  const getModalContainer = () => {
-    const modalElement = document.getElementById("modal-datepicker");
-    return modalElement ? modalElement : document.body;
-  };
+  const customSelectStyles = `
+    .custom-select-header .ant-select-selector {
+      border-color: #dee2e6 !important;
+      font-weight: 700 !important;
+      font-size: 13px !important;
+      color: #333 !important;
+      background-color: #fff !important;
+    }
+    .custom-select-header .ant-select-selection-placeholder {
+      font-weight: 700 !important;
+      color: #6c757d !important;
+    }
+  `;
 
   const { prescriptions, loading } = usePrescriptions();
   const [searchText, setSearchText] = useState<string>("");
+  const [filterDoctor, setFilterDoctor] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+  const [datePreset, setDatePreset] = useState("All"); // All, Today, Yesterday, Last 7 Days, Custom
 
-  const handleSearch = (value: string) => {
-    setSearchText(value);
-  };
+  const doctorsList = useMemo(() => {
+    const names = Array.from(new Set(prescriptions.map(p => p.doctor?.fullName || p.doctorName)));
+    return names.filter(n => n).sort();
+  }, [prescriptions]);
 
-  const data = prescriptions.map((pres: any) => ({
+  const data = useMemo(() => prescriptions.map((pres: any) => ({
     ...pres,
     key: pres.id,
     Prescription_ID: pres.prescriptionCode || `#PRES-${pres.id.slice(-4)}`,
@@ -38,10 +44,41 @@ const PatientPrescriptions = () => {
       : (pres.doctorName || "Doctor"),
     img: pres.doctor?.profileImage || "assets/img/doctor-placeholder.png",
     role: pres.doctor?.designation?.name || pres.doctorRole || "Practitioner",
+    Prescribed_On_Date: pres.createdAt ? dayjs(pres.createdAt) : null,
     Prescribed_On: pres.createdAt ? dayjs(pres.createdAt).format('DD MMM YYYY') : "—",
     doctorId: pres.doctorId,
     department: pres.doctor?.department?.name || "General",
-  }));
+  })), [prescriptions]);
+
+  const filteredData = useMemo(() => {
+    return data.filter((row) => {
+      const matchSearch = searchText
+        ? row.Prescription_ID.toLowerCase().includes(searchText.toLowerCase()) ||
+        row.Doctor_Name.toLowerCase().includes(searchText.toLowerCase())
+        : true;
+
+      const matchDoctor = filterDoctor
+        ? row.Doctor_Name.toLowerCase().includes(filterDoctor.toLowerCase())
+        : true;
+
+      // Date Filter Logic
+      let matchDate = true;
+      const rowDate = row.Prescribed_On_Date;
+      if (rowDate) {
+        if (datePreset === "Today") {
+          matchDate = rowDate.isSame(dayjs(), 'day');
+        } else if (datePreset === "Yesterday") {
+          matchDate = rowDate.isSame(dayjs().subtract(1, 'day'), 'day');
+        } else if (datePreset === "Last 7 Days") {
+          matchDate = rowDate.isAfter(dayjs().subtract(7, 'day'));
+        } else if (datePreset === "Custom" && filterDate) {
+          matchDate = rowDate.format("YYYY-MM-DD") === filterDate;
+        }
+      }
+
+      return matchSearch && matchDoctor && matchDate;
+    });
+  }, [data, searchText, filterDoctor, filterDate, datePreset]);
 
   const columns = [
     {
@@ -56,7 +93,7 @@ const PatientPrescriptions = () => {
       dataIndex: "Prescription_ID",
       sorter: (a: any, b: any) => a.Prescription_ID.localeCompare(b.Prescription_ID),
       render: (text: string, record: any) => (
-        <Link to={`${all_routes.patientprescriptiondetails}?id=${record.id}`} className="text-primary fw-semibold">
+        <Link to={`${all_routes.patientprescriptiondetails}?id=${record.id}`} className="text-primary fw-bold">
           {text}
         </Link>
       ),
@@ -83,7 +120,7 @@ const PatientPrescriptions = () => {
             >
               {text}
             </Link>
-            <span className="text-muted fs-11 fw-medium text-uppercase tracking-wider">
+            <span className="text-muted fs-11 fw-bold text-uppercase tracking-wider">
               {record.role} · {record.department}
             </span>
           </div>
@@ -95,7 +132,7 @@ const PatientPrescriptions = () => {
       title: "Prescribed On",
       dataIndex: "Prescribed_On",
       sorter: (a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      render: (text: string) => <span className="fw-medium text-dark">{text}</span>
+      render: (text: string) => <span className="fw-bold text-dark">{text}</span>
     },
     {
       title: "Action",
@@ -110,13 +147,6 @@ const PatientPrescriptions = () => {
           >
             <i className="ti ti-eye" />
           </Link>
-          <button
-            className="btn btn-icon btn-sm btn-soft-info"
-            title="Download PDF"
-            onClick={() => { /* Implement download if needed */ }}
-          >
-            <i className="ti ti-download" />
-          </button>
         </div>
       ),
     },
@@ -124,124 +154,61 @@ const PatientPrescriptions = () => {
 
   return (
     <>
+      <style>{customSelectStyles}</style>
       <div className="page-wrapper">
         <div className="content">
-          <div className="d-md-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
-            <div>
-              <h6 className="fw-bold mb-1 d-flex align-items-center text-muted fs-12 text-uppercase">
-                <Link to={all_routes.patientdashboard} className="text-muted hover-primary">Dashboard</Link>
-                <i className="ti ti-chevron-right mx-2" />
-                <span className="text-primary">Prescriptions</span>
-              </h6>
-              <h3 className="fw-bold mb-0">My Prescriptions</h3>
-            </div>
-            <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
-              <div className="dropdown me-1">
-                <Link
-                  to="#"
-                  className="btn btn-md border fs-14 fw-bold bg-white rounded text-dark d-inline-flex align-items-center shadow-sm"
-                  data-bs-toggle="dropdown"
+          <div className="d-flex align-items-center pb-3 mb-4 border-bottom overflow-hidden" style={{ gap: '16px' }}>
+            <h4 className="fw-bold mb-0 flex-shrink-0">My Prescriptions</h4>
+
+            <div className="ms-auto d-flex align-items-center" style={{ gap: '12px' }}>
+              {/* Doctor Filter Select */}
+              <div className="position-relative" style={{ minWidth: '160px' }}>
+                <select
+                  className="form-select fs-12 fw-bold border-secondary-subtle bg-white shadow-sm"
+                  style={{ height: '36px', borderRadius: '6px' }}
+                  value={filterDoctor}
+                  onChange={(e) => setFilterDoctor(e.target.value)}
                 >
-                  <i className="ti ti-download me-2" />
-                  Export
-                  <i className="ti ti-chevron-down ms-2" />
-                </Link>
-                <ul className="dropdown-menu p-2 shadow-lg border-0">
-                  <li>
-                    <Link className="dropdown-item rounded" to="#">
-                      <i className="ti ti-file-type-pdf me-2 text-danger" />
-                      Download as PDF
-                    </Link>
-                  </li>
-                  <li>
-                    <Link className="dropdown-item rounded" to="#">
-                      <i className="ti ti-file-spreadsheet me-2 text-success" />
-                      Download as Excel
-                    </Link>
-                  </li>
-                </ul>
+                  <option value="">All Doctors</option>
+                  {doctorsList.map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
               </div>
-              <div className="dropdown">
-                <Link
-                  to="#"
-                  className="bg-white border rounded btn btn-md text-dark fs-14 py-1 align-items-center d-flex fw-bold shadow-sm"
-                  data-bs-toggle="dropdown"
-                  data-bs-auto-close="outside"
+
+              {/* Date Filter Select */}
+              <div className="position-relative" style={{ minWidth: '150px' }}>
+                <select
+                  className="form-select fs-12 fw-bold border-secondary-subtle bg-white shadow-sm"
+                  style={{ height: '36px', borderRadius: '6px' }}
+                  value={datePreset}
+                  onChange={(e) => setDatePreset(e.target.value)}
                 >
-                  <i className="ti ti-filter text-primary me-2" />
-                  Filters
-                </Link>
-                <div
-                  className="dropdown-menu dropdown-lg dropdown-menu-end filter-dropdown p-0 shadow-lg border-0"
-                  id="filter-dropdown"
-                >
-                  <div className="d-flex align-items-center justify-content-between border-bottom filter-header p-3">
-                    <h5 className="mb-0 fw-bold">Advanced Search</h5>
-                    <div className="d-flex align-items-center">
-                      <Link
-                        to="#"
-                        className="link-danger fs-12 text-decoration-underline"
-                      >
-                        Clear All
-                      </Link>
-                    </div>
-                  </div>
-                  <form action="#">
-                    <div className="filter-body p-3">
-                      <div className="mb-3">
-                        <label className="form-label fw-bold text-dark fs-13 mb-1">Doctor</label>
-                        <Select
-                          mode="multiple"
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Select Doctor"
-                          options={Doctor}
-                        />
-                      </div>
-                      <div className="mb-3">
-                        <label className="form-label fw-bold text-dark fs-13 mb-1">Department</label>
-                        <Select
-                          mode="multiple"
-                          allowClear
-                          style={{ width: "100%" }}
-                          placeholder="Select Department"
-                          options={Department}
-                        />
-                      </div>
-                      <div className="mb-3">
-                        <label className="form-label fw-bold text-dark fs-13 mb-1">Date Range</label>
-                        <div className="input-icon-end position-relative">
-                          <DatePicker
-                            className="form-control"
-                            format="DD-MM-YYYY"
-                            placeholder="Select Date"
-                          />
-                          <span className="input-icon-addon">
-                            <i className="ti ti-calendar" />
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="filter-footer d-flex align-items-center justify-content-end border-top p-3 bg-light">
-                      <button type="button" className="btn btn-light btn-md me-2 fw-bold" id="close-filter">Close</button>
-                      <button type="submit" className="btn btn-primary btn-md fw-bold px-4">Apply Filters</button>
-                    </div>
-                  </form>
-                </div>
+                  <option value="All">All Dates</option>
+                  <option value="Today">Today</option>
+                  <option value="Yesterday">Yesterday</option>
+                  <option value="Last 7 Days">Last 7 Days</option>
+                </select>
               </div>
+
+              {/* Clear Filter Button */}
+              {(filterDoctor !== "" || datePreset !== "All") && (
+                <button
+                  className="btn btn-sm btn-soft-danger d-flex align-items-center justify-content-center p-0 rounded-circle flex-shrink-0 shadow-xs"
+                  style={{ width: '28px', height: '28px' }}
+                  onClick={() => { setFilterDoctor(""); setDatePreset("All"); }}
+                  title="Clear Filters"
+                >
+                  <i className="ti ti-rotate-clockwise fs-14" />
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3 mb-4">
-            <div className="search-set w-100 w-md-auto">
-              <SearchInput value={searchText} onChange={handleSearch} />
-            </div>
-          </div>
-
-          <div className="table-responsive bg-white rounded shadow-sm border">
+          <div className="table-responsive bg-white rounded shadow-sm border p-0">
             <Datatable
               columns={columns}
-              dataSource={data}
+              dataSource={filteredData}
               loading={loading}
               Selection={true}
               searchText={searchText}
@@ -249,24 +216,18 @@ const PatientPrescriptions = () => {
           </div>
         </div>
 
-        <div className="footer text-center bg-white p-2 border-top mt-4">
-          <p className="text-dark mb-0">
-            2025 © <Link to="#" className="link-primary fw-bold">Docyari</Link>, All Rights Reserved
-          </p>
-        </div>
+        <Footer />
       </div>
 
       <Modals />
 
       <style>{`
         .btn-soft-primary { background-color: rgba(79, 70, 229, 0.1); color: #4f46e5; border: none; }
-        .btn-soft-primary:hover { background-color: #4f46e5 !color: white; }
-        .btn-soft-info { background-color: rgba(13, 202, 240, 0.1); color: #0dcaf0; border: none; }
-        .btn-soft-info:hover { background-color: #0dcaf0; color: white; }
-        .filter-dropdown { min-width: 350px; }
+        .btn-soft-primary:hover { background-color: #4f46e5; color: white; }
+        .btn-soft-danger { background-color: rgba(220, 38, 38, 0.1); color: #dc2626; border: none; }
+        .btn-soft-danger:hover { background-color: #dc2626; color: white; }
         .avatar-md { width: 40px; height: 40px; }
-        .tracking-wider { letter-spacing: 0.05em; }
-        .shadow-sm { box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important; }
+        .shadow-xs { box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
       `}</style>
     </>
   );

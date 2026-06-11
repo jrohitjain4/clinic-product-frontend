@@ -17,735 +17,727 @@ const Modal = () => {
   return (
     <>
       {/* Start Add New Appointment */}
-      <div
-        className="offcanvas offcanvas-offset offcanvas-end"
-        tabIndex={-1}
-        id="new_appointment"
-      >
-        <div className="offcanvas-header d-block pb-0 px-0">
-          <div className="border-bottom d-flex align-items-center justify-content-between pb-3 px-3">
-            <h5 className="offcanvas-title fs-18 fw-bold">New Appointment</h5>
-            <button
-              type="button"
-              className="btn-close opacity-100"
-              data-bs-dismiss="offcanvas"
-              aria-label="Close"
-            />
-          </div>
-        </div>
-        <div className="offcanvas-body pt-3">
-          <form action="#">
-            {/* start row*/}
-            <div className="row">
-              <div className="col-lg-12">
-                <div className="mb-3">
-                  <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    Appointment ID <span className="text-danger">*</span>
-                  </label>
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      className="form-control rounded bg-light"
-                      defaultValue="AP234354"
-                    />
-                  </div>
-                </div>
-              </div>
-              {/* end col*/}
-              <div className="col-lg-12">
-                <div className="mb-3">
-                  <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    Patient<span className="text-danger">*</span>
-                  </label>
-                  <div className="dropdown">
-                    <Link
-                      to="#"
-                      className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
-                      data-bs-toggle="dropdown"
-                      data-bs-auto-close="outside"
-                      aria-expanded="true"
-                    >
-                      Select
-                    </Link>
-                    <div className="dropdown-menu shadow-lg w-100 dropdown-info">
-                      <div className="mb-3">
-                        <div className="input-icon-start position-relative">
-                          <span className="input-icon-addon fs-12">
-                            <i className="ti ti-search" />
-                          </span>
-                          <input
-                            type="text"
-                            className="form-control form-control-sm"
-                            placeholder="Search"
-                          />
-                        </div>
-                      </div>
-                      <ul className="mb-3 list-style-none">
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            <span className="avatar avatar-sm rounded-circle me-2">
-                              <ImageWithBasePath
-                                src="assets/img/users/user-02.jpg"
-                                className="flex-shrink-0 rounded-circle"
-                                alt="img"
-                              />
-                            </span>
-                            Emily Clark
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            <span className="avatar avatar-sm rounded-circle me-2">
-                              <ImageWithBasePath
-                                src="assets/img/profiles/avatar-01.jpg"
-                                className="flex-shrink-0 rounded-circle"
-                                alt="img"
-                              />
-                            </span>
-                            John Carter
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            <span className="avatar avatar-sm rounded-circle me-2">
-                              <ImageWithBasePath
-                                src="assets/img/profiles/avatar-16.jpg"
-                                className="flex-shrink-0 rounded-circle"
-                                alt="img"
-                              />
-                            </span>
-                            Sophia White
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            <span className="avatar avatar-sm rounded-circle me-2">
-                              <ImageWithBasePath
-                                src="assets/img/profiles/avatar-15.jpg"
-                                className="flex-shrink-0 rounded-circle"
-                                alt="img"
-                              />
-                            </span>
-                            Michael Johnson
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            <span className="avatar avatar-sm rounded-circle me-2">
-                              <ImageWithBasePath
-                                src="assets/img/profiles/avatar-14.jpg"
-                                className="flex-shrink-0 rounded-circle"
-                                alt="img"
-                              />
-                            </span>
-                            Olivia Harris
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            <span className="avatar avatar-sm rounded-circle me-2">
-                              <ImageWithBasePath
-                                src="assets/img/profiles/avatar-01.jpg"
-                                className="flex-shrink-0 rounded-circle"
-                                alt="img"
-                              />
-                            </span>
-                            David Anderson
-                          </label>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* end col*/}
-              <div className="col-lg-12">
-                <div className="mb-3">
-                  <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    Appointment Type <span className="text-danger">*</span>
-                  </label>
-                  <div className="dropdown">
-                    <Link
-                      to="#"
-                      className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
-                      data-bs-toggle="dropdown"
-                      data-bs-auto-close="outside"
-                      aria-expanded="true"
-                    >
-                      Select
-                    </Link>
-                    <div className="dropdown-menu shadow-lg w-100 dropdown-info">
-                      <div className="mb-3">
-                        <div className="input-icon-start position-relative">
-                          <span className="input-icon-addon fs-12">
-                            <i className="ti ti-search" />
-                          </span>
-                          <input
-                            type="text"
-                            className="form-control form-control-sm"
-                            placeholder="Select"
-                          />
-                        </div>
-                      </div>
-                      <ul className="mb-3 list-style-none">
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            In Person
-                          </label>
-                        </li>
-                        <li className="list-none">
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            Online
-                          </label>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* end col*/}
-              <div className="col-lg-6">
-                <div className="mb-3">
-                  <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    Date of Appointment <span className="text-danger">*</span>
-                  </label>
-                  <div className="input-icon-end position-relative">
-                    <DatePicker
-                      className="form-control datetimepicker"
-                      format={{
-                        format: "DD-MM-YYYY",
-                        type: "mask",
-                      }}
-                      getPopupContainer={getModalContainer}
-                      placeholder="DD-MM-YYYY"
-                      suffixIcon={null}
-                    />
-                    <span className="input-icon-addon">
-                      <i className="ti ti-calendar" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-              {/* end col*/}
-              <div className="col-lg-6">
-                <div className="mb-3">
-                  <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    Time <span className="text-danger">*</span>
-                  </label>
-                  <div className="input-icon-end position-relative">
-                    <TimePicker
-                      className="form-control"
-                      onChange={onChangeTime}
-                      defaultOpenValue={dayjs("00:00:00", "HH:mm:ss")}
-                    />
-                    <span className="input-icon-addon">
-                      <i className="ti ti-clock" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-              {/* end col*/}
-              <div className="col-lg-12">
-                <div className="mb-3">
-                  <div>
-                    <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                      Appointment Reason
-                    </label>
-                    <textarea rows={4} className="form-control rounded" />
-                  </div>
-                </div>
-              </div>
-              {/* end col*/}
-              <div className="col-lg-12">
-                <div className="mb-3">
-                  <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    Status<span className="text-danger">*</span>
-                  </label>
-                  <div className="dropdown">
-                    <Link
-                      to="#"
-                      className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
-                      data-bs-toggle="dropdown"
-                      data-bs-auto-close="outside"
-                      aria-expanded="true"
-                    >
-                      Select
-                    </Link>
-                    <div className="dropdown-menu shadow-lg w-100 dropdown-info">
-                      <div className="mb-3">
-                        <div className="input-icon-start position-relative">
-                          <span className="input-icon-addon fs-12">
-                            <i className="ti ti-search" />
-                          </span>
-                          <input
-                            type="text"
-                            className="form-control form-control-sm"
-                            placeholder="Select"
-                          />
-                        </div>
-                      </div>
-                      <ul className="mb-3 list-style-none">
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            Checked Out
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                              defaultChecked
-                            />
-                            Checked In
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            Cancelled
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            Scheduled
-                          </label>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* end col*/}
+      <div className="modal fade" id="new_appointment" tabIndex={-1} aria-hidden="true">
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px' }}>
+            <div className="modal-header bg-primary border-bottom p-3 px-4 d-flex align-items-center justify-content-between">
+              <h5 className="modal-title fs-18 fw-bold text-white">New Appointment</h5>
+              <button
+                type="button"
+                className="btn-close btn-close-white opacity-100"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              />
             </div>
-            {/* end row*/}
-          </form>
-        </div>
-        <div className="offcanvas-footer mb-1 mt-3 p-3 border-1 border-top">
-          <div className=" d-flex justify-content-end gap-2">
-            <Link to="#" className="btn btn-light btm-md">
-              Cancel
-            </Link>
-            <button
-              data-bs-dismiss="offcanvas"
-              className="btn btn-primary btm-md"
-              id="filter-submit"
-            >
-              Create Create Appointment
-            </button>
+            <div className="modal-body p-4">
+              <form action="#">
+                {/* start row*/}
+                <div className="row">
+                  <div className="col-lg-12">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                        Appointment ID <span className="text-danger">*</span>
+                      </label>
+                      <div className="input-group">
+                        <input
+                          type="text"
+                          className="form-control rounded bg-light"
+                          defaultValue="AP234354"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {/* end col*/}
+                  <div className="col-lg-12">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                        Patient<span className="text-danger">*</span>
+                      </label>
+                      <div className="dropdown">
+                        <Link
+                          to="#"
+                          className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
+                          data-bs-toggle="dropdown"
+                          data-bs-auto-close="outside"
+                          aria-expanded="true"
+                        >
+                          Select
+                        </Link>
+                        <div className="dropdown-menu shadow-lg w-100 dropdown-info">
+                          <div className="mb-3">
+                            <div className="input-icon-start position-relative">
+                              <span className="input-icon-addon fs-12">
+                                <i className="ti ti-search" />
+                              </span>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                placeholder="Search"
+                              />
+                            </div>
+                          </div>
+                          <ul className="mb-3 list-style-none">
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                <span className="avatar avatar-sm rounded-circle me-2">
+                                  <ImageWithBasePath
+                                    src="assets/img/users/user-02.jpg"
+                                    className="flex-shrink-0 rounded-circle"
+                                    alt="img"
+                                  />
+                                </span>
+                                Emily Clark
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                <span className="avatar avatar-sm rounded-circle me-2">
+                                  <ImageWithBasePath
+                                    src="assets/img/profiles/avatar-01.jpg"
+                                    className="flex-shrink-0 rounded-circle"
+                                    alt="img"
+                                  />
+                                </span>
+                                John Carter
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                <span className="avatar avatar-sm rounded-circle me-2">
+                                  <ImageWithBasePath
+                                    src="assets/img/profiles/avatar-16.jpg"
+                                    className="flex-shrink-0 rounded-circle"
+                                    alt="img"
+                                  />
+                                </span>
+                                Sophia White
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                <span className="avatar avatar-sm rounded-circle me-2">
+                                  <ImageWithBasePath
+                                    src="assets/img/profiles/avatar-15.jpg"
+                                    className="flex-shrink-0 rounded-circle"
+                                    alt="img"
+                                  />
+                                </span>
+                                Michael Johnson
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                <span className="avatar avatar-sm rounded-circle me-2">
+                                  <ImageWithBasePath
+                                    src="assets/img/profiles/avatar-14.jpg"
+                                    className="flex-shrink-0 rounded-circle"
+                                    alt="img"
+                                  />
+                                </span>
+                                Olivia Harris
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                <span className="avatar avatar-sm rounded-circle me-2">
+                                  <ImageWithBasePath
+                                    src="assets/img/profiles/avatar-01.jpg"
+                                    className="flex-shrink-0 rounded-circle"
+                                    alt="img"
+                                  />
+                                </span>
+                                David Anderson
+                              </label>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* end col*/}
+                  <div className="col-lg-12">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                        Appointment Type <span className="text-danger">*</span>
+                      </label>
+                      <div className="dropdown">
+                        <Link
+                          to="#"
+                          className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
+                          data-bs-toggle="dropdown"
+                          data-bs-auto-close="outside"
+                          aria-expanded="true"
+                        >
+                          Select
+                        </Link>
+                        <div className="dropdown-menu shadow-lg w-100 dropdown-info">
+                          <div className="mb-3">
+                            <div className="input-icon-start position-relative">
+                              <span className="input-icon-addon fs-12">
+                                <i className="ti ti-search" />
+                              </span>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                placeholder="Select"
+                              />
+                            </div>
+                          </div>
+                          <ul className="mb-3 list-style-none">
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                In Person
+                              </label>
+                            </li>
+                            <li className="list-none">
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                Online
+                              </label>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* end col*/}
+                  <div className="col-lg-6">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                        Date of Appointment <span className="text-danger">*</span>
+                      </label>
+                      <div className="input-icon-end position-relative">
+                        <DatePicker
+                          className="form-control datetimepicker"
+                          format={{
+                            format: "DD-MM-YYYY",
+                            type: "mask",
+                          }}
+                          getPopupContainer={getModalContainer}
+                          placeholder="DD-MM-YYYY"
+                          suffixIcon={null}
+                        />
+                        <span className="input-icon-addon">
+                          <i className="ti ti-calendar" />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* end col*/}
+                  <div className="col-lg-6">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                        Time <span className="text-danger">*</span>
+                      </label>
+                      <div className="input-icon-end position-relative">
+                        <TimePicker
+                          className="form-control"
+                          onChange={onChangeTime}
+                          defaultOpenValue={dayjs("00:00:00", "HH:mm:ss")}
+                        />
+                        <span className="input-icon-addon">
+                          <i className="ti ti-clock" />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* end col*/}
+                  <div className="col-lg-12">
+                    <div className="mb-3">
+                      <div>
+                        <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                          Appointment Reason
+                        </label>
+                        <textarea rows={4} className="form-control rounded" />
+                      </div>
+                    </div>
+                  </div>
+                  {/* end col*/}
+                  <div className="col-lg-12">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                        Status<span className="text-danger">*</span>
+                      </label>
+                      <div className="dropdown">
+                        <Link
+                          to="#"
+                          className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
+                          data-bs-toggle="dropdown"
+                          data-bs-auto-close="outside"
+                          aria-expanded="true"
+                        >
+                          Select
+                        </Link>
+                        <div className="dropdown-menu shadow-lg w-100 dropdown-info">
+                          <div className="mb-3">
+                            <div className="input-icon-start position-relative">
+                              <span className="input-icon-addon fs-12">
+                                <i className="ti ti-search" />
+                              </span>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                placeholder="Select"
+                              />
+                            </div>
+                          </div>
+                          <ul className="mb-3 list-style-none">
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                Checked Out
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                  defaultChecked
+                                />
+                                Checked In
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                Cancelled
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                Scheduled
+                              </label>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* end col*/}
+                </div>
+                {/* end row*/}
+              </form>
+            </div>
+            <div className="modal-footer border-top p-3 d-flex justify-content-end gap-2">
+              <button type="button" className="btn btn-light fw-bold" data-bs-dismiss="modal">
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary fw-bold"
+                id="filter-submit"
+              >
+                Create Appointment
+              </button>
+            </div>
           </div>
         </div>
       </div>
       {/* End Add New Appointment*/}
       {/* Start Edit New Appointment */}
-      <div
-        className="offcanvas offcanvas-offset offcanvas-end"
-        tabIndex={-1}
-        id="edit_appointment"
-      >
-        <div className="offcanvas-header d-block pb-0 px-0">
-          <div className="border-bottom d-flex align-items-center justify-content-between pb-3 px-3">
-            <h5 className="offcanvas-title fs-18 fw-bold"> Edit Appointment</h5>
-            <button
-              type="button"
-              className="btn-close opacity-100"
-              data-bs-dismiss="offcanvas"
-              aria-label="Close"
-            />
-          </div>
-        </div>
-        <div className="offcanvas-body pt-3">
-          <form action="#">
-            {/* start row*/}
-            <div className="row">
-              <div className="col-lg-12">
-                <div className="mb-3">
-                  <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    Appointment ID <span className="text-danger">*</span>
-                  </label>
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      className="form-control rounded bg-light"
-                      defaultValue="AP234354"
-                    />
-                  </div>
-                </div>
-              </div>
-              {/* end col*/}
-              <div className="col-lg-12">
-                <div className="mb-3">
-                  <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    Patient<span className="text-danger">*</span>
-                  </label>
-                  <div className="dropdown">
-                    <Link
-                      to="#"
-                      className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
-                      data-bs-toggle="dropdown"
-                      data-bs-auto-close="outside"
-                      aria-expanded="true"
-                    >
-                      Emily Clark
-                    </Link>
-                    <div className="dropdown-menu shadow-lg w-100 dropdown-info">
-                      <div className="mb-3">
-                        <div className="input-icon-start position-relative">
-                          <span className="input-icon-addon fs-12">
-                            <i className="ti ti-search" />
-                          </span>
-                          <input
-                            type="text"
-                            className="form-control form-control-sm"
-                            placeholder="Search"
-                          />
-                        </div>
-                      </div>
-                      <ul className="mb-3 list-style-none">
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            <span className="avatar avatar-sm rounded-circle me-2">
-                              <ImageWithBasePath
-                                src="assets/img/users/user-02.jpg"
-                                className="flex-shrink-0 rounded-circle"
-                                alt="img"
-                              />
-                            </span>
-                            Emily Clark
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            <span className="avatar avatar-sm rounded-circle me-2">
-                              <ImageWithBasePath
-                                src="assets/img/profiles/avatar-01.jpg"
-                                className="flex-shrink-0 rounded-circle"
-                                alt="img"
-                              />
-                            </span>
-                            John Carter
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            <span className="avatar avatar-sm rounded-circle me-2">
-                              <ImageWithBasePath
-                                src="assets/img/profiles/avatar-16.jpg"
-                                className="flex-shrink-0 rounded-circle"
-                                alt="img"
-                              />
-                            </span>
-                            Sophia White
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            <span className="avatar avatar-sm rounded-circle me-2">
-                              <ImageWithBasePath
-                                src="assets/img/profiles/avatar-15.jpg"
-                                className="flex-shrink-0 rounded-circle"
-                                alt="img"
-                              />
-                            </span>
-                            Michael Johnson
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            <span className="avatar avatar-sm rounded-circle me-2">
-                              <ImageWithBasePath
-                                src="assets/img/profiles/avatar-14.jpg"
-                                className="flex-shrink-0 rounded-circle"
-                                alt="img"
-                              />
-                            </span>
-                            Olivia Harris
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            <span className="avatar avatar-sm rounded-circle me-2">
-                              <ImageWithBasePath
-                                src="assets/img/profiles/avatar-01.jpg"
-                                className="flex-shrink-0 rounded-circle"
-                                alt="img"
-                              />
-                            </span>
-                            David Anderson
-                          </label>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* end col*/}
-              <div className="col-lg-12">
-                <div className="mb-3">
-                  <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    Appointment Type <span className="text-danger">*</span>
-                  </label>
-                  <div className="dropdown">
-                    <Link
-                      to="#"
-                      className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
-                      data-bs-toggle="dropdown"
-                      data-bs-auto-close="outside"
-                      aria-expanded="true"
-                    >
-                      In Person
-                    </Link>
-                    <div className="dropdown-menu shadow-lg w-100 dropdown-info">
-                      <div className="mb-3">
-                        <div className="input-icon-start position-relative">
-                          <span className="input-icon-addon fs-12">
-                            <i className="ti ti-search" />
-                          </span>
-                          <input
-                            type="text"
-                            className="form-control form-control-sm"
-                            placeholder="Select"
-                          />
-                        </div>
-                      </div>
-                      <ul className="mb-0 list-style-none">
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            In Person
-                          </label>
-                        </li>
-                        <li className="list-none">
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            Online
-                          </label>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* end col*/}
-              <div className="col-lg-6">
-                <div className="mb-3">
-                  <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    Date of Appointment <span className="text-danger">*</span>
-                  </label>
-                  <div className="input-icon-end position-relative">
-                    <DatePicker
-                      className="form-control datetimepicker"
-                      format={{
-                        format: "DD-MM-YYYY",
-                        type: "mask",
-                      }}
-                      getPopupContainer={getModalContainer}
-                      placeholder="DD-MM-YYYY"
-                      suffixIcon={null}
-                    />
-                    <span className="input-icon-addon">
-                      <i className="ti ti-calendar" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-              {/* end col*/}
-              <div className="col-lg-6">
-                <div className="mb-3">
-                  <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    Time <span className="text-danger">*</span>
-                  </label>
-                  <div className="input-icon-end position-relative">
-                    <TimePicker
-                      className="form-control"
-                      onChange={onChangeTime}
-                      defaultOpenValue={dayjs("00:00:00", "HH:mm:ss")}
-                    />
-                    <span className="input-icon-addon">
-                      <i className="ti ti-clock" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-              {/* end col*/}
-              <div className="col-lg-12">
-                <div className="mb-3">
-                  <div>
-                    <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                      Appointment Reason
-                    </label>
-                    <textarea
-                      rows={4}
-                      className="form-control rounded"
-                      defaultValue={
-                        " An account of the present illness, which includes the circumstances surrounding the onset of recent health changes and the Purpose. "
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-              {/* end col*/}
-              <div className="col-lg-12">
-                <div className="mb-3">
-                  <label className="form-label mb-1 text-dark fs-14 fw-medium">
-                    Status<span className="text-danger">*</span>
-                  </label>
-                  <div className="dropdown">
-                    <Link
-                      to="#"
-                      className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
-                      data-bs-toggle="dropdown"
-                      data-bs-auto-close="outside"
-                      aria-expanded="true"
-                    >
-                      Checked Out
-                    </Link>
-                    <div className="dropdown-menu shadow-lg w-100 dropdown-info">
-                      <div className="mb-3">
-                        <div className="input-icon-start position-relative">
-                          <span className="input-icon-addon fs-12">
-                            <i className="ti ti-search" />
-                          </span>
-                          <input
-                            type="text"
-                            className="form-control form-control-sm"
-                            placeholder="Select"
-                          />
-                        </div>
-                      </div>
-                      <ul className="mb-3 list-style-none">
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            Checked Out
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                              defaultChecked
-                            />
-                            Checked In
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            Cancelled
-                          </label>
-                        </li>
-                        <li>
-                          <label className="dropdown-item px-2 d-flex align-items-center text-dark">
-                            <input
-                              className="form-check-input m-0 me-2"
-                              type="checkbox"
-                            />
-                            Scheduled
-                          </label>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* end col*/}
+      <div className="modal fade" id="edit_appointment" tabIndex={-1} aria-hidden="true">
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px' }}>
+            <div className="modal-header bg-primary border-bottom p-3 px-4 d-flex align-items-center justify-content-between">
+              <h5 className="modal-title fs-18 fw-bold text-white">Edit Appointment</h5>
+              <button
+                type="button"
+                className="btn-close btn-close-white opacity-100"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              />
             </div>
-            {/* end row*/}
-          </form>
-        </div>
-        <div className="offcanvas-footer mb-1 mt-3 p-3 border-1 border-top">
-          <div className=" d-flex justify-content-end gap-2">
-            <Link to="#" className="btn btn-light btm-md">
-              Cancel
-            </Link>
-            <button
-              data-bs-dismiss="offcanvas"
-              className="btn btn-primary btm-md"
-              id="filter-submit2"
-            >
-              Create Create Appointment
-            </button>
+            <div className="modal-body p-4">
+              <form action="#">
+                {/* start row*/}
+                <div className="row">
+                  <div className="col-lg-12">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                        Appointment ID <span className="text-danger">*</span>
+                      </label>
+                      <div className="input-group">
+                        <input
+                          type="text"
+                          className="form-control rounded bg-light"
+                          defaultValue="AP234354"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {/* end col*/}
+                  <div className="col-lg-12">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                        Patient<span className="text-danger">*</span>
+                      </label>
+                      <div className="dropdown">
+                        <Link
+                          to="#"
+                          className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
+                          data-bs-toggle="dropdown"
+                          data-bs-auto-close="outside"
+                          aria-expanded="true"
+                        >
+                          Emily Clark
+                        </Link>
+                        <div className="dropdown-menu shadow-lg w-100 dropdown-info">
+                          <div className="mb-3">
+                            <div className="input-icon-start position-relative">
+                              <span className="input-icon-addon fs-12">
+                                <i className="ti ti-search" />
+                              </span>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                placeholder="Search"
+                              />
+                            </div>
+                          </div>
+                          <ul className="mb-3 list-style-none">
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                <span className="avatar avatar-sm rounded-circle me-2">
+                                  <ImageWithBasePath
+                                    src="assets/img/users/user-02.jpg"
+                                    className="flex-shrink-0 rounded-circle"
+                                    alt="img"
+                                  />
+                                </span>
+                                Emily Clark
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                <span className="avatar avatar-sm rounded-circle me-2">
+                                  <ImageWithBasePath
+                                    src="assets/img/profiles/avatar-01.jpg"
+                                    className="flex-shrink-0 rounded-circle"
+                                    alt="img"
+                                  />
+                                </span>
+                                John Carter
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                <span className="avatar avatar-sm rounded-circle me-2">
+                                  <ImageWithBasePath
+                                    src="assets/img/profiles/avatar-16.jpg"
+                                    className="flex-shrink-0 rounded-circle"
+                                    alt="img"
+                                  />
+                                </span>
+                                Sophia White
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                <span className="avatar avatar-sm rounded-circle me-2">
+                                  <ImageWithBasePath
+                                    src="assets/img/profiles/avatar-15.jpg"
+                                    className="flex-shrink-0 rounded-circle"
+                                    alt="img"
+                                  />
+                                </span>
+                                Michael Johnson
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                <span className="avatar avatar-sm rounded-circle me-2">
+                                  <ImageWithBasePath
+                                    src="assets/img/profiles/avatar-14.jpg"
+                                    className="flex-shrink-0 rounded-circle"
+                                    alt="img"
+                                  />
+                                </span>
+                                Olivia Harris
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                <span className="avatar avatar-sm rounded-circle me-2">
+                                  <ImageWithBasePath
+                                    src="assets/img/profiles/avatar-01.jpg"
+                                    className="flex-shrink-0 rounded-circle"
+                                    alt="img"
+                                  />
+                                </span>
+                                David Anderson
+                              </label>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* end col*/}
+                  <div className="col-lg-12">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                        Appointment Type <span className="text-danger">*</span>
+                      </label>
+                      <div className="dropdown">
+                        <Link
+                          to="#"
+                          className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
+                          data-bs-toggle="dropdown"
+                          data-bs-auto-close="outside"
+                          aria-expanded="true"
+                        >
+                          In Person
+                        </Link>
+                        <div className="dropdown-menu shadow-lg w-100 dropdown-info">
+                          <div className="mb-3">
+                            <div className="input-icon-start position-relative">
+                              <span className="input-icon-addon fs-12">
+                                <i className="ti ti-search" />
+                              </span>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                placeholder="Select"
+                              />
+                            </div>
+                          </div>
+                          <ul className="mb-0 list-style-none">
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                In Person
+                              </label>
+                            </li>
+                            <li className="list-none">
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                Online
+                              </label>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* end col*/}
+                  <div className="col-lg-6">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                        Date of Appointment <span className="text-danger">*</span>
+                      </label>
+                      <div className="input-icon-end position-relative">
+                        <DatePicker
+                          className="form-control datetimepicker"
+                          format={{
+                            format: "DD-MM-YYYY",
+                            type: "mask",
+                          }}
+                          getPopupContainer={getModalContainer}
+                          placeholder="DD-MM-YYYY"
+                          suffixIcon={null}
+                        />
+                        <span className="input-icon-addon">
+                          <i className="ti ti-calendar" />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* end col*/}
+                  <div className="col-lg-6">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                        Time <span className="text-danger">*</span>
+                      </label>
+                      <div className="input-icon-end position-relative">
+                        <TimePicker
+                          className="form-control"
+                          onChange={onChangeTime}
+                          defaultOpenValue={dayjs("00:00:00", "HH:mm:ss")}
+                        />
+                        <span className="input-icon-addon">
+                          <i className="ti ti-clock" />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* end col*/}
+                  <div className="col-lg-12">
+                    <div className="mb-3">
+                      <div>
+                        <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                          Appointment Reason
+                        </label>
+                        <textarea
+                          rows={4}
+                          className="form-control rounded"
+                          defaultValue={
+                            " An account of the present illness, which includes the circumstances surrounding the onset of recent health changes and the Purpose. "
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {/* end col*/}
+                  <div className="col-lg-12">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                        Status<span className="text-danger">*</span>
+                      </label>
+                      <div className="dropdown">
+                        <Link
+                          to="#"
+                          className="dropdown-toggle form-control rounded d-flex align-items-center justify-content-between border"
+                          data-bs-toggle="dropdown"
+                          data-bs-auto-close="outside"
+                          aria-expanded="true"
+                        >
+                          Checked Out
+                        </Link>
+                        <div className="dropdown-menu shadow-lg w-100 dropdown-info">
+                          <div className="mb-3">
+                            <div className="input-icon-start position-relative">
+                              <span className="input-icon-addon fs-12">
+                                <i className="ti ti-search" />
+                              </span>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                placeholder="Select"
+                              />
+                            </div>
+                          </div>
+                          <ul className="mb-3 list-style-none">
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                Checked Out
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                  defaultChecked
+                                />
+                                Checked In
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                Cancelled
+                              </label>
+                            </li>
+                            <li>
+                              <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                                <input
+                                  className="form-check-input m-0 me-2"
+                                  type="checkbox"
+                                />
+                                Scheduled
+                              </label>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* end col*/}
+                </div>
+                {/* end row*/}
+              </form>
+            </div>
+            <div className="modal-footer border-top p-3 d-flex justify-content-end gap-2">
+              <button type="button" className="btn btn-light fw-bold" data-bs-dismiss="modal">
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary fw-bold"
+                id="filter-submit2"
+              >
+                Save Changes
+              </button>
+            </div>
           </div>
         </div>
       </div>

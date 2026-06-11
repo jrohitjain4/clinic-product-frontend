@@ -23,7 +23,7 @@ const Sidebarthree = () => {
     ].includes(location.pathname);
     setOpenSubmenus((prev) => ({
       ...prev,
-      settings: isSettingsRoute ? true : prev.settings,
+      settings: isSettingsRoute,
     }));
   }, [location.pathname, routes]);
 
@@ -130,7 +130,7 @@ const Sidebarthree = () => {
                   <li
                     className={
                       isActive(routes.patientappointments) ||
-                        isActive(routes.patientappointmentdetails)
+                        location.pathname.startsWith("/patient/patient-appointment-details")
                         ? "active"
                         : ""
                     }
@@ -151,7 +151,7 @@ const Sidebarthree = () => {
                   <li
                     className={
                       isActive(routes.patientPrescriptions) ||
-                        isActive(routes.patientprescriptiondetails)
+                        location.pathname.startsWith("/patient/patient-prescription-details")
                         ? "active"
                         : ""
                     }
@@ -164,7 +164,7 @@ const Sidebarthree = () => {
                   <li
                     className={
                       isActive(routes.patientinvoices) ||
-                        isActive(routes.patientinvoicedetails)
+                        location.pathname.startsWith("/patient/patient-invoice-details")
                         ? "active"
                         : ""
                     }

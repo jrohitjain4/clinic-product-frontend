@@ -4,6 +4,7 @@ import { all_routes } from "../../../../routes/all_routes";
 import { useState, useEffect } from "react";
 import { usePrescriptions } from "../../../../../core/hooks/usePrescriptions";
 import html2pdf from 'html2pdf.js';
+import { resolveMediaUrl } from "../../../../../core/config/api";
 
 const PatientPrescriptionDetails = () => {
   const [searchParams] = useSearchParams();
@@ -23,31 +24,138 @@ const PatientPrescriptionDetails = () => {
   const handlePrint = () => window.print();
 
   const handleDownload = () => {
-    const element = document.getElementById('print-prescription');
-    if (!element) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow || !prescription) return;
 
-    const opt = {
-      margin: 0.3,
-      filename: `prescription_${prescription?.prescriptionCode || 'report'}.pdf`,
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
-    };
+    const html = `<html>
+        <head>
+          <title>Prescription - ${prescription.prescriptionCode || 'Record'}</title>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+          <style>
+            body { background: #fff; padding: 40px; font-family: 'Inter', sans-serif; color: #1e293b; }
+            .report-header { border-bottom: 2px solid #4f46e5; margin-bottom: 30px; padding-bottom: 20px; }
+            .logo-box { width: 80px; height: 80px; border: 1px dashed #4f46e5; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fff; }
+            .section-title { font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 15px; font-size: 11px; color: #64748b; letter-spacing: 1px; }
+            .info-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; font-weight: 700; }
+            .info-value { font-size: 13px; font-weight: 700; color: #1e293b; }
+            .rx-symbol { font-size: 32px; font-weight: 700; color: #4f46e5; font-family: serif; }
+            .med-table th { background: #f8fafc; color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #e2e8f0; }
+            .med-table td { font-size: 12px; vertical-align: middle; padding: 12px 8px; border-bottom: 1px solid #f1f5f9; }
+            .advice-box { padding: 20px; border: 1px solid #e2e8f0; background: #fff; border-radius: 4px; font-size: 13px; min-height: 80px; border-left: 4px solid #4f46e5; }
+            @media print { body { padding: 0; } .no-print { display: none; } }
+          </style>
+        </head>
+        <body>
+          <div class="d-flex justify-content-between align-items-start report-header">
+            <div class="d-flex gap-3">
+              <div class="logo-box">
+                <img src="${resolveMediaUrl((prescription as any)?.clinic?.landingPage?.logo) || '/logo.png'}" alt="logo" style="max-height: 60px; max-width: 60px; object-fit: contain;">
+              </div>
+              <div>
+                <h4 class="fw-bold mb-1" style="color: #1e293b; font-size: 22px;">${(prescription as any).clinicName || "DocYari Health Hub"}</h4>
+                <p class="mb-1 text-muted small">${(prescription as any).location || "Clinic Location"}</p>
+                <div class="d-flex gap-2">
+                   <p class="mb-0 small fw-bold text-primary">ID: ${prescription.prescriptionCode || "#---"}</p>
+                   <p class="mb-0 small text-muted">|</p>
+                   <p class="mb-0 small text-muted">Dept: ${prescription.doctor?.department?.name || 'General'}</p>
+                </div>
+              </div>
+            </div>
+            <div class="text-end">
+               <div class="info-label">Prescribed Date</div>
+               <div class="info-value mb-2">${new Date(prescription.createdAt).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+               <span class="badge bg-light text-primary border border-primary-subtle px-3 py-1 fw-bold fs-10">VALID E-PRESCRIPTION</span>
+            </div>
+          </div>
 
-    // Ensure visibility during capture
-    const originalStyle = element.getAttribute('style') || '';
-    element.style.display = 'block';
-    element.style.visibility = 'visible';
-    element.style.position = 'fixed';
-    element.style.left = '-9999px';
-    element.style.background = 'white';
-    element.style.padding = '30px';
+          <div class="bg-light p-3 rounded mb-4 border d-flex justify-content-between">
+            <div>
+               <div class="info-label">Patient Name</div>
+               <div class="info-value" style="font-size: 16px;">${prescription.patient?.firstName} ${prescription.patient?.lastName}</div>
+            </div>
+            <div class="text-center">
+               <div class="info-label">Age / Gender</div>
+               <div class="info-value">${prescription.patient?.dob ? Math.floor((Date.now() - new Date(prescription.patient.dob).getTime()) / 31557600000) : '--'}Y / ${prescription.patient?.gender || '--'}</div>
+            </div>
+            <div class="text-end">
+               <div class="info-label">Patient ID</div>
+               <div class="info-value">${prescription.patient?.patientCode || 'N/A'}</div>
+            </div>
+          </div>
 
-    setTimeout(() => {
-      html2pdf().set(opt).from(element).save().finally(() => {
-        element.setAttribute('style', originalStyle);
-      });
-    }, 500);
+          <div class="mb-2 d-flex align-items-center gap-2">
+             <span class="rx-symbol">Rx</span>
+             <h6 class="section-title mb-0 border-0">Medication Order</h6>
+          </div>
+
+          <table class="table med-table mb-4">
+             <thead>
+                <tr>
+                   <th>S.NO</th>
+                   <th>MEDICINE NAME</th>
+                   <th>DOSAGE</th>
+                   <th>FREQUENCY</th>
+                   <th>DURATION</th>
+                   <th>TIMINGS</th>
+                </tr>
+             </thead>
+             <tbody>
+                ${(prescription.medicines || []).map((med: any, i: number) => `
+                   <tr>
+                      <td class="text-muted fw-bold">${String(i + 1).padStart(2, "0")}</td>
+                      <td class="fw-bold text-dark">${med.medicineName}</td>
+                      <td>${med.dosage || "—"}</td>
+                      <td class="fw-bold text-primary">${med.frequency || "—"}</td>
+                      <td>${med.duration || "—"}</td>
+                      <td>${med.timings || "—"}</td>
+                   </tr>
+                `).join('')}
+             </tbody>
+          </table>
+
+          <div class="row mb-5">
+             <div class="col-7">
+                <h6 class="section-title">Instructions & Advice</h6>
+                <div class="advice-box">
+                   ${prescription.advice || "No specific advice provided."}
+                </div>
+             </div>
+             <div class="col-5">
+                <h6 class="section-title">Doctor Review</h6>
+                <div class="p-3 border rounded">
+                   <div class="info-label">Practitioner</div>
+                   <div class="info-value">${prescription.doctor?.fullName?.startsWith('Dr.') ? prescription.doctor.fullName : `Dr. ${prescription.doctor?.fullName}`}</div>
+                   <div class="info-label">Follow-up Date</div>
+                   <div class="info-value text-primary">${prescription.followUpDate ? new Date(prescription.followUpDate).toLocaleDateString() : 'As Needed'}</div>
+                </div>
+             </div>
+          </div>
+
+          <div class="mt-auto pt-5 text-center border-top">
+             <div class="d-flex justify-content-between align-items-end mb-3">
+                <div class="text-end">
+                   <h6 class="fw-bold mb-1">CLINICAL VISIT REPORT</h6>
+                   <span class="badge bg-primary px-3 py-1 fw-bold fs-10 text-uppercase">${(prescription as any).status || 'Completed'}</span>
+                </div>
+                <div class="text-end">
+                   <p class="info-label mt-1 mb-1">Authorized Medical Signatory</p>
+                   <p class="fw-bold small mb-0">${prescription.doctor?.fullName?.startsWith('Dr.') ? prescription.doctor.fullName : `Dr. ${prescription.doctor?.fullName}`}</p>
+                </div>
+             </div>
+             <p class="mb-1 fw-bold fs-11 text-muted">2025 &copy; Docyari Clinical Solutions</p>
+             <p class="mb-0 italic opacity-50" style="font-size: 9px;">This document is digitally signed and valid without a physical rubber stamp.</p>
+          </div>
+
+          <script>
+            window.onload = () => {
+              setTimeout(() => { window.print(); window.close(); }, 500);
+            };
+          </script>
+        </body>
+      </html>`;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
   };
 
   if (loading) {

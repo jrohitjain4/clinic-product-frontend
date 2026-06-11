@@ -7,6 +7,8 @@ import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
 import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppointments";
 import { usePrescriptions } from "../../../../../core/hooks/usePrescriptions";
+import { useClinicPatients } from "../../../../../core/hooks/useClinicPatients";
+import { useClinicDepartments } from "../../../../../core/hooks/useClinicDepartments";
 import AddPrescriptionModal from "../doctors-prescriptions/AddPrescriptionModal";
 import {
   APPOINTMENT_STATUS_OPTIONS,
@@ -18,6 +20,8 @@ import { toast } from "react-toastify";
 
 const DoctorAppointments = () => {
   const { appointments, loading } = useClinicAppointments();
+  const { patients } = useClinicPatients();
+  const { departments } = useClinicDepartments();
   const [searchText, setSearchText] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterPatient, setFilterPatient] = useState("");
@@ -106,6 +110,14 @@ const DoctorAppointments = () => {
       sorter: (a: any, b: any) => a.SrNo - b.SrNo,
     },
     {
+      title: "Appointment ID",
+      dataIndex: "id",
+      render: (text: string, record: any) => (
+        <span className="text-primary fw-bold">#{record._raw.appointmentCode || text?.slice(-6).toUpperCase()}</span>
+      ),
+      sorter: (a: any, b: any) => (a._raw.appointmentCode || "").localeCompare(b._raw.appointmentCode || ""),
+    },
+    {
       title: "Date & Time",
       dataIndex: "Date_Time",
       sorter: (a: any, b: any) => a.Date_Time.localeCompare(b.Date_Time),
@@ -178,28 +190,28 @@ const DoctorAppointments = () => {
       title: "Action",
       className: "text-center",
       render: (_text: string, record: any) => (
-        <div className="d-flex align-items-center gap-1 justify-content-center">
-          <Link to={all_routes.doctorsappointmentdetails.replace(":id", record.id)} className="btn btn-icon btn-sm btn-soft-info border-0 shadow-none">
-            <i className="ti ti-eye" />
-          </Link>
-          <button
-            className="btn btn-icon btn-sm btn-soft-success border-0 shadow-none"
+        <div className="d-flex align-items-center justify-content-center" style={{ gap: '8px' }}>
+          {/* Quick Add Prescription */}
+          <Link
+            to="#"
+            className="avatar avatar-xs border border-primary text-primary rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent"
+            title="Add Prescription"
             onClick={() => {
               setSelectedAppForPres(record._raw);
               setShowPresModal(true);
             }}
           >
-            <i className="ti ti-file-text" />
-          </button>
-          <Link to="#" className="btn btn-icon btn-sm btn-soft-primary border-0 shadow-none" data-bs-toggle="offcanvas" data-bs-target="#edit_appointment">
-            <i className="ti ti-edit" />
+            <i className="ti ti-file-plus fs-14" />
           </Link>
-          <button className="btn btn-icon btn-sm btn-soft-secondary border-0 shadow-none">
-            <i className="ti ti-printer" />
-          </button>
-          <button className="btn btn-icon btn-sm btn-soft-danger border-0 shadow-none" data-bs-toggle="modal" data-bs-target="#delete_modal">
-            <i className="ti ti-trash" />
-          </button>
+
+          {/* View Details */}
+          <Link
+            to={all_routes.doctorsappointmentdetails.replace(":id", record.id)}
+            className="avatar avatar-xs border border-info text-info rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent"
+            title="View Details"
+          >
+            <i className="ti ti-eye fs-14" />
+          </Link>
         </div>
       ),
     },
@@ -210,38 +222,27 @@ const DoctorAppointments = () => {
       <div className="page-wrapper">
         <div className="content">
           {/* Header with Filters - Cloned from Admin Design */}
-          <div className="d-flex align-items-center pb-3 mb-3 border-bottom overflow-hidden" style={{ gap: '16px' }}>
-            <h4 className="fw-bold mb-0 flex-shrink-0">Appointment</h4>
+          <div className="d-flex align-items-center pb-3 mb-4 border-bottom" style={{ gap: '16px', overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+            <h3 className="fw-bolder mb-0 flex-shrink-0 text-dark">Appointment</h3>
 
-            <div className="d-flex align-items-center flex-nowrap overflow-auto hide-scrollbar" style={{ gap: '12px' }}>
-              {["All", "Schedule", "Confirmed", "Checked Out"].map((s) => (
+            <div className="d-flex align-items-center flex-nowrap overflow-auto flex-grow-1" style={{ gap: '12px', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+              <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+              {["All", "Schedule", "Confirmed", "Checked In", "Checked Out"].map((s) => (
                 <button
                   key={s}
                   className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "All") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-2 fs-12 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
                   onClick={() => setFilterStatus(s)}
                   style={{ borderRadius: '6px', height: '36px' }}
                 >
-                  {s === "Checked Out" ? "Check-out" : s}
+                  {s === "Checked Out" ? "Check-out" : s === "Checked In" ? "Check-in" : s}
                   <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "All") ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>
-                    {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked Out" ? counts.checkedOut : counts.all}
+                    {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : s === "Checked Out" ? counts.checkedOut : counts.all}
                   </span>
                 </button>
               ))}
             </div>
 
             <div className="ms-auto d-flex align-items-center" style={{ gap: '12px' }}>
-              <div className="position-relative" style={{ width: '180px' }}>
-                <input
-                  type="text"
-                  className="form-control bg-white"
-                  style={{ height: '36px', paddingLeft: '35px', fontSize: '13px', fontWeight: 'bold', border: '1px solid #e2e8f0' }}
-                  placeholder="Search Patient..."
-                  value={filterPatient}
-                  onChange={(e) => setFilterPatient(e.target.value)}
-                />
-                <i className="ti ti-search position-absolute top-50 translate-middle-y text-muted" style={{ left: '12px', fontSize: '14px' }} />
-              </div>
-
               <button
                 className="btn btn-sm btn-light border d-flex align-items-center gap-2 fw-bold fs-12 flex-shrink-0 shadow-sm bg-white"
                 style={{ height: '36px', borderRadius: '6px' }}
@@ -251,11 +252,17 @@ const DoctorAppointments = () => {
                 <i className="ti ti-filter fs-14" /> Filters
               </button>
 
+              <div className="d-flex align-items-center gap-1">
+                <button className="btn btn-sm btn-icon btn-primary border shadow-sm" style={{ height: '36px', width: '36px' }}>
+                  <i className="ti ti-list fs-16" />
+                </button>
+              </div>
+
               <Link
                 to="#"
                 className="btn btn-sm btn-primary fw-bold fs-12 d-flex align-items-center shadow-sm flex-shrink-0 text-nowrap"
                 style={{ height: '36px', borderRadius: '6px' }}
-                data-bs-toggle="offcanvas"
+                data-bs-toggle="modal"
                 data-bs-target="#new_appointment"
               >
                 <i className="ti ti-plus me-1" /> New Appointment
@@ -263,14 +270,48 @@ const DoctorAppointments = () => {
             </div>
           </div>
 
-          {/* Table Content */}
-          <div className="table-responsive border rounded bg-white shadow-sm p-0">
-            <Datatable
-              columns={columns}
-              dataSource={filteredData}
-              Selection={true}
-              searchText={searchText}
-            />
+          {/* Table Content - Premium HRM Style */}
+          <div className="card shadow-sm border-0 rounded-4 overflow-hidden mb-0" style={{ borderBottom: '1px solid #e2e8f0' }}>
+            <div className="card-body p-0">
+              <style>{`
+                .custom-table .ant-table { background: transparent; border: 0 !important; }
+                .custom-table .ant-table-container { border: 0 !important; }
+                .custom-table .ant-table-thead > tr > th { 
+                  background: #f8fafc !important; 
+                  color: #475569 !important; 
+                  font-weight: 700 !important; 
+                  text-transform: uppercase; 
+                  font-size: 11px; 
+                  letter-spacing: 0.5px;
+                  border-bottom: 1px solid #e2e8f0 !important;
+                }
+                .custom-table .ant-table-tbody > tr > td { 
+                  padding: 16px 12px !important; 
+                  border-bottom: 1px solid #f1f5f9 !important;
+                }
+                .custom-table .ant-table-tbody > tr:last-child > td {
+                  border-bottom: 0 !important;
+                }
+                .custom-table .ant-table-tbody > tr:hover > td { 
+                  background: #f8fafc !important; 
+                }
+                .custom-table .ant-pagination { 
+                  margin: 16px 16px 0 16px !important; 
+                  padding: 12px 0 16px 0 !important;
+                  border-top: 1px solid #f1f5f9;
+                  width: calc(100% - 32px);
+                }
+                .ant-table-wrapper, .ant-spin-nested-loading, .ant-spin-container, .ant-table { margin-bottom: 0 !important; padding-bottom: 0 !important; }
+              `}</style>
+              <div className="custom-table border-0" style={{ marginBottom: '0 !important' }}>
+                <Datatable
+                  columns={columns}
+                  dataSource={filteredData}
+                  Selection={true}
+                  searchText={searchText}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -291,23 +332,33 @@ const DoctorAppointments = () => {
         <div className="offcanvas-body">
           <div className="mb-3">
             <label className="form-label fw-bold small text-muted text-uppercase mb-2">Patient Profile</label>
-            <input
-              type="text"
-              className="form-control fs-13 py-2"
-              placeholder="Search Name or ID"
+            <select
+              className="form-select fs-13 py-2"
               value={filterPatient}
               onChange={(e) => setFilterPatient(e.target.value)}
-            />
+            >
+              <option value="">All Patients</option>
+              {Array.from(new Set(appointments.map(a => a.patientName))).sort().map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="mb-3">
             <label className="form-label fw-bold small text-muted text-uppercase mb-2">Department</label>
-            <input
-              type="text"
-              className="form-control fs-13 py-2"
-              placeholder="Search Subject / Dept"
+            <select
+              className="form-select fs-13 py-2"
               value={filterDepartment}
               onChange={(e) => setFilterDepartment(e.target.value)}
-            />
+            >
+              <option value="">All Departments</option>
+              {Array.from(new Set(appointments.map(a => a.department?.name))).filter(Boolean).sort().map((name) => (
+                <option key={name as string} value={name as string}>
+                  {name as string}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="mb-3">
             <label className="form-label fw-bold small text-muted text-uppercase mb-2">Appointment Date</label>

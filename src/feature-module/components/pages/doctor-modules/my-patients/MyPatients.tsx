@@ -96,7 +96,7 @@ const MyPatients = () => {
                             const statusLabel = p.status === "Active" ? "Available" : (p.status === "Inactive" ? "Unavailable" : p.status);
 
                             return (
-                                <div key={p.id} className="col-xl-3 col-lg-4 col-md-6 mb-2">
+                                <div key={p.id} className="col-xxl-3 col-xl-4 col-lg-6 col-md-6 col-12 mb-2">
                                     <div className="card h-100 shadow-sm border-0 border-top border-3 border-primary transition-all position-relative">
                                         <div className="card-body d-flex align-items-center p-2 overflow-hidden">
                                             <div className="me-2 ps-1">

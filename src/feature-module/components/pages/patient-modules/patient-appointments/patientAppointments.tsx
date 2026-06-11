@@ -403,25 +403,27 @@ const PatientAppointments = () => {
       <style>{customSelectStyles}</style>
       <div className="page-wrapper">
         <div className="content">
-          <div className="d-flex align-items-center pb-3 mb-3 border-bottom overflow-hidden" style={{ gap: '16px' }}>
-            <h4 className="fw-bold mb-0 flex-shrink-0">Appointment</h4>
-            <div className="d-flex align-items-center flex-nowrap" style={{ gap: '16px' }}>
-              {["All", "Schedule", "Confirmed", "Checked In"].map((s) => (
-                <button
-                  key={s}
-                  className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-2 fs-12 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
-                  onClick={() => setFilterStatus(s)}
-                  style={{ borderRadius: '6px', height: '36px' }}
-                >
-                  {s}
-                  <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>
-                    {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : appointments.filter(a => a.status === s).length}
-                  </span>
-                </button>
-              ))}
+          <div className="d-flex align-items-sm-center flex-column flex-sm-row justify-content-between pb-3 mb-3 border-bottom gap-3 flex-wrap">
+            <div className="d-flex align-items-center flex-wrap gap-3">
+              <h4 className="fw-bold mb-0">Appointment</h4>
+              <div className="d-flex align-items-center flex-wrap gap-2">
+                {["All", "Schedule", "Confirmed", "Checked In"].map((s) => (
+                  <button
+                    key={s}
+                    className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-2 fs-12 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
+                    onClick={() => setFilterStatus(s)}
+                    style={{ borderRadius: '6px', height: '36px' }}
+                  >
+                    {s}
+                    <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>
+                      {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : appointments.filter(a => a.status === s).length}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="d-flex align-items-center" style={{ gap: '16px' }}>
+            <div className="d-flex align-items-center flex-wrap gap-3">
               <div className="position-relative" style={{ width: '185px' }}>
                 <select
                   className="form-select fs-13"
@@ -434,14 +436,23 @@ const PatientAppointments = () => {
                   <option value="Paid">Paid Follow-up</option>
                 </select>
               </div>
+              <div className="position-relative" style={{ width: '185px' }}>
+                <select
+                  className="form-select fs-13"
+                  style={{ height: '36px', fontSize: '13px', fontWeight: 'bold' }}
+                  value={filterDoctor}
+                  onChange={(e) => setFilterDoctor(e.target.value)}
+                >
+                  <option value="">All Doctors</option>
+                  {doctorsList.map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
               <button className="btn btn-sm btn-light border d-flex align-items-center gap-2 fw-bold fs-12 flex-shrink-0 shadow-sm bg-white" style={{ height: '36px', borderRadius: '6px' }} data-bs-toggle="offcanvas" data-bs-target="#filter_drawer">
                 <i className="ti ti-filter fs-14" /> Filter
               </button>
             </div>
-
-            <Link to={all_routes.newAppointment} className="btn btn-sm btn-primary fw-bold fs-12 d-flex align-items-center shadow-sm flex-shrink-0 text-nowrap" style={{ height: '36px', borderRadius: '6px' }}>
-              <i className="ti ti-plus me-1" /> New Appointment
-            </Link>
           </div>
 
           <div className="compact-table">

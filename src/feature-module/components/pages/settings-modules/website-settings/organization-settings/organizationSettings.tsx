@@ -126,8 +126,11 @@ const LandingImageUpload = ({
       }
       const data = await res.json();
       onChange(data.url);
+      toast.success(`${label} uploaded successfully!`);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Upload failed");
+      const msg = e instanceof Error ? e.message : "Upload failed";
+      setError(msg);
+      toast.error(`Error: ${msg}`);
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -344,9 +347,9 @@ const OrganizationSettings = () => {
                           { label: "Phone Number", key: "phone" as keyof HeroForm, type: "text", ph: "+91 98765 43210", required: true, disabled: true },
                           { label: "WhatsApp Number", key: "whatsapp" as keyof HeroForm, type: "text", ph: "+91 98765 43210" },
                           { label: "Email Address", key: "email" as keyof HeroForm, type: "email", ph: "clinic@example.com" },
-                          { label: "Social – Facebook", key: "facebook" as keyof HeroForm, type: "url", ph: "https://facebook.com/yourclinic" },
-                          { label: "Social – Instagram", key: "instagram" as keyof HeroForm, type: "url", ph: "https://instagram.com/yourclinic" },
-                          { label: "Google Map Embed URL", key: "mapUrl" as keyof HeroForm, type: "url", ph: "Paste Google Maps embed link" },
+                          { label: "Social – Facebook", key: "facebook" as keyof HeroForm, type: "text", ph: "https://facebook.com/yourclinic" },
+                          { label: "Social – Instagram", key: "instagram" as keyof HeroForm, type: "text", ph: "https://instagram.com/yourclinic" },
+                          { label: "Google Map Embed URL", key: "mapUrl" as keyof HeroForm, type: "text", ph: "Paste Google Maps embed link" },
                         ] as Array<{ label: string; key: keyof HeroForm; type: string; ph: string; required?: boolean; disabled?: boolean }>).map((f, i) => (
                           <div key={i} className="col-lg-6">
                             <div className="row align-items-center mb-3">

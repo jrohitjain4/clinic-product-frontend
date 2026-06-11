@@ -226,19 +226,28 @@ const DoctorsLeaves = () => {
                   padding: 12px 16px !important; 
                   border-bottom: 1px solid #f1f5f9 !important;
                 }
+                .custom-table .ant-table-tbody > tr:last-child > td {
+                  border-bottom: none !important;
+                }
                 .custom-table .ant-table-tbody > tr:hover > td { 
                   background: #f8fafc !important; 
                 }
                 .custom-table .ant-pagination { 
                   margin: 0 !important; 
-                  padding: 16px !important;
-                  border-top: 1px solid #f1f5f9;
+                  padding: 12px 16px !important;
+                  border-top: 1px solid #e2e8f0;
                 }
-                /* Seal the bottom */
+                .custom-table .ant-table-wrapper { border-radius: 8px; overflow: hidden; }
+                .custom-table .ant-table-content { border-bottom: none !important; }
+                .custom-table .ant-table-body { height: auto !important; max-height: none !important; }
+                .custom-table { height: auto !important; }
+                .custom-table > .card { border: none !important; box-shadow: none !important; margin-bottom: 0 !important; border-radius: 8px !important; overflow: hidden; }
+                .custom-table > .card > .card-body { padding: 0 !important; }
+                .custom-table > .card > .card-body > .table-responsive { border: none !important; }
                 .content { padding: 20px !important; background: transparent !important; }
                 .page-wrapper { background: #f4f7fe !important; min-height: 100vh; }
               `}</style>
-              <div className="table-responsive custom-table">
+              <div className="table-responsive custom-table" style={{ height: 'auto' }}>
                 <Datatable
                   columns={columns}
                   dataSource={data}

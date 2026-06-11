@@ -323,7 +323,7 @@ const DoctorsAppointmentDetails = () => {
 
         <div className="row g-3 mb-4">
           {/* Patient Info */}
-          <div className="col-xl-4 col-lg-4 col-md-6">
+          <div className="col-xxl-4 col-xl-6 col-lg-6 col-md-12">
             <div className="card shadow-sm border rounded-4 mb-0 h-100 overflow-hidden hover-shadow transition-all position-relative">
               <div className="card-body p-4 position-relative z-index-1">
                 <div className="d-flex align-items-start gap-3">
@@ -376,7 +376,7 @@ const DoctorsAppointmentDetails = () => {
           </div>
 
           {/* Doctor Info */}
-          <div className="col-xl-4 col-lg-4 col-md-6">
+          <div className="col-xxl-4 col-xl-6 col-lg-6 col-md-12">
             <div className="card shadow-sm border rounded-4 mb-0 h-100 overflow-hidden hover-shadow transition-all position-relative">
               <div className="card-body p-4 position-relative z-index-1">
                 <div className="d-flex align-items-start gap-3">
@@ -429,7 +429,7 @@ const DoctorsAppointmentDetails = () => {
           </div>
 
           {/* Slot Details */}
-          <div className="col-xl-4 col-lg-4 col-md-12">
+          <div className="col-xxl-4 col-xl-12 col-lg-12 col-md-12">
             <div className="card shadow-sm border rounded-4 mb-0 h-100 overflow-hidden bg-white border-primary-light hover-shadow transition-all position-relative">
               <div className="card-body p-4 position-relative z-index-1">
                 <div className="d-flex justify-content-between align-items-start mb-3">

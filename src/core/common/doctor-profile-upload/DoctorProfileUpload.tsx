@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { apiUrl, resolveMediaUrl } from "../../config/api";
+import { toast } from "react-toastify";
 
 interface DoctorProfileUploadProps {
   value?: string | null;
@@ -41,8 +42,11 @@ const DoctorProfileUpload = ({
 
       const data = await res.json();
       onChange(data.url);
+      toast.success("Profile image uploaded successfully");
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Upload failed");
+      const msg = e instanceof Error ? e.message : "Upload failed";
+      setError(msg);
+      toast.error(`Error: ${msg}`);
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";

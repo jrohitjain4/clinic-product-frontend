@@ -155,25 +155,25 @@ const PatientDetails = () => {
               </div>
               <div className="col-xl-3 col-lg-4">
                 <div className="p-3 text-lg-end">
-                  <div className="mb-4">
-                    <Link
-                      to="#"
-                      className="btn btn-outline-white shadow-sm rounded-circle d-inline-flex align-items-center p-2 fs-14 me-2"
+                  <div className="mb-4 d-flex align-items-center gap-2 justify-content-lg-end">
+                    <a
+                      href={`tel:${patient.phone || ''}`}
+                      className="btn btn-outline-primary shadow-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+                      style={{ width: '42px', height: '42px' }}
+                      title="Call Patient"
                     >
-                      <i className="ti ti-phone" />
-                    </Link>
-                    <Link
-                      to="#"
-                      className="btn btn-outline-white shadow-sm rounded-circle d-inline-flex align-items-center p-2 fs-14 me-2"
+                      <i className="ti ti-phone fs-18" />
+                    </a>
+                    <a
+                      href={`https://wa.me/${(patient.phone || '').replace(/[^0-9]/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-outline-success shadow-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+                      style={{ width: '42px', height: '42px' }}
+                      title="WhatsApp Patient"
                     >
-                      <i className="ti ti-message-circle" />
-                    </Link>
-                    <Link
-                      to="#"
-                      className="btn btn-outline-white shadow-sm rounded-circle d-inline-flex align-items-center p-2 fs-14"
-                    >
-                      <i className="ti ti-video" />
-                    </Link>
+                      <i className="ti ti-brand-whatsapp fs-18" />
+                    </a>
                   </div>
                   <Link
                     to={all_routes.newAppointment}

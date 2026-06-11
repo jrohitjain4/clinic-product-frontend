@@ -173,8 +173,10 @@ const DoctorsList = () => {
       title: "Action",
       dataIndex: "action",
       align: "center",
+      className: "text-nowrap",
+      width: 130,
       render: (_: unknown, record: (typeof tableData)[0]) => (
-        <div className="text-center d-flex align-items-center justify-content-center gap-2">
+        <div className="text-center d-flex align-items-center justify-content-center gap-2 text-nowrap">
           <Link
             to={doctorDetailsPath(record.key)}
             className="btn btn-icon btn-sm btn-soft-secondary"

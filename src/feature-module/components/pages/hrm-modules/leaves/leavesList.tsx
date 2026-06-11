@@ -38,8 +38,8 @@ const LeavesList = () => {
   };
 
   const [rejectModal, setRejectModal] = useState<{ open: boolean; id: string; remark: string }>({ open: false, id: "", remark: "" });
-  const [approveModal, setApproveModal] = useState<{ open: boolean; id: string; startDate: string; endDate: string; isPaid: boolean; adminNotes: string }>({
-    open: false, id: "", startDate: "", endDate: "", isPaid: true, adminNotes: ""
+  const [approveModal, setApproveModal] = useState<{ open: boolean; id: string; startDate: string; endDate: string; isPaid: boolean; adminNotes: string; isApproving: boolean }>({
+    open: false, id: "", startDate: "", endDate: "", isPaid: true, adminNotes: "", isApproving: false
   });
 
   const handleApprove = async () => {
@@ -51,8 +51,12 @@ const LeavesList = () => {
       adminNotes: approveModal.adminNotes
     });
     setApproveModal({ ...approveModal, open: false });
-    if (ok) toast.success("Leave approved successfully");
-    else toast.error("Failed to approve leave");
+    if (ok) {
+      toast.success("Leave approved successfully");
+      document.getElementById("btn-close-approve-leave")?.click();
+    } else {
+      toast.error("Failed to approve leave");
+    }
   };
 
   const handleReject = async () => {
@@ -65,8 +69,12 @@ const LeavesList = () => {
       rejectRemark: rejectModal.remark
     });
     setRejectModal({ ...rejectModal, open: false });
-    if (ok) toast.success("Leave rejected");
-    else toast.error("Failed to reject leave");
+    if (ok) {
+      toast.success("Leave rejected");
+      document.getElementById("btn-close-reject-leave")?.click();
+    } else {
+      toast.error("Failed to reject leave");
+    }
   };
 
   const filteredData = useMemo(() => {
@@ -168,6 +176,8 @@ const LeavesList = () => {
     {
       title: "Action",
       align: "center" as const,
+      className: "text-nowrap",
+      width: 130,
       render: (_: any, record: any) => {
         const storedRole =
           localStorage.getItem("role") ||
@@ -196,7 +206,7 @@ const LeavesList = () => {
           dayjs().isBefore(dayjs(record.endDate));
 
         return (
-          <div className="d-flex align-items-center justify-content-center gap-2">
+          <div className="d-flex align-items-center justify-content-center gap-2 text-nowrap">
             {/* View */}
             <button
               className="bg-transparent border-0 text-info p-1"
@@ -235,6 +245,8 @@ const LeavesList = () => {
             {record.rawStatus === "APPLIED" && isAdmin && (
               <button
                 className="bg-transparent border-0 text-success p-1"
+                data-bs-toggle="modal"
+                data-bs-target="#approve_leave_v2"
                 onClick={(e) => {
                   e.preventDefault();
                   setApproveModal({
@@ -244,6 +256,7 @@ const LeavesList = () => {
                     endDate: record.endDate,
                     isPaid: record.isPaid ?? true,
                     adminNotes: record.adminNotes || "",
+                    isApproving: true,
                   });
                 }}
                 title="Approve"
@@ -258,6 +271,8 @@ const LeavesList = () => {
               isAdmin && (
                 <button
                   className="bg-transparent border-0 text-primary p-1"
+                  data-bs-toggle="modal"
+                  data-bs-target="#approve_leave_v2"
                   onClick={(e) => {
                     e.preventDefault();
                     setApproveModal({
@@ -267,6 +282,7 @@ const LeavesList = () => {
                       endDate: record.endDate,
                       isPaid: record.isPaid ?? true,
                       adminNotes: record.adminNotes || "",
+                      isApproving: false,
                     });
                   }}
                   title="Edit / Review"
@@ -279,6 +295,8 @@ const LeavesList = () => {
             {isAdmin && record.rawStatus === "APPLIED" && (
               <button
                 className="bg-transparent border-0 text-warning p-1"
+                data-bs-toggle="modal"
+                data-bs-target="#reject_leave_v2"
                 onClick={(e) => {
                   e.preventDefault();
                   setRejectModal({ open: true, id: record.id, remark: "" });
@@ -334,7 +352,6 @@ const LeavesList = () => {
           </div>
         );
       },
-      width: 120,
     },
   ];
 
@@ -561,84 +578,138 @@ const LeavesList = () => {
       </div>
 
       {/* ===== REJECT MODAL ===== */}
-      <Modal
-        title="Reject Leave Request"
-        open={rejectModal.open}
-        onOk={handleReject}
-        onCancel={() => setRejectModal({ ...rejectModal, open: false })}
-        okText="Confirm Reject"
-        okButtonProps={{ danger: true }}
-        width={600}
-      >
-        <div className="mb-3">
-          <label className="form-label fw-semibold">
-            Reason for Rejection <span className="text-danger">*</span>
-          </label>
-          <TextArea
-            rows={4}
-            placeholder="Explain why this leave is being rejected..."
-            value={rejectModal.remark}
-            onChange={(e) => setRejectModal({ ...rejectModal, remark: e.target.value })}
-          />
-        </div>
-      </Modal>
-
-      {/* ===== APPROVE / EDIT MODAL ===== */}
-      <Modal
-        title="Review Leave Request"
-        open={approveModal.open}
-        onOk={handleApprove}
-        onCancel={() => setApproveModal({ ...approveModal, open: false })}
-        okText="Approve & Save"
-        width={600}
-      >
-        <div className="row row-gap-3">
-          <div className="col-md-6">
-            <label className="form-label fw-semibold">Start Date</label>
-            <DatePicker
-              className="w-100"
-              value={approveModal.startDate ? dayjs(approveModal.startDate) : null}
-              onChange={(date) =>
-                setApproveModal({ ...approveModal, startDate: date?.toISOString() || "" })
-              }
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label fw-semibold">End Date</label>
-            <DatePicker
-              className="w-100"
-              value={approveModal.endDate ? dayjs(approveModal.endDate) : null}
-              onChange={(date) =>
-                setApproveModal({ ...approveModal, endDate: date?.toISOString() || "" })
-              }
-            />
-          </div>
-          <div className="col-md-12">
-            <div className="d-flex align-items-center justify-content-between p-2 bg-light rounded">
-              <span className="fw-semibold">Mark as Paid Leave?</span>
-              <Switch
-                checked={approveModal.isPaid}
-                onChange={(checked) =>
-                  setApproveModal({ ...approveModal, isPaid: checked })
-                }
-              />
+      <div id="reject_leave_v2" className="modal fade" role="dialog" aria-hidden="true" tabIndex={-1}>
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "15px", overflow: "hidden" }}>
+            <div className="modal-header bg-danger text-white pt-4 px-4 pb-3">
+              <div className="d-flex align-items-center">
+                <div className="bg-white rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
+                  <i className="ti ti-x fs-18 text-danger" />
+                </div>
+                <div>
+                  <h5 className="modal-title fw-bold fs-18 mb-0 text-white">Reject Leave Request</h5>
+                  <p className="text-white-50 mb-0 fs-12">Please provide a reason for rejection</p>
+                </div>
+              </div>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" id="btn-close-reject-leave" aria-label="Close"></button>
+            </div>
+            <div className="modal-body p-4">
+              <div className="mb-0">
+                <label className="form-label fw-bold mb-2">Reason for Rejection <span className="text-danger">*</span></label>
+                <textarea
+                  className="form-control border-danger-subtle"
+                  rows={4}
+                  placeholder="Explain why this leave is being rejected..."
+                  value={rejectModal.remark}
+                  style={{ borderRadius: '10px', backgroundColor: '#fff5f5' }}
+                  onChange={(e) => setRejectModal({ ...rejectModal, remark: e.target.value })}
+                />
+                <div className="form-text text-danger fs-11 mt-2">
+                  <i className="ti ti-info-circle me-1" /> This note will be visible to the employee.
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer border-top p-3 px-4 d-flex align-items-center gap-2 bg-light-subtle">
+              <button type="button" className="btn btn-light border px-4 fw-semibold" data-bs-dismiss="modal" style={{ borderRadius: '8px' }}>Cancel</button>
+              <button
+                type="button"
+                className="btn btn-danger px-4 d-flex align-items-center gap-2 fw-bold"
+                onClick={handleReject}
+                style={{ borderRadius: '8px', boxShadow: '0 4px 12px rgba(220, 53, 69, 0.2)' }}
+              >
+                <i className="ti ti-ban fs-16" /> Confirm Reject
+              </button>
             </div>
           </div>
-          <div className="col-md-12">
-            <label className="form-label fw-semibold">
-              Internal Notes (Optional)
-            </label>
-            <TextArea
-              rows={3}
-              placeholder="Any notes for the records..."
-              value={approveModal.adminNotes}
-              onChange={(e) =>
-                setApproveModal({ ...approveModal, adminNotes: e.target.value })
-              }
-            />
+        </div>
+      </div>
+
+      {/* ===== APPROVE / EDIT MODAL ===== */}
+      <div id="approve_leave_v2" className="modal fade" role="dialog">
+        <div className="modal-dialog modal-dialog-centered modal-lg">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "15px", overflow: "hidden" }}>
+            <div className="modal-header bg-primary text-white pt-4 px-4 pb-3">
+              <div className="d-flex align-items-center">
+                <div className="bg-white-transparent rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
+                  <i className="ti ti-calendar-check fs-18 text-white" />
+                </div>
+                <div>
+                  <h5 className="modal-title fw-bold fs-18 mb-0 text-white">Review Leave Request</h5>
+                </div>
+              </div>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" id="btn-close-approve-leave"></button>
+            </div>
+            <div className="modal-body p-4">
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label fw-bold">Start Date</label>
+                  <DatePicker
+                    className="form-control"
+                    style={{ height: '42px' }}
+                    value={approveModal.startDate ? dayjs(approveModal.startDate) : null}
+                    onChange={(date) =>
+                      setApproveModal({ ...approveModal, startDate: date?.toISOString() || "" })
+                    }
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label fw-bold">End Date</label>
+                  <DatePicker
+                    className="form-control"
+                    style={{ height: '42px' }}
+                    value={approveModal.endDate ? dayjs(approveModal.endDate) : null}
+                    onChange={(date) =>
+                      setApproveModal({ ...approveModal, endDate: date?.toISOString() || "" })
+                    }
+                  />
+                </div>
+                <div className="col-md-12">
+                  <div className="d-flex align-items-center justify-content-between p-3 bg-light rounded border border-dashed border-primary-subtle mt-1" style={{ backgroundColor: '#f8f9ff !important' }}>
+                    <div className="d-flex align-items-center">
+                      <div className="bg-primary-subtle rounded p-2 me-3 d-flex align-items-center justify-content-center" style={{ width: '38px', height: '38px' }}>
+                        <i className="ti ti-cash text-primary fs-16" />
+                      </div>
+                      <div>
+                        <h6 className="mb-0 fw-bold fs-14">Mark as Paid Leave?</h6>
+                        <p className="text-muted fs-12 mb-0">Toggle to set leave as paid or unpaid</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={approveModal.isPaid}
+                      onChange={(checked) =>
+                        setApproveModal({ ...approveModal, isPaid: checked })
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="col-md-12 mt-3">
+                  <label className="form-label fw-bold">Internal Notes (Optional)</label>
+                  <textarea
+                    className="form-control"
+                    rows={3}
+                    placeholder="Any notes for the records..."
+                    value={approveModal.adminNotes}
+                    onChange={(e) =>
+                      setApproveModal({ ...approveModal, adminNotes: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer border-top p-3 px-4 d-flex align-items-center gap-2">
+              <button type="button" className="btn btn-light border px-4" data-bs-dismiss="modal" style={{ borderRadius: '8px' }}>Cancel</button>
+              <button
+                type="button"
+                className="btn btn-primary px-4 d-flex align-items-center gap-2"
+                onClick={handleApprove}
+                style={{ borderRadius: '8px', backgroundColor: '#624bff', borderColor: '#624bff' }}
+              >
+                <i className="ti ti-check fs-16" /> {approveModal.isApproving ? "Approve & Save" : "Save Changes"}
+              </button>
+            </div>
           </div>
         </div>
-      </Modal>
+      </div>
 
       {/* ===== VIEW LEAVE DETAILS MODAL ===== */}
       <ViewModal
@@ -651,15 +722,15 @@ const LeavesList = () => {
         highlightRightSubText="Status"
         highlightColor="#e0f2fe"
         details={[
-            { icon: <i className="ti ti-category" />, label: "Leave Type", value: viewRecord?.LeaveType || "—" },
-            { icon: <i className="ti ti-calendar" />, label: "Start Date", value: viewRecord?.startDate ? dayjs(viewRecord.startDate).format("DD MMM YYYY") : "—" },
-            { icon: <i className="ti ti-calendar-event" />, label: "End Date", value: viewRecord?.endDate ? dayjs(viewRecord.endDate).format("DD MMM YYYY") : "—" },
-            { icon: <i className="ti ti-clock" />, label: "Total Days", value: viewRecord?.Day || "—" },
-            { icon: <i className="ti ti-calendar-plus" />, label: "Applied On", value: viewRecord?.AppliedOn || "—" },
-            { icon: <i className="ti ti-cash" />, label: "Payment Type", value: viewRecord?.isPaid ? "Paid Leave" : "Unpaid Leave" },
-            { icon: <i className="ti ti-file-description" />, label: "Reason", value: viewRecord?.reason || "No reason provided", fullWidth: true },
-            ...(viewRecord?.rejectRemark ? [{ icon: <i className="ti ti-x" />, label: "Rejection Remark", value: viewRecord?.rejectRemark, fullWidth: true }] : []),
-            ...(viewRecord?.adminNotes ? [{ icon: <i className="ti ti-notes" />, label: "Internal Admin Notes", value: viewRecord?.adminNotes, fullWidth: true }] : [])
+          { icon: <i className="ti ti-category" />, label: "Leave Type", value: viewRecord?.LeaveType || "—" },
+          { icon: <i className="ti ti-calendar" />, label: "Start Date", value: viewRecord?.startDate ? dayjs(viewRecord.startDate).format("DD MMM YYYY") : "—" },
+          { icon: <i className="ti ti-calendar-event" />, label: "End Date", value: viewRecord?.endDate ? dayjs(viewRecord.endDate).format("DD MMM YYYY") : "—" },
+          { icon: <i className="ti ti-clock" />, label: "Total Days", value: viewRecord?.Day || "—" },
+          { icon: <i className="ti ti-calendar-plus" />, label: "Applied On", value: viewRecord?.AppliedOn || "—" },
+          { icon: <i className="ti ti-cash" />, label: "Payment Type", value: viewRecord?.isPaid ? "Paid Leave" : "Unpaid Leave" },
+          { icon: <i className="ti ti-file-description" />, label: "Reason", value: viewRecord?.reason || "No reason provided", fullWidth: true },
+          ...(viewRecord?.rejectRemark ? [{ icon: <i className="ti ti-x" />, label: "Rejection Remark", value: viewRecord?.rejectRemark, fullWidth: true }] : []),
+          ...(viewRecord?.adminNotes ? [{ icon: <i className="ti ti-notes" />, label: "Internal Admin Notes", value: viewRecord?.adminNotes, fullWidth: true }] : [])
         ]}
       />
     </>

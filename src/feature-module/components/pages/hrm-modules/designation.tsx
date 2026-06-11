@@ -353,8 +353,10 @@ const DesignationList = () => {
     {
       title: "Action",
       align: "center" as const,
+      className: "text-nowrap",
+      width: 120,
       render: (_: any, record: Designation) => (
-        <div className="d-flex align-items-center justify-content-center gap-2">
+        <div className="d-flex align-items-center justify-content-center gap-2 text-nowrap">
           {/* View Icon */}
           <button
             type="button"
@@ -392,7 +394,6 @@ const DesignationList = () => {
           </button>
         </div>
       ),
-      width: 100,
     },
   ];
 
@@ -740,6 +741,35 @@ const DesignationList = () => {
                 )}
                 <div className="mb-3">
                   <label className="form-label fw-semibold">
+                    Department <span className="text-danger ms-1">*</span>
+                  </label>
+                  <select
+                    className="form-select"
+                    value={addDeptId}
+                    onChange={(e) => setAddDeptId(e.target.value)}
+                  >
+                    <option value="">-- Select Department --</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
+                    Designation Name <span className="text-danger ms-1">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={addName}
+                    onChange={(e) => setAddName(e.target.value)}
+                    placeholder="e.g. Senior Nurse"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
                     Type <span className="text-danger ms-1">*</span>
                   </label>
                   <div className="d-flex align-items-center gap-3">
@@ -770,35 +800,6 @@ const DesignationList = () => {
                       </label>
                     </div>
                   </div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label fw-semibold">
-                    Designation Name <span className="text-danger ms-1">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={addName}
-                    onChange={(e) => setAddName(e.target.value)}
-                    placeholder="e.g. Senior Nurse"
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label fw-semibold">
-                    Department <span className="text-danger ms-1">*</span>
-                  </label>
-                  <select
-                    className="form-select"
-                    value={addDeptId}
-                    onChange={(e) => setAddDeptId(e.target.value)}
-                  >
-                    <option value="">-- Select Department --</option>
-                    {departments.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.name}
-                      </option>
-                    ))}
-                  </select>
                 </div>
                 <div className="mb-3">
                   <label className="form-label fw-semibold">Description</label>
@@ -865,6 +866,35 @@ const DesignationList = () => {
                 )}
                 <div className="mb-3">
                   <label className="form-label fw-semibold">
+                    Department <span className="text-danger ms-1">*</span>
+                  </label>
+                  <select
+                    className="form-select"
+                    value={editDeptId}
+                    onChange={(e) => setEditDeptId(e.target.value)}
+                  >
+                    <option value="">-- Select Department --</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
+                    Designation Name <span className="text-danger ms-1">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="e.g. Senior Nurse"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
                     Type <span className="text-danger ms-1">*</span>
                   </label>
                   <div className="d-flex align-items-center gap-3">
@@ -895,27 +925,6 @@ const DesignationList = () => {
                       </label>
                     </div>
                   </div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Designation Name <span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" value={editName} onChange={e => setEditName(e.target.value)} placeholder="e.g. Senior Nurse" />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label fw-semibold">
-                    Department <span className="text-danger ms-1">*</span>
-                  </label>
-                  <select
-                    className="form-select"
-                    value={editDeptId}
-                    onChange={(e) => setEditDeptId(e.target.value)}
-                  >
-                    <option value="">-- Select Department --</option>
-                    {departments.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.name}
-                      </option>
-                    ))}
-                  </select>
                 </div>
                 <div className="mb-3">
                   <label className="form-label fw-bold">Description</label>
@@ -1032,23 +1041,23 @@ const DesignationList = () => {
         headerIcon={<i className="ti ti-briefcase" />}
         highlightTitle={viewDesig?.name || "Designation"}
         highlightStatus={
-            <span className={`badge border ${viewDesig?.status === "Active" ? "bg-success-transparent text-success border-success" : "bg-danger-transparent text-danger border-danger"} fw-bold px-2 py-1`} style={{ fontSize: "10px", borderRadius: "10px" }}>
-                <i className="ti ti-point-filled me-1"></i>{viewDesig?.status || "Active"}
-            </span>
+          <span className={`badge border ${viewDesig?.status === "Active" ? "bg-success-transparent text-success border-success" : "bg-danger-transparent text-danger border-danger"} fw-bold px-2 py-1`} style={{ fontSize: "10px", borderRadius: "10px" }}>
+            <i className="ti ti-point-filled me-1"></i>{viewDesig?.status || "Active"}
+          </span>
         }
         highlightRightText={viewDesig?.type || "Type"}
         highlightRightSubText="Type"
         highlightColor="#e0f2fe"
         details={[
-            { icon: <i className="ti ti-bookmark" />, label: "Designation Name", value: viewDesig?.name || "—" },
-            { icon: <i className="ti ti-category" />, label: "Type", value: viewDesig?.type || "—" },
-            { icon: <i className="ti ti-building" />, label: "Department", value: viewDesig?.departmentName || "—" },
-            { icon: <i className="ti ti-circle-check" />, label: "Status", value: viewDesig?.status || "—" },
-            { icon: <i className="ti ti-calendar" />, label: "Created On", value: viewDesig?.createdAt ? new Date(viewDesig.createdAt).toLocaleDateString("en-GB") : "—" },
-            { icon: <i className="ti ti-file-description" />, label: "Description", value: viewDesig?.description || "No description provided", fullWidth: true }
+          { icon: <i className="ti ti-bookmark" />, label: "Designation Name", value: viewDesig?.name || "—" },
+          { icon: <i className="ti ti-category" />, label: "Type", value: viewDesig?.type || "—" },
+          { icon: <i className="ti ti-building" />, label: "Department", value: viewDesig?.departmentName || "—" },
+          { icon: <i className="ti ti-circle-check" />, label: "Status", value: viewDesig?.status || "—" },
+          { icon: <i className="ti ti-calendar" />, label: "Created On", value: viewDesig?.createdAt ? new Date(viewDesig.createdAt).toLocaleDateString("en-GB") : "—" },
+          { icon: <i className="ti ti-file-description" />, label: "Description", value: viewDesig?.description || "No description provided", fullWidth: true }
         ]}
         onEdit={() => {
-            if (viewDesig) openEdit(viewDesig);
+          if (viewDesig) openEdit(viewDesig);
         }}
         editLabel="Edit Designation"
         editModalTarget="#edit_designation"

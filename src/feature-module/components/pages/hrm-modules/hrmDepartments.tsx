@@ -83,13 +83,15 @@ const HrmDepartments = () => {
 
       if (filterDatePreset === "Today") {
         matchDate = itemDate.isSame(dayjs(), "day");
-      } else if (filterDatePreset === "Tomorrow") {
-        matchDate = itemDate.isSame(dayjs().add(1, "day"), "day");
-      } else if (filterDatePreset === "7 Days") {
-        matchDate = itemDate.isAfter(dayjs().subtract(7, "days")) && itemDate.isBefore(dayjs().add(1, "day"), "day");
+      } else if (filterDatePreset === "Yesterday") {
+        matchDate = itemDate.isSame(dayjs().subtract(1, "day"), "day");
+      } else if (filterDatePreset === "This Week") {
+        matchDate = itemDate.isAfter(dayjs().startOf("week").subtract(1, "day")) && itemDate.isBefore(dayjs().endOf("week").add(1, "day"));
+      } else if (filterDatePreset === "This Month") {
+        matchDate = itemDate.isSame(dayjs(), "month");
       } else if (filterDatePreset === "Custom") {
         if (customRange[0] && customRange[1]) {
-          matchDate = itemDate.isAfter(customRange[0].startOf("day")) && itemDate.isBefore(customRange[1].endOf("day"));
+          matchDate = itemDate.isAfter(customRange[0].startOf("day").subtract(1, "second")) && itemDate.isBefore(customRange[1].endOf("day").add(1, "second"));
         }
       }
 
@@ -265,8 +267,10 @@ const HrmDepartments = () => {
     {
       title: "Action",
       align: "center" as const,
+      className: "text-nowrap",
+      width: 120,
       render: (_: any, record: Department) => (
-        <div className="d-flex align-items-center justify-content-center gap-2">
+        <div className="d-flex align-items-center justify-content-center gap-2 text-nowrap">
           {/* View Icon */}
           <button
             type="button"
@@ -304,7 +308,6 @@ const HrmDepartments = () => {
           </button>
         </div>
       ),
-      width: 100,
     },
   ];
 
@@ -355,13 +358,14 @@ const HrmDepartments = () => {
                   </span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2" style={{ minWidth: "200px" }}>
-                  {["All", "Today", "Tomorrow", "7 Days", "Custom"].map((preset) => (
+                  {["All", "Today", "Yesterday", "This Week", "This Month", "Custom"].map((preset) => (
                     <li key={preset}>
                       <Link
                         to="#"
                         className="dropdown-item rounded-1"
                         onClick={(e) => {
                           e.preventDefault();
+                          if (preset === "Custom") e.stopPropagation();
                           setFilterDatePreset(preset);
                         }}
                       >

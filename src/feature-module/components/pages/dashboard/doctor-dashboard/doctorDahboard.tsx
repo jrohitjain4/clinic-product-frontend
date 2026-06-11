@@ -170,7 +170,7 @@ const DoctorDahboard = () => {
           {/* row start */}
           <div className="row g-2">
             {/* col start */}
-            <div className="col-xl-4 d-flex">
+            <div className="col-xxl-4 col-xl-12 col-12 d-flex">
               {/* card start */}
               <div className="card shadow-sm flex-fill w-100">
                 <div className="card-header d-flex align-items-center justify-content-between">
@@ -272,7 +272,7 @@ const DoctorDahboard = () => {
             </div>
             {/* col end */}
             {/* col start */}
-            <div className="col-xl-8 d-flex">
+            <div className="col-xxl-8 col-xl-12 col-12 d-flex">
               {/* card start */}
               <div className="card shadow-sm flex-fill w-100">
                 <div className="card-header d-flex align-items-center justify-content-between">
@@ -460,7 +460,7 @@ const DoctorDahboard = () => {
           {/* row start */}
           <div className="row g-2">
             {/* col start */}
-            <div className="col-xl-4 d-flex">
+            <div className="col-xxl-4 col-xl-6 col-lg-6 col-12 d-flex">
               <div className="card shadow-sm flex-fill w-100">
                 <div className="card-header d-flex align-items-center justify-content-between">
                   <h5 className="fw-bold mb-0">Availability</h5>
@@ -554,7 +554,7 @@ const DoctorDahboard = () => {
             </div>
             {/* col end */}
             {/* col start */}
-            <div className="col-xl-4 col-lg-6 d-flex">
+            <div className="col-xxl-4 col-xl-6 col-lg-6 col-12 d-flex">
               <div className="card shadow-sm flex-fill w-100">
                 <div className="card-header d-flex align-items-center justify-content-between">
                   <h5 className="fw-bold mb-0 text-truncate">

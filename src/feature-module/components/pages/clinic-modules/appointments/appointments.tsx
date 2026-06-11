@@ -43,6 +43,120 @@ const Appointments = () => {
       margin-bottom: 0 !important;
       border-radius: 8px !important;
     }
+
+    /* Appointments responsive filter line classes */
+    .appointments-filter-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: nowrap;
+      width: 100%;
+    }
+    .appointments-filter-line h4 {
+      font-size: 16px !important;
+    }
+    .status-buttons-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+      gap: 4px;
+    }
+    .status-btn {
+      padding: 0 8px !important;
+      font-weight: 700 !important;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 1px;
+      text-wrap: nowrap;
+      border-radius: 6px !important;
+      height: 32px !important;
+      font-size: 11px !important;
+    }
+    .count-badge {
+      font-size: 10px !important;
+      padding: 2px 4px !important;
+    }
+    .follow-up-select-wrapper {
+      width: 125px;
+      flex-shrink: 0;
+    }
+    .follow-up-select {
+      height: 32px !important;
+      font-size: 11px !important;
+      font-weight: bold !important;
+      padding: 0 24px 0 8px !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+    }
+    .filter-btn {
+      height: 32px !important;
+      border-radius: 6px !important;
+      font-size: 11px !important;
+      padding: 0 8px !important;
+      font-weight: 700 !important;
+      background-color: #fff !important;
+      flex-shrink: 0;
+    }
+    .filter-btn i {
+      font-size: 13px !important;
+    }
+    .new-appointment-btn {
+      height: 32px !important;
+      border-radius: 6px !important;
+      font-size: 11px !important;
+      padding: 0 10px !important;
+      font-weight: 700 !important;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    /* Standard large screen (100% zoom / wide screen) styling */
+    @media (min-width: 1400px) {
+      .appointments-filter-line {
+        gap: 16px;
+      }
+      .appointments-filter-line h4 {
+        font-size: 18px !important;
+      }
+      .status-buttons-group {
+        gap: 12px;
+      }
+      .status-btn {
+        padding: 0 12px !important;
+        height: 36px !important;
+        font-size: 12px !important;
+        gap: 2px;
+      }
+      .count-badge {
+        font-size: 11px !important;
+        padding: 3px 6px !important;
+      }
+      .follow-up-select-wrapper {
+        width: 165px;
+      }
+      .follow-up-select {
+        height: 36px !important;
+        font-size: 13px !important;
+        padding: 0 24px 0 12px !important;
+      }
+      .filter-btn {
+        height: 36px !important;
+        font-size: 12px !important;
+        padding: 0 12px !important;
+      }
+      .filter-btn i {
+        font-size: 14px !important;
+      }
+      .new-appointment-btn {
+        height: 36px !important;
+        font-size: 12px !important;
+        padding: 0 12px !important;
+      }
+    }
   `;
 
   const { appointments, loading, error, refetch, reload, updateAppointmentStatus } = useClinicAppointments();
@@ -51,9 +165,14 @@ const Appointments = () => {
   const [searchText, setSearchText] = useState("");
 
   const handleStatusToggle = async (appointmentId: string, currentStatus: string) => {
-    if (currentStatus === "Checked In") {
+    let nextStatus = "";
+    if (currentStatus === "Schedule") nextStatus = "Confirmed";
+    else if (currentStatus === "Confirmed") nextStatus = "Checked In";
+    else if (currentStatus === "Checked In") nextStatus = "Checked Out";
+
+    if (nextStatus) {
       try {
-        await updateAppointmentStatus(appointmentId, "Checked Out");
+        await updateAppointmentStatus(appointmentId, nextStatus);
       } catch (err) {
         console.error("Error updating status:", err);
       }
@@ -406,7 +525,7 @@ const Appointments = () => {
         return (
           <div className="d-flex flex-column align-items-start gap-1">
             <span className={`badge ${statusBadgeClass(text)} `}>{text}</span>
-            {text === "Checked In" && (
+            {["Schedule", "Confirmed", "Checked In"].includes(text) && (
               <div className="form-check form-switch p-0 ms-2" style={{ minHeight: 'auto' }}>
                 <input
                   className="form-check-input ms-0"
@@ -416,7 +535,9 @@ const Appointments = () => {
                   onChange={() => handleStatusToggle(raw.id, text)}
                   style={{ cursor: 'pointer', width: '30px', height: '16px' }}
                 />
-                <label className="text-muted small ms-1" style={{ fontSize: '10px' }}>Checkout</label>
+                <label className="text-muted small ms-1" style={{ fontSize: '10px' }}>
+                  {text === "Schedule" ? "Confirm" : text === "Confirmed" ? "Checkin" : "Checkout"}
+                </label>
               </div>
             )}
             {raw?.isFollowUp && (
@@ -432,10 +553,11 @@ const Appointments = () => {
     },
     {
       title: "Action",
-      className: "text-center",
+      className: "text-center text-nowrap",
+      width: 140,
       align: "center" as const,
       render: (_: any, record: any) => (
-        <div className="d-flex align-items-center gap-2 justify-content-center">
+        <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
           <Link to={all_routes.appointmentDetails.replace(":id", record._raw.id)} className="text-info p-1" title="View"><i className="ti ti-eye fs-18" /></Link>
           <Link to={all_routes.editAppointment.replace(":id", record._raw.id)} className="text-primary p-1" title="Edit"><i className="ti ti-edit fs-18" /></Link>
           <button className="bg-transparent border-0 text-secondary p-1" onClick={() => handlePrintAppointment(record._raw)} title="Print"><i className="ti ti-printer fs-18" /></button>
@@ -450,48 +572,56 @@ const Appointments = () => {
       <style>{customSelectStyles}</style>
       <div className="page-wrapper">
         <div className="content">
-          <div className="d-flex align-items-center pb-3 mb-3 border-bottom overflow-hidden" style={{ gap: '16px' }}>
-            <h4 className="fw-bold mb-0 flex-shrink-0">Appointment</h4>
-            <div className="d-flex align-items-center flex-nowrap" style={{ gap: '16px' }}>
+          <div className="appointments-filter-line pb-3 mb-3 border-bottom">
+            <h4 className="fw-bold mb-0 text-dark flex-shrink-0">Appointment</h4>
+            <div className="status-buttons-group">
               {["All", "Schedule", "Confirmed", "Checked In"].map((s) => (
                 <button
                   key={s}
-                  className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-2 fs-12 fw-bold flex-shrink-0 d-flex align-items-center gap-1 text-nowrap`}
+                  className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} status-btn`}
                   onClick={() => setFilterStatus(s)}
-                  style={{ borderRadius: '6px', height: '36px' }}
                 >
                   {s}
-                  <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>
+                  <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1 count-badge`}>
                     {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : appointments.filter(a => a.status === s).length}
                   </span>
                 </button>
               ))}
             </div>
 
-            <div className="d-flex align-items-center" style={{ gap: '16px' }}>
-              <div className="position-relative" style={{ width: '165px' }}>
-                <select
-                  className="form-select fs-13"
-                  style={{ height: '36px', fontSize: '13px', fontWeight: 'bold' }}
-                  value={filterFollowUp}
-                  onChange={(e) => setFilterFollowUp(e.target.value)}
-                >
-                  <option value="All">Follow-up Status</option>
-                  <option value="Free">Free Follow-up</option>
-                  <option value="Paid">Paid Follow-up</option>
-                </select>
-              </div>
-              <button className="btn btn-sm btn-light border d-flex align-items-center gap-2 fw-bold fs-12 flex-shrink-0 shadow-sm bg-white" style={{ height: '36px', borderRadius: '6px' }} data-bs-toggle="offcanvas" data-bs-target="#filter_drawer">
-                <i className="ti ti-filter fs-14" /> Filter
-              </button>
+            <div className="position-relative follow-up-select-wrapper">
+              {/* Large screen select */}
+              <select
+                className="form-select follow-up-select d-none d-xxl-block"
+                value={filterFollowUp}
+                onChange={(e) => setFilterFollowUp(e.target.value)}
+              >
+                <option value="All">Follow-up Status</option>
+                <option value="Free">Free Follow-up</option>
+                <option value="Paid">Paid Follow-up</option>
+              </select>
+              {/* Small screen select */}
+              <select
+                className="form-select follow-up-select d-block d-xxl-none"
+                value={filterFollowUp}
+                onChange={(e) => setFilterFollowUp(e.target.value)}
+              >
+                <option value="All">Follow-up...</option>
+                <option value="Free">Free Follow-up</option>
+                <option value="Paid">Paid Follow-up</option>
+              </select>
             </div>
 
-            <Link to={all_routes.newAppointment} className="btn btn-sm btn-primary fw-bold fs-12 d-flex align-items-center shadow-sm flex-shrink-0 text-nowrap" style={{ height: '36px', borderRadius: '6px' }}>
+            <button className="btn btn-sm btn-light border filter-btn" data-bs-toggle="offcanvas" data-bs-target="#filter_drawer">
+              <i className="ti ti-filter" /> Filter
+            </button>
+
+            <Link to={all_routes.newAppointment} className="btn btn-sm btn-primary new-appointment-btn">
               <i className="ti ti-plus me-1" /> New Appointment
             </Link>
           </div>
 
-          <div className="compact-table">
+          <div className="table-responsive border rounded bg-white compact-table">
             <Datatable
               columns={columns}
               dataSource={filteredData}

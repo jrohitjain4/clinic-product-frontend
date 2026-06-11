@@ -159,8 +159,10 @@ const StaffsList = () => {
     {
       title: "Action",
       align: "center",
+      className: "text-nowrap",
+      width: 130,
       render: (_: unknown, record: (typeof tableData)[0]) => (
-        <div className="d-flex align-items-center justify-content-center gap-2">
+        <div className="d-flex align-items-center justify-content-center gap-2 text-nowrap">
           {/* View Icon */}
           <button
             type="button"
@@ -410,24 +412,24 @@ const StaffsList = () => {
         headerIcon={<i className="ti ti-user-circle" />}
         highlightTitle={viewStaff?.fullName || "Staff Member"}
         highlightStatus={
-            <span className="badge bg-success-transparent text-success fw-bold px-2 py-1" style={{ fontSize: "10px", borderRadius: "10px" }}>
-                <i className="ti ti-point-filled me-1"></i>Active
-            </span>
+          <span className="badge bg-success-transparent text-success fw-bold px-2 py-1" style={{ fontSize: "10px", borderRadius: "10px" }}>
+            <i className="ti ti-point-filled me-1"></i>Active
+          </span>
         }
         highlightRightText={viewStaff?.role || "Staff"}
         highlightRightSubText="Role"
         highlightColor="#f3e8ff"
         details={[
-            { icon: <i className="ti ti-mail" />, label: "Email", value: viewStaff?.email || "—" },
-            { icon: <i className="ti ti-phone" />, label: "Phone", value: viewStaff?.phone || "—" },
-            { icon: <i className="ti ti-briefcase" />, label: "Designation", value: viewStaff?.designationName || viewStaff?.designation?.name || "—" },
-            { icon: <i className="ti ti-gender-intergender" />, label: "Gender", value: viewStaff?.gender || "—" },
-            { icon: <i className="ti ti-calendar" />, label: "Date of Birth", value: viewStaff?.dob ? new Date(viewStaff.dob).toLocaleDateString("en-GB") : "—" },
-            { icon: <i className="ti ti-droplet" />, label: "Blood Group", value: viewStaff?.bloodGroup || "—" },
-            { icon: <i className="ti ti-map-pin" />, label: "Address", value: [viewStaff?.address1, viewStaff?.address2, viewStaff?.city, viewStaff?.state, viewStaff?.country, viewStaff?.pincode].filter(Boolean).join(", ") || "—", fullWidth: true }
+          { icon: <i className="ti ti-mail" />, label: "Email", value: viewStaff?.email || "—" },
+          { icon: <i className="ti ti-phone" />, label: "Phone", value: viewStaff?.phone || "—" },
+          { icon: <i className="ti ti-briefcase" />, label: "Designation", value: viewStaff?.designationName || viewStaff?.designation?.name || "—" },
+          { icon: <i className="ti ti-gender-intergender" />, label: "Gender", value: viewStaff?.gender || "—" },
+          { icon: <i className="ti ti-calendar" />, label: "Date of Birth", value: viewStaff?.dob ? new Date(viewStaff.dob).toLocaleDateString("en-GB") : "—" },
+          { icon: <i className="ti ti-droplet" />, label: "Blood Group", value: viewStaff?.bloodGroup || "—" },
+          { icon: <i className="ti ti-map-pin" />, label: "Address", value: [viewStaff?.address1, viewStaff?.address2, viewStaff?.city, viewStaff?.state, viewStaff?.country, viewStaff?.pincode].filter(Boolean).join(", ") || "—", fullWidth: true }
         ]}
         onEdit={() => {
-            setSelected(viewStaff);
+          setSelected(viewStaff);
         }}
         editLabel="Edit Staff"
         editModalTarget="#edit_staff"

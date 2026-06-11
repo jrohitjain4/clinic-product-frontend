@@ -90,8 +90,10 @@ const LeaveType = () => {
     {
       title: "Action",
       align: "center" as const,
+      className: "text-nowrap",
+      width: 120,
       render: (_text: any, record: any) => (
-        <div className="d-flex align-items-center justify-content-center gap-2">
+        <div className="d-flex align-items-center justify-content-center gap-2 text-nowrap">
           {/* Edit Icon */}
           <button
             className="bg-transparent border-0 text-primary p-1"
@@ -123,7 +125,6 @@ const LeaveType = () => {
           </button>
         </div>
       ),
-      width: 100,
     },
   ];
 

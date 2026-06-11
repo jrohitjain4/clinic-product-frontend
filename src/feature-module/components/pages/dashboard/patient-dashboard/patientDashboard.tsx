@@ -46,7 +46,7 @@ const PatientDashboard = () => {
           {/* row start */}
           <div className="row g-2">
             {/* col start */}
-            <div className="col-xl-3 col-md-6 d-flex">
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
               <div className="card flex-fill w-100 shadow-sm">
                 <div className="card-body">
                   <div className="d-flex align-items-center mb-4">
@@ -69,7 +69,7 @@ const PatientDashboard = () => {
             </div>
             {/* col end */}
             {/* col start */}
-            <div className="col-xl-3 col-md-6 d-flex">
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
               <div className="card flex-fill w-100 shadow-sm">
                 <div className="card-body">
                   <div className="d-flex align-items-center mb-4">
@@ -92,7 +92,7 @@ const PatientDashboard = () => {
             </div>
             {/* col end */}
             {/* col start */}
-            <div className="col-xl-3 col-md-6 d-flex">
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
               <div className="card flex-fill w-100 shadow-sm">
                 <div className="card-body">
                   <div className="d-flex align-items-center justify-content-between mb-3">
@@ -115,7 +115,7 @@ const PatientDashboard = () => {
             </div>
             {/* col end */}
             {/* col start */}
-            <div className="col-xl-3 col-md-6 d-flex">
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
               <div className="card flex-fill w-100 shadow-sm">
                 <div className="card-body">
                   <div className="d-flex align-items-center justify-content-between mb-3">
@@ -142,7 +142,7 @@ const PatientDashboard = () => {
           {/* row start */}
           <div className="row g-2">
             {/* col start */}
-            <div className="col-xl-4 col-lg-6 d-flex">
+            <div className="col-xxl-4 col-xl-6 col-lg-6 col-12 d-flex">
               <div className="card shadow-sm flex-fill w-100">
                 <div className="card-header d-flex align-items-center justify-content-between">
                   <h5 className="fw-bold mb-0">My Doctors</h5>
@@ -180,7 +180,7 @@ const PatientDashboard = () => {
             </div>
             {/* col end */}
             {/* col start */}
-            <div className="col-xl-4 col-lg-6 d-flex">
+            <div className="col-xxl-4 col-xl-6 col-lg-6 col-12 d-flex">
               <div className="card shadow-sm flex-fill w-100">
                 <div className="card-header d-flex align-items-center justify-content-between">
                   <h5 className="fw-bold mb-0">Prescriptions</h5>
@@ -245,7 +245,7 @@ const PatientDashboard = () => {
             </div>
             {/* col end */}
             {/* col start */}
-            <div className="col-xl-4 d-flex">
+            <div className="col-xxl-4 col-xl-12 col-12 d-flex">
               <div className="card shadow-sm flex-fill w-100">
                 <div className="card-header d-flex align-items-center justify-content-between">
                   <h5 className="fw-bold mb-0">Recent Activity</h5>
@@ -322,7 +322,7 @@ const PatientDashboard = () => {
             </div>
             <div className="card-body">
               {/* row start */}
-              <div className="row g-2 row-gap-3 row-cols-1 row-cols-xl-6 row-cols-md-3 row-cols-sm-2">
+              <div className="row g-2 row-gap-3 row-cols-1 row-cols-xxl-6 row-cols-xl-3 row-cols-md-3 row-cols-sm-2">
                 {/* col start */}
                 <div className="col d-flex">
                   <div className="p-3 border shadow-sm flex-fill w-100 rounded-2">

@@ -127,12 +127,14 @@
   .mobile-header-actions {
     width: 100%;
   }
-  .mobile-header-actions > .dropdown,
-  .mobile-header-actions > .ant-picker {
+
+  .mobile-header-actions>.dropdown,
+  .mobile-header-actions>.ant-picker {
     flex: 1 1 calc(50% - 8px) !important;
     min-width: 130px !important;
   }
-  .mobile-header-actions > .btn {
+
+  .mobile-header-actions>.btn {
     flex: 1 1 100% !important;
     width: 100% !important;
   }
@@ -690,12 +692,12 @@ html[data-color="primary"] {
     border: none !important;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
   }
-  
+
   .modal-header.bg-primary {
     background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%) !important;
     color: white !important;
     border-bottom: none !important;
-    
+
     .modal-title {
       color: white !important;
     }
@@ -706,7 +708,9 @@ html[data-color="primary"] {
     .settings-sidebar {
       border-right: none !important;
     }
-    > .card, > .flex-fill {
+
+    >.card,
+    >.flex-fill {
       border-left: 1px solid #e2e8f0 !important;
       border-radius: 0 !important;
       background: white !important;
@@ -1117,25 +1121,30 @@ html[data-color="primary"] {
 }
 
 /* Global Page/Section Header Adjustments */
-.section-header, .page-header, .page-wrapper > .content > div:first-child {
+.section-header,
+.page-header,
+.page-wrapper>.content>div:first-child {
   margin-top: 0 !important;
   margin-bottom: 8px !important;
   padding-top: 0 !important;
   padding-bottom: 8px !important;
 }
 
-.section-header .page-title, .page-header .page-title, .page-wrapper > .content > div:first-child h4 {
+.section-header .page-title,
+.page-header .page-title,
+.page-wrapper>.content>div:first-child h4 {
   white-space: nowrap !important;
 }
 
 /* Globally reduce massive gaps from template search/filter spacer elements */
-.search-set, .table-dropdown {
+.search-set,
+.table-dropdown {
   margin-bottom: 8px !important;
   padding-bottom: 0 !important;
 }
 
 /* Moderately reduce left and right spacing globally */
-.page-wrapper > .content {
+.page-wrapper>.content {
   padding-top: 8px !important;
   padding-left: 16px !important;
   padding-right: 16px !important;
@@ -1154,14 +1163,15 @@ html[data-color="primary"] {
 
 /* --- Global Mobile Responsiveness Fixes --- */
 @media (max-width: 767.98px) {
+
   /* Fix header actions squeezing on mobile */
   .page-header {
     flex-direction: column !important;
     align-items: flex-start !important;
     gap: 12px !important;
   }
-  
-  .page-header > div:last-child {
+
+  .page-header>div:last-child {
     display: flex !important;
     flex-wrap: wrap !important;
     width: 100% !important;
@@ -1170,7 +1180,7 @@ html[data-color="primary"] {
   }
 
   /* Make inputs and buttons inside header flexible on mobile */
-  .page-header > div:last-child > * {
+  .page-header>div:last-child>* {
     flex: 1 1 auto !important;
     min-width: 110px !important;
   }
@@ -1183,7 +1193,7 @@ html[data-color="primary"] {
   }
 
   /* Reduce side padding on mobile for maximum space */
-  .page-wrapper > .content {
+  .page-wrapper>.content {
     padding-left: 8px !important;
     padding-right: 8px !important;
   }

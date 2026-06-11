@@ -62,7 +62,7 @@ const Doctors = () => {
     [designations]
   );
 
-  const truncateText = (str: string, maxLen: number = 2) => {
+  const truncateText = (str: string, maxLen: number = 12) => {
     if (str.length > maxLen) return str.substring(0, maxLen) + "..";
     return str;
   };
@@ -99,7 +99,7 @@ const Doctors = () => {
                 </span>
               </h4>
             </div>
-            <div className="text-end d-flex align-items-center gap-2">
+            <div className="text-end d-flex align-items-center flex-wrap gap-2">
               {/* Department Filter */}
               <div className="dropdown">
                 <Link

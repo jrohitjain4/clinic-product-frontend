@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import Datatable from "../../../../../core/common/dataTable";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import dayjs from "dayjs";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import { all_routes } from "../../../../routes/all_routes";
 import { useClinicInvoices } from "../../../../../core/hooks/useClinicInvoices";
@@ -34,6 +35,7 @@ const PatientInvoices = () => {
         : inv.paymentStatus === "Pending" || inv.paymentStatus === "Unpaid"
           ? "UnPaid"
           : inv.paymentStatus || "UnPaid",
+    _rawDate: inv.invoiceDate,
   }));
 
   const columns = [
@@ -148,27 +150,109 @@ const PatientInvoices = () => {
   ];
 
   const [searchText, setSearchText] = useState<string>("");
-  const handleSearch = (value: string) => setSearchText(value);
+  const [datePreset, setDatePreset] = useState("All");
+  const [filterDate, setFilterDate] = useState("");
+
+  const filteredData = useMemo(() => {
+    return data.filter((row) => {
+      // Search logic (ID or Description)
+      const matchesSearch = searchText === "" ||
+        row.Invoice_ID.toLowerCase().includes(searchText.toLowerCase()) ||
+        row.Description.toLowerCase().includes(searchText.toLowerCase());
+
+      // Date logic
+      let matchesDate = true;
+      const invDate = dayjs(row._rawDate); // Need to add _rawDate to mapping
+
+      if (datePreset === "Today") {
+        matchesDate = invDate.isSame(dayjs(), 'day');
+      } else if (datePreset === "Yesterday") {
+        matchesDate = invDate.isSame(dayjs().subtract(1, 'day'), 'day');
+      } else if (datePreset === "Last 7 Days") {
+        matchesDate = invDate.isAfter(dayjs().subtract(7, 'day'));
+      } else if (datePreset === "Custom" && filterDate) {
+        matchesDate = invDate.format("YYYY-MM-DD") === filterDate;
+      }
+
+      return matchesSearch && matchesDate;
+    });
+  }, [data, searchText, datePreset, filterDate]);
 
   return (
     <>
       <div className="page-wrapper">
         <div className="content content-two">
-          {/* Header */}
-          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
-            <div className="flex-grow-1">
+          {/* Unified Header - Title Left, All Filters & Actions Right */}
+          <div className="d-flex align-items-sm-center flex-column flex-sm-row justify-content-between mb-4 border-bottom pb-4 gap-3 flex-wrap">
+            <div className="d-flex align-items-center">
               <h4 className="fw-bold mb-0">
                 Invoices
                 <span className="badge badge-soft-primary border pt-1 px-2 border-primary fw-medium ms-2 fs-13">
-                  Total : {data.length}
+                  Total : {filteredData.length}
                 </span>
               </h4>
             </div>
-            <div className="text-end d-flex align-items-center gap-2">
-              <div className="dropdown me-1">
+
+            <div className="d-flex align-items-center flex-wrap gap-2">
+              {/* Search */}
+              <div className="position-relative">
+                <i className="ti ti-search position-absolute top-50 translate-middle-y ms-2 text-muted fs-14" style={{ zIndex: 10 }} />
+                <input
+                  type="text"
+                  className="form-control text-end"
+                  placeholder="Search Invoice ID..."
+                  style={{ width: '180px', paddingLeft: '30px', height: '38px', fontSize: '13px' }}
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                />
+              </div>
+
+              {/* Date Filter */}
+              <select
+                className="form-select fw-bold fs-13"
+                style={{ width: '135px', height: '38px', borderRadius: '6px' }}
+                value={datePreset}
+                onChange={(e) => setDatePreset(e.target.value)}
+              >
+                <option value="All">All Dates</option>
+                <option value="Today">Today</option>
+                <option value="Yesterday">Yesterday</option>
+                <option value="Last 7 Days">Last 7 Days</option>
+                <option value="Custom">Custom Date</option>
+              </select>
+
+              {datePreset === "Custom" && (
+                <input
+                  type="date"
+                  className="form-control fs-13"
+                  style={{ width: '150px', height: '38px' }}
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                />
+              )}
+
+              {/* Clear Button */}
+              {(searchText || datePreset !== "All" || filterDate) && (
+                <button
+                  className="btn btn-soft-danger btn-icon border"
+                  style={{ height: '38px', width: '38px', borderRadius: '6px' }}
+                  title="Clear Filters"
+                  onClick={() => {
+                    setSearchText("");
+                    setDatePreset("All");
+                    setFilterDate("");
+                  }}
+                >
+                  <i className="ti ti-refresh fs-16" />
+                </button>
+              )}
+
+              {/* Export & Sort */}
+              <div className="dropdown">
                 <Link
                   to="#"
-                  className="btn btn-md fs-14 fw-normal border bg-white rounded text-dark d-inline-flex align-items-center"
+                  className="btn btn-md fs-13 fw-bold border bg-white rounded text-dark d-inline-flex align-items-center px-3"
+                  style={{ height: '38px' }}
                   data-bs-toggle="dropdown"
                 >
                   Export <i className="ti ti-chevron-down ms-2" />
@@ -178,27 +262,20 @@ const PatientInvoices = () => {
                   <li><Link className="dropdown-item" to="#">Download as Excel</Link></li>
                 </ul>
               </div>
+
               <div className="dropdown">
                 <Link
                   to="#"
-                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-normal rounded border text-dark px-2 py-1 fs-14"
+                  className="dropdown-toggle btn bg-white btn-md d-inline-flex align-items-center fw-bold rounded border text-dark px-3 fs-13"
+                  style={{ height: '38px' }}
                   data-bs-toggle="dropdown"
                 >
-                  <span className="me-1">Sort By :</span> Recent
+                  Sort By
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item rounded-1">Recent</Link></li>
                   <li><Link to="#" className="dropdown-item rounded-1">Oldest</Link></li>
                 </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* Search & Sort */}
-          <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-            <div className="search-set mb-3">
-              <div className="d-flex align-items-center flex-wrap gap-2">
-
               </div>
             </div>
           </div>
@@ -214,17 +291,17 @@ const PatientInvoices = () => {
                         <span className="spinner-border text-primary" role="status" />
                         <p className="text-muted mt-2 mb-0">Loading invoices…</p>
                       </div>
-                    ) : data.length === 0 ? (
+                    ) : filteredData.length === 0 ? (
                       <div className="text-center py-5">
                         <i className="ti ti-receipt-off fs-40 text-muted" />
-                        <p className="text-muted mt-2 mb-0">No invoices found for your account.</p>
+                        <p className="text-muted mt-2 mb-0">No invoices found matching your criteria.</p>
                       </div>
                     ) : (
                       <Datatable
                         columns={columns}
-                        dataSource={data}
+                        dataSource={filteredData}
                         Selection={true}
-                        searchText={searchText}
+                        searchText={""} // Search handled manually for more control
                       />
                     )}
                   </div>

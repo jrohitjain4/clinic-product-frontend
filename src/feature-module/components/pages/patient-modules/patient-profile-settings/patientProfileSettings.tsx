@@ -141,7 +141,7 @@ const PatientProfileSettings = () => {
           <div className="card-body p-0">
             <div className="row g-0">
               {/* Sidebar Navigation */}
-              <div className="col-lg-3 border-end bg-light-500">
+              <div className="col-xxl-3 col-xl-3 col-lg-4 col-md-12 border-end bg-light-500">
                 <div className="p-4 sticky-top" style={{ top: '20px' }}>
                   <Link
                     to={all_routes.patientprofilesettings}
@@ -159,7 +159,7 @@ const PatientProfileSettings = () => {
               </div>
 
               {/* Profile Form */}
-              <div className="col-lg-9 bg-white">
+              <div className="col-xxl-9 col-xl-9 col-lg-8 col-md-12 bg-white">
                 <div className="p-4 p-md-5">
                   <div className="d-flex align-items-center justify-content-between pb-3 mb-4 border-bottom">
                     <h5 className="fw-bold mb-0 text-dark">Patient Profile Settings</h5>

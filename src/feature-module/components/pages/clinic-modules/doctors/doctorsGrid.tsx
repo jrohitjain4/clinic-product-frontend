@@ -73,7 +73,7 @@ const DoctorsGrid = ({ doctors, loading, error, onRetry, onDelete }: DoctorsGrid
           const statusLabel = doctor.status === "Active" ? "Available" : (doctor.status === "Inactive" ? "Unable" : doctor.status);
 
           return (
-            <div key={doctor.id} className="col-xl-3 col-lg-4 col-md-6 mb-3">
+            <div key={doctor.id} className="col-xxl-3 col-xl-4 col-lg-6 col-md-6 mb-3">
               <div className="card h-100 shadow-sm border-0 border-top border-3 border-primary transition-all doctor-grid-card">
                 <div className="card-body d-flex align-items-center flex-sm-nowrap flex-wrap row-gap-3 p-3">
                   <div className="me-2 ps-1">

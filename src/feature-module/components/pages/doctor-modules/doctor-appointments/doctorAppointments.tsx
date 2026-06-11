@@ -28,6 +28,7 @@ const DoctorAppointments = () => {
   const [filterDate, setFilterDate] = useState<dayjs.Dayjs | null>(null);
   const [filterType, setFilterType] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("");
+  const [filterFollowUp, setFilterFollowUp] = useState("All");
 
   const { createPrescription } = usePrescriptions();
   const [showPresModal, setShowPresModal] = useState(false);
@@ -75,8 +76,15 @@ const DoctorAppointments = () => {
         const matchDepartment = filterDepartment
           ? a.department?.name?.toLowerCase().includes(filterDepartment.toLowerCase())
           : true;
+        const matchFollowUp = filterFollowUp === "All"
+          ? true
+          : filterFollowUp === "Fresh"
+            ? !a.isFollowUp
+            : filterFollowUp === "FollowUp"
+              ? a.isFollowUp
+              : a.followUpStatus === filterFollowUp;
 
-        return matchStatus && matchPatient && matchDate && matchSearch && matchType && matchDepartment;
+        return matchStatus && matchPatient && matchDate && matchSearch && matchType && matchDepartment && matchFollowUp;
       })
       .map((app, index) => ({
         key: app.id,
@@ -260,12 +268,14 @@ const DoctorAppointments = () => {
 
               <Link
                 to="#"
-                className="btn btn-sm btn-primary fw-bold fs-12 d-flex align-items-center shadow-sm flex-shrink-0 text-nowrap"
-                style={{ height: '36px', borderRadius: '6px' }}
-                data-bs-toggle="modal"
-                data-bs-target="#new_appointment"
+                className="btn btn-sm btn-primary fw-bold fs-12 d-flex align-items-center shadow-sm flex-shrink-0 text-nowrap opacity-75"
+                style={{ height: '36px', borderRadius: '6px', cursor: 'not-allowed' }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  toast.info("You do not have permission to create appointments from here.");
+                }}
               >
-                <i className="ti ti-plus me-1" /> New Appointment
+                <i className="ti ti-lock me-1" /> New Appointment
               </Link>
             </div>
           </div>
@@ -387,12 +397,21 @@ const DoctorAppointments = () => {
               <option value="In-person">In-person</option>
             </select>
           </div>
+          <div className="mb-3">
+            <label className="form-label fw-bold small text-muted text-uppercase mb-2">Follow-up Status</label>
+            <select className="form-select fs-13 py-2" value={filterFollowUp} onChange={(e) => setFilterFollowUp(e.target.value)}>
+              <option value="All">All Appointments</option>
+              <option value="FollowUp">All Follow-ups</option>
+              <option value="Free Follow-up">Free Follow-up</option>
+              <option value="Paid Follow-up">Paid Follow-up</option>
+            </select>
+          </div>
 
           <hr className="my-4" />
 
           <div className="d-grid gap-2">
             <button className="btn btn-soft-danger fw-bold py-2" onClick={() => {
-              setFilterPatient(""); setFilterDate(null); setFilterStatus("All"); setFilterType(""); setFilterDepartment("");
+              setFilterPatient(""); setFilterDate(null); setFilterStatus("All"); setFilterType(""); setFilterDepartment(""); setFilterFollowUp("All");
             }}>
               <i className="ti ti-refresh me-2" /> Reset All Filters
             </button>

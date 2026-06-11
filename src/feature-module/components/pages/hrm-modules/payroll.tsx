@@ -186,8 +186,10 @@ const PayrollList = () => {
     {
       title: "Action",
       align: "center" as const,
+      className: "text-nowrap",
+      width: 120,
       render: (_: string, record: any) => (
-        <div className="d-flex align-items-center justify-content-center gap-2">
+        <div className="d-flex align-items-center justify-content-center gap-2 text-nowrap">
           {/* View Icon */}
           <button
             className="bg-transparent border-0 text-info p-1"
@@ -222,7 +224,6 @@ const PayrollList = () => {
           </button>
         </div>
       ),
-      width: 100,
     },
   ];
 

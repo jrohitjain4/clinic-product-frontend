@@ -70,7 +70,7 @@ const DoctorsPasswordSettings = () => {
           <div className="card">
             <div className="card-body">
               <div className="row g-3">
-                <div className="col-lg-3">
+                <div className="col-xxl-3 col-xl-3 col-lg-4 col-md-12">
                   <div className="text-start sticky-top" style={{ top: '20px' }}>
                     <Link
                       to={all_routes.doctorsprofilesettings}
@@ -88,8 +88,8 @@ const DoctorsPasswordSettings = () => {
                     </Link>
                   </div>
                 </div>
-                <div className="col-lg-9">
-                  <div className="border-1 border-start ps-4">
+                <div className="col-xxl-9 col-xl-9 col-lg-8 col-md-12">
+                  <div className="border-1 border-lg-start ps-lg-4 ps-0 border-0">
                     <h5 className="fw-bold pb-3 mb-4 border-1 border-bottom">
                       Change Password
                     </h5>

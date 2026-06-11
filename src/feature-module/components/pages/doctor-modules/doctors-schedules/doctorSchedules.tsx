@@ -348,7 +348,7 @@ const DoctorSchedules = () => {
                     ) : (
                       (schedules[activeDay] || []).map((row, idx) => (
                         <div className="row gx-3 align-items-end" key={row.id}>
-                          <div className="col-lg-4">
+                          <div className="col-xl-4 col-lg-6 col-md-6 col-12">
                             <div className="mb-3">
                               <label className="form-label">Session</label>
                               {editing ? (
@@ -363,7 +363,7 @@ const DoctorSchedules = () => {
                               )}
                             </div>
                           </div>
-                          <div className="col-lg-3">
+                          <div className="col-xl-3 col-lg-6 col-md-6 col-12">
                             <div className="mb-3">
                               <label className="form-label">From</label>
                               <div className="input-icon-end position-relative">
@@ -380,7 +380,7 @@ const DoctorSchedules = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="col-lg-3">
+                          <div className="col-xl-3 col-lg-6 col-md-6 col-12">
                             <div className="mb-3">
                               <label className="form-label">To</label>
                               <div className="input-icon-end position-relative">
@@ -397,7 +397,7 @@ const DoctorSchedules = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="col-lg-2">
+                          <div className="col-xl-2 col-lg-6 col-md-6 col-12">
                             <div className="mb-3 d-flex gap-2">
                               {editing && idx === 0 && (
                                 <button

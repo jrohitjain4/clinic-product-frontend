@@ -352,7 +352,7 @@ const DoctorDetails = () => {
         </div>
 
         <div className="row gx-3">
-          <div className="col-lg-8">
+          <div className="col-xxl-8 col-xl-8 col-lg-7 col-md-12">
             <div className="card mb-2">
               <div className="card-body">
                 <h5 className="fw-bold mb-3">Availability</h5>
@@ -533,7 +533,7 @@ const DoctorDetails = () => {
             </div>
           </div>
 
-          <div className="col-lg-4 theiaStickySidebar">
+          <div className="col-xxl-4 col-xl-4 col-lg-5 col-md-12 theiaStickySidebar">
             <div className="card mb-2">
               <div className="card-body">
                 <h6 className="fw-bold mb-3">About</h6>

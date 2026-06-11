@@ -157,10 +157,10 @@ const PatientPrescriptions = () => {
       <style>{customSelectStyles}</style>
       <div className="page-wrapper">
         <div className="content">
-          <div className="d-flex align-items-center pb-3 mb-4 border-bottom overflow-hidden" style={{ gap: '16px' }}>
-            <h4 className="fw-bold mb-0 flex-shrink-0">My Prescriptions</h4>
+          <div className="d-flex align-items-sm-center flex-column flex-sm-row justify-content-between pb-3 mb-4 border-bottom gap-3 flex-wrap">
+            <h4 className="fw-bold mb-0">My Prescriptions</h4>
 
-            <div className="ms-auto d-flex align-items-center" style={{ gap: '12px' }}>
+            <div className="d-flex align-items-center flex-wrap gap-2">
               {/* Doctor Filter Select */}
               <div className="position-relative" style={{ minWidth: '160px' }}>
                 <select

@@ -4,6 +4,9 @@ import { Link } from "react-router";
 import { DatePicker } from "antd";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
+
+dayjs.extend(isBetween);
 import { all_routes } from "../../../../routes/all_routes";
 import Datatable from "../../../../../core/common/dataTable";
 import { useClinicPatients } from "../../../../../core/hooks/useClinicPatients";
@@ -28,7 +31,12 @@ const Patients = () => {
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterBloodGroup, setFilterBloodGroup] = useState("All");
   const [filterGender, setFilterGender] = useState("All");
-  const [filterDate, setFilterDate] = useState<Dayjs | null>(null);
+  const [filterDatePreset, setFilterDatePreset] = useState("All");
+  const [customRange, setCustomRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
+
+  const isFilterActive = useMemo(() => {
+    return filterStatus !== "All" || filterBloodGroup !== "All" || filterGender !== "All" || filterDatePreset !== "All";
+  }, [filterStatus, filterBloodGroup, filterGender, filterDatePreset]);
 
   const getModalContainer = () =>
     document.getElementById("modal-datepicker") || document.body;
@@ -37,7 +45,8 @@ const Patients = () => {
     setFilterStatus("All");
     setFilterBloodGroup("All");
     setFilterGender("All");
-    setFilterDate(null);
+    setFilterDatePreset("All");
+    setCustomRange([null, null]);
   };
 
   const handleBulkDelete = async () => {
@@ -77,10 +86,27 @@ const Patients = () => {
       const matchStatus = filterStatus === "All" || p.status === filterStatus;
       const matchBlood = filterBloodGroup === "All" || p.bloodGroup === filterBloodGroup;
       const matchGender = filterGender === "All" || p.gender === filterGender;
-      const matchDate = !filterDate || (p.createdAt && dayjs(p.createdAt).isSame(filterDate, "day"));
+
+      let matchDate = true;
+      if (filterDatePreset !== "All" && p.createdAt) {
+        const itemDate = dayjs(p.createdAt);
+        if (filterDatePreset === "Today") {
+          matchDate = itemDate.isSame(dayjs(), "day");
+        } else if (filterDatePreset === "Yesterday") {
+          matchDate = itemDate.isSame(dayjs().subtract(1, "day"), "day");
+        } else if (filterDatePreset === "Last 7 Days") {
+          matchDate = itemDate.isAfter(dayjs().subtract(7, "day").startOf("day"));
+        } else if (filterDatePreset === "This Month") {
+          matchDate = itemDate.isSame(dayjs(), "month");
+        } else if (filterDatePreset === "Custom") {
+          if (customRange[0] && customRange[1]) {
+            matchDate = itemDate.isAfter(customRange[0].startOf("day").subtract(1, "second")) && itemDate.isBefore(customRange[1].endOf("day").add(1, "second"));
+          }
+        }
+      }
       return matchStatus && matchBlood && matchGender && matchDate;
     });
-  }, [patients, filterStatus, filterBloodGroup, filterGender, filterDate]);
+  }, [patients, filterStatus, filterBloodGroup, filterGender, filterDatePreset, customRange]);
 
   const tableData = useMemo(
     () => filteredPatients.map((p, i) => {
@@ -110,6 +136,12 @@ const Patients = () => {
       dataIndex: "SrNo",
       render: (text: number) => <span className="text-dark fw-bold">{text}</span>,
       sorter: (a: any, b: any) => a.SrNo - b.SrNo,
+    },
+    {
+      title: "Patient ID",
+      dataIndex: "PatientID",
+      render: (_: any, record: any) => <span className="text-primary fw-bold">#{record._raw.patientId || `PAT-${record._raw.id?.slice(-4).toUpperCase() || '000'}`}</span>,
+      sorter: (a: any, b: any) => (a._raw.patientId || "").localeCompare(b._raw.patientId || ""),
     },
     {
       title: "Patient",
@@ -183,8 +215,10 @@ const Patients = () => {
       title: "Action",
       dataIndex: "action",
       align: "center",
+      className: "text-nowrap",
+      width: 130,
       render: (_: unknown, record: any) => (
-        <div className="d-flex align-items-center justify-content-center gap-2">
+        <div className="d-flex align-items-center justify-content-center gap-2 text-nowrap">
           <Link
             to={patientDetailsPath(record._raw.id)}
             className="btn btn-icon btn-sm btn-soft-secondary border"
@@ -234,23 +268,54 @@ const Patients = () => {
               </h4>
             </div>
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
-              <button
-                className="btn btn-sm btn-light border text-primary fw-bold me-1"
-                onClick={handleClearAll}
-                style={{ height: "38px" }}
-              >
-                Clear All
-              </button>
-              <DatePicker
-                placeholder="Date"
-                className="form-select text-dark"
-                style={{ width: "135px", height: "38px" }}
-                format="DD-MM-YYYY"
-                allowClear={true}
-                getPopupContainer={getModalContainer}
-                onChange={(date) => setFilterDate(date)}
-                value={filterDate}
-              />
+              {isFilterActive && (
+                <button
+                  className="btn btn-sm btn-light border text-primary fw-bold me-1"
+                  onClick={handleClearAll}
+                  style={{ height: "38px" }}
+                >
+                  Clear All
+                </button>
+              )}
+              <div className="dropdown">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                  style={{ minWidth: "160px", height: "38px" }}
+                  data-bs-toggle="dropdown"
+                >
+                  <span className="text-truncate">
+                    <span className="text-muted"><i className="ti ti-calendar me-1"></i></span> {filterDatePreset === "All" ? "Select Date" : filterDatePreset}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2" style={{ minWidth: "220px" }}>
+                  {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((preset) => (
+                    <li key={preset}>
+                      <Link
+                        to="#"
+                        className={`dropdown-item rounded-1${filterDatePreset === preset ? ' active' : ''}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (preset === "Custom") e.stopPropagation();
+                          setFilterDatePreset(preset);
+                        }}
+                      >
+                        {preset}
+                      </Link>
+                    </li>
+                  ))}
+                  {filterDatePreset === "Custom" && (
+                    <li className="p-2 border-top mt-2">
+                      <DatePicker.RangePicker
+                        format="DD-MM-YYYY"
+                        className="w-100"
+                        value={customRange}
+                        onChange={(dates) => setCustomRange(dates ? [dates[0], dates[1]] : [null, null])}
+                      />
+                    </li>
+                  )}
+                </ul>
+              </div>
               <div className="dropdown">
                 <Link to="#" className="form-select text-dark d-flex align-items-center justify-content-between" style={{ minWidth: "125px", height: "38px" }} data-bs-toggle="dropdown">
                   <span className="text-truncate"><span className="text-muted">Status:</span> {filterStatus === "All" ? "All" : filterStatus === "Active" ? "Available" : "Unavailable"}</span>

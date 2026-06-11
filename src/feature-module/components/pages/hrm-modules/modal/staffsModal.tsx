@@ -458,7 +458,7 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
 
       {/* Add */}
       <div id="add_staff" className="modal fade" role="dialog">
-        <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-dialog modal-dialog-centered modal-lg">
           <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
             <div className="modal-header bg-primary text-white">
               <h5 className="modal-title">New Staff</h5>
@@ -505,7 +505,7 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
 
       {/* Edit */}
       <div id="edit_staff" className="modal fade" role="dialog">
-        <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-dialog modal-dialog-centered modal-lg">
           <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
             <div className="modal-header bg-primary text-white">
               <h5 className="modal-title">Edit Staff</h5>

@@ -160,15 +160,15 @@ const Header = () => {
               {/* Copy URL */}
               {user?.clinic?.id && user?.role !== 'PATIENT' && (
                 <div
-                  className="ms-2 d-flex align-items-center bg-white border rounded px-3 text-nowrap shadow-sm flex-shrink-0"
+                  className="ms-2 d-flex align-items-center bg-white border rounded px-2 px-xl-3 text-nowrap shadow-sm flex-shrink-0"
                   style={{ height: '38px' }}
                   title="Copy Link"
                 >
-                  <span className="fw-semibold text-primary fs-13 user-select-all">
+                  <span className="fw-semibold text-primary fs-13 user-select-all d-none d-xl-inline">
                     docyari.com/c/{user.clinic.username || 'clinic'}
                   </span>
                   <button
-                    className="btn btn-sm btn-icon border-0 p-0 text-muted ms-2"
+                    className="btn btn-sm btn-icon border-0 p-0 text-muted ms-xl-2"
                     onClick={() => navigator.clipboard.writeText(`${window.location.origin}/c/${user.clinic.username || 'clinic'}`)}
                   >
                     <i className="ti ti-copy fs-15 hover-primary" />

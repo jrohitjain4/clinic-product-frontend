@@ -151,7 +151,7 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
     <>
       {/* Start Add Modal */}
       <div id="add_payroll" className="modal fade" role="dialog">
-        <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-dialog modal-dialog-centered modal-lg">
           <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
             <div className="modal-header bg-primary text-white">
               <h5 className="modal-title fw-bold">Add Employee Salary</h5>
@@ -232,7 +232,7 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
 
       {/* Edit Modal */}
       <div id="edit_payroll" className="modal fade" role="dialog">
-        <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-dialog modal-dialog-centered modal-lg">
           <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
             <div className="modal-header bg-primary text-white">
               <h5 className="modal-title fw-bold">Edit Employee Salary</h5>

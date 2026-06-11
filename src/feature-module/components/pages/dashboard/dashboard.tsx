@@ -134,7 +134,7 @@ const Dashboard = () => {
           </div>
 
           <div className="row g-1 mb-1">
-            <div className="col-xl-3 col-md-6">
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
               <div className="card h-100">
                 <div className="card-body">
                   <div className="d-flex align-items-center mb-2 justify-content-between">
@@ -150,7 +150,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="col-xl-3 col-md-6">
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
               <div className="card h-100">
                 <div className="card-body">
                   <div className="d-flex align-items-center mb-2 justify-content-between">
@@ -166,7 +166,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="col-xl-3 col-md-6">
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
               <div className="card h-100">
                 <div className="card-body">
                   <div className="d-flex align-items-center mb-2 justify-content-between">
@@ -182,7 +182,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="col-xl-3 col-md-6">
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
               <div className="card h-100">
                 <div className="card-body">
                   <div className="d-flex align-items-center mb-2 justify-content-between">
@@ -201,7 +201,7 @@ const Dashboard = () => {
           </div>
 
           <div className="row g-1 mb-1">
-            <div className="col-xl-8">
+            <div className="col-xxl-8 col-xl-12 col-12">
               <div className="card h-100">
                 <div className="card-header d-flex align-items-center justify-content-between border-0">
                   <h5 className="fw-bold mb-0">Appointment Statistics</h5>
@@ -214,7 +214,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="col-xl-4">
+            <div className="col-xxl-4 col-xl-12 col-12">
               <div className="card h-100">
                 <div className="card-header d-flex align-items-center justify-content-between border-0">
                   <h5 className="fw-bold mb-0">Holiday Calendar</h5>
@@ -306,7 +306,7 @@ const Dashboard = () => {
 
           {/* ── TRANSACTION ANALYTICS SECTION ────────────────── */}
           <div className="row g-1 mb-1">
-            <div className="col-xl-4 col-md-4">
+            <div className="col-xxl-4 col-xl-6 col-md-6 col-12">
               <div className="card h-100 border-0" style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', borderLeft: '4px solid #10b981 !important' }}>
                 <div className="card-body d-flex align-items-center gap-3">
                   <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 52, height: 52, background: 'rgba(16, 185, 129, 0.15)' }}>
@@ -322,7 +322,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="col-xl-4 col-md-4">
+            <div className="col-xxl-4 col-xl-6 col-md-6 col-12">
               <div className="card h-100 border-0" style={{ background: 'linear-gradient(135deg, #fef2f2 0%, #fecaca 100%)', borderLeft: '4px solid #ef4444 !important' }}>
                 <div className="card-body d-flex align-items-center gap-3">
                   <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 52, height: 52, background: 'rgba(239, 68, 68, 0.12)' }}>
@@ -338,7 +338,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="col-xl-4 col-md-4">
+            <div className="col-xxl-4 col-xl-6 col-md-6 col-12">
               <div className="card h-100 border-0" style={{ background: stats.netProfit >= 0 ? 'linear-gradient(135deg, #eff6ff 0%, #bfdbfe 100%)' : 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)', borderLeft: `4px solid ${stats.netProfit >= 0 ? '#3b82f6' : '#f97316'} !important` }}>
                 <div className="card-body d-flex align-items-center gap-3">
                   <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 52, height: 52, background: stats.netProfit >= 0 ? 'rgba(59, 130, 246, 0.12)' : 'rgba(249, 115, 22, 0.12)' }}>

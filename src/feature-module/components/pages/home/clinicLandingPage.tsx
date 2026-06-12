@@ -88,7 +88,7 @@ export default function ClinicLandingPage() {
 
         let hasError = false;
         const newErrors: any = {};
-        
+
         if (!bookForm.name.trim()) { newErrors.name = "Name is required"; hasError = true; }
         if (!bookForm.phone.trim()) { newErrors.phone = "Phone number is required"; hasError = true; }
         if (!bookForm.doctorId) { newErrors.doctorId = "Please select a doctor"; hasError = true; }
@@ -1210,8 +1210,8 @@ export default function ClinicLandingPage() {
                                         ].map((faq, i) => (
                                             <div key={i} className="col-md-6">
                                                 <div className="card shadow-none rounded-2 border" style={{ borderColor: "#f1f5f9" }}>
-                                                    <div 
-                                                        className="d-flex justify-content-between align-items-center py-2 px-3 text-dark fw-medium" 
+                                                    <div
+                                                        className="d-flex justify-content-between align-items-center py-2 px-3 text-dark fw-medium"
                                                         style={{ fontSize: "12px", cursor: "pointer" }}
                                                         data-bs-toggle="collapse"
                                                         data-bs-target={`#faq-${i}`}

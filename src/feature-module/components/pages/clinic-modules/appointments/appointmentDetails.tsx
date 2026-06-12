@@ -410,7 +410,7 @@ const AppointmentDetails = () => {
     if (loading) {
         return (
             <div className="page-wrapper">
-                <div className="content text-center py-5">
+                <div className="content d-flex flex-column align-items-center justify-content-center py-5" style={{ minHeight: '350px' }}>
                     <span className="spinner-border text-primary" role="status" />
                     <p className="mt-2 text-muted">Loading Clinical Dashboard...</p>
                 </div>
@@ -677,7 +677,12 @@ const AppointmentDetails = () => {
                             <i className="ti ti-chevron-right mx-2" />
                             <span className="text-primary">Appointment Dashboard</span>
                         </h6>
-                        <h3 className="fw-bold mb-0">Visit # {appointment.appointmentCode || id?.slice(-6).toUpperCase()}</h3>
+                        <div className="d-flex align-items-center gap-3">
+                            <Link to={all_routes.appointments} className="btn btn-icon btn-soft-light rounded-circle border shadow-sm flex-shrink-0" title="Back to Appointments">
+                                <i className="ti ti-arrow-left fs-20" />
+                            </Link>
+                            <h3 className="fw-bold mb-0">Visit # {appointment.appointmentCode || id?.slice(-6).toUpperCase()}</h3>
+                        </div>
                     </div>
                     <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
                         <button className="btn btn-outline-light border bg-white text-dark d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={() => window.print()}>

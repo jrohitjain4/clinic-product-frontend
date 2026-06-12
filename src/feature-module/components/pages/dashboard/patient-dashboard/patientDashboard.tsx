@@ -22,12 +22,22 @@ const PatientDashboard = () => {
   const totalClinics = clinics?.length || 0;
   const recentAppointments = appointments?.slice(0, 5) || [];
 
+  const localStyles = `
+    .patient-dashboard-wrapper .card {
+      margin-bottom: 12px !important;
+    }
+    .patient-dashboard-wrapper .card-body .mb-3 {
+      margin-bottom: 10px !important;
+    }
+  `;
+
   return (
     <>
       {/* ========================
 			Start Page Content
 		========================= */}
-      <div className="page-wrapper">
+      <style>{localStyles}</style>
+      <div className="page-wrapper patient-dashboard-wrapper">
         <div className="content pb-0">
           {/* Page Header */}
           <div className="d-flex align-items-sm-center justify-content-between flex-wrap gap-2 mb-4">
@@ -35,11 +45,6 @@ const PatientDashboard = () => {
               <h4 className="fw-bold mb-0">Patient Dashboard</h4>
             </div>
             <div className="d-flex align-items-center flex-wrap gap-2">
-              <Link
-                to={all_routes.newAppointment}
-                className="btn btn-primary d-inline-flex align-items-center"
-              >
-                New Appointment <i className="ti ti-plus ms-2" /></Link>
             </div>
           </div>
           {/* End Page Header */}

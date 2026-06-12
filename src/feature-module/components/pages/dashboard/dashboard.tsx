@@ -122,10 +122,72 @@ const Dashboard = () => {
         `}</style>
 
         <div className="content pb-0">
-          <div className="d-flex align-items-sm-center justify-content-between flex-wrap gap-2 mb-3">
+          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
             <div>
               <h4 className="fw-bold mb-0 fs-20">Admin Dashboard</h4>
             </div>
+
+            {stats.profileCompletion !== undefined && (
+              <Link
+                to="/profile-settings"
+                className="d-flex align-items-center gap-2 px-3 py-1 rounded-pill text-decoration-none shadow-sm mx-md-auto my-2 my-md-0"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid #d1d5db',
+                  cursor: 'pointer',
+                  minWidth: '200px',
+                  maxWidth: '300px',
+                  boxShadow: '0 2px 6px rgba(15, 23, 42, 0.06)',
+                  transition: 'all 0.2s ease-in-out'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.borderColor = stats.profileCompletion === 100 ? '#10b981' : '#6366f1';
+                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(15, 23, 42, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.borderColor = '#d1d5db';
+                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(15, 23, 42, 0.06)';
+                }}
+                title={stats.profileCompletion < 100 ? "Click to complete your profile settings" : "Profile setup is complete!"}
+              >
+                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{
+                  width: '22px',
+                  height: '22px',
+                  backgroundColor: stats.profileCompletion === 100 ? '#ecfdf5' : '#e0e7ff',
+                  color: stats.profileCompletion === 100 ? '#10b981' : '#6366f1'
+                }}>
+                  <i className={`ti ${stats.profileCompletion === 100 ? 'ti-circle-check' : 'ti-chart-pie'} fs-12`} />
+                </div>
+                <span className="fs-12 fw-bold text-dark text-nowrap" style={{ letterSpacing: '0.1px' }}>Profile</span>
+                <div className="progress flex-grow-1 mb-0" style={{ height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div
+                    className="progress-bar"
+                    style={{
+                      width: `${stats.profileCompletion}%`,
+                      borderRadius: '3px',
+                      background: stats.profileCompletion === 100 
+                        ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)' 
+                        : 'linear-gradient(90deg, #6366f1 0%, #3b82f6 100%)',
+                      transition: 'width 0.6s ease'
+                    }}
+                    role="progressbar"
+                    aria-valuenow={stats.profileCompletion}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  />
+                </div>
+                <span className="fs-11 fw-bold text-nowrap px-2 py-0.5 rounded-pill" style={{
+                  backgroundColor: stats.profileCompletion === 100 ? '#ecfdf5' : '#e0e7ff',
+                  color: stats.profileCompletion === 100 ? '#10b981' : '#6366f1'
+                }}>
+                  {stats.profileCompletion}%
+                </span>
+              </Link>
+            )}
+
             <div className="d-flex align-items-center flex-wrap gap-2">
               <Link to={all_routes.newAppointment} className="btn btn-primary d-inline-flex align-items-center btn-sm py-2 px-3">
                 New Appointment <i className="ti ti-plus ms-2" />

@@ -104,6 +104,7 @@ export const all_routes = {
   demoBookings: "/super-admin/demo-bookings",
   contactSettingsAdmin: "/super-admin/contact-settings",
   superAdminEmailSettings: "/super-admin/email-settings",
+  superAdminRazorpaySettings: "/super-admin/razorpay-settings",
 
   //Application routes
   chat: "/application/chat",

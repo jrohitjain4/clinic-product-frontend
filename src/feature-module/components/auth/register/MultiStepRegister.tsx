@@ -223,16 +223,83 @@ const MultiStepRegister: React.FC = () => {
         }
     };
 
+    const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+            if ((window as any).Razorpay) {
+                resolve(true);
+                return;
+            }
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
+
     const handleComplete = async (packageId: string) => {
-        setSelectedPkgId(packageId);
-        setLoading(true);
-        setError("");
-        try {
-            // Perform full registration in one step
-            const res = await fetch(apiUrl("/api/auth/register-full"), {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
+        const selectedPkg = packages.find(p => p.id === packageId);
+        if (!selectedPkg) return;
+
+        if (selectedPkg.price === 0) {
+            // Free Package - registration proceeds directly
+            setSelectedPkgId(packageId);
+            setLoading(true);
+            setError("");
+            try {
+                // Perform full registration in one step
+                const res = await fetch(apiUrl("/api/auth/register-full"), {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        ownerName: form.ownerName,
+                        email: form.emailId,
+                        password: form.password,
+                        phone: form.mobileNumber,
+                        whatsappNumber: form.sameAsMobile ? form.mobileNumber : form.whatsappNumber,
+                        clinicName: form.clinicName,
+                        username: form.username.toLowerCase().trim(),
+                        addressLine1: form.addressLine1,
+                        addressLine2: form.addressLine2,
+                        district: form.district,
+                        city: form.city,
+                        state: form.state,
+                        country: form.country,
+                        pincode: form.pincode,
+                        doctorCount: form.doctorCount ? parseInt(form.doctorCount) : 0,
+                        packageId: packageId,
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || "Failed to complete registration");
+
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("user", JSON.stringify(data.user));
+
+                toast.success("Account created successfully!");
+                setSuccess("🎉 Account created successfully! Redirecting...");
+                setTimeout(() => navigate(all_routes.dashboard), 2000);
+            } catch (err: any) {
+                const msg = err.message || "Something went wrong. Please try again.";
+                setError(msg);
+                toast.error(msg);
+            } finally {
+                setLoading(false);
+                setSelectedPkgId("");
+            }
+        } else {
+            // Paid Package - Razorpay flow
+            setSelectedPkgId(packageId);
+            setLoading(true);
+            setError("");
+            try {
+                // First load the checkout script
+                const isLoaded = await loadRazorpayScript();
+                if (!isLoaded) {
+                    throw new Error("Razorpay SDK failed to load. Are you connected to the internet?");
+                }
+
+                const clinicData = {
                     ownerName: form.ownerName,
                     email: form.emailId,
                     password: form.password,
@@ -248,25 +315,90 @@ const MultiStepRegister: React.FC = () => {
                     country: form.country,
                     pincode: form.pincode,
                     doctorCount: form.doctorCount ? parseInt(form.doctorCount) : 0,
-                    packageId: packageId,
-                }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to complete registration");
+                };
 
-            localStorage.setItem("token", data.token);
-            localStorage.setItem("user", JSON.stringify(data.user));
+                // 1. Create order on the backend
+                const orderRes = await fetch(apiUrl("/api/payments/create-order"), {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ packageId }),
+                });
+                
+                const orderData = await orderRes.json();
+                if (!orderRes.ok) {
+                    throw new Error(orderData.message || "Failed to initiate payment. Please contact support.");
+                }
 
-            toast.success("Account created successfully!");
-            setSuccess("🎉 Account created successfully! Redirecting...");
-            setTimeout(() => navigate(all_routes.dashboard), 2000);
-        } catch (err: any) {
-            const msg = err.message || "Something went wrong. Please try again.";
-            setError(msg);
-            toast.error(msg);
-        } finally {
-            setLoading(false);
-            setSelectedPkgId("");
+                // 2. Open Razorpay checkout modal
+                const options = {
+                    key: orderData.razorpayKeyId,
+                    amount: orderData.amount,
+                    currency: orderData.currency,
+                    name: "Docyori Clinic SaaS",
+                    description: `Subscription: ${selectedPkg.name}`,
+                    order_id: orderData.orderId,
+                    handler: async function (response: any) {
+                        setLoading(true);
+                        try {
+                            // 3. Verify payment signature and complete registration
+                            const verifyRes = await fetch(apiUrl("/api/payments/verify"), {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    packageId,
+                                    clinicData
+                                })
+                            });
+
+                            const verifyData = await verifyRes.json();
+                            if (!verifyRes.ok) {
+                                throw new Error(verifyData.message || "Payment verification failed");
+                            }
+
+                            localStorage.setItem("token", verifyData.token);
+                            localStorage.setItem("user", JSON.stringify(verifyData.user));
+
+                            toast.success("Payment successful & account created!");
+                            setSuccess("🎉 Payment verified & account created! Redirecting...");
+                            setTimeout(() => navigate(all_routes.dashboard), 2000);
+                        } catch (err: any) {
+                            const msg = err.message || "Failed to verify payment. Please contact support.";
+                            setError(msg);
+                            toast.error(msg);
+                        } finally {
+                            setLoading(false);
+                            setSelectedPkgId("");
+                        }
+                    },
+                    prefill: {
+                        name: form.ownerName,
+                        email: form.emailId,
+                        contact: form.mobileNumber,
+                    },
+                    theme: {
+                        color: "#7c3aed", // Docyori brand violet color
+                    },
+                    modal: {
+                        ondismiss: function () {
+                            setLoading(false);
+                            setSelectedPkgId("");
+                            toast.info("Payment cancelled.");
+                        }
+                    }
+                };
+
+                const rzp = new (window as any).Razorpay(options);
+                rzp.open();
+            } catch (err: any) {
+                const msg = err.message || "Something went wrong. Please try again.";
+                setError(msg);
+                toast.error(msg);
+                setLoading(false);
+                setSelectedPkgId("");
+            }
         }
     };
 

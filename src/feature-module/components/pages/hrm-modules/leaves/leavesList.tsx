@@ -42,6 +42,17 @@ const LeavesList = () => {
     open: false, id: "", startDate: "", endDate: "", isPaid: true, adminNotes: "", isApproving: false
   });
 
+  const storedRole =
+    localStorage.getItem("role") ||
+    (() => {
+      try {
+        return JSON.parse(localStorage.getItem("user") || "{}").role;
+      } catch {
+        return "";
+      }
+    })();
+  const isAdmin = storedRole === "ADMIN" || storedRole === "SUPER_ADMIN";
+
   const handleApprove = async () => {
     const ok = await updateStatus(approveModal.id, {
       status: "APPROVED",
@@ -177,18 +188,8 @@ const LeavesList = () => {
       title: "Action",
       align: "center" as const,
       className: "text-nowrap",
-      width: 130,
+      width: 90,
       render: (_: any, record: any) => {
-        const storedRole =
-          localStorage.getItem("role") ||
-          (() => {
-            try {
-              return JSON.parse(localStorage.getItem("user") || "{}").role;
-            } catch {
-              return "";
-            }
-          })();
-        const isAdmin = storedRole === "ADMIN" || storedRole === "SUPER_ADMIN";
         const currentUserEmail = (() => {
           try {
             return JSON.parse(localStorage.getItem("user") || "{}").email;
@@ -241,30 +242,6 @@ const LeavesList = () => {
               </button>
             </Popconfirm>
 
-            {/* Approve */}
-            {record.rawStatus === "APPLIED" && isAdmin && (
-              <button
-                className="bg-transparent border-0 text-success p-1"
-                data-bs-toggle="modal"
-                data-bs-target="#approve_leave_v2"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setApproveModal({
-                    open: true,
-                    id: record.id,
-                    startDate: record.startDate,
-                    endDate: record.endDate,
-                    isPaid: record.isPaid ?? true,
-                    adminNotes: record.adminNotes || "",
-                    isApproving: true,
-                  });
-                }}
-                title="Approve"
-              >
-                <i className="ti ti-check fs-18"></i>
-              </button>
-            )}
-
             {/* Edit/Review */}
             {(record.rawStatus === "APPLIED" ||
               record.rawStatus === "APPROVED") &&
@@ -290,22 +267,6 @@ const LeavesList = () => {
                   <i className="ti ti-edit fs-18"></i>
                 </button>
               )}
-
-            {/* Reject */}
-            {isAdmin && record.rawStatus === "APPLIED" && (
-              <button
-                className="bg-transparent border-0 text-warning p-1"
-                data-bs-toggle="modal"
-                data-bs-target="#reject_leave_v2"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setRejectModal({ open: true, id: record.id, remark: "" });
-                }}
-                title="Reject"
-              >
-                <i className="ti ti-x fs-18"></i>
-              </button>
-            )}
 
             {/* Withdraw */}
             {canWithdraw && isSelf && (
@@ -534,15 +495,13 @@ const LeavesList = () => {
               />
             </div>
           ) : (
-            <div className="table-responsive">
-              <Datatable
-                columns={columns}
-                dataSource={data}
-                Selection={true}
-                searchText=""
-                onSelectionChange={(keys) => setSelectedIds(keys as string[])}
-              />
-            </div>
+            <Datatable
+              columns={columns}
+              dataSource={data}
+              Selection={true}
+              searchText=""
+              onSelectionChange={(keys) => setSelectedIds(keys as string[])}
+            />
           )}
 
           {/* Delete Selected Bar */}
@@ -732,7 +691,46 @@ const LeavesList = () => {
           ...(viewRecord?.rejectRemark ? [{ icon: <i className="ti ti-x" />, label: "Rejection Remark", value: viewRecord?.rejectRemark, fullWidth: true }] : []),
           ...(viewRecord?.adminNotes ? [{ icon: <i className="ti ti-notes" />, label: "Internal Admin Notes", value: viewRecord?.adminNotes, fullWidth: true }] : [])
         ]}
-      />
+      >
+        {viewRecord?.rawStatus === "APPLIED" && isAdmin && (
+          <>
+            <button
+              type="button"
+              className="btn btn-success fw-medium d-flex align-items-center"
+              data-bs-dismiss="modal"
+              data-bs-toggle="modal"
+              data-bs-target="#approve_leave_v2"
+              onClick={() => {
+                setApproveModal({
+                  open: true,
+                  id: viewRecord.id,
+                  startDate: viewRecord.startDate,
+                  endDate: viewRecord.endDate,
+                  isPaid: viewRecord.isPaid ?? true,
+                  adminNotes: viewRecord.adminNotes || "",
+                  isApproving: true,
+                });
+              }}
+            >
+              <i className="ti ti-check me-2" />
+              Approve
+            </button>
+            <button
+              type="button"
+              className="btn btn-danger fw-medium d-flex align-items-center"
+              data-bs-dismiss="modal"
+              data-bs-toggle="modal"
+              data-bs-target="#reject_leave_v2"
+              onClick={() => {
+                setRejectModal({ open: true, id: viewRecord.id, remark: "" });
+              }}
+            >
+              <i className="ti ti-x me-2" />
+              Reject
+            </button>
+          </>
+        )}
+      </ViewModal>
     </>
   );
 };

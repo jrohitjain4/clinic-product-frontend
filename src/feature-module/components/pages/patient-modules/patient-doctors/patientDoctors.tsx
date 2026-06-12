@@ -9,8 +9,9 @@ import {
 } from "../../../../../core/common/selectOption";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes, doctorDetailsPath } from "../../../../routes/all_routes";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useClinicDoctors } from "../../../../../core/hooks/useClinicDoctors";
+import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppointments";
 import { useClinics } from "../../../../../core/hooks/useClinics";
 import Datatable from "../../../../../core/common/dataTable";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
@@ -22,9 +23,26 @@ const PatientDoctors = () => {
   const clinicId = queryParams.get("clinicId") || undefined;
 
   const { doctors, loading: doctorsLoading } = useClinicDoctors(clinicId);
+  const { appointments } = useClinicAppointments(); // auto-filtered by patientId from localStorage
   const { clinics } = useClinics();
 
   const selectedClinic = clinics.find(c => String(c.id) === String(clinicId));
+
+  // Get unique doctorIds from patient's appointments
+  const connectedDoctorIds = useMemo(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (user?.role === "PATIENT") {
+      return new Set(appointments.map((a: any) => a.doctorId).filter(Boolean));
+    }
+    return null; // null means show all (for admin/staff)
+  }, [appointments]);
+
+  // Filter doctors to only those connected to patient's appointments
+  const filteredDoctors = useMemo(() => {
+    if (!connectedDoctorIds) return doctors;
+    return doctors.filter(d => connectedDoctorIds.has(d.id));
+  }, [doctors, connectedDoctorIds]);
+
   const loading = doctorsLoading;
 
   const getModalContainer = () => {
@@ -32,7 +50,7 @@ const PatientDoctors = () => {
     return modalElement ? modalElement : document.body; // Fallback to document.body if modalElement is null
   };
 
-  const data = doctors.map((doctor) => {
+  const data = filteredDoctors.map((doctor) => {
     const hasImage = doctor.profileImage && doctor.profileImage.trim() !== "" && !doctor.profileImage.includes("300x300");
     const doctorImg = hasImage ? doctor.profileImage : "assets/img/doctor-placeholder.png";
 

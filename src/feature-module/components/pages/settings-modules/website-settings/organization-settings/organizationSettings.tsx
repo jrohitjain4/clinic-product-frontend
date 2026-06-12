@@ -309,9 +309,9 @@ const OrganizationSettings = () => {
         const errData = await r.json().catch(() => ({}))
         throw new Error(errData.message || `Server error (${r.status})`)
       }
-      toast.success("✅ Landing page settings saved successfully!")
+      toast.success("Landing page settings saved successfully!")
     } catch (err: any) {
-      toast.error(`❌ Save failed: ${err.message || "Unknown error. Please try again."}`)
+      toast.error(`Save failed: ${err.message || "Unknown error. Please try again."}`)
     } finally {
       setSaving(false)
     }

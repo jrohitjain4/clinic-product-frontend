@@ -130,6 +130,17 @@ export const SidebarData = [
         dot: true,
         submenuItems: [],
       },
+      {
+        label: "Razorpay Settings",
+        link: routes.superAdminRazorpaySettings,
+        submenu: false,
+        showSubRoute: false,
+        icon: "credit-card",
+        base: "settings",
+        materialicons: "start",
+        dot: true,
+        submenuItems: [],
+      },
     ],
   },
   {

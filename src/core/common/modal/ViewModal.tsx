@@ -32,6 +32,7 @@ export interface ViewModalProps {
     editModalTarget?: string; // e.g. "#edit_holiday"
     onBack?: () => void; // Optional back button function
     backLabel?: string;
+    children?: React.ReactNode;
 }
 
 export const ViewModal: React.FC<ViewModalProps> = ({
@@ -51,7 +52,8 @@ export const ViewModal: React.FC<ViewModalProps> = ({
     editLabel = "Edit",
     editModalTarget,
     onBack,
-    backLabel = "Back"
+    backLabel = "Back",
+    children
 }) => {
     return (
         <div className="modal fade" id={id} tabIndex={-1} aria-hidden="true">
@@ -142,6 +144,7 @@ export const ViewModal: React.FC<ViewModalProps> = ({
                             )}
                         </div>
                         <div className="d-flex gap-2">
+                            {children}
                             {onEdit && (
                                 <button type="button" className="btn btn-outline-primary fw-medium d-flex align-items-center" onClick={onEdit} data-bs-dismiss="modal" data-bs-toggle={editModalTarget ? "modal" : undefined} data-bs-target={editModalTarget}>
                                     <i className="ti ti-pencil me-2" />

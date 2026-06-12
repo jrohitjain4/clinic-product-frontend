@@ -221,32 +221,32 @@ const Patients = () => {
         <div className="d-flex align-items-center justify-content-center gap-2 text-nowrap">
           <Link
             to={patientDetailsPath(record._raw.id)}
-            className="btn btn-icon btn-sm btn-soft-secondary border"
+            className="btn btn-icon btn-sm btn-soft-secondary"
             title="View Patient"
           >
-            <i className="ti ti-eye fs-16" />
+            <i className="ti ti-eye" />
           </Link>
 
           <HasPermission module="Patients" action="EDIT">
             <Link
               to={editPatientPath(record._raw.id)}
-              className="btn btn-icon btn-sm btn-soft-primary border"
+              className="btn btn-icon btn-sm btn-soft-primary"
               title="Edit Patient"
             >
-              <i className="ti ti-edit fs-16" />
+              <i className="ti ti-edit" />
             </Link>
           </HasPermission>
 
           <HasPermission module="Patients" action="DELETE">
             <button
               type="button"
-              className="btn btn-icon btn-sm btn-soft-danger border"
+              className="btn btn-icon btn-sm btn-soft-danger"
               title="Delete Patient"
               data-bs-toggle="modal"
               data-bs-target="#delete_patient_modal"
               onClick={() => setPatientToDelete(record._raw.id)}
             >
-              <i className="ti ti-trash fs-16" />
+              <i className="ti ti-trash" />
             </button>
           </HasPermission>
         </div>

@@ -734,8 +734,8 @@ const DesignationList = () => {
                 data-bs-dismiss="modal"
               ></button>
             </div>
-            <div className="modal-body">
-              <form onSubmit={handleAdd}>
+            <form onSubmit={handleAdd}>
+              <div className="modal-body pb-0">
                 {addError && (
                   <div className="alert alert-danger py-2 fs-13">{addError}</div>
                 )}
@@ -811,34 +811,34 @@ const DesignationList = () => {
                     placeholder="Optional description"
                   />
                 </div>
-                <div className="modal-footer d-flex align-items-center gap-2 pt-3 border-top">
-                  <button
-                    type="button"
-                    className="btn btn-light border"
-                    data-bs-dismiss="modal"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={addLoading}
-                  >
-                    {addLoading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <i className="ti ti-check me-2" />
-                        Add Designation
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
+              </div>
+              <div className="modal-footer d-flex align-items-center gap-2 pt-3 border-top">
+                <button
+                  type="button"
+                  className="btn btn-light border"
+                  data-bs-dismiss="modal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={addLoading}
+                >
+                  {addLoading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <i className="ti ti-check me-2" />
+                      Add Designation
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>

@@ -19,7 +19,24 @@ import { resolveMediaUrl } from "../../../../../core/config/api";
 import { toast } from "react-toastify";
 
 const DoctorAppointments = () => {
-  const { appointments, loading } = useClinicAppointments();
+  const { appointments, loading, updateAppointmentStatus } = useClinicAppointments();
+
+  const handleStatusToggle = async (appointmentId: string, currentStatus: string) => {
+    let nextStatus = "";
+    if (currentStatus === "Schedule") nextStatus = "Confirmed";
+    else if (currentStatus === "Confirmed") nextStatus = "Checked In";
+    else if (currentStatus === "Checked In") nextStatus = "Checked Out";
+
+    if (nextStatus) {
+      try {
+        await updateAppointmentStatus(appointmentId, nextStatus);
+        toast.success(`Status updated to ${nextStatus}`);
+      } catch (err) {
+        console.error("Error updating status:", err);
+        toast.error("Failed to update status");
+      }
+    }
+  };
   const { patients } = useClinicPatients();
   const { departments } = useClinicDepartments();
   const [searchText, setSearchText] = useState("");
@@ -177,6 +194,21 @@ const DoctorAppointments = () => {
             <span className={`badge ${statusBadgeClass(text)} px-2 py-1 text-uppercase`} style={{ fontSize: '10px' }}>
               {text}
             </span>
+            {["Schedule", "Confirmed", "Checked In"].includes(text) && (
+              <div className="form-check form-switch p-0 ms-1 mt-1" style={{ minHeight: 'auto' }}>
+                <input
+                  className="form-check-input ms-0"
+                  type="checkbox"
+                  role="switch"
+                  checked={false}
+                  onChange={() => handleStatusToggle(raw.id, text)}
+                  style={{ cursor: 'pointer', width: '30px', height: '16px' }}
+                />
+                <label className="text-muted small ms-1" style={{ fontSize: '10px' }}>
+                  {text === "Schedule" ? "Confirm" : text === "Confirmed" ? "Checkin" : "Checkout"}
+                </label>
+              </div>
+            )}
             {raw?.isFollowUp && (
               <div className="d-flex flex-column gap-1 mt-1">
                 <span className={`badge fs-10 px-2 py-1 ${raw.paymentStatus === "Free" ? "badge-soft-success text-success" : "badge-soft-info text-info border-info-subtle"}`} style={{ border: '1px solid currentColor', opacity: 0.85 }}>
@@ -227,15 +259,15 @@ const DoctorAppointments = () => {
 
   return (
     <>
-      <div className="page-wrapper">
-        <div className="content">
+      <div className="page-wrapper d-flex flex-column" style={{ minHeight: '100vh' }}>
+        <div className="content flex-grow-1">
           {/* Header with Filters - Cloned from Admin Design */}
           <div className="d-flex align-items-center pb-3 mb-4 border-bottom" style={{ gap: '16px', overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
             <h3 className="fw-bolder mb-0 flex-shrink-0 text-dark">Appointment</h3>
 
-            <div className="d-flex align-items-center flex-nowrap overflow-auto flex-grow-1" style={{ gap: '12px', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+            <div className="d-flex align-items-center flex-nowrap overflow-auto" style={{ gap: '12px', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
               <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
-              {["All", "Schedule", "Confirmed", "Checked In", "Checked Out"].map((s) => (
+              {["All", "Schedule", "Confirmed", "Checked In", "Checked Out", "Cancelled"].map((s) => (
                 <button
                   key={s}
                   className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "All") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-2 fs-12 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
@@ -244,13 +276,17 @@ const DoctorAppointments = () => {
                 >
                   {s === "Checked Out" ? "Check-out" : s === "Checked In" ? "Check-in" : s}
                   <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "All") ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>
-                    {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : s === "Checked Out" ? counts.checkedOut : counts.all}
+                    {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : s === "Checked Out" ? counts.checkedOut : s === "Cancelled" ? counts.cancelled : counts.all}
                   </span>
                 </button>
               ))}
-            </div>
 
-            <div className="ms-auto d-flex align-items-center" style={{ gap: '12px' }}>
+              <div className="d-flex align-items-center gap-1">
+                <button className="btn btn-sm btn-icon btn-primary border shadow-sm flex-shrink-0" style={{ height: '36px', width: '36px' }}>
+                  <i className="ti ti-list fs-16" />
+                </button>
+              </div>
+
               <button
                 className="btn btn-sm btn-light border d-flex align-items-center gap-2 fw-bold fs-12 flex-shrink-0 shadow-sm bg-white"
                 style={{ height: '36px', borderRadius: '6px' }}
@@ -259,30 +295,12 @@ const DoctorAppointments = () => {
               >
                 <i className="ti ti-filter fs-14" /> Filters
               </button>
-
-              <div className="d-flex align-items-center gap-1">
-                <button className="btn btn-sm btn-icon btn-primary border shadow-sm" style={{ height: '36px', width: '36px' }}>
-                  <i className="ti ti-list fs-16" />
-                </button>
-              </div>
-
-              <Link
-                to="#"
-                className="btn btn-sm btn-primary fw-bold fs-12 d-flex align-items-center shadow-sm flex-shrink-0 text-nowrap opacity-75"
-                style={{ height: '36px', borderRadius: '6px', cursor: 'not-allowed' }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  toast.info("You do not have permission to create appointments from here.");
-                }}
-              >
-                <i className="ti ti-lock me-1" /> New Appointment
-              </Link>
             </div>
           </div>
 
           {/* Table Content - Premium HRM Style */}
-          <div className="card shadow-sm border-0 rounded-4 overflow-hidden mb-0" style={{ borderBottom: '1px solid #e2e8f0' }}>
-            <div className="card-body p-0">
+          <div className="mb-4">
+            <div className="p-0">
               <style>{`
                 .custom-table .ant-table { background: transparent; border: 0 !important; }
                 .custom-table .ant-table-container { border: 0 !important; }

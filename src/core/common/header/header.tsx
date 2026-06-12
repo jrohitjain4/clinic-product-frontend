@@ -1,7 +1,8 @@
 /* eslint-disable */
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ImageWithBasePath from "../../imageWithBasePath";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { apiGet } from "../../utils/apiClient";
 import { updateTheme } from "../../redux/themeSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { setMobileSidebar } from "../../redux/sidebarSlice";
@@ -16,7 +17,45 @@ import { Search } from "react-feather";
 const Header = () => {
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const themeSettings = useSelector((state: any) => state.theme.themeSettings);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<{ patients: any[], doctors: any[], appointments: any[] }>({ patients: [], doctors: [], appointments: [] });
+  const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.trim() === "") {
+        setSearchResults({ patients: [], doctors: [], appointments: [] });
+        setShowDropdown(false);
+        return;
+      }
+      setIsSearching(true);
+      try {
+        const data = await apiGet<{ patients: any[], doctors: any[], appointments: any[] }>(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+        setSearchResults(data);
+        setShowDropdown(true);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
 
@@ -143,12 +182,15 @@ const Header = () => {
               <i className="ti ti-arrow-right" />
             </button>
             {/* Search */}
-            <div className="me-auto d-flex align-items-center header-search d-lg-flex d-none me-3">
+            <div className="me-auto d-flex align-items-center header-search d-lg-flex d-none me-3" ref={searchRef} style={{ position: 'relative' }}>
               <div className="me-2" style={{ width: '240px', transition: 'width 0.3s ease-in-out' }}>
                 <Input
                   className="mb-0 navbar-search"
                   type="text"
                   placeholder="Search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => { if (searchQuery.trim() !== "") setShowDropdown(true); }}
                   leftAddon={<Search size={16} strokeWidth={2.5} color="#64748b" />}
                   rightIcon={
                     <span className="text-dark shadow-sm fs-12 fw-bold d-inline-flex px-1 bg-light rounded border align-items-center justify-content-center" style={{ height: '22px' }}>
@@ -157,6 +199,69 @@ const Header = () => {
                   }
                 />
               </div>
+
+              {/* Dropdown */}
+              {showDropdown && (
+                <div className="position-absolute bg-white border rounded shadow-sm" style={{ top: '100%', left: 0, width: '300px', zIndex: 1000, maxHeight: '400px', overflowY: 'auto' }}>
+                  {isSearching ? (
+                    <div className="p-3 text-center text-muted">Searching...</div>
+                  ) : (
+                    <>
+                      {searchResults.patients.length > 0 && (
+                        <div className="p-2 border-bottom">
+                          <h6 className="fs-12 text-muted mb-2 text-uppercase">Patients</h6>
+                          {searchResults.patients.map(p => (
+                            <div key={p.id} className="dropdown-item d-flex align-items-center p-2 hover-bg-light rounded" style={{ cursor: "pointer" }} onClick={() => { setShowDropdown(false); navigate(all_routes.patientDetails.replace(":id", p.id)); }}>
+                              <div className="ms-2">
+                                <div className="fw-semibold text-dark">{p.firstName} {p.lastName}</div>
+                                <div className="fs-12 text-muted">{p.patientCode}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {searchResults.doctors.length > 0 && (
+                        <div className="p-2 border-bottom">
+                          <h6 className="fs-12 text-muted mb-2 text-uppercase">Doctors</h6>
+                          {searchResults.doctors.map(d => (
+                            <div key={d.id} className="dropdown-item d-flex align-items-center p-2 hover-bg-light rounded" style={{ cursor: "pointer" }} onClick={() => { setShowDropdown(false); navigate(all_routes.doctorsDetails.replace(":id", d.id)); }}>
+                              <div className="ms-2">
+                                <div className="fw-semibold text-dark">{d.fullName}</div>
+                                <div className="fs-12 text-muted">{d.doctorCode}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {searchResults.appointments.length > 0 && (
+                        <div className="p-2">
+                          <h6 className="fs-12 text-muted mb-2 text-uppercase">Appointments</h6>
+                          {searchResults.appointments.map(a => (
+                            <div key={a.id} className="dropdown-item d-flex align-items-center p-2 hover-bg-light rounded" style={{ cursor: "pointer" }} onClick={() => {
+                              setShowDropdown(false);
+                              if (user?.role === "DOCTOR") {
+                                navigate(all_routes.doctorsappointmentdetails.replace(":id", a.id));
+                              } else if (user?.role === "PATIENT") {
+                                navigate(all_routes.patientappointmentdetails?.replace(":id", a.id) || all_routes.patientappointments);
+                              } else {
+                                navigate(all_routes.appointmentDetails.replace(":id", a.id));
+                              }
+                            }}>
+                              <div className="ms-2">
+                                <div className="fw-semibold text-dark">{a.patient?.firstName} {a.patient?.lastName}</div>
+                                <div className="fs-12 text-muted">{a.appointmentCode} • {new Date(a.scheduledAt).toLocaleDateString()}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {searchResults.patients.length === 0 && searchResults.doctors.length === 0 && searchResults.appointments.length === 0 && (
+                        <div className="p-3 text-center text-muted">No results found</div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
               {/* Copy URL */}
               {user?.clinic?.id && user?.role !== 'PATIENT' && (
                 <div

@@ -628,6 +628,7 @@ const Appointments = () => {
               Selection={true}
               onSelectionChange={(keys: any) => setSelectedIds(keys as string[])}
               searchText={searchText}
+              loading={loading}
               emptyTitle="No Appointments Scheduled"
               emptyMessage="We couldn't find any appointments matching your current filters. You can try adjusting the date range or follow-up status."
             />

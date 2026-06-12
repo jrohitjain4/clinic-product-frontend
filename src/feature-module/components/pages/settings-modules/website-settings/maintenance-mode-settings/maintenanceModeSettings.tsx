@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { Link } from "react-router"
+import { toast } from "react-toastify"
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar"
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000"
@@ -32,6 +33,8 @@ const MaintenanceModeSettings = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
+    if (files.length === 0) return;
+    
     files.forEach(file => {
       const reader = new FileReader()
       reader.onload = ev => {
@@ -39,7 +42,9 @@ const MaintenanceModeSettings = () => {
       }
       reader.readAsDataURL(file)
     })
+    
     if (fileInputRef.current) fileInputRef.current.value = ""
+    toast.success(`${files.length} photo(s) added to gallery preview!`);
   }
 
   const updateItem = (i: number, key: keyof GalleryItem, value: string) =>
@@ -106,7 +111,7 @@ const MaintenanceModeSettings = () => {
                           <i className="ti ti-upload me-2" /> Upload Photos
                         </button>
                         <input type="file" ref={fileInputRef} multiple accept="image/*" style={{ display: "none" }} onChange={handleFileChange} />
-                        <span className="text-muted small ms-3">JPG, PNG, WEBP – max 5 MB each</span>
+                        <span className="text-muted small ms-3 fw-medium text-success">JPG, PNG, WEBP – Unlimited size &amp; unlimited uploads</span>
                       </div>
 
                       {gallery.length > 0 ? (

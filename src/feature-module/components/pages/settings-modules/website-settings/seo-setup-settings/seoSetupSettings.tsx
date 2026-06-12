@@ -204,9 +204,9 @@ const SeoSetupSettings = () => {
         const errData = await r.json().catch(() => ({}))
         throw new Error(errData.message || `Server error (${r.status})`)
       }
-      toast.success("✅ Services saved successfully!")
+      toast.success("Services saved successfully!")
     } catch (err: any) {
-      toast.error(`❌ Save failed: ${err.message || "Unknown error"}`)
+      toast.error(`Save failed: ${err.message || "Unknown error"}`)
     } finally {
       setSaving(false)
     }

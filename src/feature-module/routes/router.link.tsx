@@ -43,6 +43,7 @@ import RefundPolicyAdmin from "../components/pages/super-admin/settings/RefundPo
 import DemoBookingsAdmin from "../components/pages/super-admin/demo-bookings/DemoBookingsAdmin";
 import ContactSettingsAdmin from "../components/pages/super-admin/settings/ContactSettingsAdmin";
 import EmailSettingsAdmin from "../components/pages/super-admin/settings/EmailSettingsAdmin";
+import RazorpaySettingsAdmin from "../components/pages/super-admin/settings/RazorpaySettingsAdmin";
 import Calendars from "../components/pages/application-modules/application/calendar/calendar";
 import CallHistory from "../components/pages/application-modules/application/calls/callHistory";
 import IncomingCall from "../components/pages/application-modules/application/calls/incomingCall";
@@ -423,6 +424,12 @@ export const publicRoutes = [
     path: all_routes.superAdminEmailSettings,
     name: "super-admin-email-settings",
     element: <EmailSettingsAdmin />,
+    route: Route,
+  },
+  {
+    path: all_routes.superAdminRazorpaySettings,
+    name: "super-admin-razorpay-settings",
+    element: <RazorpaySettingsAdmin />,
     route: Route,
   },
   {

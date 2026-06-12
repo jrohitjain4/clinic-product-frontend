@@ -120,10 +120,10 @@ const DoctorsAppointmentDetails = () => {
 
   if (loading) {
     return (
-      <div className="page-wrapper">
-        <div className="content text-center py-5">
-          <span className="spinner-border text-primary" role="status" />
-          <p className="mt-2 text-muted">Loading Visit Details...</p>
+      <div className="page-wrapper d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
+        <div className="content text-center">
+          <span className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }} />
+          <p className="mt-3 text-muted fw-bold">Loading Visit Details...</p>
         </div>
       </div>
     );
@@ -303,13 +303,18 @@ const DoctorsAppointmentDetails = () => {
     <div className="page-wrapper p-0">
       <div className="content">
         <div className="d-md-flex align-items-center justify-content-between mb-4">
-          <div>
-            <h6 className="fw-bold mb-1 d-flex align-items-center text-muted fs-12 text-uppercase">
-              <Link to={all_routes.doctorsappointments} className="text-muted hover-primary">Appointments</Link>
-              <i className="ti ti-chevron-right mx-2" />
-              <span className="text-primary">Appointment Dashboard</span>
-            </h6>
-            <h3 className="fw-bold mb-0">Visit # {appointment.appointmentCode || id?.slice(-6).toUpperCase()}</h3>
+          <div className="d-flex align-items-center gap-3">
+            <Link to={all_routes.doctorsappointments} className="btn btn-icon btn-light border rounded-circle shadow-sm flex-shrink-0" title="Back to Appointments">
+              <i className="ti ti-arrow-left fs-18" />
+            </Link>
+            <div>
+              <h6 className="fw-bold mb-1 d-flex align-items-center text-muted fs-12 text-uppercase">
+                <Link to={all_routes.doctorsappointments} className="text-muted hover-primary">Appointments</Link>
+                <i className="ti ti-chevron-right mx-2" />
+                <span className="text-primary">Appointment Dashboard</span>
+              </h6>
+              <h3 className="fw-bold mb-0">Visit # {appointment.appointmentCode || id?.slice(-6).toUpperCase()}</h3>
+            </div>
           </div>
           <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
             <button className="btn btn-soft-primary d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={() => { setClinicalNote(""); setShowNoteModal(true); }}>
@@ -325,9 +330,9 @@ const DoctorsAppointmentDetails = () => {
           {/* Patient Info */}
           <div className="col-xxl-4 col-xl-6 col-lg-6 col-md-12">
             <div className="card shadow-sm border rounded-4 mb-0 h-100 overflow-hidden hover-shadow transition-all position-relative">
-              <div className="card-body p-4 position-relative z-index-1">
-                <div className="d-flex align-items-start gap-3">
-                  <div className="avatar avatar-xxl rounded-circle border p-1 bg-light shadow-sm flex-shrink-0">
+              <div className="card-body p-3 position-relative z-index-1">
+                <div className="d-flex align-items-start gap-2">
+                  <div className="avatar avatar-xl rounded-circle border p-1 bg-light shadow-sm flex-shrink-0">
                     <ImageWithBasePath
                       src={getProfileImage(appointment.patient?.profileImage, 'patient')}
                       className="rounded-circle img-fluid"
@@ -339,32 +344,32 @@ const DoctorsAppointmentDetails = () => {
                       <span className="badge bg-soft-primary text-primary fw-bold text-uppercase fs-10 tracking-wider px-2 py-1">Patient</span>
                       <span className="text-muted fs-11 fw-medium">#{appointment.patient?.patientCode || appointment.patientId?.slice(-6).toUpperCase()}</span>
                     </div>
-                    <h5 className="fw-bold text-dark mb-2 fs-18">{appointment.patient?.firstName} {appointment.patient?.lastName}</h5>
+                    <h5 className="fw-bold text-dark mb-1 fs-16">{appointment.patient?.firstName} {appointment.patient?.lastName}</h5>
 
-                    <div className="d-flex flex-wrap gap-x-3 gap-y-1 mb-3">
-                      <div className="d-flex align-items-center gap-1 text-muted fs-12">
-                        <i className="ti ti-user fs-14 text-primary opacity-75" />
+                    <div className="d-flex flex-wrap gap-x-3 gap-y-1 mb-2">
+                      <div className="d-flex align-items-center gap-1 text-muted fs-11">
+                        <i className="ti ti-user fs-12 text-primary opacity-75" />
                         <span>{appointment.patient?.gender || "N/A"}</span>
                       </div>
-                      <div className="d-flex align-items-center gap-1 text-muted fs-12">
-                        <i className="ti ti-calendar fs-14 text-primary opacity-75" />
+                      <div className="d-flex align-items-center gap-1 text-muted fs-11">
+                        <i className="ti ti-calendar fs-12 text-primary opacity-75" />
                         <span>{appointment.patient?.dob ? `${dayjs().diff(appointment.patient.dob, 'year')} Yrs` : "N/A"}</span>
                       </div>
-                      <div className="d-flex align-items-center gap-1 text-muted fs-12">
-                        <i className="ti ti-droplet fs-14 text-danger opacity-75" />
+                      <div className="d-flex align-items-center gap-1 text-muted fs-11">
+                        <i className="ti ti-droplet fs-12 text-danger opacity-75" />
                         <span>{appointment.patient?.bloodGroup || "O+"}</span>
                       </div>
                     </div>
 
-                    <div className="d-flex align-items-end justify-content-between pt-2">
+                    <div className="d-flex align-items-end justify-content-between pt-1">
                       <div>
-                        <p className="text-muted fs-13 mb-0 d-flex align-items-center gap-1 fw-medium">
-                          <i className="ti ti-phone-filled fs-14 text-primary opacity-75" />
+                        <p className="text-muted fs-12 mb-0 d-flex align-items-center gap-1 fw-medium">
+                          <i className="ti ti-phone-filled fs-12 text-primary opacity-75" />
                           {appointment.patient?.phone || "N/A"}
                         </p>
                       </div>
-                      <div className="text-end opacity-75 bg-light p-2 rounded-3 border-dashed-1 flex-shrink-0" style={{ minWidth: '100px' }}>
-                        <p className="fs-10 text-uppercase fw-bold text-muted mb-0 letter-spacing-1" style={{ fontSize: '9px' }}>Insurance</p>
+                      <div className="text-end opacity-75 bg-light p-1 rounded-3 border-dashed-1 flex-shrink-0" style={{ minWidth: '90px' }}>
+                        <p className="fs-10 text-uppercase fw-bold text-muted mb-0 letter-spacing-1" style={{ fontSize: '8px' }}>Insurance</p>
                         <span className="badge bg-soft-success text-success fs-10 fw-bold border-0 p-0 text-uppercase">Verified ✓</span>
                       </div>
                     </div>
@@ -378,9 +383,9 @@ const DoctorsAppointmentDetails = () => {
           {/* Doctor Info */}
           <div className="col-xxl-4 col-xl-6 col-lg-6 col-md-12">
             <div className="card shadow-sm border rounded-4 mb-0 h-100 overflow-hidden hover-shadow transition-all position-relative">
-              <div className="card-body p-4 position-relative z-index-1">
-                <div className="d-flex align-items-start gap-3">
-                  <div className="avatar avatar-xxl rounded-circle border p-1 bg-light shadow-sm flex-shrink-0">
+              <div className="card-body p-3 position-relative z-index-1">
+                <div className="d-flex align-items-start gap-2">
+                  <div className="avatar avatar-xl rounded-circle border p-1 bg-light shadow-sm flex-shrink-0">
                     <ImageWithBasePath
                       src={getProfileImage(appointment.doctor?.profileImage, 'doctor')}
                       className="rounded-circle img-fluid"
@@ -394,28 +399,28 @@ const DoctorsAppointmentDetails = () => {
                         <i className="fa fa-star" /><i className="fa fa-star" /><i className="fa fa-star" /><i className="fa fa-star" /><i className="fa fa-star" />
                       </div>
                     </div>
-                    <h5 className="fw-bold text-dark mb-2 fs-18">{appointment.doctor?.fullName}</h5>
+                    <h5 className="fw-bold text-dark mb-1 fs-16">{appointment.doctor?.fullName}</h5>
 
-                    <div className="d-flex flex-wrap gap-x-3 gap-y-1 mb-3">
-                      <div className="d-flex align-items-center gap-1 text-muted fs-12">
-                        <i className="ti ti-briefcase fs-14 text-info opacity-75" />
+                    <div className="d-flex flex-wrap gap-x-3 gap-y-1 mb-2">
+                      <div className="d-flex align-items-center gap-1 text-muted fs-11">
+                        <i className="ti ti-briefcase fs-12 text-info opacity-75" />
                         <span>{appointment.doctor?.yearOfExperience || "8"}+ Yrs Exp</span>
                       </div>
-                      <div className="d-flex align-items-center gap-1 text-muted fs-12">
-                        <i className="ti ti-building fs-14 text-info opacity-75" />
+                      <div className="d-flex align-items-center gap-1 text-muted fs-11">
+                        <i className="ti ti-building fs-12 text-info opacity-75" />
                         <span>{appointment.doctor?.department?.name || "General"}</span>
                       </div>
                     </div>
 
-                    <div className="d-flex align-items-end justify-content-between pt-2">
+                    <div className="d-flex align-items-end justify-content-between pt-1">
                       <div className="flex-grow-1">
-                        <div className="text-muted fs-13 mb-0 d-flex align-items-center gap-1 fw-medium text-truncate" style={{ maxWidth: '120px' }}>
-                          <i className="ti ti-shield-check-filled fs-14 text-info opacity-75" />
+                        <div className="text-muted fs-12 mb-0 d-flex align-items-center gap-1 fw-medium text-truncate" style={{ maxWidth: '120px' }}>
+                          <i className="ti ti-shield-check-filled fs-12 text-info opacity-75" />
                           {appointment.doctor?.designation?.name || "Consultant"}
                         </div>
                       </div>
-                      <div className="text-end bg-info-soft p-2 rounded-3 border-dashed-1 flex-shrink-0" style={{ minWidth: '100px' }}>
-                        <p className="fs-10 text-uppercase fw-bold text-info mb-0 letter-spacing-1" style={{ fontSize: '9px' }}>Availability</p>
+                      <div className="text-end bg-info-soft p-1 rounded-3 border-dashed-1 flex-shrink-0" style={{ minWidth: '90px' }}>
+                        <p className="fs-10 text-uppercase fw-bold text-info mb-0 letter-spacing-1" style={{ fontSize: '8px' }}>Availability</p>
                         <span className="fs-11 fw-bold text-info d-flex align-items-center gap-1 justify-content-end">
                           <span className="pulse-dot-info" /> AVAILABLE
                         </span>
@@ -431,8 +436,8 @@ const DoctorsAppointmentDetails = () => {
           {/* Slot Details */}
           <div className="col-xxl-4 col-xl-12 col-lg-12 col-md-12">
             <div className="card shadow-sm border rounded-4 mb-0 h-100 overflow-hidden bg-white border-primary-light hover-shadow transition-all position-relative">
-              <div className="card-body p-4 position-relative z-index-1">
-                <div className="d-flex justify-content-between align-items-start mb-3">
+              <div className="card-body p-3 position-relative z-index-1">
+                <div className="d-flex justify-content-between align-items-start mb-2">
                   <div className="d-flex flex-column gap-1">
                     <div className="badge bg-soft-primary text-primary fw-bold text-uppercase fs-10 tracking-wider px-2 py-1" style={{ width: 'fit-content' }}>Visit Slot</div>
                     {appointment.isFollowUp && (
@@ -443,31 +448,31 @@ const DoctorsAppointmentDetails = () => {
                     {appointment.status}
                   </span>
                 </div>
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <div className="avatar avatar-lg bg-soft-primary text-primary rounded-3 flex-shrink-0 d-flex align-items-center justify-content-center shadow-xs">
-                    <i className="ti ti-calendar-event fs-24" />
+                <div className="d-flex align-items-center gap-3 mb-2">
+                  <div className="avatar avatar-md bg-soft-primary text-primary rounded-3 flex-shrink-0 d-flex align-items-center justify-content-center shadow-xs">
+                    <i className="ti ti-calendar-event fs-20" />
                   </div>
                   <div>
-                    <p className="text-muted fs-11 fw-bold text-uppercase mb-0 tracking-wider opacity-75">Date & Visit Type</p>
-                    <h5 className="fw-bold text-dark mb-0 fs-15">
+                    <p className="text-muted fs-10 fw-bold text-uppercase mb-0 tracking-wider opacity-75">Date & Visit Type</p>
+                    <h5 className="fw-bold text-dark mb-0 fs-14">
                       {dayjs(appointment.scheduledAt).format('DD MMM, YYYY')}
-                      <span className="text-primary fs-11 ms-2 fw-medium px-2 py-1 bg-soft-primary rounded-pill">{appointment.appointmentType || "Routine"}</span>
+                      <span className="text-primary fs-10 ms-2 fw-medium px-2 py-1 bg-soft-primary rounded-pill">{appointment.appointmentType || "Routine"}</span>
                     </h5>
                   </div>
                 </div>
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <div className="avatar avatar-lg bg-soft-info text-info rounded-3 flex-shrink-0 d-flex align-items-center justify-content-center shadow-xs">
-                    <i className="ti ti-clock-hour-4 fs-24" />
+                <div className="d-flex align-items-center gap-3 mb-2">
+                  <div className="avatar avatar-md bg-soft-info text-info rounded-3 flex-shrink-0 d-flex align-items-center justify-content-center shadow-xs">
+                    <i className="ti ti-clock-hour-4 fs-20" />
                   </div>
                   <div>
-                    <p className="text-muted fs-11 fw-bold text-uppercase mb-0 tracking-wider opacity-75">Scheduled Slot</p>
-                    <h5 className="fw-bold text-dark mb-0 fs-15">{formatAppointmentTimeRange(appointment.scheduledAt, appointment.endAt)}</h5>
+                    <p className="text-muted fs-10 fw-bold text-uppercase mb-0 tracking-wider opacity-75">Scheduled Slot</p>
+                    <h5 className="fw-bold text-dark mb-0 fs-14">{formatAppointmentTimeRange(appointment.scheduledAt, appointment.endAt)}</h5>
                   </div>
                 </div>
-                <div className="d-flex align-items-center justify-content-between mt-3 pt-3 border-top">
+                <div className="d-flex align-items-center justify-content-between mt-2 pt-2 border-top">
                   <div className="d-flex align-items-center gap-2 text-truncate">
-                    <i className="ti ti-map-pin text-muted fs-14" />
-                    <span className="text-muted fs-12 fw-medium text-truncate">{appointment.location || "Room 102, OPD"}</span>
+                    <i className="ti ti-map-pin text-muted fs-12" />
+                    <span className="text-muted fs-11 fw-medium text-truncate">{appointment.location || "Room 102, OPD"}</span>
                   </div>
                   <div className="bg-success-soft px-2 py-1 rounded-2 border-dashed flex-shrink-0">
                     <span className="fs-10 fw-bold text-success text-uppercase">
@@ -483,15 +488,15 @@ const DoctorsAppointmentDetails = () => {
 
         <div className="row">
           <div className="col-lg-12">
-            <ul className="nav nav-pills nav-pills-primary gap-2 mb-3 bg-white p-2 rounded shadow-sm border" role="tablist">
+            <ul className="nav nav-pills nav-pills-primary gap-1 mb-3 bg-white p-1 rounded shadow-sm border" role="tablist">
               <li className="nav-item border-0">
-                <button className="nav-link active fw-bold py-2 px-3 fs-13 border-0" data-bs-toggle="pill" data-bs-target="#overview" type="button" role="tab">Overview</button>
+                <button className="nav-link active fw-bold py-1 px-3 fs-12 border-0" data-bs-toggle="pill" data-bs-target="#overview" type="button" role="tab">Overview</button>
               </li>
               <li className="nav-item border-0">
-                <button className="nav-link fw-bold py-2 px-3 fs-13 border-0" data-bs-toggle="pill" data-bs-target="#prescription" type="button" role="tab">Prescriptions ({linkedPrescriptions.length})</button>
+                <button className="nav-link fw-bold py-1 px-3 fs-12 border-0" data-bs-toggle="pill" data-bs-target="#prescription" type="button" role="tab">Prescriptions ({linkedPrescriptions.length})</button>
               </li>
               <li className="nav-item border-0">
-                <button className="nav-link fw-bold py-2 px-3 fs-13 border-0" data-bs-toggle="pill" data-bs-target="#followup" type="button" role="tab">
+                <button className="nav-link fw-bold py-1 px-3 fs-12 border-0" data-bs-toggle="pill" data-bs-target="#followup" type="button" role="tab">
                   Follow-ups {sortedChain.length > 1 ? `(${sortedChain.length - 1})` : ""}
                 </button>
               </li>

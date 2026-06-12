@@ -9,7 +9,13 @@ import { setExpandMenu, setMobileSidebar } from "../../redux/sidebarSlice";
 const SidebarTwo = () => {
   const location = useLocation();
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path.includes('/:')) {
+      const basePath = path.split('/:')[0];
+      return location.pathname.includes(basePath);
+    }
+    return location.pathname === path;
+  };
 
   // State to manage open submenus
   const [openSubmenus, setOpenSubmenus] = useState<{ [key: string]: boolean }>(

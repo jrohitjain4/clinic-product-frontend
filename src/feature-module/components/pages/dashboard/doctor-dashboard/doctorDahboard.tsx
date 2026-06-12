@@ -86,20 +86,7 @@ const DoctorDahboard = () => {
                 )}
                 {marked ? (markedByAdmin ? 'Admin Marked' : 'Attendance Marked') : 'Mark Today\'s Attendance'}
               </button>
-              <Link
-                to="#"
-                className="btn btn-primary d-inline-flex align-items-center"
-                data-bs-toggle="offcanvas"
-                data-bs-target="#new_appointment"
-              >
-                New Appointment <i className="ti ti-plus ms-2" /></Link>
-              <Link
-                to="#"
-                className="btn btn-outline-white bg-white d-inline-flex align-items-center"
-              >
-                <i className="ti ti-calendar-time me-1" />
-                Schedule Availability
-              </Link>
+
             </div>
           </div>
           {/* End Page Header */}

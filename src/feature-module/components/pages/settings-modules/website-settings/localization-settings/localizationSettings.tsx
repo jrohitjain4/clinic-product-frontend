@@ -54,9 +54,9 @@ const LocalizationSettings = () => {
         const errData = await r.json().catch(() => ({}))
         throw new Error(errData.message || `Server error (${r.status})`)
       }
-      toast.success("✅ Clinic overview saved! It will now appear on your public landing page.")
+      toast.success("Clinic overview saved! It will now appear on your public landing page.")
     } catch (err: any) {
-      toast.error(`❌ Save failed: ${err.message || "Unknown error. Please try again."}`)
+      toast.error(`Save failed: ${err.message || "Unknown error. Please try again."}`)
     } finally {
       setSaving(false)
     }

@@ -12,10 +12,27 @@ export const useClinicAppointments = (params?: {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Auto-inject doctorId / patientId based on logged-in user role
   const buildUrl = useCallback(() => {
     const q = new URLSearchParams();
-    if (params?.patientId) q.set("patientId", params.patientId);
-    if (params?.doctorId) q.set("doctorId", params.doctorId);
+
+    // If caller explicitly passes params, use those (e.g. patient history in detail page)
+    if (params?.patientId) {
+      q.set("patientId", params.patientId);
+    } else if (params?.doctorId) {
+      q.set("doctorId", params.doctorId);
+    } else {
+      // Auto-detect from localStorage user
+      try {
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        if (user?.role === "DOCTOR" && user?.doctorId) {
+          q.set("doctorId", user.doctorId);
+        } else if (user?.role === "PATIENT" && user?.patientId) {
+          q.set("patientId", user.patientId);
+        }
+      } catch (_) { /* ignore parse errors */ }
+    }
+
     const qs = q.toString();
     return apiUrl(`/api/appointments${qs ? `?${qs}` : ""}`);
   }, [params?.patientId, params?.doctorId]);

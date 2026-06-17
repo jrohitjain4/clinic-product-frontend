@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link, useParams } from "react-router";
 import { all_routes } from "../../../routes/all_routes";
 import FooterFront from "./FooterFront";
+import { DatePicker } from "antd";
+import dayjs, { Dayjs } from "dayjs";
 
 interface Doctor {
     id: string;
@@ -26,6 +28,8 @@ interface ClinicData {
     doctors: Doctor[]; services: Service[]; reviews: Review[];
     gallery: { url: string; category: string }[];
     workingDays: { schedules: any[]; offDays: number[] } | null;
+    onboardingStep?: number;
+    nextAppointmentCode?: string;
 }
 
 const Stars = ({ n, color, size }: { n: number; color?: string; size?: number }) => (
@@ -56,16 +60,45 @@ export default function ClinicLandingPage() {
         (loggedUser.clinicId === clinic.id || loggedUser.clinic?.id === clinic.id) &&
         (loggedUser.role === "ADMIN" || loggedUser.role === "DOCTOR");
 
-    const isIncomplete = clinic && (!clinic.about || clinic.tagline === "Quality Healthcare for Your Family");
+    const isIncomplete = clinic && (clinic.onboardingStep !== undefined ? clinic.onboardingStep < 2 : !clinic.about);
 
     // ── Booking Modal State ──
     const [showModal, setShowModal] = useState(false);
     const [preselectedDoctor, setPreselectedDoctor] = useState("");
-    const [bookForm, setBookForm] = useState({ name: "", phone: "", doctorId: "", date: "", time: "", reason: "" });
+    const [bookForm, setBookForm] = useState({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        gender: "",
+        doctorId: "",
+        date: null as Dayjs | null,
+        time: "",
+        reason: ""
+    });
     const [bookFormErrors, setBookFormErrors] = useState<any>({});
     const [bookLoading, setBookLoading] = useState(false);
     const [bookSuccess, setBookSuccess] = useState<string | null>(null);
     const [bookError, setBookError] = useState<string | null>(null);
+
+    // Credentials returned on new registration
+    const [generatedCreds, setGeneratedCreds] = useState<{
+        email?: string;
+        password?: string;
+        isNewUserCreated?: boolean;
+        appointmentCode?: string;
+    } | null>(null);
+
+    // Selected Doctor's Availability State
+    const [availability, setAvailability] = useState<{
+        schedules: any;
+        duration?: number;
+        holidays: any[];
+        leaves: any[];
+        appointments: any[];
+        clinicWorkingDays?: number[];
+        clinicSchedules?: any[];
+    } | null>(null);
 
     // ── Doctor Profile Modal State ──
     const [selectedDocDetails, setSelectedDocDetails] = useState<Doctor | null>(null);
@@ -73,11 +106,128 @@ export default function ClinicLandingPage() {
 
     const openBooking = (doctorId = "") => {
         setPreselectedDoctor(doctorId);
-        setBookForm({ name: "", phone: "", doctorId, date: "", time: "", reason: "" });
+        setBookForm({
+            firstName: "",
+            lastName: "",
+            email: "",
+            phone: "",
+            gender: "",
+            doctorId: doctorId,
+            date: null,
+            time: "",
+            reason: ""
+        });
         setBookSuccess(null);
         setBookError(null);
+        setGeneratedCreds(null);
         setShowModal(true);
         setSelectedDocDetails(null); // Close doctor details modal if it was open
+    };
+
+    // Fetch availability when selected doctor changes
+    useEffect(() => {
+        const docId = bookForm.doctorId || preselectedDoctor;
+        if (docId) {
+            const start = dayjs().startOf("month").subtract(1, "month").toISOString();
+            const end = dayjs().endOf("month").add(3, "month").toISOString();
+            fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/doctors/${docId}/availability?startDate=${start}&endDate=${end}`)
+                .then((r) => r.json())
+                .then((data) => {
+                    setAvailability(data);
+                })
+                .catch(console.error);
+        } else {
+            setAvailability(null);
+        }
+    }, [bookForm.doctorId, preselectedDoctor]);
+
+    // Compute session options (like in admin appointment form page)
+    const sessionOptions = useMemo(() => {
+        if (!availability || !bookForm.date) return [];
+        const dayName = bookForm.date.format("dddd");
+        const daySchedule = availability.schedules?.[dayName];
+        if (!Array.isArray(daySchedule) || daySchedule.length === 0) return [];
+
+        return daySchedule.map((session: any, idx: number) => {
+            const sessionLabel = session.label || (idx === 0 ? "Morning Session" : idx === 1 ? "Evening Session" : `Session ${idx + 1}`);
+            const fromFormatted = dayjs(session.from, "HH:mm").format("hh:mm A");
+            const toFormatted = dayjs(session.to, "HH:mm").format("hh:mm A");
+
+            return {
+                value: session.from,
+                label: `${sessionLabel}: ${fromFormatted} – ${toFormatted}`,
+            };
+        });
+    }, [availability, bookForm.date]);
+
+    // Calendar Date Styling Custom Cell Render
+    const cellRender = (current: Dayjs | any, info: any) => {
+        if (info.type !== 'date' || !availability || !dayjs.isDayjs(current)) return info.originNode;
+
+        const dateStr = current.format("YYYY-MM-DD");
+        const dayName = current.format("dddd");
+
+        // 1. Holiday (Blueish)
+        const isHoliday = availability.holidays?.some((h: any) => {
+            const start = dayjs(h.date).startOf("day");
+            const end = h.endDate ? dayjs(h.endDate).endOf("day") : start.endOf("day");
+            return (current.isAfter(start) || current.isSame(start)) && (current.isBefore(end) || current.isSame(end));
+        });
+
+        if (isHoliday) {
+            return (
+                <div className="ant-picker-cell-inner" style={{ backgroundColor: '#e6f7ff', border: '1px solid #91d5ff', borderRadius: '4px', color: '#0050b3' }}>
+                    {current.date()}
+                </div>
+            );
+        }
+
+        // 2. Clinic Off Day (Orange/Red)
+        const clinicOffDays = availability.clinicWorkingDays || [0];
+        const dayOfWeek = current.day();
+        if (clinicOffDays.includes(dayOfWeek)) {
+            return (
+                <div className="ant-picker-cell-inner" style={{ backgroundColor: '#fff7e6', border: '1px solid #ffd591', borderRadius: '4px', color: '#d46b08' }}>
+                    {current.date()}
+                </div>
+            );
+        }
+
+        // 3. Doctor Weekly Off (Red)
+        const daySchedule = availability.schedules?.[dayName];
+        const isWorking = Array.isArray(daySchedule) && daySchedule.length > 0;
+        if (!isWorking) {
+            return (
+                <div className="ant-picker-cell-inner" style={{ backgroundColor: '#fff1f0', border: '1px solid #ffa39e', borderRadius: '4px', color: '#a8071a' }}>
+                    {current.date()}
+                </div>
+            );
+        }
+
+        // 4. Leave (Yellow)
+        const isLeave = availability.leaves?.some((l: any) => {
+            const s = dayjs(l.start).startOf("day");
+            const e = dayjs(l.end).endOf("day");
+            return (current.isAfter(s) || current.isSame(s)) && (current.isBefore(e) || current.isSame(e));
+        });
+        if (isLeave) {
+            return (
+                <div className="ant-picker-cell-inner" style={{ backgroundColor: '#fffbe6', border: '1px solid #ffe58f', borderRadius: '4px', color: '#874d00' }}>
+                    {current.date()}
+                </div>
+            );
+        }
+
+        // 5. Working Day (Green)
+        if (isWorking) {
+            return (
+                <div className="ant-picker-cell-inner" style={{ backgroundColor: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: '4px', color: '#237804' }}>
+                    {current.date()}
+                </div>
+            );
+        }
+
+        return info.originNode;
     };
 
     const handleBookSubmit = async (e: React.FormEvent) => {
@@ -89,9 +239,14 @@ export default function ClinicLandingPage() {
         let hasError = false;
         const newErrors: any = {};
 
-        if (!bookForm.name.trim()) { newErrors.name = "Name is required"; hasError = true; }
+        if (!bookForm.firstName.trim()) { newErrors.firstName = "First name is required"; hasError = true; }
+        if (!bookForm.lastName.trim()) { newErrors.lastName = "Last name is required"; hasError = true; }
+        if (!bookForm.email.trim()) { newErrors.email = "Email is required"; hasError = true; }
         if (!bookForm.phone.trim()) { newErrors.phone = "Phone number is required"; hasError = true; }
-        if (!bookForm.doctorId) { newErrors.doctorId = "Please select a doctor"; hasError = true; }
+        if (!bookForm.gender) { newErrors.gender = "Gender is required"; hasError = true; }
+
+        const docId = bookForm.doctorId || preselectedDoctor;
+        if (!docId) { newErrors.doctorId = "Please select a doctor"; hasError = true; }
         if (!bookForm.date) { newErrors.date = "Please select a date"; hasError = true; }
         if (!bookForm.time) { newErrors.time = "Please select a time slot"; hasError = true; }
 
@@ -106,11 +261,28 @@ export default function ClinicLandingPage() {
             const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/landing/id/${clinic?.id}/book`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(bookForm),
+                body: JSON.stringify({
+                    firstName: bookForm.firstName,
+                    lastName: bookForm.lastName,
+                    email: bookForm.email,
+                    phone: bookForm.phone,
+                    gender: bookForm.gender,
+                    doctorId: docId,
+                    date: bookForm.date!.format("YYYY-MM-DD"),
+                    time: bookForm.time,
+                    reason: bookForm.reason
+                }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Booking failed");
-            setBookSuccess(data.message);
+            
+            setGeneratedCreds({
+                email: data.email,
+                password: data.generatedPassword,
+                isNewUserCreated: data.isNewUserCreated,
+                appointmentCode: data.appointmentCode
+            });
+            setBookSuccess(data.message || "Appointment booked successfully!");
         } catch (err: any) {
             setBookError(err.message);
         } finally {
@@ -255,14 +427,22 @@ export default function ClinicLandingPage() {
                         <li><a href="#contact" onClick={(e) => { e.preventDefault(); setSelectedDocDetails(null); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }); }}>Contact</a></li>
                     </ul>
 
-                    <div className="dy-nav-actions">
+                    <div className="dy-nav-actions d-flex align-items-center gap-2">
                         <Link
                             to={all_routes.login}
+                            className="btn btn-outline-primary px-4 py-2 fw-semibold d-flex align-items-center justify-content-center"
+                            style={{ borderRadius: '8px', minHeight: '44px', border: '2px solid #1d4ed8', color: '#1d4ed8' }}
+                        >
+                            Login
+                        </Link>
+                        <button
+                            type="button"
+                            onClick={() => openBooking("")}
                             className="btn btn-primary px-4 py-2 fw-semibold d-flex align-items-center justify-content-center"
                             style={{ borderRadius: '8px', minHeight: '44px' }}
                         >
                             Book Appointment
-                        </Link>
+                        </button>
                     </div>
                 </div>
             </nav>
@@ -377,13 +557,14 @@ export default function ClinicLandingPage() {
                                                     / 30 Min
                                                 </span>
                                             </h6>
-                                            <Link
-                                                to={all_routes.login}
+                                            <button
+                                                type="button"
+                                                onClick={() => openBooking(selectedDocDetails.id)}
                                                 className="btn btn-primary"
                                             >
                                                 <i className="ti ti-calendar-event me-1" />
                                                 Book Appointment
-                                            </Link>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -655,8 +836,8 @@ export default function ClinicLandingPage() {
                                                     <p className="mb-0 opacity-75 fs-14">Get a free pre-consultation chat with our support team to clear your doubts.</p>
                                                 </div>
                                                 <div className="d-flex gap-3">
-                                                    <button className="btn btn-light fw-bold px-4">Contact Support</button>
-                                                    <Link to={all_routes.login} className="btn btn-warning fw-bold px-4">Book Appointment</Link>
+                                                    <button className="btn btn-light fw-bold px-4" onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}>Contact Support</button>
+                                                    <button type="button" onClick={() => openBooking("")} className="btn btn-warning fw-bold px-4">Book Appointment</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -714,12 +895,13 @@ export default function ClinicLandingPage() {
                                     </div>
 
                                     <div className="d-flex flex-wrap gap-3">
-                                        <Link
-                                            to={all_routes.login}
+                                        <button
+                                            type="button"
+                                            onClick={() => openBooking("")}
                                             className="btn btn-primary px-4 py-2 fw-semibold d-flex align-items-center gap-2 rounded-3 text-white shadow"
                                         >
                                             <i className="ti ti-calendar-event" /> Book Appointment
-                                        </Link>
+                                        </button>
                                         <a
                                             href={`tel:${clinic.phone}`}
                                             className="btn bg-white px-4 py-2 fw-semibold d-flex align-items-center gap-2 rounded-3 shadow-sm"
@@ -869,13 +1051,13 @@ export default function ClinicLandingPage() {
                                                 </div>
                                             </div>
                                             <div className="px-3 pb-4 mt-auto">
-                                                <Link
-                                                    to={all_routes.login}
-                                                    onClick={(e) => { e.stopPropagation(); }}
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); openBooking(doc.id); }}
                                                     className="btn btn-primary w-100 fw-bold rounded-3"
                                                 >
                                                     Book Appointment
-                                                </Link>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -926,93 +1108,55 @@ export default function ClinicLandingPage() {
 
                                 {/* Booking Card */}
                                 <div className="col-lg-4">
-                                    <div id="booking-widget" className="card h-100 p-4 border-0 rounded-4 shadow-sm" style={{ background: "#1d4ed8" }}>
-                                        <h6 className="fw-bold mb-4 text-white" style={{ letterSpacing: "0.5px" }}>BOOK APPOINTMENT ONLINE</h6>
-                                        <form onSubmit={handleBookSubmit} noValidate>
+                                    <div id="booking-widget" className="card h-100 p-4 border-0 rounded-4 shadow-sm text-white d-flex flex-column justify-content-between" style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)" }}>
+                                        <div>
+                                            <div className="d-flex align-items-center justify-content-center mb-3 rounded-circle bg-white bg-opacity-10" style={{ width: "50px", height: "50px" }}>
+                                                <i className="ti ti-calendar-event fs-3 text-white" />
+                                            </div>
+                                            <h5 className="fw-bold mb-3 text-white" style={{ letterSpacing: "0.5px" }}>Book Appointment Online</h5>
+                                            <p className="text-white text-opacity-80 small mb-4" style={{ lineHeight: "1.6" }}>
+                                                Skip the queue! Book your appointment directly online with our simplified booking system.
+                                            </p>
+                                            
                                             <div className="d-flex flex-column gap-3 mb-4">
-                                                <div>
-                                                    <input
-                                                        type="text"
-                                                        className={`form-control py-2 border-0 rounded-3 shadow-none ${bookFormErrors.name ? 'is-invalid' : ''}`}
-                                                        placeholder="Your Name"
-                                                        style={{ fontSize: "14px" }}
-                                                        value={bookForm.name}
-                                                        onChange={(e) => setBookForm({ ...bookForm, name: e.target.value })}
-                                                        required
-                                                    />
-                                                    {bookFormErrors.name && <div className="invalid-feedback d-block">{bookFormErrors.name}</div>}
+                                                <div className="d-flex gap-3 align-items-start">
+                                                    <div className="d-flex align-items-center justify-content-center rounded-circle bg-white bg-opacity-20 mt-1" style={{ width: "24px", height: "24px", minWidth: "24px" }}>
+                                                        <span className="fw-bold small" style={{ fontSize: "11px" }}>1</span>
+                                                    </div>
+                                                    <div>
+                                                        <h6 className="fw-bold mb-1 text-white small">Choose Your Doctor</h6>
+                                                        <p className="text-white text-opacity-70 mb-0" style={{ fontSize: "12px" }}>Select from our team of qualified specialists.</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <input
-                                                        type="text"
-                                                        className={`form-control py-2 border-0 rounded-3 shadow-none ${bookFormErrors.phone ? 'is-invalid' : ''}`}
-                                                        placeholder="Phone Number"
-                                                        style={{ fontSize: "14px" }}
-                                                        value={bookForm.phone}
-                                                        onChange={(e) => setBookForm({ ...bookForm, phone: e.target.value })}
-                                                        required
-                                                    />
-                                                    {bookFormErrors.phone && <div className="invalid-feedback d-block">{bookFormErrors.phone}</div>}
+                                                <div className="d-flex gap-3 align-items-start">
+                                                    <div className="d-flex align-items-center justify-content-center rounded-circle bg-white bg-opacity-20 mt-1" style={{ width: "24px", height: "24px", minWidth: "24px" }}>
+                                                        <span className="fw-bold small" style={{ fontSize: "11px" }}>2</span>
+                                                    </div>
+                                                    <div>
+                                                        <h6 className="fw-bold mb-1 text-white small">Select Date & Time</h6>
+                                                        <p className="text-white text-opacity-70 mb-0" style={{ fontSize: "12px" }}>Pick a slot from the live availability calendar.</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <select
-                                                        className={`form-select py-2 border-0 rounded-3 shadow-none text-secondary ${bookFormErrors.doctorId ? 'is-invalid' : ''}`}
-                                                        style={{ fontSize: "14px" }}
-                                                        value={bookForm.doctorId}
-                                                        onChange={(e) => setBookForm({ ...bookForm, doctorId: e.target.value })}
-                                                        required
-                                                    >
-                                                        <option value="">Select Doctor</option>
-                                                        {clinic.doctors.map(doc => (
-                                                            <option key={doc.id} value={doc.id}>{doc.name}</option>
-                                                        ))}
-                                                    </select>
-                                                    {bookFormErrors.doctorId && <div className="invalid-feedback d-block">{bookFormErrors.doctorId}</div>}
-                                                </div>
-                                                <div>
-                                                    <input
-                                                        type="date"
-                                                        className={`form-control py-2 border-0 rounded-3 shadow-none text-secondary ${bookFormErrors.date ? 'is-invalid' : ''}`}
-                                                        style={{ fontSize: "14px" }}
-                                                        value={bookForm.date}
-                                                        onChange={(e) => setBookForm({ ...bookForm, date: e.target.value })}
-                                                        required
-                                                    />
-                                                    {bookFormErrors.date && <div className="invalid-feedback d-block">{bookFormErrors.date}</div>}
-                                                </div>
-                                                <div>
-                                                    <select
-                                                        className={`form-select py-2 border-0 rounded-3 shadow-none text-secondary ${bookFormErrors.time ? 'is-invalid' : ''}`}
-                                                        style={{ fontSize: "14px" }}
-                                                        value={bookForm.time}
-                                                        onChange={(e) => setBookForm({ ...bookForm, time: e.target.value })}
-                                                        required
-                                                    >
-                                                        <option value="">Select Time Slot</option>
-                                                        {["09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM"].map(t => (
-                                                            <option key={t} value={t}>{t}</option>
-                                                        ))}
-                                                    </select>
-                                                    {bookFormErrors.time && <div className="invalid-feedback d-block">{bookFormErrors.time}</div>}
+                                                <div className="d-flex gap-3 align-items-start">
+                                                    <div className="d-flex align-items-center justify-content-center rounded-circle bg-white bg-opacity-20 mt-1" style={{ width: "24px", height: "24px", minWidth: "24px" }}>
+                                                        <span className="fw-bold small" style={{ fontSize: "11px" }}>3</span>
+                                                    </div>
+                                                    <div>
+                                                        <h6 className="fw-bold mb-1 text-white small">Instant Account Info</h6>
+                                                        <p className="text-white text-opacity-70 mb-0" style={{ fontSize: "12px" }}>Receive credentials & confirmation instantly via email.</p>
+                                                    </div>
                                                 </div>
                                             </div>
+                                        </div>
 
-                                            {bookError && <div className="alert alert-danger py-2 fs-12 mb-3">{bookError}</div>}
-                                            {bookSuccess && <div className="alert alert-success py-2 fs-12 mb-3">{bookSuccess}</div>}
-
-                                            <button
-                                                type="submit"
-                                                disabled={bookLoading}
-                                                className="btn w-100 mt-auto fw-bold text-white shadow-sm py-2 d-flex align-items-center justify-content-center gap-2"
-                                                style={{ background: "#10b981", fontSize: "14px", border: "none" }}
-                                            >
-                                                {bookLoading ? (
-                                                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                                ) : (
-                                                    <><i className="ti ti-lock" /> Confirm Appointment</>
-                                                )}
-                                            </button>
-                                        </form>
+                                        <button
+                                            type="button"
+                                            onClick={() => openBooking("")}
+                                            className="btn w-100 mt-auto fw-bold text-dark bg-white shadow py-3 rounded-3 d-flex align-items-center justify-content-center gap-2 border-0"
+                                            style={{ fontSize: "14px", transition: "all 0.3s ease" }}
+                                        >
+                                            <i className="ti ti-circle-plus fs-5" /> Book Online Appointment
+                                        </button>
                                     </div>
                                 </div>
 
@@ -1316,7 +1460,7 @@ export default function ClinicLandingPage() {
                         style={{ zIndex: 99999, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
                         onClick={(e) => { if (e.target === e.currentTarget) { setShowModal(false); } }}
                     >
-                        <div className="bg-white rounded-4 shadow-lg" style={{ width: "100%", maxWidth: "520px", margin: "20px", maxHeight: "90vh", overflowY: "auto" }}>
+                        <div className="bg-white rounded-4 shadow-lg" style={{ width: "100%", maxWidth: "560px", margin: "20px", maxHeight: "90vh", overflowY: "auto" }}>
                             {/* Modal Header */}
                             <div className="d-flex align-items-center justify-content-between p-4 pb-3 border-bottom" style={{ background: "#1d4ed8", borderRadius: "16px 16px 0 0" }}>
                                 <div className="d-flex align-items-center gap-3">
@@ -1337,45 +1481,115 @@ export default function ClinicLandingPage() {
                                 </button>
                             </div>
 
-                            <div className="p-4">
+                            <div className="p-4" id="modal-datepicker-container" style={{ position: "relative" }}>
                                 {bookSuccess ? (
-                                    /* Success State */
+                                    /* Success State Popup */
                                     <div className="text-center py-4">
                                         <div className="d-flex align-items-center justify-content-center mb-4">
                                             <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 80, height: 80, background: "#dcfce7" }}>
                                                 <i className="ti ti-circle-check-filled" style={{ fontSize: 48, color: "#16a34a" }} />
                                             </div>
                                         </div>
-                                        <h5 className="fw-bold text-dark mb-2">Appointment Confirmed!</h5>
-                                        <p className="text-secondary fw-medium mb-4" style={{ fontSize: "14px" }}>{bookSuccess}</p>
-                                        <p className="text-secondary" style={{ fontSize: "13px" }}>Our team will call you shortly to confirm your appointment. Please keep your phone reachable.</p>
+                                        <h4 className="fw-bold text-dark mb-2">Booking Success!</h4>
+                                        <p className="text-success fw-bold mb-4" style={{ fontSize: "15px" }}>{bookSuccess}</p>
+                                        
+                                        {/* Appointment ID Details */}
+                                        <div className="mb-4 p-3 bg-light rounded-3 text-start">
+                                            <div className="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                                                <span className="text-secondary fw-semibold">Appointment ID:</span>
+                                                <span className="text-dark fw-bold">{generatedCreds?.appointmentCode || "AP..."}</span>
+                                            </div>
+                                            
+                                            {/* Account Details if user was created */}
+                                            {generatedCreds?.isNewUserCreated ? (
+                                                <>
+                                                    <div className="alert alert-info py-2 px-3 rounded-2 fs-12 mb-3">
+                                                        <i className="ti ti-info-circle-filled me-1" />
+                                                        Your patient login account has been created successfully! A credentials email has been sent to your Gmail.
+                                                    </div>
+                                                    <div className="d-flex justify-content-between mb-1">
+                                                        <span className="text-secondary fs-13">Login Email:</span>
+                                                        <span className="text-dark fw-bold fs-13">{generatedCreds?.email}</span>
+                                                    </div>
+                                                    <div className="d-flex justify-content-between">
+                                                        <span className="text-secondary fs-13">Temporary Password:</span>
+                                                        <span className="text-primary fw-bold fs-13" style={{ letterSpacing: "0.5px" }}>{generatedCreds?.password}</span>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="alert alert-secondary py-2 px-3 rounded-2 fs-12 mb-0">
+                                                    <i className="ti ti-info-circle-filled me-1" />
+                                                    Linked with your existing patient portal account.
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Confirmation Notice */}
+                                        <div className="p-3 mb-4 rounded-3 text-center" style={{ backgroundColor: "#fff9db", border: "1px solid #ffec99" }}>
+                                            <h6 className="fw-bold mb-1" style={{ color: "#b45309" }}>
+                                                ⚠️ Next Steps to Confirm Booking
+                                            </h6>
+                                            <p className="mb-0 fw-bold fs-14" style={{ color: "#ef4444" }}>
+                                                To confirm your booking, please call the admin and pay the advance.
+                                            </p>
+                                        </div>
+
                                         <button
-                                            className="btn mt-3 fw-bold px-5 py-2 rounded-3 text-white"
-                                            style={{ background: "#1d4ed8", fontSize: "14px" }}
+                                            className="btn mt-2 fw-bold px-5 py-2.5 rounded-3 text-white w-100"
+                                            style={{ background: "#1d4ed8", fontSize: "14px", border: "none" }}
                                             onClick={() => setShowModal(false)}
                                         >
                                             Done
                                         </button>
                                     </div>
                                 ) : (
-                                    /* Form State */
+                                    /* Booking Form State */
                                     <form onSubmit={handleBookSubmit} noValidate>
                                         <div className="row g-3">
-                                            <div className="col-12">
-                                                <label className="form-label fw-bold text-dark" style={{ fontSize: "13px" }}>Full Name <span className="text-danger">*</span></label>
+                                            {/* Patient First & Last Name */}
+                                            <div className="col-6">
+                                                <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>First Name <span className="text-danger">*</span></label>
                                                 <input
                                                     type="text"
-                                                    className={`form-control rounded-3 ${bookFormErrors.name ? 'is-invalid' : ''}`}
-                                                    placeholder="Enter your full name"
-                                                    value={bookForm.name}
-                                                    onChange={e => setBookForm(f => ({ ...f, name: e.target.value }))}
+                                                    className={`form-control rounded-3 ${bookFormErrors.firstName ? 'is-invalid' : ''}`}
+                                                    placeholder="First name"
+                                                    value={bookForm.firstName}
+                                                    onChange={e => setBookForm(f => ({ ...f, firstName: e.target.value }))}
                                                     required
                                                     style={{ fontSize: "14px" }}
                                                 />
-                                                {bookFormErrors.name && <div className="invalid-feedback">{bookFormErrors.name}</div>}
+                                                {bookFormErrors.firstName && <div className="invalid-feedback">{bookFormErrors.firstName}</div>}
                                             </div>
+                                            <div className="col-6">
+                                                <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Last Name <span className="text-danger">*</span></label>
+                                                <input
+                                                    type="text"
+                                                    className={`form-control rounded-3 ${bookFormErrors.lastName ? 'is-invalid' : ''}`}
+                                                    placeholder="Last name"
+                                                    value={bookForm.lastName}
+                                                    onChange={e => setBookForm(f => ({ ...f, lastName: e.target.value }))}
+                                                    required
+                                                    style={{ fontSize: "14px" }}
+                                                />
+                                                {bookFormErrors.lastName && <div className="invalid-feedback">{bookFormErrors.lastName}</div>}
+                                            </div>
+
+                                            {/* Email & Phone */}
                                             <div className="col-12">
-                                                <label className="form-label fw-bold text-dark" style={{ fontSize: "13px" }}>Phone Number <span className="text-danger">*</span></label>
+                                                <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Email Address <span className="text-danger">*</span></label>
+                                                <input
+                                                    type="email"
+                                                    className={`form-control rounded-3 ${bookFormErrors.email ? 'is-invalid' : ''}`}
+                                                    placeholder="username@example.com"
+                                                    value={bookForm.email}
+                                                    onChange={e => setBookForm(f => ({ ...f, email: e.target.value }))}
+                                                    required
+                                                    style={{ fontSize: "14px" }}
+                                                />
+                                                {bookFormErrors.email && <div className="invalid-feedback">{bookFormErrors.email}</div>}
+                                            </div>
+                                            <div className="col-6">
+                                                <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Phone Number <span className="text-danger">*</span></label>
                                                 <input
                                                     type="tel"
                                                     className={`form-control rounded-3 ${bookFormErrors.phone ? 'is-invalid' : ''}`}
@@ -1387,62 +1601,113 @@ export default function ClinicLandingPage() {
                                                 />
                                                 {bookFormErrors.phone && <div className="invalid-feedback">{bookFormErrors.phone}</div>}
                                             </div>
-                                            <div className="col-12">
-                                                <label className="form-label fw-bold text-dark" style={{ fontSize: "13px" }}>Select Doctor</label>
+
+                                            {/* Gender */}
+                                            <div className="col-6">
+                                                <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Gender <span className="text-danger">*</span></label>
                                                 <select
-                                                    className={`form-select rounded-3 text-secondary ${bookFormErrors.doctorId ? 'is-invalid' : ''}`}
-                                                    value={bookForm.doctorId || preselectedDoctor}
-                                                    onChange={e => setBookForm(f => ({ ...f, doctorId: e.target.value }))}
+                                                    className={`form-select rounded-3 text-secondary ${bookFormErrors.gender ? 'is-invalid' : ''}`}
+                                                    value={bookForm.gender}
+                                                    onChange={e => setBookForm(f => ({ ...f, gender: e.target.value }))}
+                                                    required
                                                     style={{ fontSize: "14px" }}
                                                 >
-                                                    <option value="">Any available doctor</option>
+                                                    <option value="">Select Gender</option>
+                                                    <option value="Male">Male</option>
+                                                    <option value="Female">Female</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                                {bookFormErrors.gender && <div className="invalid-feedback">{bookFormErrors.gender}</div>}
+                                            </div>
+
+                                            {/* Appointment ID */}
+                                            <div className="col-12">
+                                                <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Appointment ID</label>
+                                                <input
+                                                    type="text"
+                                                    className="form-control rounded-3"
+                                                    value={clinic.nextAppointmentCode || "AP..."}
+                                                    disabled
+                                                    style={{ fontSize: "14px", backgroundColor: "#f8fafc" }}
+                                                />
+                                            </div>
+
+                                            {/* Doctor Selection */}
+                                            <div className="col-12">
+                                                <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Select Doctor <span className="text-danger">*</span></label>
+                                                <select
+                                                    className={`form-select rounded-3 text-secondary ${bookFormErrors.doctorId ? 'is-invalid' : ''}`}
+                                                    value={bookForm.doctorId}
+                                                    onChange={e => setBookForm(f => ({ ...f, doctorId: e.target.value, date: null, time: "" }))}
+                                                    style={{ fontSize: "14px" }}
+                                                >
+                                                    <option value="">Select a doctor</option>
                                                     {realDoctors.map((d: any) => (
                                                         <option key={d.id} value={d.id}>{d.name} — {d.specialization}</option>
                                                     ))}
                                                 </select>
                                                 {bookFormErrors.doctorId && <div className="invalid-feedback">{bookFormErrors.doctorId}</div>}
                                             </div>
+
+                                            {/* Calendar (antd DatePicker with Custom Styles) */}
                                             <div className="col-6">
-                                                <label className="form-label fw-bold text-dark" style={{ fontSize: "13px" }}>Date <span className="text-danger">*</span></label>
-                                                <input
-                                                    type="date"
-                                                    className={`form-control rounded-3 ${bookFormErrors.date ? 'is-invalid' : ''}`}
+                                                <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Date <span className="text-danger">*</span></label>
+                                                <DatePicker
+                                                    className={`form-control rounded-3 datetimepicker w-100 ${bookFormErrors.date ? 'is-invalid' : ''}`}
+                                                    format="DD-MM-YYYY"
+                                                    placeholder="DD-MM-YYYY"
+                                                    suffixIcon={null}
+                                                    cellRender={cellRender}
                                                     value={bookForm.date}
-                                                    min={new Date().toISOString().split("T")[0]}
-                                                    onChange={e => setBookForm(f => ({ ...f, date: e.target.value }))}
-                                                    required
-                                                    style={{ fontSize: "14px" }}
+                                                    disabled={!(bookForm.doctorId || preselectedDoctor)}
+                                                    onChange={(d: Dayjs | null) => setBookForm(f => ({ ...f, date: d, time: "" }))}
+                                                    getPopupContainer={() => document.getElementById("modal-datepicker-container") || document.body}
+                                                    style={{ fontSize: "14px", height: "38px" }}
                                                 />
-                                                {bookFormErrors.date && <div className="invalid-feedback">{bookFormErrors.date}</div>}
+                                                {bookFormErrors.date && <div className="invalid-feedback d-block">{bookFormErrors.date}</div>}
                                             </div>
+
+                                            {/* Time Slots */}
                                             <div className="col-6">
-                                                <label className="form-label fw-bold text-dark" style={{ fontSize: "13px" }}>Time Slot <span className="text-danger">*</span></label>
+                                                <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Time Slot <span className="text-danger">*</span></label>
                                                 <select
                                                     className={`form-select rounded-3 text-secondary ${bookFormErrors.time ? 'is-invalid' : ''}`}
                                                     value={bookForm.time}
+                                                    disabled={!bookForm.date || sessionOptions.length === 0}
                                                     onChange={e => setBookForm(f => ({ ...f, time: e.target.value }))}
                                                     required
                                                     style={{ fontSize: "14px" }}
                                                 >
-                                                    <option value="">Select time</option>
-                                                    {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"].map(t => (
-                                                        <option key={t} value={t}>{t}</option>
+                                                    <option value="">
+                                                        {!bookForm.date
+                                                            ? "Select date first"
+                                                            : sessionOptions.length > 0
+                                                                ? "Select slot"
+                                                                : "No slots available"}
+                                                    </option>
+                                                    {sessionOptions.map((opt: any) => (
+                                                        <option key={opt.value} value={opt.value}>
+                                                            {opt.label}
+                                                        </option>
                                                     ))}
                                                 </select>
                                                 {bookFormErrors.time && <div className="invalid-feedback">{bookFormErrors.time}</div>}
                                             </div>
+
+                                            {/* Reason Symptoms */}
                                             <div className="col-12">
-                                                <label className="form-label fw-bold text-dark" style={{ fontSize: "13px" }}>Reason / Symptoms</label>
+                                                <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Reason / Symptoms (Optional)</label>
                                                 <textarea
                                                     className="form-control rounded-3"
                                                     rows={2}
-                                                    placeholder="Brief description of your symptoms or reason for visit..."
+                                                    placeholder="Brief description of your symptoms..."
                                                     value={bookForm.reason}
                                                     onChange={e => setBookForm(f => ({ ...f, reason: e.target.value }))}
                                                     style={{ fontSize: "14px", resize: "none" }}
                                                 />
                                             </div>
 
+                                            {/* Error Message */}
                                             {bookError && (
                                                 <div className="col-12">
                                                     <div className="alert alert-danger py-2 px-3 rounded-3 d-flex align-items-center gap-2 mb-0" style={{ fontSize: "13px" }}>
@@ -1452,11 +1717,12 @@ export default function ClinicLandingPage() {
                                                 </div>
                                             )}
 
+                                            {/* Submit Button */}
                                             <div className="col-12 mt-1">
                                                 <button
                                                     type="submit"
                                                     className="btn w-100 fw-bold py-2 rounded-3 text-white d-flex align-items-center justify-content-center gap-2"
-                                                    style={{ background: "#10b981", fontSize: "15px", letterSpacing: "-0.2px" }}
+                                                    style={{ background: "#10b981", fontSize: "15px", border: "none" }}
                                                     disabled={bookLoading}
                                                 >
                                                     {bookLoading ? (
@@ -1465,12 +1731,6 @@ export default function ClinicLandingPage() {
                                                         <><i className="ti ti-lock" /> Confirm Appointment</>
                                                     )}
                                                 </button>
-                                            </div>
-                                            <div className="col-12 text-center">
-                                                <small className="text-secondary" style={{ fontSize: "11px" }}>
-                                                    <i className="ti ti-shield-check text-success me-1" />
-                                                    Your data is secure. We'll call to confirm your appointment.
-                                                </small>
                                             </div>
                                         </div>
                                     </form>

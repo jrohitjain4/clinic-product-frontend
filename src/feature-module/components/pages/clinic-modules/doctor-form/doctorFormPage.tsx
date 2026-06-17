@@ -1277,18 +1277,13 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         {/* Educational Information */}
                         <div className="col-lg-12 mb-4 px-3">
                           <div className="border rounded bg-white">
-                            <div className="px-3 py-2 border-bottom d-flex align-items-center justify-content-between">
+                            <div 
+                              className="px-3 py-2 border-bottom d-flex align-items-center justify-content-between"
+                              onClick={() => setShowEducation(!showEducation)}
+                              style={{ cursor: "pointer", userSelect: "none" }}
+                            >
                               <h6 className="fw-bold mb-0 text-primary">Educational Information</h6>
-                              <div className="form-check form-switch mb-0">
-                                <input
-                                  className="form-check-input"
-                                  type="checkbox"
-                                  role="switch"
-                                  id="showEducationToggle"
-                                  checked={showEducation}
-                                  onChange={(e) => setShowEducation(e.target.checked)}
-                                />
-                              </div>
+                              <i className={`ti ${showEducation ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-primary`} />
                             </div>
                             {showEducation && (
                               <div className="p-4">
@@ -1305,18 +1300,13 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         {/* Awards & Recognition */}
                         <div className="col-lg-12 mb-4 px-3">
                           <div className="border rounded bg-white">
-                            <div className="px-3 py-2 border-bottom d-flex align-items-center justify-content-between">
+                            <div 
+                              className="px-3 py-2 border-bottom d-flex align-items-center justify-content-between"
+                              onClick={() => setShowAwards(!showAwards)}
+                              style={{ cursor: "pointer", userSelect: "none" }}
+                            >
                               <h6 className="fw-bold mb-0 text-success">Awards &amp; Recognition</h6>
-                              <div className="form-check form-switch mb-0">
-                                <input
-                                  className="form-check-input"
-                                  type="checkbox"
-                                  role="switch"
-                                  id="showAwardsToggle"
-                                  checked={showAwards}
-                                  onChange={(e) => setShowAwards(e.target.checked)}
-                                />
-                              </div>
+                              <i className={`ti ${showAwards ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-success`} />
                             </div>
                             {showAwards && (
                               <div className="p-4">
@@ -1333,18 +1323,13 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         {/* Certifications */}
                         <div className="col-lg-12 mb-4 px-3">
                           <div className="border rounded bg-white">
-                            <div className="px-3 py-2 border-bottom d-flex align-items-center justify-content-between">
+                            <div 
+                              className="px-3 py-2 border-bottom d-flex align-items-center justify-content-between"
+                              onClick={() => setShowCertifications(!showCertifications)}
+                              style={{ cursor: "pointer", userSelect: "none" }}
+                            >
                               <h6 className="fw-bold mb-0 text-warning">Certifications</h6>
-                              <div className="form-check form-switch mb-0">
-                                <input
-                                  className="form-check-input"
-                                  type="checkbox"
-                                  role="switch"
-                                  id="showCertificationsToggle"
-                                  checked={showCertifications}
-                                  onChange={(e) => setShowCertifications(e.target.checked)}
-                                />
-                              </div>
+                              <i className={`ti ${showCertifications ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-warning`} />
                             </div>
                             {showCertifications && (
                               <div className="p-4">
@@ -1361,18 +1346,13 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                     </div>
 
                     {/* -- Document Information ----------------- */}
-                    <div className="bg-light px-3 py-2 mb-3 d-flex align-items-center justify-content-between">
+                    <div 
+                      className="bg-light px-3 py-2 mb-3 d-flex align-items-center justify-content-between"
+                      onClick={() => setShowDocuments(!showDocuments)}
+                      style={{ cursor: "pointer", userSelect: "none" }}
+                    >
                       <h6 className="fw-bold mb-0">Documents Upload</h6>
-                      <div className="form-check form-switch mb-0">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          role="switch"
-                          id="showDocumentsToggle"
-                          checked={showDocuments}
-                          onChange={(e) => setShowDocuments(e.target.checked)}
-                        />
-                      </div>
+                      <i className={`ti ${showDocuments ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-dark`} />
                     </div>
                     {showDocuments && (
                       <div className="p-3">

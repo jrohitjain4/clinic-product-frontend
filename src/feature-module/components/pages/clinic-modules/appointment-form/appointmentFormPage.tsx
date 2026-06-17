@@ -427,7 +427,7 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
     const dayName = current.format("dddd");
 
     // 1. Holiday (Blueish) - HIGHEST PRIORITY as per user
-    const isHoliday = availability.holidays.some((h) => {
+    const isHoliday = availability.holidays?.some((h) => {
       const start = dayjs(h.date).startOf("day");
       const end = h.endDate ? dayjs(h.endDate).endOf("day") : start.endOf("day");
       return (current.isAfter(start) || current.isSame(start)) && (current.isBefore(end) || current.isSame(end));
@@ -465,7 +465,7 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
     }
 
     // 3. Leave (Yellow)
-    const isLeave = availability.leaves.some((l) => {
+    const isLeave = availability.leaves?.some((l) => {
       const s = dayjs(l.start).startOf("day");
       const e = dayjs(l.end).endOf("day");
       return (current.isAfter(s) || current.isSame(s)) && (current.isBefore(e) || current.isSame(e));

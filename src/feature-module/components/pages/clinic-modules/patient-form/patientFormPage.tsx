@@ -39,6 +39,10 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [phoneWarning, setPhoneWarning] = useState<string | null>(null);
+  
+  // Collapse states for optional details sections
+  const [showOptionalDetails, setShowOptionalDetails] = useState(false);
+  const [showEmergencyContact, setShowEmergencyContact] = useState(false);
 
   const getModalContainer = () =>
     document.getElementById("modal-datepicker") || document.body;
@@ -438,100 +442,114 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                   </div>
 
                   {/* --- Optional Information --- */}
-                  <h6 className="fw-bold mb-3 border-top pt-3 text-secondary">
-                    Optional Details
-                  </h6>
-                  <div className="row">
-                    <div className="col-md-4">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">Alternate Mobile</label>
-                        <PhoneInput defaultCountry="IN" placeholder="Enter Alternate Mobile" value={form.alternateMobile} onChange={(v) => setForm((f) => ({ ...f, alternateMobile: v || "" }))} />
-                      </div>
-                    </div>
-                    <div className="col-md-4">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">
-                          Blood Group <span className="text-muted fw-normal fs-12">(Optional)</span>
-                        </label>
-                        <CommonSelect
-                          options={Blood_Group}
-                          className="select"
-                          value={
-                            findSelectOption(Blood_Group, form.bloodGroup) ||
-                            Blood_Group[0]
-                          }
-                          placeholder="Select Blood Group"
-                          onChange={(opt) =>
-                            setForm((f) => ({
-                              ...f,
-                              bloodGroup: opt?.value || "",
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-4">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">Marital Status</label>
-                        <CommonSelect
-                          options={[{ value: "Single", label: "Single" }, { value: "Married", label: "Married" }, { value: "Divorced", label: "Divorced" }, { value: "Widowed", label: "Widowed" }]}
-                          className="select"
-                          value={[{ value: "Single", label: "Single" }, { value: "Married", label: "Married" }, { value: "Divorced", label: "Divorced" }, { value: "Widowed", label: "Widowed" }].find(o => o.value === form.maritalStatus)}
-                          placeholder="Select Marital Status"
-                          onChange={(opt) => setForm((f) => ({ ...f, maritalStatus: opt?.value || "" }))}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-4">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">Occupation</label>
-                        <input type="text" className="form-control" placeholder="Enter Occupation" value={form.occupation} onChange={(e) => setForm((f) => ({ ...f, occupation: e.target.value }))} />
-                      </div>
-                    </div>
-                    <div className="col-md-4">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">Aadhaar Number</label>
-                        <input type="text" className="form-control" placeholder="Enter Aadhaar Number" value={form.aadhaarNumber} onChange={(e) => setForm((f) => ({ ...f, aadhaarNumber: e.target.value }))} />
-                      </div>
-                    </div>
-                    <div className="col-md-4">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">Passport Number</label>
-                        <input type="text" className="form-control" placeholder="Enter Passport Number" value={form.passportNumber} onChange={(e) => setForm((f) => ({ ...f, passportNumber: e.target.value }))} />
-                      </div>
-                    </div>
-                    <div className="col-md-8">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">Referred By</label>
-                        <input type="text" className="form-control" placeholder="e.g. Google, Walk-in, Doctor Name" value={form.referredBy} onChange={(e) => setForm((f) => ({ ...f, referredBy: e.target.value }))} />
-                      </div>
-                    </div>
+                  <div 
+                    className="d-flex align-items-center justify-content-between border-top pt-3 mb-3"
+                    onClick={() => setShowOptionalDetails(!showOptionalDetails)}
+                    style={{ cursor: "pointer", userSelect: "none" }}
+                  >
+                    <h6 className="fw-bold mb-0 text-secondary">Optional Details</h6>
+                    <i className={`ti ${showOptionalDetails ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-secondary`} />
                   </div>
+                  {showOptionalDetails && (
+                    <div className="row">
+                      <div className="col-md-4">
+                        <div className="mb-3">
+                          <label className="form-label mb-1 fw-medium">Alternate Mobile</label>
+                          <PhoneInput defaultCountry="IN" placeholder="Enter Alternate Mobile" value={form.alternateMobile} onChange={(v) => setForm((f) => ({ ...f, alternateMobile: v || "" }))} />
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="mb-3">
+                          <label className="form-label mb-1 fw-medium">
+                            Blood Group <span className="text-muted fw-normal fs-12">(Optional)</span>
+                          </label>
+                          <CommonSelect
+                            options={Blood_Group}
+                            className="select"
+                            value={
+                              findSelectOption(Blood_Group, form.bloodGroup) ||
+                              Blood_Group[0]
+                            }
+                            placeholder="Select Blood Group"
+                            onChange={(opt) =>
+                              setForm((f) => ({
+                                ...f,
+                                bloodGroup: opt?.value || "",
+                              }))
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="mb-3">
+                          <label className="form-label mb-1 fw-medium">Marital Status</label>
+                          <CommonSelect
+                            options={[{ value: "Single", label: "Single" }, { value: "Married", label: "Married" }, { value: "Divorced", label: "Divorced" }, { value: "Widowed", label: "Widowed" }]}
+                            className="select"
+                            value={[{ value: "Single", label: "Single" }, { value: "Married", label: "Married" }, { value: "Divorced", label: "Divorced" }, { value: "Widowed", label: "Widowed" }].find(o => o.value === form.maritalStatus)}
+                            placeholder="Select Marital Status"
+                            onChange={(opt) => setForm((f) => ({ ...f, maritalStatus: opt?.value || "" }))}
+                          />
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="mb-3">
+                          <label className="form-label mb-1 fw-medium">Occupation</label>
+                          <input type="text" className="form-control" placeholder="Enter Occupation" value={form.occupation} onChange={(e) => setForm((f) => ({ ...f, occupation: e.target.value }))} />
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="mb-3">
+                          <label className="form-label mb-1 fw-medium">Aadhaar Number</label>
+                          <input type="text" className="form-control" placeholder="Enter Aadhaar Number" value={form.aadhaarNumber} onChange={(e) => setForm((f) => ({ ...f, aadhaarNumber: e.target.value }))} />
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="mb-3">
+                          <label className="form-label mb-1 fw-medium">Passport Number</label>
+                          <input type="text" className="form-control" placeholder="Enter Passport Number" value={form.passportNumber} onChange={(e) => setForm((f) => ({ ...f, passportNumber: e.target.value }))} />
+                        </div>
+                      </div>
+                      <div className="col-md-8">
+                        <div className="mb-3">
+                          <label className="form-label mb-1 fw-medium">Referred By</label>
+                          <input type="text" className="form-control" placeholder="e.g. Google, Walk-in, Doctor Name" value={form.referredBy} onChange={(e) => setForm((f) => ({ ...f, referredBy: e.target.value }))} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* --- Emergency Contact (Optional) --- */}
-                  <h6 className="fw-bold mb-3 border-top pt-3 text-danger">
-                    Emergency Contact (Optional)
-                  </h6>
-                  <div className="row">
-                    <div className="col-md-4">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">Name</label>
-                        <input type="text" className="form-control" placeholder="Enter Contact Name" value={form.emergencyContactName} onChange={(e) => setForm((f) => ({ ...f, emergencyContactName: e.target.value }))} />
-                      </div>
-                    </div>
-                    <div className="col-md-4">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">Relation</label>
-                        <input type="text" className="form-control" placeholder="e.g. Brother, Wife" value={form.emergencyContactRelation} onChange={(e) => setForm((f) => ({ ...f, emergencyContactRelation: e.target.value }))} />
-                      </div>
-                    </div>
-                    <div className="col-md-4">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">Phone Number</label>
-                        <PhoneInput defaultCountry="IN" placeholder="Enter Phone Number" value={form.emergencyContactPhone} onChange={(v) => setForm((f) => ({ ...f, emergencyContactPhone: v || "" }))} />
-                      </div>
-                    </div>
+                  <div 
+                    className="d-flex align-items-center justify-content-between border-top pt-3 mb-3"
+                    onClick={() => setShowEmergencyContact(!showEmergencyContact)}
+                    style={{ cursor: "pointer", userSelect: "none" }}
+                  >
+                    <h6 className="fw-bold mb-0 text-danger">Emergency Contact (Optional)</h6>
+                    <i className={`ti ${showEmergencyContact ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-danger`} />
                   </div>
+                  {showEmergencyContact && (
+                    <div className="row">
+                      <div className="col-md-4">
+                        <div className="mb-3">
+                          <label className="form-label mb-1 fw-medium">Name</label>
+                          <input type="text" className="form-control" placeholder="Enter Contact Name" value={form.emergencyContactName} onChange={(e) => setForm((f) => ({ ...f, emergencyContactName: e.target.value }))} />
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="mb-3">
+                          <label className="form-label mb-1 fw-medium">Relation</label>
+                          <input type="text" className="form-control" placeholder="e.g. Brother, Wife" value={form.emergencyContactRelation} onChange={(e) => setForm((f) => ({ ...f, emergencyContactRelation: e.target.value }))} />
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="mb-3">
+                          <label className="form-label mb-1 fw-medium">Phone Number</label>
+                          <PhoneInput defaultCountry="IN" placeholder="Enter Phone Number" value={form.emergencyContactPhone} onChange={(v) => setForm((f) => ({ ...f, emergencyContactPhone: v || "" }))} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="d-flex align-items-center justify-content-end mt-3">

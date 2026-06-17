@@ -2,11 +2,12 @@ import { Link } from "react-router";
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import { City, Country, State } from "../../../../../../core/common/selectOption";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import DoctorProfileUpload from "../../../../../../core/common/doctor-profile-upload/DoctorProfileUpload";
 import { toast } from "react-toastify";
 import { resolveMediaUrl } from "../../../../../../core/config/api";
+import ImageCropperModal from "../../../../../../core/common/crop/ImageCropperModal";
 
 const ProfileSettings = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -21,6 +22,12 @@ const ProfileSettings = () => {
       : null
   );
   const [profileImage, setProfileImage] = useState<string | null>(userObj.profileImage || null);
+  
+  // Clinic logo cropper states
+  const [isLogoCropOpen, setIsLogoCropOpen] = useState(false);
+  const [logoCropImageSrc, setLogoCropImageSrc] = useState<string | null>(null);
+  const [logoCropFileName, setLogoCropFileName] = useState("logo.jpg");
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const nameParts = (userObj.fullName || "Admin User").split(" ");
   const initialFirstName = nameParts[0] || "Admin";
@@ -366,6 +373,7 @@ const ProfileSettings = () => {
                                       style={{ position: 'relative', cursor: isEditing ? 'pointer' : 'default' }}
                                     >
                                       <input
+                                        ref={logoInputRef}
                                         type="file"
                                         id="logoUpload"
                                         accept="image/*"
@@ -375,10 +383,12 @@ const ProfileSettings = () => {
                                         onChange={(e) => {
                                           const file = e.target.files?.[0];
                                           if (file) {
+                                            setLogoCropFileName(file.name);
                                             const reader = new FileReader();
-                                            reader.onload = (event) => {
-                                              if (event.target?.result) {
-                                                setLogoPreview(event.target.result as string);
+                                            reader.onload = () => {
+                                              if (reader.result) {
+                                                setLogoCropImageSrc(reader.result as string);
+                                                setIsLogoCropOpen(true);
                                               }
                                             };
                                             reader.readAsDataURL(file);
@@ -391,6 +401,28 @@ const ProfileSettings = () => {
                                   <p className="fs-12 text-muted mb-0">Recommended image size is 250px x 100px.</p>
                                 </div>
                               </div>
+                              {isLogoCropOpen && logoCropImageSrc && (
+                                <ImageCropperModal
+                                  isOpen={isLogoCropOpen}
+                                  imageSrc={logoCropImageSrc}
+                                  onClose={() => {
+                                    setIsLogoCropOpen(false);
+                                    setLogoCropImageSrc(null);
+                                    if (logoInputRef.current) logoInputRef.current.value = "";
+                                  }}
+                                  onCropComplete={(croppedFile) => {
+                                    const reader = new FileReader();
+                                    reader.onload = (event) => {
+                                      if (event.target?.result) {
+                                        setLogoPreview(event.target.result as string);
+                                      }
+                                    };
+                                    reader.readAsDataURL(croppedFile);
+                                  }}
+                                  title="Crop Clinic Logo"
+                                  fileName={logoCropFileName}
+                                />
+                              )}
                             </div>
                           </div>
                         </div>

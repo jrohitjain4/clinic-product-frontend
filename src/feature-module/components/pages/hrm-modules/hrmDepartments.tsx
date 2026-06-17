@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import EmptyState from "../../../../core/common/emptyState";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import SearchInput from "../../../../core/common/dataTable/dataTableSearch";
 import Datatable from "../../../../core/common/dataTable";
 import { DatePicker, Select } from "antd";
@@ -21,6 +21,7 @@ interface Department {
 }
 
 const HrmDepartments = () => {
+  const location = useLocation();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -72,6 +73,15 @@ const HrmDepartments = () => {
   useEffect(() => {
     fetchDepartments();
   }, [fetchDepartments]);
+
+  useEffect(() => {
+    if (location.state?.openAddModal) {
+      setTimeout(() => {
+        const btn = document.querySelector('[data-bs-target="#add_department"]') as HTMLButtonElement;
+        if (btn) btn.click();
+      }, 300);
+    }
+  }, [location.state]);
 
   // Filter departments based on status and date
   useEffect(() => {

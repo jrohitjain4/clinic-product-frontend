@@ -82,17 +82,7 @@ const MultiStepRegister: React.FC = () => {
         }
     }, [step]);
 
-    // Auto-generate username from clinic name
-    useEffect(() => {
-        if (form.clinicName && !form.username) {
-            const generated = form.clinicName
-                .toLowerCase()
-                .replace(/[^a-z0-9\s]/g, "")
-                .trim()
-                .replace(/\s+/g, "_");
-            setForm(f => ({ ...f, username: generated }));
-        }
-    }, [form.clinicName]);
+
 
     // Real-time username availability check
     useEffect(() => {
@@ -459,6 +449,13 @@ const MultiStepRegister: React.FC = () => {
                 .tag-recommended { background: linear-gradient(135deg, #10b981, #059669); color: white; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 100px; display: inline-block; margin-top: 8px; }
                 .phone-note { font-size: 11px; color: #9ca3af; margin-top: 4px; }
                 .form-gap-fix .docyori-input-group { margin-bottom: 0 !important; }
+                html[data-color="primary"] .docyori-input-wrapper select,
+                html[data-color="primary"] select.docyori-input {
+                    border: none !important;
+                    outline: none !important;
+                    box-shadow: none !important;
+                    background: transparent !important;
+                }
             `}</style>
 
             <div className="container-fuild position-relative z-1" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -581,6 +578,25 @@ const MultiStepRegister: React.FC = () => {
                                                                 placeholder="e.g. 9876543210"
                                                                 maxLength={10}
                                                                 leftAddon={<Phone size={20} strokeWidth={2.5} color="#0f172a" />}
+                                                                rightIcon={
+                                                                    <div className="d-flex align-items-center h-100 pe-2">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                const nextSame = !form.sameAsMobile;
+                                                                                setForm(prev => ({
+                                                                                    ...prev,
+                                                                                    sameAsMobile: nextSame,
+                                                                                    whatsappNumber: nextSame ? prev.mobileNumber : prev.whatsappNumber
+                                                                                }));
+                                                                            }}
+                                                                            className={`btn btn-sm ${form.sameAsMobile ? 'btn-primary' : 'btn-light border text-muted'} rounded-pill`}
+                                                                            style={{ fontSize: "11px", padding: "3px 10px", fontWeight: 600, whiteSpace: "nowrap" }}
+                                                                        >
+                                                                            {form.sameAsMobile ? "✓ Same for WhatsApp" : "Same for WhatsApp"}
+                                                                        </button>
+                                                                    </div>
+                                                                }
                                                                 value={form.mobileNumber}
                                                                 onChange={e => {
                                                                     const val = e.target.value.replace(/\D/g, "").slice(0, 10);
@@ -612,18 +628,6 @@ const MultiStepRegister: React.FC = () => {
                                                                 maxLength={10}
                                                                 disabled={form.sameAsMobile}
                                                                 leftAddon={<MessageCircle size={20} strokeWidth={2.5} color="#0f172a" />}
-                                                                rightIcon={
-                                                                    <div className="d-flex align-items-center h-100 pe-2">
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => setForm({ ...form, sameAsMobile: !form.sameAsMobile })}
-                                                                            className={`btn btn-sm ${form.sameAsMobile ? 'btn-primary' : 'btn-light border text-muted'} rounded-pill`}
-                                                                            style={{ fontSize: "11px", padding: "3px 10px", fontWeight: 600, whiteSpace: "nowrap" }}
-                                                                        >
-                                                                            {form.sameAsMobile ? "✓ Same as Mobile" : "Same as Mobile"}
-                                                                        </button>
-                                                                    </div>
-                                                                }
                                                                 value={form.sameAsMobile ? form.mobileNumber : form.whatsappNumber}
                                                                 onChange={e => setForm({ ...form, whatsappNumber: e.target.value.replace(/\D/g, "").slice(0, 10) })}
                                                             />
@@ -732,7 +736,7 @@ const MultiStepRegister: React.FC = () => {
                                                                     <label className="docyori-label">Country <span className="docyori-required">*</span></label>
                                                                     <div className={`docyori-input-wrapper ${formErrors.country ? 'has-error' : ''}`}>
                                                                         <div className="docyori-input-addon-left"><Map size={20} strokeWidth={2.5} color="#0f172a" /></div>
-                                                                        <select className="docyori-input border-0 shadow-none bg-transparent" style={{ width: "100%", outline: "none", color: "#1a1a2e", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }} value={selectedCountryCode} onChange={handleCountryChange}>
+                                                                        <select className="docyori-input border-0 shadow-none bg-transparent" style={{ border: "none", width: "100%", outline: "none", color: "#1a1a2e", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }} value={selectedCountryCode} onChange={handleCountryChange}>
                                                                             <option value="">Select Country</option>
                                                                             {countries.map(c => (
                                                                                 <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
@@ -748,7 +752,7 @@ const MultiStepRegister: React.FC = () => {
                                                                     <label className="docyori-label">State <span className="docyori-required">*</span></label>
                                                                     <div className={`docyori-input-wrapper ${formErrors.state ? 'has-error' : ''}`}>
                                                                         <div className="docyori-input-addon-left"><Map size={20} strokeWidth={2.5} color="#0f172a" /></div>
-                                                                        <select className="docyori-input border-0 shadow-none bg-transparent" style={{ width: "100%", outline: "none", color: "#1a1a2e", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }} value={selectedStateCode} onChange={handleStateChange}>
+                                                                        <select className="docyori-input border-0 shadow-none bg-transparent" style={{ border: "none", width: "100%", outline: "none", color: "#1a1a2e", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }} value={selectedStateCode} onChange={handleStateChange}>
                                                                             <option value="">Select State</option>
                                                                             {states.map(s => (
                                                                                 <option key={s.isoCode} value={s.isoCode}>{s.name}</option>
@@ -767,7 +771,7 @@ const MultiStepRegister: React.FC = () => {
                                                                     <label className="docyori-label">City <span className="docyori-required">*</span></label>
                                                                     <div className={`docyori-input-wrapper ${formErrors.city ? 'has-error' : ''}`}>
                                                                         <div className="docyori-input-addon-left"><MapPin size={20} strokeWidth={2.5} color="#0f172a" /></div>
-                                                                        <select className="docyori-input border-0 shadow-none bg-transparent" style={{ width: "100%", outline: "none", color: "#1a1a2e", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }} value={form.city} onChange={e => setForm({ ...form, city: e.target.value })}>
+                                                                        <select className="docyori-input border-0 shadow-none bg-transparent" style={{ border: "none", width: "100%", outline: "none", color: "#1a1a2e", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }} value={form.city} onChange={e => setForm({ ...form, city: e.target.value })}>
                                                                             <option value="">Select City</option>
                                                                             {cities.map(c => (
                                                                                 <option key={c.name} value={c.name}>{c.name}</option>
@@ -785,7 +789,7 @@ const MultiStepRegister: React.FC = () => {
 
                                                         <div className="row mb-3">
                                                             <div className="col-md-12">
-                                                                <Input label="No. of Doctors" type="number" placeholder="e.g. 5" min={1} leftAddon={<Users size={20} strokeWidth={2.5} color="#0f172a" />} value={form.doctorCount} onChange={e => setForm({ ...form, doctorCount: e.target.value })} />
+                                                                <Input label="No. of Doctors (Optional)" type="number" placeholder="e.g. 5" min={1} leftAddon={<Users size={20} strokeWidth={2.5} color="#0f172a" />} value={form.doctorCount} onChange={e => setForm({ ...form, doctorCount: e.target.value })} />
                                                             </div>
                                                         </div>
 
@@ -861,9 +865,7 @@ const MultiStepRegister: React.FC = () => {
                                                                             <span style={{ fontWeight: 700, fontSize: "16px", color: "#1a1a2e" }}>{p.name}</span>
                                                                         </div>
                                                                         <div className="pkg-meta d-flex align-items-center flex-wrap gap-2 text-muted" style={{ fontSize: "13px", marginTop: "8px" }}>
-                                                                            <span className="d-flex align-items-center gap-1"><Calendar size={14} /> {p.durationInDays} Days</span> <span className="opacity-50">|</span>
-                                                                            <span className="d-flex align-items-center gap-1"><UserPlus size={14} /> Max {p.maxDoctors} Doctors</span> <span className="opacity-50">|</span>
-                                                                            <span className="d-flex align-items-center gap-1"><User size={14} /> Max {p.maxPatients} Patients</span>
+                                                                            <span className="d-flex align-items-center gap-1"><Calendar size={14} /> {p.durationInDays} Days</span>
                                                                         </div>
                                                                         {p.price === 0 && <div className="tag-recommended d-inline-flex align-items-center gap-1 mt-2"><Star size={12} /> Recommended for New Users</div>}
                                                                     </div>

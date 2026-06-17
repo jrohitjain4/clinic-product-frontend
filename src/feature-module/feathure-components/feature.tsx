@@ -7,6 +7,7 @@ import Sidebar from "../../core/common/sidebar/sidebar";
 import SidebarTwo from "../../core/common/sidebar-two/sidebarTwo";
 import Sidebarthree from "../../core/common/sidebarthree/sidebarthree";
 import { apiUrl } from "../../core/config/api";
+import OnboardingWizard from "./onboarding-wizard/OnboardingWizard";
 
 interface SubscriptionPackage {
   id: string;
@@ -24,6 +25,7 @@ const Feature = () => {
   const path = locations.pathname;
   const token = localStorage.getItem("token");
   const [isExpired, setIsExpired] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Packages modal state
   const [showPackages, setShowPackages] = useState(false);
@@ -31,6 +33,35 @@ const Feature = () => {
   const [loadingPackages, setLoadingPackages] = useState(false);
   const [activating, setActivating] = useState<string | null>(null);
   const [activateMsg, setActivateMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    const checkOnboarding = () => {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        const u = JSON.parse(userStr);
+        const step = u?.clinic?.onboardingStep ?? 0;
+        if (u?.role === "ADMIN" && step < 2) {
+          setShowOnboarding(true);
+          return;
+        }
+      }
+      setShowOnboarding(false);
+    };
+
+    checkOnboarding();
+    const interval = setInterval(checkOnboarding, 2000);
+    return () => clearInterval(interval);
+  }, [locations.pathname]);
+
+  const handleOnboardingComplete = () => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const u = JSON.parse(userStr);
+      if (u?.clinic?.onboardingStep >= 2) {
+        setShowOnboarding(false);
+      }
+    }
+  };
 
   useEffect(() => {
     // Refresh user profile and permissions from backend automatically
@@ -186,7 +217,7 @@ const Feature = () => {
           )}
 
           <ThemeSettings />
-          <div style={{ filter: isExpired ? 'blur(8px)' : 'none', pointerEvents: isExpired ? 'none' : 'auto', transition: 'filter 0.3s ease' }}>
+          <div style={{ filter: (isExpired || showOnboarding) ? 'blur(8px)' : 'none', pointerEvents: (isExpired || showOnboarding) ? 'none' : 'auto', transition: 'filter 0.3s ease' }}>
             <Outlet />
           </div>
         </div>
@@ -412,6 +443,13 @@ const Feature = () => {
               </div>
             )}
           </div>
+        )}
+
+        {/* ─── Onboarding Wizard Overlay ─── */}
+        {showOnboarding && !isExpired && (
+          <OnboardingWizard
+            onComplete={handleOnboardingComplete}
+          />
         )}
 
         <div

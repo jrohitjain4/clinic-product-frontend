@@ -6,6 +6,7 @@ import { useState } from "react";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import DoctorProfileUpload from "../../../../../../core/common/doctor-profile-upload/DoctorProfileUpload";
 import { toast } from "react-toastify";
+import { resolveMediaUrl } from "../../../../../../core/config/api";
 
 const ProfileSettings = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -14,7 +15,11 @@ const ProfileSettings = () => {
     userObj = JSON.parse(localStorage.getItem("user") || "{}");
   } catch (e) { }
 
-  const [logoPreview, setLogoPreview] = useState(userObj.clinic?.landingPage?.logo || "/logo.png");
+  const [logoPreview, setLogoPreview] = useState<string | null>(
+    userObj.clinic?.landingPage?.logo && userObj.clinic?.landingPage?.logo !== "/logo.png"
+      ? userObj.clinic.landingPage.logo
+      : null
+  );
   const [profileImage, setProfileImage] = useState<string | null>(userObj.profileImage || null);
 
   const nameParts = (userObj.fullName || "Admin User").split(" ");
@@ -54,7 +59,7 @@ const ProfileSettings = () => {
         body: JSON.stringify({
           ...formData,
           profileImage: profileImage !== userObj.profileImage ? profileImage : undefined,
-          clinicLogo: logoPreview !== "/logo.png" ? logoPreview : undefined
+          clinicLogo: logoPreview || undefined
         })
       });
       const data = await res.json();
@@ -340,11 +345,17 @@ const ProfileSettings = () => {
                               <div className="d-flex align-items-center mb-3">
                                 <div className="profile-upload me-3">
                                   <div className="profile-container d-flex align-items-center justify-content-center bg-light" style={{ width: '150px', height: '60px', border: '1px dashed #ccc', borderRadius: '8px', overflow: 'hidden' }}>
-                                    <img
-                                      src={logoPreview}
-                                      alt="Clinic Logo Preview"
-                                      className="img-fluid object-fit-contain p-1 w-100 h-100"
-                                    />
+                                    {logoPreview ? (
+                                      <img
+                                        src={resolveMediaUrl(logoPreview)}
+                                        alt="Clinic Logo Preview"
+                                        className="img-fluid object-fit-contain p-1 w-100 h-100"
+                                      />
+                                    ) : (
+                                      <div className="d-flex align-items-center justify-content-center w-100 h-100" style={{ backgroundColor: "#f8fafc" }}>
+                                        <i className="ti ti-camera" style={{ fontSize: "20px", color: "#94a3b8" }} />
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                                 <div className="profile-upload-content">

@@ -189,6 +189,9 @@ const Dashboard = () => {
             )}
 
             <div className="d-flex align-items-center flex-wrap gap-2">
+              <Link to={all_routes.profilesettings} className="btn btn-primary d-inline-flex align-items-center btn-sm py-2 px-3">
+                Profile Setting <i className="ti ti-settings ms-2" />
+              </Link>
               <Link to={all_routes.newAppointment} className="btn btn-primary d-inline-flex align-items-center btn-sm py-2 px-3">
                 New Appointment <i className="ti ti-plus ms-2" />
               </Link>

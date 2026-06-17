@@ -6,9 +6,6 @@ interface Package {
     name: string;
     price: number;
     durationInDays: number;
-    maxDoctors: number;
-    maxPatients: number;
-    maxAppointments: number;
     isActive: boolean;
 }
 
@@ -22,16 +19,8 @@ const PackagesAdmin = () => {
         name: "",
         price: "",
         durationInDays: "",
-        maxDoctors: "",
-        maxPatients: "",
-        maxAppointments: "",
         isActive: true,
     });
-
-    // Unlimited states for the form
-    const [unlimitedDoctors, setUnlimitedDoctors] = useState(false);
-    const [unlimitedPatients, setUnlimitedPatients] = useState(false);
-    const [unlimitedAppointments, setUnlimitedAppointments] = useState(false);
 
     const fetchPackages = async () => {
         try {
@@ -53,9 +42,6 @@ const PackagesAdmin = () => {
 
         const dataToSave = {
             ...formData,
-            maxDoctors: unlimitedDoctors ? -1 : parseInt(formData.maxDoctors),
-            maxPatients: unlimitedPatients ? -1 : parseInt(formData.maxPatients),
-            maxAppointments: unlimitedAppointments ? -1 : parseInt(formData.maxAppointments),
         };
 
         try {
@@ -131,10 +117,7 @@ const PackagesAdmin = () => {
     };
 
     const openAddModal = () => {
-        setFormData({ name: "", price: "", durationInDays: "", maxDoctors: "", maxPatients: "", maxAppointments: "", isActive: true });
-        setUnlimitedDoctors(false);
-        setUnlimitedPatients(false);
-        setUnlimitedAppointments(false);
+        setFormData({ name: "", price: "", durationInDays: "", isActive: true });
         setEditingPackage(null);
         setIsModalOpen(true);
     };
@@ -144,20 +127,10 @@ const PackagesAdmin = () => {
             name: pkg.name,
             price: pkg.price.toString(),
             durationInDays: pkg.durationInDays.toString(),
-            maxDoctors: pkg.maxDoctors === -1 ? "" : pkg.maxDoctors.toString(),
-            maxPatients: pkg.maxPatients === -1 ? "" : pkg.maxPatients.toString(),
-            maxAppointments: pkg.maxAppointments === -1 ? "" : pkg.maxAppointments.toString(),
             isActive: pkg.isActive
         });
-        setUnlimitedDoctors(pkg.maxDoctors === -1);
-        setUnlimitedPatients(pkg.maxPatients === -1);
-        setUnlimitedAppointments(pkg.maxAppointments === -1);
         setEditingPackage(pkg);
         setIsModalOpen(true);
-    };
-
-    const renderLimit = (value: number) => {
-        return value === -1 ? "Unlimited" : value;
     };
 
     return (
@@ -190,21 +163,6 @@ const PackagesAdmin = () => {
                                     </div>
                                 </div>
                                 <div className="card-body p-4">
-                                    <h6 className="fw-bold text-uppercase fs-12 text-muted mb-3 ls-1">Plan Features</h6>
-                                    <ul className="list-unstyled mb-4">
-                                        <li className="mb-3 d-flex align-items-center">
-                                            <i className="ti ti-circle-check text-success me-3 fs-18" />
-                                            <strong>{renderLimit(pkg.maxDoctors)}</strong> Doctors Limit
-                                        </li>
-                                        <li className="mb-3 d-flex align-items-center">
-                                            <i className="ti ti-circle-check text-success me-3 fs-18" />
-                                            <strong>{renderLimit(pkg.maxPatients)}</strong> Patients Limit
-                                        </li>
-                                        <li className="mb-3 d-flex align-items-center">
-                                            <i className="ti ti-circle-check text-success me-3 fs-18" />
-                                            <strong>{renderLimit(pkg.maxAppointments)}</strong> Appointments Limit
-                                        </li>
-                                    </ul>
 
                                     <div className="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
                                         <div className="form-check form-switch m-0 d-flex align-items-center">
@@ -252,41 +210,6 @@ const PackagesAdmin = () => {
                                             <input type="number" className="form-control form-control-lg" required value={formData.durationInDays} onChange={e => setFormData({ ...formData, durationInDays: e.target.value })} />
                                         </div>
 
-                                        <div className="col-12 mt-4 pt-3 border-top">
-                                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                                <h6 className="fw-bold text-primary m-0">Resource Limits</h6>
-                                                <span className="text-muted fs-12">Check box for Unlimited</span>
-                                            </div>
-                                            <div className="row g-3">
-                                                <div className="col-md-4">
-                                                    <div className="d-flex justify-content-between">
-                                                        <label className="form-label small">Max Doctors</label>
-                                                        <div className="form-check p-0">
-                                                            <input className="form-check-input ms-0" type="checkbox" checked={unlimitedDoctors} onChange={e => setUnlimitedDoctors(e.target.checked)} />
-                                                        </div>
-                                                    </div>
-                                                    <input type="number" className="form-control" required={!unlimitedDoctors} disabled={unlimitedDoctors} value={unlimitedDoctors ? "" : formData.maxDoctors} onChange={e => setFormData({ ...formData, maxDoctors: e.target.value })} placeholder={unlimitedDoctors ? "Unlimited" : "0"} />
-                                                </div>
-                                                <div className="col-md-4">
-                                                    <div className="d-flex justify-content-between">
-                                                        <label className="form-label small">Max Patients</label>
-                                                        <div className="form-check p-0">
-                                                            <input className="form-check-input ms-0" type="checkbox" checked={unlimitedPatients} onChange={e => setUnlimitedPatients(e.target.checked)} />
-                                                        </div>
-                                                    </div>
-                                                    <input type="number" className="form-control" required={!unlimitedPatients} disabled={unlimitedPatients} value={unlimitedPatients ? "" : formData.maxPatients} onChange={e => setFormData({ ...formData, maxPatients: e.target.value })} placeholder={unlimitedPatients ? "Unlimited" : "0"} />
-                                                </div>
-                                                <div className="col-md-4">
-                                                    <div className="d-flex justify-content-between">
-                                                        <label className="form-label small">Max Appointments</label>
-                                                        <div className="form-check p-0">
-                                                            <input className="form-check-input ms-0" type="checkbox" checked={unlimitedAppointments} onChange={e => setUnlimitedAppointments(e.target.checked)} />
-                                                        </div>
-                                                    </div>
-                                                    <input type="number" className="form-control" required={!unlimitedAppointments} disabled={unlimitedAppointments} value={unlimitedAppointments ? "" : formData.maxAppointments} onChange={e => setFormData({ ...formData, maxAppointments: e.target.value })} placeholder={unlimitedAppointments ? "Unlimited" : "0"} />
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     <div className="d-flex justify-content-end gap-2 mt-5">

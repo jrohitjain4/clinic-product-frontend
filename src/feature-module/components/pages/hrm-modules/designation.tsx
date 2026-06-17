@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import EmptyState from "../../../../core/common/emptyState";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import Datatable from "../../../../core/common/dataTable";
 import { DatePicker, Modal } from "antd";
 import type { Dayjs } from "dayjs";
@@ -28,6 +28,7 @@ interface Designation {
 }
 
 const DesignationList = () => {
+  const location = useLocation();
   const [designations, setDesignations] = useState<Designation[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(false);
@@ -96,6 +97,15 @@ const DesignationList = () => {
     fetchDesignations();
     fetchDepartments();
   }, [fetchDesignations, fetchDepartments]);
+
+  useEffect(() => {
+    if (location.state?.openAddModal) {
+      setTimeout(() => {
+        const btn = document.querySelector('[data-bs-target="#add_designation"]') as HTMLButtonElement;
+        if (btn) btn.click();
+      }, 300);
+    }
+  }, [location.state]);
 
   const filteredData = useMemo(() => {
     return designations.filter((item) => {

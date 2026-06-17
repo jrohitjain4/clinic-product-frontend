@@ -67,6 +67,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   // -- Dynamic dropdown data --------------------------------------
   const [departments, setDepartments] = useState<Dept[]>([]);
   const [isLoadingDepartments, setIsLoadingDepartments] = useState(true);
+  const [isLoadingDesignations, setIsLoadingDesignations] = useState(true);
   const [allDesignations, setAllDesignations] = useState<Desig[]>([]);
   const [filteredDesignations, setFilteredDesignations] = useState<Desig[]>([]);
   const [specializations, setSpecializations] = useState<{ id: string; name: string }[]>([]);
@@ -152,6 +153,10 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   const [awardsKey, setAwardsKey] = useState(0);
   const [certsKey, setCertsKey] = useState(0);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showEducation, setShowEducation] = useState(false);
+  const [showAwards, setShowAwards] = useState(false);
+  const [showCertifications, setShowCertifications] = useState(false);
+  const [showDocuments, setShowDocuments] = useState(false);
 
   const serializeSchedules = (raw: Record<string, RowType[]>) => {
     const out: Record<string, { session: string; from: string; to: string }[]> = {};
@@ -334,9 +339,28 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         const edu = toEducationEntries(d.educations);
         const aw = toAwardEntries(d.awards);
         const cert = toAwardEntries(d.certifications);
-        if (edu.length) setEducations(edu);
-        if (aw.length) setAwards(aw);
-        if (cert.length) setCertifications(cert);
+        if (edu.length) {
+          setEducations(edu);
+          setShowEducation(true);
+        }
+        if (aw.length) {
+          setAwards(aw);
+          setShowAwards(true);
+        }
+        if (cert.length) {
+          setCertifications(cert);
+          setShowCertifications(true);
+        }
+        if (
+          d.signatureImage ||
+          d.medicalRegCertificate ||
+          d.qualificationCertificate ||
+          d.aadhaarCard ||
+          d.aadhaarCardBack ||
+          d.panCard
+        ) {
+          setShowDocuments(true);
+        }
         setEducationKey((k) => k + 1);
         setAwardsKey((k) => k + 1);
         setCertsKey((k) => k + 1);
@@ -407,7 +431,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
           setAllDesignations([]);
         }
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setIsLoadingDesignations(false));
 
     fetch(apiUrl("/api/specializations"), {
       headers: { Authorization: `Bearer ${token}` },
@@ -420,12 +445,16 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   }, []);
 
   useEffect(() => {
-    if (!isLoadingDepartments && departments.length === 0) {
-      const msg = "To add a doctor, you need to first add at least one Department and one Designation in the system.";
-      setError(msg);
-      setShowErrorModal(true);
+    if (!isEdit && !isLoadingDepartments && !isLoadingDesignations) {
+      if (departments.length === 0 || allDesignations.length === 0) {
+        const msg = departments.length === 0
+          ? "To add a doctor, you need to first add at least one Department in the system."
+          : "To add a doctor, you need to first add at least one Designation in the system.";
+        setError(msg);
+        setShowErrorModal(true);
+      }
     }
-  }, [isLoadingDepartments, departments]);
+  }, [isEdit, isLoadingDepartments, isLoadingDesignations, departments, allDesignations]);
 
   // -- Filter designations when department changes ----------------
   useEffect(() => {
@@ -557,12 +586,12 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         gender,
         bio,
         profileImage: profileImage || null,
-        signatureImage: signatureImage || null,
-        medicalRegCertificate: medicalRegCertificate || null,
-        qualificationCertificate: qualificationCertificate || null,
-        aadhaarCard: aadhaarCard || null,
-        aadhaarCardBack: aadhaarCardBack || null,
-        panCard: panCard || null,
+        signatureImage: showDocuments ? (signatureImage || null) : null,
+        medicalRegCertificate: showDocuments ? (medicalRegCertificate || null) : null,
+        qualificationCertificate: showDocuments ? (qualificationCertificate || null) : null,
+        aadhaarCard: showDocuments ? (aadhaarCard || null) : null,
+        aadhaarCardBack: showDocuments ? (aadhaarCardBack || null) : null,
+        panCard: showDocuments ? (panCard || null) : null,
         status: status,
         address1,
         address2,
@@ -581,9 +610,9 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         freeFollowUpLimit: followUpEnabled ? freeFollowUpLimit : null,
         followUpFee: followUpEnabled ? followUpFee : null,
         schedules: serializeSchedules(activeSchedules),
-        educations: serializeEducations(educations),
-        awards: serializeAwards(awards),
-        certifications: serializeAwards(certifications),
+        educations: showEducation ? serializeEducations(educations) : null,
+        awards: showAwards ? serializeAwards(awards) : null,
+        certifications: showCertifications ? serializeAwards(certifications) : null,
       };
 
       const res = await fetch(
@@ -1066,114 +1095,6 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                             />
                           </div>
                         </div>
-
-                        {/* Moved Sections */}
-                        <div className="col-lg-12 mb-4 px-3">
-                          <div className="border rounded bg-white">
-                            <div className="px-3 py-2 border-bottom">
-                              <h6 className="fw-bold mb-0 text-primary">Educational Information</h6>
-                            </div>
-                            <div className="p-4">
-                              <EducationForms
-                                key={`edu-${educationKey}`}
-                                initialRows={educations.length ? educations : undefined}
-                                onChange={setEducations}
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="col-lg-12 mb-4 px-3">
-                          <div className="border rounded bg-white">
-                            <div className="px-3 py-2 border-bottom">
-                              <h6 className="fw-bold mb-0 text-success">Awards &amp; Recognition</h6>
-                            </div>
-                            <div className="p-4">
-                              <RewardsForms
-                                key={`aw-${awardsKey}`}
-                                initialRows={awards.length ? awards : undefined}
-                                onChange={setAwards}
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="col-lg-12 mb-4 px-3">
-                          <div className="border rounded bg-white">
-                            <div className="px-3 py-2 border-bottom">
-                              <h6 className="fw-bold mb-0 text-warning">Certifications</h6>
-                            </div>
-                            <div className="p-4">
-                              <RewardsForms
-                                key={`cert-${certsKey}`}
-                                initialRows={certifications.length ? certifications : undefined}
-                                onChange={setCertifications}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* -- Document Information ----------------- */}
-                    <div className="bg-light px-3 py-2 mb-3">
-                      <h6 className="fw-bold mb-0">Documents Upload</h6>
-                    </div>
-                    <div className="p-3">
-                      <div className="row">
-                        {/* Row 1 */}
-                        <div className="col-lg-6 mb-3">
-                          <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
-                            <label className="form-label mb-0 fw-bold text-dark">Doctor Signature (Optional)</label>
-                            <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
-                              <DoctorProfileUpload value={signatureImage} onChange={setSignatureImage} />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-lg-6 mb-3">
-                          <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
-                            <label className="form-label mb-0 fw-bold text-dark">Medical Reg. Certificate (Optional)</label>
-                            <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
-                              <DoctorProfileUpload value={medicalRegCertificate} onChange={setMedicalRegCertificate} />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Row 2 */}
-                        <div className="col-lg-6 mb-3">
-                          <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
-                            <label className="form-label mb-0 fw-bold text-dark">Qualification Certificate (Optional)</label>
-                            <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
-                              <DoctorProfileUpload value={qualificationCertificate} onChange={setQualificationCertificate} />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-lg-6 mb-3">
-                          <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
-                            <label className="form-label mb-0 fw-bold text-dark">Aadhaar Card Front (Optional)</label>
-                            <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
-                              <DoctorProfileUpload value={aadhaarCard} onChange={setAadhaarCard} />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Row 3 */}
-                        <div className="col-lg-6 mb-3">
-                          <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
-                            <label className="form-label mb-0 fw-bold text-dark">PAN Card (Optional)</label>
-                            <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
-                              <DoctorProfileUpload value={panCard} onChange={setPanCard} />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-lg-6 mb-3">
-                          <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
-                            <label className="form-label mb-0 fw-bold text-dark">Aadhaar Card Back (Optional)</label>
-                            <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
-                              <DoctorProfileUpload value={aadhaarCardBack} onChange={setAadhaarCardBack} />
-                            </div>
-                          </div>
-                        </div>
                       </div>
                     </div>
 
@@ -1270,9 +1191,9 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
 
                       <ul className="nav nav-pills schedule-tab mb-4 gap-2" id="pills-tab" role="tablist">
                         {WEEKDAYS.map((day, i) => (
-                          <li key={day} className="nav-item" role="presentation">
+                          <li key={day} className="nav-item flex-fill" role="presentation">
                             <button
-                              className={`nav-link btn px-4 py-2 border rounded-pill transition-all d-flex align-items-center gap-2 ${activeScheduleDay === day
+                              className={`nav-link btn w-100 px-3 py-2 border rounded-pill transition-all d-flex align-items-center justify-content-center gap-2 ${activeScheduleDay === day
                                 ? "active btn-primary text-white shadow"
                                 : "btn-light text-dark hover-bg-light"
                                 }`}
@@ -1284,7 +1205,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               aria-selected={activeScheduleDay === day}
                               onClick={() => setActiveScheduleDay(day)}
                             >
-                              {day.substring(0, 2)}..
+                              {day}
                               {lockedDays[day] && <i className="ti ti-circle-check-filled fs-14 text-white shadow-sm" />}
                             </button>
                           </li>
@@ -1349,6 +1270,169 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         </span>
                       </div>
                     </div>
+
+                    {/* -- Optional Information Toggles ----------------- */}
+                    <div className="pb-0">
+                      <div className="row">
+                        {/* Educational Information */}
+                        <div className="col-lg-12 mb-4 px-3">
+                          <div className="border rounded bg-white">
+                            <div className="px-3 py-2 border-bottom d-flex align-items-center justify-content-between">
+                              <h6 className="fw-bold mb-0 text-primary">Educational Information</h6>
+                              <div className="form-check form-switch mb-0">
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  role="switch"
+                                  id="showEducationToggle"
+                                  checked={showEducation}
+                                  onChange={(e) => setShowEducation(e.target.checked)}
+                                />
+                              </div>
+                            </div>
+                            {showEducation && (
+                              <div className="p-4">
+                                <EducationForms
+                                  key={`edu-${educationKey}`}
+                                  initialRows={educations.length ? educations : undefined}
+                                  onChange={setEducations}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Awards & Recognition */}
+                        <div className="col-lg-12 mb-4 px-3">
+                          <div className="border rounded bg-white">
+                            <div className="px-3 py-2 border-bottom d-flex align-items-center justify-content-between">
+                              <h6 className="fw-bold mb-0 text-success">Awards &amp; Recognition</h6>
+                              <div className="form-check form-switch mb-0">
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  role="switch"
+                                  id="showAwardsToggle"
+                                  checked={showAwards}
+                                  onChange={(e) => setShowAwards(e.target.checked)}
+                                />
+                              </div>
+                            </div>
+                            {showAwards && (
+                              <div className="p-4">
+                                <RewardsForms
+                                  key={`aw-${awardsKey}`}
+                                  initialRows={awards.length ? awards : undefined}
+                                  onChange={setAwards}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Certifications */}
+                        <div className="col-lg-12 mb-4 px-3">
+                          <div className="border rounded bg-white">
+                            <div className="px-3 py-2 border-bottom d-flex align-items-center justify-content-between">
+                              <h6 className="fw-bold mb-0 text-warning">Certifications</h6>
+                              <div className="form-check form-switch mb-0">
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  role="switch"
+                                  id="showCertificationsToggle"
+                                  checked={showCertifications}
+                                  onChange={(e) => setShowCertifications(e.target.checked)}
+                                />
+                              </div>
+                            </div>
+                            {showCertifications && (
+                              <div className="p-4">
+                                <RewardsForms
+                                  key={`cert-${certsKey}`}
+                                  initialRows={certifications.length ? certifications : undefined}
+                                  onChange={setCertifications}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* -- Document Information ----------------- */}
+                    <div className="bg-light px-3 py-2 mb-3 d-flex align-items-center justify-content-between">
+                      <h6 className="fw-bold mb-0">Documents Upload</h6>
+                      <div className="form-check form-switch mb-0">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          role="switch"
+                          id="showDocumentsToggle"
+                          checked={showDocuments}
+                          onChange={(e) => setShowDocuments(e.target.checked)}
+                        />
+                      </div>
+                    </div>
+                    {showDocuments && (
+                      <div className="p-3">
+                        <div className="row">
+                          {/* Row 1 */}
+                          <div className="col-lg-6 mb-3">
+                            <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                              <label className="form-label mb-0 fw-bold text-dark">Doctor Signature (Optional)</label>
+                              <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                                <DoctorProfileUpload value={signatureImage} onChange={setSignatureImage} />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="col-lg-6 mb-3">
+                            <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                              <label className="form-label mb-0 fw-bold text-dark">Medical Reg. Certificate (Optional)</label>
+                              <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                                <DoctorProfileUpload value={medicalRegCertificate} onChange={setMedicalRegCertificate} />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Row 2 */}
+                          <div className="col-lg-6 mb-3">
+                            <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                              <label className="form-label mb-0 fw-bold text-dark">Qualification Certificate (Optional)</label>
+                              <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                                <DoctorProfileUpload value={qualificationCertificate} onChange={setQualificationCertificate} />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="col-lg-6 mb-3">
+                            <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                              <label className="form-label mb-0 fw-bold text-dark">Aadhaar Card Front (Optional)</label>
+                              <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                                <DoctorProfileUpload value={aadhaarCard} onChange={setAadhaarCard} />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Row 3 */}
+                          <div className="col-lg-6 mb-3">
+                            <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                              <label className="form-label mb-0 fw-bold text-dark">PAN Card (Optional)</label>
+                              <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                                <DoctorProfileUpload value={panCard} onChange={setPanCard} />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="col-lg-6 mb-3">
+                            <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                              <label className="form-label mb-0 fw-bold text-dark">Aadhaar Card Back (Optional)</label>
+                              <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                                <DoctorProfileUpload value={aadhaarCardBack} onChange={setAadhaarCardBack} />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="bg-light px-3 py-2 mb-3 d-flex align-items-center justify-content-between">
                       <h6 className="fw-bold mb-0">Appointment Information</h6>
@@ -1574,19 +1658,53 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                   </span>
                 </div>
                 <h5 className="fw-bold mb-2">Setup Incomplete</h5>
-                <p className="text-muted mb-0">
-                  To add a doctor, you need to first add at least one <strong>Department</strong> and one <strong>Designation</strong> in the system.
-                </p>
+                {departments.length === 0 ? (
+                  <p className="text-muted mb-0">
+                    To add a doctor, you need to first add at least one <strong>Department</strong> in the system.
+                  </p>
+                ) : (
+                  <p className="text-muted mb-0">
+                    To add a doctor, you need to first add at least one <strong>Designation</strong> in the system.
+                  </p>
+                )}
               </div>
-              <div className="modal-footer border-top-0 pt-0 pb-4 justify-content-center">
+              <div className="modal-footer border-top-0 pt-0 pb-4 justify-content-center gap-2">
                 <button
                   type="button"
-                  className="btn btn-primary px-5 shadow-sm"
-                  onClick={() => setShowErrorModal(false)}
+                  className="btn btn-light px-4 border"
+                  onClick={() => {
+                    setShowErrorModal(false);
+                    navigate(all_routes.doctors);
+                  }}
                   style={{ borderRadius: '8px' }}
                 >
-                  Understood
+                  Cancel
                 </button>
+                {departments.length === 0 ? (
+                  <button
+                    type="button"
+                    className="btn btn-primary px-4 shadow-sm"
+                    onClick={() => {
+                      setShowErrorModal(false);
+                      navigate(all_routes.hrmDepartments, { state: { openAddModal: true } });
+                    }}
+                    style={{ borderRadius: '8px' }}
+                  >
+                    Add Department <i className="ti ti-plus ms-1" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn-primary px-4 shadow-sm"
+                    onClick={() => {
+                      setShowErrorModal(false);
+                      navigate(all_routes.designation, { state: { openAddModal: true } });
+                    }}
+                    style={{ borderRadius: '8px' }}
+                  >
+                    Add Designation <i className="ti ti-plus ms-1" />
+                  </button>
+                )}
               </div>
             </div>
           </div>

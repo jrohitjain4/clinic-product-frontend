@@ -60,6 +60,13 @@ const Header = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
 
   const [user, setUser] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/c/${user?.clinic?.username || 'clinic'}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
@@ -267,16 +274,16 @@ const Header = () => {
                 <div
                   className="ms-2 d-flex align-items-center bg-white border rounded px-2 px-xl-3 text-nowrap shadow-sm flex-shrink-0"
                   style={{ height: '38px' }}
-                  title="Copy Link"
+                  title={copied ? "Copied!" : "Copy Link"}
                 >
                   <span className="fw-semibold text-primary fs-13 user-select-all d-none d-xl-inline">
-                    docyari.com/c/{user.clinic.username || 'clinic'}
+                    {window.location.host}/c/{user.clinic.username || 'clinic'}
                   </span>
                   <button
                     className="btn btn-sm btn-icon border-0 p-0 text-muted ms-xl-2"
-                    onClick={() => navigator.clipboard.writeText(`${window.location.origin}/c/${user.clinic.username || 'clinic'}`)}
+                    onClick={handleCopyLink}
                   >
-                    <i className="ti ti-copy fs-15 hover-primary" />
+                    <i className={copied ? "ti ti-check text-success fs-15" : "ti ti-copy fs-15 hover-primary"} />
                   </button>
                 </div>
               )}

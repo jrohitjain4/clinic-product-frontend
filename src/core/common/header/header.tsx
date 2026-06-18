@@ -480,6 +480,16 @@ const Header = () => {
                 </span>
               </Link>
               <div className="dropdown-menu dropdown-menu-end dropdown-menu-md p-2 border border-primary shadow-lg">
+                <style>{`
+                  .profile-dropdown .dropdown-item:not(.text-danger) {
+                    color: #000000 !important;
+                    font-weight: 550 !important;
+                  }
+                  .profile-dropdown .dropdown-item:hover:not(.text-danger) {
+                    color: #2e37a4 !important;
+                    background-color: rgba(46, 55, 164, 0.06) !important;
+                  }
+                `}</style>
                 <div className="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
                   <ImageWithBasePath
                     src="assets/img/users/user-01.jpg"
@@ -503,6 +513,13 @@ const Header = () => {
                   <i className="ti ti-settings me-1 align-middle" />
                   <span className="align-middle">Account Settings</span>
                 </Link>
+                {/* Landing Page Settings */}
+                {user?.role !== 'PATIENT' && (
+                  <Link to={all_routes.organizationsettings} className="dropdown-item">
+                    <i className="ti ti-browser-check me-1 align-middle" />
+                    <span className="align-middle">Landing Page Settings</span>
+                  </Link>
+                )}
                 {/* Theme Customizer Trigger */}
                 <Link
                   to="#"

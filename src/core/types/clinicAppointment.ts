@@ -62,6 +62,7 @@ export interface ClinicAppointment {
   followUpPaymentStatus?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  serviceIds?: string[];
   clinic?: {
     id: string;
     name: string;

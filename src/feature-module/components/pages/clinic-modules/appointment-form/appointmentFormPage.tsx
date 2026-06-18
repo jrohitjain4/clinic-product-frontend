@@ -65,7 +65,7 @@ const AppointmentFormPage = ({ mode, isModal = false, onSuccess, onCancel }: App
   const { services } = useClinicServices();
 
   const [form, setForm] = useState({
-    ...emptyAppointmentForm,
+    ...emptyAppointmentForm(),
     serviceIds: [] as string[],
   });
   const [submitting, setSubmitting] = useState(false);

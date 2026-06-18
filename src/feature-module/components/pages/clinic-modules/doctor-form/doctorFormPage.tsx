@@ -182,6 +182,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   // Quick Add State
   const [showQuickAddDeptModal, setShowQuickAddDeptModal] = useState(false);
   const [quickDeptName, setQuickDeptName] = useState("");
+  const [quickDeptDesc, setQuickDeptDesc] = useState("");
   const [isSubmittingQuickDept, setIsSubmittingQuickDept] = useState(false);
 
   const [showQuickAddDesigModal, setShowQuickAddDesigModal] = useState(false);
@@ -914,7 +915,10 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                   <button
                                     type="button"
                                     className="btn btn-link p-0 text-primary fw-bold fs-12 text-decoration-none"
-                                    onClick={() => setShowQuickAddDeptModal(true)}
+                                    onClick={() => {
+                                      setShowErrorModal(false);
+                                      setShowQuickAddDeptModal(true);
+                                    }}
                                   >
                                     <i className="ti ti-plus me-1" />Quick Add
                                   </button>
@@ -949,6 +953,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                     type="button"
                                     className="btn btn-link p-0 text-primary fw-bold fs-12 text-decoration-none"
                                     onClick={() => {
+                                      setShowErrorModal(false);
                                       setQuickDesigDeptId(departmentId || (departments[0]?.id || ""));
                                       setShowQuickAddDesigModal(true);
                                     }}
@@ -1707,6 +1712,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                     type="button"
                     className="btn btn-primary px-4 shadow-sm"
                     onClick={() => {
+                      setShowErrorModal(false);
                       setShowQuickAddDeptModal(true);
                     }}
                     style={{ borderRadius: '8px' }}
@@ -1718,6 +1724,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                     type="button"
                     className="btn btn-primary px-4 shadow-sm"
                     onClick={() => {
+                      setShowErrorModal(false);
                       setQuickDesigDeptId(departments[0]?.id || "");
                       setShowQuickAddDesigModal(true);
                     }}
@@ -1736,79 +1743,88 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         <div
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            zIndex: 1060,
+            zIndex: 9999,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'transparent',
           }}
           onClick={() => setShowQuickAddDeptModal(false)}
         >
           <div
-            className="shadow-lg"
-            style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '380px', padding: '0', overflow: 'hidden' }}
+            style={{
+              width: '100%', maxWidth: '480px', borderRadius: '12px',
+              overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+              background: '#fff',
+            }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h5 style={{ color: '#fff', fontWeight: 700, margin: 0, fontSize: '16px' }}>Add Department</h5>
+            {/* Header */}
+            <div style={{ background: 'var(--bs-primary, #6366f1)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h5 style={{ color: '#fff', fontWeight: 700, margin: 0, fontSize: '16px' }}>Add New Department</h5>
               <button type="button" className="btn-close btn-close-white" onClick={() => setShowQuickAddDeptModal(false)} />
             </div>
-            <div style={{ padding: '24px 24px 8px' }}>
-              <div className="mb-3">
-                <label className="form-label fw-bold">Department Name <span className="text-danger">*</span></label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Enter department name"
-                  value={quickDeptName}
-                  autoFocus
-                  onChange={(e) => setQuickDeptName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.form?.requestSubmit?.(); }}
-                />
+            {/* Body */}
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!quickDeptName.trim()) { toast.error("Department name is required."); return; }
+              setIsSubmittingQuickDept(true);
+              try {
+                const token = localStorage.getItem("token");
+                const res = await fetch(apiUrl("/api/departments"), {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ name: quickDeptName, description: quickDeptDesc, status: "Active" }),
+                });
+                if (!res.ok) { const data = await res.json(); throw new Error(data.message || "Failed to create department"); }
+                const newDept = await res.json();
+                toast.success("Department added successfully!");
+                const fetchRes = await fetch(apiUrl("/api/departments"), { headers: { Authorization: `Bearer ${token}` } });
+                const depts = await fetchRes.json();
+                if (Array.isArray(depts)) { setDepartments(depts.filter((d: any) => d.status === "Active")); }
+                setDepartmentId(newDept.id);
+                setQuickDeptName("");
+                setQuickDeptDesc("");
+                setShowQuickAddDeptModal(false);
+                setShowErrorModal(false);
+              } catch (err: any) {
+                toast.error(err.message);
+              } finally {
+                setIsSubmittingQuickDept(false);
+              }
+            }}>
+              <div style={{ padding: '24px 24px 0' }}>
+                <div style={{ marginBottom: '16px' }}>
+                  <label className="form-label fw-semibold">Department Name<span className="text-danger ms-1">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={quickDeptName}
+                    onChange={(e) => setQuickDeptName(e.target.value)}
+                    placeholder="e.g. Cardiology"
+                    autoFocus
+                  />
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label className="form-label fw-semibold">Description</label>
+                  <textarea
+                    className="form-control"
+                    rows={3}
+                    value={quickDeptDesc}
+                    onChange={(e) => setQuickDeptDesc(e.target.value)}
+                    placeholder="Optional description"
+                  />
+                </div>
               </div>
-            </div>
-            <div style={{ padding: '0 24px 24px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <button type="button" className="btn btn-light px-4 border" onClick={() => setShowQuickAddDeptModal(false)}>Cancel</button>
-              <button
-                type="button"
-                className="btn btn-primary px-4"
-                disabled={isSubmittingQuickDept}
-                onClick={async () => {
-                  if (!quickDeptName.trim()) {
-                    toast.error("Department name is required.");
-                    return;
-                  }
-                  setIsSubmittingQuickDept(true);
-                  try {
-                    const token = localStorage.getItem("token");
-                    const res = await fetch(apiUrl("/api/departments"), {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                      body: JSON.stringify({ name: quickDeptName, status: "Active" }),
-                    });
-                    if (!res.ok) {
-                      const data = await res.json();
-                      throw new Error(data.message || "Failed to create department");
-                    }
-                    const newDept = await res.json();
-                    toast.success("Department added successfully!");
-                    const fetchRes = await fetch(apiUrl("/api/departments"), { headers: { Authorization: `Bearer ${token}` } });
-                    const depts = await fetchRes.json();
-                    if (Array.isArray(depts)) {
-                      const active = depts.filter((d: any) => d.status === "Active");
-                      setDepartments(active);
-                    }
-                    setDepartmentId(newDept.id);
-                    setQuickDeptName("");
-                    setShowQuickAddDeptModal(false);
-                    setShowErrorModal(false);
-                  } catch (err: any) {
-                    toast.error(err.message);
-                  } finally {
-                    setIsSubmittingQuickDept(false);
-                  }
-                }}
-              >
-                {isSubmittingQuickDept ? "Adding..." : "Add Department"}
-              </button>
-            </div>
+              <div style={{ padding: '16px 24px', borderTop: '1px solid #e9ecef', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button type="button" className="btn btn-light border" onClick={() => setShowQuickAddDeptModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={isSubmittingQuickDept}>
+                  {isSubmittingQuickDept ? (
+                    <><span className="spinner-border spinner-border-sm me-2" />Saving...</>
+                  ) : (
+                    <><i className="ti ti-check me-2" />Add Department</>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -1818,92 +1834,89 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         <div
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            zIndex: 1060,
+            zIndex: 9999,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'transparent',
           }}
           onClick={() => setShowQuickAddDesigModal(false)}
         >
           <div
-            className="shadow-lg"
-            style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '420px', padding: '0', overflow: 'hidden' }}
+            style={{
+              width: '100%', maxWidth: '480px', borderRadius: '12px',
+              overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+              background: '#fff',
+            }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h5 style={{ color: '#fff', fontWeight: 700, margin: 0, fontSize: '16px' }}>Add Designation</h5>
+            {/* Header */}
+            <div style={{ background: 'var(--bs-primary, #6366f1)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h5 style={{ color: '#fff', fontWeight: 700, margin: 0, fontSize: '16px' }}>Add New Designation</h5>
               <button type="button" className="btn-close btn-close-white" onClick={() => setShowQuickAddDesigModal(false)} />
             </div>
-            <div style={{ padding: '24px 24px 8px' }}>
-              <div className="mb-3">
-                <label className="form-label fw-bold">Designation Name <span className="text-danger">*</span></label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Enter designation name"
-                  value={quickDesigName}
-                  autoFocus
-                  onChange={(e) => setQuickDesigName(e.target.value)}
-                />
+            {/* Body */}
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!quickDesigName.trim()) { toast.error("Designation name is required."); return; }
+              if (!quickDesigDeptId) { toast.error("Please select a department."); return; }
+              setIsSubmittingQuickDesig(true);
+              try {
+                const token = localStorage.getItem("token");
+                const res = await fetch(apiUrl("/api/designations"), {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ name: quickDesigName, departmentId: quickDesigDeptId, status: "Active" }),
+                });
+                if (!res.ok) { const data = await res.json(); throw new Error(data.message || "Failed to create designation"); }
+                const newDesig = await res.json();
+                toast.success("Designation added successfully!");
+                const fetchRes = await fetch(apiUrl("/api/designations"), { headers: { Authorization: `Bearer ${token}` } });
+                const desigs = await fetchRes.json();
+                if (Array.isArray(desigs)) { setAllDesignations(desigs); }
+                setDepartmentId(quickDesigDeptId);
+                setDesignationId(newDesig.id);
+                setQuickDesigName("");
+                setShowQuickAddDesigModal(false);
+                setShowErrorModal(false);
+              } catch (err: any) {
+                toast.error(err.message);
+              } finally {
+                setIsSubmittingQuickDesig(false);
+              }
+            }}>
+              <div style={{ padding: '24px 24px 0' }}>
+                <div style={{ marginBottom: '16px' }}>
+                  <label className="form-label fw-semibold">Department<span className="text-danger ms-1">*</span></label>
+                  <CommonSelect
+                    options={deptOptions}
+                    className="select"
+                    value={deptOptions.find(o => o.value === quickDesigDeptId) || null}
+                    onChange={(opt: any) => setQuickDesigDeptId(opt?.value || "")}
+                    placeholder="Select Department"
+                  />
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label className="form-label fw-semibold">Designation Name<span className="text-danger ms-1">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={quickDesigName}
+                    onChange={(e) => setQuickDesigName(e.target.value)}
+                    placeholder="e.g. Senior Consultant"
+                    autoFocus
+                  />
+                </div>
               </div>
-              <div className="mb-3">
-                <label className="form-label fw-bold">Department <span className="text-danger">*</span></label>
-                <CommonSelect
-                  options={deptOptions}
-                  className="select"
-                  value={deptOptions.find(o => o.value === quickDesigDeptId) || null}
-                  onChange={(opt: any) => setQuickDesigDeptId(opt?.value || "")}
-                  placeholder="Select Department"
-                />
+              <div style={{ padding: '16px 24px', borderTop: '1px solid #e9ecef', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button type="button" className="btn btn-light border" onClick={() => setShowQuickAddDesigModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={isSubmittingQuickDesig}>
+                  {isSubmittingQuickDesig ? (
+                    <><span className="spinner-border spinner-border-sm me-2" />Saving...</>
+                  ) : (
+                    <><i className="ti ti-check me-2" />Add Designation</>
+                  )}
+                </button>
               </div>
-            </div>
-            <div style={{ padding: '0 24px 24px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <button type="button" className="btn btn-light px-4 border" onClick={() => setShowQuickAddDesigModal(false)}>Cancel</button>
-              <button
-                type="button"
-                className="btn btn-primary px-4"
-                disabled={isSubmittingQuickDesig}
-                onClick={async () => {
-                  if (!quickDesigName.trim()) {
-                    toast.error("Designation name is required.");
-                    return;
-                  }
-                  if (!quickDesigDeptId) {
-                    toast.error("Please select a department for this designation.");
-                    return;
-                  }
-                  setIsSubmittingQuickDesig(true);
-                  try {
-                    const token = localStorage.getItem("token");
-                    const res = await fetch(apiUrl("/api/designations"), {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                      body: JSON.stringify({ name: quickDesigName, departmentId: quickDesigDeptId, status: "Active" }),
-                    });
-                    if (!res.ok) {
-                      const data = await res.json();
-                      throw new Error(data.message || "Failed to create designation");
-                    }
-                    const newDesig = await res.json();
-                    toast.success("Designation added successfully!");
-                    const fetchRes = await fetch(apiUrl("/api/designations"), { headers: { Authorization: `Bearer ${token}` } });
-                    const desigs = await fetchRes.json();
-                    if (Array.isArray(desigs)) {
-                      setAllDesignations(desigs);
-                    }
-                    setDepartmentId(quickDesigDeptId);
-                    setDesignationId(newDesig.id);
-                    setQuickDesigName("");
-                    setShowQuickAddDesigModal(false);
-                    setShowErrorModal(false);
-                  } catch (err: any) {
-                    toast.error(err.message);
-                  } finally {
-                    setIsSubmittingQuickDesig(false);
-                  }
-                }}
-              >
-                {isSubmittingQuickDesig ? "Adding..." : "Add Designation"}
-              </button>
-            </div>
+            </form>
           </div>
         </div>
       )}

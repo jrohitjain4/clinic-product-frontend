@@ -715,7 +715,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       <div className="row">
                         {/* Profile Image */}
                         <div className="col-lg-12">
-                          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2" style={{ marginBottom: "5px" }}>
+                          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2" style={{ marginBottom: "10px" }}>
                             <div className="d-flex align-items-center">
                               <label className="form-label me-3 mb-0">Profile Image</label>
                               <DoctorProfileUpload
@@ -759,7 +759,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         <div className="col-lg-12">
                           <div className="row">
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">
                                   Name <span className="text-danger">*</span>
                                 </label>
@@ -773,7 +773,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">
                                   Username <span className="text-danger">*</span>
                                 </label>
@@ -811,7 +811,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
 
                             {/* Phone + Email */}
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">
                                   Phone Number <span className="text-danger">*</span>
                                 </label>
@@ -831,7 +831,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">
                                   Email Address <span className="text-danger">*</span>
                                 </label>
@@ -851,7 +851,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         <div className="col-lg-12">
                           <div className="row">
                             <div className="col-lg-4">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">
                                   DOB <span className="text-danger">*</span>
                                 </label>
@@ -872,7 +872,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-4">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">
                                   Age
                                 </label>
@@ -886,7 +886,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-4">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">
                                   Year Of Experience <span className="text-danger">*</span>
                                 </label>
@@ -907,7 +907,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         <div className="col-lg-12">
                           <div className="row">
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <div className="d-flex align-items-center justify-content-between mb-1">
                                   <label className="form-label mb-0">
                                     Department <span className="text-danger">*</span>
@@ -944,7 +944,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <div className="d-flex align-items-center justify-content-between mb-1">
                                   <label className="form-label mb-0">
                                     Designation <span className="text-danger">*</span>
@@ -992,7 +992,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                     <div className="pb-0">
                       <div className="row">
                         <div className="col-lg-6">
-                          <div style={{ marginBottom: "5px" }}>
+                          <div style={{ marginBottom: "10px" }}>
                             <label className="form-label mb-0">Address 1 <span className="text-danger ms-1">*</span></label>
                             <input
                               type="text"
@@ -1004,7 +1004,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
                         </div>
                         <div className="col-lg-6">
-                          <div style={{ marginBottom: "5px" }}>
+                          <div style={{ marginBottom: "10px" }}>
                             <label className="form-label mb-0">Address 2 (Optional)</label>
                             <input
                               type="text"
@@ -1016,7 +1016,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
                         </div>
                         <div className="col-lg-6">
-                          <div style={{ marginBottom: "5px" }}>
+                          <div style={{ marginBottom: "10px" }}>
                             <label className="form-label mb-0">Country</label>
                             <CommonSelect
                               options={Country}
@@ -1027,7 +1027,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
                         </div>
                         <div className="col-lg-6">
-                          <div style={{ marginBottom: "5px" }}>
+                          <div style={{ marginBottom: "10px" }}>
                             <label className="form-label mb-0">State <span className="text-danger ms-1">*</span></label>
                             <CommonSelect
                               options={State}
@@ -1038,7 +1038,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
                         </div>
                         <div className="col-lg-6">
-                          <div style={{ marginBottom: "5px" }}>
+                          <div style={{ marginBottom: "10px" }}>
                             <label className="form-label mb-0">City <span className="text-danger ms-1">*</span></label>
                             <CommonSelect
                               options={City}
@@ -1049,7 +1049,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
                         </div>
                         <div className="col-lg-6">
-                          <div style={{ marginBottom: "5px" }}>
+                          <div style={{ marginBottom: "10px" }}>
                             <label className="form-label mb-0">Pincode <span className="text-danger ms-1">*</span></label>
                             <input
                               type="text"
@@ -1081,7 +1081,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           <div className="row">
                             {/* Specialization + Qualification */}
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Specializations</label>
                                 {specOptions.length > 0 ? (
                                   <CommonSelect
@@ -1104,7 +1104,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Qualification</label>
                                 <input
                                   type="text"
@@ -1118,7 +1118,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
 
                             {/* Marital Status + License */}
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Marital Status</label>
                                 <CommonSelect
                                   options={[
@@ -1138,7 +1138,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Medical License Number</label>
                                 <input
                                   type="text"
@@ -1152,7 +1152,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
 
                             {/* Languages + Alt Contact */}
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Language Spoken</label>
                                 <TagInput
                                   key={`tags-${educationKey}`}
@@ -1162,7 +1162,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Alternative Contact No</label>
                                 <input
                                   type="text"
@@ -1176,7 +1176,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
 
                             {/* Blood Group + Gender */}
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">
                                   Blood Group <span className="text-danger ms-1">*</span>
                                 </label>
@@ -1192,7 +1192,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">
                                   Gender <span className="text-danger ms-1">*</span>
                                 </label>
@@ -1207,7 +1207,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
 
                             {/* Bio */}
                             <div className="col-lg-12">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Bio</label>
                                 <textarea
                                   className="form-control"
@@ -1481,7 +1481,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       <div className="row">
                         {/* All 4 fields on one row to reduce empty space */}
                         <div className="col-lg-3">
-                          <div style={{ marginBottom: "5px" }}>
+                          <div style={{ marginBottom: "10px" }}>
                             <label className="form-label mb-0">Appointment Type</label>
                             <CommonSelect
                               options={Appointment_Type}
@@ -1496,7 +1496,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
                         </div>
                         <div className="col-lg-3">
-                          <div style={{ marginBottom: "5px" }}>
+                          <div style={{ marginBottom: "10px" }}>
                             <label className="form-label mb-0">Accept bookings (in Advance)</label>
                             <input
                               type="number"
@@ -1510,7 +1510,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
                         </div>
                         <div className="col-lg-3">
-                          <div style={{ marginBottom: "5px" }}>
+                          <div style={{ marginBottom: "10px" }}>
                             <label className="form-label mb-0">Appointment Duration</label>
                             <input
                               type="number"
@@ -1524,7 +1524,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
                         </div>
                         <div className="col-lg-3">
-                          <div style={{ marginBottom: "5px" }}>
+                          <div style={{ marginBottom: "10px" }}>
                             <label className="form-label mb-0">Consultation Charge</label>
                             <input
                               type="number"
@@ -1565,7 +1565,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         {followUpEnabled && (
                           <>
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Follow-up Validity</label>
                                 <input
                                   type="number"
@@ -1578,7 +1578,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label d-flex align-items-center gap-2">
                                   Free Follow-up Limit
                                   <span className="badge bg-soft-info text-info fw-normal fs-12">
@@ -1596,7 +1596,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div style={{ marginBottom: "5px" }}>
+                              <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Follow-up Fee (₹)</label>
                                 <input
                                   type="number"

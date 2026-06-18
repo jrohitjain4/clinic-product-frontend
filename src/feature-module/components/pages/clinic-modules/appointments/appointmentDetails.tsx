@@ -22,6 +22,7 @@ import Footer from "../../../../../core/common/footer/footer";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import { APPOINTMENT_STATUS_OPTIONS } from "../../../../../core/utils/appointmentForm";
 import { authHeaders } from "../../../../../core/utils/apiClient";
+import { useClinicServices } from "../../../../../core/hooks/useClinicServices";
 
 const AppointmentDetails = () => {
     const { id } = useParams<{ id: string }>();
@@ -57,6 +58,9 @@ const AppointmentDetails = () => {
 
     // Fetch all appointments to compute dynamic queue/expected-time ranks
     const { appointments: allAppointments } = useClinicAppointments();
+
+    // Fetch services for session appointment display
+    const { services } = useClinicServices();
 
     const slotDetails = useMemo(() => {
         if (!appointment || !allAppointments || allAppointments.length === 0) return { expectedTime: "—", checkinHisNo: "—" };
@@ -126,6 +130,28 @@ const AppointmentDetails = () => {
         chainIds.includes(p.appointment?.id || "")
     );
     const patientHistory = history.filter(h => !chainIds.includes(h.id)); // Other visits
+
+    // Session appointment support
+    const isSessionAppointment = appointment?.serviceIds && appointment.serviceIds.length > 0;
+    const sessionServices = useMemo(() => {
+        if (!isSessionAppointment || !services.length) return [];
+        return services.filter(s => appointment.serviceIds.includes(s.id));
+    }, [isSessionAppointment, appointment?.serviceIds, services]);
+    const totalSessionDays = useMemo(() => {
+        return sessionServices.reduce((sum, s) => {
+            const match = (s.duration || '').match(/(\d+)/);
+            return sum + (match ? parseInt(match[1], 10) : 0);
+        }, 0);
+    }, [sessionServices]);
+    // Session children: appointments linked via parentAppointmentId to current or current is parent
+    const sessionChildren = useMemo(() => {
+        if (!isSessionAppointment || !appointment) return [];
+        const parentId = appointment.parentAppointmentId || appointment.id;
+        return history
+            .filter(a => a.id === parentId || a.parentAppointmentId === parentId)
+            .filter(a => (a as any).serviceIds && (a as any).serviceIds.length > 0)
+            .sort((a, b) => dayjs(a.scheduledAt).isBefore(dayjs(b.scheduledAt)) ? -1 : 1);
+    }, [isSessionAppointment, appointment, history]);
 
     const handlePresSubmit = async (data: any) => {
         try {
@@ -1000,6 +1026,14 @@ const AppointmentDetails = () => {
                                     Follow-ups {(appointment as any)?.followUpChain?.length > 1 ? `(${(appointment as any).followUpChain.length - 1})` : ""}
                                 </button>
                             </li>
+                            {isSessionAppointment && (
+                                <li className="nav-item border-0">
+                                    <button className="nav-link fw-bold py-2 px-3 fs-13 border-0" data-bs-toggle="pill" data-bs-target="#session" type="button" role="tab">
+                                        <i className="ti ti-calendar-event me-1" />
+                                        Session ({sessionChildren.length}/{totalSessionDays} days)
+                                    </button>
+                                </li>
+                            )}
                         </ul>
 
                         <div className="tab-content bg-white p-4 rounded shadow-sm border shadow-none">
@@ -1764,6 +1798,132 @@ const AppointmentDetails = () => {
                                     />
                                 </div>
                             </div>
+
+                            {/* Session Appointments Tab */}
+                            {isSessionAppointment && (
+                                <div className="tab-pane fade" id="session" role="tabpanel">
+                                    <div className="mb-4">
+                                        <div className="d-flex align-items-center justify-content-between mb-3">
+                                            <div className="d-flex align-items-center gap-3">
+                                                <h5 className="fw-bold mb-0 text-dark">
+                                                    <i className="ti ti-calendar-event me-2 text-primary" />
+                                                    Session Appointments
+                                                </h5>
+                                                <span className="badge bg-primary fs-12 fw-bold px-3 py-1">
+                                                    {sessionChildren.length} / {totalSessionDays} Days
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Services Info */}
+                                        <div className="card border mb-4 shadow-sm">
+                                            <div className="card-header bg-light py-2 px-3">
+                                                <h6 className="fw-bold mb-0 fs-13 text-uppercase text-muted">
+                                                    <i className="ti ti-medical-cross me-1" /> Selected Services
+                                                </h6>
+                                            </div>
+                                            <div className="card-body p-0">
+                                                <div className="table-responsive">
+                                                    <table className="table table-borderless table-hover mb-0">
+                                                        <thead className="bg-light">
+                                                            <tr>
+                                                                <th className="fw-bold fs-12 text-muted py-2 px-3">Service</th>
+                                                                <th className="fw-bold fs-12 text-muted py-2 px-3">Duration</th>
+                                                                <th className="fw-bold fs-12 text-muted py-2 px-3">Price</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {sessionServices.map((s) => (
+                                                                <tr key={s.id}>
+                                                                    <td className="fw-bold fs-13 py-2 px-3">{s.serviceName}</td>
+                                                                    <td className="fs-13 py-2 px-3">{s.duration || '—'}</td>
+                                                                    <td className="fs-13 py-2 px-3">₹{s.price || 0}</td>
+                                                                </tr>
+                                                            ))}
+                                                            <tr className="border-top">
+                                                                <td className="fw-bold fs-13 py-2 px-3 text-primary">Total</td>
+                                                                <td className="fw-bold fs-13 py-2 px-3 text-primary">{totalSessionDays} Days</td>
+                                                                <td className="fw-bold fs-13 py-2 px-3 text-primary">₹{sessionServices.reduce((sum, s) => sum + (s.price || 0), 0)}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Session Timeline */}
+                                        <div className="card border shadow-sm">
+                                            <div className="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+                                                <h6 className="fw-bold mb-0 fs-13 text-uppercase text-muted">
+                                                    <i className="ti ti-list me-1" /> Daily Appointments
+                                                </h6>
+                                                {sessionChildren.length < totalSessionDays && appointment?.status === 'Schedule' && (
+                                                    <span className="badge bg-warning text-dark fs-11">
+                                                        <i className="ti ti-alert-triangle me-1" />
+                                                        Confirm this appointment to generate all {totalSessionDays} daily sessions
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="card-body p-0">
+                                                {sessionChildren.length === 0 ? (
+                                                    <div className="text-center py-5 text-muted">
+                                                        <i className="ti ti-calendar-off fs-30 mb-2 opacity-50" /><br />
+                                                        No session appointments created yet.<br />
+                                                        <span className="fs-12">Confirm this appointment to automatically create {totalSessionDays} daily sessions.</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="table-responsive">
+                                                        <table className="table table-hover mb-0">
+                                                            <thead className="bg-light">
+                                                                <tr>
+                                                                    <th className="fw-bold fs-12 text-muted py-2 px-3">S.No.</th>
+                                                                    <th className="fw-bold fs-12 text-muted py-2 px-3">Day</th>
+                                                                    <th className="fw-bold fs-12 text-muted py-2 px-3">Date</th>
+                                                                    <th className="fw-bold fs-12 text-muted py-2 px-3">Code</th>
+                                                                    <th className="fw-bold fs-12 text-muted py-2 px-3">Status</th>
+                                                                    <th className="fw-bold fs-12 text-muted py-2 px-3">Action</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {sessionChildren.map((child, idx) => (
+                                                                    <tr key={child.id} className={child.id === appointment?.id ? 'bg-primary-subtle' : ''}>
+                                                                        <td className="fs-13 py-2 px-3">{idx + 1}</td>
+                                                                        <td className="fw-bold fs-13 py-2 px-3">
+                                                                            Day {idx + 1}
+                                                                        </td>
+                                                                        <td className="fs-13 py-2 px-3">
+                                                                            {dayjs(child.scheduledAt).format('DD MMM YYYY')}
+                                                                            <span className="text-muted ms-1 fs-11">
+                                                                                ({dayjs(child.scheduledAt).format('dddd')})
+                                                                            </span>
+                                                                        </td>
+                                                                        <td className="fw-bold fs-13 py-2 px-3 text-primary">
+                                                                            {child.appointmentCode || '—'}
+                                                                        </td>
+                                                                        <td className="py-2 px-3">
+                                                                            <span className={`badge ${statusBadgeClass(child.status)} fw-bold fs-11`}>
+                                                                                {child.status}
+                                                                            </span>
+                                                                        </td>
+                                                                        <td className="py-2 px-3">
+                                                                            <Link
+                                                                                to={all_routes.appointmentDetails.replace(':id', child.id)}
+                                                                                className="btn btn-sm btn-soft-primary fw-bold fs-11 px-2 py-1"
+                                                                            >
+                                                                                <i className="ti ti-eye me-1" /> View
+                                                                            </Link>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -2140,10 +2300,12 @@ const AppointmentDetails = () => {
                 .btn-xs { padding: 4px 10px; font-size: 11px; border-radius: 6px; }
                 .avatar-xxl { width: 64px; height: 64px; }
                 .hover-primary:hover { color: var(--bs-primary) !important; }
-                .btn-soft-primary { background-color: rgba(79, 70, 229, 0.1); color: #4f46e5; border: none; }
-                .btn-soft-primary:hover { background-color: #4f46e5; color: white; }
-                .btn-soft-info { background-color: rgba(13, 202, 240, 0.1); color: #0dcaf0; border: none; }
-                .btn-soft-info:hover { background-color: #0dcaf0; color: white; }
+                .btn-soft-primary { background-color: #4f46e5; color: white; border: none; }
+                .btn-soft-primary:hover { background-color: #3730a3; color: white; }
+                .btn-soft-info { background-color: #0dcaf0; color: white; border: none; }
+                .btn-soft-info:hover { background-color: #0baccc; color: white; }
+                .btn-soft-success { background-color: #27ae60; color: white; border: none; }
+                .btn-soft-success:hover { background-color: #1e8449; color: white; }
                 .nav-pills-primary .nav-link.active { background-color: #4f46e5 !important; color: white !important; }
                 .nav-link { color: #64748b; }
                 .badge-soft-info { background-color: rgba(0, 207, 221, 0.1); color: #00cfdd; }

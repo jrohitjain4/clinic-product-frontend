@@ -11,6 +11,8 @@ import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import isBetween from "dayjs/plugin/isBetween";
+import { apiDelete } from "../../../../core/utils/apiClient";
+import { toast } from "react-toastify";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -376,6 +378,7 @@ const HolidaysList = () => {
                 className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
                 data-bs-toggle="modal"
                 data-bs-target="#delete_holiday"
+                onClick={() => setSelectedHoliday(null)}
                 style={{
                   borderRadius: "8px",
                   minHeight: "42px",
@@ -404,6 +407,8 @@ const HolidaysList = () => {
       <HolidaysModal
         selectedHoliday={selectedHoliday}
         refetch={refetch}
+        selectedIds={selectedIds}
+        setSelectedIds={setSelectedIds}
       />
 
       {/* ===== VIEW HOLIDAY MODAL ===== */}

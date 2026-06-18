@@ -5,6 +5,7 @@ import Datatable from "../../../../../core/common/dataTable";
 import { useClinicServices } from "../../../../../core/hooks/useClinicServices";
 import { useClinicProducts } from "../../../../../core/hooks/useClinicProducts";
 import { useClinicDepartments } from "../../../../../core/hooks/useClinicDepartments";
+import { apiDelete } from "../../../../../core/utils/apiClient";
 
 const Services = () => {
   const { services, refetch: refetchServices } = useClinicServices();
@@ -25,6 +26,21 @@ const Services = () => {
     refetchProducts();
   };
 
+  const handleBulkDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete selected items?")) return;
+    try {
+      for (const key of selectedIds) {
+        const [type, id] = key.split("-");
+        if (type === "service") await apiDelete(`/api/services/${id}`);
+        else if (type === "product") await apiDelete(`/api/products/${id}`);
+      }
+      setSelectedIds([]);
+      refetchAll();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Merge services and products into one table
   const rawData = useMemo(() => [
     ...services.map(s => ({
@@ -35,6 +51,7 @@ const Services = () => {
       ServiceName: s.serviceName,
       Department: s.department?.name || "N/A",
       Price: s.price,
+      Duration: s.duration || "N/A",
       Status: s.status || "Active",
     })),
     ...products.map(p => ({
@@ -45,6 +62,7 @@ const Services = () => {
       ServiceName: p.name,
       Department: p.key || "N/A",
       Price: p.price,
+      Duration: "N/A",
       Status: "Active",
     })),
   ], [services, products]);
@@ -93,6 +111,12 @@ const Services = () => {
       sorter: (a: any, b: any) => a.Price - b.Price,
     },
     {
+      title: "Duration",
+      dataIndex: "Duration",
+      render: (text: string) => <span className="text-dark">{text}</span>,
+      sorter: (a: any, b: any) => a.Duration.localeCompare(b.Duration),
+    },
+    {
       title: "Status",
       dataIndex: "Status",
       render: (text: string) => (
@@ -110,46 +134,35 @@ const Services = () => {
     {
       title: "Action",
       dataIndex: "action",
+      align: "center",
+      className: "text-nowrap",
       render: (_text: string, record: any) => (
-        <div className="dropdown dropdown-action">
+        <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
           <Link
             to="#"
-            className="action-icon"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
+            className="text-primary p-1"
+            title="Edit"
+            data-bs-toggle="modal"
+            data-bs-target={record.Type === "Service" ? "#edit_service" : "#edit_product"}
+            onClick={() => {
+              if (record.Type === "Service") setSelectedService(record.originalService);
+              else setSelectedProduct(record.originalService);
+            }}
           >
-            <i className="ti ti-dots-vertical" />
+            <i className="ti ti-edit fs-18" />
           </Link>
-          <ul className="dropdown-menu dropdown-menu-end">
-            <li>
-              <Link
-                to="#"
-                className="dropdown-item"
-                data-bs-toggle="modal"
-                data-bs-target={record.Type === "Service" ? "#edit_service" : "#edit_product"}
-                onClick={() => {
-                  if (record.Type === "Service") setSelectedService(record.originalService);
-                  else setSelectedProduct(record.originalService);
-                }}
-              >
-                <i className="ti ti-edit me-2" /> Edit
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="#"
-                className="dropdown-item"
-                data-bs-toggle="modal"
-                data-bs-target={record.Type === "Service" ? "#delete_service" : "#delete_product"}
-                onClick={() => {
-                  if (record.Type === "Service") setSelectedService(record.originalService);
-                  else setSelectedProduct(record.originalService);
-                }}
-              >
-                <i className="ti ti-trash me-2" /> Delete
-              </Link>
-            </li>
-          </ul>
+          <button
+            className="bg-transparent border-0 text-danger p-1"
+            title="Delete"
+            data-bs-toggle="modal"
+            data-bs-target={record.Type === "Service" ? "#delete_service" : "#delete_product"}
+            onClick={() => {
+              if (record.Type === "Service") setSelectedService(record.originalService);
+              else setSelectedProduct(record.originalService);
+            }}
+          >
+            <i className="ti ti-trash fs-18" />
+          </button>
         </div>
       ),
     },
@@ -274,6 +287,7 @@ const Services = () => {
         {selectedIds.length > 0 && (
           <div className="d-flex justify-content-center mt-4">
             <button
+              onClick={handleBulkDelete}
               className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
               style={{ borderRadius: '8px', fontWeight: 'bold' }}
             >

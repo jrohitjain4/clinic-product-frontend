@@ -6,6 +6,7 @@ export interface ClinicService {
     id: string;
     serviceName: string;
     price: number;
+    duration?: string;
     status: string;
     departmentId: string;
     department?: ClinicDepartment;

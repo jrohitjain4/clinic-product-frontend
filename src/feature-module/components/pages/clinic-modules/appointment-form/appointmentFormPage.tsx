@@ -10,6 +10,7 @@ import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppoin
 import { useClinicDepartments } from "../../../../../core/hooks/useClinicDepartments";
 import { useClinicDoctors } from "../../../../../core/hooks/useClinicDoctors";
 import { useClinicPatients } from "../../../../../core/hooks/useClinicPatients";
+import { useClinicServices } from "../../../../../core/hooks/useClinicServices";
 import {
   APPOINTMENT_STATUS_OPTIONS,
   APPOINTMENT_TYPE_OPTIONS,
@@ -61,13 +62,18 @@ const AppointmentFormPage = ({ mode, isModal = false, onSuccess, onCancel }: App
     refetch: reloadDepts,
   } = useClinicDepartments();
   const { appointments: existingAppointments } = useClinicAppointments();
+  const { services } = useClinicServices();
 
-  const [form, setForm] = useState(emptyAppointmentForm);
+  const [form, setForm] = useState({
+    ...emptyAppointmentForm,
+    serviceIds: [] as string[],
+  });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [showFollowUp, setShowFollowUp] = useState(false);
   const [followUpCount, setFollowUpCount] = useState(0);
   const [showAddPatient, setShowAddPatient] = useState(false);
+  const [isSessionMode, setIsSessionMode] = useState(false);
   const [availability, setAvailability] = useState<{
     schedules: any;
     duration?: number;
@@ -80,6 +86,13 @@ const AppointmentFormPage = ({ mode, isModal = false, onSuccess, onCancel }: App
 
   const loadError = patientsError || doctorsError || deptsError;
   const optionsLoading = loadingPatients || loadingDoctors || loadingDepts;
+
+  const serviceOptions = useMemo(() => {
+    return services.filter(s => s.status === "Active").map(s => ({
+      value: s.id,
+      label: `${s.serviceName} (₹${s.price || 0})${s.duration ? ` - ${s.duration}` : ''}`,
+    }));
+  }, [services]);
 
   const nextCode =
     mode === "edit" && appointment?.appointmentCode
@@ -120,9 +133,15 @@ const AppointmentFormPage = ({ mode, isModal = false, onSuccess, onCancel }: App
         followUpStatus: appointment.followUpStatus || "Free Follow-up",
         paymentStatus: appointment.paymentStatus || "Free",
         parentAppointmentId: appointment.parentAppointmentId || "",
+        serviceIds: appointment.serviceIds || [],
       });
       if (appointment.isFollowUp) {
         setShowFollowUp(true);
+      }
+      if (appointment.serviceIds && appointment.serviceIds.length > 0) {
+        setIsSessionMode(true);
+      } else {
+        setIsSessionMode(false);
       }
     }
   }, [mode, appointment?.id]);
@@ -274,20 +293,24 @@ const AppointmentFormPage = ({ mode, isModal = false, onSuccess, onCancel }: App
     );
   };
 
-  const formatPatientLabel = (option: any) => {
+  const formatPatientLabel = (option: any, meta?: any) => {
     const p = option.patient;
     if (!p) return option.label;
+    const isMenu = meta?.context === "menu";
     return (
       <div className="d-flex flex-column" style={{ lineHeight: '1.2' }}>
-        <span className="fw-bold fs-14">{option.label}</span>
+        <span className="fw-bold fs-14" style={{ color: 'inherit' }}>{option.label}</span>
         <div className="d-flex align-items-center gap-2 mt-1">
           {p.patientCode && (
-            <span className="badge badge-soft-primary border-0 px-1 py-0 fs-10">
+            <span className="badge border-0 px-1 py-0 fs-10" style={{
+              backgroundColor: isMenu ? 'rgba(255,255,255,0.2)' : 'rgba(101,113,255,0.12)',
+              color: 'inherit',
+            }}>
               {p.patientCode}
             </span>
           )}
           {p.phone && (
-            <span className="text-muted fs-11">
+            <span className="fs-11" style={{ color: 'inherit', opacity: 0.85 }}>
               <i className="ti ti-device-mobile me-1" />{p.phone}
             </span>
           )}
@@ -330,13 +353,13 @@ const AppointmentFormPage = ({ mode, isModal = false, onSuccess, onCancel }: App
     if (!d) return option.label;
     return (
       <div className="d-flex flex-column" style={{ lineHeight: '1.2' }}>
-        <span className="fw-bold fs-14">{option.label}</span>
+        <span className="fw-bold fs-14" style={{ color: 'inherit' }}>{option.label}</span>
         <div className="d-flex align-items-center gap-2 mt-1">
-          <span className="text-muted fs-11">
+          <span className="fs-11" style={{ color: 'inherit', opacity: 0.85 }}>
             {d.department?.name || "—"} · {d.designation?.name || "Doctor"}
           </span>
           {d.phone && (
-            <span className="text-muted fs-11">
+            <span className="fs-11" style={{ color: 'inherit', opacity: 0.85 }}>
               <i className="ti ti-device-mobile me-1" />
               {d.phone}
             </span>
@@ -405,6 +428,7 @@ const AppointmentFormPage = ({ mode, isModal = false, onSuccess, onCancel }: App
           followUpStatus: form.isFollowUp ? form.followUpStatus : null,
           paymentStatus: form.isFollowUp ? form.paymentStatus : null,
           parentAppointmentId: form.isFollowUp ? form.parentAppointmentId : null,
+          serviceIds: isSessionMode ? form.serviceIds : [],
         }),
       });
       if (!res.ok) {
@@ -842,6 +866,25 @@ const AppointmentFormPage = ({ mode, isModal = false, onSuccess, onCancel }: App
               </div>
             </div>
           </div>
+
+          {isSessionMode && (
+            <div className="mt-4 border-top pt-3">
+              <label className="form-label mb-1 fw-bold text-primary fs-15">
+                Select Services for Session <span className="text-danger ms-1">*</span>
+              </label>
+              <CommonSelect
+                isMulti
+                options={serviceOptions}
+                className="select"
+                value={serviceOptions.filter((opt: any) => form.serviceIds.includes(opt.value))}
+                placeholder="Select one or more services"
+                onChange={(opts: any) => {
+                  const selectedIds = (opts || []).map((o: any) => o.value);
+                  setForm(f => ({ ...f, serviceIds: selectedIds }));
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
       <div className="d-flex justify-content-end mt-3">
@@ -890,13 +933,21 @@ const AppointmentFormPage = ({ mode, isModal = false, onSuccess, onCancel }: App
       <div className="content">
         <div className="row justify-content-center">
           <div className="col-lg-12">
-            <div className="mb-4">
+            <div className="mb-4 d-flex justify-content-between align-items-center">
               <h6 className="fw-bold mb-0">
                 <Link to={all_routes.appointments} className="text-dark">
                   <i className="ti ti-chevron-left me-1" />
-                  Appointments
+                  {isSessionMode ? "Session Appointment" : "Appointments"}
                 </Link>
               </h6>
+              {mode === "create" && (
+                <button
+                  className={`btn ${isSessionMode ? 'btn-secondary' : 'btn-primary'} fw-bold`}
+                  onClick={() => setIsSessionMode(!isSessionMode)}
+                >
+                  {isSessionMode ? "Switch to Regular Appointment" : "Session Appointment"}
+                </button>
+              )}
             </div>
             {formContent}
           </div>

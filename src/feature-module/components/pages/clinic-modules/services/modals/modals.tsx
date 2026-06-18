@@ -17,6 +17,7 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
   // Add Service State
   const [addName, setAddName] = useState("");
   const [addPrice, setAddPrice] = useState("");
+  const [addDuration, setAddDuration] = useState("");
   const [addDept, setAddDept] = useState<any>(null);
 
   const handleAddSubmit = async (e: any) => {
@@ -27,10 +28,11 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
         serviceName: addName,
         departmentId: addDept.value,
         price: addPrice || 0,
+        duration: addDuration || null,
         status: "Active",
       });
       refetch?.();
-      setAddName(""); setAddPrice(""); setAddDept(null);
+      setAddName(""); setAddPrice(""); setAddDuration(""); setAddDept(null);
       document.getElementById("close-add-modal")?.click();
     } catch (err) { console.error(err); }
   };
@@ -38,6 +40,7 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
   // Edit Service State
   const [editName, setEditName] = useState("");
   const [editPrice, setEditPrice] = useState("");
+  const [editDuration, setEditDuration] = useState("");
   const [editDept, setEditDept] = useState<any>(null);
   const [editStatus, setEditStatus] = useState<any>(null);
 
@@ -45,6 +48,7 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
     if (selectedService) {
       setEditName(selectedService.serviceName);
       setEditPrice(String(selectedService.price));
+      setEditDuration(selectedService.duration || "");
       setEditDept(selectedService.departmentId && selectedService.department
         ? { value: selectedService.departmentId, label: selectedService.department.name }
         : null);
@@ -62,6 +66,7 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
         serviceName: editName,
         departmentId: editDept.value,
         price: editPrice || 0,
+        duration: editDuration || null,
         status: editStatus.value,
       });
       refetch?.();
@@ -88,7 +93,7 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
 
   const handleAddProductSubmit = async (e: any) => {
     e.preventDefault();
-    if (!productName || !productPrice || !productKey || !productDesc) return;
+    if (!productName || !productPrice || !productDesc) return;
     try {
       await apiPost("/api/products", {
         name: productName,
@@ -148,29 +153,33 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
       {/* Start Add Service Modal */}
       <div id="add_service" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="text-dark modal-title fw-bold">New Service</h4>
-              <button type="button" className="btn-close btn-close-modal custom-btn-close" data-bs-dismiss="modal" aria-label="Close" />
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary">
+              <h4 className="modal-title fw-bold text-white">New Service</h4>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" />
             </div>
             <form onSubmit={handleAddSubmit}>
               <div className="modal-body">
                 <div className="mb-3">
-                  <label className="form-label">Service Name<span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" value={addName} onChange={(e) => setAddName(e.target.value)} required />
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Service Name<span className="text-danger ms-1">*</span></label>
+                  <input type="text" className="form-control" placeholder="Enter Service Name" value={addName} onChange={(e) => setAddName(e.target.value)} required />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Department<span className="text-danger ms-1">*</span></label>
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Department<span className="text-danger ms-1">*</span></label>
                   <CommonSelect options={deptOptions} className="select" value={addDept} onChange={(val) => setAddDept(val)} />
                 </div>
+                <div className="mb-3">
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Price</label>
+                  <input type="number" className="form-control" placeholder="Enter Price" value={addPrice} onChange={(e) => setAddPrice(e.target.value)} />
+                </div>
                 <div className="mb-0">
-                  <label className="form-label">Price</label>
-                  <input type="number" className="form-control" value={addPrice} onChange={(e) => setAddPrice(e.target.value)} />
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Duration <span className="text-muted fw-normal fs-12">(Optional)</span></label>
+                  <input type="text" className="form-control" placeholder="e.g. 1 Day, 3 Days, 7 Days" value={addDuration} onChange={(e) => setAddDuration(e.target.value)} />
                 </div>
               </div>
-              <div className="modal-footer d-flex align-items-center gap-1">
-                <button type="button" className="btn btn-white border" data-bs-dismiss="modal" id="close-add-modal">Cancel</button>
-                <button type="submit" className="btn btn-primary">Add New Service</button>
+              <div className="modal-footer d-flex align-items-center gap-2 mt-4 pt-3 border-top">
+                <button type="button" className="btn btn-light px-4 shadow-sm" style={{ borderRadius: '6px' }} data-bs-dismiss="modal" id="close-add-modal">Cancel</button>
+                <button type="submit" className="btn btn-primary px-4 shadow-sm" style={{ borderRadius: '6px' }}>Add New Service</button>
               </div>
             </form>
           </div>
@@ -180,33 +189,37 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
       {/* Start Edit Service Modal */}
       <div id="edit_service" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="text-dark modal-title fw-bold">Edit Service</h4>
-              <button type="button" className="btn-close btn-close-modal custom-btn-close" data-bs-dismiss="modal" aria-label="Close" />
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary">
+              <h4 className="modal-title fw-bold text-white">Edit Service</h4>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" />
             </div>
             <form onSubmit={handleEditSubmit}>
               <div className="modal-body">
                 <div className="mb-3">
-                  <label className="form-label">Service Name<span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" value={editName} onChange={(e) => setEditName(e.target.value)} required />
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Service Name<span className="text-danger ms-1">*</span></label>
+                  <input type="text" className="form-control" placeholder="Enter Service Name" value={editName} onChange={(e) => setEditName(e.target.value)} required />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Department<span className="text-danger ms-1">*</span></label>
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Department<span className="text-danger ms-1">*</span></label>
                   <CommonSelect options={deptOptions} className="select" value={editDept} onChange={(val) => setEditDept(val)} />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Price</label>
-                  <input type="number" className="form-control" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Price</label>
+                  <input type="number" className="form-control" placeholder="Enter Price" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Duration <span className="text-muted fw-normal fs-12">(Optional)</span></label>
+                  <input type="text" className="form-control" placeholder="e.g. 1 Day, 3 Days, 7 Days" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} />
                 </div>
                 <div className="mb-0">
-                  <label className="form-label">Status<span className="text-danger ms-1">*</span></label>
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Status<span className="text-danger ms-1">*</span></label>
                   <CommonSelect options={StatusActive} className="select" value={editStatus} onChange={(val) => setEditStatus(val)} />
                 </div>
               </div>
-              <div className="modal-footer d-flex align-items-center gap-1">
-                <button type="button" className="btn btn-white border" data-bs-dismiss="modal" id="close-edit-modal">Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Changes</button>
+              <div className="modal-footer d-flex align-items-center gap-2 mt-4 pt-3 border-top">
+                <button type="button" className="btn btn-light px-4 shadow-sm" style={{ borderRadius: '6px' }} data-bs-dismiss="modal" id="close-edit-modal">Cancel</button>
+                <button type="submit" className="btn btn-primary px-4 shadow-sm" style={{ borderRadius: '6px' }}>Save Changes</button>
               </div>
             </form>
           </div>
@@ -237,33 +250,33 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
       {/* Start Add Product Modal */}
       <div id="add_product" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="text-dark modal-title fw-bold">New Product</h4>
-              <button type="button" className="btn-close btn-close-modal custom-btn-close" data-bs-dismiss="modal" aria-label="Close" />
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary">
+              <h4 className="modal-title fw-bold text-white">New Medicine</h4>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" />
             </div>
             <form onSubmit={handleAddProductSubmit}>
               <div className="modal-body">
                 <div className="mb-3">
-                  <label className="form-label">Name<span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" value={productName} onChange={(e) => setProductName(e.target.value)} required />
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Name<span className="text-danger ms-1">*</span></label>
+                  <input type="text" className="form-control" placeholder="Enter Name" value={productName} onChange={(e) => setProductName(e.target.value)} required />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Description<span className="text-danger ms-1">*</span></label>
-                  <textarea className="form-control" value={productDesc} onChange={(e) => setProductDesc(e.target.value)} required />
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Description<span className="text-danger ms-1">*</span></label>
+                  <textarea className="form-control" placeholder="Enter Description" value={productDesc} onChange={(e) => setProductDesc(e.target.value)} required />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Price<span className="text-danger ms-1">*</span></label>
-                  <input type="number" className="form-control" value={productPrice} onChange={(e) => setProductPrice(e.target.value)} required />
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Price<span className="text-danger ms-1">*</span></label>
+                  <input type="number" className="form-control" placeholder="Enter Price" value={productPrice} onChange={(e) => setProductPrice(e.target.value)} required />
                 </div>
                 <div className="mb-0">
-                  <label className="form-label">Key<span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" value={productKey} onChange={(e) => setProductKey(e.target.value)} required />
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">SKU-KEY <span className="text-muted fw-normal fs-12">(Optional)</span></label>
+                  <input type="text" className="form-control" placeholder="Enter SKU-KEY" value={productKey} onChange={(e) => setProductKey(e.target.value)} />
                 </div>
               </div>
-              <div className="modal-footer d-flex align-items-center gap-1">
-                <button type="button" className="btn btn-white border" data-bs-dismiss="modal" id="close-add-product-modal">Cancel</button>
-                <button type="submit" className="btn btn-info">Add New Product</button>
+              <div className="modal-footer d-flex align-items-center gap-2 mt-4 pt-3 border-top">
+                <button type="button" className="btn btn-light px-4 shadow-sm" style={{ borderRadius: '6px' }} data-bs-dismiss="modal" id="close-add-product-modal">Cancel</button>
+                <button type="submit" className="btn btn-primary px-4 shadow-sm" style={{ borderRadius: '6px' }}>Add New Medicine</button>
               </div>
             </form>
           </div>
@@ -273,33 +286,33 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
       {/* Start Edit Product Modal */}
       <div id="edit_product" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="text-dark modal-title fw-bold">Edit Product</h4>
-              <button type="button" className="btn-close btn-close-modal custom-btn-close" data-bs-dismiss="modal" aria-label="Close" />
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary">
+              <h4 className="modal-title fw-bold text-white">Edit Medicine</h4>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" />
             </div>
             <form onSubmit={handleEditProductSubmit}>
               <div className="modal-body">
                 <div className="mb-3">
-                  <label className="form-label">Name<span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" value={editProductName} onChange={(e) => setEditProductName(e.target.value)} required />
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Name<span className="text-danger ms-1">*</span></label>
+                  <input type="text" className="form-control" placeholder="Enter Name" value={editProductName} onChange={(e) => setEditProductName(e.target.value)} required />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Description<span className="text-danger ms-1">*</span></label>
-                  <textarea className="form-control" value={editProductDesc} onChange={(e) => setEditProductDesc(e.target.value)} />
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Description<span className="text-danger ms-1">*</span></label>
+                  <textarea className="form-control" placeholder="Enter Description" value={editProductDesc} onChange={(e) => setEditProductDesc(e.target.value)} />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Price<span className="text-danger ms-1">*</span></label>
-                  <input type="number" className="form-control" value={editProductPrice} onChange={(e) => setEditProductPrice(e.target.value)} required />
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Price<span className="text-danger ms-1">*</span></label>
+                  <input type="number" className="form-control" placeholder="Enter Price" value={editProductPrice} onChange={(e) => setEditProductPrice(e.target.value)} required />
                 </div>
                 <div className="mb-0">
-                  <label className="form-label">Key<span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" value={editProductKey} onChange={(e) => setEditProductKey(e.target.value)} />
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">SKU-KEY <span className="text-muted fw-normal fs-12">(Optional)</span></label>
+                  <input type="text" className="form-control" placeholder="Enter SKU-KEY" value={editProductKey} onChange={(e) => setEditProductKey(e.target.value)} />
                 </div>
               </div>
-              <div className="modal-footer d-flex align-items-center gap-1">
-                <button type="button" className="btn btn-white border" data-bs-dismiss="modal" id="close-edit-product-modal">Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Changes</button>
+              <div className="modal-footer d-flex align-items-center gap-2 mt-4 pt-3 border-top">
+                <button type="button" className="btn btn-light px-4 shadow-sm" style={{ borderRadius: '6px' }} data-bs-dismiss="modal" id="close-edit-product-modal">Cancel</button>
+                <button type="submit" className="btn btn-primary px-4 shadow-sm" style={{ borderRadius: '6px' }}>Save Changes</button>
               </div>
             </form>
           </div>
@@ -314,7 +327,7 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
               <span className="avatar avatar-xxl bg-transparent text-danger mb-3 border border-danger">
                 <i className="ti ti-trash-x fs-36" />
               </span>
-              <h4 className="mb-2">Delete this product?</h4>
+              <h4 className="mb-2">Delete this medicine?</h4>
               <p>This action cannot be undone.</p>
               <div className="d-flex align-items-center justify-content-center mt-4">
                 <Link to="#" className="btn btn-light me-2" data-bs-dismiss="modal" id="close-delete-product-modal">Cancel</Link>

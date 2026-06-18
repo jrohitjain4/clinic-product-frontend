@@ -14,6 +14,8 @@ import {
 import Datatable from "../../../../../core/common/dataTable";
 import AppointmentsModals from "./appointmentsModals";
 import { resolveMediaUrl } from "../../../../../core/config/api";
+import { apiDelete } from "../../../../../core/utils/apiClient";
+import { toast } from "react-toastify";
 
 const Appointments = () => {
   const customSelectStyles = `
@@ -174,9 +176,26 @@ const Appointments = () => {
     if (nextStatus) {
       try {
         await updateAppointmentStatus(appointmentId, nextStatus);
+        toast.success(`Appointment marked as ${nextStatus}`);
       } catch (err) {
         console.error("Error updating status:", err);
+        toast.error("Failed to update status");
       }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} appointments?`)) return;
+    try {
+      for (const id of selectedIds) {
+        await apiDelete(`/api/appointments/${id}`);
+      }
+      setSelectedIds([]);
+      toast.success(`${selectedIds.length} appointments deleted successfully.`);
+      refetch();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete some appointments.");
     }
   };
 
@@ -671,18 +690,18 @@ const Appointments = () => {
         return (
           <div className="d-flex flex-column align-items-start gap-1">
             <span className={`badge ${statusBadgeClass(text)} `}>{text}</span>
-            {["Confirmed", "Checked In"].includes(text) && (
+            {["Schedule", "Confirmed", "Checked In"].includes(text) && (
               <div className="form-check form-switch p-0 ms-2" style={{ minHeight: 'auto' }}>
                 <input
                   className="form-check-input ms-0"
                   type="checkbox"
                   role="switch"
-                  checked={text === "Checked In"}
+                  checked={false}
                   onChange={() => handleStatusToggle(raw.id, text)}
                   style={{ cursor: 'pointer', width: '30px', height: '16px' }}
                 />
                 <label className="text-muted small ms-1" style={{ fontSize: '10px' }}>
-                  {text === "Confirmed" ? "Checkin" : "Checkout"}
+                  {text === "Schedule" ? "Confirm" : text === "Confirmed" ? "Checkin" : "Checkout"}
                 </label>
               </div>
             )}
@@ -812,6 +831,19 @@ const Appointments = () => {
               emptyMessage="We couldn't find any appointments matching your current filters. You can try adjusting the date range or follow-up status."
             />
           </div>
+
+          {selectedIds.length > 0 && (
+            <div className="d-flex justify-content-center mt-3 pb-3">
+              <button
+                className="btn btn-danger d-flex align-items-center gap-2 px-4 shadow"
+                onClick={handleBulkDelete}
+                style={{ borderRadius: '8px', minHeight: '40px', fontWeight: 'bold' }}
+              >
+                <i className="ti ti-trash"></i>
+                Delete Selected ({selectedIds.length})
+              </button>
+            </div>
+          )}
         </div>
         <Footer />
       </div>

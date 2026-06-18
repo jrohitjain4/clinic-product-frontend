@@ -212,9 +212,11 @@ const Sidebar = () => {
 
                 return (
                   <React.Fragment key={`main-${index}`}>
-                    <li className="menu-title">
-                      <span>{mainLabel?.tittle}</span>
-                    </li>
+                    {!mainLabel?.hideHeader && (
+                      <li className="menu-title">
+                        <span>{mainLabel?.tittle}</span>
+                      </li>
+                    )}
                     <li>
                       <ul>
                         {filteredItems?.map((title: any, i: number) => {

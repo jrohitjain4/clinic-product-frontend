@@ -9,9 +9,11 @@ import { toast } from "react-toastify";
 interface HolidaysModalProps {
   selectedHoliday?: any;
   refetch: () => void;
+  selectedIds?: string[];
+  setSelectedIds?: (ids: string[]) => void;
 }
 
-const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch }) => {
+const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch, selectedIds, setSelectedIds }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState<dayjs.Dayjs | null>(null);
@@ -82,13 +84,21 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch 
 
   const handleDelete = async (e: any) => {
     e.preventDefault();
-    if (!selectedHoliday) return;
+    if (!selectedHoliday && (!selectedIds || selectedIds.length === 0)) return;
     setLoading(true);
     try {
-      await apiDelete(`/api/holidays/${selectedHoliday.id}`);
-      toast.success("Holiday deleted successfully");
+      if (selectedIds && selectedIds.length > 0) {
+        for (const id of selectedIds) {
+          await apiDelete(`/api/holidays/${id}`);
+        }
+        if (setSelectedIds) setSelectedIds([]);
+        toast.success(`${selectedIds.length} holidays deleted successfully.`);
+      } else {
+        await apiDelete(`/api/holidays/${selectedHoliday.id}`);
+        toast.success("Holiday deleted successfully");
+      }
       refetch();
-      document.querySelector<HTMLElement>("#delete_holiday .btn-close")?.click();
+      document.querySelector<HTMLElement>("#delete_holiday [data-bs-dismiss=\"modal\"]")?.click();
     } catch (err: any) {
       toast.error(err?.message || "Failed to delete holiday");
     }

@@ -773,6 +773,10 @@ const DoctorsAppointmentDetails = () => {
                 .min-height-200 { min-height: 200px; }
                 .btn-xs { padding: 4px 10px; font-size: 11px; border-radius: 6px; }
                 .avatar-xxl { width: 64px; height: 64px; }
+                .btn-soft-primary { background-color: #4f46e5; color: white; border: none; }
+                .btn-soft-primary:hover { background-color: #3730a3; color: white; }
+                .btn-soft-info { background-color: #0dcaf0; color: white; border: none; }
+                .btn-soft-info:hover { background-color: #0baccc; color: white; }
                 .card-decoration-circle { position: absolute; width: 200px; height: 200px; background: rgba(255,255,255,0.05); border-radius: 50%; bottom: -50px; right: -50px; }
                 .bg-primary-light-large { position: absolute; width: 300px; height: 300px; background: rgba(255,255,255,0.03); border-radius: 50%; top: -100px; left: -100px; }
             `}</style>

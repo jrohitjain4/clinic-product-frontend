@@ -14,18 +14,16 @@ const DesignationModal = () => {
       <div id="add_designation" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="text-dark modal-title fw-bold">
+            <div className="modal-header bg-primary">
+              <h4 className="modal-title fw-bold" style={{ color: '#fff' }}>
                 Add New Designation
               </h4>
               <button
                 type="button"
-                className="btn-close btn-close-modal custom-btn-close"
+                className="btn-close btn-close-white"
                 data-bs-dismiss="modal"
                 aria-label="Close"
-              >
-                <i className="ti ti-x" />
-              </button>
+              />
             </div>
             <form>
               <div className="modal-body">
@@ -107,18 +105,16 @@ const DesignationModal = () => {
       <div id="edit_designation" className="modal fade">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="text-dark modal-title fw-bold">
+            <div className="modal-header bg-primary">
+              <h4 className="modal-title fw-bold" style={{ color: '#fff' }}>
                 Edit Designation
               </h4>
               <button
                 type="button"
-                className="btn-close btn-close-modal custom-btn-close"
+                className="btn-close btn-close-white"
                 data-bs-dismiss="modal"
                 aria-label="Close"
-              >
-                <i className="ti ti-x" />
-              </button>
+              />
             </div>
             <form>
               <div className="modal-body">

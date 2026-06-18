@@ -221,10 +221,12 @@ const Sidebar = () => {
                           let link_array: any = [];
                           if ("submenuItems" in title) {
                             title.submenuItems?.forEach((link: any) => {
-                              link_array.push(link?.link);
+                              const cleanLink = link?.link?.split("?")[0];
+                              if (cleanLink) link_array.push(cleanLink);
                               if (link?.submenu && "submenuItems" in link) {
                                 link.submenuItems?.forEach((item: any) => {
-                                  link_array.push(item?.link);
+                                  const cleanSubLink = item?.link?.split("?")[0];
+                                  if (cleanSubLink) link_array.push(cleanSubLink);
                                 });
                               }
                             });
@@ -286,11 +288,14 @@ const Sidebar = () => {
                                     return true;
                                   }).map(
                                     (item: any, j: any) => {
+                                      const currentFullPath = Location.pathname + Location.search;
                                       const isSubActive =
                                         item?.submenuItems
                                           ?.map((link: any) => link?.link)
                                           .includes(Location.pathname) ||
-                                        item?.link === Location.pathname;
+                                        (item?.link?.includes("?")
+                                          ? (currentFullPath === item?.link || (item?.link?.includes("tab=roles") && !Location.search))
+                                          : item?.link === Location.pathname);
 
                                       return (
                                         <li

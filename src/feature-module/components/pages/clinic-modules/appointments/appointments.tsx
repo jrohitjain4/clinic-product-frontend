@@ -625,7 +625,14 @@ const Appointments = () => {
         </div>
       ),
       dataIndex: "checkinHisNo",
-      render: (text: string) => <span className="fw-medium text-secondary">{text}</span>,
+      render: (text: string, record: any) => {
+        const isConfirmed = record.Status === "Confirmed";
+        return (
+          <span className={`text-dark ${isConfirmed ? "fw-semibold" : ""}`}>
+            {isConfirmed ? text : "null"}
+          </span>
+        );
+      },
       sorter: (a: any, b: any) => a.checkinHisNo.localeCompare(b.checkinHisNo),
     },
     {

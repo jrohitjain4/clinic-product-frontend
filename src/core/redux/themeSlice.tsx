@@ -15,10 +15,19 @@ const defaultThemeSettings = {
 
 
 const initialState = {
-  themeSettings: JSON.parse(
-    localStorage.getItem("themeSettings") ||
-      JSON.stringify(defaultThemeSettings)
-  ),
+  themeSettings: (() => {
+    const stored = localStorage.getItem("themeSettings");
+    let settings = stored ? JSON.parse(stored) : null;
+    if (!settings) {
+      settings = { ...defaultThemeSettings };
+    }
+    // Automatically migrate/cleanup user session settings to light defaults
+    settings["data-bs-theme"] = "light";
+    settings["data-sidebar"] = "light";
+    settings["data-topbar"] = "white";
+    localStorage.setItem("themeSettings", JSON.stringify(settings));
+    return settings;
+  })(),
 };
 
 

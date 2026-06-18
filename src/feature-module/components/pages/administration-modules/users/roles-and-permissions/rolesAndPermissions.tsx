@@ -1,15 +1,37 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import EmptyState from "../../../../../../core/common/emptyState";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import Datatable from "../../../../../../core/common/dataTable";
 import { all_routes } from "../../../../../routes/all_routes";
 import { useClinicRoles } from "../../../../../../core/hooks/useClinicRoles";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import dayjs from "dayjs";
 
+const MODULE_GROUPS = [
+  {
+    group: "Clinic",
+    modules: ["Doctors", "Patients", "Appointments", "Locations", "Visits", "Services", "Designations", "Departments", "Activities"]
+  },
+  {
+    group: "Hrm",
+    modules: ["Staffs", "Departments", "Designation", "Attendance", "Leaves", "Holidays", "Payroll"]
+  },
+  {
+    group: "Finance & Accounts",
+    modules: ["Expenses", "Income", "Invoices", "Payments", "Transactions"]
+  }
+];
+
+const ACTIONS = ["CREATE", "EDIT", "DELETE", "VIEW"];
+
 const RolesAndPermissions = () => {
   const { roles, createRole, updateRole, deleteRole, loading, error } =
     useClinicRoles();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const activeTab = searchParams.get("tab") || "roles";
+  const id = searchParams.get("id");
+
   const [selectedRole, setSelectedRole] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState("All");
@@ -19,6 +41,10 @@ const RolesAndPermissions = () => {
   const [name, setName] = useState("");
   const [status, setStatus] = useState<any>({ value: "Active", label: "Active" });
   const [submitting, setSubmitting] = useState(false);
+
+  // Permissions config states
+  const [permissions, setPermissions] = useState<Record<string, Record<string, boolean>>>({});
+  const [saving, setSaving] = useState(false);
 
   const filteredData = useMemo(() => {
     return roles.filter((role: any) => {
@@ -68,6 +94,61 @@ const RolesAndPermissions = () => {
     }
   };
 
+  // Memoized current active role based on id or first role
+  const role = useMemo(() => {
+    if (roles.length === 0) return null;
+    return roles.find((r: any) => r.id === id) || roles[0];
+  }, [roles, id]);
+
+  // Sync permissions state when active role changes
+  useEffect(() => {
+    if (role) {
+      setPermissions(
+        (role.permissions && !Array.isArray(role.permissions)) ? (role.permissions as any) : {}
+      );
+    }
+  }, [role]);
+
+  const handleActionToggle = (module: string, action: string, checked: boolean) => {
+    setPermissions(prev => ({
+      ...prev,
+      [module]: {
+        ...(prev[module] || {}),
+        [action]: checked
+      }
+    }));
+  };
+
+  const handleRowToggle = (module: string, checked: boolean) => {
+    setPermissions(prev => {
+      const allActions = ACTIONS.reduce((acc, a) => ({ ...acc, [a]: checked }), {});
+      return { ...prev, [module]: allActions };
+    });
+  };
+
+  const handleGroupToggle = (groupModules: string[], checked: boolean) => {
+    setPermissions(prev => {
+      const next = { ...prev };
+      groupModules.forEach(mod => {
+        next[mod] = ACTIONS.reduce((acc, a) => ({ ...acc, [a]: checked }), {});
+      });
+      return next;
+    });
+  };
+
+  const handleSave = async () => {
+    if (!role) return;
+    setSaving(true);
+    try {
+      await updateRole(role.id, { permissions });
+      alert("Permissions saved successfully!");
+    } catch (e: any) {
+      alert(e.message || "Failed to save permissions");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const columns = [
     {
       title: "S.No",
@@ -100,8 +181,8 @@ const RolesAndPermissions = () => {
       render: (text: string) => (
         <span
           className={`badge border ${text === "Active"
-              ? "badge-soft-success border-success"
-              : "badge-soft-danger border-danger"
+            ? "badge-soft-success border-success"
+            : "badge-soft-danger border-danger"
             } px-2 py-1 fs-13 fw-medium`}
         >
           {text}
@@ -114,7 +195,7 @@ const RolesAndPermissions = () => {
       align: "center" as const,
       render: (role: any) => (
         <Link
-          to={`${all_routes.permissions}?id=${role.id}`}
+          to={`?tab=permissions&id=${role.id}`}
           className="btn btn-sm btn-light border text-dark"
           style={{ minHeight: "32px" }}
         >
@@ -181,159 +262,311 @@ const RolesAndPermissions = () => {
             <div className="flex-grow-1">
               <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
                 Roles & Permissions
-                <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                  Total : {loading ? "" : filteredData.length}
-                </span>
+                {activeTab === "roles" && (
+                  <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
+                    Total : {loading ? "" : filteredData.length}
+                  </span>
+                )}
               </h4>
             </div>
 
-            {/* Filter and Action Buttons */}
-            <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
-              {/* Status Filter */}
-              <div className="dropdown">
-                <Link
-                  to="#"
-                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
-                  style={{ minWidth: "130px", minHeight: "38px" }}
-                  data-bs-toggle="dropdown"
-                >
-                  <span className="text-truncate">
-                    <span className="text-muted">Status:</span> {filterStatus}
-                  </span>
-                </Link>
-                <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li>
-                    <Link
-                      to="#"
-                      className="dropdown-item rounded-1"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setFilterStatus("All");
-                      }}
-                    >
-                      All
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="#"
-                      className="dropdown-item rounded-1"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setFilterStatus("Active");
-                      }}
-                    >
-                      Active
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="#"
-                      className="dropdown-item rounded-1"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setFilterStatus("Inactive");
-                      }}
-                    >
-                      Inactive
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+            {/* Filter and Action Buttons - ONLY show on Roles Tab */}
+            {activeTab === "roles" && (
+              <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
+                {/* Status Filter */}
+                <div className="dropdown">
+                  <Link
+                    to="#"
+                    className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
+                    style={{ minWidth: "130px", minHeight: "38px" }}
+                    data-bs-toggle="dropdown"
+                  >
+                    <span className="text-truncate">
+                      <span className="text-muted">Status:</span> {filterStatus}
+                    </span>
+                  </Link>
+                  <ul className="dropdown-menu dropdown-menu-end p-2">
+                    <li>
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterStatus("All");
+                        }}
+                      >
+                        All
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterStatus("Active");
+                        }}
+                      >
+                        Active
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterStatus("Inactive");
+                        }}
+                      >
+                        Inactive
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
 
-              {/* New Role Button */}
-              <button
-                className="btn btn-primary d-flex align-items-center justify-content-center"
-                style={{ minHeight: "38px", whiteSpace: "nowrap" }}
-                data-bs-toggle="modal"
-                data-bs-target="#add_role"
-                onClick={() => {
-                  setSelectedRole(null);
-                  setName("");
-                  setStatus({ value: "Active", label: "Active" });
-                }}
-              >
-                New Role <i className="fa fa-plus ms-2" />
-              </button>
-            </div>
+                {/* New Role Button */}
+                <button
+                  className="btn btn-primary d-flex align-items-center justify-content-center"
+                  style={{ minHeight: "38px", whiteSpace: "nowrap" }}
+                  data-bs-toggle="modal"
+                  data-bs-target="#add_role"
+                  onClick={() => {
+                    setSelectedRole(null);
+                    setName("");
+                    setStatus({ value: "Active", label: "Active" });
+                  }}
+                >
+                  New Role <i className="fa fa-plus ms-2" />
+                </button>
+              </div>
+            )}
+
+            {/* Selector and Save Button - ONLY show on Permissions Tab */}
+            {activeTab === "permissions" && (
+              <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-3">
+                <div className="d-flex align-items-center gap-2" style={{ minWidth: "250px" }}>
+                  <span className="text-dark fw-medium text-nowrap">Configure Role:</span>
+                  <div style={{ minWidth: "180px" }}>
+                    {roles.length > 0 && (
+                      <CommonSelect
+                        options={roles.map((r: any) => ({ value: r.id, label: r.name }))}
+                        value={role ? { value: role.id, label: role.name } : null}
+                        onChange={(val: any) => {
+                          if (val) {
+                            setSearchParams({ tab: "permissions", id: val.value });
+                          }
+                        }}
+                        className="select"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  className="btn btn-primary d-flex align-items-center justify-content-center"
+                  onClick={handleSave}
+                  disabled={saving || !role}
+                  style={{ minHeight: "38px", whiteSpace: "nowrap" }}
+                >
+                  {saving ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <i className="ti ti-device-floppy me-1" />
+                      Save Permissions
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Error Alert */}
-          {error && (
-            <div className="alert alert-danger d-flex align-items-center justify-content-between mb-3">
-              <span>{error}</span>
-              <button type="button" className="btn btn-sm btn-outline-danger">
-                Retry
-              </button>
-            </div>
-          )}
+          {/* Tab Selection Navigation */}
+          <ul className="nav nav-tabs nav-bordered mb-4">
+            <li className="nav-item">
+              <Link
+                to="?tab=roles"
+                className={`nav-link bg-transparent ${activeTab === "roles" ? "active fw-semibold text-primary" : "text-muted"}`}
+              >
+                <i className="ti ti-user-cog me-1" />
+                Roles
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link
+                to={`?tab=permissions${id ? `&id=${id}` : (roles[0]?.id ? `&id=${roles[0].id}` : "")}`}
+                className={`nav-link bg-transparent ${activeTab === "permissions" ? "active fw-semibold text-primary" : "text-muted"}`}
+              >
+                <i className="ti ti-shield-lock me-1" />
+                Permissions
+              </Link>
+            </li>
+          </ul>
 
-          {/* Table or Empty State */}
-          {loading ? (
-            <div className="text-center py-5">
-              <span className="spinner-border text-primary" role="status" />
-              <p className="text-muted mt-2 mb-0">Loading roles</p>
-            </div>
-          ) : roles.length === 0 && !error ? (
-            <div className="border rounded bg-white">
-              <EmptyState
-                title="No roles yet"
-                message="Define clear access levels by creating roles like Receptionist, Doctor, or Manager."
-                action={
+          {/* Tab Content */}
+          {activeTab === "roles" ? (
+            /* Roles Tab Content */
+            <>
+              {error && (
+                <div className="alert alert-danger d-flex align-items-center justify-content-between mb-3">
+                  <span>{error}</span>
+                  <button type="button" className="btn btn-sm btn-outline-danger">
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              {loading ? (
+                <div className="text-center py-5">
+                  <span className="spinner-border text-primary" role="status" />
+                  <p className="text-muted mt-2 mb-0">Loading roles</p>
+                </div>
+              ) : roles.length === 0 && !error ? (
+                <div className="border rounded bg-white">
+                  <EmptyState
+                    title="No roles yet"
+                    message="Define clear access levels by creating roles like Receptionist, Doctor, or Manager."
+                    action={
+                      <button
+                        className="btn btn-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#add_role"
+                        onClick={() => {
+                          setSelectedRole(null);
+                          setName("");
+                          setStatus({ value: "Active", label: "Active" });
+                        }}
+                      >
+                        New Role <i className="ti ti-plus ms-2" />
+                      </button>
+                    }
+                  />
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <Datatable
+                    columns={columns}
+                    dataSource={data}
+                    Selection={true}
+                    searchText=""
+                    onSelectionChange={(keys) => setSelectedIds(keys as string[])}
+                  />
+                </div>
+              )}
+
+              {/* Delete Selected Bar */}
+              {selectedIds.length > 0 && (
+                <div className="d-flex justify-content-center pt-4 pb-4 sticky-delete-bar">
                   <button
-                    className="btn btn-primary"
-                    data-bs-toggle="modal"
-                    data-bs-target="#add_role"
+                    className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
                     onClick={() => {
-                      setSelectedRole(null);
-                      setName("");
-                      setStatus({ value: "Active", label: "Active" });
+                      if (
+                        window.confirm(
+                          "Are you sure you want to delete selected roles?"
+                        )
+                      ) {
+                        selectedIds.forEach((id) => {
+                          deleteRole(id);
+                        });
+                        setSelectedIds([]);
+                      }
+                    }}
+                    style={{
+                      borderRadius: "8px",
+                      minHeight: "42px",
+                      fontWeight: "bold",
                     }}
                   >
-                    New Role <i className="ti ti-plus ms-2" />
+                    <i className="ti ti-trash fs-18"></i>
+                    Delete Selected ({selectedIds.length})
                   </button>
-                }
-              />
-            </div>
+                </div>
+              )}
+            </>
           ) : (
-            <div className="table-responsive">
-              <Datatable
-                columns={columns}
-                dataSource={data}
-                Selection={true}
-                searchText=""
-                onSelectionChange={(keys) => setSelectedIds(keys as string[])}
-              />
-            </div>
-          )}
-
-          {/* Delete Selected Bar */}
-          {selectedIds.length > 0 && (
-            <div className="d-flex justify-content-center pt-4 pb-4 sticky-delete-bar">
-              <button
-                className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      "Are you sure you want to delete selected roles?"
-                    )
-                  ) {
-                    selectedIds.forEach((id) => {
-                      deleteRole(id);
-                    });
-                    setSelectedIds([]);
-                  }
-                }}
-                style={{
-                  borderRadius: "8px",
-                  minHeight: "42px",
-                  fontWeight: "bold",
-                }}
-              >
-                <i className="ti ti-trash fs-18"></i>
-                Delete Selected ({selectedIds.length})
-              </button>
-            </div>
+            /* Permissions Tab Content */
+            <>
+              {loading || !role ? (
+                <div className="text-center py-5">
+                  <span className="spinner-border text-primary" role="status" />
+                  <p className="text-muted mt-2 mb-0">Loading role permissions...</p>
+                </div>
+              ) : (
+                <div>
+                  {MODULE_GROUPS.map((mg) => (
+                    <div className="card mb-4 border shadow-sm" key={mg.group} style={{ borderRadius: "10px" }}>
+                      <div className="card-header bg-light py-3">
+                        <div className="d-flex align-items-center justify-content-between">
+                          <h6 className="fw-bold mb-0 text-dark">{mg.group} Module Group</h6>
+                          <div className="form-check form-switch form-check-md">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              id={`select-all-${mg.group}`}
+                              checked={mg.modules.every(mod => ACTIONS.every(a => permissions[mod]?.[a]))}
+                              onChange={(e) => handleGroupToggle(mg.modules, e.target.checked)}
+                            />
+                            <label className="form-check-label fw-medium text-muted ms-2" htmlFor={`select-all-${mg.group}`}>
+                              Allow All in {mg.group}
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="card-body p-0">
+                        <div className="table-responsive">
+                          <table className="table table-nowrap table-hover mb-0">
+                            <thead className="thead-light">
+                              <tr>
+                                <th style={{ width: "30%", paddingLeft: "24px" }}>Module Name</th>
+                                {ACTIONS.map((a) => (
+                                  <th key={a} className="text-center">{a}</th>
+                                ))}
+                                <th className="text-center">ALLOW ALL</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {mg.modules.map((mod) => (
+                                <tr key={mod}>
+                                  <td style={{ paddingLeft: "24px" }}>
+                                    <p className="fw-semibold text-dark mb-0">{mod}</p>
+                                  </td>
+                                  {ACTIONS.map((a) => (
+                                    <td key={a} className="text-center">
+                                      <div className="form-check form-check-md d-inline-block">
+                                        <input
+                                          className="form-check-input"
+                                          type="checkbox"
+                                          checked={!!permissions[mod]?.[a]}
+                                          onChange={(e) => handleActionToggle(mod, a, e.target.checked)}
+                                        />
+                                      </div>
+                                    </td>
+                                  ))}
+                                  <td className="text-center">
+                                    <div className="form-check form-check-md d-inline-block">
+                                      <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        checked={ACTIONS.every(a => permissions[mod]?.[a])}
+                                        onChange={(e) => handleRowToggle(mod, e.target.checked)}
+                                      />
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
 

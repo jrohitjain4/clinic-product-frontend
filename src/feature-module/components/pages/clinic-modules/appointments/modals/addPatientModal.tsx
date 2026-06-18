@@ -255,7 +255,7 @@ const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
                                     />
                                 </div>
                                 <div className="col-md-6 mb-3">
-                                    <label className="form-label mb-1 fw-medium">Country (Optional)</label>
+                                    <label className="form-label mb-1 fw-medium">Country</label>
                                     <CommonSelect
                                         options={Country}
                                         className="select"
@@ -265,7 +265,7 @@ const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
                                     />
                                 </div>
                                 <div className="col-md-6 mb-3">
-                                    <label className="form-label mb-1 fw-medium">State (Optional)</label>
+                                    <label className="form-label mb-1 fw-medium">State</label>
                                     <CommonSelect
                                         options={State}
                                         className="select"
@@ -275,7 +275,7 @@ const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
                                     />
                                 </div>
                                 <div className="col-md-6 mb-3">
-                                    <label className="form-label mb-1 fw-medium">City (Optional)</label>
+                                    <label className="form-label mb-1 fw-medium">City</label>
                                     <CommonSelect
                                         options={City}
                                         className="select"

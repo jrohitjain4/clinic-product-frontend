@@ -3,6 +3,7 @@ import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { all_routes } from "../../../routes/all_routes";
 import { useEffect, useMemo, useState } from "react";
 import Chart from "react-apexcharts";
+import type { ApexOptions } from "apexcharts";
 import SCol2Chart from "./chats/scol2";
 import SCol3Chart from "./chats/scol3";
 import SCol4Chart from "./chats/scol4";
@@ -172,9 +173,9 @@ const Dashboard = () => {
     return { total, present, absent, percentage };
   }, [staffs]);
 
-  const staffChartOptions = useMemo(() => ({
+  const staffChartOptions = useMemo((): ApexOptions => ({
     chart: {
-      type: 'radialBar',
+      type: 'radialBar' as const,
       sparkline: { enabled: true }
     },
     plotOptions: {
@@ -753,14 +754,14 @@ const Dashboard = () => {
                                     fontWeight: 700,
                                     color: '#1e293b',
                                     offsetY: -16,
-                                    formatter: (val: any) => val
+                                    formatter: (val: any) => String(val)
                                   },
                                   total: {
                                     show: true,
                                     label: 'Total Patients',
                                     fontSize: '11px',
                                     color: '#64748b',
-                                    formatter: () => patientStats.total
+                                    formatter: () => String(patientStats.total)
                                   }
                                 }
                               }

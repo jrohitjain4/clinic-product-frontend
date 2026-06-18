@@ -89,6 +89,7 @@ export default function ClinicLandingPage() {
         password?: string;
         isNewUserCreated?: boolean;
         appointmentCode?: string;
+        patientCode?: string;
     } | null>(null);
 
     // Selected Doctor's Availability State

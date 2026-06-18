@@ -921,7 +921,7 @@ const PatientDetails = () => {
                               </div>
                             </td>
                             <td className="text-dark fw-medium py-1 fs-13">
-                              {appt.departmentName || appt.doctor?.department?.name || "General"}
+                              {appt.department?.name || appt.doctor?.department?.name || "General"}
                             </td>
                             <td className="text-center py-1">
                               <span className={`badge border ${appt.mode === 'Online' ? 'badge-soft-info border-info' : 'badge-soft-secondary border-secondary'} rounded-pill fs-11`}>

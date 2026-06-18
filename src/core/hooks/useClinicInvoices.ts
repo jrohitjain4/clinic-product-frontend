@@ -17,6 +17,14 @@ export interface ClinicInvoice {
     otherInfo: string;
     items: any[];
     createdAt: string;
+    clinicName?: string;
+    clinic?: {
+        name?: string;
+        landingPage?: {
+            logo?: string;
+            address?: string;
+        };
+    };
 }
 
 export const useClinicInvoices = () => {

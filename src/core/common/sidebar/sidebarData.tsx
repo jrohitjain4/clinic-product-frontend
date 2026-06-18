@@ -215,7 +215,7 @@ export const SidebarData = [
         ],
       },
       {
-        label: "Services and Products",
+        label: "Services and Medicines",
         link: routes.services,
         submenu: false,
         showSubRoute: false,

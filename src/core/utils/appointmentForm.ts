@@ -44,7 +44,7 @@ export const appointmentToTableRow = (a: ClinicAppointment, index: number) => {
     Doctor_Image: doctorImg,
     Doctor: a.doctorName || a.doctor.fullName,
     role: a.doctorRole || a.doctor.designation?.name || "—",
-    Mode: a.mode,
+    Mode: a.appointmentType === "Online Booking" || a.mode === "Clinic Landing page" || a.mode === "Clinic Landing" ? "Clinic Landing" : a.mode,
     Status: a.status,
     Code: a.appointmentCode || "—",
     _raw: a,

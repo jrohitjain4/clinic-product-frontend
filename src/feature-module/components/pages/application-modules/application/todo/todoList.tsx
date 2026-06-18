@@ -266,7 +266,7 @@ const TodoList = () => {
             checked={text === 'Completed'}
             onChange={(e) => handleUpdate(record.id, { status: e.target.checked ? 'Completed' : 'Pending' })}
           />
-          <label className="form-check-label text-muted fs-13 mb-0">{text}</label>
+          <label className="form-check-label text-dark fw-bold fs-13 mb-0">{text}</label>
         </div>
       ),
       sorter: (a: any, b: any) => a.status.localeCompare(b.status),
@@ -523,17 +523,17 @@ const TodoList = () => {
               {isViewMode ? (
                 <div className="row g-3">
                   <div className="col-12">
-                    <div className="card border shadow-none mb-0" style={{ borderRadius: '10px' }}>
+                    <div className="card bg-white border border-dark shadow-none mb-0" style={{ borderRadius: '10px' }}>
                       <div className="card-body p-3 d-flex justify-content-between align-items-center">
                         <div>
-                          <h4 className="fw-bold mb-1">{newTodo.title}</h4>
+                          <h4 className="fw-bold mb-1 text-dark">{newTodo.title}</h4>
                           <span className={`badge border ${newTodo.priority === 'High' ? 'badge-soft-danger border-danger' :
                             newTodo.priority === 'Medium' ? 'badge-soft-warning border-warning' : 'badge-soft-info border-info'}`}>
                             <i className="fas fa-circle fs-8 me-1" /> {newTodo.priority} Priority
                           </span>
                         </div>
                         <div className="text-end">
-                          <span className="text-muted fs-12 d-block">Current Status</span>
+                          <span className="text-dark fw-bold fs-12 d-block">Current Status</span>
                           <span className={`badge ${editTodo?.status === 'Completed' ? 'bg-success' : 'bg-warning'} text-white rounded-pill px-3 pb-1 pt-1 mt-1`}>
                             {editTodo?.status || 'Pending'}
                           </span>
@@ -543,36 +543,36 @@ const TodoList = () => {
                   </div>
 
                   <div className="col-md-6">
-                    <div className="border rounded p-3 d-flex align-items-center h-100 bg-white">
+                    <div className="border border-dark rounded p-3 d-flex align-items-center h-100 bg-white text-dark">
                       <div className="bg-primary-subtle rounded p-2 me-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
                         <i className="ti ti-calendar text-primary fs-18" />
                       </div>
                       <div>
-                        <span className="text-muted fs-12 d-block fw-semibold mb-1 uppercase">Task Date</span>
-                        <h6 className="mb-0 fw-bold fs-14">{newTodo.taskDate ? new Date(newTodo.taskDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'No date set'}</h6>
+                        <span className="text-dark fs-12 d-block fw-bold mb-1 uppercase">Task Date</span>
+                        <h6 className="mb-0 fw-bold fs-14 text-dark">{newTodo.taskDate ? new Date(newTodo.taskDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'No date set'}</h6>
                       </div>
                     </div>
                   </div>
 
                   <div className="col-md-6">
-                    <div className="border rounded p-3 d-flex align-items-center h-100 bg-white">
+                    <div className="border border-dark rounded p-3 d-flex align-items-center h-100 bg-white text-dark">
                       <div className="bg-info-subtle rounded p-2 me-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
                         <i className="ti ti-flag text-info fs-18" />
                       </div>
                       <div>
-                        <span className="text-muted fs-12 d-block fw-semibold mb-1 uppercase">Priority Level</span>
+                        <span className="text-dark fs-12 d-block fw-bold mb-1 uppercase">Priority Level</span>
                         <h6 className="mb-0 fw-bold fs-14 text-dark">{newTodo.priority}</h6>
                       </div>
                     </div>
                   </div>
 
                   <div className="col-12">
-                    <div className="border rounded p-3 bg-white">
+                    <div className="border border-dark rounded p-3 bg-white text-dark">
                       <div className="d-flex align-items-center mb-2">
                         <div className="bg-danger-subtle rounded p-2 me-2 d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }}>
                           <i className="ti ti-notes text-danger fs-14" />
                         </div>
-                        <span className="text-muted fs-12 fw-semibold uppercase">Description</span>
+                        <span className="text-dark fs-12 fw-bold uppercase">Description</span>
                       </div>
                       <h6 className="mb-0 fw-medium fs-14 text-dark lh-base">{newTodo.title}</h6>
                     </div>

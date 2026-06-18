@@ -22,9 +22,12 @@ import { toast } from "react-toastify";
 
 interface AppointmentFormPageProps {
   mode: "create" | "edit";
+  isModal?: boolean;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
+const AppointmentFormPage = ({ mode, isModal = false, onSuccess, onCancel }: AppointmentFormPageProps) => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
@@ -410,7 +413,11 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
       }
 
       toast.success(mode === "create" ? "Appointment created successfully!" : "Appointment updated successfully!");
-      navigate(all_routes.appointments, { replace: true });
+      if (isModal && onSuccess) {
+        onSuccess();
+      } else {
+        navigate(all_routes.appointments, { replace: true });
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to save";
       setFormError(msg);
@@ -492,11 +499,388 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
 
 
   if (mode === "edit" && loadingAppt) {
-    return (
+    return isModal ? (
+      <div className="text-center py-5">
+        <span className="spinner-border text-primary" role="status" />
+      </div>
+    ) : (
       <div className="page-wrapper">
         <div className="content text-center py-5">
           <span className="spinner-border text-primary" role="status" />
         </div>
+      </div>
+    );
+  }
+
+  const formContent = (
+    <form onSubmit={handleSubmit}>
+      <div className={isModal ? "" : "card"}>
+        <div className={isModal ? "" : "card-body"}>
+          {loadError && (
+            <div className="alert alert-warning d-flex justify-content-between align-items-center py-2 fs-13 mb-3">
+              <span>
+                Could not load dropdown data: {loadError}. Log in as clinic
+                owner (owner@clinic.com) and ensure the backend is running.
+              </span>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-warning ms-2"
+                onClick={() => {
+                  reloadPatients();
+                  reloadDoctors();
+                  reloadDepts();
+                }}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          {formError && (
+            <div className="alert alert-danger py-2 fs-13 mb-3">
+              {formError}
+            </div>
+          )}
+          {optionsLoading && (
+            <p className="text-muted fs-13 mb-3">
+              <span className="spinner-border spinner-border-sm me-1" />
+              Loading patients, doctors, and departments…
+            </p>
+          )}
+          <div className="mb-3">
+            <label className="form-label mb-1 fw-medium">
+              Appointment ID
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              value={nextCode}
+              disabled
+            />
+          </div>
+          <div className="row">
+            <div className="col-md-6">
+              <div className="mb-3">
+                <div className="d-flex align-items-center justify-content-between mb-1">
+                  <label className="form-label mb-0 fw-medium">
+                    Patient<span className="text-danger ms-1">*</span>
+                  </label>
+                  {!isPatientRole && mode !== "edit" && (
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-compact"
+                      style={{ alignSelf: 'flex-start' }}
+                      onClick={() => setShowAddPatient(true)}
+                    >
+                      Add New <i className="ti ti-plus ms-1" />
+                    </button>
+                  )}
+                </div>
+                <CommonSelect
+                  key={`patient-${patientOptions.length}`}
+                  options={patientOptions}
+                  className="select"
+                  value={findSelectOption(patientOptions, form.patientId)}
+                  placeholder={
+                    patientOptions.length
+                      ? "Select patient"
+                      : optionsLoading
+                        ? "Loading…"
+                        : "No patients — add a patient first"
+                  }
+                  isDisabled={optionsLoading || patientOptions.length === 0}
+                  onChange={(opt) =>
+                    setForm((f) => ({ ...f, patientId: opt?.value || "" }))
+                  }
+                  filterOption={filterPatient}
+                  formatOptionLabel={formatPatientLabel}
+                />
+              </div>
+            </div>
+            <div className="col-md-6">
+              <div className="mb-3">
+                <label className="form-label mb-1 fw-medium">
+                  Department (Optional)
+                </label>
+                <CommonSelect
+                  key={`dept-${deptOptions.length}`}
+                  options={deptOptions}
+                  className="select"
+                  value={findSelectOption(deptOptions, form.departmentId)}
+                  placeholder={
+                    deptOptions.length
+                      ? "Select department"
+                      : optionsLoading
+                        ? "Loading…"
+                        : "No departments found"
+                  }
+                  isDisabled={optionsLoading || deptOptions.length === 0}
+                  onChange={(opt) =>
+                    setForm((f) => ({
+                      ...f,
+                      departmentId: opt?.value || "",
+                      doctorId: "",
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-md-6">
+              <div className="mb-3">
+                <label className="form-label mb-1 fw-medium">
+                  Doctor<span className="text-danger ms-1">*</span>
+                </label>
+                <CommonSelect
+                  key={`doctor-${doctorOptions.length}-${form.departmentId}`}
+                  options={doctorOptions}
+                  className="select"
+                  value={findSelectOption(doctorOptions, form.doctorId)}
+                  placeholder={
+                    doctorOptions.length
+                      ? "Select doctor"
+                      : form.departmentId
+                        ? "No doctors in this department"
+                        : optionsLoading
+                          ? "Loading…"
+                          : "Select department first or add doctors"
+                  }
+                  isDisabled={optionsLoading || doctorOptions.length === 0}
+                  onChange={(opt) =>
+                    setForm((f) => ({ ...f, doctorId: opt?.value || "" }))
+                  }
+                  filterOption={filterDoctor}
+                  formatOptionLabel={formatDoctorLabel}
+                />
+              </div>
+            </div>
+            <div className="col-md-6">
+              <div className="mb-3">
+                <label className="form-label mb-1 fw-medium">
+                  Appointment Type<span className="text-danger ms-1">*</span>
+                </label>
+                <CommonSelect
+                  options={APPOINTMENT_TYPE_OPTIONS}
+                  className="select"
+                  value={findSelectOption(
+                    APPOINTMENT_TYPE_OPTIONS,
+                    form.appointmentType
+                  )}
+                  onChange={(opt) =>
+                    setForm((f) => ({
+                      ...f,
+                      appointmentType: opt?.value || "",
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-md-6">
+              <div className="mb-3">
+                <label className="form-label mb-1 fw-medium">
+                  Date of Appointment<span className="text-danger ms-1">*</span>
+                </label>
+                <div className="input-icon-end position-relative">
+                  <DatePicker
+                    className="form-control datetimepicker w-100"
+                    format={{ format: "DD-MM-YYYY", type: "mask" }}
+                    getPopupContainer={getModalContainer}
+                    placeholder="DD-MM-YYYY"
+                    suffixIcon={null}
+                    cellRender={cellRender}
+                    value={form.appointmentDate}
+                    onChange={(d: Dayjs | null) =>
+                      setForm((f) => ({ ...f, appointmentDate: d }))
+                    }
+                  />
+                  <span className="input-icon-addon">
+                    <i className="ti ti-calendar" />
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="col-md-6">
+              <div className="mb-3">
+                <label className="form-label mb-1 fw-medium">
+                  Shift / Session<span className="text-danger ms-1">*</span>
+                </label>
+                <CommonSelect
+                  key={`session-${sessionOptions.length}-${form.appointmentDate?.toString()}`}
+                  options={sessionOptions}
+                  className="select"
+                  value={sessionOptions.find(opt => opt.value === form.appointmentTime?.format("HH:mm"))}
+                  placeholder={
+                    !form.appointmentDate
+                      ? "Select date first"
+                      : sessionOptions.length > 0
+                        ? "Select session"
+                        : "No shifts available on this day"
+                  }
+                  isDisabled={!form.appointmentDate || sessionOptions.length === 0}
+                  onChange={(opt: any) => {
+                    if (opt?.value) {
+                      setForm(f => ({ ...f, appointmentTime: dayjs(opt.value, "HH:mm") }));
+                    }
+                  }}
+                />
+                {form.appointmentTime && sessionOptions.length > 0 && (
+                  <div className="text-success fs-12 mt-1">
+                    <i className="ti ti-check me-1" />
+                    Slot selected: {form.appointmentTime.format("hh:mm A")}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="mb-3">
+            <label className="form-label mb-1 fw-medium">
+              Appointment Reason (Optional)
+            </label>
+            <textarea
+              className="form-control"
+              rows={3}
+              value={form.reason}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, reason: e.target.value }))
+              }
+            />
+          </div>
+
+          {showFollowUp && (
+            <div className="mb-4">
+              <div className="p-3 rounded border" style={{ backgroundColor: form.isFollowUp ? '#f0f9ff' : '#f8f9fa', borderColor: form.isFollowUp ? '#bae6fd' : '#e2e8f0' }}>
+                <div className="form-check form-switch mb-0">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="followUpToggle"
+                    checked={form.isFollowUp}
+                    onChange={(e) => setForm(f => ({ ...f, isFollowUp: e.target.checked }))}
+                  />
+                  <label className="form-check-label fw-bold" htmlFor="followUpToggle">
+                    This is a Follow-up Appointment
+                  </label>
+                </div>
+                {followUpCount > 0 && (
+                  <div className="mt-2 text-primary fs-11 fw-medium opacity-75">
+                    <i className="ti ti-info-circle me-1" />
+                    This patient already has {followUpCount} follow-up visit(s) linked to this treatment.
+                  </div>
+                )}
+
+                {form.isFollowUp && (
+                  <div className="mt-3 pt-3 border-top border-info-subtle">
+                    <div className="row g-3">
+                      <div className="col-md-6">
+                        <label className="form-label mb-1 fs-12 fw-bold text-uppercase text-muted">Follow-up Type</label>
+                        <div className="mt-1">
+                          <span className={`badge ${form.followUpStatus.includes('Free') ? 'badge-soft-success' : 'badge-soft-info'} px-2 py-1 fs-12 w-100 text-start border`}>
+                            <i className="ti ti-check-circle me-1" /> {form.followUpStatus}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label mb-1 fs-12 fw-bold text-uppercase text-muted">Payment Status</label>
+                        <CommonSelect
+                          options={[
+                            { value: "Paid", label: "Paid" },
+                            { value: "Free", label: "Free" },
+                            { value: "Unpaid", label: "Unpaid" },
+                          ]}
+                          className="select select-sm"
+                          value={{ value: form.paymentStatus, label: form.paymentStatus }}
+                          onChange={(opt: any) => setForm(f => ({ ...f, paymentStatus: opt?.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="mb-0">
+            <label className="form-label mb-1 fw-medium">
+              Status<span className="text-danger ms-1">*</span>
+            </label>
+            <CommonSelect
+              options={APPOINTMENT_STATUS_OPTIONS}
+              className="select"
+              isDisabled={isPatientRole}
+              value={findSelectOption(
+                APPOINTMENT_STATUS_OPTIONS,
+                isPatientRole ? "Schedule" : form.status
+              )}
+              onChange={(opt) =>
+                setForm((f) => ({ ...f, status: opt?.value || "Schedule" }))
+              }
+            />
+            <div className="mt-3 p-2 bg-light rounded border">
+              <div className="d-flex flex-wrap gap-3 fs-12">
+                <div className="d-flex align-items-center">
+                  <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#f6ffed', border: '1px solid #b7eb8f' }}></span>
+                  Available
+                </div>
+                <div className="d-flex align-items-center">
+                  <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#fffbe6', border: '1px solid #ffe58f' }}></span>
+                  On Leave
+                </div>
+                <div className="d-flex align-items-center">
+                  <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#e6f7ff', border: '1px solid #91d5ff' }}></span>
+                  Holiday
+                </div>
+                <div className="d-flex align-items-center">
+                  <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#fff7e6', border: '1px solid #ffd591' }}></span>
+                  Clinic Closed
+                </div>
+                <div className="d-flex align-items-center">
+                  <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#fff1f0', border: '1px solid #ffa39e' }}></span>
+                  Dr. Off
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="d-flex justify-content-end mt-3">
+        {isModal ? (
+          <button type="button" className="btn btn-light me-2" onClick={onCancel}>
+            Cancel
+          </button>
+        ) : (
+          <Link to={all_routes.appointments} className="btn btn-light me-2">
+            Cancel
+          </Link>
+        )}
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={submitting}
+        >
+          {submitting
+            ? "Saving…"
+            : mode === "create"
+              ? "Create Appointment"
+              : "Save Changes"}
+        </button>
+      </div>
+    </form>
+  );
+
+  if (isModal) {
+    return (
+      <div className="p-0">
+        {formContent}
+        <AddPatientModal
+          show={showAddPatient}
+          onHide={() => setShowAddPatient(false)}
+          onSuccess={(newPatient) => {
+            reloadPatients();
+            setForm((f) => ({ ...f, patientId: newPatient.id }));
+          }}
+        />
       </div>
     );
   }
@@ -514,354 +898,7 @@ const AppointmentFormPage = ({ mode }: AppointmentFormPageProps) => {
                 </Link>
               </h6>
             </div>
-            <form onSubmit={handleSubmit}>
-              <div className="card">
-                <div className="card-body">
-                  {loadError && (
-                    <div className="alert alert-warning d-flex justify-content-between align-items-center py-2 fs-13 mb-3">
-                      <span>
-                        Could not load dropdown data: {loadError}. Log in as clinic
-                        owner (owner@clinic.com) and ensure the backend is running.
-                      </span>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-warning ms-2"
-                        onClick={() => {
-                          reloadPatients();
-                          reloadDoctors();
-                          reloadDepts();
-                        }}
-                      >
-                        Retry
-                      </button>
-                    </div>
-                  )}
-                  {formError && (
-                    <div className="alert alert-danger py-2 fs-13 mb-3">
-                      {formError}
-                    </div>
-                  )}
-                  {optionsLoading && (
-                    <p className="text-muted fs-13 mb-3">
-                      <span className="spinner-border spinner-border-sm me-1" />
-                      Loading patients, doctors, and departments…
-                    </p>
-                  )}
-                  <div className="mb-3">
-                    <label className="form-label mb-1 fw-medium">
-                      Appointment ID
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={nextCode}
-                      disabled
-                    />
-                  </div>
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <div className="d-flex align-items-center justify-content-between mb-1">
-                          <label className="form-label mb-0 fw-medium">
-                            Patient<span className="text-danger ms-1">*</span>
-                          </label>
-                          {!isPatientRole && (
-                            <button
-                              type="button"
-                              className="btn btn-outline-primary btn-compact"
-                              style={{ alignSelf: 'flex-start' }}
-                              onClick={() => setShowAddPatient(true)}
-                            >
-                              Add New <i className="ti ti-plus ms-1" />
-                            </button>
-                          )}
-                        </div>
-                        <CommonSelect
-                          key={`patient-${patientOptions.length}`}
-                          options={patientOptions}
-                          className="select"
-                          value={findSelectOption(patientOptions, form.patientId)}
-                          placeholder={
-                            patientOptions.length
-                              ? "Select patient"
-                              : optionsLoading
-                                ? "Loading…"
-                                : "No patients — add a patient first"
-                          }
-                          isDisabled={optionsLoading || patientOptions.length === 0}
-                          onChange={(opt) =>
-                            setForm((f) => ({ ...f, patientId: opt?.value || "" }))
-                          }
-                          filterOption={filterPatient}
-                          formatOptionLabel={formatPatientLabel}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">
-                          Department<span className="text-danger ms-1">*</span>
-                        </label>
-                        <CommonSelect
-                          key={`dept-${deptOptions.length}`}
-                          options={deptOptions}
-                          className="select"
-                          value={findSelectOption(deptOptions, form.departmentId)}
-                          placeholder={
-                            deptOptions.length
-                              ? "Select department"
-                              : optionsLoading
-                                ? "Loading…"
-                                : "No departments found"
-                          }
-                          isDisabled={optionsLoading || deptOptions.length === 0}
-                          onChange={(opt) =>
-                            setForm((f) => ({
-                              ...f,
-                              departmentId: opt?.value || "",
-                              doctorId: "",
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">
-                          Doctor<span className="text-danger ms-1">*</span>
-                        </label>
-                        <CommonSelect
-                          key={`doctor-${doctorOptions.length}-${form.departmentId}`}
-                          options={doctorOptions}
-                          className="select"
-                          value={findSelectOption(doctorOptions, form.doctorId)}
-                          placeholder={
-                            doctorOptions.length
-                              ? "Select doctor"
-                              : form.departmentId
-                                ? "No doctors in this department"
-                                : optionsLoading
-                                  ? "Loading…"
-                                  : "Select department first or add doctors"
-                          }
-                          isDisabled={optionsLoading || doctorOptions.length === 0}
-                          onChange={(opt) =>
-                            setForm((f) => ({ ...f, doctorId: opt?.value || "" }))
-                          }
-                          filterOption={filterDoctor}
-                          formatOptionLabel={formatDoctorLabel}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">
-                          Appointment Type<span className="text-danger ms-1">*</span>
-                        </label>
-                        <CommonSelect
-                          options={APPOINTMENT_TYPE_OPTIONS}
-                          className="select"
-                          value={findSelectOption(
-                            APPOINTMENT_TYPE_OPTIONS,
-                            form.appointmentType
-                          )}
-                          onChange={(opt) =>
-                            setForm((f) => ({
-                              ...f,
-                              appointmentType: opt?.value || "",
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">
-                          Date of Appointment<span className="text-danger ms-1">*</span>
-                        </label>
-                        <div className="input-icon-end position-relative">
-                          <DatePicker
-                            className="form-control datetimepicker w-100"
-                            format={{ format: "DD-MM-YYYY", type: "mask" }}
-                            getPopupContainer={getModalContainer}
-                            placeholder="DD-MM-YYYY"
-                            suffixIcon={null}
-                            cellRender={cellRender}
-                            value={form.appointmentDate}
-                            onChange={(d: Dayjs | null) =>
-                              setForm((f) => ({ ...f, appointmentDate: d }))
-                            }
-                          />
-                          <span className="input-icon-addon">
-                            <i className="ti ti-calendar" />
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">
-                          Shift / Session<span className="text-danger ms-1">*</span>
-                        </label>
-                        <CommonSelect
-                          key={`session-${sessionOptions.length}-${form.appointmentDate?.toString()}`}
-                          options={sessionOptions}
-                          className="select"
-                          value={sessionOptions.find(opt => opt.value === form.appointmentTime?.format("HH:mm"))}
-                          placeholder={
-                            !form.appointmentDate
-                              ? "Select date first"
-                              : sessionOptions.length > 0
-                                ? "Select session"
-                                : "No shifts available on this day"
-                          }
-                          isDisabled={!form.appointmentDate || sessionOptions.length === 0}
-                          onChange={(opt: any) => {
-                            if (opt?.value) {
-                              setForm(f => ({ ...f, appointmentTime: dayjs(opt.value, "HH:mm") }));
-                            }
-                          }}
-                        />
-                        {form.appointmentTime && sessionOptions.length > 0 && (
-                          <div className="text-success fs-12 mt-1">
-                            <i className="ti ti-check me-1" />
-                            Slot selected: {form.appointmentTime.format("hh:mm A")}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label mb-1 fw-medium">
-                      Appointment Reason (Optional)
-                    </label>
-                    <textarea
-                      className="form-control"
-                      rows={3}
-                      value={form.reason}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, reason: e.target.value }))
-                      }
-                    />
-                  </div>
-
-                  {showFollowUp && (
-                    <div className="mb-4">
-                      <div className="p-3 rounded border" style={{ backgroundColor: form.isFollowUp ? '#f0f9ff' : '#f8f9fa', borderColor: form.isFollowUp ? '#bae6fd' : '#e2e8f0' }}>
-                        <div className="form-check form-switch mb-0">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            id="followUpToggle"
-                            checked={form.isFollowUp}
-                            onChange={(e) => setForm(f => ({ ...f, isFollowUp: e.target.checked }))}
-                          />
-                          <label className="form-check-label fw-bold" htmlFor="followUpToggle">
-                            This is a Follow-up Appointment
-                          </label>
-                        </div>
-                        {followUpCount > 0 && (
-                          <div className="mt-2 text-primary fs-11 fw-medium opacity-75">
-                            <i className="ti ti-info-circle me-1" />
-                            This patient already has {followUpCount} follow-up visit(s) linked to this treatment.
-                          </div>
-                        )}
-
-                        {form.isFollowUp && (
-                          <div className="mt-3 pt-3 border-top border-info-subtle">
-                            <div className="row g-3">
-                              <div className="col-md-6">
-                                <label className="form-label mb-1 fs-12 fw-bold text-uppercase text-muted">Follow-up Type</label>
-                                <div className="mt-1">
-                                  <span className={`badge ${form.followUpStatus.includes('Free') ? 'badge-soft-success' : 'badge-soft-info'} px-2 py-1 fs-12 w-100 text-start border`}>
-                                    <i className="ti ti-check-circle me-1" /> {form.followUpStatus}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="col-md-6">
-                                <label className="form-label mb-1 fs-12 fw-bold text-uppercase text-muted">Payment Status</label>
-                                <CommonSelect
-                                  options={[
-                                    { value: "Paid", label: "Paid" },
-                                    { value: "Free", label: "Free" },
-                                    { value: "Unpaid", label: "Unpaid" },
-                                  ]}
-                                  className="select select-sm"
-                                  value={{ value: form.paymentStatus, label: form.paymentStatus }}
-                                  onChange={(opt: any) => setForm(f => ({ ...f, paymentStatus: opt?.value }))}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="mb-0">
-                    <label className="form-label mb-1 fw-medium">
-                      Status<span className="text-danger ms-1">*</span>
-                    </label>
-                    <CommonSelect
-                      options={APPOINTMENT_STATUS_OPTIONS}
-                      className="select"
-                      isDisabled={isPatientRole}
-                      value={findSelectOption(
-                        APPOINTMENT_STATUS_OPTIONS,
-                        isPatientRole ? "Schedule" : form.status
-                      )}
-                      onChange={(opt) =>
-                        setForm((f) => ({ ...f, status: opt?.value || "Schedule" }))
-                      }
-                    />
-                    <div className="mt-3 p-2 bg-light rounded border">
-                      <div className="d-flex flex-wrap gap-3 fs-12">
-                        <div className="d-flex align-items-center">
-                          <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#f6ffed', border: '1px solid #b7eb8f' }}></span>
-                          Available
-                        </div>
-                        <div className="d-flex align-items-center">
-                          <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#fffbe6', border: '1px solid #ffe58f' }}></span>
-                          On Leave
-                        </div>
-                        <div className="d-flex align-items-center">
-                          <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#e6f7ff', border: '1px solid #91d5ff' }}></span>
-                          Holiday
-                        </div>
-                        <div className="d-flex align-items-center">
-                          <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#fff7e6', border: '1px solid #ffd591' }}></span>
-                          Clinic Closed
-                        </div>
-                        <div className="d-flex align-items-center">
-                          <span className="d-inline-block rounded me-1" style={{ width: 12, height: 12, backgroundColor: '#fff1f0', border: '1px solid #ffa39e' }}></span>
-                          Dr. Off
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="d-flex justify-content-end mt-3">
-                <Link to={all_routes.appointments} className="btn btn-light me-2">
-                  Cancel
-                </Link>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={submitting}
-                >
-                  {submitting
-                    ? "Saving…"
-                    : mode === "create"
-                      ? "Create Appointment"
-                      : "Save Changes"}
-                </button>
-              </div>
-            </form>
+            {formContent}
           </div>
         </div>
       </div>

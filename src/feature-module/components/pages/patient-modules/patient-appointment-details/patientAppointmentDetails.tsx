@@ -429,45 +429,45 @@ const PatientAppointmentDetails = () => {
                   <div className="flex-grow-1">
                     <div className="d-flex align-items-center justify-content-between mb-1">
                       <span className="badge bg-soft-primary text-primary fw-bold text-uppercase fs-10 tracking-wider px-2 py-1">Patient</span>
-                      <span className="text-muted fs-11 fw-medium">#{appointment.patient?.patientCode || appointment.patientId?.slice(-6).toUpperCase()}</span>
+                      <span className="text-black fw-bold fs-11">#{appointment.patient?.patientCode || appointment.patientId?.slice(-6).toUpperCase()}</span>
                     </div>
                     <h5 className="fw-bold text-dark mb-2 fs-18">{appointment.patient?.firstName} {appointment.patient?.lastName}</h5>
 
                     <div className="d-flex flex-wrap gap-x-3 gap-y-1 mb-3">
-                      <div className="d-flex align-items-center gap-1 text-muted fs-12">
-                        <i className="ti ti-user fs-14 text-primary opacity-75" />
+                      <div className="d-flex align-items-center gap-1 text-black fw-bold fs-12">
+                        <i className="ti ti-user fs-14 text-primary" />
                         <span>{appointment.patient?.gender || "N/A"}</span>
                       </div>
-                      <div className="d-flex align-items-center gap-1 text-muted fs-12">
-                        <i className="ti ti-calendar fs-14 text-primary opacity-75" />
+                      <div className="d-flex align-items-center gap-1 text-black fw-bold fs-12">
+                        <i className="ti ti-calendar fs-14 text-primary" />
                         <span>{appointment.patient?.dob ? `${dayjs().diff(appointment.patient.dob, 'year')} Yrs` : "N/A"}</span>
                       </div>
-                      <div className="d-flex align-items-center gap-1 text-muted fs-12">
-                        <i className="ti ti-droplet fs-14 text-danger opacity-75" />
+                      <div className="d-flex align-items-center gap-1 text-black fw-bold fs-12">
+                        <i className="ti ti-droplet fs-14 text-danger" />
                         <span>{appointment.patient?.bloodGroup || "O+"}</span>
                       </div>
                     </div>
 
                     <div className="d-flex align-items-end justify-content-between pt-2">
                       <div className="flex-grow-1">
-                        <p className="text-muted fs-13 mb-1 d-flex align-items-center gap-1 fw-medium">
-                          <i className="ti ti-phone-filled fs-14 text-primary opacity-75" />
+                        <p className="text-black fw-bold fs-13 mb-1 d-flex align-items-center gap-1">
+                          <i className="ti ti-phone-filled fs-14 text-primary" />
                           {appointment.patient?.phone || "N/A"}
                         </p>
                       </div>
-                      <div className="text-end opacity-75 bg-light p-2 rounded-3 border-dashed-1 flex-shrink-0" style={{ minWidth: '100px' }}>
-                        <p className="fs-10 text-uppercase fw-bold text-muted mb-0 letter-spacing-1" style={{ fontSize: '9px' }}>Insurance</p>
+                      <div className="text-end bg-light p-2 rounded-3 border-dashed-1 flex-shrink-0" style={{ minWidth: '100px' }}>
+                        <p className="fs-10 text-uppercase fw-bold text-black mb-0 letter-spacing-1" style={{ fontSize: '9px' }}>Insurance</p>
                         <span className="badge bg-soft-success text-success fs-10 fw-bold border-0 p-0 text-uppercase">Verified ✓</span>
                       </div>
                     </div>
 
-                    <div className="mt-4 pt-3 border-top border-dashed d-flex align-items-center justify-content-between opacity-75">
+                    <div className="mt-4 pt-3 border-top border-dashed d-flex align-items-center justify-content-between">
                       <div className="d-flex align-items-center gap-2">
                         <div className="avatar avatar-xs bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center">
                           <i className="ti ti-building-hospital fs-12" />
                         </div>
                         <div className="lh-sm">
-                          <p className="fs-10 fw-bold text-muted mb-0 text-uppercase letter-spacing-1">Clinic</p>
+                          <p className="fs-10 fw-bold text-black mb-0 text-uppercase letter-spacing-1">Clinic</p>
                           <p className="fs-11 fw-bold text-dark mb-0">{appointment.clinicName || "Preclinic Central"}</p>
                         </div>
                       </div>
@@ -502,38 +502,38 @@ const PatientAppointmentDetails = () => {
                     <h5 className="fw-bold text-dark mb-2 fs-18">{appointment.doctor?.fullName}</h5>
 
                     <div className="d-flex flex-wrap gap-x-3 gap-y-1 mb-3">
-                      <div className="d-flex align-items-center gap-1 text-muted fs-12">
-                        <i className="ti ti-briefcase fs-14 text-info opacity-75" />
+                      <div className="d-flex align-items-center gap-1 text-black fw-bold fs-12">
+                        <i className="ti ti-briefcase fs-14 text-info" />
                         <span>{appointment.doctor?.yearOfExperience || "8"}+ Yrs Exp</span>
                       </div>
-                      <div className="d-flex align-items-center gap-1 text-muted fs-12">
-                        <i className="ti ti-building fs-14 text-info opacity-75" />
+                      <div className="d-flex align-items-center gap-1 text-black fw-bold fs-12">
+                        <i className="ti ti-building fs-14 text-info" />
                         <span>{appointment.doctor?.department?.name || "General"}</span>
                       </div>
                     </div>
 
                     <div className="d-flex align-items-end justify-content-between pt-2">
                       <div className="flex-grow-1">
-                        <div className="text-muted fs-13 mb-1 d-flex align-items-center gap-1 fw-medium text-truncate" style={{ maxWidth: '120px' }}>
-                          <i className="ti ti-shield-check-filled fs-14 text-info opacity-75" />
+                        <div className="text-black fw-bold fs-13 mb-1 d-flex align-items-center gap-1 text-truncate" style={{ maxWidth: '120px' }}>
+                          <i className="ti ti-shield-check-filled fs-14 text-info" />
                           {appointment.doctor?.designation?.name || "Consultant"}
                         </div>
                       </div>
                       <div className="text-end bg-info-soft p-2 rounded-3 border-dashed-1 flex-shrink-0" style={{ minWidth: '100px' }}>
-                        <p className="fs-10 text-uppercase fw-bold text-info mb-0 letter-spacing-1" style={{ fontSize: '9px' }}>Availability</p>
+                        <p className="fs-10 text-uppercase fw-bold text-black mb-0 letter-spacing-1" style={{ fontSize: '9px' }}>Availability</p>
                         <span className="fs-11 fw-bold text-info d-flex align-items-center gap-1 justify-content-end">
                           <span className="pulse-dot-info" /> AVAILABLE
                         </span>
                       </div>
                     </div>
 
-                    <div className="mt-4 pt-3 border-top border-dashed d-flex align-items-center justify-content-between opacity-75">
+                    <div className="mt-4 pt-3 border-top border-dashed d-flex align-items-center justify-content-between">
                       <div className="d-flex align-items-center gap-2">
                         <div className="avatar avatar-xs bg-soft-info text-info rounded-circle d-flex align-items-center justify-content-center">
                           <i className="ti ti-map-pin fs-12" />
                         </div>
                         <div className="lh-sm">
-                          <p className="fs-10 fw-bold text-muted mb-0 text-uppercase letter-spacing-1">Facility</p>
+                          <p className="fs-10 fw-bold text-black mb-0 text-uppercase letter-spacing-1">Facility</p>
                           <p className="fs-11 fw-bold text-dark mb-0">{appointment.location || "City Med Tower, 4F"}</p>
                         </div>
                       </div>

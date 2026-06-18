@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { all_routes } from "../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { DatePicker } from "antd";
 import dayjs, { Dayjs } from "dayjs";
@@ -35,6 +37,7 @@ interface StaffsModalProps {
 }
 
 const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
+  const navigate = useNavigate();
   const getModalContainer = () =>
     document.getElementById("modal-datepicker") || document.body;
 
@@ -44,20 +47,131 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [setupAlert, setSetupAlert] = useState<{ type: string, message: string, route: string } | null>(null);
+  const [loadingSetup, setLoadingSetup] = useState(true);
+
+  const [showRoleForm, setShowRoleForm] = useState(false);
+  const [newRoleName, setNewRoleName] = useState("");
+  const [addingRole, setAddingRole] = useState(false);
+  const [roleError, setRoleError] = useState<string | null>(null);
+
+  const [showDesigForm, setShowDesigForm] = useState(false);
+  const [newDesigName, setNewDesigName] = useState("");
+  const [newDesigDeptId, setNewDesigDeptId] = useState("");
+  const [addingDesig, setAddingDesig] = useState(false);
+  const [desigError, setDesigError] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+
+  const handleInlineAddRole = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRoleName.trim()) return;
+    setAddingRole(true);
+    setRoleError(null);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(apiUrl("/api/clinic-roles"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ name: newRoleName.trim(), status: "Active" }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to create role");
+      }
+      const newRole = await res.json();
+      toast.success("Role created successfully");
+      setClinicRoles(prev => [...prev, newRole]);
+      setNewRoleName("");
+      setShowRoleForm(false);
+    } catch (err: any) {
+      setRoleError(err.message || "Failed to create role");
+      toast.error(err.message || "Failed to create role");
+    } finally {
+      setAddingRole(false);
+    }
+  };
+
+  const handleInlineAddDesig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newDesigName.trim()) return;
+    setAddingDesig(true);
+    setDesigError(null);
+    try {
+      const token = localStorage.getItem("token");
+      let deptId = newDesigDeptId;
+      
+      // If no department is selected/exists, create a default "General" department first
+      if (!deptId) {
+        if (departments.length > 0) {
+          deptId = departments[0].id;
+        } else {
+          const deptRes = await fetch(apiUrl("/api/departments"), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ name: "General", status: "Active" }),
+          });
+          if (!deptRes.ok) {
+            const err = await deptRes.json().catch(() => ({}));
+            throw new Error(err.message || "Failed to create default department");
+          }
+          const newDept = await deptRes.json();
+          deptId = newDept.id;
+          setDepartments([newDept]);
+        }
+      }
+
+      const res = await fetch(apiUrl("/api/designations"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: newDesigName.trim(),
+          type: "Staff",
+          description: "",
+          departmentId: deptId,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to create designation");
+      }
+      const newDesig = await res.json();
+      toast.success("Designation created successfully");
+      setDesignations(prev => [...prev, newDesig]);
+      setNewDesigName("");
+      setShowDesigForm(false);
+    } catch (err: any) {
+      setDesigError(err.message || "Failed to create designation");
+      toast.error(err.message || "Failed to create designation");
+    } finally {
+      setAddingDesig(false);
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
-    fetch(apiUrl("/api/designations?type=Staff"), { headers })
-      .then((r) => r.json())
-      .then((data: DesigOption[]) => setDesignations(Array.isArray(data) ? data : []))
-      .catch(console.error);
-
-    fetch(apiUrl("/api/clinic-roles"), { headers })
-      .then(r => r.json())
-      .then(data => setClinicRoles(Array.isArray(data) ? data : []))
-      .catch(console.error);
+    setLoadingSetup(true);
+    Promise.all([
+      fetch(apiUrl("/api/designations?type=Staff"), { headers }).then(r => r.json()).catch(() => []),
+      fetch(apiUrl("/api/clinic-roles"), { headers }).then(r => r.json()).catch(() => []),
+      fetch(apiUrl("/api/departments"), { headers }).then(r => r.json()).catch(() => [])
+    ]).then(([desigsData, rolesData, deptsData]) => {
+      setDesignations(Array.isArray(desigsData) ? desigsData : []);
+      setClinicRoles(Array.isArray(rolesData) ? rolesData : []);
+      setDepartments(Array.isArray(deptsData) ? deptsData.filter((d: any) => d.status === "Active") : []);
+    }).finally(() => {
+      setLoadingSetup(false);
+    });
   }, []);
 
   const desigOptions = designations.map((d) => ({ value: d.id, label: d.name }));
@@ -66,6 +180,8 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
   const resetAddForm = () => {
     setForm(emptyStaffForm());
     setFormError(null);
+    setShowRoleForm(false);
+    setShowDesigForm(false);
   };
 
   const loadEditForm = (s: ClinicStaff) => {
@@ -225,22 +341,6 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
 
   const renderFormFields = (opts?: { showStatus?: boolean }) => (
     <>
-      {(designations.length === 0 || clinicRoles.length === 0) && (
-        <div className="alert alert-soft-warning py-2 mb-3 fs-13 border-dashed">
-          <div className="d-flex align-items-center mb-1">
-            <i className="ti ti-info-circle me-2 fs-16"></i>
-            <h6 className="mb-0 fs-13 fw-bold text-warning-emphasis">Setup Required:</h6>
-          </div>
-          <ul className="ps-4 mb-0 fs-12">
-            {clinicRoles.length === 0 && (
-              <li>No roles found. Please add at least one in <strong>Roles & Permissions</strong> first.</li>
-            )}
-            {designations.length === 0 && (
-              <li>No staff designations found. Please add at least one in <strong>Designation</strong> (type: Staff) first.</li>
-            )}
-          </ul>
-        </div>
-      )}
       {formError && (
         <div className="alert alert-danger py-2 fs-13 mb-3">{formError}</div>
       )}
@@ -452,16 +552,203 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
     </>
   );
 
+  const renderModalContent = (isEdit: boolean, formSubmit: (e: React.FormEvent) => void) => {
+    if (loadingSetup) {
+      return (
+        <div className="modal-body p-5 text-center">
+          <span className="spinner-border text-primary" />
+          <p className="mt-2 text-muted">Checking prerequisites...</p>
+        </div>
+      );
+    }
+    
+    if (clinicRoles.length === 0) {
+      if (!showRoleForm) {
+        return (
+          <div className="modal-body p-4 text-center">
+            <div className="mb-3">
+              <span className="avatar avatar-xl bg-danger-transparent text-danger rounded-circle">
+                <i className="ti ti-alert-triangle fs-36" />
+              </span>
+            </div>
+            <h5 className="fw-bold mb-2">Setup Required</h5>
+            <p className="text-muted mb-4">
+              There is no role. Please add a role first.
+            </p>
+            <div className="d-flex justify-content-center gap-2">
+              <button type="button" className="btn btn-light px-4" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Cancel</button>
+              <button type="button" className="btn btn-primary px-4" onClick={() => setShowRoleForm(true)} style={{ borderRadius: '6px' }}>
+                Add a Role
+              </button>
+            </div>
+          </div>
+        );
+      } else {
+        return (
+          <form onSubmit={handleInlineAddRole}>
+            <div className="modal-body">
+              {roleError && (
+                <div className="alert alert-danger py-2 fs-13 mb-3">{roleError}</div>
+              )}
+              <div className="mb-3">
+                <label className="form-label mb-1 text-dark fs-14 fw-medium">Role Name <span className="text-danger">*</span></label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter role name (e.g. Accountant)"
+                  value={newRoleName}
+                  onChange={(e) => setNewRoleName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="mb-3">
+                <label className="form-label mb-1 text-dark fs-14 fw-medium">Status <span className="text-danger">*</span></label>
+                <CommonSelect
+                  options={[
+                    { value: "Active", label: "Active" },
+                    { value: "Inactive", label: "Inactive" }
+                  ]}
+                  className="select"
+                  value={{ value: "Active", label: "Active" }}
+                  onChange={() => {}}
+                />
+              </div>
+              <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                <button type="button" className="btn btn-light px-4 shadow-sm" onClick={() => setShowRoleForm(false)} style={{ borderRadius: '6px' }}>Cancel</button>
+                <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" disabled={addingRole} style={{ borderRadius: '6px' }}>
+                  {addingRole && <i className="fa fa-spinner fa-spin me-2" />}
+                  {addingRole ? "Saving..." : "Save Role"}
+                </button>
+              </div>
+            </div>
+          </form>
+        );
+      }
+    }
+
+    if (designations.length === 0) {
+      if (!showDesigForm) {
+        return (
+          <div className="modal-body p-4 text-center">
+            <div className="mb-3">
+              <span className="avatar avatar-xl bg-danger-transparent text-danger rounded-circle">
+                <i className="ti ti-alert-triangle fs-36" />
+              </span>
+            </div>
+            <h5 className="fw-bold mb-2">Setup Required</h5>
+            <p className="text-muted mb-4">
+              There is no designation. Please add a designation first.
+            </p>
+            <div className="d-flex justify-content-center gap-2">
+              <button type="button" className="btn btn-light px-4" data-bs-dismiss="modal" style={{ borderRadius: '6px' }}>Cancel</button>
+              <button type="button" className="btn btn-primary px-4" onClick={() => setShowDesigForm(true)} style={{ borderRadius: '6px' }}>
+                Add Designation
+              </button>
+            </div>
+          </div>
+        );
+      } else {
+        return (
+          <form onSubmit={handleInlineAddDesig}>
+            <div className="modal-body">
+              {desigError && (
+                <div className="alert alert-danger py-2 fs-13 mb-3">{desigError}</div>
+              )}
+              {departments.length > 0 ? (
+                <div className="mb-3">
+                  <label className="form-label mb-1 text-dark fs-14 fw-medium">Department <span className="text-danger">*</span></label>
+                  <select
+                    className="form-select"
+                    value={newDesigDeptId}
+                    onChange={(e) => setNewDesigDeptId(e.target.value)}
+                    required
+                  >
+                    <option value="">-- Select Department --</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="alert alert-info py-2 px-3 fs-13 mb-3">
+                  <i className="ti ti-info-circle me-1 text-info" />
+                  No departments found. A default department <strong>"General"</strong> will be automatically created.
+                </div>
+              )}
+
+              <div className="mb-3">
+                <label className="form-label mb-1 text-dark fs-14 fw-medium">Designation Name <span className="text-danger">*</span></label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="e.g. Senior Nurse, Accountant"
+                  value={newDesigName}
+                  onChange={(e) => setNewDesigName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                <button type="button" className="btn btn-light px-4 shadow-sm" onClick={() => setShowDesigForm(false)} style={{ borderRadius: '6px' }}>Cancel</button>
+                <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" disabled={addingDesig} style={{ borderRadius: '6px' }}>
+                  {addingDesig && <i className="fa fa-spinner fa-spin me-2" />}
+                  {addingDesig ? "Saving..." : "Save Designation"}
+                </button>
+              </div>
+            </div>
+          </form>
+        );
+      }
+    }
+
+    return (
+      <form
+        onSubmit={formSubmit}
+        onFocus={() => {
+          if (!isEdit && !form.fullName && !form.role) resetAddForm();
+        }}
+      >
+        <div className="modal-body">
+          {renderFormFields({ showStatus: isEdit })}
+          <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+            <button
+              type="button"
+              className="btn btn-light px-4 shadow-sm"
+              data-bs-dismiss="modal"
+              style={{ borderRadius: '6px' }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center"
+              disabled={submitting}
+              onClick={(e) => e.stopPropagation()}
+              style={{ borderRadius: '6px' }}
+            >
+              {submitting && <i className="fa fa-spinner fa-spin me-2" />}
+              {submitting ? "Saving…" : (isEdit ? "Save Changes" : "Add Staff")}
+            </button>
+          </div>
+        </div>
+      </form>
+    );
+  };
+
+  const isAlert = !loadingSetup && (clinicRoles.length === 0 || designations.length === 0);
+
   return (
     <>
 
 
       {/* Add */}
       <div id="add_staff" className="modal fade" role="dialog">
-        <div className="modal-dialog modal-dialog-centered modal-lg">
+        <div className={`modal-dialog modal-dialog-centered ${isAlert ? "" : "modal-lg"}`}>
           <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
             <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title">New Staff</h5>
+              <h5 className="modal-title">{showRoleForm ? "Add New Role" : showDesigForm ? "Add New Designation" : "New Staff"}</h5>
               <button
                 type="button"
                 className="btn-close btn-close-white"
@@ -469,43 +756,14 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
                 aria-label="Close"
               ></button>
             </div>
-            <form
-              onSubmit={handleAdd}
-              onFocus={() => {
-                if (!form.fullName && !form.role) resetAddForm();
-              }}
-            >
-              <div className="modal-body">
-                {renderFormFields()}
-                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                  <button
-                    type="button"
-                    className="btn btn-light px-4 shadow-sm"
-                    data-bs-dismiss="modal"
-                    style={{ borderRadius: '6px' }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center"
-                    disabled={submitting}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{ borderRadius: '6px' }}
-                  >
-                    {submitting && <i className="fa fa-spinner fa-spin me-2" />}
-                    {submitting ? "Saving…" : "Add Staff"}
-                  </button>
-                </div>
-              </div>
-            </form>
+            {renderModalContent(false, handleAdd)}
           </div>
         </div>
       </div>
 
       {/* Edit */}
       <div id="edit_staff" className="modal fade" role="dialog">
-        <div className="modal-dialog modal-dialog-centered modal-lg">
+        <div className={`modal-dialog modal-dialog-centered ${isAlert ? "" : "modal-lg"}`}>
           <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
             <div className="modal-header bg-primary text-white">
               <h5 className="modal-title">Edit Staff</h5>
@@ -516,31 +774,7 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
                 aria-label="Close"
               ></button>
             </div>
-            <form onSubmit={handleEdit}>
-              <div className="modal-body">
-                {renderFormFields({ showStatus: true })}
-                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                  <button
-                    type="button"
-                    className="btn btn-light px-4 shadow-sm"
-                    data-bs-dismiss="modal"
-                    style={{ borderRadius: '6px' }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center"
-                    disabled={submitting}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{ borderRadius: '6px' }}
-                  >
-                    {submitting && <i className="fa fa-spinner fa-spin me-2" />}
-                    {submitting ? "Saving…" : "Save Changes"}
-                  </button>
-                </div>
-              </div>
-            </form>
+            {renderModalContent(true, handleEdit)}
           </div>
         </div>
       </div>

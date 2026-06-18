@@ -314,7 +314,7 @@ const HomePage = () => {
                       </div>
                       <div className="col-6">
                         <div className="d-flex flex-column gap-3">
-                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Services & Products</div>
+                           <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Services & Medicines</div>
                            <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Specializations</div>
                            <div className="d-flex align-items-center gap-2 fs-14" style={{ color: '#475569' }}><i className="ti ti-circle-check fs-18" style={{ color: '#2563eb' }} /> Assets</div>
                         </div>

@@ -11,6 +11,9 @@ interface PayrollModalProps {
   refetch: () => void;
   staffs?: any[];
   doctors?: any[];
+  selectedIds?: string[];
+  setSelectedIds?: (ids: string[]) => void;
+  payrolls?: any[];
 }
 
 const STATUS_OPTIONS = [
@@ -19,7 +22,7 @@ const STATUS_OPTIONS = [
   { value: "Pending", label: "Pending" }
 ];
 
-const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetch, staffs = [], doctors = [] }) => {
+const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetch, staffs = [], doctors = [], selectedIds = [], setSelectedIds, payrolls = [] }) => {
   const staffOptions = [
     ...staffs.map((s) => ({ value: `staff_${s.id}`, label: `${s.fullName} (Staff)` })),
     ...doctors.map((d) => ({ value: `doctor_${d.id}`, label: `${d.fullName} (Doctor)` }))
@@ -83,6 +86,36 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
       resetForm();
     }
   }, [selectedPayroll, staffs, doctors]);
+
+  useEffect(() => {
+    if (!selectedPayroll && employeeId?.value) {
+      const isDoctor = employeeId.value.startsWith("doctor_");
+      const rawId = employeeId.value.split("_")[1];
+      
+      const existing = (payrolls || []).find((p: any) => 
+        isDoctor ? p.doctorId === rawId : p.staffId === rawId
+      );
+
+      if (existing) {
+        setBasicSalary(existing.basicSalary || 0);
+        setDa(existing.da || 0);
+        setHra(existing.hra || 0);
+        setConveyance(existing.conveyance || 0);
+        setMedicalAllowance(existing.medicalAllowance || 0);
+        setOtherEarnings(existing.otherEarnings || 0);
+
+        setTds(existing.tds || 0);
+        setEsi(existing.esi || 0);
+        setPf(existing.pf || 0);
+        setProfTax(existing.profTax || 0);
+        setLabourWelfare(existing.labourWelfare || 0);
+        setOtherDeductions(existing.otherDeductions || 0);
+      } else {
+        setBasicSalary(0); setDa(0); setHra(0); setConveyance(0); setMedicalAllowance(0); setOtherEarnings(0);
+        setTds(0); setEsi(0); setPf(0); setProfTax(0); setLabourWelfare(0); setOtherDeductions(0);
+      }
+    }
+  }, [employeeId, selectedPayroll, payrolls]);
 
   const resetForm = () => {
     setEmployeeId(null);
@@ -156,13 +189,38 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
 
   const handleDelete = async (e: any) => {
     e.preventDefault();
-    if (!selectedPayroll) return;
     setLoading(true);
     try {
-      await apiDelete(`/api/payroll/${selectedPayroll.id}`);
-      toast.success("Payroll record deleted successfully");
+      if (selectedPayroll) {
+        // Single delete validation
+        if (selectedPayroll.status === "Paid" || selectedPayroll.status === "Salary_Paid") {
+          toast.error("Paid payroll records cannot be deleted", { position: "top-center" });
+          document.getElementById("close_delete_payroll")?.click();
+          setLoading(false);
+          return;
+        }
+        await apiDelete(`/api/payroll/${selectedPayroll.id}`);
+        toast.success("Payroll record deleted successfully");
+      } else if (selectedIds && selectedIds.length > 0) {
+        // Bulk delete validation
+        const selectedRecords = (payrolls || []).filter((p: any) => selectedIds.includes(p.id));
+        const hasPaid = selectedRecords.some((p: any) => p.status === "Paid" || p.status === "Salary_Paid");
+        if (hasPaid) {
+          toast.error("Paid payroll records cannot be deleted. Deletion aborted.", { position: "top-center" });
+          document.getElementById("close_delete_payroll")?.click();
+          setLoading(false);
+          return;
+        }
+
+        // Sequential deletion
+        for (const id of selectedIds) {
+          await apiDelete(`/api/payroll/${id}`);
+        }
+        toast.success(`${selectedIds.length} payroll records deleted successfully`);
+        if (setSelectedIds) setSelectedIds([]);
+      }
       refetch();
-      document.querySelector<HTMLElement>("#delete_payroll .btn-close")?.click();
+      document.getElementById("close_delete_payroll")?.click();
     } catch (err: any) {
       toast.error(err?.message || "Failed to delete payroll");
     }
@@ -581,9 +639,13 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                 </span>
               </div>
               <h5 className="fw-bold mb-1">Delete Confirmation</h5>
-              <p className="mb-3">Are you sure you want to delete this payroll record?</p>
+              <p className="mb-3">
+                {selectedPayroll 
+                  ? "Are you sure you want to delete this payroll record?" 
+                  : `Are you sure you want to delete the selected ${selectedIds?.length || 0} payroll records?`}
+              </p>
               <div className="d-flex justify-content-center">
-                <button type="button" className="btn btn-light position-relative z-1 me-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="close_delete_payroll" className="btn btn-light position-relative z-1 me-3" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" onClick={handleDelete} className="btn btn-danger position-relative z-1">{loading ? <Spin size="small" /> : "Yes, Delete"}</button>
               </div>
             </div>

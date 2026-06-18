@@ -51,7 +51,20 @@ export const useClinicAppointments = (params?: {
           throw new Error(data.message || "Failed to load appointments");
         }
         const data = await res.json();
-        setAppointments(Array.isArray(data) ? data : []);
+        if (Array.isArray(data)) {
+          data.sort((a: any, b: any) => {
+            if (a.createdAt && b.createdAt) {
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            }
+            const codeA = a.appointmentCode || "";
+            const codeB = b.appointmentCode || "";
+            if (codeA && codeB) return codeB.localeCompare(codeA);
+            return (b.id || "").localeCompare(a.id || "");
+          });
+          setAppointments(data);
+        } else {
+          setAppointments([]);
+        }
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Failed to load appointments");
         setAppointments([]);

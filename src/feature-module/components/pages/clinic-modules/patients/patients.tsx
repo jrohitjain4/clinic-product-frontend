@@ -140,7 +140,7 @@ const Patients = () => {
     {
       title: "Patient ID",
       dataIndex: "PatientID",
-      render: (_: any, record: any) => <span className="text-primary fw-bold">#{record._raw.patientId || `PAT-${record._raw.id?.slice(-4).toUpperCase() || '000'}`}</span>,
+      render: (_: any, record: any) => <span className="text-primary fw-bold">{record._raw.patientId || `PAT-${record._raw.id?.slice(-4).toUpperCase() || '000'}`}</span>,
       sorter: (a: any, b: any) => (a._raw.patientId || "").localeCompare(b._raw.patientId || ""),
     },
     {
@@ -218,36 +218,14 @@ const Patients = () => {
       className: "text-nowrap",
       width: 130,
       render: (_: unknown, record: any) => (
-        <div className="d-flex align-items-center justify-content-center gap-2 text-nowrap">
-          <Link
-            to={patientDetailsPath(record._raw.id)}
-            className="btn btn-icon btn-sm btn-soft-secondary"
-            title="View Patient"
-          >
-            <i className="ti ti-eye" />
-          </Link>
-
+        <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
+          <Link to={patientDetailsPath(record._raw.id)} className="text-info p-1" title="View"><i className="ti ti-eye fs-18" /></Link>
           <HasPermission module="Patients" action="EDIT">
-            <Link
-              to={editPatientPath(record._raw.id)}
-              className="btn btn-icon btn-sm btn-soft-primary"
-              title="Edit Patient"
-            >
-              <i className="ti ti-edit" />
-            </Link>
+            <Link to={editPatientPath(record._raw.id)} className="text-primary p-1" title="Edit"><i className="ti ti-edit fs-18" /></Link>
           </HasPermission>
-
+          <button className="bg-transparent border-0 text-secondary p-1" title="Print" onClick={() => { /* print patient */ }}><i className="ti ti-printer fs-18" /></button>
           <HasPermission module="Patients" action="DELETE">
-            <button
-              type="button"
-              className="btn btn-icon btn-sm btn-soft-danger"
-              title="Delete Patient"
-              data-bs-toggle="modal"
-              data-bs-target="#delete_patient_modal"
-              onClick={() => setPatientToDelete(record._raw.id)}
-            >
-              <i className="ti ti-trash" />
-            </button>
+            <button className="bg-transparent border-0 text-danger p-1" title="Delete" data-bs-toggle="modal" data-bs-target="#delete_patient_modal" onClick={() => setPatientToDelete(record._raw.id)}><i className="ti ti-trash fs-18" /></button>
           </HasPermission>
         </div>
       ),

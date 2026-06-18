@@ -170,14 +170,18 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
       }
 
       // Update local storage
-      const updatedUser = {
-        ...profileData.user,
+      // Trim heavy fields to avoid exceeding storage quota
+      const { profileImage: _, ...userWithoutProfileImage } = profileData.user;
+      const trimmedUser = {
+        ...userWithoutProfileImage,
         clinic: {
-          ...profileData.user.clinic,
-          onboardingStep: 1
+          ...userWithoutProfileImage.clinic,
+          onboardingStep: 1,
+          // Exclude large logo if present
+          ...(userWithoutProfileImage.clinic?.logo ? { logo: undefined } : {})
         }
       };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      localStorage.setItem("user", JSON.stringify(trimmedUser));
 
       toast.success("Step 1 completed successfully!", { position: "top-center" });
       setStep(1);

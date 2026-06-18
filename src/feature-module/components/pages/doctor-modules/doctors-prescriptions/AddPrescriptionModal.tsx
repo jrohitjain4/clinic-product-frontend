@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
 import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppointments";
+import { useClinicProducts } from "../../../../../core/hooks/useClinicProducts";
 
 interface Medicine {
     medicineName: string;
@@ -18,6 +19,7 @@ interface Props {
     initialDoctorId?: string;
     initialAppointmentId?: string;
     linkedAppointments?: any[];
+    initialPrescription?: any;
 }
 
 const FREQUENCY_OPTIONS = ["1-0-1", "1-1-1", "0-0-1", "1-0-0", "0-1-0", "1-1-0", "SOS"];
@@ -32,8 +34,15 @@ const emptyMedicine = (): Medicine => ({
     timings: "After meal",
 });
 
-const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoctorId, initialAppointmentId, linkedAppointments }: Props) => {
+const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoctorId, initialAppointmentId, linkedAppointments, initialPrescription }: Props) => {
     const { appointments } = useClinicAppointments();
+    const { products } = useClinicProducts();
+
+    const medicineOptions = useMemo(() => {
+        return products
+            .filter((p: any) => p.key === "Medicine")
+            .map((p: any) => p.name);
+    }, [products]);
 
     // Get logged-in user from localStorage
     const loggedUser = useMemo(() => {
@@ -63,14 +72,15 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
         return match?.doctor || null;
     }, [scheduledAppointments, isDoctor]);
 
-    const [patientId, setPatientId] = useState(initialPatientId || "");
-    const [doctorId, setDoctorId] = useState(initialDoctorId || loggedDoctorFromAppointment?.id || "");
-    const [appointmentId, setAppointmentId] = useState(initialAppointmentId || "");
-    const [advice, setAdvice] = useState("");
-    const [followUpDate, setFollowUpDate] = useState<any>(null);
-    const [followUpNotes, setFollowUpNotes] = useState("");
-    const [medicines, setMedicines] = useState<Medicine[]>([emptyMedicine()]);
+    const [patientId, setPatientId] = useState(initialPrescription?.patientId || initialPatientId || "");
+    const [doctorId, setDoctorId] = useState(initialPrescription?.doctorId || initialDoctorId || loggedDoctorFromAppointment?.id || "");
+    const [appointmentId, setAppointmentId] = useState(initialPrescription?.appointmentId || initialAppointmentId || "");
+    const [advice, setAdvice] = useState(initialPrescription?.advice || "");
+    const [followUpDate, setFollowUpDate] = useState<any>(initialPrescription?.followUpDate ? dayjs(initialPrescription.followUpDate) : null);
+    const [followUpNotes, setFollowUpNotes] = useState(initialPrescription?.followUpNotes || "");
+    const [medicines, setMedicines] = useState<Medicine[]>(initialPrescription?.medicines || [emptyMedicine()]);
     const [submitting, setSubmitting] = useState(false);
+    const [activeSearchIndex, setActiveSearchIndex] = useState<number | null>(null);
 
     // When patient is selected, auto-fill doctor from their latest scheduled appointment
     const handlePatientChange = (pid: string) => {
@@ -100,7 +110,7 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
         );
     };
 
-    const addMedicine = () => setMedicines((prev) => [...prev, emptyMedicine()]);
+    const addMedicine = () => setMedicines((prev) => [emptyMedicine(), ...prev]);
     const removeMedicine = (index: number) =>
         setMedicines((prev) => prev.filter((_, i) => i !== index));
 
@@ -139,7 +149,7 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
                     <div className="modal-content" style={{ maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
                         <div className="modal-header bg-primary border-bottom p-3 px-4 d-flex align-items-center justify-content-between" style={{ flexShrink: 0 }}>
                             <h5 className="modal-title fw-bold text-white">
-                                Add New Prescription
+                                {initialPrescription ? "Edit Prescription" : "Add New Prescription"}
                             </h5>
                             <button
                                 type="button"
@@ -150,96 +160,111 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
 
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
                             <div className="modal-body" style={{ overflowY: 'auto', flex: 1 }}>
-                                {/* Patient & Doctor */}
-                                <div className="row g-3 mb-4">
-                                    <div className="col-md-6">
-                                        <label className="form-label fw-medium">
-                                            Patient (Scheduled Only) <span className="text-danger">*</span>
-                                        </label>
-                                        <select
-                                            className="form-select text-dark"
-                                            value={patientId}
-                                            onChange={(e) => handlePatientChange(e.target.value)}
-                                            required
-                                            disabled={!!initialPatientId}
-                                        >
-                                            <option value="">-- Select Patient --</option>
-                                            {scheduledPatients.map((p: any) => (
-                                                <option key={p.id} value={p.id}>
-                                                    {p.firstName} {p.lastName} {p.patientCode ? `(${p.patientCode})` : ""}
-                                                </option>
-                                            ))}
-                                            {/* Fallback if initial patient is not in scheduled list */}
-                                            {initialPatientId && !scheduledPatients.find(p => p.id === initialPatientId) && (
-                                                <option value={initialPatientId}>Current Patient</option>
-                                            )}
-                                        </select>
-                                        {scheduledPatients.length === 0 && (
-                                            <small className="text-muted mt-1 d-block">
-                                                <i className="ti ti-info-circle me-1" />
-                                                No patients with scheduled appointments found.
-                                            </small>
-                                        )}
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <label className="form-label fw-medium">
-                                            Doctor <span className="text-danger">*</span>
-                                        </label>
-                                        <select
-                                            className="form-select text-dark"
-                                            value={doctorId}
-                                            onChange={(e) => setDoctorId(e.target.value)}
-                                            required
-                                            disabled={isDoctor || !!initialDoctorId || availableDoctors.length === 0}
-                                        >
-                                            <option value="">-- Select Doctor --</option>
-                                            {// If it's a doctor, we make sure they appear even if availableDoctors is somehow missing them 
-                                                // But they should already be in availableDoctors.
-                                                availableDoctors.map((d: any) => (
-                                                    <option key={d.id} value={d.id}>
-                                                        {d.fullName}
+                                {/* Patient & Doctor (Hidden if pre-decided) */}
+                                {(!initialPatientId || !initialDoctorId) && (
+                                    <div className="row g-3 mb-4">
+                                        <div className="col-md-6">
+                                            <label className="form-label fw-medium">
+                                                Patient (Scheduled Only) <span className="text-danger">*</span>
+                                            </label>
+                                            <select
+                                                className="form-select text-dark"
+                                                value={patientId}
+                                                onChange={(e) => handlePatientChange(e.target.value)}
+                                                required
+                                                disabled={!!initialPatientId}
+                                            >
+                                                <option value="">-- Select Patient --</option>
+                                                {scheduledPatients.map((p: any) => (
+                                                    <option key={p.id} value={p.id}>
+                                                        {p.firstName} {p.lastName} {p.patientCode ? `(${p.patientCode})` : ""}
                                                     </option>
                                                 ))}
-                                            {/* Fallback if initial doctor is not in filtered list */}
-                                            {initialDoctorId && !availableDoctors.find(d => d.id === initialDoctorId) && (
-                                                <option value={initialDoctorId}>Selected Doctor</option>
+                                                {/* Fallback if initial patient is not in scheduled list */}
+                                                {initialPatientId && !scheduledPatients.find(p => p.id === initialPatientId) && (
+                                                    <option value={initialPatientId}>Current Patient</option>
+                                                )}
+                                            </select>
+                                            {scheduledPatients.length === 0 && (
+                                                <small className="text-muted mt-1 d-block">
+                                                    <i className="ti ti-info-circle me-1" />
+                                                    No patients with scheduled appointments found.
+                                                </small>
                                             )}
-                                        </select>
-                                    </div>
-                                </div>
+                                        </div>
 
-                                {/* Appointment Link (New Section) */}
+                                        <div className="col-md-6">
+                                            <label className="form-label fw-medium">
+                                                Doctor <span className="text-danger">*</span>
+                                            </label>
+                                            <select
+                                                className="form-select text-dark"
+                                                value={doctorId}
+                                                onChange={(e) => setDoctorId(e.target.value)}
+                                                required
+                                                disabled={isDoctor || !!initialDoctorId || availableDoctors.length === 0}
+                                            >
+                                                <option value="">-- Select Doctor --</option>
+                                                {// If it's a doctor, we make sure they appear even if availableDoctors is somehow missing them 
+                                                    // But they should already be in availableDoctors.
+                                                    availableDoctors.map((d: any) => (
+                                                        <option key={d.id} value={d.id}>
+                                                            {d.fullName}
+                                                        </option>
+                                                    ))}
+                                                {/* Fallback if initial doctor is not in filtered list */}
+                                                {initialDoctorId && !availableDoctors.find(d => d.id === initialDoctorId) && (
+                                                    <option value={initialDoctorId}>Selected Doctor</option>
+                                                )}
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Appointment Link (Styled Premium) */}
                                 {(linkedAppointments && linkedAppointments.length > 0) && (
-                                    <div className="mb-4 p-3 border rounded bg-info-subtle border-info-subtle">
-                                        <label className="form-label fw-bold text-info-emphasis d-flex align-items-center">
-                                            <i className="ti ti-link me-2" />
+                                    <div className="mb-4 p-4 border-0 rounded-4 shadow-sm" style={{ backgroundColor: '#f8fafc' }}>
+                                        <label className="form-label fw-bold text-dark fs-13 d-flex align-items-center mb-3 letter-spacing-1 text-uppercase tracking-wider">
+                                            <i className="ti ti-link me-2 text-primary fs-18" />
                                             Select Visit for this Prescription
                                         </label>
-                                        <div className="row g-2">
-                                            {linkedAppointments.sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()).map((apt) => (
-                                                <div className="col-md-4" key={apt.id}>
-                                                    <div
-                                                        className={`card h-100 cursor-pointer border-2 transition-all ${appointmentId === apt.id ? 'border-primary bg-primary-subtle' : 'border-light-subtle'}`}
-                                                        onClick={() => setAppointmentId(apt.id)}
-                                                        style={{ cursor: 'pointer' }}
-                                                    >
-                                                        <div className="card-body p-2 d-flex align-items-center gap-2">
-                                                            <div className={`rounded-circle p-1 ${appointmentId === apt.id ? 'bg-primary text-white' : 'bg-light text-muted'}`}>
-                                                                <i className={`ti ${appointmentId === apt.id ? 'ti-check' : 'ti-circle'}`} />
-                                                            </div>
-                                                            <div>
-                                                                <span className="d-block fw-bold fs-12">
-                                                                    {apt.status === 'Follow-up' ? 'Follow-up Visit' : 'Main Consultation'}
-                                                                </span>
-                                                                <small className="text-muted d-block fs-11">
-                                                                    {dayjs(apt.scheduledAt).format('DD MMM, YYYY')}
-                                                                </small>
+                                        <div className="row g-3">
+                                            {linkedAppointments.sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()).map((apt) => {
+                                                const isSelected = appointmentId === apt.id;
+                                                return (
+                                                    <div className="col-md-4" key={apt.id}>
+                                                        <div
+                                                            className="card h-100 border-0 rounded-3 position-relative overflow-hidden"
+                                                            onClick={() => setAppointmentId(apt.id)}
+                                                            style={{
+                                                                cursor: 'pointer',
+                                                                border: isSelected ? '2px solid #4f46e5' : '1px solid #e2e8f0',
+                                                                backgroundColor: isSelected ? '#f5f3ff' : '#ffffff',
+                                                                transition: 'all 0.2s ease-in-out',
+                                                                boxShadow: isSelected ? '0 4px 12px rgba(79, 70, 229, 0.1)' : '0 2px 4px rgba(0,0,0,0.02)'
+                                                            }}
+                                                        >
+                                                            <div className="card-body p-3 d-flex align-items-center gap-3">
+                                                                <div 
+                                                                    className={`rounded-circle d-flex align-items-center justify-content-center ${isSelected ? 'bg-primary text-white' : 'bg-light text-muted'}`}
+                                                                    style={{ width: '28px', height: '28px', flexShrink: 0 }}
+                                                                >
+                                                                    <i className={`ti ${isSelected ? 'ti-check' : 'ti-calendar-event'}`} style={{ fontSize: '15px' }} />
+                                                                </div>
+                                                                <div className="lh-sm">
+                                                                    <span className={`d-block fw-bold fs-13 ${isSelected ? 'text-primary' : 'text-dark'}`}>
+                                                                        {apt.status === 'Follow-up' ? 'Follow-up Visit' : 'Main Consultation'}
+                                                                    </span>
+                                                                    <small className="text-muted d-block fs-11 mt-1">
+                                                                        <i className="ti ti-calendar me-1" />
+                                                                        {dayjs(apt.scheduledAt).format('DD MMM, YYYY')}
+                                                                    </small>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 )}
@@ -258,8 +283,8 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
                                             Add Medicine <i className="ti ti-plus ms-2" /></button>
                                     </div>
 
-                                    <div className="table-responsive border rounded">
-                                        <table className="table table-bordered mb-0">
+                                    <div className="table-responsive border rounded" style={{ overflow: 'visible' }}>
+                                        <table className="table table-bordered mb-0" style={{ overflow: 'visible' }}>
                                             <thead className="table-light">
                                                 <tr>
                                                     <th style={{ width: 40 }}>#</th>
@@ -277,15 +302,59 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
                                                         <td className="text-muted fw-medium text-center">
                                                             {String(index + 1).padStart(2, "0")}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ position: 'relative', zIndex: activeSearchIndex === index ? 10 : 1 }}>
                                                             <input
                                                                 type="text"
                                                                 className="form-control form-control-sm"
                                                                 placeholder="e.g. Paracetamol 500mg"
                                                                 value={med.medicineName}
-                                                                onChange={(e) => updateMedicine(index, "medicineName", e.target.value)}
+                                                                onChange={(e) => {
+                                                                    updateMedicine(index, "medicineName", e.target.value);
+                                                                    setActiveSearchIndex(index);
+                                                                }}
+                                                                onFocus={() => setActiveSearchIndex(index)}
+                                                                onBlur={() => {
+                                                                    setTimeout(() => setActiveSearchIndex(null), 250);
+                                                                }}
                                                                 required
+                                                                autoComplete="off"
                                                             />
+                                                            {activeSearchIndex === index && (
+                                                                <div 
+                                                                    className="position-absolute w-100 bg-white border rounded shadow-lg mt-1" 
+                                                                    style={{ 
+                                                                        zIndex: 1000, 
+                                                                        maxHeight: '200px', 
+                                                                        overflowY: 'auto',
+                                                                        top: '100%',
+                                                                        left: 0
+                                                                    }}
+                                                                >
+                                                                    {medicineOptions
+                                                                        .filter((opt: string) => 
+                                                                            opt.toLowerCase().includes((med.medicineName || "").toLowerCase())
+                                                                        )
+                                                                        .map((opt: string) => (
+                                                                            <div
+                                                                                key={opt}
+                                                                                className="medicine-dropdown-item"
+                                                                                onMouseDown={() => {
+                                                                                    updateMedicine(index, "medicineName", opt);
+                                                                                    setActiveSearchIndex(null);
+                                                                                }}
+                                                                            >
+                                                                                {opt}
+                                                                            </div>
+                                                                        ))}
+                                                                    {medicineOptions.filter((opt: string) => 
+                                                                        opt.toLowerCase().includes((med.medicineName || "").toLowerCase())
+                                                                    ).length === 0 && (
+                                                                        <div className="px-3 py-2 text-muted fs-12">
+                                                                            No matching medicines
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
                                                         </td>
                                                         <td>
                                                             <input
@@ -394,7 +463,7 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
                                     {submitting ? (
                                         <><span className="spinner-border spinner-border-sm me-2" />Processing...</>
                                     ) : (
-                                        <><i className="ti ti-plus me-1" /> Add Prescription</>
+                                        initialPrescription ? <><i className="ti ti-check me-1" /> Save Changes</> : <><i className="ti ti-plus me-1" /> Add Prescription</>
                                     )}
                                 </button>
                             </div>
@@ -402,6 +471,21 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
                     </div>
                 </div>
             </div>
+            <style>{`
+                .medicine-dropdown-item {
+                    padding: 8px 12px;
+                    font-size: 13px;
+                    color: #1e293b;
+                    cursor: pointer;
+                    transition: background 0.15s ease;
+                    text-align: left;
+                }
+                .medicine-dropdown-item:hover {
+                    background-color: #f1f5f9;
+                    color: #4f46e5;
+                    font-weight: 500;
+                }
+            `}</style>
         </>
     );
 };

@@ -293,7 +293,6 @@ export const City = [
   { value: "Sonipat", label: "Sonipat" },
   { value: "Farrukhabad", label: "Farrukhabad" },
   { value: "Sagar", label: "Sagar" },
-  { value: "Rourkela", label: "Rourkela" },
   { value: "Durg", label: "Durg" },
   { value: "Imphal", label: "Imphal" },
   { value: "Ratlam", label: "Ratlam" },

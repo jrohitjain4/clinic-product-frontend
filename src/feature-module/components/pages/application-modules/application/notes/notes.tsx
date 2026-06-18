@@ -487,14 +487,14 @@ const Notes = () => {
                 <div className="row g-3">
                   {/* Note Summary Card */}
                   <div className="col-12">
-                    <div className="card border shadow-none mb-0" style={{ borderRadius: '10px', backgroundColor: '#fcfcfc' }}>
+                    <div className="card bg-white border border-dark shadow-none mb-0" style={{ borderRadius: '10px' }}>
                       <div className="card-body p-3">
                         <div className="d-flex justify-content-between align-items-center mb-2">
                           <span className={`badge border ${newNote.priority === 'High' ? 'badge-soft-danger border-danger' :
                             newNote.priority === 'Medium' ? 'badge-soft-warning border-warning' : 'badge-soft-info border-info'}`}>
                             <i className="fas fa-circle fs-8 me-1" /> {newNote.priority} Priority
                           </span>
-                          <span className="text-muted fs-12 uppercase fw-semibold">Note Header</span>
+                          <span className="text-dark fw-bold fs-12 uppercase">Note Header</span>
                         </div>
                         <h4 className="fw-bold mb-0 text-dark">{newNote.title}</h4>
                       </div>
@@ -503,24 +503,24 @@ const Notes = () => {
 
                   {/* Info Cards Grid */}
                   <div className="col-md-6">
-                    <div className="border rounded p-3 d-flex align-items-center h-100 bg-white shadow-sm">
+                    <div className="border border-dark rounded p-3 d-flex align-items-center h-100 bg-white">
                       <div className="bg-primary-subtle rounded p-2 me-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
                         <i className="ti ti-calendar text-primary fs-18" />
                       </div>
                       <div>
-                        <span className="text-muted fs-12 d-block fw-semibold mb-1 uppercase text-truncate">Created Date</span>
-                        <h6 className="mb-0 fw-bold fs-14">{newNote.noteDate ? new Date(newNote.noteDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'NA'}</h6>
+                        <span className="text-dark fs-12 d-block fw-bold mb-1 uppercase text-truncate">Created Date</span>
+                        <h6 className="mb-0 fw-bold fs-14 text-dark">{newNote.noteDate ? new Date(newNote.noteDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : 'NA'}</h6>
                       </div>
                     </div>
                   </div>
 
                   <div className="col-md-6">
-                    <div className="border rounded p-3 d-flex align-items-center h-100 bg-white shadow-sm">
+                    <div className="border border-dark rounded p-3 d-flex align-items-center h-100 bg-white">
                       <div className="bg-info-subtle rounded p-2 me-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
                         <i className="ti ti-flag text-info fs-18" />
                       </div>
                       <div>
-                        <span className="text-muted fs-12 d-block fw-semibold mb-1 uppercase">Priority</span>
+                        <span className="text-dark fs-12 d-block fw-bold mb-1 uppercase">Priority</span>
                         <h6 className="mb-0 fw-bold fs-14 text-dark">{newNote.priority}</h6>
                       </div>
                     </div>
@@ -528,12 +528,12 @@ const Notes = () => {
 
                   {/* Note Description (Full width) */}
                   <div className="col-12">
-                    <div className="border rounded p-3 bg-white shadow-sm" style={{ borderLeft: '4px solid #624bff !important' }}>
+                    <div className="border border-dark rounded p-3 bg-white">
                       <div className="d-flex align-items-center mb-3">
                         <div className="bg-primary-subtle rounded p-2 me-2 d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }}>
                           <i className="ti ti-align-left text-primary fs-14" />
                         </div>
-                        <span className="text-muted fs-12 fw-semibold uppercase">Content / Description</span>
+                        <span className="text-dark fs-12 fw-bold uppercase">Content / Description</span>
                       </div>
                       <div className="text-dark lh-lg fs-14 pb-1" style={{ whiteSpace: 'pre-wrap' }}>
                         {newNote.content}
@@ -543,10 +543,10 @@ const Notes = () => {
 
                   {/* Additional Metadata Card */}
                   <div className="col-12">
-                    <div className="border rounded p-3 bg-light-subtle d-flex align-items-center justify-content-between">
+                    <div className="border border-dark rounded p-3 bg-white d-flex align-items-center justify-content-between">
                       <div className="d-flex align-items-center">
-                        <i className="ti ti-info-circle text-muted fs-18 me-2" />
-                        <span className="text-muted fs-13 italic">Last viewed by you just now</span>
+                        <i className="ti ti-info-circle text-dark fs-18 me-2" />
+                        <span className="text-dark fw-bold fs-13 italic">Last viewed by you just now</span>
                       </div>
                       <span className="badge bg-secondary-subtle text-secondary fs-11">Clinic Note #231</span>
                     </div>

@@ -26,9 +26,10 @@ import { authHeaders } from "../../../../../core/utils/apiClient";
 const AppointmentDetails = () => {
     const { id } = useParams<{ id: string }>();
     const { appointment, loading, error, refetch } = useClinicAppointment(id);
-    const { prescriptions, createPrescription, deletePrescription, refetch: refetchPres } = usePrescriptions();
+    const { prescriptions, createPrescription, updatePrescription, deletePrescription, refetch: refetchPres } = usePrescriptions();
 
     const [showPresModal, setShowPresModal] = useState(false);
+    const [editingPrescription, setEditingPrescription] = useState<any>(null);
     const [selectedPres, setSelectedPres] = useState<any>(null);
     const [showNoteModal, setShowNoteModal] = useState(false);
     const [clinicalNote, setClinicalNote] = useState("");
@@ -50,9 +51,68 @@ const AppointmentDetails = () => {
     const { notes, addNote, loading: loadingNotes } = useNotes({ appointmentId: id });
 
     // Fetch patient's full history
-    const { appointments: history } = useClinicAppointments(
+    const { appointments: history, updateAppointmentStatus } = useClinicAppointments(
         appointment?.patientId ? { patientId: appointment.patientId } : undefined
     );
+
+    // Fetch all appointments to compute dynamic queue/expected-time ranks
+    const { appointments: allAppointments } = useClinicAppointments();
+
+    const slotDetails = useMemo(() => {
+        if (!appointment || !allAppointments || allAppointments.length === 0) return { expectedTime: "—", checkinHisNo: "—" };
+
+        const dateStr = dayjs(appointment.scheduledAt).format("YYYY-MM-DD");
+        const timeStr = dayjs(appointment.scheduledAt).format("HH:mm");
+        const doctorId = appointment.doctorId;
+
+        // Group appointments by doctor, date, and slot time
+        const group = allAppointments.filter((a) => {
+            const aDate = dayjs(a.scheduledAt).format("YYYY-MM-DD");
+            const aTime = dayjs(a.scheduledAt).format("HH:mm");
+            return a.doctorId === doctorId && aDate === dateStr && aTime === timeStr;
+        }).sort((a, b) => {
+            const createA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const createB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            if (createA !== createB) return createA - createB;
+            return (a.id || "").localeCompare(b.id || "");
+        });
+
+        const indexInGroup = group.findIndex((item) => item.id === appointment.id);
+        const queueNo = indexInGroup !== -1 ? indexInGroup + 1 : 1;
+
+        const slotStartTime = dayjs(appointment.scheduledAt);
+        const expectedTime = indexInGroup !== -1
+            ? slotStartTime.add(indexInGroup * 15, "minute").format("hh:mm A")
+            : slotStartTime.format("hh:mm A");
+
+        const checkinsBefore = indexInGroup !== -1
+            ? group.slice(0, indexInGroup).filter((item) => ["Checked In", "Checked Out"].includes(item.status)).length
+            : 0;
+
+        const checkinHisNo = `${checkinsBefore} / ${queueNo}`;
+
+        return { expectedTime, checkinHisNo };
+    }, [appointment, allAppointments]);
+
+    const handleCancelAppointment = async () => {
+        if (!appointment) return;
+        Modal.confirm({
+            title: <span className="text-danger fw-bold">Cancel Appointment</span>,
+            content: "Are you sure you want to cancel this appointment?",
+            okText: "Yes, Cancel",
+            okType: "danger",
+            centered: true,
+            onOk: async () => {
+                try {
+                    await updateAppointmentStatus(appointment.id, "Cancelled");
+                    toast.success("Appointment cancelled successfully");
+                    refetch();
+                } catch (e: any) {
+                    toast.error(e.message || "Failed to cancel appointment");
+                }
+            }
+        });
+    };
 
     // Calculate fully linked chain (Root Parent + all its Follow-ups)
     const rootId = appointment?.parentAppointmentId || appointment?.id;
@@ -69,18 +129,29 @@ const AppointmentDetails = () => {
 
     const handlePresSubmit = async (data: any) => {
         try {
-            await createPrescription({
-                ...data,
-                appointmentId: data.appointmentId || id,
-                patientId: appointment?.patientId,
-                doctorId: appointment?.doctorId
-            });
+            if (editingPrescription) {
+                await updatePrescription(editingPrescription.id, {
+                    ...data,
+                    appointmentId: data.appointmentId || id,
+                    patientId: appointment?.patientId,
+                    doctorId: appointment?.doctorId
+                });
+                toast.success("Prescription updated successfully");
+            } else {
+                await createPrescription({
+                    ...data,
+                    appointmentId: data.appointmentId || id,
+                    patientId: appointment?.patientId,
+                    doctorId: appointment?.doctorId
+                });
+                toast.success("Prescription created successfully");
+            }
             setShowPresModal(false);
+            setEditingPrescription(null);
             refetchPres();
-            toast.success("Prescription created successfully");
         } catch (e) {
             console.error(e);
-            toast.error("Failed to create prescription");
+            toast.error(editingPrescription ? "Failed to update prescription" : "Failed to create prescription");
         }
     };
 
@@ -533,19 +604,14 @@ const AppointmentDetails = () => {
         },
         {
             title: "Action",
-            className: "text-center",
+            className: "text-center text-nowrap",
             align: 'center',
+            width: 130,
             render: (_: any, record: any) => (
-                <div className="d-flex align-items-center justify-content-center gap-1">
-                    <button className="btn btn-icon btn-sm btn-soft-primary" onClick={() => { setSelectedPres(record); toast.info("Viewing prescription details"); }} title="View Detail">
-                        <i className="ti ti-eye" />
-                    </button>
-                    <button className="btn btn-icon btn-sm btn-soft-info" title="Edit" onClick={() => toast.warning("Edit functionality coming soon")}>
-                        <i className="ti ti-edit" />
-                    </button>
-                    <button className="btn btn-icon btn-sm btn-soft-danger" title="Delete" onClick={() => handleDelete(record.id)}>
-                        <i className="ti ti-trash" />
-                    </button>
+                <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
+                    <button className="bg-transparent border-0 text-info p-1" onClick={() => { setSelectedPres(record); toast.info("Viewing prescription details"); }} title="View Detail"><i className="ti ti-eye fs-18" /></button>
+                    <button className="bg-transparent border-0 text-primary p-1" title="Edit" onClick={() => { setEditingPrescription(record); setShowPresModal(true); }}><i className="ti ti-edit fs-18" /></button>
+                    <button className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={() => handleDelete(record.id)}><i className="ti ti-trash fs-18" /></button>
                 </div>
             ),
         },
@@ -649,19 +715,14 @@ const AppointmentDetails = () => {
         },
         {
             title: "Action",
-            className: "text-center",
+            className: "text-center text-nowrap",
             align: 'center',
+            width: 130,
             render: (_: any, record: any) => (
-                <div className="d-flex align-items-center justify-content-center gap-1">
-                    <Link to={all_routes.appointmentDetails.replace(":id", record.id)} className="btn btn-icon btn-sm btn-soft-primary" title="View Details">
-                        <i className="ti ti-eye" />
-                    </Link>
-                    <button className="btn btn-icon btn-sm btn-soft-info" title="Edit" onClick={() => toast.warning("Edit functionality coming soon")}>
-                        <i className="ti ti-edit" />
-                    </button>
-                    <button className="btn btn-icon btn-sm btn-soft-danger" title="Delete" onClick={() => handleFollowUpDelete(record.id)}>
-                        <i className="ti ti-trash" />
-                    </button>
+                <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
+                    <Link to={all_routes.appointmentDetails.replace(":id", record.id)} className="text-info p-1" title="View Details"><i className="ti ti-eye fs-18" /></Link>
+                    <button className="bg-transparent border-0 text-primary p-1" title="Edit" onClick={() => toast.warning("Edit functionality coming soon")}><i className="ti ti-edit fs-18" /></button>
+                    <button className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={() => handleFollowUpDelete(record.id)}><i className="ti ti-trash fs-18" /></button>
                 </div>
             ),
         },
@@ -670,30 +731,49 @@ const AppointmentDetails = () => {
     return (
         <div className="page-wrapper p-0">
             <div className="content">
+                <div className="mb-2">
+                    <h6 className="fw-semibold fs-14 mb-0">
+                        <Link to={all_routes.appointments}>
+                            <i className="ti ti-chevron-left me-1" />
+                            Appointments
+                        </Link>
+                    </h6>
+                </div>
                 <div className="d-md-flex align-items-center justify-content-between mb-4">
                     <div>
-                        <h6 className="fw-bold mb-1 d-flex align-items-center text-muted fs-12 text-uppercase">
-                            <Link to={all_routes.appointments} className="text-muted hover-primary">Appointments</Link>
-                            <i className="ti ti-chevron-right mx-2" />
-                            <span className="text-primary">Appointment Dashboard</span>
-                        </h6>
-                        <div className="d-flex align-items-center gap-3">
-                            <Link to={all_routes.appointments} className="btn btn-icon btn-soft-light rounded-circle border shadow-sm flex-shrink-0" title="Back to Appointments">
-                                <i className="ti ti-arrow-left fs-20" />
-                            </Link>
-                            <h3 className="fw-bold mb-0">Visit # {appointment.appointmentCode || id?.slice(-6).toUpperCase()}</h3>
-                        </div>
+                        <h3 className="fw-bold mb-0">Visit # {appointment.appointmentCode || id?.slice(-6).toUpperCase()}</h3>
                     </div>
-                    <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
-                        <button className="btn btn-outline-light border bg-white text-dark d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={() => window.print()}>
-                            <i className="ti ti-printer" /> Print
+                    <div className="d-flex align-items-center gap-2 mt-3 mt-md-0 action-buttons-row">
+                        {/* Print / Download Dropdown */}
+                        <div className="dropdown">
+                            <button className="btn btn-outline-light border bg-white text-dark dropdown-toggle d-flex align-items-center gap-2 fw-bold shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i className="ti ti-printer" /> Print / Download
+                            </button>
+                            <ul className="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li>
+                                    <button className="dropdown-item d-flex align-items-center gap-2 text-dark" onClick={() => window.print()}>
+                                        <i className="ti ti-printer" /> Print
+                                    </button>
+                                </li>
+                                <li>
+                                    <button className="dropdown-item d-flex align-items-center gap-2 text-dark" onClick={handleDownload}>
+                                        <i className="ti ti-download" /> Download PDF
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        {/* Add Prescription Button */}
+                        <button className="btn btn-soft-info d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={() => { setSelectedPres(null); setEditingPrescription(null); setShowPresModal(true); }}>
+                            <i className="ti ti-file-plus" /> Add Prescription
                         </button>
-                        <button className="btn btn-outline-light border bg-white text-dark d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={handleDownload}>
-                            <i className="ti ti-download" /> Download
-                        </button>
+
+                        {/* Add Note Button */}
                         <button className="btn btn-soft-primary d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={() => { setClinicalNote(""); setShowNoteModal(true); }}>
                             <i className="ti ti-notes" /> Add Note
                         </button>
+
+                        {/* Schedule Follow-up Button */}
                         {appointment?.doctor?.followUpEnabled && (
                             <button
                                 className="btn btn-soft-success d-flex align-items-center gap-2 fw-bold shadow-sm"
@@ -703,9 +783,18 @@ const AppointmentDetails = () => {
                                 <i className="ti ti-calendar-plus" /> Schedule Follow-up
                             </button>
                         )}
+
+                        {/* Edit Button */}
                         <Link to={all_routes.editAppointment.replace(":id", appointment.id)} className="btn btn-primary d-flex align-items-center gap-2 fw-bold shadow-sm">
                             <i className="ti ti-edit" /> Edit
                         </Link>
+
+                        {/* Cancel Appointment Button (Only shown in Confirmed/Schedule status) */}
+                        {(appointment.status === "Confirmed" || appointment.status === "Schedule") && (
+                            <button className="btn btn-danger d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={handleCancelAppointment}>
+                                <i className="ti ti-circle-x" /> Cancel Appointment
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -713,7 +802,7 @@ const AppointmentDetails = () => {
                     {/* Patient Info */}
                     <div className="col-xl-4 col-lg-4 col-md-6">
                         <div className="card shadow-sm border rounded-4 mb-0 h-100 overflow-hidden hover-shadow transition-all position-relative">
-                            <div className="card-body p-4 position-relative z-index-1">
+                            <div className="card-body p-4 position-relative z-index-1" style={{ color: '#000' }}>
                                 <div className="d-flex align-items-start gap-3">
                                     <div className="avatar avatar-xxl rounded-circle border p-1 bg-light shadow-sm flex-shrink-0">
                                         <ImageWithBasePath
@@ -725,53 +814,54 @@ const AppointmentDetails = () => {
                                     <div className="flex-grow-1">
                                         <div className="d-flex align-items-center justify-content-between mb-1">
                                             <span className="badge bg-soft-primary text-primary fw-bold text-uppercase fs-10 tracking-wider px-2 py-1">Patient</span>
-                                            <span className="text-muted fs-11 fw-medium">#{appointment.patient?.patientCode || appointment.patientId?.slice(-6).toUpperCase()}</span>
+                                            <span className="text-black fw-bold fs-11">#{appointment.patient?.patientCode || appointment.patientId?.slice(-6).toUpperCase()}</span>
                                         </div>
                                         <h5 className="fw-bold text-dark mb-2 fs-18">{appointment.patient?.firstName} {appointment.patient?.lastName}</h5>
 
                                         <div className="d-flex flex-wrap gap-x-3 gap-y-1 mb-3">
-                                            <div className="d-flex align-items-center gap-1 text-muted fs-12">
-                                                <i className="ti ti-user fs-14 text-primary opacity-75" />
+                                            <div className="d-flex align-items-center gap-1 text-black fw-bold fs-12">
+                                                <i className="ti ti-user fs-14 text-primary" />
                                                 <span>{appointment.patient?.gender || "N/A"}</span>
                                             </div>
-                                            <div className="d-flex align-items-center gap-1 text-muted fs-12">
-                                                <i className="ti ti-calendar fs-14 text-primary opacity-75" />
+                                            <div className="d-flex align-items-center gap-1 text-black fw-bold fs-12">
+                                                <i className="ti ti-calendar fs-14 text-primary" />
                                                 <span>{appointment.patient?.dob ? `${dayjs().diff(appointment.patient.dob, 'year')} Yrs` : "N/A"}</span>
                                             </div>
-                                            <div className="d-flex align-items-center gap-1 text-muted fs-12">
-                                                <i className="ti ti-droplet fs-14 text-danger opacity-75" />
+                                            <div className="d-flex align-items-center gap-1 text-black fw-bold fs-12">
+                                                <i className="ti ti-droplet fs-14 text-danger" />
                                                 <span>{appointment.patient?.bloodGroup || "O+"}</span>
                                             </div>
                                         </div>
 
                                         <div className="d-flex align-items-end justify-content-between pt-2">
                                             <div className="flex-grow-1">
-                                                <p className="text-muted fs-13 mb-1 d-flex align-items-center gap-1 fw-medium">
-                                                    <i className="ti ti-phone-filled fs-14 text-primary opacity-75" />
+                                                <p className="text-black fw-bold fs-13 mb-1 d-flex align-items-center gap-1">
+                                                    <i className="ti ti-phone-filled fs-14 text-primary" />
                                                     {appointment.patient?.phone || "N/A"}
                                                 </p>
                                                 <Link to={all_routes.patientDetails.replace(":id", appointment.patientId)} className="btn btn-soft-primary btn-sm rounded-pill fw-bold px-3 fs-11 d-inline-flex align-items-center gap-1 transition-all">
                                                     History <i className="ti ti-chevron-right fs-12" />
                                                 </Link>
                                             </div>
-                                            <div className="text-end opacity-75 bg-light p-2 rounded-3 border-dashed-1 flex-shrink-0" style={{ minWidth: '100px' }}>
-                                                <p className="fs-10 text-uppercase fw-bold text-muted mb-0 letter-spacing-1" style={{ fontSize: '9px' }}>Insurance</p>
+                                            <div className="text-end bg-light p-2 rounded-3 border-dashed-1 flex-shrink-0" style={{ minWidth: '100px' }}>
+                                                <p className="fs-10 text-uppercase fw-bold text-black mb-0 letter-spacing-1" style={{ fontSize: '9px' }}>Insurance</p>
                                                 <span className="badge bg-soft-success text-success fs-10 fw-bold border-0 p-0 text-uppercase">Verified ✓</span>
                                             </div>
                                         </div>
-
-                                        <div className="mt-4 pt-3 border-top border-dashed d-flex align-items-center justify-content-between opacity-75">
-                                            <div className="d-flex align-items-center gap-2">
-                                                <div className="avatar avatar-xs bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center">
-                                                    <i className="ti ti-building-hospital fs-12" />
-                                                </div>
-                                                <div>
-                                                    <p className="fs-10 fw-bold text-muted mb-0 text-uppercase letter-spacing-1" style={{ fontSize: '8px' }}>Clinic</p>
-                                                    <p className="fs-11 fw-bold text-dark mb-0">{appointment.clinicName || "Preclinic Central"}</p>
+                                        {(appointment.appointmentType === "Online Booking" || appointment.mode === "Clinic Landing page" || appointment.mode === "Clinic Landing") && (
+                                            <div className="mt-3 pt-2 border-top">
+                                                <div className="d-flex align-items-center gap-2 px-3 py-2 rounded-3" style={{ background: "linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)", border: "1px solid #c7d2fe" }}>
+                                                    <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 28, height: 28, background: "#4f46e5" }}>
+                                                        <i className="ti ti-world text-white" style={{ fontSize: 14 }} />
+                                                    </div>
+                                                    <div>
+                                                        <span className="fw-bold" style={{ fontSize: 12, color: "#1e1b4b", letterSpacing: "0.3px" }}>Booked via </span>
+                                                        <span className="fw-bold" style={{ fontSize: 12, color: "#4f46e5", letterSpacing: "0.3px" }}>Clinic Landing</span>
+                                                    </div>
+                                                    <span className="ms-auto badge rounded-pill px-2 py-1" style={{ background: "#4f46e5", color: "#fff", fontSize: 10, fontWeight: 700, letterSpacing: "0.5px" }}>ONLINE</span>
                                                 </div>
                                             </div>
-                                            <div className="badge bg-soft-secondary text-secondary fs-10 border-0 rounded-pill px-2 py-1">PHR Verified</div>
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -782,7 +872,7 @@ const AppointmentDetails = () => {
                     {/* Doctor Info */}
                     <div className="col-xl-4 col-lg-4 col-md-6">
                         <div className="card shadow-sm border rounded-4 mb-0 h-100 overflow-hidden hover-shadow transition-all position-relative">
-                            <div className="card-body p-4 position-relative z-index-1">
+                            <div className="card-body p-4 position-relative z-index-1" style={{ color: '#000' }}>
                                 <div className="d-flex align-items-start gap-3">
                                     <div className="avatar avatar-xxl rounded-circle border p-1 bg-light shadow-sm flex-shrink-0">
                                         <ImageWithBasePath
@@ -801,20 +891,20 @@ const AppointmentDetails = () => {
                                         <h5 className="fw-bold text-dark mb-2 fs-18">{appointment.doctor?.fullName}</h5>
 
                                         <div className="d-flex flex-wrap gap-x-3 gap-y-1 mb-3">
-                                            <div className="d-flex align-items-center gap-1 text-muted fs-12">
-                                                <i className="ti ti-briefcase fs-14 text-info opacity-75" />
+                                            <div className="d-flex align-items-center gap-1 text-black fw-bold fs-12">
+                                                <i className="ti ti-briefcase fs-14 text-info" />
                                                 <span>{appointment.doctor?.yearOfExperience || "8"}+ Yrs Exp</span>
                                             </div>
-                                            <div className="d-flex align-items-center gap-1 text-muted fs-12">
-                                                <i className="ti ti-building fs-14 text-info opacity-75" />
+                                            <div className="d-flex align-items-center gap-1 text-black fw-bold fs-12">
+                                                <i className="ti ti-building fs-14 text-info" />
                                                 <span>{appointment.doctor?.department?.name || "General"}</span>
                                             </div>
                                         </div>
 
                                         <div className="d-flex align-items-end justify-content-between pt-2">
                                             <div className="flex-grow-1">
-                                                <div className="text-muted fs-13 mb-1 d-flex align-items-center gap-1 fw-medium text-truncate" style={{ maxWidth: '120px' }}>
-                                                    <i className="ti ti-shield-check-filled fs-14 text-info opacity-75" />
+                                                <div className="text-black fw-bold fs-13 mb-1 d-flex align-items-center gap-1 text-truncate" style={{ maxWidth: '120px' }}>
+                                                    <i className="ti ti-shield-check-filled fs-14 text-info" />
                                                     {appointment.doctor?.designation?.name || "Consultant"}
                                                 </div>
                                                 <Link to={all_routes.doctorsDetails.replace(":id", appointment.doctorId)} className="btn btn-soft-info btn-sm rounded-pill fw-bold px-3 fs-11 d-inline-flex align-items-center gap-1 transition-all">
@@ -822,24 +912,11 @@ const AppointmentDetails = () => {
                                                 </Link>
                                             </div>
                                             <div className="text-end bg-info-soft p-2 rounded-3 border-dashed-1 flex-shrink-0" style={{ minWidth: '100px' }}>
-                                                <p className="fs-10 text-uppercase fw-bold text-info mb-0 letter-spacing-1" style={{ fontSize: '9px' }}>Availability</p>
+                                                <p className="fs-10 text-uppercase fw-bold text-black mb-0 letter-spacing-1" style={{ fontSize: '9px' }}>Availability</p>
                                                 <span className="fs-11 fw-bold text-info d-flex align-items-center gap-1 justify-content-end">
                                                     <span className="pulse-dot-info" /> AVAILABLE
                                                 </span>
                                             </div>
-                                        </div>
-
-                                        <div className="mt-4 pt-3 border-top border-dashed d-flex align-items-center justify-content-between opacity-75">
-                                            <div className="d-flex align-items-center gap-2">
-                                                <div className="avatar avatar-xs bg-soft-info text-info rounded-circle d-flex align-items-center justify-content-center">
-                                                    <i className="ti ti-map-pin fs-12" />
-                                                </div>
-                                                <div>
-                                                    <p className="fs-10 fw-bold text-muted mb-0 text-uppercase letter-spacing-1" style={{ fontSize: '8px' }}>Facility</p>
-                                                    <p className="fs-11 fw-bold text-dark mb-0">{appointment.location || "City Med Tower, 4F"}</p>
-                                                </div>
-                                            </div>
-                                            <div className="badge bg-soft-info text-info fs-10 border-0 rounded-pill px-2 py-1">Top Rated ★</div>
                                         </div>
                                     </div>
                                 </div>
@@ -884,30 +961,21 @@ const AppointmentDetails = () => {
                                         <h5 className="fw-bold text-dark mb-0 fs-15">{formatAppointmentTimeRange(appointment.scheduledAt, appointment.endAt)}</h5>
                                     </div>
                                 </div>
-                                <div className="d-flex align-items-center justify-content-between mt-3 pt-3 border-top">
-                                    <div className="d-flex align-items-center gap-2 text-truncate" style={{ maxWidth: '140px' }}>
-                                        <i className="ti ti-map-pin text-muted fs-14" />
-                                        <span className="text-muted fs-12 fw-medium text-truncate">{appointment.location || "Room 102, OPD"}</span>
-                                    </div>
-                                    <div className={`${appointment.isFollowUp && appointment.paymentStatus === 'Unpaid' ? 'bg-danger-soft' : 'bg-success-soft'} px-2 py-1 rounded-2 border-dashed flex-shrink-0`}>
-                                        <span className={`fs-10 fw-bold ${appointment.isFollowUp && appointment.paymentStatus === 'Unpaid' ? 'text-danger' : 'text-success'} text-uppercase`}>
-                                            Payment: {appointment.isFollowUp ? (appointment.paymentStatus || 'FREE').toUpperCase() : 'PAID'} {appointment.paymentStatus === 'Unpaid' ? '✗' : '✓'}
-                                        </span>
-                                    </div>
-                                </div>
 
-                                <div className="mt-4 d-flex align-items-center justify-content-between">
-                                    <div className="d-flex align-items-baseline gap-1">
-                                        <span className="fs-10 fw-bold text-muted text-uppercase">Support:</span>
-                                        <span className="fs-11 fw-bold text-primary">+1 (800) MED-HELP</span>
+                                {/* Expected Time & Check-in / His No. */}
+                                <div className="d-flex align-items-center justify-content-between mt-3 pt-3 border-top">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <i className="ti ti-hourglass-low text-warning fs-18" />
+                                        <div>
+                                            <p className="text-muted mb-0" style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase' }}>Expected Time</p>
+                                            <h6 className="fw-bold text-dark mb-0 fs-13">{slotDetails.expectedTime}</h6>
+                                        </div>
                                     </div>
                                     <div className="d-flex align-items-center gap-2">
-                                        {appointment.isFollowUp && (
-                                            <span className="badge bg-soft-info text-info border-dashed fs-10 fw-bold">{appointment.followUpStatus}</span>
-                                        )}
-                                        <div className="d-flex align-items-center gap-1">
-                                            <i className="ti ti-shield-check text-success fs-14" />
-                                            <span className="fs-10 fw-bold text-muted text-uppercase">Secured Access</span>
+                                        <i className="ti ti-users text-success fs-18" />
+                                        <div>
+                                            <p className="text-muted mb-0" style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase' }}>Check-in / His No.</p>
+                                            <h6 className="fw-bold text-dark mb-0 fs-13">{slotDetails.checkinHisNo}</h6>
                                         </div>
                                     </div>
                                 </div>
@@ -1110,7 +1178,7 @@ const AppointmentDetails = () => {
                                         <div className="d-flex align-items-center justify-content-between mb-4">
                                             <div className="d-flex align-items-center gap-2">
                                                 <button className="btn btn-sm btn-icon btn-light" onClick={() => setSelectedPres(null)}>
-                                                    <i className="ti ti-arrow-left" />
+                                                    <i className="ti ti-chevron-left" />
                                                 </button>
                                                 <h5 className="fw-bold mb-0 text-dark">Visit Prescriptions</h5>
                                             </div>
@@ -1122,42 +1190,42 @@ const AppointmentDetails = () => {
                                         <div className="card shadow-sm border rounded-4 mt-2">
                                             <div className="card-body">
                                                 {/* Clinic + Doctor Info */}
-                                                <div className="d-flex align-items-center justify-content-between border-bottom pb-3 mb-3 flex-wrap gap-2">
+                                                <div className="header-banner d-flex align-items-center justify-content-between flex-wrap gap-2 text-white" style={{ background: "linear-gradient(135deg, #1e3a8a, #3b82f6)", padding: "24px", borderRadius: "8px", marginBottom: "25px" }}>
                                                     <div className="d-flex align-items-center gap-3">
-                                                        {(appointment as any)?.clinic?.landingPage?.logo && (
-                                                            <div className="avatar avatar-xxl rounded bg-light border p-2">
-                                                                <ImageWithBasePath src={(appointment as any).clinic.landingPage.logo} alt="clinic" className="img-fluid" />
-                                                            </div>
-                                                        )}
+                                                        <div className="logo-box" style={{ width: 70, height: 70, background: '#fff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5px' }}>
+                                                            <img src={resolveMediaUrl((appointment as any)?.clinic?.landingPage?.logo) || '/logo.png'} alt="logo" style={{ maxHeight: 55, maxWidth: 55, objectFit: 'contain' }} />
+                                                        </div>
                                                         <div>
-                                                            <h5 className="text-dark fw-bold mb-1">{(appointment as any)?.clinic?.name || (appointment as any)?.clinicName || "Preclinic Central"}</h5>
-                                                            <p className="mb-2 text-muted fs-13 d-flex align-items-center gap-1">
+                                                            <h4 className="text-white fw-bold mb-1" style={{ fontSize: "22px" }}>{(appointment as any)?.clinic?.name || (appointment as any)?.clinicName || "Preclinic Central"}</h4>
+                                                            <p className="mb-2 text-white opacity-90 fs-13 d-flex align-items-center gap-1">
                                                                 <i className="ti ti-map-pin" />
-                                                                {(appointment as any)?.clinic?.address || (appointment as any)?.location || "City Med Tower, 4F"}
+                                                                {(appointment as any)?.clinic
+                                                                    ? [(appointment as any).clinic.addressLine1, (appointment as any).clinic.addressLine2, (appointment as any).clinic.city].filter(Boolean).join(", ")
+                                                                    : (appointment as any)?.location || "City Med Tower, 4F"}
                                                             </p>
-                                                            <p className="mb-1 text-dark fw-semibold">{appointment?.doctor?.fullName || "-"}</p>
-                                                            <p className="mb-0 text-muted fs-13">
+                                                            <h6 className="text-white mb-1 fw-bold">{appointment.doctorName || appointment.doctor?.fullName || "-"}</h6>
+                                                            <p className="mb-0 text-white opacity-90 fs-13">
                                                                 {appointment?.doctor?.designation?.name || ""}{appointment?.doctor?.department?.name ? ` · ${appointment.doctor.department.name}` : ""}
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    <div className="text-lg-end">
+                                                    <div className="text-lg-end text-white">
                                                         <div className="mb-2">
-                                                            <span className="badge bg-info-subtle text-info-emphasis fs-13 fw-medium border border-primary py-1 px-3">
+                                                            <span className="badge bg-white text-primary fw-bold py-1 px-3 fs-13" style={{ borderRadius: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                                                                 {selectedPres.prescriptionCode || `#P-${selectedPres.id?.substring(0, 4)}`}
                                                             </span>
                                                         </div>
-                                                        <p className="text-dark mb-1">
-                                                            Department: <span className="text-body">{appointment?.doctor?.department?.name || "-"}</span>
+                                                        <p className="text-white mb-1 fw-semibold opacity-90">
+                                                            Department: <span className="text-white fw-bold">{appointment?.doctor?.department?.name || "-"}</span>
                                                         </p>
-                                                        <p className="text-dark mb-1">
-                                                            Prescribed on: <span className="text-body">
+                                                        <p className="text-white mb-1 fw-semibold opacity-90">
+                                                            Prescribed on: <span className="text-white fw-bold">
                                                                 {new Date(selectedPres.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                                                             </span>
                                                         </p>
                                                         {selectedPres.followUpDate && (
-                                                            <p className="text-dark mb-0">
-                                                                Follow Up: <span className="text-body">
+                                                            <p className="text-white mb-0 fw-semibold opacity-90">
+                                                                Follow Up: <span className="text-white fw-bold">
                                                                     {new Date(selectedPres.followUpDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                                                                 </span>
                                                             </p>
@@ -1166,56 +1234,58 @@ const AppointmentDetails = () => {
                                                 </div>
 
                                                 {/* Patient Details */}
-                                                <div className="mb-3">
-                                                    <h6 className="mb-2 fs-14 fw-medium">Patient Details</h6>
-                                                    <div className="px-3 py-2 bg-light rounded d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                                        <h6 className="m-0 fw-semibold fs-16">
-                                                            {appointment?.patient?.firstName} {appointment?.patient?.lastName}
-                                                        </h6>
-                                                        <div className="d-flex align-items-center gap-3 flex-wrap">
-                                                            {appointment?.patient?.dob && (
-                                                                <p className="mb-0 text-dark">{Math.floor((Date.now() - new Date(appointment?.patient?.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))}Y / {appointment?.patient?.gender || "—"}</p>
-                                                            )}
-                                                            {appointment?.patient?.bloodGroup && (
-                                                                <p className="mb-0 text-dark">
-                                                                    <span className="text-body">Blood</span> : {appointment?.patient?.bloodGroup}
-                                                                </p>
-                                                            )}
-                                                            {appointment?.patient?.patientCode && (
-                                                                <p className="mb-0 text-dark">
-                                                                    Patient ID <span className="text-body">{appointment?.patient?.patientCode}</span>
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    </div>
+                                                <div className="mb-4">
+                                                    <h6 className="section-title" style={{ fontWeight: 700, textTransform: 'uppercase', borderBottom: '2px solid #0f172a', paddingBottom: '8px', marginBottom: '15px', fontSize: '12px', color: '#0f172a', letterSpacing: '0.5px' }}>Patient Clinical Profile</h6>
+                                                    <table className="table table-bordered mb-0">
+                                                        <thead style={{ backgroundColor: "#0f172a" }}>
+                                                            <tr>
+                                                                <th className="text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>PATIENT NAME</th>
+                                                                <th className="text-center text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>AGE / GENDER</th>
+                                                                <th className="text-center text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>BLOOD GROUP</th>
+                                                                <th className="text-center text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>PATIENT ID</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td className="text-primary" style={{ fontSize: "15px", fontWeight: 700, color: "#1e3a8a", padding: "12px 10px" }}>{appointment?.patient?.firstName} {appointment?.patient?.lastName}</td>
+                                                                <td className="text-center" style={{ padding: "12px 10px" }}>{appointment?.patient?.dob ? Math.floor((Date.now() - new Date(appointment?.patient?.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : '--'}Y / {appointment?.patient?.gender || "—"}</td>
+                                                                <td className="text-center" style={{ padding: "12px 10px" }}>{appointment?.patient?.bloodGroup || 'N/A'}</td>
+                                                                <td className="text-center" style={{ padding: "12px 10px" }}>{appointment?.patient?.patientCode || appointment?.patientId?.slice(-6).toUpperCase()}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                <div className="text-center mb-4 pt-3">
+                                                    <h5 className="fw-bold text-dark text-uppercase tracking-wider" style={{ borderBottom: '3px solid #0f172a', display: 'inline-block', paddingBottom: '8px' }}>
+                                                        Prescription Details
+                                                    </h5>
                                                 </div>
 
                                                 {/* Medicines Table */}
                                                 <div className="mb-4">
-                                                    <h6 className="mb-3 fs-16 fw-semibold text-center">
-                                                        {appointment?.doctor?.department?.name ? `${appointment.doctor.department.name} Prescription` : "Prescription"}
-                                                    </h6>
-                                                    <div className="table-responsive border bg-white">
-                                                        <table className="table table-nowrap">
-                                                            <thead className="table-light">
+                                                    <h6 className="section-title" style={{ fontWeight: 700, textTransform: 'uppercase', borderBottom: '2px solid #0f172a', paddingBottom: '8px', marginBottom: '15px', fontSize: '12px', color: '#0f172a', letterSpacing: '0.5px' }}>Medicines Details</h6>
+                                                    <div className="table-responsive">
+                                                        <table className="table table-bordered mb-0">
+                                                            <thead style={{ backgroundColor: "#0f172a" }}>
                                                                 <tr>
-                                                                    <th className="text-dark">SNO</th>
-                                                                    <th className="text-dark">Medicine Name</th>
-                                                                    <th className="text-dark">Dosage</th>
-                                                                    <th className="text-dark">Frequency</th>
-                                                                    <th className="text-dark">Duration</th>
-                                                                    <th className="text-dark">Timings</th>
+                                                                    <th className="text-center text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>S.NO</th>
+                                                                    <th className="text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>Medicine Name</th>
+                                                                    <th className="text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>Dosage</th>
+                                                                    <th className="text-center text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>Frequency</th>
+                                                                    <th className="text-center text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>Duration</th>
+                                                                    <th className="text-center text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>Timings</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
                                                                 {selectedPres.medicines && selectedPres.medicines.length > 0 ? selectedPres.medicines.map((med: any, i: number) => (
                                                                     <tr key={med.id || i}>
-                                                                        <td>{String(i + 1).padStart(2, "0")}</td>
-                                                                        <td className="fw-medium">{med.medicineName}</td>
-                                                                        <td>{med.dosage || "—"}</td>
-                                                                        <td className="text-primary fw-medium">{med.frequency || "—"}</td>
-                                                                        <td>{med.duration || "—"}</td>
-                                                                        <td>{med.timings || "—"}</td>
+                                                                        <td className="text-center text-muted" style={{ padding: "12px 10px" }}>{String(i + 1).padStart(2, "0")}</td>
+                                                                        <td className="text-primary" style={{ fontWeight: 700, color: "#1e3a8a", padding: "12px 10px" }}>{med.medicineName}</td>
+                                                                        <td style={{ padding: "12px 10px" }}>{med.dosage || "—"}</td>
+                                                                        <td className="text-center" style={{ padding: "12px 10px" }}>{med.frequency || "—"}</td>
+                                                                        <td className="text-center" style={{ padding: "12px 10px" }}>{med.duration || "—"}</td>
+                                                                        <td className="text-center" style={{ padding: "12px 10px" }}>{med.timings || "—"}</td>
                                                                     </tr>
                                                                 )) : (
                                                                     <tr>
@@ -1238,8 +1308,8 @@ const AppointmentDetails = () => {
                                                 {/* Follow Up */}
                                                 <div className="pb-3 mb-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
                                                     <div>
-                                                        <h6 className="mb-1 fs-14 fw-semibold">Follow Up</h6>
-                                                        <p className="mb-0">
+                                                        <h6 className="mb-1 fs-14 fw-semibold text-uppercase tracking-wider opacity-75 text-secondary">Follow Up</h6>
+                                                        <p className="mb-0 fw-bold">
                                                             {selectedPres.followUpDate
                                                                 ? new Date(selectedPres.followUpDate).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })
                                                                 : "—"}
@@ -1247,18 +1317,401 @@ const AppointmentDetails = () => {
                                                         </p>
                                                     </div>
                                                     <div className="text-end">
-                                                        <ImageWithBasePath src="assets/img/icons/signature-img.svg" alt="signature" className="img-fluid mb-1" />
-                                                        <h6 className="fs-14 fw-semibold mb-0">{appointment?.doctor?.fullName || "—"}</h6>
-                                                        <p className="fs-13 fw-normal text-muted">{appointment?.doctor?.designation?.name || ""}</p>
+                                                        <h6 className="fs-14 fw-semibold mb-0">{appointment?.doctorName || appointment?.doctor?.fullName || "—"}</h6>
+                                                        <p className="fs-13 fw-normal text-muted mb-0">{appointment?.doctor?.designation?.name || ""}</p>
                                                     </div>
                                                 </div>
 
                                                 {/* Actions */}
                                                 <div className="text-center d-flex align-items-center justify-content-center gap-2 mt-4">
-                                                    <button onClick={() => window.print()} className="btn btn-md btn-dark d-flex align-items-center">
+                                                    <button onClick={() => {
+                                                        const printWindow = window.open('', '_blank');
+                                                        if (!printWindow || !appointment) return;
+                                                        const medicinesHtml = selectedPres.medicines && selectedPres.medicines.length > 0
+                                                            ? selectedPres.medicines.map((med: any, i: number) => `
+                                                                <tr>
+                                                                    <td class="text-center text-muted">${String(i + 1).padStart(2, "0")}</td>
+                                                                    <td class="text-primary" style="font-weight: 700;">${med.medicineName}</td>
+                                                                    <td>${med.dosage || "—"}</td>
+                                                                    <td class="text-center">${med.frequency || "—"}</td>
+                                                                    <td class="text-center">${med.duration || "—"}</td>
+                                                                    <td class="text-center">${med.timings || "—"}</td>
+                                                                </tr>
+                                                            `).join('')
+                                                            : `<tr><td colspan="6" class="text-center text-muted">No medicines added</td></tr>`;
+
+                                                        const logoSrc = resolveMediaUrl((appointment as any)?.clinic?.landingPage?.logo) || '/logo.png';
+                                                        const clinicName = (appointment as any)?.clinic?.name || (appointment as any)?.clinicName || "Preclinic Central";
+                                                        const clinicAddress = (appointment as any)?.clinic
+                                                            ? [(appointment as any).clinic.addressLine1, (appointment as any).clinic.addressLine2, (appointment as any).clinic.city].filter(Boolean).join(", ")
+                                                            : (appointment as any)?.location || "City Med Tower, 4F";
+
+                                                        const html = `<html>
+                                                            <head>
+                                                              <title>Prescription Summary - ${selectedPres.prescriptionCode || 'Record'}</title>
+                                                              <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+                                                              <style>
+                                                                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                                                                body { background: #fff; padding: 30px; font-family: 'Inter', sans-serif; color: #0f172a; }
+                                                                .header-banner {
+                                                                  background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+                                                                  color: #ffffff !important;
+                                                                  padding: 24px !important;
+                                                                  border-radius: 8px !important;
+                                                                  margin-bottom: 25px !important;
+                                                                  display: flex;
+                                                                  justify-content: space-between;
+                                                                  align-items: center;
+                                                                  -webkit-print-color-adjust: exact;
+                                                                  print-color-adjust: exact;
+                                                                }
+                                                                .header-banner h4 { color: #ffffff !important; font-weight: 700; margin: 0 0 4px 0; font-size: 22px; }
+                                                                .header-banner p { color: #e0f2fe !important; margin: 0; font-size: 13px; }
+                                                                .header-banner h6 { color: #ffffff !important; margin: 8px 0 2px 0; font-size: 15px; font-weight: 600; }
+                                                                .logo-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+                                                                .section-title { font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #0f172a !important; padding-bottom: 8px; margin-bottom: 15px; font-size: 12px; color: #0f172a !important; letter-spacing: 0.5px; }
+                                                                
+                                                                /* Dark Styled Tables */
+                                                                .table-bordered { border: 2px solid #0f172a !important; }
+                                                                .table-bordered th { 
+                                                                  background-color: #0f172a !important; 
+                                                                  color: #ffffff !important; 
+                                                                  border: 2px solid #0f172a !important; 
+                                                                  font-weight: 700; 
+                                                                  font-size: 12px; 
+                                                                  letter-spacing: 0.5px; 
+                                                                  padding: 12px 10px !important;
+                                                                  -webkit-print-color-adjust: exact;
+                                                                  print-color-adjust: exact;
+                                                                }
+                                                                .table-bordered td { border: 1px solid #334155 !important; color: #0f172a !important; font-weight: 600; font-size: 13px; padding: 12px 10px !important; }
+                                                                
+                                                                .text-primary { color: #1e3a8a !important; }
+                                                                .clinical-findings { border: 2px solid #0f172a !important; padding: 20px; background: #f8fafc; min-height: 120px; line-height: 1.6; font-size: 13px; color: #000000 !important; font-weight: 500; border-radius: 6px; }
+                                                                @media print { 
+                                                                  .no-print { display: none; } 
+                                                                  body { padding: 0; }
+                                                                  .header-banner {
+                                                                    background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+                                                                    -webkit-print-color-adjust: exact;
+                                                                    print-color-adjust: exact;
+                                                                  }
+                                                                  .table-bordered th {
+                                                                    background-color: #0f172a !important;
+                                                                    color: #ffffff !important;
+                                                                    -webkit-print-color-adjust: exact;
+                                                                    print-color-adjust: exact;
+                                                                  }
+                                                                }
+                                                              </style>
+                                                            </head>
+                                                            <body>
+                                                              <div class="header-banner">
+                                                                <div class="d-flex align-items-center gap-3">
+                                                                  <div class="logo-box">
+                                                                    <img src="${logoSrc}" alt="logo" style="max-height: 55px; max-width: 55px; object-fit: contain;">
+                                                                  </div>
+                                                                  <div>
+                                                                    <h4>${clinicName}</h4>
+                                                                    <p><i class="ti ti-map-pin"></i> ${clinicAddress}</p>
+                                                                    <h6>${appointment.doctorName || appointment.doctor?.fullName}</h6>
+                                                                    <p>${appointment.doctor?.designation?.name || "Consultant"} · ${appointment.doctor?.department?.name || "Medicine"}</p>
+                                                                  </div>
+                                                                </div>
+                                                                <div class="text-end text-white">
+                                                                  <span class="badge bg-white text-primary fw-bold px-3 py-2 mb-2" style="font-size: 12px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                                    ${selectedPres.prescriptionCode || `#P-${selectedPres.id?.substring(0, 4)}`}
+                                                                  </span>
+                                                                  <div class="small mt-1 opacity-90">
+                                                                    <div class="mb-1"><strong>Dept:</strong> ${appointment.doctor?.department?.name || "General"}</div>
+                                                                    <div><strong>Date:</strong> ${new Date(selectedPres.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                                                                  </div>
+                                                                </div>
+                                                              </div>
+
+                                                              <div class="mb-4">
+                                                                <h6 class="section-title">Patient Clinical Profile</h6>
+                                                                <table class="table table-bordered mb-0">
+                                                                  <thead>
+                                                                    <tr>
+                                                                      <th class="text-white">PATIENT NAME</th>
+                                                                      <th class="text-center text-white">AGE / GENDER</th>
+                                                                      <th class="text-center text-white">BLOOD GROUP</th>
+                                                                      <th class="text-center text-white">PATIENT ID</th>
+                                                                    </tr>
+                                                                  </thead>
+                                                                  <tbody>
+                                                                    <tr>
+                                                                      <td class="text-primary" style="font-size: 15px; font-weight: 700;">${appointment.patient?.firstName} ${appointment.patient?.lastName}</td>
+                                                                      <td class="text-center">${appointment.patient?.dob ? Math.floor((new Date().getTime() - new Date(appointment.patient.dob).getTime()) / 31557600000) : '--'}Y / ${appointment.patient?.gender || '--'}</td>
+                                                                      <td class="text-center">${appointment.patient?.bloodGroup || 'N/A'}</td>
+                                                                      <td class="text-center">${appointment.patient?.patientCode || appointment.patientId?.slice(-6).toUpperCase()}</td>
+                                                                    </tr>
+                                                                  </tbody>
+                                                                </table>
+                                                              </div>
+
+                                                              <div class="text-center mb-4 pt-3">
+                                                                <h5 class="fw-bold text-dark text-uppercase tracking-wider" style="border-bottom: 3px solid #0f172a; display: inline-block; padding-bottom: 8px;">
+                                                                  Prescription Summary
+                                                                </h5>
+                                                              </div>
+
+                                                              <div class="mb-4">
+                                                                <h6 class="section-title">Medicines Details</h6>
+                                                                <table class="table table-bordered mb-0">
+                                                                  <thead>
+                                                                    <tr>
+                                                                      <th class="text-center text-white">S.NO</th>
+                                                                      <th class="text-white">Medicine Name</th>
+                                                                      <th class="text-white">Dosage</th>
+                                                                      <th class="text-center text-white">Frequency</th>
+                                                                      <th class="text-center text-white">Duration</th>
+                                                                      <th class="text-center text-white">Timings</th>
+                                                                    </tr>
+                                                                  </thead>
+                                                                  <tbody>
+                                                                    ${medicinesHtml}
+                                                                  </tbody>
+                                                                </table>
+                                                              </div>
+
+                                                              ${selectedPres.advice ? `
+                                                              <div class="mb-4">
+                                                                <h6 class="section-title">Advice / Instructions</h6>
+                                                                <div class="clinical-findings">
+                                                                  ${selectedPres.advice}
+                                                                </div>
+                                                              </div>
+                                                              ` : ''}
+
+                                                              <div class="pb-3 mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2 mt-5">
+                                                                <div>
+                                                                    <h6 class="mb-1 fs-14 fw-semibold text-uppercase tracking-wider opacity-75 text-secondary">Follow Up</h6>
+                                                                    <p class="mb-0 fw-bold">
+                                                                        ${selectedPres.followUpDate
+                                                                ? new Date(selectedPres.followUpDate).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })
+                                                                : "—"}
+                                                                        ${selectedPres.followUpNotes ? ` · ${selectedPres.followUpNotes}` : ""}
+                                                                    </p>
+                                                                </div>
+                                                                <div class="text-end">
+                                                                    <h6 class="fs-14 fw-bold mb-0">${appointment.doctorName || appointment.doctor?.fullName || "—"}</h6>
+                                                                    <p class="fs-13 fw-normal text-muted mb-0">${appointment.doctor?.designation?.name || ""}</p>
+                                                                </div>
+                                                              </div>
+
+                                                              <div class="mt-auto pt-4 border-top text-center text-muted small">
+                                                                <p class="mb-1 fw-bold" style="color: #64748b; letter-spacing: 0.5px;">2025 &copy; <span style="color: #1e3a8a;">Docyari</span>, All Rights Reserved</p>
+                                                                <p class="mb-0 italic opacity-50" style="font-size: 10px;">This is a computer-generated prescription summary and does not require a physical signature.</p>
+                                                              </div>
+
+                                                              <script>
+                                                                window.onload = () => {
+                                                                  setTimeout(() => { window.print(); window.close(); }, 500);
+                                                                };
+                                                              </script>
+                                                            </body>
+                                                          </html>`;
+
+                                                        printWindow.document.write(html);
+                                                        printWindow.document.close();
+                                                    }} className="btn btn-md btn-dark d-flex align-items-center">
                                                         <i className="ti ti-printer me-1" /> Print
                                                     </button>
-                                                    <button onClick={() => window.print()} className="btn btn-md btn-primary d-flex align-items-center">
+                                                    <button onClick={() => {
+                                                        const printWindow = window.open('', '_blank');
+                                                        if (!printWindow || !appointment) return;
+                                                        const medicinesHtml = selectedPres.medicines && selectedPres.medicines.length > 0
+                                                            ? selectedPres.medicines.map((med: any, i: number) => `
+                                                                <tr>
+                                                                    <td class="text-center text-muted">${String(i + 1).padStart(2, "0")}</td>
+                                                                    <td class="text-primary" style="font-weight: 700;">${med.medicineName}</td>
+                                                                    <td>${med.dosage || "—"}</td>
+                                                                    <td class="text-center">${med.frequency || "—"}</td>
+                                                                    <td class="text-center">${med.duration || "—"}</td>
+                                                                    <td class="text-center">${med.timings || "—"}</td>
+                                                                </tr>
+                                                            `).join('')
+                                                            : `<tr><td colspan="6" class="text-center text-muted">No medicines added</td></tr>`;
+
+                                                        const logoSrc = resolveMediaUrl((appointment as any)?.clinic?.landingPage?.logo) || '/logo.png';
+                                                        const clinicName = (appointment as any)?.clinic?.name || (appointment as any)?.clinicName || "Preclinic Central";
+                                                        const clinicAddress = (appointment as any)?.clinic
+                                                            ? [(appointment as any).clinic.addressLine1, (appointment as any).clinic.addressLine2, (appointment as any).clinic.city].filter(Boolean).join(", ")
+                                                            : (appointment as any)?.location || "City Med Tower, 4F";
+
+                                                        const html = `<html>
+                                                            <head>
+                                                              <title>Prescription Summary - ${selectedPres.prescriptionCode || 'Record'}</title>
+                                                              <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+                                                              <style>
+                                                                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                                                                body { background: #fff; padding: 30px; font-family: 'Inter', sans-serif; color: #0f172a; }
+                                                                .header-banner {
+                                                                  background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+                                                                  color: #ffffff !important;
+                                                                  padding: 24px !important;
+                                                                  border-radius: 8px !important;
+                                                                  margin-bottom: 25px !important;
+                                                                  display: flex;
+                                                                  justify-content: space-between;
+                                                                  align-items: center;
+                                                                  -webkit-print-color-adjust: exact;
+                                                                  print-color-adjust: exact;
+                                                                }
+                                                                .header-banner h4 { color: #ffffff !important; font-weight: 700; margin: 0 0 4px 0; font-size: 22px; }
+                                                                .header-banner p { color: #e0f2fe !important; margin: 0; font-size: 13px; }
+                                                                .header-banner h6 { color: #ffffff !important; margin: 8px 0 2px 0; font-size: 15px; font-weight: 600; }
+                                                                .logo-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+                                                                .section-title { font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #0f172a !important; padding-bottom: 8px; margin-bottom: 15px; font-size: 12px; color: #0f172a !important; letter-spacing: 0.5px; }
+                                                                
+                                                                /* Dark Styled Tables */
+                                                                .table-bordered { border: 2px solid #0f172a !important; }
+                                                                .table-bordered th { 
+                                                                  background-color: #0f172a !important; 
+                                                                  color: #ffffff !important; 
+                                                                  border: 2px solid #0f172a !important; 
+                                                                  font-weight: 700; 
+                                                                  font-size: 12px; 
+                                                                  letter-spacing: 0.5px; 
+                                                                  padding: 12px 10px !important;
+                                                                  -webkit-print-color-adjust: exact;
+                                                                  print-color-adjust: exact;
+                                                                }
+                                                                .table-bordered td { border: 1px solid #334155 !important; color: #0f172a !important; font-weight: 600; font-size: 13px; padding: 12px 10px !important; }
+                                                                
+                                                                .text-primary { color: #1e3a8a !important; }
+                                                                .clinical-findings { border: 2px solid #0f172a !important; padding: 20px; background: #f8fafc; min-height: 120px; line-height: 1.6; font-size: 13px; color: #000000 !important; font-weight: 500; border-radius: 6px; }
+                                                                @media print { 
+                                                                  .no-print { display: none; } 
+                                                                  body { padding: 0; }
+                                                                  .header-banner {
+                                                                    background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+                                                                    -webkit-print-color-adjust: exact;
+                                                                    print-color-adjust: exact;
+                                                                  }
+                                                                  .table-bordered th {
+                                                                    background-color: #0f172a !important;
+                                                                    color: #ffffff !important;
+                                                                    -webkit-print-color-adjust: exact;
+                                                                    print-color-adjust: exact;
+                                                                  }
+                                                                }
+                                                              </style>
+                                                            </head>
+                                                            <body>
+                                                              <div class="header-banner">
+                                                                <div class="d-flex align-items-center gap-3">
+                                                                  <div class="logo-box">
+                                                                    <img src="${logoSrc}" alt="logo" style="max-height: 55px; max-width: 55px; object-fit: contain;">
+                                                                  </div>
+                                                                  <div>
+                                                                    <h4>${clinicName}</h4>
+                                                                    <p><i class="ti ti-map-pin"></i> ${clinicAddress}</p>
+                                                                    <h6>${appointment.doctorName || appointment.doctor?.fullName}</h6>
+                                                                    <p>${appointment.doctor?.designation?.name || "Consultant"} · ${appointment.doctor?.department?.name || "Medicine"}</p>
+                                                                  </div>
+                                                                </div>
+                                                                <div class="text-end text-white">
+                                                                  <span class="badge bg-white text-primary fw-bold px-3 py-2 mb-2" style="font-size: 12px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                                    ${selectedPres.prescriptionCode || `#P-${selectedPres.id?.substring(0, 4)}`}
+                                                                  </span>
+                                                                  <div class="small mt-1 opacity-90">
+                                                                    <div class="mb-1"><strong>Dept:</strong> ${appointment.doctor?.department?.name || "General"}</div>
+                                                                    <div><strong>Date:</strong> ${new Date(selectedPres.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                                                                  </div>
+                                                                </div>
+                                                              </div>
+
+                                                              <div class="mb-4">
+                                                                <h6 class="section-title">Patient Clinical Profile</h6>
+                                                                <table class="table table-bordered mb-0">
+                                                                  <thead>
+                                                                    <tr>
+                                                                      <th class="text-white">PATIENT NAME</th>
+                                                                      <th class="text-center text-white">AGE / GENDER</th>
+                                                                      <th class="text-center text-white">BLOOD GROUP</th>
+                                                                      <th class="text-center text-white">PATIENT ID</th>
+                                                                    </tr>
+                                                                  </thead>
+                                                                  <tbody>
+                                                                    <tr>
+                                                                      <td class="text-primary" style="font-size: 15px; font-weight: 700;">${appointment.patient?.firstName} ${appointment.patient?.lastName}</td>
+                                                                      <td class="text-center">${appointment.patient?.dob ? Math.floor((new Date().getTime() - new Date(appointment.patient.dob).getTime()) / 31557600000) : '--'}Y / ${appointment.patient?.gender || '--'}</td>
+                                                                      <td class="text-center">${appointment.patient?.bloodGroup || 'N/A'}</td>
+                                                                      <td class="text-center">${appointment.patient?.patientCode || appointment.patientId?.slice(-6).toUpperCase()}</td>
+                                                                    </tr>
+                                                                  </tbody>
+                                                                </table>
+                                                              </div>
+
+                                                              <div class="text-center mb-4 pt-3">
+                                                                <h5 class="fw-bold text-dark text-uppercase tracking-wider" style="border-bottom: 3px solid #0f172a; display: inline-block; padding-bottom: 8px;">
+                                                                  Prescription Summary
+                                                                </h5>
+                                                              </div>
+
+                                                              <div class="mb-4">
+                                                                <h6 class="section-title">Medicines Details</h6>
+                                                                <table class="table table-bordered mb-0">
+                                                                  <thead>
+                                                                    <tr>
+                                                                      <th class="text-center text-white">S.NO</th>
+                                                                      <th class="text-white">Medicine Name</th>
+                                                                      <th class="text-white">Dosage</th>
+                                                                      <th class="text-center text-white">Frequency</th>
+                                                                      <th class="text-center text-white">Duration</th>
+                                                                      <th class="text-center text-white">Timings</th>
+                                                                    </tr>
+                                                                  </thead>
+                                                                  <tbody>
+                                                                    ${medicinesHtml}
+                                                                  </tbody>
+                                                                </table>
+                                                              </div>
+
+                                                              ${selectedPres.advice ? `
+                                                              <div class="mb-4">
+                                                                <h6 class="section-title">Advice / Instructions</h6>
+                                                                <div class="clinical-findings">
+                                                                  ${selectedPres.advice}
+                                                                </div>
+                                                              </div>
+                                                              ` : ''}
+
+                                                              <div class="pb-3 mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2 mt-5">
+                                                                <div>
+                                                                    <h6 class="mb-1 fs-14 fw-semibold text-uppercase tracking-wider opacity-75 text-secondary">Follow Up</h6>
+                                                                    <p class="mb-0 fw-bold">
+                                                                        ${selectedPres.followUpDate
+                                                                ? new Date(selectedPres.followUpDate).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })
+                                                                : "—"}
+                                                                        ${selectedPres.followUpNotes ? ` · ${selectedPres.followUpNotes}` : ""}
+                                                                    </p>
+                                                                </div>
+                                                                <div class="text-end">
+                                                                    <h6 class="fs-14 fw-bold mb-0">${appointment.doctorName || appointment.doctor?.fullName || "—"}</h6>
+                                                                    <p class="fs-13 fw-normal text-muted mb-0">${appointment.doctor?.designation?.name || ""}</p>
+                                                                </div>
+                                                              </div>
+
+                                                              <div class="mt-auto pt-4 border-top text-center text-muted small">
+                                                                <p class="mb-1 fw-bold" style="color: #64748b; letter-spacing: 0.5px;">2025 &copy; <span style="color: #1e3a8a;">Docyari</span>, All Rights Reserved</p>
+                                                                <p class="mb-0 italic opacity-50" style="font-size: 10px;">This is a computer-generated prescription summary and does not require a physical signature.</p>
+                                                              </div>
+
+                                                              <script>
+                                                                window.onload = () => {
+                                                                  setTimeout(() => { window.print(); window.close(); }, 500);
+                                                                };
+                                                              </script>
+                                                            </body>
+                                                          </html>`;
+
+                                                        printWindow.document.write(html);
+                                                        printWindow.document.close();
+                                                    }} className="btn btn-md btn-primary d-flex align-items-center">
                                                         <i className="ti ti-download me-1" /> Download
                                                     </button>
                                                 </div>
@@ -1319,12 +1772,13 @@ const AppointmentDetails = () => {
             {/* Modals */}
             {showPresModal && appointment && (
                 <AddPrescriptionModal
-                    onClose={() => setShowPresModal(false)}
+                    onClose={() => { setShowPresModal(false); setEditingPrescription(null); }}
                     onSubmit={handlePresSubmit}
                     initialPatientId={appointment.patientId}
                     initialDoctorId={appointment.doctorId}
                     initialAppointmentId={appointment.id}
                     linkedAppointments={chainAppointments}
+                    initialPrescription={editingPrescription}
                 />
             )}
 
@@ -1748,9 +2202,22 @@ const AppointmentDetails = () => {
                 .shadow-none { box-shadow: none !important; }
                 .italic { font-style: italic; }
                 .line-height-base { line-height: 1.5; }
-                .z-index-1 { z-index: 1; }
-                .h-10px { height: 10px; }
                 .vr { width: 1px; background-color: #cbd5e1; }
+
+                .action-buttons-row .btn, .action-buttons-row a.btn {
+                    height: 48px !important;
+                    padding: 0 24px !important;
+                    font-size: 15px !important;
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    gap: 8px !important;
+                    border-radius: 8px !important;
+                    font-weight: 700 !important;
+                }
+                .action-buttons-row .btn i, .action-buttons-row a.btn i {
+                    font-size: 18px !important;
+                }
             `}</style>
         </div>
     );

@@ -6,6 +6,7 @@ import { useClinicInvoices } from "../../../../../core/hooks/useClinicInvoices";
 import Datatable from "../../../../../core/common/dataTable";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
+import { resolveMediaUrl } from "../../../../../core/config/api";
 
 const InvoicesList = () => {
   const { invoices, loading, error, refetch } = useClinicInvoices();
@@ -23,6 +24,140 @@ const InvoicesList = () => {
       return matchStatus && matchDate;
     });
   }, [invoices, filterStatus, filterDate]);
+
+  const handleDownloadPDF = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const firstInv = invoices[0];
+    const logoSrc = resolveMediaUrl(firstInv?.clinic?.landingPage?.logo) || '/logo.png';
+    const clinicName = firstInv?.clinic?.name || firstInv?.clinicName || "DocYari Clinical Network";
+    const clinicAddress = firstInv?.clinic?.landingPage?.address || "Clinic Address Location";
+
+    const reportHtml = `
+      <html>
+        <head>
+          <title>Invoices Master Ledger</title>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            body { background: #fff; padding: 30px; font-family: 'Inter', sans-serif; color: #0f172a; }
+            .header-banner {
+              background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+              color: #ffffff !important;
+              padding: 24px !important;
+              border-radius: 8px !important;
+              margin-bottom: 25px !important;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .header-banner h4 { color: #ffffff !important; font-weight: 700; margin: 0 0 4px 0; font-size: 22px; }
+            .header-banner p { color: #e0f2fe !important; margin: 0; font-size: 13px; }
+            .header-banner h6 { color: #ffffff !important; margin: 8px 0 2px 0; font-size: 15px; font-weight: 600; }
+            .logo-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+            
+            /* Dark Styled Tables */
+            .table-bordered { border: 2px solid #0f172a !important; }
+            .table-bordered th { 
+              background-color: #0f172a !important; 
+              color: #ffffff !important; 
+              border: 2px solid #0f172a !important; 
+              font-weight: 700; 
+              font-size: 12px; 
+              letter-spacing: 0.5px; 
+              padding: 12px 10px !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .table-bordered td { border: 1px solid #334155 !important; color: #0f172a !important; font-weight: 600; font-size: 13px; padding: 12px 10px !important; }
+            .fw-heavy { font-weight: 800; color: #0f172a; }
+            .badge-custom { padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 10px; border: 1px solid #cbd5e1; background: #f8fafc; }
+            @media print { 
+              .no-print { display: none; } 
+              body { padding: 0; }
+              .header-banner {
+                background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .table-bordered th {
+                background-color: #0f172a !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header-banner">
+            <div class="d-flex align-items-center gap-3">
+              <div class="logo-box">
+                <img src="${logoSrc}" alt="logo" style="max-height: 55px; max-width: 55px; object-fit: contain;">
+              </div>
+              <div>
+                <h4>${clinicName}</h4>
+                <p><i class="ti ti-map-pin"></i> ${clinicAddress}</p>
+                <h6>DocYari Health Ledger</h6>
+                <p>Practice Wide Financial Statements</p>
+              </div>
+            </div>
+            <div class="text-end text-white">
+              <span class="badge bg-white text-primary fw-bold px-3 py-2 mb-2" style="font-size: 12px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                INVOICES MASTER LEDGER
+              </span>
+              <div class="small mt-1 opacity-90">
+                <div class="mb-1"><strong>Total Records:</strong> ${filteredData.length}</div>
+                <div><strong>Generated:</strong> ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+              </div>
+            </div>
+          </div>
+
+          <table class="table table-bordered shadow-sm">
+            <thead>
+              <tr>
+                <th class="text-white text-center">SR NO</th>
+                <th class="text-white">INVOICE ID</th>
+                <th class="text-white">PATIENT NAME</th>
+                <th class="text-white">CREATED DATE</th>
+                <th class="text-white">DUE DATE</th>
+                <th class="text-white text-center">AMOUNT</th>
+                <th class="text-white text-center">STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map(r => `
+                <tr style="background: ${r.S_No % 2 === 0 ? '#fcfcfc' : '#ffffff'};">
+                  <td class="text-center fw-heavy">#${r.S_No}</td>
+                  <td class="fw-bold text-primary">${r.InvoiceID || '#---'}</td>
+                  <td class="fw-heavy text-dark" style="font-size: 13px;">${r.Patient}</td>
+                  <td>${r.CreatedDate}</td>
+                  <td>${r.DueDate}</td>
+                  <td class="text-center fw-bold text-success" style="font-size: 13px;">${r.Amount}</td>
+                  <td class="text-center"><span class="badge-custom text-uppercase">${r.Status}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="mt-5 pt-4 text-center border-top text-muted small">
+            <p class="mb-1 fw-bold" style="color: #64748b; letter-spacing: 0.5px;">2025 &copy; <span style="color: #4f46e5;">Docyari</span>, All Rights Reserved</p>
+            <p class="mt-1 opacity-50" style="font-size: 10px;">End of Report. Confidential Financial Ledger.</p>
+          </div>
+
+          <script>
+            window.onload = () => { setTimeout(() => { window.print(); }, 500); };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(reportHtml);
+    printWindow.document.close();
+  };
 
   const data = filteredData.map((inv, index) => ({
     key: inv.id,
@@ -260,36 +395,36 @@ const InvoicesList = () => {
                 value={filterDate}
               />
 
-              {/* Export Dropdown */}
+              {/* Download & Print Dropdown */}
               <div className="dropdown">
                 <Link
                   to="#"
-                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
-                  style={{ minWidth: "100px", minHeight: "38px" }}
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap px-3"
+                  style={{ minWidth: "190px", minHeight: "38px" }}
                   data-bs-toggle="dropdown"
                 >
                   <span className="text-truncate">
-                    <i className="ti ti-download me-1" /> Export
+                    <i className="ti ti-printer me-1" /> Download & Print
                   </span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li>
-                    <Link
-                      to="#"
-                      className="dropdown-item rounded-1"
-                      onClick={(e) => e.preventDefault()}
+                    <button
+                      className="dropdown-item rounded-1 d-flex align-items-center"
+                      onClick={handleDownloadPDF}
+                      style={{ border: 'none', background: 'none', width: '100%', textAlign: 'left' }}
                     >
-                      Download as PDF
-                    </Link>
+                      <i className="ti ti-file-text me-2" /> Download as PDF
+                    </button>
                   </li>
                   <li>
-                    <Link
-                      to="#"
-                      className="dropdown-item rounded-1"
-                      onClick={(e) => e.preventDefault()}
+                    <button
+                      className="dropdown-item rounded-1 d-flex align-items-center"
+                      onClick={handleDownloadPDF}
+                      style={{ border: 'none', background: 'none', width: '100%', textAlign: 'left' }}
                     >
-                      Download as Excel
-                    </Link>
+                      <i className="ti ti-printer me-2" /> Print report
+                    </button>
                   </li>
                 </ul>
               </div>

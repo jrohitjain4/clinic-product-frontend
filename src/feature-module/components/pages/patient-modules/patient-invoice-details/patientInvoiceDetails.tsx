@@ -174,35 +174,67 @@ const PatientInvoiceDetails = () => {
                                                     <title>Invoice - ${invoice.invoiceCode || 'Record'}</title>
                                                     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
                                                     <style>
-                                                        body { background: #fff; padding: 40px; font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; }
-                                                        .inv-header { border-bottom: 2px solid #4f46e5; margin-bottom: 40px; padding-bottom: 20px; }
-                                                        .info-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 700; }
+                                                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                                                        body { background: #fff; padding: 30px; font-family: 'Inter', sans-serif; color: #0f172a; }
+                                                        .header-banner {
+                                                            background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+                                                            color: #ffffff !important;
+                                                            padding: 24px !important;
+                                                            border-radius: 8px !important;
+                                                            margin-bottom: 25px !important;
+                                                            display: flex;
+                                                            justify-content: space-between;
+                                                            align-items: center;
+                                                            -webkit-print-color-adjust: exact;
+                                                            print-color-adjust: exact;
+                                                        }
+                                                        .header-banner h4 { color: #ffffff !important; font-weight: 700; margin: 0 0 4px 0; font-size: 22px; }
+                                                        .header-banner p { color: #e0f2fe !important; margin: 0; font-size: 13px; }
+                                                        .header-banner h6 { color: #ffffff !important; margin: 8px 0 2px 0; font-size: 15px; font-weight: 600; }
+                                                        .logo-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+                                                        .info-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 700; }
                                                         .info-value { font-size: 14px; font-weight: 700; color: #1e293b; }
-                                                        .table th { background: #f8fafc !important; color: #64748b !important; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; padding: 15px 12px; border-bottom: 2px solid #e2e8f0; }
-                                                        .table td { padding: 15px 12px; font-size: 13px; border-color: #f1f5f9; }
-                                                        .total-box { background: #f8fafc; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; }
+                                                        
+                                                        /* Dark Styled Tables */
+                                                        .table-bordered { border: 2px solid #0f172a !important; }
+                                                        .table th { background: #0f172a !important; color: #ffffff !important; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 10px; border: 2px solid #0f172a !important; font-weight: 700; }
+                                                        .table td { padding: 12px 10px; font-size: 13px; border: 1px solid #334155 !important; color: #0f172a !important; font-weight: 600; }
+                                                        
+                                                        .total-box { background: #f8fafc; padding: 25px; border-radius: 12px; border: 2px solid #0f172a; }
                                                         .badge-paid { background: #ecfdf5; color: #059669; padding: 6px 16px; border-radius: 50px; font-weight: 800; font-size: 11px; }
                                                         .badge-unpaid { background: #fff7ed; color: #ea580c; padding: 6px 16px; border-radius: 50px; font-weight: 800; font-size: 11px; }
-                                                        @media print { body { padding: 0; } .no-print { display: none; } }
+                                                        @media print { 
+                                                            body { padding: 0; } 
+                                                            .no-print { display: none; }
+                                                            .header-banner {
+                                                                background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+                                                                -webkit-print-color-adjust: exact;
+                                                                print-color-adjust: exact;
+                                                            }
+                                                        }
                                                     </style>
                                                 </head>
                                                 <body>
-                                                    <div class="d-flex justify-content-between align-items-start inv-header">
-                                                        <div class="d-flex gap-3 align-items-center">
-                                                            <div style="width: 70px; height: 70px; border: 1px dashed #4f46e5; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fff;">
-                                                                <img src="${resolveMediaUrl(invoice.clinic?.landingPage?.logo) || '/logo.png'}" alt="logo" style="max-height: 50px; max-width: 50px; object-fit: contain;">
+                                                    <div class="header-banner">
+                                                        <div class="d-flex align-items-center gap-3">
+                                                            <div class="logo-box">
+                                                                <img src="${resolveMediaUrl(invoice.clinic?.landingPage?.logo) || '/logo.png'}" alt="logo" style="max-height: 55px; max-width: 55px; object-fit: contain;">
                                                             </div>
                                                             <div>
-                                                                <h2 class="fw-bold text-primary mb-1 mt-1">OFFICIAL INVOICE</h2>
-                                                                <p class="text-muted small mb-0">Record Reference: <strong>${invoice.invoiceCode || "#INV-0001"}</strong></p>
+                                                                <h4>${invoice.clinic?.name || invoice.clinicName || "Docyari Healthcare"}</h4>
+                                                                <p><i class="ti ti-map-pin"></i> ${invoice.clinic?.landingPage?.address || 'Clinic Support Network'}</p>
+                                                                <h6 class="text-white opacity-90 mt-2" style="font-size: 14px; font-weight: bold;">OFFICIAL INVOICE</h6>
+                                                                <p class="mb-0 opacity-80" style="font-size: 12px;">Ref: ${invoice.invoiceCode || "#INV-0001"}</p>
                                                             </div>
                                                         </div>
-                                                        <div class="text-end">
-                                                            <h4 class="fw-bold mb-1" style="color: #1e293b;">${invoice.clinic?.name || invoice.clinicName || "Docyari Healthcare"}</h4>
-                                                            <p class="text-muted small mb-1">${invoice.clinic?.landingPage?.address || 'Clinic Support Network'}</p>
-                                                            <span class="${invoice.paymentStatus === 'Paid' ? 'badge-paid' : 'badge-unpaid'} text-uppercase">
+                                                        <div class="text-end text-white">
+                                                            <span class="${invoice.paymentStatus === 'Paid' ? 'badge bg-success text-white' : 'badge bg-warning text-dark'} fw-bold px-3 py-2 mb-2 text-uppercase" style="font-size: 12px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                                                 ${invoice.paymentStatus || 'PENDING'}
                                                             </span>
+                                                            <div class="small mt-1 opacity-90">
+                                                                <div class="mb-1"><strong>Billing Date:</strong> ${dayjs(invoice.invoiceDate).format("DD MMM YYYY")}</div>
+                                                                <div><strong>Due Date:</strong> ${dayjs(invoice.dueDate).format("DD MMM YYYY")}</div>
+                                                            </div>
                                                         </div>
                                                     </div>
 

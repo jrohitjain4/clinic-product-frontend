@@ -157,6 +157,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   const [showAwards, setShowAwards] = useState(false);
   const [showCertifications, setShowCertifications] = useState(false);
   const [showDocuments, setShowDocuments] = useState(false);
+  const [showOptionalFields, setShowOptionalFields] = useState(false);
 
   const serializeSchedules = (raw: Record<string, RowType[]>) => {
     const out: Record<string, { session: string; from: string; to: string }[]> = {};
@@ -177,6 +178,16 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   const [error, setError] = useState<string | null>(null);
   const [phoneWarning, setPhoneWarning] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Quick Add State
+  const [showQuickAddDeptModal, setShowQuickAddDeptModal] = useState(false);
+  const [quickDeptName, setQuickDeptName] = useState("");
+  const [isSubmittingQuickDept, setIsSubmittingQuickDept] = useState(false);
+
+  const [showQuickAddDesigModal, setShowQuickAddDesigModal] = useState(false);
+  const [quickDesigName, setQuickDesigName] = useState("");
+  const [quickDesigDeptId, setQuickDesigDeptId] = useState("");
+  const [isSubmittingQuickDesig, setIsSubmittingQuickDesig] = useState(false);
 
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const [initialUsername, setInitialUsername] = useState("");
@@ -659,7 +670,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
     return (
       <div className="page-wrapper">
         <div className="content">
-          <Link to={all_routes.doctors} className="btn btn-light mb-3">
+          <Link to={all_routes.doctors} className="btn btn-light mb-2">
             Back to Doctors
           </Link>
           <div className="alert alert-danger">{error}</div>
@@ -675,7 +686,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
           <div className="row">
             <div className="col-lg-10 mx-auto">
               {/* Page Header */}
-              <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
+              <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-2 pb-3 border-bottom">
                 <div className="flex-grow-1">
                   <h6 className="fw-bold mb-0 d-flex align-items-center">
                     <Link to={all_routes.doctors}>
@@ -688,7 +699,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
 
               <div className="card">
                 <div className="card-body">
-                  <div className="border-bottom d-flex align-items-center justify-content-between pb-3 mb-3">
+                  <div className="border-bottom d-flex align-items-center justify-content-between pb-3 mb-2">
                     <h5 className="offcanvas-title fs-18 fw-bold">
                       {isEdit ? "Edit Doctor" : "New Doctor"}
                     </h5>
@@ -696,14 +707,14 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
 
                   <form onSubmit={handleSubmit}>
                     {/* -- Contact Information ----------------- */}
-                    <div className="bg-light px-3 py-2 mb-3">
+                    <div className="bg-light px-3 py-2 mb-2">
                       <h6 className="fw-bold mb-0">Contact Information</h6>
                     </div>
                     <div className="pb-0">
                       <div className="row">
                         {/* Profile Image */}
                         <div className="col-lg-12">
-                          <div className="mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2" style={{ marginBottom: "2px" }}>
                             <div className="d-flex align-items-center">
                               <label className="form-label me-3 mb-0">Profile Image</label>
                               <DoctorProfileUpload
@@ -747,8 +758,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         <div className="col-lg-12">
                           <div className="row">
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">
                                   Name <span className="text-danger">*</span>
                                 </label>
                                 <input
@@ -761,8 +772,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">
                                   Username <span className="text-danger">*</span>
                                 </label>
                                 <input
@@ -772,7 +783,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                   onChange={(e) => setUsername(e.target.value)}
                                   placeholder="username"
                                 />
-                                <div className="mt-1 d-flex flex-column" style={{ minHeight: "20px" }}>
+                                <div className="d-flex flex-column" style={{ minHeight: "0px", marginTop: "2px" }}>
                                   {usernameWarning && (
                                     <span className="text-danger fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
                                       <i className="ti ti-alert-triangle me-1" /> {usernameWarning}
@@ -799,8 +810,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
 
                             {/* Phone + Email */}
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">
                                   Phone Number <span className="text-danger">*</span>
                                 </label>
                                 <div>
@@ -819,8 +830,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">
                                   Email Address <span className="text-danger">*</span>
                                 </label>
                                 <input
@@ -839,8 +850,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         <div className="col-lg-12">
                           <div className="row">
                             <div className="col-lg-4">
-                              <div className="mb-3">
-                                <label className="form-label">
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">
                                   DOB <span className="text-danger">*</span>
                                 </label>
                                 <div className="input-icon-end position-relative">
@@ -860,8 +871,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-4">
-                              <div className="mb-3">
-                                <label className="form-label">
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">
                                   Age
                                 </label>
                                 <input
@@ -874,8 +885,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-4">
-                              <div className="mb-3">
-                                <label className="form-label">
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">
                                   Year Of Experience <span className="text-danger">*</span>
                                 </label>
                                 <input
@@ -895,10 +906,19 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         <div className="col-lg-12">
                           <div className="row">
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">
-                                  Department <span className="text-danger ms-1">*</span>
-                                </label>
+                              <div style={{ marginBottom: "2px" }}>
+                                <div className="d-flex align-items-center justify-content-between mb-1">
+                                  <label className="form-label mb-0">
+                                    Department <span className="text-danger">*</span>
+                                  </label>
+                                  <button
+                                    type="button"
+                                    className="btn btn-link p-0 text-primary fw-bold fs-12 text-decoration-none"
+                                    onClick={() => setShowQuickAddDeptModal(true)}
+                                  >
+                                    <i className="ti ti-plus me-1" />Quick Add
+                                  </button>
+                                </div>
                                 {isLoadingDepartments ? (
                                   <div className="form-control text-muted d-flex align-items-center gap-2">
                                     <span className="spinner-border spinner-border-sm" role="status" />
@@ -920,10 +940,22 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">
-                                  Designation <span className="text-danger ms-1">*</span>
-                                </label>
+                              <div style={{ marginBottom: "2px" }}>
+                                <div className="d-flex align-items-center justify-content-between mb-1">
+                                  <label className="form-label mb-0">
+                                    Designation <span className="text-danger">*</span>
+                                  </label>
+                                  <button
+                                    type="button"
+                                    className="btn btn-link p-0 text-primary fw-bold fs-12 text-decoration-none"
+                                    onClick={() => {
+                                      setQuickDesigDeptId(departmentId || (departments[0]?.id || ""));
+                                      setShowQuickAddDesigModal(true);
+                                    }}
+                                  >
+                                    <i className="ti ti-plus me-1" />Quick Add
+                                  </button>
+                                </div>
                                 {departmentId && desigOptions.length > 0 ? (
                                   <CommonSelect
                                     key={departmentId}
@@ -945,12 +977,107 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
                         </div>
 
-                        {/* Specialization + Qualification */}
-                        <div className="col-lg-12">
+                      </div>
+                    </div>
+
+                    {/* -- Address Information ----------------- */}
+                    <div className="bg-light px-3 py-2 mb-2">
+                      <h6 className="fw-bold mb-0">Address Information</h6>
+                    </div>
+                    <div className="pb-0">
+                      <div className="row">
+                        <div className="col-lg-6">
+                          <div style={{ marginBottom: "2px" }}>
+                            <label className="form-label mb-0">Address 1 <span className="text-danger ms-1">*</span></label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={address1}
+                              onChange={(e) => setAddress1(e.target.value)}
+                              placeholder="House No, Building, Street Name"
+                            />
+                          </div>
+                        </div>
+                        <div className="col-lg-6">
+                          <div style={{ marginBottom: "2px" }}>
+                            <label className="form-label mb-0">Address 2 (Optional)</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={address2}
+                              onChange={(e) => setAddress2(e.target.value)}
+                              placeholder="Landmark, Area, Colony"
+                            />
+                          </div>
+                        </div>
+                        <div className="col-lg-6">
+                          <div style={{ marginBottom: "2px" }}>
+                            <label className="form-label mb-0">Country</label>
+                            <CommonSelect
+                              options={Country}
+                              className="select"
+                              value={findSelectOption(Country, country) || { value: "India", label: "India" }}
+                              onChange={(opt: any) => setCountry(opt?.value || "")}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-lg-6">
+                          <div style={{ marginBottom: "2px" }}>
+                            <label className="form-label mb-0">State <span className="text-danger ms-1">*</span></label>
+                            <CommonSelect
+                              options={State}
+                              className="select"
+                              value={findSelectOption(State, stateVal) || State[0]}
+                              onChange={(opt: any) => setStateVal(opt?.value || "")}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-lg-6">
+                          <div style={{ marginBottom: "2px" }}>
+                            <label className="form-label mb-0">City <span className="text-danger ms-1">*</span></label>
+                            <CommonSelect
+                              options={City}
+                              className="select"
+                              value={findSelectOption(City, city) || City[0]}
+                              onChange={(opt: any) => setCity(opt?.value || "")}
+                            />
+                          </div>
+                        </div>
+                        <div className="col-lg-6">
+                          <div style={{ marginBottom: "2px" }}>
+                            <label className="form-label mb-0">Pincode <span className="text-danger ms-1">*</span></label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={pincode}
+                              onChange={(e) => setPincode(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* -- Additional Details (Optional, Collapsible) -- */}
+                    <div className="border rounded mb-2 mx-0 bg-white">
+                      <div
+                        className="bg-light px-3 py-2 d-flex align-items-center justify-content-between"
+                        onClick={() => setShowOptionalFields(!showOptionalFields)}
+                        style={{ cursor: "pointer", userSelect: "none", borderRadius: showOptionalFields ? "0.375rem 0.375rem 0 0" : "0.375rem" }}
+                      >
+                        <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                          <i className="ti ti-list-details text-primary fs-18" />
+                          Additional Details
+                          <span className="badge bg-soft-secondary text-muted fw-normal fs-11 ms-1">Optional</span>
+                        </h6>
+                        <i className={`ti ${showOptionalFields ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-dark`} />
+                      </div>
+                      {showOptionalFields && (
+                        <div className="p-3">
                           <div className="row">
+                            {/* Specialization + Qualification */}
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">Specializations</label>
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">Specializations</label>
                                 {specOptions.length > 0 ? (
                                   <CommonSelect
                                     options={specOptions}
@@ -972,8 +1099,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">Qualification</label>
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">Qualification</label>
                                 <input
                                   type="text"
                                   className="form-control"
@@ -983,15 +1110,11 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                 />
                               </div>
                             </div>
-                          </div>
-                        </div>
 
-                        {/* Marital Status + License */}
-                        <div className="col-lg-12">
-                          <div className="row">
+                            {/* Marital Status + License */}
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">Marital Status</label>
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">Marital Status</label>
                                 <CommonSelect
                                   options={[
                                     { value: "Single", label: "Single" },
@@ -1010,10 +1133,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">
-                                  Medical License Number
-                                </label>
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">Medical License Number</label>
                                 <input
                                   type="text"
                                   className="form-control"
@@ -1023,9 +1144,11 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                 />
                               </div>
                             </div>
+
+                            {/* Languages + Alt Contact */}
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">Language Spoken</label>
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">Language Spoken</label>
                                 <TagInput
                                   key={`tags-${educationKey}`}
                                   initialTags={tags}
@@ -1034,8 +1157,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">Alternative Contact No</label>
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">Alternative Contact No</label>
                                 <input
                                   type="text"
                                   className="form-control"
@@ -1045,15 +1168,11 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                 />
                               </div>
                             </div>
-                          </div>
-                        </div>
 
-                        {/* Blood Group + Gender */}
-                        <div className="col-lg-12">
-                          <div className="row">
+                            {/* Blood Group + Gender */}
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">
                                   Blood Group <span className="text-danger ms-1">*</span>
                                 </label>
                                 <CommonSelect
@@ -1068,8 +1187,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">
                                   Gender <span className="text-danger ms-1">*</span>
                                 </label>
                                 <CommonSelect
@@ -1080,103 +1199,26 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                 />
                               </div>
                             </div>
-                          </div>
-                        </div>
 
-                        {/* Bio + Feature on website toggle */}
-                        <div className="col-lg-12">
-                          <div className="mb-3">
-                            <label className="form-label">Bio</label>
-                            <textarea
-                              className="form-control"
-                              rows={3}
-                              value={bio}
-                              onChange={(e) => setBio(e.target.value)}
-                            />
+                            {/* Bio */}
+                            <div className="col-lg-12">
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">Bio</label>
+                                <textarea
+                                  className="form-control"
+                                  rows={3}
+                                  value={bio}
+                                  onChange={(e) => setBio(e.target.value)}
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* -- Address Information ----------------- */}
-                    <div className="bg-light px-3 py-2 mb-3">
-                      <h6 className="fw-bold mb-0">Address Information</h6>
-                    </div>
-                    <div className="pb-0">
-                      <div className="row">
-                        <div className="col-lg-6">
-                          <div className="mb-3">
-                            <label className="form-label">Address 1 <span className="text-danger ms-1">*</span></label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={address1}
-                              onChange={(e) => setAddress1(e.target.value)}
-                              placeholder="House No, Building, Street Name"
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6">
-                          <div className="mb-3">
-                            <label className="form-label">Address 2 (Optional)</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={address2}
-                              onChange={(e) => setAddress2(e.target.value)}
-                              placeholder="Landmark, Area, Colony"
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6">
-                          <div className="mb-3">
-                            <label className="form-label">Country</label>
-                            <CommonSelect
-                              options={Country}
-                              className="select"
-                              value={findSelectOption(Country, country) || { value: "India", label: "India" }}
-                              onChange={(opt: any) => setCountry(opt?.value || "")}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6">
-                          <div className="mb-3">
-                            <label className="form-label">State <span className="text-danger ms-1">*</span></label>
-                            <CommonSelect
-                              options={State}
-                              className="select"
-                              value={findSelectOption(State, stateVal) || State[0]}
-                              onChange={(opt: any) => setStateVal(opt?.value || "")}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6">
-                          <div className="mb-3">
-                            <label className="form-label">City <span className="text-danger ms-1">*</span></label>
-                            <CommonSelect
-                              options={City}
-                              className="select"
-                              value={findSelectOption(City, city) || City[0]}
-                              onChange={(opt: any) => setCity(opt?.value || "")}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6">
-                          <div className="mb-3">
-                            <label className="form-label">Pincode <span className="text-danger ms-1">*</span></label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={pincode}
-                              onChange={(e) => setPincode(e.target.value)}
-                            />
-                          </div>
-                        </div>
-                      </div>
+                      )}
                     </div>
 
                     {/* -- Schedule --------------------------- */}
-                    <div className="bg-light px-3 py-2 mb-3">
+                    <div className="bg-light px-3 py-2 mb-2">
                       <h6 className="fw-bold mb-0">Schedule</h6>
                     </div>
                     <div className="p-3 bg-white rounded shadow-sm border mx-3 my-3" style={{ overflow: "visible" }}>
@@ -1222,7 +1264,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                             id={`schedule-${i + 1}`}
                             role="tabpanel"
                           >
-                            <div className="add-schedule-list border rounded p-4 bg-light border-dashed mb-3 position-relative">
+                            <div className="add-schedule-list border rounded p-4 bg-light border-dashed mb-2 position-relative">
                               <div className="d-flex align-items-center justify-content-between mb-4">
                                 <div>
                                   <h6 className="fw-bold mb-1 text-primary">{day} Working Hours</h6>
@@ -1347,7 +1389,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
 
                     {/* -- Document Information ----------------- */}
                     <div 
-                      className="bg-light px-3 py-2 mb-3 d-flex align-items-center justify-content-between"
+                      className="bg-light px-3 py-2 mb-2 d-flex align-items-center justify-content-between"
                       onClick={() => setShowDocuments(!showDocuments)}
                       style={{ cursor: "pointer", userSelect: "none" }}
                     >
@@ -1358,7 +1400,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       <div className="p-3">
                         <div className="row">
                           {/* Row 1 */}
-                          <div className="col-lg-6 mb-3">
+                          <div className="col-lg-6 mb-2">
                             <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
                               <label className="form-label mb-0 fw-bold text-dark">Doctor Signature (Optional)</label>
                               <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
@@ -1366,7 +1408,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                           </div>
-                          <div className="col-lg-6 mb-3">
+                          <div className="col-lg-6 mb-2">
                             <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
                               <label className="form-label mb-0 fw-bold text-dark">Medical Reg. Certificate (Optional)</label>
                               <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
@@ -1376,7 +1418,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
 
                           {/* Row 2 */}
-                          <div className="col-lg-6 mb-3">
+                          <div className="col-lg-6 mb-2">
                             <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
                               <label className="form-label mb-0 fw-bold text-dark">Qualification Certificate (Optional)</label>
                               <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
@@ -1384,7 +1426,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                           </div>
-                          <div className="col-lg-6 mb-3">
+                          <div className="col-lg-6 mb-2">
                             <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
                               <label className="form-label mb-0 fw-bold text-dark">Aadhaar Card Front (Optional)</label>
                               <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
@@ -1394,7 +1436,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
 
                           {/* Row 3 */}
-                          <div className="col-lg-6 mb-3">
+                          <div className="col-lg-6 mb-2">
                             <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
                               <label className="form-label mb-0 fw-bold text-dark">PAN Card (Optional)</label>
                               <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
@@ -1402,7 +1444,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                           </div>
-                          <div className="col-lg-6 mb-3">
+                          <div className="col-lg-6 mb-2">
                             <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
                               <label className="form-label mb-0 fw-bold text-dark">Aadhaar Card Back (Optional)</label>
                               <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
@@ -1414,7 +1456,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       </div>
                     )}
 
-                    <div className="bg-light px-3 py-2 mb-3 d-flex align-items-center justify-content-between">
+                    <div className="bg-light px-3 py-2 mb-2 d-flex align-items-center justify-content-between">
                       <h6 className="fw-bold mb-0">Appointment Information</h6>
                       <div className="form-check form-switch mb-0">
                         <label className="form-check-label fs-14 fw-medium me-2" htmlFor="acceptingAppointments">
@@ -1434,8 +1476,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       <div className="row">
                         {/* All 4 fields on one row to reduce empty space */}
                         <div className="col-lg-3">
-                          <div className="mb-3">
-                            <label className="form-label">Appointment Type</label>
+                          <div style={{ marginBottom: "2px" }}>
+                            <label className="form-label mb-0">Appointment Type</label>
                             <CommonSelect
                               options={Appointment_Type}
                               className="select"
@@ -1449,8 +1491,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
                         </div>
                         <div className="col-lg-3">
-                          <div className="mb-3">
-                            <label className="form-label">Accept bookings (in Advance)</label>
+                          <div style={{ marginBottom: "2px" }}>
+                            <label className="form-label mb-0">Accept bookings (in Advance)</label>
                             <input
                               type="number"
                               className="form-control"
@@ -1463,8 +1505,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
                         </div>
                         <div className="col-lg-3">
-                          <div className="mb-3">
-                            <label className="form-label">Appointment Duration</label>
+                          <div style={{ marginBottom: "2px" }}>
+                            <label className="form-label mb-0">Appointment Duration</label>
                             <input
                               type="number"
                               className="form-control"
@@ -1477,8 +1519,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </div>
                         </div>
                         <div className="col-lg-3">
-                          <div className="mb-3">
-                            <label className="form-label">Consultation Charge</label>
+                          <div style={{ marginBottom: "2px" }}>
+                            <label className="form-label mb-0">Consultation Charge</label>
                             <input
                               type="number"
                               className="form-control"
@@ -1495,13 +1537,13 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                     </div>
 
                     {/* -- Follow-up Information ------------- */}
-                    <div className="bg-light px-3 py-2 mb-3">
+                    <div className="bg-light px-3 py-2 mb-2">
                       <h6 className="fw-bold mb-0">Follow-up Settings</h6>
                     </div>
                     <div className="pb-0">
                       <div className="row">
                         <div className="col-lg-12">
-                          <div className="form-check form-switch mb-3">
+                          <div className="form-check form-switch mb-2">
                             <label className="form-check-label" htmlFor="followUpEnabled">
                               Follow-up Enabled
                             </label>
@@ -1518,8 +1560,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         {followUpEnabled && (
                           <>
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">Follow-up Validity</label>
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">Follow-up Validity</label>
                                 <input
                                   type="number"
                                   className="form-control"
@@ -1531,7 +1573,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div className="mb-3">
+                              <div style={{ marginBottom: "2px" }}>
                                 <label className="form-label d-flex align-items-center gap-2">
                                   Free Follow-up Limit
                                   <span className="badge bg-soft-info text-info fw-normal fs-12">
@@ -1549,8 +1591,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
                             <div className="col-lg-6">
-                              <div className="mb-3">
-                                <label className="form-label">Follow-up Fee (₹)</label>
+                              <div style={{ marginBottom: "2px" }}>
+                                <label className="form-label mb-0">Follow-up Fee (₹)</label>
                                 <input
                                   type="number"
                                   className="form-control"
@@ -1632,7 +1674,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                 ></button>
               </div>
               <div className="modal-body p-4 text-center">
-                <div className="mb-3">
+                <div style={{ marginBottom: "2px" }}>
                   <span className="avatar avatar-xl bg-primary-light text-primary rounded-circle">
                     <i className="ti ti-briefcase fs-36" />
                   </span>
@@ -1665,8 +1707,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                     type="button"
                     className="btn btn-primary px-4 shadow-sm"
                     onClick={() => {
-                      setShowErrorModal(false);
-                      navigate(all_routes.hrmDepartments, { state: { openAddModal: true } });
+                      setShowQuickAddDeptModal(true);
                     }}
                     style={{ borderRadius: '8px' }}
                   >
@@ -1677,14 +1718,169 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                     type="button"
                     className="btn btn-primary px-4 shadow-sm"
                     onClick={() => {
-                      setShowErrorModal(false);
-                      navigate(all_routes.designation, { state: { openAddModal: true } });
+                      setQuickDesigDeptId(departments[0]?.id || "");
+                      setShowQuickAddDesigModal(true);
                     }}
                     style={{ borderRadius: '8px' }}
                   >
                     Add Designation <i className="ti ti-plus ms-1" />
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* --- Quick Add Department Modal --- */}
+      {showQuickAddDeptModal && (
+        <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }} role="dialog">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px' }}>
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title fw-bold">Add Department</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowQuickAddDeptModal(false)}></button>
+              </div>
+              <div className="modal-body p-4">
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Department Name <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Enter department name"
+                    value={quickDeptName}
+                    onChange={(e) => setQuickDeptName(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="modal-footer border-top-0 pt-0 pb-4 d-flex justify-content-end gap-2">
+                <button type="button" className="btn btn-light px-4 border" onClick={() => setShowQuickAddDeptModal(false)}>Cancel</button>
+                <button
+                  type="button"
+                  className="btn btn-primary px-4 shadow-sm"
+                  disabled={isSubmittingQuickDept}
+                  onClick={async () => {
+                    if (!quickDeptName.trim()) {
+                      toast.error("Department name is required.");
+                      return;
+                    }
+                    setIsSubmittingQuickDept(true);
+                    try {
+                      const token = localStorage.getItem("token");
+                      const res = await fetch(apiUrl("/api/departments"), {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                        body: JSON.stringify({ name: quickDeptName, status: "Active" }),
+                      });
+                      if (!res.ok) {
+                        const data = await res.json();
+                        throw new Error(data.message || "Failed to create department");
+                      }
+                      const newDept = await res.json();
+                      toast.success("Department added successfully!");
+                      const fetchRes = await fetch(apiUrl("/api/departments"), { headers: { Authorization: `Bearer ${token}` } });
+                      const depts = await fetchRes.json();
+                      if (Array.isArray(depts)) {
+                        const active = depts.filter((d: any) => d.status === "Active");
+                        setDepartments(active);
+                      }
+                      setDepartmentId(newDept.id);
+                      setQuickDeptName("");
+                      setShowQuickAddDeptModal(false);
+                      setShowErrorModal(false);
+                    } catch (err: any) {
+                      toast.error(err.message);
+                    } finally {
+                      setIsSubmittingQuickDept(false);
+                    }
+                  }}
+                >
+                  {isSubmittingQuickDept ? "Adding..." : "Add Department"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- Quick Add Designation Modal --- */}
+      {showQuickAddDesigModal && (
+        <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }} role="dialog">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px' }}>
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title fw-bold">Add Designation</h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowQuickAddDesigModal(false)}></button>
+              </div>
+              <div className="modal-body p-4">
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Designation Name <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Enter designation name"
+                    value={quickDesigName}
+                    onChange={(e) => setQuickDesigName(e.target.value)}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Department <span className="text-danger">*</span></label>
+                  <CommonSelect
+                    options={deptOptions}
+                    className="select"
+                    value={deptOptions.find(o => o.value === quickDesigDeptId) || null}
+                    onChange={(opt: any) => setQuickDesigDeptId(opt?.value || "")}
+                    placeholder="Select Department"
+                  />
+                </div>
+              </div>
+              <div className="modal-footer border-top-0 pt-0 pb-4 d-flex justify-content-end gap-2">
+                <button type="button" className="btn btn-light px-4 border" onClick={() => setShowQuickAddDesigModal(false)}>Cancel</button>
+                <button
+                  type="button"
+                  className="btn btn-primary px-4 shadow-sm"
+                  disabled={isSubmittingQuickDesig}
+                  onClick={async () => {
+                    if (!quickDesigName.trim()) {
+                      toast.error("Designation name is required.");
+                      return;
+                    }
+                    if (!quickDesigDeptId) {
+                      toast.error("Please select a department for this designation.");
+                      return;
+                    }
+                    setIsSubmittingQuickDesig(true);
+                    try {
+                      const token = localStorage.getItem("token");
+                      const res = await fetch(apiUrl("/api/designations"), {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                        body: JSON.stringify({ name: quickDesigName, departmentId: quickDesigDeptId, status: "Active" }),
+                      });
+                      if (!res.ok) {
+                        const data = await res.json();
+                        throw new Error(data.message || "Failed to create designation");
+                      }
+                      const newDesig = await res.json();
+                      toast.success("Designation added successfully!");
+                      const fetchRes = await fetch(apiUrl("/api/designations"), { headers: { Authorization: `Bearer ${token}` } });
+                      const desigs = await fetchRes.json();
+                      if (Array.isArray(desigs)) {
+                        setAllDesignations(desigs);
+                      }
+                      setDepartmentId(quickDesigDeptId);
+                      setDesignationId(newDesig.id);
+                      setQuickDesigName("");
+                      setShowQuickAddDesigModal(false);
+                      setShowErrorModal(false);
+                    } catch (err: any) {
+                      toast.error(err.message);
+                    } finally {
+                      setIsSubmittingQuickDesig(false);
+                    }
+                  }}
+                >
+                  {isSubmittingQuickDesig ? "Adding..." : "Add Designation"}
+                </button>
               </div>
             </div>
           </div>

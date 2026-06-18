@@ -60,6 +60,7 @@ const Appointments = () => {
       align-items: center;
       flex-wrap: nowrap;
       gap: 4px;
+      margin-left: auto !important;
     }
     .status-btn {
       padding: 0 8px !important;
@@ -183,44 +184,70 @@ const Appointments = () => {
   const [filterFollowUp, setFilterFollowUp] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterDate, setFilterDate] = useState("");
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
   const [datePreset, setDatePreset] = useState("All"); // All, Today, Yesterday, Last 7 Days, Custom
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterDoctor, setFilterDoctor] = useState("");
   const [filterType, setFilterType] = useState("");
 
-  const tableData = useMemo(
-    () => appointments.map((a, i) => ({
-      ...appointmentToTableRow(a, i),
-      SrNo: i + 1,
-      key: a.id,
-      department: a.doctor?.department?.name || "N/A"
-    })),
-    [appointments]
-  );
+  const tableData = useMemo(() => {
+    // Group all appointments by doctor, date, and slot time to determine queue ranks
+    const groups: Record<string, ClinicAppointment[]> = {};
+
+    const sortedAppts = [...appointments].sort((a, b) => {
+      const timeA = new Date(a.scheduledAt).getTime();
+      const timeB = new Date(b.scheduledAt).getTime();
+      if (timeA !== timeB) return timeA - timeB;
+      const createA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const createB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (createA !== createB) return createA - createB;
+      return (a.id || "").localeCompare(b.id || "");
+    });
+
+    sortedAppts.forEach((a) => {
+      const dateStr = dayjs(a.scheduledAt).format("YYYY-MM-DD");
+      const timeStr = dayjs(a.scheduledAt).format("HH:mm");
+      const key = `${a.doctorId}_${dateStr}_${timeStr}`;
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(a);
+    });
+
+    return appointments.map((a, i) => {
+      const dateStr = dayjs(a.scheduledAt).format("YYYY-MM-DD");
+      const timeStr = dayjs(a.scheduledAt).format("HH:mm");
+      const key = `${a.doctorId}_${dateStr}_${timeStr}`;
+      const group = groups[key] || [];
+
+      const indexInGroup = group.findIndex((item) => item.id === a.id);
+      const queueNo = indexInGroup !== -1 ? indexInGroup + 1 : 1;
+
+      const slotStartTime = dayjs(a.scheduledAt);
+      const expectedTime = indexInGroup !== -1
+        ? slotStartTime.add(indexInGroup * 15, "minute").format("hh:mm A")
+        : slotStartTime.format("hh:mm A");
+
+      const checkinsBefore = indexInGroup !== -1
+        ? group.slice(0, indexInGroup).filter((item) => ["Checked In", "Checked Out"].includes(item.status)).length
+        : 0;
+
+      const checkinHisNo = `${checkinsBefore} / ${queueNo}`;
+
+      return {
+        ...appointmentToTableRow(a, i),
+        SrNo: i + 1,
+        key: a.id,
+        department: a.doctor?.department?.name || "N/A",
+        expectedTime,
+        checkinHisNo,
+      };
+    });
+  }, [appointments]);
 
   // Status Counts
-  const counts = useMemo(() => {
-    return {
-      all: appointments.length,
-      schedule: appointments.filter(a => a.status === "Schedule").length,
-      confirmed: appointments.filter(a => a.status === "Confirmed").length,
-      checkedIn: appointments.filter(a => a.status === "Checked In").length,
-      checkedOut: appointments.filter(a => a.status === "Checked Out").length,
-      cancelled: appointments.filter(a => a.status === "Cancelled").length,
-    };
-  }, [appointments]);
-
-  const doctorsList = useMemo(() => {
-    const names = Array.from(new Set(appointments.map(a => a.doctorName || a.doctor?.fullName)));
-    return names.filter(n => n && n !== "—").sort();
-  }, [appointments]);
-
-  const departmentsList = useMemo(() => {
-    const names = Array.from(new Set(appointments.map(a => a.doctor?.department?.name)));
-    return names.filter(n => n).sort();
-  }, [appointments]);
-
-  const filteredData = useMemo(() => {
+  const filteredSubData = useMemo(() => {
     return tableData.filter((row) => {
       const matchFollowUp = filterFollowUp === "All" || !filterFollowUp
         ? true
@@ -229,10 +256,6 @@ const Appointments = () => {
           : filterFollowUp === "Paid"
             ? row._raw.isFollowUp && row._raw.paymentStatus === "Paid"
             : row._raw.followUpStatus?.toLowerCase() === filterFollowUp.toLowerCase() || (filterFollowUp === "Follow-up" && row._raw.isFollowUp);
-
-      const matchStatus = filterStatus === "All" || !filterStatus
-        ? true
-        : row.Status.toLowerCase() === filterStatus.toLowerCase();
 
       const matchDoctor = filterDoctor
         ? row.Doctor.toLowerCase().includes(filterDoctor.toLowerCase())
@@ -247,8 +270,15 @@ const Appointments = () => {
         matchDate = rowDate.isSame(dayjs().subtract(1, 'day'), 'day');
       } else if (datePreset === "Last 7 Days") {
         matchDate = rowDate.isAfter(dayjs().subtract(7, 'day'));
-      } else if (datePreset === "Custom" && filterDate) {
-        matchDate = rowDate.format("YYYY-MM-DD") === filterDate;
+      } else if (datePreset === "Custom") {
+        const rowDateStr = rowDate.format("YYYY-MM-DD");
+        if (filterStartDate && filterEndDate) {
+          matchDate = rowDateStr >= filterStartDate && rowDateStr <= filterEndDate;
+        } else if (filterStartDate) {
+          matchDate = rowDateStr >= filterStartDate;
+        } else if (filterEndDate) {
+          matchDate = rowDateStr <= filterEndDate;
+        }
       }
 
       const matchDept = filterDepartment
@@ -258,9 +288,39 @@ const Appointments = () => {
         ? row.Mode.toLowerCase() === filterType.toLowerCase()
         : true;
 
-      return matchFollowUp && matchStatus && matchDate && matchDept && matchType && matchDoctor;
+      return matchFollowUp && matchDate && matchDept && matchType && matchDoctor;
     });
-  }, [tableData, filterFollowUp, filterStatus, filterDate, datePreset, filterDepartment, filterType, filterDoctor]);
+  }, [tableData, filterFollowUp, filterStartDate, filterEndDate, datePreset, filterDepartment, filterType, filterDoctor]);
+
+  const filteredData = useMemo(() => {
+    return filteredSubData.filter((row) => {
+      const matchStatus = filterStatus === "All" || !filterStatus
+        ? true
+        : row.Status.toLowerCase() === filterStatus.toLowerCase();
+      return matchStatus;
+    });
+  }, [filteredSubData, filterStatus]);
+
+  const counts = useMemo(() => {
+    return {
+      all: filteredSubData.length,
+      schedule: filteredSubData.filter(a => a._raw.status === "Schedule").length,
+      confirmed: filteredSubData.filter(a => a._raw.status === "Confirmed").length,
+      checkedIn: filteredSubData.filter(a => a._raw.status === "Checked In").length,
+      checkedOut: filteredSubData.filter(a => a._raw.status === "Checked Out").length,
+      cancelled: filteredSubData.filter(a => a._raw.status === "Cancelled").length,
+    };
+  }, [filteredSubData]);
+
+  const doctorsList = useMemo(() => {
+    const names = Array.from(new Set(appointments.map(a => a.doctorName || a.doctor?.fullName)));
+    return names.filter(n => n && n !== "—").sort();
+  }, [appointments]);
+
+  const departmentsList = useMemo(() => {
+    const names = Array.from(new Set(appointments.map(a => a.doctor?.department?.name)));
+    return names.filter(n => n).sort();
+  }, [appointments]);
 
   const handlePrintAppointment = (a: ClinicAppointment) => {
     const printWindow = window.open('', '_blank');
@@ -271,100 +331,147 @@ const Appointments = () => {
           <title>Appointment Summary - ${a.appointmentCode || 'Record'}</title>
           <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
           <style>
-            body { background: #fff; padding: 40px; font-family: 'Inter', sans-serif; color: #000; }
-            .logo-box { width: 80px; height: 80px; border: 1px dashed #4f46e5; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fff; }
-            .patient-infobar { background: #f8f9fa; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 10px 20px; margin-bottom: 30px; }
-            .section-title { font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 15px; font-size: 11px; color: #64748b; letter-spacing: 0.5px; }
-            @media print { .no-print { display: none; } body { padding: 0; } }
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            body { background: #fff; padding: 30px; font-family: 'Inter', sans-serif; color: #0f172a; }
+            .header-banner {
+              background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+              color: #ffffff !important;
+              padding: 24px !important;
+              border-radius: 8px !important;
+              margin-bottom: 25px !important;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .header-banner h4 { color: #ffffff !important; font-weight: 700; margin: 0 0 4px 0; font-size: 22px; }
+            .header-banner p { color: #e0f2fe !important; margin: 0; font-size: 13px; }
+            .header-banner h6 { color: #ffffff !important; margin: 8px 0 2px 0; font-size: 15px; font-weight: 600; }
+            .logo-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+            .section-title { font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #0f172a !important; padding-bottom: 8px; margin-bottom: 15px; font-size: 12px; color: #0f172a !important; letter-spacing: 0.5px; }
+            
+            /* Dark Styled Tables */
+            .table-bordered { border: 2px solid #0f172a !important; }
+            .table-bordered th { 
+              background-color: #0f172a !important; 
+              color: #ffffff !important; 
+              border: 2px solid #0f172a !important; 
+              font-weight: 700; 
+              font-size: 12px; 
+              letter-spacing: 0.5px; 
+              padding: 12px 10px !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .table-bordered td { border: 1px solid #334155 !important; color: #0f172a !important; font-weight: 600; font-size: 13px; padding: 12px 10px !important; }
+            
+            .text-primary { color: #1e3a8a !important; }
+            .clinical-findings { border: 2px solid #0f172a !important; padding: 20px; background: #f8fafc; min-height: 120px; line-height: 1.6; font-size: 13px; color: #000000 !important; font-weight: 500; border-radius: 6px; }
+            @media print { 
+              .no-print { display: none; } 
+              body { padding: 0; }
+              .header-banner {
+                background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .table-bordered th {
+                background-color: #0f172a !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+            }
           </style>
         </head>
         <body>
-          <div class="d-flex justify-content-between align-items-start mb-4">
-            <div class="d-flex gap-3">
-              <div class="logo-box" style="width: 80px; height: 80px; border: 1px dashed #4f46e5; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fff;">
-                <img src="${resolveMediaUrl(a.clinic?.landingPage?.logo) || '/logo.png'}" alt="logo" style="max-height: 60px; max-width: 60px; object-fit: contain;">
+          <div class="header-banner">
+            <div class="d-flex align-items-center gap-3">
+              <div class="logo-box">
+                <img src="${resolveMediaUrl(a.clinic?.landingPage?.logo) || '/logo.png'}" alt="logo" style="max-height: 55px; max-width: 55px; object-fit: contain;">
               </div>
               <div>
-                <h4 class="fw-bold mb-1 mt-1" style="font-size: 20px;">${a.clinic?.name || a.clinicName || "DocYari Clinical Network"}</h4>
-                <p class="mb-1 text-muted small"><i class="ti ti-map-pin"></i> ${a.clinic?.landingPage?.address || a.location || "Clinic Address"}</p>
-                <h6 class="fw-bold mb-0" style="font-size: 14px;">${a.doctorName || a.doctor?.fullName}</h6>
-                <p class="text-muted small mb-0">${a.doctor?.designation?.name || "Consultant"} · ${a.doctor?.department?.name || "Medicine"}</p>
+                <h4>${a.clinic?.name || a.clinicName || "DocYari Clinical Network"}</h4>
+                <p><i class="ti ti-map-pin"></i> ${a.clinic?.landingPage?.address || a.location || "Clinic Address"}</p>
+                <h6>${a.doctorName || a.doctor?.fullName}</h6>
+                <p>${a.doctor?.designation?.name || "Consultant"} · ${a.doctor?.department?.name || "Medicine"}</p>
               </div>
             </div>
-            <div class="text-end">
-              <span class="badge bg-white text-primary border border-primary-subtle fw-bold px-3 py-2 mb-2" style="font-size: 11px; border-radius: 4px;">
+            <div class="text-end text-white">
+              <span class="badge bg-white text-primary fw-bold px-3 py-2 mb-2" style="font-size: 12px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 ${a.appointmentCode || "#---"}
               </span>
-              <div class="text-muted small mt-1">
-                <div class="mb-1 text-dark"><strong>Dept:</strong> ${a.doctor?.department?.name || "General"}</div>
-                <div class="text-dark"><strong>Date:</strong> ${new Date(a.scheduledAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+              <div class="small mt-1 opacity-90">
+                <div class="mb-1"><strong>Dept:</strong> ${a.doctor?.department?.name || "General"}</div>
+                <div><strong>Date:</strong> ${new Date(a.scheduledAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
               </div>
             </div>
           </div>
 
           <div class="mb-4">
-            <h6 class="fw-bold text-uppercase border-bottom pb-2" style="font-size: 10px; color: #64748b; letter-spacing: 1px;">Patient Clinical Profile</h6>
-            <table class="table table-bordered mb-0" style="font-size: 11px; border-color: #cbd5e1;">
-              <thead style="background: #1e293b;">
+            <h6 class="section-title">Patient Clinical Profile</h6>
+            <table class="table table-bordered mb-0">
+              <thead>
                 <tr>
-                  <th class="py-3 text-white">PATIENT NAME</th>
-                  <th class="py-3 text-center text-white">AGE / GENDER</th>
-                  <th class="py-3 text-center text-white">BLOOD GROUP</th>
-                  <th class="py-3 text-center text-white">PATIENT ID</th>
+                  <th class="text-white">PATIENT NAME</th>
+                  <th class="text-center text-white">AGE / GENDER</th>
+                  <th class="text-center text-white">BLOOD GROUP</th>
+                  <th class="text-center text-white">PATIENT ID</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td class="py-3 fw-bold text-primary" style="font-size: 14px;">${a.patientName}</td>
-                  <td class="py-3 text-center fw-bold text-dark">${a.patient?.dob ? Math.floor((new Date().getTime() - new Date(a.patient.dob).getTime()) / 31557600000) : '--'}Y / ${a.patient?.gender || '--'}</td>
-                  <td class="py-3 text-center fw-bold text-dark">${a.patient?.bloodGroup || 'N/A'}</td>
-                  <td class="py-3 text-center fw-bold text-dark">${a.patient?.patientCode || a.patientId?.slice(-6).toUpperCase()}</td>
+                  <td class="text-primary" style="font-size: 15px; font-weight: 700;">${a.patientName}</td>
+                  <td class="text-center">${a.patient?.dob ? Math.floor((new Date().getTime() - new Date(a.patient.dob).getTime()) / 31557600000) : '--'}Y / ${a.patient?.gender || '--'}</td>
+                  <td class="text-center">${a.patient?.bloodGroup || 'N/A'}</td>
+                  <td class="text-center">${a.patient?.patientCode || a.patientId?.slice(-6).toUpperCase()}</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           <div class="text-center mb-4 pt-3">
-            <h5 class="fw-bold text-dark text-uppercase tracking-wider" style="border-bottom: 3px solid #1e293b; display: inline-block; padding-bottom: 8px;">
+            <h5 class="fw-bold text-dark text-uppercase tracking-wider" style="border-bottom: 3px solid #0f172a; display: inline-block; padding-bottom: 8px;">
               Clinical Appointment Summary
             </h5>
           </div>
 
           <div class="mb-4">
-            <h6 class="fw-bold text-uppercase border-bottom pb-2" style="font-size: 10px; color: #64748b; letter-spacing: 1px;">Appointment Registration Details</h6>
-            <table class="table table-bordered mb-0" style="font-size: 11px; border-color: #cbd5e1;">
-              <thead style="background: #1e293b;">
+            <h6 class="section-title">Appointment Registration Details</h6>
+            <table class="table table-bordered mb-0">
+              <thead>
                 <tr>
-                  <th class="py-3 text-center text-white fw-bold">S.NO</th>
-                  <th class="py-3 text-white fw-bold">APPOINT ID</th>
-                  <th class="py-3 text-white fw-bold">PATIENT NAME</th>
-                  <th class="py-3 text-white fw-bold">DOCTOR NAME</th>
-                  <th class="py-3 text-center text-white fw-bold">MODE</th>
-                  <th class="py-3 text-center text-white fw-bold">STATUS</th>
+                  <th class="text-center text-white">S.NO</th>
+                  <th class="text-white">APPOINT ID</th>
+                  <th class="text-white">PATIENT NAME</th>
+                  <th class="text-white">DOCTOR NAME</th>
+                  <th class="text-center text-white">MODE</th>
+                  <th class="text-center text-white">STATUS</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td class="py-3 text-center text-muted fw-bold">01</td>
-                  <td class="py-3 fw-bold text-dark">${a.appointmentCode}</td>
-                  <td class="py-3 fw-bold text-primary">${a.patientName}</td>
-                  <td class="py-3 fw-bold text-dark">${a.doctorName || a.doctor?.fullName}</td>
-                  <td class="py-3 text-center fw-bold text-dark">${a.mode}</td>
-                  <td class="py-3 text-center"><span class="badge bg-light text-dark border px-2 py-1 text-uppercase" style="font-size: 10px;">${a.status}</span></td>
+                  <td class="text-center text-muted">01</td>
+                  <td>${a.appointmentCode}</td>
+                  <td class="text-primary" style="font-weight: 700;">${a.patientName}</td>
+                  <td>${a.doctorName || a.doctor?.fullName}</td>
+                  <td class="text-center">${a.mode}</td>
+                  <td class="text-center"><span class="badge bg-dark text-white border px-3 py-1 text-uppercase" style="font-size: 10px; font-weight: 700;">${a.status}</span></td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           <div class="mb-5">
-            <h6 class="fw-bold text-uppercase border-bottom pb-2" style="font-size: 10px; color: #64748b; letter-spacing: 1px;">Clinical Findings / Assessment</h6>
-            <div style="padding: 15px; border: 1px solid #e2e8f0; background: #fff; min-height: 120px; line-height: 1.6; font-size: 13px;">
+            <h6 class="section-title">Clinical Findings / Assessment</h6>
+            <div class="clinical-findings">
               ${a.reason || "Patient presented for follow-up review. Clinical status stable."}
             </div>
           </div>
 
           <div class="mt-auto pt-4 border-top text-center text-muted small">
-            <p class="mb-1 fw-bold" style="color: #64748b; letter-spacing: 0.5px;">2025 &copy; <span style="color: #4f46e5;">Docyari</span>, All Rights Reserved</p>
+            <p class="mb-1 fw-bold" style="color: #64748b; letter-spacing: 0.5px;">2025 &copy; <span style="color: #1e3a8a;">Docyari</span>, All Rights Reserved</p>
             <p class="mb-0 italic opacity-50" style="font-size: 10px;">This is a computer-generated clinical summary and does not require a physical signature.</p>
           </div>
 
@@ -374,8 +481,7 @@ const Appointments = () => {
             };
           </script>
         </body>
-      </html >
-  `;
+      </html>`;
     printWindow.document.write(html);
     printWindow.document.close();
   };
@@ -479,15 +585,48 @@ const Appointments = () => {
 
   const columns = [
     {
-      title: "Sr No",
+      title: "Sr No. / ID",
       dataIndex: "SrNo",
-      render: (text: number) => <span className="fw-bold">{text}</span>,
+      render: (text: number, record: any) => {
+        const appNo = record.Code ? record.Code.replace(/[^0-9]/g, "") : "";
+        return (
+          <span className="fw-bold">
+            {text} / <span className="text-primary fw-medium">{appNo}</span>
+          </span>
+        );
+      },
       sorter: (a: any, b: any) => a.SrNo - b.SrNo,
     },
     {
       title: "Date & Time",
       dataIndex: "Date_Time",
+      render: (_: any, record: any) => {
+        const dateStr = record._raw.scheduledAt ? dayjs(record._raw.scheduledAt).format("DD MMM YYYY") : "—";
+        const timeStr = record._raw.scheduledAt ? dayjs(record._raw.scheduledAt).format("hh:mm A") : "";
+        return (
+          <div className="d-flex flex-column" style={{ lineHeight: '1.2' }}>
+            <span className="fw-medium text-dark text-nowrap">{dateStr}</span>
+            {timeStr && <span className="text-muted fs-11 mt-1 text-nowrap">{timeStr}</span>}
+          </div>
+        );
+      },
       sorter: (a: any, b: any) => a.Date_Time.localeCompare(b.Date_Time),
+    },
+    {
+      title: "Expected Time",
+      dataIndex: "expectedTime",
+      render: (text: string) => <span className="fw-bold text-dark">{text}</span>,
+    },
+    {
+      title: (
+        <div className="d-flex flex-column text-start" style={{ lineHeight: '1.2' }}>
+          <span>Check-in /</span>
+          <span>His No.</span>
+        </div>
+      ),
+      dataIndex: "checkinHisNo",
+      render: (text: string) => <span className="fw-medium text-secondary">{text}</span>,
+      sorter: (a: any, b: any) => a.checkinHisNo.localeCompare(b.checkinHisNo),
     },
     {
       title: "Patient",
@@ -525,24 +664,24 @@ const Appointments = () => {
         return (
           <div className="d-flex flex-column align-items-start gap-1">
             <span className={`badge ${statusBadgeClass(text)} `}>{text}</span>
-            {["Schedule", "Confirmed", "Checked In"].includes(text) && (
+            {["Confirmed", "Checked In"].includes(text) && (
               <div className="form-check form-switch p-0 ms-2" style={{ minHeight: 'auto' }}>
                 <input
                   className="form-check-input ms-0"
                   type="checkbox"
                   role="switch"
-                  checked={false}
+                  checked={text === "Checked In"}
                   onChange={() => handleStatusToggle(raw.id, text)}
                   style={{ cursor: 'pointer', width: '30px', height: '16px' }}
                 />
                 <label className="text-muted small ms-1" style={{ fontSize: '10px' }}>
-                  {text === "Schedule" ? "Confirm" : text === "Confirmed" ? "Checkin" : "Checkout"}
+                  {text === "Confirmed" ? "Checkin" : "Checkout"}
                 </label>
               </div>
             )}
             {raw?.isFollowUp && (
               <div className="mt-1">
-                <span className={`text - muted fw - bold`} style={{ fontSize: '10px' }}>
+                <span className="text-muted fw-bold" style={{ fontSize: '10px' }}>
                   {raw.followUpStatus || "Follow-up"}
                 </span>
               </div>
@@ -550,6 +689,7 @@ const Appointments = () => {
           </div>
         );
       },
+      sorter: (a: any, b: any) => a.Status.localeCompare(b.Status),
     },
     {
       title: "Action",
@@ -574,7 +714,7 @@ const Appointments = () => {
         <div className="content">
           <div className="appointments-filter-line pb-3 mb-3 border-bottom">
             <h4 className="fw-bold mb-0 text-dark flex-shrink-0">Appointment</h4>
-            <div className="status-buttons-group">
+            <div className="status-buttons-group ms-auto">
               {["All", "Schedule", "Confirmed", "Checked In"].map((s) => (
                 <button
                   key={s}
@@ -589,27 +729,59 @@ const Appointments = () => {
               ))}
             </div>
 
-            <div className="position-relative follow-up-select-wrapper">
-              {/* Large screen select */}
-              <select
-                className="form-select follow-up-select d-none d-xxl-block"
-                value={filterFollowUp}
-                onChange={(e) => setFilterFollowUp(e.target.value)}
+            <div className="dropdown">
+              <Link
+                to="#"
+                className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap follow-up-select"
+                style={{ minWidth: "140px", height: "32px", fontSize: "11px", display: "flex", alignItems: "center" }}
+                data-bs-toggle="dropdown"
+                data-bs-auto-close="outside"
               >
-                <option value="All">Follow-up Status</option>
-                <option value="Free">Free Follow-up</option>
-                <option value="Paid">Paid Follow-up</option>
-              </select>
-              {/* Small screen select */}
-              <select
-                className="form-select follow-up-select d-block d-xxl-none"
-                value={filterFollowUp}
-                onChange={(e) => setFilterFollowUp(e.target.value)}
-              >
-                <option value="All">Follow-up...</option>
-                <option value="Free">Free Follow-up</option>
-                <option value="Paid">Paid Follow-up</option>
-              </select>
+                <span className="text-truncate">
+                  <span className="text-muted"><i className="ti ti-calendar me-1"></i></span> {datePreset === "All" ? "Filter Date" : datePreset}
+                </span>
+              </Link>
+              <ul className="dropdown-menu dropdown-menu-end p-2 animate__animated animate__fadeIn" style={{ minWidth: "180px", zIndex: 1050 }}>
+                {["All", "Today", "Yesterday", "Last 7 Days", "Custom"].map((preset) => (
+                  <li key={preset}>
+                    <Link
+                      to="#"
+                      className="dropdown-item rounded-1 fs-12 py-2"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (preset === "Custom") {
+                          e.stopPropagation();
+                        }
+                        setDatePreset(preset);
+                      }}
+                    >
+                      {preset}
+                    </Link>
+                  </li>
+                ))}
+                {datePreset === "Custom" && (
+                  <li className="p-2 border-top mt-2" onClick={(e) => e.stopPropagation()}>
+                    <div className="d-flex flex-column gap-1">
+                      <label className="text-muted fs-10 fw-bold text-uppercase mb-0">Start Date</label>
+                      <input
+                        type="date"
+                        className="form-control fs-12 px-2 py-1"
+                        value={filterStartDate}
+                        onChange={(e) => setFilterStartDate(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <label className="text-muted fs-10 fw-bold text-uppercase mb-0 mt-1">End Date</label>
+                      <input
+                        type="date"
+                        className="form-control fs-12 px-2 py-1"
+                        value={filterEndDate}
+                        onChange={(e) => setFilterEndDate(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  </li>
+                )}
+              </ul>
             </div>
 
             <button className="btn btn-sm btn-light border filter-btn" data-bs-toggle="offcanvas" data-bs-target="#filter_drawer">
@@ -682,7 +854,11 @@ const Appointments = () => {
               <option value="Custom">Choose Custom Date</option>
             </select>
             {datePreset === "Custom" && (
-              <input type="date" className="form-control fs-13" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
+              <div className="d-flex gap-1 align-items-center mt-2">
+                <input type="date" className="form-control fs-13" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} />
+                <span className="text-muted small">to</span>
+                <input type="date" className="form-control fs-13" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} />
+              </div>
             )}
           </div>
 
@@ -709,7 +885,7 @@ const Appointments = () => {
 
           <div className="d-grid gap-2">
             <button className="btn btn-soft-danger fw-bold py-2" onClick={() => {
-              setFilterFollowUp("All"); setFilterDate(""); setDatePreset("All"); setFilterStatus("All"); setFilterDepartment(""); setFilterType(""); setFilterDoctor("");
+              setFilterFollowUp("All"); setFilterDate(""); setFilterStartDate(""); setFilterEndDate(""); setDatePreset("All"); setFilterStatus("All"); setFilterDepartment(""); setFilterType(""); setFilterDoctor("");
             }}>
               <i className="ti ti-refresh me-2" />Clear All Filters
             </button>

@@ -15,14 +15,20 @@ const FooterFront = () => {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
+                // Try a single batch fetch first; if the endpoint doesn't exist, skip silently
+                const res = await fetch(`${API}/api/settings/contact_phone`);
+                if (!res.ok) return; // API not available, keep defaults
+
                 const keys = ["contact_phone", "contact_email", "contact_website", "contact_whatsapp"];
                 const fetched = await Promise.all(
                     keys.map(async (key) => {
-                        const res = await fetch(`${API}/api/settings/${key}`);
-                        if (res.ok) {
-                            const data = await res.json();
-                            return { [key]: data.value || "" };
-                        }
+                        try {
+                            const r = await fetch(`${API}/api/settings/${key}`);
+                            if (r.ok) {
+                                const data = await r.json();
+                                return { [key]: data.value || "" };
+                            }
+                        } catch { /* ignore */ }
                         return { [key]: "" };
                     })
                 );
@@ -33,9 +39,7 @@ const FooterFront = () => {
                     website: mergedSettings.contact_website || prev.website,
                     whatsapp: mergedSettings.contact_whatsapp || prev.whatsapp,
                 }));
-            } catch (err) {
-                console.error(err);
-            }
+            } catch { /* settings API not available, use defaults */ }
         };
         fetchSettings();
     }, []);

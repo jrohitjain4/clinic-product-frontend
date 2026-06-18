@@ -337,7 +337,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                   </div>
 
                   {/* --- Address Information (Permanent) --- */}
-                  <h6 className="fw-bold mb-3 border-top pt-3 text-success">
+                  <h6 className="fw-bold mb-3 border-top pt-3 text-dark">
                     Address Information
                   </h6>
                   <div className="row">
@@ -447,7 +447,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     onClick={() => setShowOptionalDetails(!showOptionalDetails)}
                     style={{ cursor: "pointer", userSelect: "none" }}
                   >
-                    <h6 className="fw-bold mb-0 text-secondary">Optional Details</h6>
+                    <h6 className="fw-bold mb-0 text-dark">Optional Details</h6>
                     <i className={`ti ${showOptionalDetails ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-secondary`} />
                   </div>
                   {showOptionalDetails && (
@@ -510,7 +510,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                           <input type="text" className="form-control" placeholder="Enter Passport Number" value={form.passportNumber} onChange={(e) => setForm((f) => ({ ...f, passportNumber: e.target.value }))} />
                         </div>
                       </div>
-                      <div className="col-md-8">
+                      <div className="col-md-12">
                         <div className="mb-3">
                           <label className="form-label mb-1 fw-medium">Referred By</label>
                           <input type="text" className="form-control" placeholder="e.g. Google, Walk-in, Doctor Name" value={form.referredBy} onChange={(e) => setForm((f) => ({ ...f, referredBy: e.target.value }))} />
@@ -550,23 +550,24 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                       </div>
                     </div>
                   )}
+                  
+                  <div className="d-flex align-items-center justify-content-end mt-4 mb-4">
+                    <Link to={all_routes.patients} className="btn btn-light me-2">
+                      Cancel
+                    </Link>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={submitting}
+                    >
+                      {submitting
+                        ? "Saving…"
+                        : mode === "create"
+                          ? "Add New Patient"
+                          : "Save Changes"}
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="d-flex align-items-center justify-content-end mt-3">
-                <Link to={all_routes.patients} className="btn btn-light me-2">
-                  Cancel
-                </Link>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={submitting}
-                >
-                  {submitting
-                    ? "Saving…"
-                    : mode === "create"
-                      ? "Add New Patient"
-                      : "Save Changes"}
-                </button>
               </div>
             </form>
           </div>

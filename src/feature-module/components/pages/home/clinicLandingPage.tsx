@@ -4,6 +4,7 @@ import { all_routes } from "../../../routes/all_routes";
 import FooterFront from "./FooterFront";
 import { DatePicker } from "antd";
 import dayjs, { Dayjs } from "dayjs";
+import { resolveMediaUrl } from "../../../../core/config/api";
 
 interface Doctor {
     id: string;
@@ -71,6 +72,7 @@ export default function ClinicLandingPage() {
         email: "",
         phone: "",
         gender: "",
+        address: "",
         doctorId: "",
         date: null as Dayjs | null,
         time: "",
@@ -112,6 +114,7 @@ export default function ClinicLandingPage() {
             email: "",
             phone: "",
             gender: "",
+            address: "",
             doctorId: doctorId,
             date: null,
             time: "",
@@ -267,6 +270,7 @@ export default function ClinicLandingPage() {
                     email: bookForm.email,
                     phone: bookForm.phone,
                     gender: bookForm.gender,
+                    address: bookForm.address,
                     doctorId: docId,
                     date: bookForm.date!.format("YYYY-MM-DD"),
                     time: bookForm.time,
@@ -280,13 +284,183 @@ export default function ClinicLandingPage() {
                 email: data.email,
                 password: data.generatedPassword,
                 isNewUserCreated: data.isNewUserCreated,
-                appointmentCode: data.appointmentCode
+                appointmentCode: data.appointmentCode,
+                patientCode: data.patientCode
             });
             setBookSuccess(data.message || "Appointment booked successfully!");
         } catch (err: any) {
             setBookError(err.message);
         } finally {
             setBookLoading(false);
+        }
+    };
+
+    const handleDownloadSlip = () => {
+        const docId = bookForm.doctorId || preselectedDoctor;
+        const doctorObj = clinic?.doctors.find(d => d.id === docId);
+        
+        const slipHtml = `
+            <html>
+            <head>
+              <title>Appointment Summary - ${generatedCreds?.appointmentCode || 'Record'}</title>
+              <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+              <style>
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                body { background: #fff; padding: 30px; font-family: 'Inter', sans-serif; color: #0f172a; }
+                .header-banner {
+                  background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+                  color: #ffffff !important;
+                  padding: 24px !important;
+                  border-radius: 8px !important;
+                  margin-bottom: 25px !important;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                }
+                .header-banner h4 { color: #ffffff !important; font-weight: 700; margin: 0 0 4px 0; font-size: 22px; }
+                .header-banner p { color: #e0f2fe !important; margin: 0; font-size: 13px; }
+                .header-banner h6 { color: #ffffff !important; margin: 8px 0 2px 0; font-size: 15px; font-weight: 600; }
+                .logo-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+                .section-title { font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #0f172a !important; padding-bottom: 8px; margin-bottom: 15px; font-size: 12px; color: #0f172a !important; letter-spacing: 0.5px; }
+                
+                /* Dark Styled Tables */
+                .table-bordered { border: 2px solid #0f172a !important; }
+                .table-bordered th { 
+                  background-color: #0f172a !important; 
+                  color: #ffffff !important; 
+                  border: 2px solid #0f172a !important; 
+                  font-weight: 700; 
+                  font-size: 12px; 
+                  letter-spacing: 0.5px; 
+                  padding: 12px 10px !important;
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                }
+                .table-bordered td { border: 1px solid #334155 !important; color: #0f172a !important; font-weight: 600; font-size: 13px; padding: 12px 10px !important; }
+                
+                .text-primary { color: #1e3a8a !important; }
+                .clinical-findings { border: 2px solid #0f172a !important; padding: 20px; background: #f8fafc; min-height: 120px; line-height: 1.6; font-size: 13px; color: #000000 !important; font-weight: 500; border-radius: 6px; }
+                @media print { 
+                  .no-print { display: none; } 
+                  body { padding: 0; }
+                  .header-banner {
+                    background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                  }
+                  .table-bordered th {
+                    background-color: #0f172a !important;
+                    color: #ffffff !important;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                  }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="header-banner">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="logo-box">
+                    <img src="${resolveMediaUrl(clinic?.logo) || '/logo.png'}" alt="logo" style="max-height: 55px; max-width: 55px; object-fit: contain;">
+                  </div>
+                  <div>
+                    <h4>${clinic?.name || "DocYari Clinical Network"}</h4>
+                    <p><i class="ti ti-map-pin"></i> ${clinic?.address || "Clinic Address"}, ${clinic?.city || ""}</p>
+                    <h6>${doctorObj?.name || ""}</h6>
+                    <p>${doctorObj?.qualification || "Consultant"} · ${doctorObj?.specialization || "Medicine"}</p>
+                  </div>
+                </div>
+                <div class="text-end text-white">
+                  <span class="badge bg-white text-primary fw-bold px-3 py-2 mb-2" style="font-size: 12px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    ${generatedCreds?.appointmentCode || "#---"}
+                  </span>
+                  <div class="small mt-1 opacity-90">
+                    <div class="mb-1"><strong>Dept:</strong> ${doctorObj?.specialization || "General"}</div>
+                    <div><strong>Date:</strong> ${bookForm.date ? bookForm.date.format("DD MMM YYYY") : dayjs().format("DD MMM YYYY")}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <h6 class="section-title">Patient Clinical Profile</h6>
+                <table class="table table-bordered mb-0">
+                  <thead>
+                    <tr>
+                      <th class="text-white">PATIENT NAME</th>
+                      <th class="text-center text-white">AGE / GENDER</th>
+                      <th class="text-center text-white">BLOOD GROUP</th>
+                      <th class="text-center text-white">PATIENT ID</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="text-primary" style="font-size: 15px; font-weight: 700;">${bookForm.firstName} ${bookForm.lastName}</td>
+                      <td class="text-center">--Y / ${bookForm.gender || '--'}</td>
+                      <td class="text-center">N/A</td>
+                      <td class="text-center">${generatedCreds?.patientCode || 'N/A'}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="text-center mb-4 pt-3">
+                <h5 class="fw-bold text-dark text-uppercase tracking-wider" style="border-bottom: 3px solid #0f172a; display: inline-block; padding-bottom: 8px;">
+                  Clinical Appointment Summary
+                </h5>
+              </div>
+
+              <div class="mb-4">
+                <h6 class="section-title">Appointment Registration Details</h6>
+                <table class="table table-bordered mb-0">
+                  <thead>
+                    <tr>
+                      <th class="text-center text-white">S.NO</th>
+                      <th class="text-white">APPOINT ID</th>
+                      <th class="text-white">PATIENT NAME</th>
+                      <th class="text-white">DOCTOR NAME</th>
+                      <th class="text-center text-white">MODE</th>
+                      <th class="text-center text-white">STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="text-center text-muted">01</td>
+                      <td>${generatedCreds?.appointmentCode || "N/A"}</td>
+                      <td class="text-primary" style="font-weight: 700;">${bookForm.firstName} ${bookForm.lastName}</td>
+                      <td>${doctorObj?.name || ""}</td>
+                      <td class="text-center">Clinic Landing</td>
+                      <td class="text-center"><span class="badge bg-dark text-white border px-3 py-1 text-uppercase" style="font-size: 10px; font-weight: 700;">SCHEDULE</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="mb-5">
+                <h6 class="section-title">Clinical Findings / Assessment</h6>
+                <div class="clinical-findings">
+                  ${bookForm.reason || "Online booking from clinic website"}
+                </div>
+              </div>
+
+              <div class="mt-auto pt-4 border-top text-center text-muted small">
+                <p class="mb-1 fw-bold" style="color: #64748b; letter-spacing: 0.5px;">2025 &copy; <span style="color: #1e3a8a;">Docyari</span>, All Rights Reserved</p>
+                <p class="mb-0 italic opacity-50" style="font-size: 10px;">This is a computer-generated clinical summary and does not require a physical signature.</p>
+              </div>
+
+              <script>
+                window.onload = () => {
+                  setTimeout(() => { window.print(); window.close(); }, 500);
+                };
+              </script>
+            </body>
+          </html>`;
+
+        const printWindow = window.open("", "_blank");
+        if (printWindow) {
+            printWindow.document.write(slipHtml);
+            printWindow.document.close();
         }
     };
 
@@ -415,9 +589,9 @@ export default function ClinicLandingPage() {
             {/* ══════ NAVBAR (Docyori Style) ══════ */}
             <nav className="dy-nav bg-white shadow-sm position-sticky top-0" style={{ zIndex: 1000, overflow: 'visible' }}>
                 <div className="dy-nav-inner container px-3" style={{ overflow: 'visible' }}>
-                    <Link to="/" className="dy-brand d-flex align-items-center text-decoration-none" style={{ height: '70px', display: 'flex', alignItems: 'center', overflow: 'visible' }} onClick={() => setSelectedDocDetails(null)}>
+                    <a href="#hero" className="dy-brand d-flex align-items-center text-decoration-none" style={{ height: '70px', display: 'flex', alignItems: 'center', overflow: 'visible' }} onClick={(e) => { e.preventDefault(); setSelectedDocDetails(null); document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' }); }}>
                         <img src="/logo.png" alt="DocYori" style={{ height: "65px", width: "auto", objectFit: "contain", maxWidth: "none" }} />
-                    </Link>
+                    </a>
 
                     <ul className="dy-nav-links d-none d-lg-flex mb-0">
                         <li><a href="#hero" className="active" onClick={(e) => { e.preventDefault(); setSelectedDocDetails(null); document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' }); }}>Home</a></li>
@@ -1460,92 +1634,141 @@ export default function ClinicLandingPage() {
                         style={{ zIndex: 99999, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
                         onClick={(e) => { if (e.target === e.currentTarget) { setShowModal(false); } }}
                     >
-                        <div className="bg-white rounded-4 shadow-lg" style={{ width: "100%", maxWidth: "560px", margin: "20px", maxHeight: "90vh", overflowY: "auto" }}>
-                            {/* Modal Header */}
-                            <div className="d-flex align-items-center justify-content-between p-4 pb-3 border-bottom" style={{ background: "#1d4ed8", borderRadius: "16px 16px 0 0" }}>
+                        <div className="bg-white rounded-4 shadow-lg d-flex flex-column" style={{ width: "100%", maxWidth: bookSuccess ? "460px" : "760px", margin: "20px", maxHeight: "90vh", overflow: "hidden", transition: "max-width 0.3s ease" }}>
+                            {/* Modal Header — fixed */}
+                            <div className="d-flex align-items-center justify-content-between p-3 border-bottom flex-shrink-0" style={{ background: "#1d4ed8", borderRadius: "16px 16px 0 0" }}>
                                 <div className="d-flex align-items-center gap-3">
-                                    <div className="bg-white bg-opacity-20 rounded-circle p-2 d-flex align-items-center justify-content-center" style={{ width: 44, height: 44 }}>
-                                        <i className="ti ti-calendar-event text-white fs-4" />
+                                    <div className="bg-white bg-opacity-20 rounded-circle p-2 d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
+                                        <i className="ti ti-calendar-event text-white fs-5" />
                                     </div>
                                     <div>
-                                        <h5 className="fw-bold text-white mb-0" style={{ fontSize: "16px" }}>Book Appointment</h5>
-                                        <small className="text-white opacity-75">{clinic.name}</small>
+                                        <h5 className="fw-bold text-white mb-0" style={{ fontSize: "15px" }}>Book Appointment</h5>
+                                        <small className="text-white opacity-75" style={{ fontSize: "12px" }}>{clinic.name}</small>
                                     </div>
                                 </div>
                                 <button
                                     className="btn p-0 d-flex align-items-center justify-content-center text-white opacity-75"
-                                    style={{ width: 32, height: 32, background: "rgba(255,255,255,0.15)", borderRadius: "50%" }}
+                                    style={{ width: 30, height: 30, background: "rgba(255,255,255,0.15)", borderRadius: "50%" }}
                                     onClick={() => setShowModal(false)}
                                 >
-                                    <i className="ti ti-x fs-5" />
+                                    <i className="ti ti-x fs-6" />
                                 </button>
                             </div>
 
-                            <div className="p-4" id="modal-datepicker-container" style={{ position: "relative" }}>
+                            {/* Modal Body — scrolls internally */}
+                            <div className="p-3 flex-grow-1" id="modal-datepicker-container" style={{ position: "relative", overflowY: "auto", minHeight: 0 }}>
                                 {bookSuccess ? (
                                     /* Success State Popup */
-                                    <div className="text-center py-4">
-                                        <div className="d-flex align-items-center justify-content-center mb-4">
-                                            <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 80, height: 80, background: "#dcfce7" }}>
-                                                <i className="ti ti-circle-check-filled" style={{ fontSize: 48, color: "#16a34a" }} />
+                                    <div className="text-center py-3">
+                                        <div className="d-flex align-items-center justify-content-center mb-3">
+                                            <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 64, height: 64, background: "#eff6ff", border: "2px solid #1d4ed8" }}>
+                                                <i className="ti ti-circle-check-filled" style={{ fontSize: 36, color: "#1d4ed8" }} />
                                             </div>
                                         </div>
-                                        <h4 className="fw-bold text-dark mb-2">Booking Success!</h4>
-                                        <p className="text-success fw-bold mb-4" style={{ fontSize: "15px" }}>{bookSuccess}</p>
+                                        <h5 className="fw-bold text-dark mb-1">Appointment Scheduled!</h5>
+                                        <p className="text-secondary fw-semibold mb-3" style={{ fontSize: "12px" }}>{bookSuccess}</p>
                                         
                                         {/* Appointment ID Details */}
-                                        <div className="mb-4 p-3 bg-light rounded-3 text-start">
-                                            <div className="d-flex justify-content-between mb-2 pb-2 border-bottom">
-                                                <span className="text-secondary fw-semibold">Appointment ID:</span>
-                                                <span className="text-dark fw-bold">{generatedCreds?.appointmentCode || "AP..."}</span>
+                                        <div className="mb-3 p-3 bg-light rounded-3 text-start border" style={{ borderColor: "#e2e8f0" }}>
+                                            <div className={`d-flex justify-content-between ${generatedCreds?.isNewUserCreated ? 'mb-2 pb-2 border-bottom' : ''}`} style={{ borderColor: "#cbd5e1" }}>
+                                                <span className="text-secondary fw-semibold fs-13">Appointment ID:</span>
+                                                <span className="text-dark fw-bold fs-13">{generatedCreds?.appointmentCode || "AP..."}</span>
                                             </div>
                                             
                                             {/* Account Details if user was created */}
-                                            {generatedCreds?.isNewUserCreated ? (
-                                                <>
-                                                    <div className="alert alert-info py-2 px-3 rounded-2 fs-12 mb-3">
-                                                        <i className="ti ti-info-circle-filled me-1" />
-                                                        Your patient login account has been created successfully! A credentials email has been sent to your Gmail.
+                                            {generatedCreds?.isNewUserCreated && (
+                                                <div className="mt-2">
+                                                    <div className="alert alert-info py-2 px-3 rounded-2 fs-12 mb-2 d-flex align-items-start gap-2" style={{ backgroundColor: "#eff6ff", borderColor: "#bfdbfe", color: "#1e3a8a" }}>
+                                                        <i className="ti ti-info-circle-filled mt-0.5 flex-shrink-0" />
+                                                        <span>
+                                                            Your login account has been created! A credentials email has been sent to your Gmail.
+                                                        </span>
                                                     </div>
                                                     <div className="d-flex justify-content-between mb-1">
-                                                        <span className="text-secondary fs-13">Login Email:</span>
-                                                        <span className="text-dark fw-bold fs-13">{generatedCreds?.email}</span>
+                                                        <span className="text-secondary fs-12">Login Email:</span>
+                                                        <span className="text-dark fw-bold fs-12">{generatedCreds?.email}</span>
                                                     </div>
                                                     <div className="d-flex justify-content-between">
-                                                        <span className="text-secondary fs-13">Temporary Password:</span>
-                                                        <span className="text-primary fw-bold fs-13" style={{ letterSpacing: "0.5px" }}>{generatedCreds?.password}</span>
+                                                        <span className="text-secondary fs-12">Temporary Password:</span>
+                                                        <span className="text-primary fw-bold fs-12" style={{ letterSpacing: "0.5px" }}>{generatedCreds?.password}</span>
                                                     </div>
-                                                </>
-                                            ) : (
-                                                <div className="alert alert-secondary py-2 px-3 rounded-2 fs-12 mb-0">
-                                                    <i className="ti ti-info-circle-filled me-1" />
-                                                    Linked with your existing patient portal account.
                                                 </div>
                                             )}
                                         </div>
 
-                                        {/* Confirmation Notice */}
-                                        <div className="p-3 mb-4 rounded-3 text-center" style={{ backgroundColor: "#fff9db", border: "1px solid #ffec99" }}>
-                                            <h6 className="fw-bold mb-1" style={{ color: "#b45309" }}>
-                                                ⚠️ Next Steps to Confirm Booking
-                                            </h6>
-                                            <p className="mb-0 fw-bold fs-14" style={{ color: "#ef4444" }}>
-                                                To confirm your booking, please call the admin and pay the advance.
-                                            </p>
+                                        {/* Redesigned Notes Section - Blue & Black highlighted, detailed */}
+                                        <div className="p-3 mb-4 rounded-3 text-start" style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                                            <h6 className="fw-bold text-dark mb-3" style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Important Notes</h6>
+                                            
+                                            {/* Note 1 */}
+                                            <div className="d-flex align-items-start gap-2 mb-3 pb-3 border-bottom" style={{ borderColor: "#e2e8f0" }}>
+                                                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: "22px", height: "22px", background: "#1d4ed8", color: "white" }}>
+                                                    <span className="fw-bold" style={{ fontSize: "10px" }}>1</span>
+                                                </div>
+                                                <div>
+                                                    <p className="mb-0 text-dark fw-bold" style={{ fontSize: "12px", lineHeight: "1.4" }}>
+                                                        Credentials for logging into the portal have been sent to your email.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Note 2 */}
+                                            <div className="d-flex align-items-start gap-2">
+                                                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: "22px", height: "22px", background: "#0f172a", color: "white" }}>
+                                                    <span className="fw-bold" style={{ fontSize: "10px" }}>2</span>
+                                                </div>
+                                                <div>
+                                                    <p className="mb-0 text-dark fw-bold" style={{ fontSize: "12px", lineHeight: "1.4" }}>
+                                                        Call admin to confirm your booking. Now it is just scheduled.
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <button
-                                            className="btn mt-2 fw-bold px-5 py-2.5 rounded-3 text-white w-100"
-                                            style={{ background: "#1d4ed8", fontSize: "14px", border: "none" }}
-                                            onClick={() => setShowModal(false)}
-                                        >
-                                            Done
-                                        </button>
+                                        {/* Bottom Action Buttons: Call Now, Download Slip, Done in one line */}
+                                        <div className="d-flex gap-2">
+                                            <a
+                                                href={`tel:${clinic.phone}`}
+                                                className="btn fw-bold py-2 px-2 rounded-3 text-white flex-grow-1 d-flex align-items-center justify-content-center gap-1 animate-hover"
+                                                style={{ background: "#1d4ed8", fontSize: "12px", border: "none" }}
+                                            >
+                                                <i className="ti ti-phone-call" /> Call Now
+                                            </a>
+                                            <button
+                                                onClick={handleDownloadSlip}
+                                                className="btn fw-bold py-2 px-2 rounded-3 flex-grow-1 d-flex align-items-center justify-content-center gap-1 animate-hover"
+                                                style={{ border: "1.5px solid #1d4ed8", color: "#1d4ed8", background: "white", fontSize: "12px", transition: "all 0.2s" }}
+                                                onMouseOver={(e) => { e.currentTarget.style.background = "#eff6ff"; }}
+                                                onMouseOut={(e) => { e.currentTarget.style.background = "white"; }}
+                                            >
+                                                <i className="ti ti-download" /> Download Slip
+                                            </button>
+                                            <button
+                                                className="btn fw-bold py-2 px-2 rounded-3 text-white flex-grow-1 animate-hover"
+                                                style={{ background: "#0f172a", fontSize: "12px", border: "none" }}
+                                                onClick={() => setShowModal(false)}
+                                            >
+                                                Done
+                                            </button>
+                                        </div>
                                     </div>
                                 ) : (
                                     /* Booking Form State */
                                     <form onSubmit={handleBookSubmit} noValidate>
-                                        <div className="row g-3">
+                                        <div className="row g-2">
+                                            {/* Appointment ID - TOP */}
+                                            <div className="col-12">
+                                                <div className="d-flex align-items-center gap-2 p-2 rounded-3" style={{ background: "linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%)", border: "1px solid #bfdbfe" }}>
+                                                    <div className="d-flex align-items-center justify-content-center rounded-circle" style={{ width: 32, height: 32, background: "#1d4ed8", flexShrink: 0 }}>
+                                                        <i className="ti ti-hash text-white" style={{ fontSize: "14px" }} />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-muted" style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>Appointment ID</div>
+                                                        <div className="fw-bold" style={{ fontSize: "15px", color: "#1d4ed8", letterSpacing: "0.5px" }}>{clinic.nextAppointmentCode || "AP..."}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             {/* Patient First & Last Name */}
                                             <div className="col-6">
                                                 <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>First Name <span className="text-danger">*</span></label>
@@ -1620,15 +1843,16 @@ export default function ClinicLandingPage() {
                                                 {bookFormErrors.gender && <div className="invalid-feedback">{bookFormErrors.gender}</div>}
                                             </div>
 
-                                            {/* Appointment ID */}
+                                            {/* Patient Address */}
                                             <div className="col-12">
-                                                <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Appointment ID</label>
+                                                <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Address (Optional)</label>
                                                 <input
                                                     type="text"
                                                     className="form-control rounded-3"
-                                                    value={clinic.nextAppointmentCode || "AP..."}
-                                                    disabled
-                                                    style={{ fontSize: "14px", backgroundColor: "#f8fafc" }}
+                                                    placeholder="House no., Street, City, Pincode"
+                                                    value={bookForm.address}
+                                                    onChange={e => setBookForm(f => ({ ...f, address: e.target.value }))}
+                                                    style={{ fontSize: "14px" }}
                                                 />
                                             </div>
 
@@ -1642,11 +1866,36 @@ export default function ClinicLandingPage() {
                                                     style={{ fontSize: "14px" }}
                                                 >
                                                     <option value="">Select a doctor</option>
-                                                    {realDoctors.map((d: any) => (
-                                                        <option key={d.id} value={d.id}>{d.name} — {d.specialization}</option>
+                                                    {clinic.doctors.map((d: any) => (
+                                                        <option key={d.id} value={d.id}>
+                                                            {d.name}{d.specialization ? ` — ${d.specialization}` : ""}{d.qualification ? ` (${d.qualification})` : ""}
+                                                        </option>
                                                     ))}
                                                 </select>
                                                 {bookFormErrors.doctorId && <div className="invalid-feedback">{bookFormErrors.doctorId}</div>}
+                                                {/* Show selected doctor info */}
+                                                {(bookForm.doctorId || preselectedDoctor) && (() => {
+                                                    const selDoc = clinic.doctors.find((d: any) => d.id === (bookForm.doctorId || preselectedDoctor));
+                                                    if (!selDoc) return null;
+                                                    return (
+                                                        <div className="mt-2 p-2 rounded-3 d-flex align-items-center gap-2" style={{ background: "#f0f9ff", border: "1px solid #bae6fd" }}>
+                                                            {selDoc.photo ? (
+                                                                <img src={selDoc.photo} alt={selDoc.name} className="rounded-circle" style={{ width: 36, height: 36, objectFit: "cover", flexShrink: 0 }} />
+                                                            ) : (
+                                                                <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 36, height: 36, background: "#1d4ed8", flexShrink: 0 }}>
+                                                                    <i className="ti ti-stethoscope text-white" style={{ fontSize: 18 }} />
+                                                                </div>
+                                                            )}
+                                                            <div>
+                                                                <div className="fw-bold text-dark" style={{ fontSize: 13 }}>{selDoc.name}</div>
+                                                                <div className="text-muted" style={{ fontSize: 11 }}>
+                                                                    {[selDoc.specialization, selDoc.qualification].filter(Boolean).join(" · ")}
+                                                                    {selDoc.experience ? ` · ${selDoc.experience} yrs exp` : ""}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })()}
                                             </div>
 
                                             {/* Calendar (antd DatePicker with Custom Styles) */}
@@ -1721,8 +1970,8 @@ export default function ClinicLandingPage() {
                                             <div className="col-12 mt-1">
                                                 <button
                                                     type="submit"
-                                                    className="btn w-100 fw-bold py-2 rounded-3 text-white d-flex align-items-center justify-content-center gap-2"
-                                                    style={{ background: "#10b981", fontSize: "15px", border: "none" }}
+                                                    className="btn btn-primary w-100 fw-bold py-2 rounded-3 text-white d-flex align-items-center justify-content-center gap-2"
+                                                    style={{ fontSize: "15px", border: "none" }}
                                                     disabled={bookLoading}
                                                 >
                                                     {bookLoading ? (

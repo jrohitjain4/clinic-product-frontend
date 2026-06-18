@@ -25,7 +25,7 @@ const ADDITIONAL_SERVICES = [
   { i: 'ti-file-text', l: 'Application Tracking' },
   { i: 'ti-list-check', l: 'To-Do Management' },
   { i: 'ti-message', l: 'Notes & Communication' },
-  { i: 'ti-stethoscope', l: 'Services & Products' },
+  { i: 'ti-stethoscope', l: 'Services & Medicines' },
   { i: 'ti-star', l: 'Specializations Management' },
   { i: 'ti-chart-pie', l: 'Reports & Analytics' }
 ];

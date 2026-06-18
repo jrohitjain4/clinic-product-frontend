@@ -72,7 +72,7 @@ const Services = () => {
         <div className="d-flex align-items-center">
           <span className="fw-medium text-dark">{text}</span>
           {record.Type === "Product" ? (
-            <span className="badge badge-soft-info border border-info ms-2 px-2 py-1 fs-11">Product</span>
+            <span className="badge badge-soft-info border border-info ms-2 px-2 py-1 fs-11">Medicine</span>
           ) : (
             <span className="badge badge-soft-primary border border-primary ms-2 px-2 py-1 fs-11">Service</span>
           )}
@@ -162,7 +162,7 @@ const Services = () => {
         <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom mb-3 pb-3">
           <div className="flex-grow-1">
             <h4 className="page-title fw-bold mb-0">
-              Services & Products
+              Services & Medicines
               <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
                 Total: {filteredData.length}
               </span>
@@ -184,7 +184,7 @@ const Services = () => {
                 {["All", "Service", "Product"].map(t => (
                   <li key={t}>
                     <Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterType(t); }}>
-                      {t}
+                      {t === "Product" ? "Medicine" : t}
                     </Link>
                   </li>
                 ))}
@@ -254,7 +254,7 @@ const Services = () => {
               className="btn btn-info text-white d-flex align-items-center"
               style={{ minHeight: '38px' }}
             >
-              New Product <i className="ti ti-plus ms-1" />
+              New Medicine <i className="ti ti-plus ms-1" />
             </Link>
           </div>
         </div>

@@ -176,30 +176,11 @@ const DoctorsList = () => {
       className: "text-nowrap",
       width: 130,
       render: (_: unknown, record: (typeof tableData)[0]) => (
-        <div className="text-center d-flex align-items-center justify-content-center gap-2 text-nowrap">
-          <Link
-            to={doctorDetailsPath(record.key)}
-            className="btn btn-icon btn-sm btn-soft-secondary"
-            title="View Doctor"
-          >
-            <i className="ti ti-eye"></i>
-          </Link>
-          <Link
-            to={editDoctorPath(record.key)}
-            className="btn btn-icon btn-sm btn-soft-primary"
-            title="Edit Doctor"
-          >
-            <i className="ti ti-edit"></i>
-          </Link>
-          <button
-            className="btn btn-icon btn-sm btn-soft-danger"
-            title="Delete Doctor"
-            data-bs-toggle="modal"
-            data-bs-target="#delete_modal"
-            onClick={() => setDoctorToDelete(record.key)}
-          >
-            <i className="ti ti-trash"></i>
-          </button>
+        <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
+          <Link to={doctorDetailsPath(record.key)} className="text-info p-1" title="View"><i className="ti ti-eye fs-18" /></Link>
+          <Link to={editDoctorPath(record.key)} className="text-primary p-1" title="Edit"><i className="ti ti-edit fs-18" /></Link>
+          <button className="bg-transparent border-0 text-secondary p-1" title="Print" onClick={() => { /* print doctor */ }}><i className="ti ti-printer fs-18" /></button>
+          <button className="bg-transparent border-0 text-danger p-1" title="Delete" data-bs-toggle="modal" data-bs-target="#delete_modal" onClick={() => setDoctorToDelete(record.key)}><i className="ti ti-trash fs-18" /></button>
         </div>
       ),
     },

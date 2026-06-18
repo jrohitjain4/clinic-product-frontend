@@ -32,39 +32,63 @@ const PatientPrescriptionDetails = () => {
           <title>Prescription - ${prescription.prescriptionCode || 'Record'}</title>
           <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
           <style>
-            body { background: #fff; padding: 40px; font-family: 'Inter', sans-serif; color: #1e293b; }
-            .report-header { border-bottom: 2px solid #4f46e5; margin-bottom: 30px; padding-bottom: 20px; }
-            .logo-box { width: 80px; height: 80px; border: 1px dashed #4f46e5; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fff; }
-            .section-title { font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 15px; font-size: 11px; color: #64748b; letter-spacing: 1px; }
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            body { background: #fff; padding: 30px; font-family: 'Inter', sans-serif; color: #0f172a; }
+            .header-banner {
+              background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+              color: #ffffff !important;
+              padding: 24px !important;
+              border-radius: 8px !important;
+              margin-bottom: 25px !important;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .header-banner h4 { color: #ffffff !important; font-weight: 700; margin: 0 0 4px 0; font-size: 22px; }
+            .header-banner p { color: #e0f2fe !important; margin: 0; font-size: 13px; }
+            .header-banner h6 { color: #ffffff !important; margin: 8px 0 2px 0; font-size: 15px; font-weight: 600; }
+            .logo-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+            .section-title { font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #0f172a !important; padding-bottom: 8px; margin-bottom: 15px; font-size: 12px; color: #0f172a !important; letter-spacing: 0.5px; }
             .info-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; font-weight: 700; }
             .info-value { font-size: 13px; font-weight: 700; color: #1e293b; }
-            .rx-symbol { font-size: 32px; font-weight: 700; color: #4f46e5; font-family: serif; }
-            .med-table th { background: #f8fafc; color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #e2e8f0; }
-            .med-table td { font-size: 12px; vertical-align: middle; padding: 12px 8px; border-bottom: 1px solid #f1f5f9; }
-            .advice-box { padding: 20px; border: 1px solid #e2e8f0; background: #fff; border-radius: 4px; font-size: 13px; min-height: 80px; border-left: 4px solid #4f46e5; }
-            @media print { body { padding: 0; } .no-print { display: none; } }
+            .rx-symbol { font-size: 32px; font-weight: 700; color: #1e3a8a; font-family: serif; }
+            .med-table th { background: #0f172a !important; color: #ffffff !important; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 10px !important; }
+            .med-table td { font-size: 12px; vertical-align: middle; padding: 12px 8px; border-bottom: 1px solid #cbd5e1; color: #0f172a !important; font-weight: 600; }
+            .advice-box { padding: 20px; border: 1px solid #e2e8f0; background: #fff; border-radius: 4px; font-size: 13px; min-height: 80px; border-left: 4px solid #1e3a8a; }
+            @media print { 
+              body { padding: 0; } 
+              .no-print { display: none; }
+              .header-banner {
+                background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+            }
           </style>
         </head>
         <body>
-          <div class="d-flex justify-content-between align-items-start report-header">
-            <div class="d-flex gap-3">
+          <div class="header-banner">
+            <div class="d-flex align-items-center gap-3">
               <div class="logo-box">
-                <img src="${resolveMediaUrl((prescription as any)?.clinic?.landingPage?.logo) || '/logo.png'}" alt="logo" style="max-height: 60px; max-width: 60px; object-fit: contain;">
+                <img src="${resolveMediaUrl((prescription as any)?.clinic?.landingPage?.logo) || '/logo.png'}" alt="logo" style="max-height: 55px; max-width: 55px; object-fit: contain;">
               </div>
               <div>
-                <h4 class="fw-bold mb-1" style="color: #1e293b; font-size: 22px;">${(prescription as any).clinicName || "DocYari Health Hub"}</h4>
-                <p class="mb-1 text-muted small">${(prescription as any).location || "Clinic Location"}</p>
-                <div class="d-flex gap-2">
-                   <p class="mb-0 small fw-bold text-primary">ID: ${prescription.prescriptionCode || "#---"}</p>
-                   <p class="mb-0 small text-muted">|</p>
-                   <p class="mb-0 small text-muted">Dept: ${prescription.doctor?.department?.name || 'General'}</p>
-                </div>
+                <h4>${(prescription as any).clinicName || "DocYari Health Hub"}</h4>
+                <p><i class="ti ti-map-pin"></i> ${(prescription as any).location || "Clinic Location"}</p>
+                <h6>${prescription.doctor?.fullName?.startsWith('Dr.') ? prescription.doctor.fullName : `Dr. ${prescription.doctor?.fullName || 'Doctor'}`}</h6>
+                <p>${prescription.doctor?.designation?.name || "Consultant"} · ${prescription.doctor?.department?.name || "Medicine"}</p>
               </div>
             </div>
-            <div class="text-end">
-               <div class="info-label">Prescribed Date</div>
-               <div class="info-value mb-2">${new Date(prescription.createdAt).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' })}</div>
-               <span class="badge bg-light text-primary border border-primary-subtle px-3 py-1 fw-bold fs-10">VALID E-PRESCRIPTION</span>
+            <div class="text-end text-white">
+              <span class="badge bg-white text-primary fw-bold px-3 py-2 mb-2" style="font-size: 12px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                ${prescription.prescriptionCode || "#---"}
+              </span>
+              <div class="small mt-1 opacity-90">
+                <div class="mb-1"><strong>Dept:</strong> ${prescription.doctor?.department?.name || 'General'}</div>
+                <div><strong>Date:</strong> ${new Date(prescription.createdAt).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+              </div>
             </div>
           </div>
 

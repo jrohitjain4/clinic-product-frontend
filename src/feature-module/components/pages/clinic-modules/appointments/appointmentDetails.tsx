@@ -135,7 +135,7 @@ const AppointmentDetails = () => {
     const isSessionAppointment = appointment?.serviceIds && appointment.serviceIds.length > 0;
     const sessionServices = useMemo(() => {
         if (!isSessionAppointment || !services.length) return [];
-        return services.filter(s => appointment.serviceIds.includes(s.id));
+        return services.filter(s => appointment.serviceIds?.includes(s.id));
     }, [isSessionAppointment, appointment?.serviceIds, services]);
     const totalSessionDays = useMemo(() => {
         return sessionServices.reduce((sum, s) => {

@@ -223,7 +223,6 @@ const Patients = () => {
           <HasPermission module="Patients" action="EDIT">
             <Link to={editPatientPath(record._raw.id)} className="text-primary p-1" title="Edit"><i className="ti ti-edit fs-18" /></Link>
           </HasPermission>
-          <button className="bg-transparent border-0 text-secondary p-1" title="Print" onClick={() => { /* print patient */ }}><i className="ti ti-printer fs-18" /></button>
           <HasPermission module="Patients" action="DELETE">
             <button className="bg-transparent border-0 text-danger p-1" title="Delete" data-bs-toggle="modal" data-bs-target="#delete_patient_modal" onClick={() => setPatientToDelete(record._raw.id)}><i className="ti ti-trash fs-18" /></button>
           </HasPermission>

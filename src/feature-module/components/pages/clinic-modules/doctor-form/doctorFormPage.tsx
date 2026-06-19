@@ -1566,7 +1566,9 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           <>
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">Follow-up Validity</label>
+                                <label className="form-label mb-1 d-flex align-items-center" style={{ minHeight: "22px" }}>
+                                  Follow-up Validity
+                                </label>
                                 <input
                                   type="number"
                                   className="form-control"
@@ -1579,7 +1581,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                             </div>
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label d-flex align-items-center gap-2">
+                                <label className="form-label mb-1 d-flex align-items-center gap-2" style={{ minHeight: "22px" }}>
                                   Free Follow-up Limit
                                   <span className="badge bg-soft-info text-info fw-normal fs-12">
                                     <i className="ti ti-info-circle me-1" />0 = Unlimited

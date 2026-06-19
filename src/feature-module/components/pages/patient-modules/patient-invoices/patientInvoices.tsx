@@ -27,7 +27,8 @@ const PatientInvoices = () => {
         year: "numeric",
       })
       : "—",
-    Amount: `$${(inv.totalAmount ?? 0).toFixed(2)}`,
+    Amount: `₹${(inv.totalAmount ?? 0).toFixed(2)}`,
+    totalAmount: inv.totalAmount ?? 0,
     Status: inv.paymentStatus === "Paid"
       ? "Paid"
       : inv.paymentStatus === "Partial"
@@ -127,25 +128,82 @@ const PatientInvoices = () => {
     {
       title: "Action",
       align: 'center' as const,
-      render: (record: any) => (
-        <div className="d-flex align-items-center justify-content-center gap-2">
-          <Link
-            to={`${all_routes.patientinvoicedetails}?id=${record.id}`}
-            className="btn btn-icon btn-sm btn-soft-primary border"
-            title="View Invoice"
-          >
-            <i className="ti ti-eye fs-16" />
-          </Link>
-
-          <button
-            className="btn btn-icon btn-sm btn-soft-info border"
-            title="Download PDF"
-            onClick={() => { /* Placeholder for download function */ }}
-          >
-            <i className="ti ti-download fs-16" />
-          </button>
-        </div>
-      ),
+      render: (record: any) => {
+        const inv = invoices.find((i) => i.id === record.id);
+        const handleDownloadInvoice = () => {
+          if (!inv) return;
+          const printWindow = window.open('', '_blank');
+          if (!printWindow) return;
+          const html = `<html>
+            <head>
+              <title>Invoice - ${inv.invoiceCode || 'Record'}</title>
+              <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+              <style>
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                body { background: #fff; padding: 30px; font-family: 'Inter', sans-serif; color: #0f172a; }
+                .header-banner { background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important; color: #fff !important; padding: 24px !important; border-radius: 8px !important; margin-bottom: 25px !important; display: flex; justify-content: space-between; align-items: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .header-banner h4 { color: #fff !important; font-weight: 700; margin: 0 0 4px 0; font-size: 22px; }
+                .header-banner p { color: #e0f2fe !important; margin: 0; font-size: 13px; }
+                .logo-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 5px; }
+                .info-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 700; }
+                .info-value { font-size: 14px; font-weight: 700; color: #1e293b; }
+                .table-bordered { border: 2px solid #0f172a !important; }
+                .table th { background: #0f172a !important; color: #fff !important; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 10px; border: 2px solid #0f172a !important; font-weight: 700; }
+                .table td { padding: 12px 10px; font-size: 13px; border: 1px solid #334155 !important; color: #0f172a !important; font-weight: 600; }
+                .total-box { background: #f8fafc; padding: 25px; border-radius: 12px; border: 2px solid #0f172a; }
+                @media print { body { padding: 0; } .header-banner { background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+              </style>
+            </head>
+            <body>
+              <div class="header-banner">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="logo-box"><img src="${inv.clinic?.landingPage?.logo || '/logo.png'}" alt="logo" style="max-height:55px;max-width:55px;object-fit:contain;"></div>
+                  <div>
+                    <h4>${inv.clinic?.name || inv.clinicName || "Docyari Healthcare"}</h4>
+                    <p>${inv.clinic?.landingPage?.address || 'Clinic Support Network'}</p>
+                    <h6 style="color:#fff;font-size:14px;font-weight:bold;margin-top:8px;">OFFICIAL INVOICE</h6>
+                    <p style="font-size:12px;opacity:0.8;">Ref: ${inv.invoiceCode || "#INV-0001"}</p>
+                  </div>
+                </div>
+                <div class="text-end text-white">
+                  <span class="${inv.paymentStatus === 'Paid' ? 'badge bg-success' : 'badge bg-warning text-dark'} fw-bold px-3 py-2 mb-2 text-uppercase" style="font-size:12px;border-radius:4px;">${inv.paymentStatus || 'PENDING'}</span>
+                  <div class="small mt-1 opacity-90">
+                    <div class="mb-1"><strong>Invoice Date:</strong> ${inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</div>
+                    <div><strong>Due Date:</strong> ${inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="row g-4 mb-5">
+                <div class="col-4"><div class="info-label">Recipient / Patient</div><div class="info-value" style="font-size:16px;color:#4f46e5;">${inv.patient?.firstName || ''} ${inv.patient?.lastName || ''}</div><div class="text-muted small">Phone: ${inv.patient?.phone || 'N/A'}</div><div class="text-muted small">Email: ${inv.patient?.email || 'N/A'}</div></div>
+                <div class="col-4"><div class="info-label">Issuance Details</div><div class="text-muted small">Billing Date</div><div class="info-value">${inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</div><div class="text-muted small mt-2">Payment Method</div><div class="info-value">${inv.paymentMethod || "Direct Payment"}</div></div>
+                <div class="col-4 text-end"><div class="info-label">Total Payable</div><div class="info-value text-primary" style="font-size:24px;">&#8377;${(inv.totalAmount || 0).toFixed(2)}</div><div class="text-muted small mt-1">Due: ${inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</div></div>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-bordered mb-5">
+                  <thead><tr><th style="width:60px;" class="text-center">S.NO</th><th>SERVICE DESCRIPTION</th><th class="text-center">QTY</th><th class="text-center">UNIT PRICE</th><th class="text-end">LINE TOTAL</th></tr></thead>
+                  <tbody>${(inv.items || []).map((item: any, i: number) => `<tr><td class="text-center text-muted fw-bold">${i + 1}</td><td><div class="fw-bold text-dark">${item.name || item.item || 'Health Consultation'}</div><div class="text-muted small mt-1">${item.description || ''}</div></td><td class="text-center fw-bold">${item.quantity || 1}</td><td class="text-center text-muted">&#8377;${(item.unitCost || 0).toFixed(2)}</td><td class="text-end fw-bold text-dark">&#8377;${(item.amount || 0).toFixed(2)}</td></tr>`).join('')}</tbody>
+                </table>
+              </div>
+              <div class="row justify-content-end mb-5">
+                <div class="col-5"><div class="total-box shadow-sm"><div class="d-flex justify-content-between mb-2"><span class="text-muted fw-bold small">SUBTOTAL</span><span class="fw-bold">&#8377;${(inv.subTotal || 0).toFixed(2)}</span></div><div class="d-flex justify-content-between mb-3"><span class="fw-bold small">TAX (${inv.tax || 0}%)</span><span class="fw-bold">&#8377;${((inv.subTotal || 0) * (inv.tax || 0) / 100).toFixed(2)}</span></div><div class="d-flex justify-content-between border-top pt-3 mt-1"><h5 class="fw-bold mb-0 text-dark">GRAND TOTAL</h5><h4 class="fw-bold text-primary mb-0">&#8377;${(inv.totalAmount || 0).toFixed(2)}</h4></div></div></div>
+              </div>
+              <div class="mt-5 pt-4 text-center border-top"><p class="mb-1 text-muted small">Thank you for your visit. For billing inquiries, please contact our clinic support.</p><p class="fw-bold fs-11 text-muted mb-0">2025 &copy; Docyari PHR Billing Gateway</p></div>
+              <script>window.onload = () => { setTimeout(() => { window.print(); window.close(); }, 500); };</script>
+            </body></html>`;
+          printWindow.document.write(html);
+          printWindow.document.close();
+        };
+        return (
+          <div className="d-flex align-items-center justify-content-center gap-2">
+            <Link to={`${all_routes.patientinvoicedetails}?id=${record.id}`} className="text-info p-1" title="View Invoice">
+              <i className="ti ti-eye fs-18" />
+            </Link>
+            <button className="bg-transparent border-0 text-primary p-1" title="Download PDF" onClick={handleDownloadInvoice}>
+              <i className="ti ti-download fs-18" />
+            </button>
+          </div>
+        );
+      },
     },
   ];
 

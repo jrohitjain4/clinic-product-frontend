@@ -223,104 +223,97 @@ const PatientPrescriptionDetails = () => {
               <div className="card shadow-sm">
                 <div className="card-body">
                   {/* Clinic + Doctor Info */}
-                  <div className="d-flex align-items-center justify-content-between border-bottom pb-3 mb-3 flex-wrap gap-2 mt-4">
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="avatar avatar-xxl rounded bg-light border p-2">
-                        <ImageWithBasePath src={(prescription as any).clinic?.landingPage?.logo || "assets/img/logo.png"} alt="clinic" className="img-fluid" />
+                  <div style={{ background: 'linear-gradient(135deg, #1e3a8a, #3b82f6)', color: '#ffffff', padding: '24px', borderRadius: '8px', marginBottom: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                      <div style={{ width: '70px', height: '70px', background: '#fff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                        {(prescription as any)?.clinic?.landingPage?.logo ? (
+                          <img src={resolveMediaUrl((prescription as any).clinic.landingPage.logo)} alt="logo" style={{ maxHeight: '55px', maxWidth: '55px', objectFit: 'contain' }} onError={(e: any) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '<span style="font-size:11px;font-weight:700;color:#1e3a8a;text-align:center">CLINIC</span>'; }} />
+                        ) : (
+                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#1e3a8a', textAlign: 'center' }}>CLINIC</span>
+                        )}
                       </div>
                       <div>
-                        <h5 className="text-dark fw-bold mb-1">{(prescription as any).clinic?.name || (prescription as any).clinicName || "Clinic Center"}</h5>
-                        <p className="mb-2 text-muted fs-13 d-flex align-items-center gap-1">
-                          <i className="ti ti-map-pin" />
+                        <h4 style={{ color: '#ffffff', fontWeight: 700, margin: '0 0 4px 0', fontSize: '22px' }}>{(prescription as any).clinic?.name || (prescription as any).clinicName || "Clinic Center"}</h4>
+                        <p style={{ color: '#e0f2fe', margin: 0, fontSize: '13px' }}>
+                          <i className="ti ti-map-pin me-1" />
                           {(prescription as any).clinic?.landingPage?.address || (prescription as any).location || "Address Not Specified"}
                         </p>
-                        <p className="mb-1 fw-semibold text-dark">
-                          {doctor.fullName ? (doctor.fullName.startsWith('Dr.') ? doctor.fullName : `Dr. ${doctor.fullName}`) : "-"}
-                        </p>
-                        <p className="mb-0 text-muted fs-13">
-                          {doctor.designation?.name || ""}{doctor.department?.name ? ` · ${doctor.department.name}` : ""}
-                        </p>
+                        <h6 style={{ color: '#ffffff', margin: '8px 0 2px 0', fontSize: '15px', fontWeight: 600 }}>
+                          {doctor.fullName ? (doctor.fullName.startsWith('Dr.') ? doctor.fullName : `Dr. ${doctor.fullName}`) : ""}
+                        </h6>
+                        <p style={{ color: '#e0f2fe', margin: 0, fontSize: '13px' }}>{doctor.designation?.name || "Consultant"} · {doctor.department?.name || "Medicine"}</p>
                       </div>
                     </div>
-                    <div className="text-lg-end">
-                      <div className="mb-2">
-                        <span className="badge bg-white text-primary border border-primary py-1 px-3 fs-13 fw-medium">
-                          {prescription.prescriptionCode || "#---"}
-                        </span>
+                    <div style={{ textAlign: 'right', color: '#fff' }}>
+                      <span style={{ background: '#fff', color: '#1e3a8a', fontWeight: 'bold', padding: '5px 15px', borderRadius: '4px', fontSize: '12px', display: 'inline-block', marginBottom: '10px' }}>
+                        {prescription.prescriptionCode || "#---"}
+                      </span>
+                      <div style={{ fontSize: '12px', opacity: 0.9 }}>
+                        <div style={{ marginBottom: '4px' }}><strong>Dept:</strong> {doctor.department?.name || "General"}</div>
+                        <div><strong>Date:</strong> {new Date(prescription.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</div>
                       </div>
-                      <p className="text-dark mb-1">
-                        Department: <span className="text-body">{doctor.department?.name || "-"}</span>
-                      </p>
-                      <p className="text-dark mb-1">
-                        Prescribed on: <span className="text-body">
-                          {new Date(prescription.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                        </span>
-                      </p>
-                      {prescription.followUpDate && (
-                        <p className="text-dark mb-0">
-                          Follow Up: <span className="text-body">
-                            {new Date(prescription.followUpDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                          </span>
-                        </p>
-                      )}
                     </div>
                   </div>
 
                   {/* Patient Details */}
-                  <div className="mb-3">
-                    <h6 className="mb-2 fs-14 fw-medium">Patient Details</h6>
-                    <div className="px-3 py-2 bg-light rounded d-flex align-items-center justify-content-between flex-wrap gap-2">
-                      <h6 className="m-0 fw-semibold fs-16">
-                        {patient.firstName} {patient.lastName}
-                      </h6>
-                      <div className="d-flex align-items-center gap-3 flex-wrap">
-                        {patientAge !== null && (
-                          <p className="mb-0 text-dark">{patientAge}Y / {patient.gender || "—"}</p>
-                        )}
-                        {patient.bloodGroup && (
-                          <p className="mb-0 text-dark">
-                            <span className="text-body">Blood</span> : {patient.bloodGroup}
-                          </p>
-                        )}
-                        {patient.patientCode && (
-                          <p className="mb-0 text-dark">
-                            Patient ID <span className="text-body">{patient.patientCode}</span>
-                          </p>
-                        )}
-                      </div>
+                  <div style={{ marginBottom: '25px' }}>
+                    <h6 style={{ fontWeight: 700, textTransform: 'uppercase', borderBottom: '2px solid #0f172a', paddingBottom: '8px', marginBottom: '15px', fontSize: '12px', color: '#0f172a' }}>Patient Clinical Profile</h6>
+                    <div className="table-responsive">
+                      <table style={{ width: '100%', borderCollapse: 'collapse', border: '2px solid #0f172a', minWidth: '500px' }}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#0f172a', color: '#fff' }}>
+                            <th style={{ padding: '12px', fontSize: '12px', border: '1px solid #0f172a', textAlign: 'left' }}>PATIENT NAME</th>
+                            <th style={{ padding: '12px', fontSize: '12px', border: '1px solid #0f172a', textAlign: 'center' }}>AGE / GENDER</th>
+                            <th style={{ padding: '12px', fontSize: '12px', border: '1px solid #0f172a', textAlign: 'center' }}>BLOOD GROUP</th>
+                            <th style={{ padding: '12px', fontSize: '12px', border: '1px solid #0f172a', textAlign: 'center' }}>PATIENT ID</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td style={{ padding: '12px', fontSize: '14px', fontWeight: 'bold', color: '#1e3a8a', border: '1px solid #334155' }}>{patient.firstName} {patient.lastName}</td>
+                            <td style={{ padding: '12px', fontSize: '13px', textAlign: 'center', border: '1px solid #334155' }}>{patientAge !== null ? `${patientAge}Y / ${patient.gender || "N/A"}` : "N/A"}</td>
+                            <td style={{ padding: '12px', fontSize: '13px', textAlign: 'center', border: '1px solid #334155' }}>{patient.bloodGroup || "O+"}</td>
+                            <td style={{ padding: '12px', fontSize: '13px', textAlign: 'center', border: '1px solid #334155' }}>{patient.patientCode || "#---"}</td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
                   </div>
 
                   {/* Medicines Table */}
-                  <div className="mb-4">
-                    <h6 className="mb-3 fs-16 fw-semibold text-center">
-                      {doctor.department?.name ? `${doctor.department.name} Prescription` : "Prescription"}
-                    </h6>
-                    <div className="table-responsive border bg-white">
-                      <table className="table table-nowrap">
-                        <thead className="table-light">
-                          <tr>
-                            <th className="text-dark">SNO</th>
-                            <th className="text-dark">Medicine Name</th>
-                            <th className="text-dark">Dosage</th>
-                            <th className="text-dark">Frequency</th>
-                            <th className="text-dark">Duration</th>
-                            <th className="text-dark">Timings</th>
+                  <div style={{ textAlign: 'center', marginBottom: '25px', paddingTop: '15px' }}>
+                    <h5 style={{ fontWeight: 'bold', color: '#0f172a', textTransform: 'uppercase', borderBottom: '3px solid #0f172a', display: 'inline-block', paddingBottom: '8px' }}>
+                      Prescription Summary
+                    </h5>
+                  </div>
+
+                  <div style={{ marginBottom: '25px' }}>
+                    <h6 style={{ fontWeight: 700, textTransform: 'uppercase', borderBottom: '2px solid #0f172a', paddingBottom: '8px', marginBottom: '15px', fontSize: '12px', color: '#0f172a' }}>Medicines Details</h6>
+                    <div className="table-responsive">
+                      <table style={{ width: '100%', borderCollapse: 'collapse', border: '2px solid #0f172a', minWidth: '600px' }}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#0f172a', color: '#fff' }}>
+                            <th style={{ padding: '12px', fontSize: '12px', border: '1px solid #0f172a', textAlign: 'center' }}>S.NO</th>
+                            <th style={{ padding: '12px', fontSize: '12px', border: '1px solid #0f172a', textAlign: 'left' }}>Medicine Name</th>
+                            <th style={{ padding: '12px', fontSize: '12px', border: '1px solid #0f172a', textAlign: 'left' }}>Dosage</th>
+                            <th style={{ padding: '12px', fontSize: '12px', border: '1px solid #0f172a', textAlign: 'center' }}>Frequency</th>
+                            <th style={{ padding: '12px', fontSize: '12px', border: '1px solid #0f172a', textAlign: 'center' }}>Duration</th>
+                            <th style={{ padding: '12px', fontSize: '12px', border: '1px solid #0f172a', textAlign: 'center' }}>Timings</th>
                           </tr>
                         </thead>
                         <tbody>
                           {medicines.length > 0 ? medicines.map((med: any, i: number) => (
                             <tr key={med.id || i}>
-                              <td>{String(i + 1).padStart(2, "0")}</td>
-                              <td className="fw-medium">{med.medicineName}</td>
-                              <td>{med.dosage || "—"}</td>
-                              <td className="text-primary fw-medium">{med.frequency || "—"}</td>
-                              <td>{med.duration || "—"}</td>
-                              <td>{med.timings || "—"}</td>
+                              <td style={{ padding: '12px', border: '1px solid #334155', fontSize: '13px', color: '#0f172a', textAlign: 'center' }}>{String(i + 1).padStart(2, "0")}</td>
+                              <td style={{ padding: '12px', border: '1px solid #334155', fontSize: '13px', color: '#1e3a8a', fontWeight: 700 }}>{med.medicineName}</td>
+                              <td style={{ padding: '12px', border: '1px solid #334155', fontSize: '13px', color: '#0f172a' }}>{med.dosage || "—"}</td>
+                              <td style={{ padding: '12px', border: '1px solid #334155', fontSize: '13px', color: '#0f172a', textAlign: 'center', fontWeight: 'bold' }}>{med.frequency || "—"}</td>
+                              <td style={{ padding: '12px', border: '1px solid #334155', fontSize: '13px', color: '#0f172a', textAlign: 'center' }}>{med.duration || "—"}</td>
+                              <td style={{ padding: '12px', border: '1px solid #334155', fontSize: '13px', color: '#0f172a', textAlign: 'center' }}>{med.timings || "—"}</td>
                             </tr>
                           )) : (
                             <tr>
-                              <td colSpan={6} className="text-center text-muted py-3">No medicines added</td>
+                              <td colSpan={6} style={{ padding: '12px', border: '1px solid #334155', fontSize: '13px', color: '#64748b', textAlign: 'center' }}>No medicines added</td>
                             </tr>
                           )}
                         </tbody>
@@ -348,7 +341,6 @@ const PatientPrescriptionDetails = () => {
                       </p>
                     </div>
                     <div className="text-end">
-                      <img src="/assets/img/icons/signature-img.svg" alt="signature" className="img-fluid mb-1" style={{ maxHeight: '60px' }} />
                       <h6 className="fs-14 fw-semibold mb-0">
                         {doctor.fullName ? (doctor.fullName.startsWith('Dr.') ? doctor.fullName : `Dr. ${doctor.fullName}`) : "—"}
                       </h6>
@@ -379,7 +371,7 @@ const PatientPrescriptionDetails = () => {
           <div className="d-flex justify-content-between align-items-start mb-4">
             <div className="d-flex gap-3">
               <div className="rounded p-1 d-flex align-items-center justify-content-center" style={{ width: '80px', height: '80px', border: '1px dashed #4f46e5', backgroundColor: '#fff' }}>
-                <ImageWithBasePath src={(prescription as any)?.clinic?.landingPage?.logo || "assets/img/logo.png"} alt="logo" style={{ maxHeight: '70px', maxWidth: '70px', objectFit: 'contain' }} />
+                <img src={resolveMediaUrl((prescription as any)?.clinic?.landingPage?.logo) || "/assets/img/logo.png"} alt="logo" style={{ maxHeight: '70px', maxWidth: '70px', objectFit: 'contain' }} />
               </div>
               <div>
                 <h4 className="fw-bold mb-1 mt-1" style={{ color: '#000', fontSize: '20px' }}>{(prescription as any).clinic?.name || (prescription as any).clinicName || "Clinic Center"}</h4>

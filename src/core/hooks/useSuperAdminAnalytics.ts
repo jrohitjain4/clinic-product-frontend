@@ -16,7 +16,23 @@ export interface SuperAdminAnalytics {
     activeSubscriptions: number;
     totalClinics: number;
     pendingRenewals: number;
+    freeTrials?: number;
+    premiumPackages?: number;
+    demoBookings?: number;
+    totalPackages?: number;
+    totalTickets?: number;
+    openTickets?: number;
+    packagesList?: any[];
+    demoBookingsList?: any[];
+    recentClinics?: any[];
+    ticketsList?: any[];
     transactionHistory: TransactionInfo[];
+    clinicStatusCounts?: {
+        UPGRADED: number;
+        IN_PROGRESS: number;
+        TRIAL: number;
+        TRIAL_EXPIRED: number;
+    };
 }
 
 export const useSuperAdminAnalytics = () => {

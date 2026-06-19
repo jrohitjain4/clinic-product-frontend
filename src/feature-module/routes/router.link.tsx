@@ -262,6 +262,7 @@ import { all_routes } from "./all_routes";
 import { Route } from "react-router";
 
 import AppointmentDetails from "../components/pages/clinic-modules/appointments/appointmentDetails";
+import SuperAdminDashboard from "../components/pages/super-admin/super-admin-dashboard/superAdminDashboard";
 
 const routes = all_routes;
 
@@ -430,6 +431,12 @@ export const publicRoutes = [
     path: all_routes.superAdminRazorpaySettings,
     name: "super-admin-razorpay-settings",
     element: <RazorpaySettingsAdmin />,
+    route: Route,
+  },
+  {
+    path: routes.superAdminDashboard,
+    name: "super-admin-dashboard",
+    element: <SuperAdminDashboard />,
     route: Route,
   },
   {

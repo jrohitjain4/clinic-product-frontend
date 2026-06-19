@@ -30,13 +30,53 @@ const DoctorsAppointmentDetails = () => {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [clinicalNote, setClinicalNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+  const [editingNote, setEditingNote] = useState<any>(null);
 
-  const { notes, addNote } = useNotes({ appointmentId: id });
+  const { notes, addNote, deleteNote, updateNote } = useNotes({ appointmentId: id });
 
   // Fetch patient's full history
   const { appointments: history } = useClinicAppointments(
     appointment?.patientId ? { patientId: appointment.patientId } : undefined
   );
+
+  // Fetch all appointments to compute dynamic queue/expected-time ranks
+  const { appointments: allAppointments } = useClinicAppointments();
+
+  const slotDetails = useMemo(() => {
+      if (!appointment || !allAppointments || allAppointments.length === 0) return { expectedTime: "—", checkinHisNo: "—" };
+
+      const dateStr = dayjs(appointment.scheduledAt).format("YYYY-MM-DD");
+      const timeStr = dayjs(appointment.scheduledAt).format("HH:mm");
+      const doctorId = appointment.doctorId;
+
+      // Group appointments by doctor, date, and slot time
+      const group = allAppointments.filter((a) => {
+          const aDate = dayjs(a.scheduledAt).format("YYYY-MM-DD");
+          const aTime = dayjs(a.scheduledAt).format("HH:mm");
+          return a.doctorId === doctorId && aDate === dateStr && aTime === timeStr;
+      }).sort((a, b) => {
+          const createA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const createB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          if (createA !== createB) return createA - createB;
+          return (a.id || "").localeCompare(b.id || "");
+      });
+
+      const indexInGroup = group.findIndex((item) => item.id === appointment.id);
+      const queueNo = indexInGroup !== -1 ? indexInGroup + 1 : 1;
+
+      const slotStartTime = dayjs(appointment.scheduledAt);
+      const expectedTime = indexInGroup !== -1
+          ? slotStartTime.add(indexInGroup * 15, "minute").format("hh:mm A")
+          : slotStartTime.format("hh:mm A");
+
+      const checkinsBefore = indexInGroup !== -1
+          ? group.slice(0, indexInGroup).filter((item) => ["Checked In", "Checked Out"].includes(item.status)).length
+          : 0;
+
+      const checkinHisNo = `${checkinsBefore} / ${queueNo}`;
+
+      return { expectedTime, checkinHisNo };
+  }, [appointment, allAppointments]);
 
   // Calculate fully linked chain (Root Parent + all its Follow-ups)
   const rootId = (appointment as any)?.rootParentId || appointment?.id;
@@ -71,15 +111,23 @@ const DoctorsAppointmentDetails = () => {
     if (!id || !clinicalNote.trim()) return;
     setSavingNote(true);
     try {
-      await addNote({
-        title: "Clinical Note",
-        content: clinicalNote,
-        priority: "Medium",
-        noteDate: new Date().toISOString(),
-        appointmentId: id
-      });
-      toast.success("Clinical note added");
+      if (editingNote) {
+        await updateNote(editingNote.id, {
+          content: clinicalNote
+        });
+        toast.success("Clinical note updated");
+      } else {
+        await addNote({
+          title: "Clinical Note",
+          content: clinicalNote,
+          priority: "Medium",
+          noteDate: new Date().toISOString(),
+          appointmentId: id
+        });
+        toast.success("Clinical note added");
+      }
       setClinicalNote("");
+      setEditingNote(null);
       setShowNoteModal(false);
     } catch (e) {
       console.error(e);
@@ -271,13 +319,7 @@ const DoctorsAppointmentDetails = () => {
       ),
       sorter: (a: any, b: any) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
     },
-    {
-      title: "Reason",
-      dataIndex: "reason",
-      render: (text: string) => (
-        <span title={text}>{truncateReason(text)}</span>
-      ),
-    },
+
     {
       title: "Status",
       dataIndex: "status",
@@ -330,47 +372,81 @@ const DoctorsAppointmentDetails = () => {
           {/* Patient Info */}
           <div className="col-xxl-4 col-xl-6 col-lg-6 col-md-12">
             <div className="card shadow-sm border rounded-4 mb-0 h-100 overflow-hidden hover-shadow transition-all position-relative">
-              <div className="card-body p-3 position-relative z-index-1">
-                <div className="d-flex align-items-start gap-2">
-                  <div className="avatar avatar-xl rounded-circle border p-1 bg-light shadow-sm flex-shrink-0">
-                    <ImageWithBasePath
-                      src={getProfileImage(appointment.patient?.profileImage, 'patient')}
-                      className="rounded-circle img-fluid"
-                      alt="Patient"
-                    />
+              <div className="card-body p-4 position-relative z-index-1">
+                <div className="d-flex align-items-center justify-content-between mb-3">
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="avatar avatar-xl rounded-circle border p-1 bg-light shadow-sm flex-shrink-0">
+                      <ImageWithBasePath
+                        src={getProfileImage(appointment.patient?.profileImage, 'patient')}
+                        className="rounded-circle img-fluid"
+                        alt="Patient"
+                      />
+                    </div>
+                    <div>
+                      <div className="d-flex align-items-center gap-2 mb-1">
+                        <span className="badge bg-soft-primary text-primary fw-bold text-uppercase fs-10 tracking-wider px-2 py-0.5">Patient</span>
+                        <span className="text-secondary fw-bold fs-11">#{appointment.patient?.patientCode || appointment.patientId?.slice(-6).toUpperCase()}</span>
+                      </div>
+                      <h5 className="fw-bold text-dark mb-0 fs-18">{appointment.patient?.firstName} {appointment.patient?.lastName}</h5>
+                    </div>
                   </div>
-                  <div className="flex-grow-1">
-                    <div className="d-flex align-items-center justify-content-between mb-1">
-                      <span className="badge bg-soft-primary text-primary fw-bold text-uppercase fs-10 tracking-wider px-2 py-1">Patient</span>
-                      <span className="text-black fw-bold fs-11">#{appointment.patient?.patientCode || appointment.patientId?.slice(-6).toUpperCase()}</span>
-                    </div>
-                    <h5 className="fw-bold text-dark mb-1 fs-16">{appointment.patient?.firstName} {appointment.patient?.lastName}</h5>
+                  <div className="text-end bg-light p-2 rounded-3 border-dashed-1 flex-shrink-0" style={{ minWidth: '95px' }}>
+                    <p className="fs-10 text-uppercase fw-bold text-black mb-0 letter-spacing-1" style={{ fontSize: '9px' }}>Insurance</p>
+                    <span className="badge bg-soft-success text-success fs-10 fw-bold border-0 p-0 text-uppercase">Verified ✓</span>
+                  </div>
+                </div>
 
-                    <div className="d-flex flex-wrap gap-x-3 gap-y-1 mb-2">
-                      <div className="d-flex align-items-center gap-1 text-black fw-bold fs-11">
-                        <i className="ti ti-user fs-12 text-primary" />
-                        <span>{appointment.patient?.gender || "N/A"}</span>
-                      </div>
-                      <div className="d-flex align-items-center gap-1 text-black fw-bold fs-11">
-                        <i className="ti ti-calendar fs-12 text-primary" />
-                        <span>{appointment.patient?.dob ? `${dayjs().diff(appointment.patient.dob, 'year')} Yrs` : "N/A"}</span>
-                      </div>
-                      <div className="d-flex align-items-center gap-1 text-black fw-bold fs-11">
-                        <i className="ti ti-droplet fs-12 text-danger" />
-                        <span>{appointment.patient?.bloodGroup || "O+"}</span>
-                      </div>
-                    </div>
+                <hr className="my-3 border-dashed" />
 
-                    <div className="d-flex align-items-end justify-content-between pt-1">
-                      <div>
-                        <p className="text-black fw-bold fs-12 mb-0 d-flex align-items-center gap-1">
-                          <i className="ti ti-phone-filled fs-12 text-primary" />
-                          {appointment.patient?.phone || "N/A"}
-                        </p>
-                      </div>
-                      <div className="text-end bg-light p-1 rounded-3 border-dashed-1 flex-shrink-0" style={{ minWidth: '90px' }}>
-                        <p className="fs-10 text-uppercase fw-bold text-black mb-0 letter-spacing-1" style={{ fontSize: '8px' }}>Insurance</p>
-                        <span className="badge bg-soft-success text-success fs-10 fw-bold border-0 p-0 text-uppercase">Verified ✓</span>
+                <div className="row g-2 text-dark fs-12">
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-user fs-14 text-primary" />
+                      <span className="text-muted fw-normal">Gender:</span>
+                      <span className="text-dark">{appointment.patient?.gender || "N/A"}</span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-calendar fs-14 text-primary" />
+                      <span className="text-muted fw-normal">Age:</span>
+                      <span className="text-dark">{appointment.patient?.dob ? `${dayjs().diff(appointment.patient.dob, 'year')} Yrs` : "N/A"}</span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-droplet fs-14 text-danger" />
+                      <span className="text-muted fw-normal">Blood:</span>
+                      <span className="text-dark">{appointment.patient?.bloodGroup || "N/A"}</span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-heart-handshake fs-14 text-primary" />
+                      <span className="text-muted fw-normal">Marital:</span>
+                      <span className="text-dark">{appointment.patient?.maritalStatus || "N/A"}</span>
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="py-2 px-2 bg-light rounded-2 text-black fw-bold d-flex align-items-center gap-2">
+                      <i className="ti ti-phone-filled fs-14 text-primary" />
+                      <span className="text-muted fw-normal">Phone:</span>
+                      <span className="text-dark">{appointment.patient?.phone || "N/A"}</span>
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="py-2 px-2 bg-light rounded-2 text-black fw-bold d-flex align-items-start gap-2">
+                      <i className="ti ti-map-pin fs-14 text-primary mt-0.5" />
+                      <div className="flex-grow-1 lh-sm">
+                        <span className="text-muted fw-normal d-block fs-10 text-uppercase letter-spacing-1 mb-1">Address</span>
+                        <div className="text-dark fw-bold mb-1">
+                          {[appointment.patient?.address1, appointment.patient?.address2].filter(p => p && p.trim() !== "").join(", ") || "N/A"}
+                        </div>
+                        <div className="text-dark fw-bold">
+                          {[appointment.patient?.city, appointment.patient?.state, appointment.patient?.pincode].filter(p => p && p.trim() !== "").join(", ") || "N/A"}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -383,48 +459,89 @@ const DoctorsAppointmentDetails = () => {
           {/* Doctor Info */}
           <div className="col-xxl-4 col-xl-6 col-lg-6 col-md-12">
             <div className="card shadow-sm border rounded-4 mb-0 h-100 overflow-hidden hover-shadow transition-all position-relative">
-              <div className="card-body p-3 position-relative z-index-1">
-                <div className="d-flex align-items-start gap-2">
-                  <div className="avatar avatar-xl rounded-circle border p-1 bg-light shadow-sm flex-shrink-0">
-                    <ImageWithBasePath
-                      src={getProfileImage(appointment.doctor?.profileImage, 'doctor')}
-                      className="rounded-circle img-fluid"
-                      alt="Doctor"
-                    />
-                  </div>
-                  <div className="flex-grow-1">
-                    <div className="d-flex align-items-center justify-content-between mb-1">
-                      <span className="badge bg-soft-info text-info fw-bold text-uppercase fs-10 tracking-wider px-2 py-1">Practitioner</span>
-                      <div className="d-flex gap-1 text-warning fs-10">
-                        <i className="fa fa-star" /><i className="fa fa-star" /><i className="fa fa-star" /><i className="fa fa-star" /><i className="fa fa-star" />
-                      </div>
+              <div className="card-body p-4 position-relative z-index-1">
+                <div className="d-flex align-items-center justify-content-between mb-3">
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="avatar avatar-xl rounded-circle border p-1 bg-light shadow-sm flex-shrink-0">
+                      <ImageWithBasePath
+                        src={getProfileImage(appointment.doctor?.profileImage, 'doctor')}
+                        className="rounded-circle img-fluid"
+                        alt="Doctor"
+                      />
                     </div>
-                    <h5 className="fw-bold text-dark mb-1 fs-16">{appointment.doctor?.fullName}</h5>
-
-                    <div className="d-flex flex-wrap gap-x-3 gap-y-1 mb-2">
-                      <div className="d-flex align-items-center gap-1 text-black fw-bold fs-11">
-                        <i className="ti ti-briefcase fs-12 text-info" />
-                        <span>{appointment.doctor?.yearOfExperience || "8"}+ Yrs Exp</span>
-                      </div>
-                      <div className="d-flex align-items-center gap-1 text-black fw-bold fs-11">
-                        <i className="ti ti-building fs-12 text-info" />
-                        <span>{appointment.doctor?.department?.name || "General"}</span>
-                      </div>
-                    </div>
-
-                    <div className="d-flex align-items-end justify-content-between pt-1">
-                      <div className="flex-grow-1">
-                        <div className="text-black fw-bold fs-12 mb-0 d-flex align-items-center gap-1 text-truncate" style={{ maxWidth: '120px' }}>
-                          <i className="ti ti-shield-check-filled fs-12 text-info" />
-                          {appointment.doctor?.designation?.name || "Consultant"}
+                    <div>
+                      <div className="d-flex align-items-center gap-2 mb-1">
+                        <span className="badge bg-soft-info text-info fw-bold text-uppercase fs-10 tracking-wider px-2 py-0.5">Practitioner</span>
+                        <div className="d-flex gap-0.5 text-warning fs-9">
+                          <i className="fa fa-star" /><i className="fa fa-star" /><i className="fa fa-star" /><i className="fa fa-star" /><i className="fa fa-star" />
                         </div>
                       </div>
-                      <div className="text-end bg-info-soft p-1 rounded-3 border-dashed-1 flex-shrink-0" style={{ minWidth: '90px' }}>
-                        <p className="fs-10 text-uppercase fw-bold text-black mb-0 letter-spacing-1" style={{ fontSize: '8px' }}>Availability</p>
-                        <span className="fs-11 fw-bold text-info d-flex align-items-center gap-1 justify-content-end">
-                          <span className="pulse-dot-info" /> AVAILABLE
-                        </span>
+                      <h5 className="fw-bold text-dark mb-0 fs-18">{appointment.doctor?.fullName}</h5>
+                    </div>
+                  </div>
+                  <div className="text-end bg-info-soft p-2 rounded-3 border-dashed-1 flex-shrink-0" style={{ minWidth: '95px' }}>
+                    <p className="fs-10 text-uppercase fw-bold text-black mb-0 letter-spacing-1" style={{ fontSize: '9px' }}>Availability</p>
+                    <span className="fs-11 fw-bold text-info d-flex align-items-center gap-1 justify-content-end">
+                      <span className="pulse-dot-info" /> AVAILABLE
+                    </span>
+                  </div>
+                </div>
+
+                <hr className="my-3 border-dashed" />
+
+                <div className="row g-2 text-dark fs-12">
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-briefcase fs-14 text-info" />
+                      <span className="text-muted fw-normal">Exp:</span>
+                      <span className="text-dark">{appointment.doctor?.yearOfExperience ? `${appointment.doctor.yearOfExperience}+ Yrs` : "8+ Yrs"}</span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-building fs-14 text-info" />
+                      <span className="text-muted fw-normal">Specialty:</span>
+                      <span className="text-dark text-truncate">{appointment.doctor?.department?.name || "General"}</span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-shield-check-filled fs-14 text-info" />
+                      <span className="text-muted fw-normal">Role:</span>
+                      <span className="text-dark text-truncate">{appointment.doctor?.designation?.name || "Consultant"}</span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-coin fs-14 text-success" />
+                      <span className="text-muted fw-normal">Fee:</span>
+                      <span className="text-dark">₹{appointment.doctor?.consultationCharge || "500"}</span>
+                    </div>
+                  </div>
+
+                  {appointment.doctor?.medicalLicenseNumber && (
+                    <div className="col-12">
+                      <div className="py-2 px-2 bg-light rounded-2 text-black fw-bold d-flex align-items-center gap-2">
+                        <i className="ti ti-license fs-14 text-info" />
+                        <span className="text-muted fw-normal">License:</span>
+                        <span className="text-dark">{appointment.doctor.medicalLicenseNumber}</span>
                       </div>
+                    </div>
+                  )}
+
+                  <div className="col-12">
+                    <div className="py-2 px-2 bg-light rounded-2 text-black fw-bold d-flex align-items-center gap-2">
+                      <i className="ti ti-phone-filled fs-14 text-info" />
+                      <span className="text-muted fw-normal">Phone:</span>
+                      <span className="text-dark">{appointment.doctor?.phone || "N/A"}</span>
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="py-2 px-2 bg-light rounded-2 text-black fw-bold d-flex align-items-center gap-2">
+                      <i className="ti ti-mail fs-14 text-info" />
+                      <span className="text-muted fw-normal">Email:</span>
+                      <span className="text-dark text-truncate">{appointment.doctor?.email || "N/A"}</span>
                     </div>
                   </div>
                 </div>
@@ -436,48 +553,104 @@ const DoctorsAppointmentDetails = () => {
           {/* Slot Details */}
           <div className="col-xxl-4 col-xl-12 col-lg-12 col-md-12">
             <div className="card shadow-sm border rounded-4 mb-0 h-100 overflow-hidden bg-white border-primary-light hover-shadow transition-all position-relative">
-              <div className="card-body p-3 position-relative z-index-1">
-                <div className="d-flex justify-content-between align-items-start mb-2">
-                  <div className="d-flex flex-column gap-1">
-                    <div className="badge bg-soft-primary text-primary fw-bold text-uppercase fs-10 tracking-wider px-2 py-1" style={{ width: 'fit-content' }}>Visit Slot</div>
-                    {appointment.isFollowUp && (
-                      <span className="badge bg-soft-success text-success fw-bold text-uppercase fs-10 tracking-wider px-2 py-1">Follow-up ✓</span>
-                    )}
+              <div className="card-body p-4 position-relative z-index-1">
+                <div className="d-flex align-items-center justify-content-between mb-3">
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="avatar avatar-xl rounded-circle border p-1 bg-light shadow-sm flex-shrink-0 d-flex align-items-center justify-content-center text-primary">
+                      <i className="ti ti-calendar-event fs-24" />
+                    </div>
+                    <div>
+                      <div className="d-flex align-items-center gap-2 mb-1">
+                        <span className="badge bg-soft-primary text-primary fw-bold text-uppercase fs-10 tracking-wider px-2 py-0.5">Visit Slot</span>
+                        <span className="badge bg-light text-dark fw-bold fs-10 px-2 py-0.5 border">#{appointment.appointmentCode || "—"}</span>
+                        {appointment.isFollowUp && (
+                          <span className="badge bg-soft-success text-success fw-bold text-uppercase fs-10 tracking-wider px-2 py-0.5 animate__animated animate__pulse animate__infinite">Follow-up ✓</span>
+                        )}
+                      </div>
+                      <h5 className="fw-bold text-dark mb-0 fs-18">{dayjs(appointment.scheduledAt).format('DD MMM, YYYY')}</h5>
+                    </div>
                   </div>
-                  <span className={`badge ${statusBadgeClass(appointment.status)} rounded-pill px-3 py-1 fw-bold border-0 fs-11 shadow-xs`}>
-                    {appointment.status}
-                  </span>
-                </div>
-                <div className="d-flex align-items-center gap-3 mb-2">
-                  <div className="avatar avatar-md bg-soft-primary text-primary rounded-3 flex-shrink-0 d-flex align-items-center justify-content-center shadow-xs">
-                    <i className="ti ti-calendar-event fs-20" />
-                  </div>
-                  <div>
-                    <p className="text-muted fs-10 fw-bold text-uppercase mb-0 tracking-wider opacity-75">Date & Visit Type</p>
-                    <h5 className="fw-bold text-dark mb-0 fs-14">
-                      {dayjs(appointment.scheduledAt).format('DD MMM, YYYY')}
-                      <span className="text-primary fs-10 ms-2 fw-medium px-2 py-1 bg-soft-primary rounded-pill">{appointment.appointmentType || "Routine"}</span>
-                    </h5>
-                  </div>
-                </div>
-                <div className="d-flex align-items-center gap-3 mb-2">
-                  <div className="avatar avatar-md bg-soft-info text-info rounded-3 flex-shrink-0 d-flex align-items-center justify-content-center shadow-xs">
-                    <i className="ti ti-clock-hour-4 fs-20" />
-                  </div>
-                  <div>
-                    <p className="text-muted fs-10 fw-bold text-uppercase mb-0 tracking-wider opacity-75">Scheduled Slot</p>
-                    <h5 className="fw-bold text-dark mb-0 fs-14">{formatAppointmentTimeRange(appointment.scheduledAt, appointment.endAt)}</h5>
-                  </div>
-                </div>
-                <div className="d-flex align-items-center justify-content-between mt-2 pt-2 border-top">
-                  <div className="d-flex align-items-center gap-2 text-truncate">
-                    <i className="ti ti-map-pin text-muted fs-12" />
-                    <span className="text-muted fs-11 fw-medium text-truncate">{appointment.location || "Room 102, OPD"}</span>
-                  </div>
-                  <div className="bg-success-soft px-2 py-1 rounded-2 border-dashed flex-shrink-0">
-                    <span className="fs-10 fw-bold text-success text-uppercase">
-                      Mode: {appointment.mode}
+                  <div className="text-end">
+                    <span className={`badge ${statusBadgeClass(appointment.status)} rounded-pill px-3 py-1.5 fw-bold border-0 fs-11 shadow-xs`}>
+                      {appointment.status}
                     </span>
+                  </div>
+                </div>
+
+                <hr className="my-3 border-dashed" />
+
+                <div className="row g-2 text-dark fs-12 mb-0">
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-building-hospital fs-14 text-primary" />
+                      <span className="text-muted fw-normal">Type:</span>
+                      <span className="text-primary badge bg-soft-primary fs-11 px-2 py-1 rounded-pill">{appointment.appointmentType || "Routine"}</span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-device-laptop fs-14 text-info" />
+                      <span className="text-muted fw-normal">Mode:</span>
+                      <span className="text-dark">{appointment.mode || "In-person"}</span>
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-clock-hour-4 fs-14 text-info" />
+                      <span className="text-muted fw-normal">Scheduled Slot:</span>
+                      <span className="text-dark fw-bold">{formatAppointmentTimeRange(appointment.scheduledAt, appointment.endAt)}</span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-hourglass-low fs-14 text-warning" />
+                      <span className="text-muted fw-normal">Expected:</span>
+                      <span className="text-dark fw-bold">{slotDetails.expectedTime}</span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-users fs-14 text-success" />
+                      <span className="text-muted fw-normal">Check-in:</span>
+                      <span className="text-dark fw-bold">{slotDetails.checkinHisNo}</span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-building fs-14 text-primary" />
+                      <span className="text-muted fw-normal">Dept:</span>
+                      <span className="text-dark text-truncate">{appointment.department?.name || "General"}</span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-stopwatch fs-14 text-info" />
+                      <span className="text-muted fw-normal">Duration:</span>
+                      <span className="text-dark">{appointment.doctor?.appointmentDuration || 30} Mins</span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-map-pin fs-14 text-muted" />
+                      <span className="text-muted fw-normal">Location:</span>
+                      <span className="text-dark text-truncate">{appointment.location || "OPD"}</span>
+                    </div>
+                  </div>
+                  <div className="col-6">
+                    <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-cash fs-14 text-success" />
+                      <span className="text-muted fw-normal">Payment:</span>
+                      <span className={`badge ${appointment.paymentStatus === 'Paid' ? 'bg-soft-success text-success' : appointment.paymentStatus === 'Free' ? 'bg-soft-info text-info' : 'bg-soft-warning text-warning'} fs-11 px-2 py-1 rounded-pill`}>{appointment.paymentStatus || "Unpaid"}</span>
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <div className="d-flex align-items-start gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                      <i className="ti ti-notes fs-14 text-muted mt-0.5" />
+                      <div className="flex-grow-1 lh-sm">
+                        <span className="text-muted fw-normal d-block fs-10 text-uppercase letter-spacing-1 mb-1">Reason</span>
+                        <span className="text-dark">{appointment.reason || "General Consultation"}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -510,9 +683,6 @@ const DoctorsAppointmentDetails = () => {
                     <div className="mb-4">
                       <div className="d-flex align-items-center justify-content-between mb-3">
                         <h6 className="fw-bold text-primary mb-0">Reason for Appointment</h6>
-                        <button className="btn btn-soft-primary btn-xs fw-bold shadow-sm" onClick={() => { setClinicalNote(""); setShowNoteModal(true); }}>
-                          <i className="ti ti-plus me-1" /> Add Note
-                        </button>
                       </div>
                       <div className="p-3 bg-light rounded border fs-14 text-dark italic">
                         {appointment.reason || "General Check-up / Consultation"}
@@ -521,7 +691,7 @@ const DoctorsAppointmentDetails = () => {
                     <div className="mb-0">
                       <div className="d-flex align-items-center justify-content-between mb-3">
                         <h6 className="fw-bold text-primary mb-0">Physician Notes ({notes.length})</h6>
-                        <button className="btn btn-primary btn-xs fw-bold shadow-sm px-3" onClick={() => { setClinicalNote(""); setShowNoteModal(true); }}>
+                        <button className="btn btn-primary btn-xs fw-bold shadow-sm px-3" onClick={() => { setClinicalNote(""); setEditingNote(null); setShowNoteModal(true); }}>
                           <i className="ti ti-plus me-1" /> Add Note
                         </button>
                       </div>
@@ -535,7 +705,25 @@ const DoctorsAppointmentDetails = () => {
                                     <i className="ti ti-calendar-event me-1" />
                                     {dayjs(note.createdAt).format('DD MMM YYYY, hh:mm A')}
                                   </span>
-                                  <span className="text-muted fs-11 fw-medium text-uppercase">Assessment</span>
+                                  <div className="d-flex align-items-center gap-2">
+                                    <span className="text-muted fs-11 fw-medium text-uppercase me-1">Assessment</span>
+                                    <button 
+                                      className="btn btn-icon btn-xs btn-soft-primary border-0 p-0" 
+                                      style={{ width: '20px', height: '20px' }} 
+                                      title="Edit Note" 
+                                      onClick={() => { setClinicalNote(note.content); setEditingNote(note); setShowNoteModal(true); }}
+                                    >
+                                      <i className="ti ti-edit fs-12" />
+                                    </button>
+                                    <button 
+                                      className="btn btn-icon btn-xs btn-soft-danger border-0 p-0" 
+                                      style={{ width: '20px', height: '20px' }} 
+                                      title="Delete Note" 
+                                      onClick={() => { if (window.confirm("Are you sure you want to delete this note?")) deleteNote(note.id); }}
+                                    >
+                                      <i className="ti ti-trash fs-12" />
+                                    </button>
+                                  </div>
                                 </div>
                                 <div className="white-space-pre-wrap text-dark fs-13 line-height-base italic">
                                   "{note.content}"
@@ -718,12 +906,12 @@ const DoctorsAppointmentDetails = () => {
 
       {showNoteModal && (
         <div className="modal fade show d-block" style={{ zIndex: 1050 }}>
-          <div className="modal-backdrop fade show" style={{ zIndex: 1040 }} onClick={() => setShowNoteModal(false)} />
+          <div className="modal-backdrop fade show" style={{ zIndex: 1040 }} onClick={() => { setShowNoteModal(false); setEditingNote(null); }} />
           <div className="modal-dialog modal-dialog-centered" style={{ zIndex: 1050 }}>
             <div className="modal-content border-0 shadow-lg">
               <div className="modal-header bg-primary text-white py-3">
-                <h5 className="modal-title fw-bold text-white mb-0">Add Clinical Note</h5>
-                <button className="btn-close btn-close-white" onClick={() => setShowNoteModal(false)} />
+                <h5 className="modal-title fw-bold text-white mb-0">{editingNote ? "Edit Clinical Note" : "Add Clinical Note"}</h5>
+                <button className="btn-close btn-close-white" onClick={() => { setShowNoteModal(false); setEditingNote(null); }} />
               </div>
               <div className="modal-body p-4">
                 <textarea
@@ -735,9 +923,9 @@ const DoctorsAppointmentDetails = () => {
                 />
               </div>
               <div className="modal-footer bg-light border-top-0 p-3">
-                <button className="btn btn-light fw-bold px-4" onClick={() => setShowNoteModal(false)}>Cancel</button>
+                <button className="btn btn-light fw-bold px-4" onClick={() => { setShowNoteModal(false); setEditingNote(null); }}>Cancel</button>
                 <button className="btn btn-primary fw-bold px-4 shadow-sm" onClick={handleNoteSave} disabled={savingNote}>
-                  Save Note
+                  {editingNote ? "Save Changes" : "Save Note"}
                 </button>
               </div>
             </div>

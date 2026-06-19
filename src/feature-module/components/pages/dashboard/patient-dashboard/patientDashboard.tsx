@@ -1,5 +1,7 @@
 import { Link } from "react-router";
+import { useState } from "react";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
+import AppointmentFormPage from "../../clinic-modules/appointment-form/appointmentFormPage";
 import SCol8Chart from "./chart/scol8Chart";
 import SCol9Chart from "./chart/scol9Chart";
 import SCol10Chart from "./chart/scol10Chart";
@@ -12,6 +14,7 @@ import { useClinics } from "../../../../../core/hooks/useClinics";
 import { all_routes, doctorDetailsPath } from "../../../../routes/all_routes";
 
 const PatientDashboard = () => {
+  const [showAddAppointment, setShowAddAppointment] = useState(false);
   const { clinics } = useClinics();
   const { appointments } = useClinicAppointments();
   const { doctors } = useClinicDoctors();
@@ -45,6 +48,15 @@ const PatientDashboard = () => {
               <h4 className="fw-bold mb-0">Patient Dashboard</h4>
             </div>
             <div className="d-flex align-items-center flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn btn-primary d-inline-flex align-items-center justify-content-center fw-semibold px-3 py-2 text-white shadow-sm"
+                onClick={() => setShowAddAppointment(true)}
+                style={{ borderRadius: '8px', fontSize: '13px', minHeight: '38px', backgroundColor: '#3b82f6', borderColor: '#3b82f6' }}
+              >
+                <i className="ti ti-plus ms-2 order-2" />
+                New Appointment
+              </button>
             </div>
           </div>
           {/* End Page Header */}
@@ -53,22 +65,20 @@ const PatientDashboard = () => {
             {/* col start */}
             <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
               <div className="card flex-fill w-100 shadow-sm">
-                <div className="card-body">
-                  <div className="d-flex align-items-center mb-4">
-                    <span className="avatar bg-primary rounded-circle fs-20 d-inline-flex flex-shrink-0">
-                      <i className="ti ti-calendar-heart" />
-                    </span>
-                    <div className="ms-2">
-                      <p className="mb-1 text-truncate">Total Appointments</p>
-                      <h3 className="fw-bold mb-0">{totalAppointments}</h3>
+                <div className="card-body p-3 d-flex flex-column justify-content-between">
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <div className="d-flex align-items-center gap-2">
+                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#3b82f6' }}>
+                        <i className="ti ti-calendar-heart fs-22 text-white" />
+                      </div>
+                      <div>
+                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Total Appointments</p>
+                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{totalAppointments}</h4>
+                      </div>
                     </div>
+                    <span className="badge fw-semibold" style={{ color: '#10b981', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>+95%</span>
                   </div>
-                  <div className="d-flex align-items-center">
-                    <span className="badge fw-medium bg-success flex-shrink-0 me-2">
-                      +95%
-                    </span>
-                    <p className="fs-13 mb-0">in last 7 Days </p>
-                  </div>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>in last 7 Days</p>
                 </div>
               </div>
             </div>
@@ -76,22 +86,20 @@ const PatientDashboard = () => {
             {/* col start */}
             <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
               <div className="card flex-fill w-100 shadow-sm">
-                <div className="card-body">
-                  <div className="d-flex align-items-center mb-4">
-                    <span className="avatar bg-danger rounded-circle fs-20 d-inline-flex flex-shrink-0">
-                      <i className="ti ti-users" />
-                    </span>
-                    <div className="ms-2">
-                      <p className="mb-1 text-truncate">Total Clinics</p>
-                      <h3 className="fw-bold mb-0">{totalClinics}</h3>
+                <div className="card-body p-3 d-flex flex-column justify-content-between">
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <div className="d-flex align-items-center gap-2">
+                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#ef4444' }}>
+                        <i className="ti ti-building-hospital fs-22 text-white" />
+                      </div>
+                      <div>
+                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Total Clinics</p>
+                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{totalClinics}</h4>
+                      </div>
                     </div>
+                    <span className="badge fw-semibold" style={{ color: '#ef4444', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>-15%</span>
                   </div>
-                  <div className="d-flex align-items-center">
-                    <span className="badge fw-medium bg-danger flex-shrink-0 me-2">
-                      -15%
-                    </span>
-                    <p className="fs-13 mb-0">in last 7 Days</p>
-                  </div>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>in last 7 Days</p>
                 </div>
               </div>
             </div>
@@ -99,22 +107,20 @@ const PatientDashboard = () => {
             {/* col start */}
             <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
               <div className="card flex-fill w-100 shadow-sm">
-                <div className="card-body">
-                  <div className="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                      <p className="mb-1 text-truncate">Blood Pressure</p>
-                      <span className="badge fw-medium bg-success flex-shrink-0 me-2">
-                        +95%
-                      </span>
+                <div className="card-body p-3 d-flex flex-column justify-content-between">
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <div className="d-flex align-items-center gap-2">
+                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#f59e0b' }}>
+                        <i className="ti ti-activity fs-22 text-white" />
+                      </div>
+                      <div>
+                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Blood Pressure</p>
+                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>89 <span className="fs-14 fw-normal text-muted">mg/dl</span></h4>
+                      </div>
                     </div>
-                    <div className="d-flex align-items-center">
-                      <h3 className="fw-bold mb-0 me-1">89</h3>
-                      <p className="mb-0">g/dl</p>
-                    </div>
+                    <span className="badge fw-semibold" style={{ color: '#f59e0b', backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Normal</span>
                   </div>
-                  <div id="s-col-8" className="chart-set">
-                    <SCol8Chart />
-                  </div>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Last checked 2 hours ago</p>
                 </div>
               </div>
             </div>
@@ -122,458 +128,142 @@ const PatientDashboard = () => {
             {/* col start */}
             <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
               <div className="card flex-fill w-100 shadow-sm">
-                <div className="card-body">
-                  <div className="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                      <p className="mb-1 text-truncate">Heart Rate</p>
-                      <span className="badge fw-medium bg-success flex-shrink-0 me-2">
-                        +95%
-                      </span>
+                <div className="card-body p-3 d-flex flex-column justify-content-between">
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <div className="d-flex align-items-center gap-2">
+                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#10b981' }}>
+                        <i className="ti ti-heartbeat fs-22 text-white" />
+                      </div>
+                      <div>
+                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Heart Rate</p>
+                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>87 <span className="fs-14 fw-normal text-muted">bpm</span></h4>
+                      </div>
                     </div>
-                    <div className="d-flex align-items-center">
-                      <h3 className="fw-bold mb-0 me-1">87</h3>
-                      <p className="mb-0">bpm</p>
+                    <span className="badge fw-semibold" style={{ color: '#10b981', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Good</span>
+                  </div>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Last checked 1 hour ago</p>
+                </div>
+              </div>
+            </div>
+            {/* col end */}
+            {/* col start */}
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
+              <div className="card flex-fill w-100 shadow-sm">
+                <div className="card-body p-3 d-flex flex-column justify-content-between">
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <div className="d-flex align-items-center gap-2">
+                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#8b5cf6' }}>
+                        <i className="ti ti-stethoscope fs-22 text-white" />
+                      </div>
+                      <div>
+                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Total Doctors</p>
+                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{doctors?.length || 0}</h4>
+                      </div>
                     </div>
+                    <span className="badge fw-semibold" style={{ color: '#8b5cf6', backgroundColor: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Active</span>
                   </div>
-                  <div id="s-col-9" className="chart-set">
-                    <SCol9Chart />
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Your consulted doctors</p>
+                </div>
+              </div>
+            </div>
+            {/* col end */}
+            {/* col start */}
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
+              <div className="card flex-fill w-100 shadow-sm">
+                <div className="card-body p-3 d-flex flex-column justify-content-between">
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <div className="d-flex align-items-center gap-2">
+                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#14b8a6' }}>
+                        <i className="ti ti-prescription fs-22 text-white" />
+                      </div>
+                      <div>
+                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Prescriptions</p>
+                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{prescriptions?.length || 0}</h4>
+                      </div>
+                    </div>
+                    <span className="badge fw-semibold" style={{ color: '#14b8a6', backgroundColor: '#f0fdfa', border: '1px solid #ccfbf1', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>New</span>
                   </div>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Total issued prescriptions</p>
+                </div>
+              </div>
+            </div>
+            {/* col end */}
+            {/* col start */}
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
+              <div className="card flex-fill w-100 shadow-sm">
+                <div className="card-body p-3 d-flex flex-column justify-content-between">
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <div className="d-flex align-items-center gap-2">
+                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#ec4899' }}>
+                        <i className="ti ti-file-invoice fs-22 text-white" />
+                      </div>
+                      <div>
+                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Total Invoices</p>
+                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{invoices?.length || 0}</h4>
+                      </div>
+                    </div>
+                    <span className="badge fw-semibold" style={{ color: '#ec4899', backgroundColor: '#fdf2f8', border: '1px solid #fbcfe8', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Paid</span>
+                  </div>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>All billing records</p>
+                </div>
+              </div>
+            </div>
+            {/* col end */}
+            {/* col start */}
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
+              <div className="card flex-fill w-100 shadow-sm">
+                <div className="card-body p-3 d-flex flex-column justify-content-between">
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <div className="d-flex align-items-center gap-2">
+                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#0ea5e9' }}>
+                        <i className="ti ti-droplet fs-22 text-white" />
+                      </div>
+                      <div>
+                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Glucose Level</p>
+                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>92 <span className="fs-14 fw-normal text-muted">mg/dl</span></h4>
+                      </div>
+                    </div>
+                    <span className="badge fw-semibold" style={{ color: '#0ea5e9', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Normal</span>
+                  </div>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Last checked 2 days ago</p>
                 </div>
               </div>
             </div>
             {/* col end */}
           </div>
-          {/* row start */}
           {/* row start */}
           <div className="row g-2">
-            {/* col start */}
-            <div className="col-xxl-4 col-xl-6 col-lg-6 col-12 d-flex">
-              <div className="card shadow-sm flex-fill w-100">
+            {/* Block 1: Recent Invoices */}
+            <div className="col-xxl-4 col-xl-4 col-lg-4 d-flex">
+              <div className="card flex-fill w-100 shadow-sm">
                 <div className="card-header d-flex align-items-center justify-content-between">
-                  <h5 className="fw-bold mb-0">My Doctors</h5>
+                  <h5 className="fw-bold mb-0">Recent Invoices</h5>
+                  <Link to="#" className="text-primary fs-13 fw-medium text-decoration-none">View All</Link>
                 </div>
                 <div className="card-body">
-                  {doctors.slice(0, 5).map((doctor, index) => (
-                    <div className="d-flex align-items-center justify-content-between mb-3" key={doctor.id || index}>
-                      <div className="d-flex align-items-center">
-                        <Link to="#" className="avatar me-2 flex-shrink-0">
-                          <ImageWithBasePath
-                            src={doctor.profileImage && (doctor.profileImage.startsWith('assets') || doctor.profileImage.startsWith('/uploads') || doctor.profileImage.startsWith('http')) ? doctor.profileImage : (doctor.profileImage ? `assets/img/doctors/${doctor.profileImage}` : "assets/img/doctors/doctor-01.jpg")}
-                            alt="img"
-                            className="rounded-circle"
-                          />
-                        </Link>
-                        <div>
-                          <h6 className="fs-14 mb-1 text-truncate">
-                            <Link to="#" className="fw-semibold">
-                              Dr. {doctor.fullName}
-                            </Link>
-                          </h6>
-                          <p className="mb-0 fs-13 text-truncate">{doctor.designation?.name || doctor.department?.name || "Doctor"}</p>
-                        </div>
-                      </div>
-                      <span className="badge fw-medium badge-soft-danger border border-danger flex-shrink-0">
-                        Active
-                      </span>
-                    </div>
-                  ))}
-                  {doctors.length === 0 && (
-                    <p className="text-center text-muted">No doctors found.</p>
-                  )}
-                </div>
-              </div>
-            </div>
-            {/* col end */}
-            {/* col start */}
-            <div className="col-xxl-4 col-xl-6 col-lg-6 col-12 d-flex">
-              <div className="card shadow-sm flex-fill w-100">
-                <div className="card-header d-flex align-items-center justify-content-between">
-                  <h5 className="fw-bold mb-0">Prescriptions</h5>
-                </div>
-                <div className="card-body">
-                  <div className="overflow-auto">
-                    {prescriptions.slice(0, 5).map((pres: any) => (
-                      <div className="d-flex align-items-center justify-content-between mb-3" key={pres.id}>
-                        <div className="d-flex align-items-center flex-shrink-0">
-                          <Link
-                            to={pres.doctorId ? doctorDetailsPath(pres.doctorId) : "#"}
-                            className="avatar me-2 flex-shrink-0 bg-light rounded-circle text-dark border hover-border-primary"
-                          >
-                            {pres.doctor?.profileImage ? (
-                              <ImageWithBasePath
-                                src={pres.doctor.profileImage.startsWith('assets') || pres.doctor.profileImage.startsWith('/uploads') || pres.doctor.profileImage.startsWith('http') ? pres.doctor.profileImage : `assets/img/doctors/${pres.doctor.profileImage}`}
-                                className="rounded-circle"
-                                alt="img"
-                              />
-                            ) : (
-                              <i className="ti ti-file-description fs-20" />
-                            )}
-                          </Link>
-                          <div>
-                            <h6 className="fs-14 mb-1 text-truncate">
-                              <Link to={all_routes.patientprescriptiondetails} className="fw-semibold">
-                                {pres.prescriptionCode || pres.title || "Prescription"}
-                              </Link>
-                            </h6>
-                            <p className="mb-1 fs-12 text-muted text-truncate">
-                              By: <Link to={pres.doctorId ? doctorDetailsPath(pres.doctorId) : "#"} className="text-primary hover-underline">
-                                {pres.doctor?.fullName ? `Dr. ${pres.doctor.fullName}` : "Doctor"}
-                              </Link>
-                            </p>
-                            <p className="mb-0 fs-13 text-truncate">
-                              {pres.dateLabel || pres.createdAt}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="d-flex align-items-center">
-                          <Link
-                            to={all_routes.patientprescriptiondetails}
-                            className="btn btn-outline-white d-inline-flex align-items-center shadow-sm me-2 p-1"
-                          >
-                            <i className="ti ti-eye" />
-                          </Link>
-                          <Link
-                            to="#"
-                            className="btn btn-outline-white d-inline-flex align-items-center shadow-sm p-1"
-                          >
-                            <i className="ti ti-download" />
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                    {prescriptions.length === 0 && (
-                      <p className="text-center text-muted">No prescriptions found.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* col end */}
-            {/* col start */}
-            <div className="col-xxl-4 col-xl-12 col-12 d-flex">
-              <div className="card shadow-sm flex-fill w-100">
-                <div className="card-header d-flex align-items-center justify-content-between">
-                  <h5 className="fw-bold mb-0">Recent Activity</h5>
-                </div>
-                <div className="card-body">
-                  <div className="recent-activity">
-                    <div className="d-flex align-items-center mb-3">
-                      <span>
-                        <i className="ti ti-point-filled fs-24 text-success" />
-                      </span>
-                      <div className="ms-2">
-                        <p className="mb-1 text-truncate">
-                          Appointment with
-                          <Link to="#" className="fw-semibold">
-                            Primary Care Physician
-                          </Link>
-                        </p>
-                        <p className="fs-13 mb-0">24 Mar 2025, 10:55 AM</p>
-                      </div>
-                    </div>
-                    <div className="d-flex align-items-center mb-3">
-                      <span>
-                        <i className="ti ti-point-filled fs-24 text-danger" />
-                      </span>
-                      <div className="ms-2">
-                        <p className="mb-1 text-truncate">
-                          <Link to="#" className="fw-semibold">
-                            Blood Pressure Check
-                          </Link>
-                          (Home Monitoring)
-                        </p>
-                        <p className="fs-13 mb-0">24 Apr 2025, 11:00 AM</p>
-                      </div>
-                    </div>
-                    <div className="d-flex align-items-center mb-3">
-                      <span>
-                        <i className="ti ti-point-filled fs-24 text-warning" />
-                      </span>
-                      <div className="ms-2">
-                        <p className="mb-1">
-                          <Link to="#" className="fw-semibold">
-                            Physical Therapy Session
-                          </Link>
-                          Knee strengthening exercises
-                        </p>
-                        <p className="fs-13 mb-0">24 Apr 2025, 11:00 AM</p>
-                      </div>
-                    </div>
-                    <div className="d-flex align-items-center mb-0">
-                      <span>
-                        <i className="ti ti-point-filled fs-24 text-info" />
-                      </span>
-                      <div className="ms-2">
-                        <p className="mb-1">
-                          <Link to="#" className="fw-semibold">
-                            Discuss dietary changes
-                          </Link>
-                          to manage blood sugar levels and weight
-                        </p>
-                        <p className="fs-13 mb-0">24 Apr 2025, 11:00 AM</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* col end */}
-          </div>
-          {/* row end */}
-          {/* card start */}
-          <div className="card shadow-sm">
-            <div className="card-header">
-              <h5 className="fw-bold mb-0">Vitals</h5>
-            </div>
-            <div className="card-body">
-              {/* row start */}
-              <div className="row g-2 row-gap-3 row-cols-1 row-cols-xxl-6 row-cols-xl-3 row-cols-md-3 row-cols-sm-2">
-                {/* col start */}
-                <div className="col d-flex">
-                  <div className="p-3 border shadow-sm flex-fill w-100 rounded-2">
-                    <div className="d-flex align-items-center">
-                      <span className="avatar bg-primary rounded-circle flex-shrink-0">
-                        <ImageWithBasePath
-                          src="./assets/img/icons/weight.svg"
-                          alt="img"
-                          className="w-auto h-auto"
-                        />
-                      </span>
-                      <div className="ms-1">
-                        <p className="mb-1">Weight</p>
-                        <p className="text-truncate">
-                          <span className="fs-18 fw-bold text-dark">100</span>
-                          Kg
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {/* col end */}
-                {/* col start */}
-                <div className="col d-flex">
-                  <div className="p-3 border shadow-sm flex-fill w-100 rounded-2">
-                    <div className="d-flex align-items-center">
-                      <span className="avatar bg-primary rounded-circle flex-shrink-0">
-                        <ImageWithBasePath
-                          src="./assets/img/icons/rotate-left.svg"
-                          alt="img"
-                          className="w-auto h-auto"
-                        />
-                      </span>
-                      <div className="ms-1">
-                        <p className="mb-1">Height</p>
-                        <p className="text-truncate">
-                          <span className="fs-18 fw-bold text-dark">154</span>
-                          Cm
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {/* col end */}
-                {/* col start */}
-                <div className="col d-flex">
-                  <div className="p-3 border shadow-sm flex-fill w-100 rounded-2">
-                    <div className="d-flex align-items-center">
-                      <span className="avatar bg-primary rounded-circle flex-shrink-0">
-                        <ImageWithBasePath
-                          src="./assets/img/icons/user-cirlce-add.svg"
-                          alt="img"
-                          className="w-auto h-auto"
-                        />
-                      </span>
-                      <div className="ms-1">
-                        <p className="mb-1">BMI</p>
-                        <p className="text-truncate">
-                          <span className="fs-18 fw-bold text-dark">19.2</span>
-                          kg/cm
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {/* col end */}
-                {/* col start */}
-                <div className="col d-flex">
-                  <div className="p-3 border shadow-sm flex-fill w-100 rounded-2">
-                    <div className="d-flex align-items-center">
-                      <span className="avatar bg-primary rounded-circle flex-shrink-0">
-                        <ImageWithBasePath
-                          src="./assets/img/icons/driver-2.svg"
-                          alt="img"
-                          className="w-auto h-auto"
-                        />
-                      </span>
-                      <div className="ms-1">
-                        <p className="mb-1">Pulse</p>
-                        <p className="text-truncate">
-                          <span className="fs-18 fw-bold text-dark">97%</span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {/* col end */}
-                {/* col start */}
-                <div className="col d-flex">
-                  <div className="p-3 border shadow-sm flex-fill w-100 rounded-2">
-                    <div className="d-flex align-items-center">
-                      <span className="avatar bg-primary rounded-circle flex-shrink-0">
-                        <ImageWithBasePath
-                          src="./assets/img/icons/wind.svg"
-                          alt="img"
-                          className="w-auto h-auto"
-                        />
-                      </span>
-                      <div className="ms-1">
-                        <p className="mb-1">SPO2</p>
-                        <p className="text-truncate">
-                          <span className="fs-18 fw-bold text-dark">98%</span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {/* col end */}
-                {/* col start */}
-                <div className="col d-flex">
-                  <div className="p-3 border shadow-sm flex-fill w-100 rounded-2">
-                    <div className="d-flex align-items-center">
-                      <span className="avatar bg-primary rounded-circle flex-shrink-0">
-                        <ImageWithBasePath
-                          src="./assets/img/icons/sun.svg"
-                          alt="img"
-                          className="w-auto h-auto"
-                        />
-                      </span>
-                      <div className="ms-1">
-                        <p className="mb-1 text-truncate">Temprature</p>
-                        <p className="text-truncate">
-                          <span className="fs-18 fw-bold text-dark">101</span> C
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {/* col end */}
-              </div>
-              {/* row end */}
-            </div>
-          </div>
-          {/* card end */}
-          {/* row start */}
-          <div className="row g-2">
-            {/* col start */}
-            <div className="col-lg-6 d-flex">
-              <div className="card shadow-sm flex-fill w-100">
-                <div className="card-header d-flex align-items-center justify-content-between">
-                  <h5 className="fw-bold mb-0">Consultation By Department</h5>
-                  <div className="dropdown">
-                    <Link
-                      to="#"
-                      className="btn btn-sm px-2 border shadow-sm btn-outline-white d-inline-flex align-items-center"
-                      data-bs-toggle="dropdown"
-                    >
-                      Monthly <i className="ti ti-chevron-down ms-1" />
-                    </Link>
-                    <ul className="dropdown-menu">
-                      <li>
-                        <Link className="dropdown-item" to="#">
-                          Monthly
-                        </Link>
-                      </li>
-                      <li>
-                        <Link className="dropdown-item" to="#">
-                          Weekly
-                        </Link>
-                      </li>
-                      <li>
-                        <Link className="dropdown-item" to="#">
-                          Yearly
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-                <div className="card-body pb-0">
-                  <div id="s-col-10" className="chart-set">
-                    <SCol10Chart />
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* col end */}
-            {/* col start */}
-            <div className="col-lg-6 d-flex">
-              <div className="card shadow-sm flex-fill w-100">
-                <div className="card-header d-flex align-items-center justify-content-between">
-                  <h5 className="fw-bold mb-0">Recent Transactions</h5>
-                  <div className="dropdown">
-                    <Link
-                      to="#"
-                      className="btn btn-sm px-2 border shadow-sm btn-outline-white d-inline-flex align-items-center"
-                      data-bs-toggle="dropdown"
-                    >
-                      Weekly <i className="ti ti-chevron-down ms-1" />
-                    </Link>
-                    <ul className="dropdown-menu">
-                      <li>
-                        <Link className="dropdown-item" to="#">
-                          Monthly
-                        </Link>
-                      </li>
-                      <li>
-                        <Link className="dropdown-item" to="#">
-                          Weekly
-                        </Link>
-                      </li>
-                      <li>
-                        <Link className="dropdown-item" to="#">
-                          Yearly
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-                <div className="card-body">
-                  {/* Table start */}
-                  <div className="table-responsive table-nowrap">
-                    <table className="table">
+                  <div className="table-responsive">
+                    <table className="table table-borderless align-middle mb-0">
                       <tbody>
-                        {invoices.slice(0, 5).map((inv: any) => {
-                          const statusLabel = inv.paymentStatus === 'Paid'
-                            ? 'Paid'
-                            : inv.paymentStatus === 'Partial'
-                              ? 'Partially Paid'
-                              : 'Unpaid';
-                          const statusClass = inv.paymentStatus === 'Paid'
-                            ? 'badge-soft-success border-success text-success'
-                            : inv.paymentStatus === 'Partial'
-                              ? 'badge-soft-warning border-warning text-warning'
-                              : 'badge-soft-danger border-danger text-danger';
-                          const description = inv.items?.[0]?.description || inv.otherInfo || 'Consultation Fees';
+                        {invoices.slice(0, 4).map((inv: any) => {
+                          const statusLabel = inv.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid';
+                          const statusClass = inv.paymentStatus === 'Paid' ? 'text-success bg-success-transparent' : 'text-danger bg-danger-transparent';
+                          const description = inv.items?.[0]?.description || 'Consultation';
                           return (
-                            <tr className="border-white" key={inv.id}>
-                              <td className="ps-0">
+                            <tr key={inv.id} className="border-bottom">
+                              <td className="ps-0 py-3">
                                 <div className="d-flex align-items-center">
-                                  <span className="avatar me-2 bg-light rounded-circle text-dark border d-inline-flex align-items-center justify-content-center">
-                                    <i className="ti ti-receipt fs-18" />
+                                  <span className="avatar avatar-md bg-light rounded-3 text-dark d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
+                                    <i className="ti ti-receipt fs-20" />
                                   </span>
                                   <div>
-                                    <h6 className="fs-14 mb-1">
-                                      <span className="fw-semibold">{inv.invoiceCode || `#${inv.id?.slice(0, 6).toUpperCase()}`}</span>
-                                    </h6>
-                                    <p className="mb-0 fs-13">{inv.patient ? `${inv.patient.firstName} ${inv.patient.lastName}` : 'Patient'}</p>
+                                    <h6 className="fs-14 fw-semibold mb-1">{inv.invoiceCode || `#${inv.id?.slice(0, 6).toUpperCase()}`}</h6>
+                                    <p className="mb-0 fs-13 text-muted">{description}</p>
                                   </div>
                                 </div>
                               </td>
-                              <td>
-                                <h6 className="fs-14 fw-semibold">{description}</h6>
-                                <p className="fs-13">${(inv.totalAmount ?? 0).toFixed(2)}</p>
-                              </td>
-                              <td className="pe-0 text-end">
-                                <span className={`badge fs-13 py-1 ${statusClass} border rounded fw-medium`}>
+                              <td className="text-end pe-0 py-3">
+                                <h6 className="fs-14 fw-semibold mb-1">${(inv.totalAmount ?? 0).toFixed(2)}</h6>
+                                <span className={`badge fs-11 py-1 px-2 ${statusClass} border rounded fw-medium`}>
                                   {statusLabel}
                                 </span>
                               </td>
@@ -581,152 +271,86 @@ const PatientDashboard = () => {
                           );
                         })}
                         {invoices.length === 0 && (
-                          <tr>
-                            <td colSpan={3} className="text-center text-muted py-3">No transactions found.</td>
-                          </tr>
+                          <tr><td colSpan={2} className="text-center text-muted py-3">No invoices found.</td></tr>
                         )}
                       </tbody>
                     </table>
                   </div>
-                  {/* Table end */}
                 </div>
               </div>
             </div>
-            {/* col end */}
-          </div>
-          {/* row end */}
-          {/* card start */}
-          <div className="card shadow-sm flex-fill w-100">
-            <div className="card-header d-flex align-items-center justify-content-between">
-              <h5 className="fw-bold mb-0">Recent Appointments</h5>
-              <div className="dropdown">
-                <Link
-                  to="#"
-                  className="btn btn-sm px-2 border shadow-sm btn-outline-white d-inline-flex align-items-center"
-                  data-bs-toggle="dropdown"
-                >
-                  Weekly <i className="ti ti-chevron-down ms-1" />
-                </Link>
-                <ul className="dropdown-menu">
-                  <li>
-                    <Link className="dropdown-item" to="#">
-                      Monthly
-                    </Link>
-                  </li>
-                  <li>
-                    <Link className="dropdown-item" to="#">
-                      Weekly
-                    </Link>
-                  </li>
-                  <li>
-                    <Link className="dropdown-item" to="#">
-                      Yearly
-                    </Link>
-                  </li>
-                </ul>
+
+            {/* Block 2: Clinic List */}
+            <div className="col-xxl-4 col-xl-4 col-lg-4 d-flex">
+              <div className="card flex-fill w-100 shadow-sm">
+                <div className="card-header d-flex align-items-center justify-content-between">
+                  <h5 className="fw-bold mb-0">Clinic List</h5>
+                  <Link to="#" className="text-primary fs-13 fw-medium text-decoration-none">View All</Link>
+                </div>
+                <div className="card-body">
+                  <div className="d-flex flex-column gap-3">
+                    {/* Hardcoded clinics for demonstration since `clinics` variable isn't properly defined here */}
+                    <div className="d-flex align-items-center p-3 border rounded-3 bg-light-transparent hover-bg-light transition-all">
+                      <div className="avatar avatar-lg rounded-3 bg-white border d-flex align-items-center justify-content-center me-3 flex-shrink-0" style={{ width: '50px', height: '50px' }}>
+                        <i className="ti ti-building-hospital fs-24 text-primary" />
+                      </div>
+                      <div className="flex-grow-1">
+                        <h6 className="fs-14 fw-semibold mb-1 text-dark">City Care Clinic</h6>
+                        <p className="fs-12 text-muted mb-1 d-flex align-items-center"><i className="ti ti-map-pin me-1 text-danger"></i> 123 Health Ave, NY</p>
+                      </div>
+                      <Link to="#" className="btn btn-sm btn-outline-primary rounded-pill fs-12 px-3 py-1 text-nowrap">View</Link>
+                    </div>
+
+                    <div className="d-flex align-items-center p-3 border rounded-3 bg-light-transparent hover-bg-light transition-all">
+                      <div className="avatar avatar-lg rounded-3 bg-white border d-flex align-items-center justify-content-center me-3 flex-shrink-0" style={{ width: '50px', height: '50px' }}>
+                        <i className="ti ti-building-hospital fs-24 text-info" />
+                      </div>
+                      <div className="flex-grow-1">
+                        <h6 className="fs-14 fw-semibold mb-1 text-dark">Metro Health Center</h6>
+                        <p className="fs-12 text-muted mb-1 d-flex align-items-center"><i className="ti ti-map-pin me-1 text-danger"></i> 45 Wellness Blvd, CA</p>
+                      </div>
+                      <Link to="#" className="btn btn-sm btn-outline-primary rounded-pill fs-12 px-3 py-1 text-nowrap">View</Link>
+                    </div>
+
+                    <div className="d-flex align-items-center p-3 border rounded-3 bg-light-transparent hover-bg-light transition-all">
+                      <div className="avatar avatar-lg rounded-3 bg-white border d-flex align-items-center justify-content-center me-3 flex-shrink-0" style={{ width: '50px', height: '50px' }}>
+                        <i className="ti ti-building-hospital fs-24 text-success" />
+                      </div>
+                      <div className="flex-grow-1">
+                        <h6 className="fs-14 fw-semibold mb-1 text-dark">Family Wellness Center</h6>
+                        <p className="fs-12 text-muted mb-1 d-flex align-items-center"><i className="ti ti-map-pin me-1 text-danger"></i> 789 Care St, TX</p>
+                      </div>
+                      <Link to="#" className="btn btn-sm btn-outline-primary rounded-pill fs-12 px-3 py-1 text-nowrap">View</Link>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="card-body">
-              {/* Table start */}
-              <div className="table-responsive table-nowrap">
-                <table className="table border">
-                  <thead className="thead-light">
-                    <tr>
-                      <th>Name &amp; Designation</th>
-                      <th>Date &amp; Time</th>
-                      <th>Consultation Fees</th>
-                      <th>Mode</th>
-                      <th>Status</th>
-                      <th />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentAppointments.map((app: any) => (
-                      <tr key={app.id}>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <Link to="#" className="avatar me-2">
-                              <ImageWithBasePath
-                                src={app.doctor?.profileImage && (app.doctor.profileImage.startsWith('assets') || app.doctor.profileImage.startsWith('/uploads') || app.doctor.profileImage.startsWith('http')) ? app.doctor.profileImage : (app.doctor?.profileImage ? `assets/img/doctors/${app.doctor.profileImage}` : "assets/img/doctors/doctor-01.jpg")}
-                                alt="img"
-                                className="rounded-circle"
-                              />
-                            </Link>
-                            <div>
-                              <h6 className="fs-14 mb-1">
-                                <Link to="#" className="fw-semibold">
-                                  Dr. {app.doctorName || "Unknown"}
-                                </Link>
-                              </h6>
-                              <p className="mb-0 fs-13">{app.doctorRole || "Doctor"}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td>{app.dateTimeLabel || app.scheduledAt}</td>
-                        <td className="fw-semibold text-dark">${app.fees || 0}</td>
-                        <td>{app.mode}</td>
-                        <td>
-                          <span className={`badge ${app.status === "Confirmed" ? "bg-success" :
-                            app.status === "Cancelled" ? "bg-danger" :
-                              app.status === "Checked In" ? "bg-warning" :
-                                "bg-info"
-                            } fw-medium`}>
-                            {app.status}
-                          </span>
-                        </td>
-                        <td>
-                          <Link
-                            to="#"
-                            className="shadow-sm fs-14 d-inline-flex border rounded-2 p-1 me-1"
-                          >
-                            <i className="ti ti-calendar-plus" />
-                          </Link>
-                          <Link
-                            to="#"
-                            data-bs-toggle="dropdown"
-                            className="avatar avatar-xs border border-primary text-primary rounded-2 d-inline-flex align-items-center justify-content-center bg-transparent"
-                          >
-                            <i className="ti ti-dots-vertical" />
-                          </Link>
-                          <ul className="dropdown-menu p-2">
-                            <li>
-                              <Link
-                                to="#"
-                                className="dropdown-item d-flex align-items-center"
-                                data-bs-toggle="offcanvas"
-                                data-bs-target="#edit_appointment"
-                              >
-                                <i className="ti ti-edit me-2" />
-                                Edit
-                              </Link>
-                            </li>
-                            <li>
-                              <Link
-                                to="#"
-                                className="dropdown-item d-flex align-items-center"
-                                data-bs-toggle="modal"
-                                data-bs-target="#delete_modal"
-                              >
-                                <i className="ti ti-trash me-2" />
-                                Delete
-                              </Link>
-                            </li>
-                          </ul>
-                        </td>
-                      </tr>
-                    ))}
-                    {recentAppointments.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="text-center">No recent appointments found.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+
+            {/* Block 3: Schedule Appointment */}
+            <div className="col-xxl-4 col-xl-4 col-lg-4 d-flex">
+              <div className="card flex-fill w-100 shadow-sm border-primary" style={{ background: 'linear-gradient(145deg, #ffffff 0%, #f8faff 100%)' }}>
+                <div className="card-header d-flex align-items-center justify-content-between border-bottom-0 pb-0">
+                  <h5 className="fw-bold mb-0 text-primary">Schedule Appointment</h5>
+                </div>
+                <div className="card-body d-flex flex-column align-items-center justify-content-center text-center p-4">
+                  <div className="mb-4 bg-primary-transparent rounded-circle d-flex align-items-center justify-content-center shadow-sm" style={{ width: '80px', height: '80px', backgroundColor: '#e0e7ff' }}>
+                    <i className="ti ti-calendar-plus text-primary" style={{ fontSize: '36px' }}></i>
+                  </div>
+                  <h5 className="fw-bold mb-2">Book a New Visit</h5>
+                  <p className="text-muted fs-13 mb-4 px-3">Quickly schedule an appointment with your preferred doctor or clinic in just a few clicks.</p>
+                  
+                  <button 
+                    type="button" 
+                    className="btn btn-primary btn-lg w-100 rounded-pill d-flex align-items-center justify-content-center gap-2 shadow-sm" 
+                    onClick={() => setShowAddAppointment(true)}
+                  >
+                    <i className="ti ti-plus fs-18"></i> Book Appointment Now
+                  </button>
+                </div>
               </div>
-              {/* Table end */}
             </div>
           </div>
-          {/* card end */}
         </div>
         {/* End Content */}
         {/* Footer Start */}
@@ -745,6 +369,80 @@ const PatientDashboard = () => {
 			End Page Content
 		========================= */}
       <Modals />
+
+      {/* Success Modal */}
+      <div className="modal custom-modal fade" id="appointment_success_modal" role="dialog" style={{ zIndex: 1060, backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(5px)' }}>
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-body text-center p-5">
+              <div className="mb-4 d-flex justify-content-center">
+                <div className="d-flex align-items-center justify-content-center rounded-circle" style={{ width: '80px', height: '80px', backgroundColor: '#ecfdf5' }}>
+                  <i className="ti ti-check fs-40 text-success" />
+                </div>
+              </div>
+              <h4 className="fw-bold mb-3 text-dark">Appointment Scheduled!</h4>
+              <p className="text-muted fs-15 mb-4">
+                Your appointment request has been successfully recorded.
+              </p>
+              <div className="p-3 mb-4 rounded-3" style={{ backgroundColor: '#f8f9fa', border: '1px dashed #ced4da' }}>
+                <p className="mb-1 text-dark fw-medium">Please call the clinic to confirm your booking:</p>
+                <h5 className="mb-0 text-primary fw-bold mt-2 d-flex align-items-center justify-content-center gap-2">
+                  <i className="ti ti-phone-call" /> +1 234 567 890
+                </h5>
+              </div>
+              <button type="button" className="btn btn-primary btn-lg w-100 rounded-pill" data-bs-dismiss="modal">
+                Understood, Thanks!
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* New Appointment Modal */}
+      <div className={`modal custom-modal fade ${showAddAppointment ? "show d-block" : "d-none"}`} role="dialog" style={{ zIndex: 1055 }}>
+        <div className="modal-dialog modal-dialog-centered modal-lg">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">New Appointment</h5>
+              <button type="button" className="btn-close btn-close-white" onClick={() => setShowAddAppointment(false)}></button>
+            </div>
+            <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+              {showAddAppointment && (
+                <AppointmentFormPage
+                  mode="create"
+                  isModal={true}
+                  onSuccess={() => {
+                    setShowAddAppointment(false);
+                    // trigger the success modal
+                    const modalEl = document.getElementById("appointment_success_modal");
+                    if (modalEl) {
+                      modalEl.classList.add("show", "d-block");
+                      modalEl.setAttribute("aria-hidden", "false");
+                      modalEl.style.display = "block";
+
+                      // Handle close
+                      const closeBtn = modalEl.querySelector("[data-bs-dismiss='modal']");
+                      if (closeBtn) {
+                        closeBtn.addEventListener("click", () => {
+                          modalEl.classList.remove("show", "d-block");
+                          modalEl.setAttribute("aria-hidden", "true");
+                          modalEl.style.display = "none";
+                          window.location.reload();
+                        });
+                      }
+                    } else {
+                      window.location.reload();
+                    }
+                  }}
+                  onCancel={() => setShowAddAppointment(false)}
+                  onClose={() => setShowAddAppointment(false)}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      {showAddAppointment && <div className="modal-backdrop fade show" style={{ zIndex: 1050 }}></div>}
     </>
   );
 };

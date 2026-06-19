@@ -9,11 +9,12 @@ import { User, Lock, Eye, EyeOff, LogIn } from "react-feather";
 
 const getDashboardPath = (role: string): string => {
   switch (role) {
+    case "SUPER_ADMIN":
+      return all_routes.superAdminDashboard;
     case "DOCTOR":
       return all_routes.doctordashboard;
     case "PATIENT":
       return all_routes.patientdashboard;
-    case "SUPER_ADMIN":
     case "ADMIN":
     case "PORTER":
     default:

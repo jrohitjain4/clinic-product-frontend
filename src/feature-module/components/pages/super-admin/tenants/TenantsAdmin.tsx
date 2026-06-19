@@ -12,13 +12,32 @@ interface Tenant {
     createdAt: string;
 }
 
+interface Package {
+    id: string;
+    name: string;
+    price: number;
+    durationInDays: number;
+    isActive: boolean;
+}
+
 const TenantsAdmin = () => {
     const [tenants, setTenants] = useState<Tenant[]>([]);
+    const [packages, setPackages] = useState<Package[]>([]);
     const [filteredTenants, setFilteredTenants] = useState<Tenant[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeFilter, setActiveFilter] = useState('ALL');
     const [searchText, setSearchText] = useState("");
     const [selectedTenants, setSelectedTenants] = useState<string[]>([]);
+
+    // Modal states
+    const [viewModal, setViewModal] = useState(false);
+    const [editModal, setEditModal] = useState(false);
+    const [deleteModal, setDeleteModal] = useState(false);
+    const [activeTenant, setActiveTenant] = useState<Tenant | null>(null);
+
+    const openViewModal = (tenant: Tenant) => { setActiveTenant(tenant); setViewModal(true); };
+    const openEditModal = (tenant: Tenant) => { setActiveTenant(tenant); setEditModal(true); };
+    const openDeleteModal = (tenant: Tenant) => { setActiveTenant(tenant); setDeleteModal(true); };
 
     const fetchTenants = async () => {
         try {
@@ -38,8 +57,19 @@ const TenantsAdmin = () => {
         }
     };
 
+    const fetchPackages = async () => {
+        try {
+            const response = await fetch(apiUrl("/api/packages"));
+            const data = await response.json();
+            setPackages(data);
+        } catch (error) {
+            console.error("Error fetching packages:", error);
+        }
+    };
+
     useEffect(() => {
         fetchTenants();
+        fetchPackages();
     }, []);
 
     useEffect(() => {
@@ -93,12 +123,36 @@ const TenantsAdmin = () => {
         <div className="page-wrapper">
             <div className="content content-two">
                 {/* Header & Search Area */}
-                <div className="d-flex align-items-center justify-content-between mb-4 border-bottom pb-4">
+                <div className="d-flex flex-wrap align-items-center justify-content-between mb-4 border-bottom pb-4 gap-3">
+                    {/* Left: Title */}
                     <div>
                         <h4 className="fw-bold mb-1">Tenants Lifecycle (Enterprise)</h4>
                         <p className="text-muted fs-14 mb-0">Monitor registration progress and subscription statuses</p>
                     </div>
 
+                    {/* Middle: Filters */}
+                    <div className="d-flex gap-2 overflow-auto scrollbar-none flex-grow-1 justify-content-xl-center justify-content-start">
+                        {[
+                            { label: 'All Tenants', value: 'ALL', count: tenants.length },
+                            { label: 'In Progress', value: 'IN_PROGRESS', count: tenants.filter(t => t.status === 'IN_PROGRESS').length },
+                            { label: 'Trial Active', value: 'TRIAL', count: tenants.filter(t => t.status === 'TRIAL').length },
+                            { label: 'Trial End', value: 'TRIAL_COMPLETED_NOT_UPGRADED', count: tenants.filter(t => t.status === 'TRIAL_COMPLETED_NOT_UPGRADED').length },
+                            { label: 'Upgraded', value: 'UPGRADED', count: tenants.filter(t => t.status === 'UPGRADED').length },
+                        ].map((f) => (
+                            <button
+                                key={f.value}
+                                onClick={() => setActiveFilter(f.value)}
+                                className={`btn rounded-pill px-4 py-2 fs-13 transition-all d-flex align-items-center flex-shrink-0 ${activeFilter === f.value ? 'btn-primary text-white shadow' : 'btn-white border text-muted'}`}
+                            >
+                                {f.label}
+                                <span className={`ms-2 badge rounded-pill ${activeFilter === f.value ? 'bg-white text-primary' : 'bg-light text-muted'}`}>
+                                    {f.count}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Right: Actions */}
                     <div className="d-flex align-items-center gap-2">
                         {selectedTenants.length > 0 && (
                             <button
@@ -109,45 +163,7 @@ const TenantsAdmin = () => {
                                 <i className="ti ti-trash fs-16" /> Delete Selected ({selectedTenants.length})
                             </button>
                         )}
-
-                        <div className="position-relative">
-                            <i className="ti ti-search position-absolute top-50 translate-middle-y ms-2 text-muted fs-14" />
-                            <input
-                                type="text"
-                                className="form-control text-end"
-                                placeholder="Search clinic, owner..."
-                                style={{ width: '220px', paddingLeft: '30px', height: '38px', fontSize: '13px' }}
-                                value={searchText}
-                                onChange={(e) => setSearchText(e.target.value)}
-                            />
-                        </div>
-
-                        <button className="btn btn-primary d-flex align-items-center gap-2 px-3" style={{ height: '38px' }}>
-                            <i className="ti ti-plus" /> Add Tenant
-                        </button>
                     </div>
-                </div>
-
-                {/* Filters */}
-                <div className="d-flex gap-2 mb-4 overflow-auto pb-2 scrollbar-none">
-                    {[
-                        { label: 'All Tenants', value: 'ALL', count: tenants.length },
-                        { label: 'In Progress', value: 'IN_PROGRESS', count: tenants.filter(t => t.status === 'IN_PROGRESS').length },
-                        { label: 'Trial Active', value: 'TRIAL', count: tenants.filter(t => t.status === 'TRIAL').length },
-                        { label: 'Trial End', value: 'TRIAL_COMPLETED_NOT_UPGRADED', count: tenants.filter(t => t.status === 'TRIAL_COMPLETED_NOT_UPGRADED').length },
-                        { label: 'Upgraded', value: 'UPGRADED', count: tenants.filter(t => t.status === 'UPGRADED').length },
-                    ].map((f) => (
-                        <button
-                            key={f.value}
-                            onClick={() => setActiveFilter(f.value)}
-                            className={`btn rounded-pill px-4 py-2 fs-13 transition-all d-flex align-items-center ${activeFilter === f.value ? 'btn-primary text-white shadow' : 'btn-white border text-muted'}`}
-                        >
-                            {f.label}
-                            <span className={`ms-2 badge rounded-pill ${activeFilter === f.value ? 'bg-white text-primary' : 'bg-light text-muted'}`}>
-                                {f.count}
-                            </span>
-                        </button>
-                    ))}
                 </div>
 
                 <div className="card border-0 shadow-sm" style={{ borderRadius: '15px' }}>
@@ -172,7 +188,7 @@ const TenantsAdmin = () => {
                                         <th className="px-4 py-3 border-0 text-uppercase fs-11 fw-bold text-muted">Current Plan</th>
                                         <th className="px-4 py-3 border-0 text-uppercase fs-11 fw-bold text-muted text-center">Status</th>
                                         <th className="px-4 py-3 border-0 text-uppercase fs-11 fw-bold text-muted">Expiry / Date</th>
-                                        <th className="px-4 py-3 border-0 text-uppercase fs-11 fw-bold text-muted text-end">Action</th>
+                                        <th className="px-4 py-3 border-0 text-uppercase fs-11 fw-bold text-muted text-center">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -241,13 +257,16 @@ const TenantsAdmin = () => {
                                                         )}
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3 text-end">
-                                                    <div className="d-flex align-items-center justify-content-end gap-2">
-                                                        <button className="btn btn-soft-primary btn-icon btn-sm" title="View Details">
-                                                            <i className="ti ti-eye fs-14" />
+                                                <td className="px-4 py-3 text-center">
+                                                    <div className="d-flex align-items-center justify-content-center gap-2 text-nowrap">
+                                                        <button className="bg-transparent border-0 text-info p-1" title="View Details" onClick={() => openViewModal(tenant)}>
+                                                            <i className="ti ti-eye fs-18" />
                                                         </button>
-                                                        <button className="btn btn-soft-danger btn-icon btn-sm" title="Delete">
-                                                            <i className="ti ti-trash fs-14" />
+                                                        <button className="bg-transparent border-0 text-primary p-1" title="Edit" onClick={() => openEditModal(tenant)}>
+                                                            <i className="ti ti-edit fs-18" />
+                                                        </button>
+                                                        <button className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={() => openDeleteModal(tenant)}>
+                                                            <i className="ti ti-trash fs-18" />
                                                         </button>
                                                     </div>
                                                 </td>
@@ -260,6 +279,203 @@ const TenantsAdmin = () => {
                     </div>
                 </div>
             </div>
+            
+            {/* View Modal */}
+            {viewModal && activeTenant && (
+                <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog modal-dialog-centered modal-lg">
+                        <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '15px' }}>
+                            <div className="modal-header border-bottom-0 bg-primary-subtle" style={{ borderTopLeftRadius: '15px', borderTopRightRadius: '15px' }}>
+                                <h5 className="modal-title fw-bold d-flex align-items-center">
+                                    <i className="ti ti-building-hospital me-2 text-primary fs-20"></i>
+                                    Clinic Profile: {activeTenant.name}
+                                </h5>
+                                <button type="button" className="btn-close" onClick={() => setViewModal(false)}></button>
+                            </div>
+                            <div className="modal-body p-4">
+                                <div className="row g-4">
+                                    {/* Column 1: Basic Info */}
+                                    <div className="col-md-6">
+                                        <div className="p-3 bg-light rounded-3 h-100 border border-light-subtle shadow-sm">
+                                            <h6 className="fw-bold mb-3 d-flex align-items-center text-dark"><i className="ti ti-info-square-rounded me-2 text-primary fs-18"></i>Basic Information</h6>
+                                            <div className="mb-3">
+                                                <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Clinic Name</p>
+                                                <h6 className="fw-bold fs-14 text-dark mb-0">{activeTenant.name}</h6>
+                                            </div>
+                                            <div className="mb-3">
+                                                <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Clinic ID</p>
+                                                <p className="fs-13 text-dark font-monospace mb-0">{activeTenant.id}</p>
+                                            </div>
+                                            <div className="mb-0">
+                                                <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Address</p>
+                                                <p className="fs-13 text-dark mb-0">123 Health Ave, Medical District, NY 10001</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Column 2: Owner Info */}
+                                    <div className="col-md-6">
+                                        <div className="p-3 bg-light rounded-3 h-100 border border-light-subtle shadow-sm">
+                                            <h6 className="fw-bold mb-3 d-flex align-items-center text-dark"><i className="ti ti-user-circle me-2 text-primary fs-18"></i>Owner Details</h6>
+                                            <div className="mb-3">
+                                                <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Owner Name</p>
+                                                <h6 className="fw-bold fs-14 text-dark mb-0">{activeTenant.ownerName}</h6>
+                                            </div>
+                                            <div className="mb-3">
+                                                <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Email Address</p>
+                                                <p className="fs-13 text-dark mb-0 d-flex align-items-center">
+                                                    <i className="ti ti-mail me-2 text-muted"></i>{activeTenant.ownerEmail}
+                                                </p>
+                                            </div>
+                                            <div className="mb-0">
+                                                <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Phone Number</p>
+                                                <p className="fs-13 text-dark mb-0 d-flex align-items-center">
+                                                    <i className="ti ti-phone me-2 text-muted"></i>+1 (555) 123-4567
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Column 3: Subscription & Status */}
+                                    <div className="col-md-6">
+                                        <div className="p-3 bg-light rounded-3 h-100 border border-light-subtle shadow-sm">
+                                            <h6 className="fw-bold mb-3 d-flex align-items-center text-dark"><i className="ti ti-shield-check me-2 text-success fs-18"></i>Subscription & Status</h6>
+                                            <div className="d-flex align-items-center justify-content-between mb-3">
+                                                <div>
+                                                    <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Current Plan</p>
+                                                    <h6 className="fw-bold fs-14 text-dark mb-0 d-flex align-items-center"><i className="ti ti-package me-1 text-primary"></i>{activeTenant.packageName}</h6>
+                                                </div>
+                                                <div>
+                                                    <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Status</p>
+                                                    <div className="mt-1">{getStatusBadge(activeTenant.status)}</div>
+                                                </div>
+                                            </div>
+                                            <hr className="my-2 border-dashed" />
+                                            <div className="d-flex align-items-center justify-content-between pt-2">
+                                                <div>
+                                                    <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Joined Date</p>
+                                                    <span className="fs-13 text-dark fw-medium"><i className="ti ti-calendar-plus me-1 text-muted"></i>{new Date(activeTenant.createdAt).toLocaleDateString()}</span>
+                                                </div>
+                                                <div className="text-end">
+                                                    <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Expiry Date</p>
+                                                    {activeTenant.expiresAt ? (
+                                                        <span className={`fs-13 fw-medium ${new Date(activeTenant.expiresAt) < new Date() ? 'text-danger fw-bold' : 'text-dark'}`}>
+                                                            <i className="ti ti-calendar-time me-1 text-muted"></i>{new Date(activeTenant.expiresAt).toLocaleDateString()}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="fs-13 text-muted">No Expiry</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Column 4: System Usage Stats */}
+                                    <div className="col-md-6">
+                                        <div className="p-3 bg-light rounded-3 h-100 border border-light-subtle shadow-sm">
+                                            <h6 className="fw-bold mb-3 d-flex align-items-center text-dark"><i className="ti ti-chart-pie me-2 text-warning fs-18"></i>System Usage</h6>
+                                            <div className="mb-3">
+                                                <div className="d-flex justify-content-between mb-1">
+                                                    <span className="text-muted fs-12 fw-medium">Storage Quota</span>
+                                                    <span className="text-dark fs-12 fw-bold">15 GB / 50 GB</span>
+                                                </div>
+                                                <div className="progress" style={{ height: '6px' }}>
+                                                    <div className="progress-bar bg-warning rounded-pill" role="progressbar" style={{ width: '30%' }} aria-valuenow={30} aria-valuemin={0} aria-valuemax={100}></div>
+                                                </div>
+                                            </div>
+                                            <div className="d-flex align-items-center justify-content-between mb-2">
+                                                <span className="text-muted fs-13 d-flex align-items-center"><i className="ti ti-users me-2"></i>Total Staff</span>
+                                                <span className="fw-bold text-dark fs-13">24 Active</span>
+                                            </div>
+                                            <div className="d-flex align-items-center justify-content-between">
+                                                <span className="text-muted fs-13 d-flex align-items-center"><i className="ti ti-wheelchair me-2"></i>Total Patients</span>
+                                                <span className="fw-bold text-dark fs-13">1,402 Registered</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div className="modal-footer border-top-0 pt-0 justify-content-center">
+                                <button type="button" className="btn btn-primary px-5 rounded-pill shadow-sm" onClick={() => setViewModal(false)}>Close View</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {editModal && activeTenant && (
+                <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '15px' }}>
+                            <div className="modal-header border-bottom-0 bg-light" style={{ borderTopLeftRadius: '15px', borderTopRightRadius: '15px' }}>
+                                <h5 className="modal-title fw-bold">Edit Clinic Details</h5>
+                                <button type="button" className="btn-close" onClick={() => setEditModal(false)}></button>
+                            </div>
+                            <div className="modal-body p-4">
+                                <div className="mb-3">
+                                    <label className="form-label fw-semibold fs-13 text-muted">Clinic Name</label>
+                                    <input type="text" className="form-control" value={activeTenant.name} disabled />
+                                </div>
+                                <div className="mb-3">
+                                    <label className="form-label fw-semibold fs-13 text-muted">Assign Package</label>
+                                    <select className="form-select" defaultValue={activeTenant.packageName}>
+                                        {packages.filter(p => p.isActive).length > 0 ? (
+                                            packages.filter(p => p.isActive).map(pkg => (
+                                                <option key={pkg.id} value={pkg.name}>{pkg.name}</option>
+                                            ))
+                                        ) : (
+                                            <>
+                                                <option value="Days Free Trial">Days Free Trial</option>
+                                                <option value="Premium Plan (Annually)">Premium Plan (Annually)</option>
+                                            </>
+                                        )}
+                                    </select>
+                                </div>
+                                <div className="mb-0">
+                                    <label className="form-label fw-semibold fs-13 text-muted">Status</label>
+                                    <select className="form-select" defaultValue={activeTenant.status}>
+                                        <option value="IN_PROGRESS">In Progress</option>
+                                        <option value="TRIAL">Trial Active</option>
+                                        <option value="UPGRADED">Upgraded</option>
+                                        <option value="TRIAL_EXPIRED">Expired</option>
+                                    </select>
+                                    <div className="form-text mt-2 text-info d-flex align-items-center">
+                                        <i className="ti ti-info-circle me-1"></i>
+                                        <span style={{ fontSize: '11px' }}>Changes are for demonstration purposes.</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer border-top-0 pt-0">
+                                <button type="button" className="btn btn-light" onClick={() => setEditModal(false)}>Cancel</button>
+                                <button type="button" className="btn btn-primary" onClick={() => setEditModal(false)}>Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Modal */}
+            {deleteModal && activeTenant && (
+                <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog modal-dialog-centered modal-sm">
+                        <div className="modal-content border-0 shadow-lg text-center p-4" style={{ borderRadius: '15px' }}>
+                            <div className="mb-4">
+                                <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger-transparent text-danger mb-3" style={{ width: '80px', height: '80px' }}>
+                                    <i className="ti ti-trash fs-36"></i>
+                                </div>
+                                <h4 className="fw-bold text-dark mb-2">Delete Clinic?</h4>
+                                <p className="text-muted fs-14 mb-0">Are you sure you want to delete <strong className="text-dark">{activeTenant.name}</strong>? This action cannot be undone.</p>
+                            </div>
+                            <div className="d-flex gap-2 justify-content-center">
+                                <button type="button" className="btn btn-light w-50 fw-semibold" onClick={() => setDeleteModal(false)}>Cancel</button>
+                                <button type="button" className="btn btn-danger w-50 fw-semibold" onClick={() => setDeleteModal(false)}>Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -84,5 +84,28 @@ export const useNotes = (filters?: { appointmentId?: string }) => {
         }
     };
 
-    return { notes, loading, refetch: fetchNotes, addNote, deleteNote };
+    const updateNote = async (id: string, noteData: Partial<Note>) => {
+        try {
+            const res = await fetch(apiUrl(`/api/notes/${id}`), {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify(noteData),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setNotes(prev => prev.map(n => n.id === id ? data : n));
+                toast.success("Note updated");
+                return data;
+            }
+            throw new Error(data.message || "Failed to update note");
+        } catch (error: any) {
+            toast.error(error.message);
+            throw error;
+        }
+    };
+
+    return { notes, loading, refetch: fetchNotes, addNote, deleteNote, updateNote };
 };

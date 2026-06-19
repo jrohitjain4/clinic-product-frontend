@@ -126,9 +126,9 @@ const PatientInvoiceDetails = () => {
                                                             <td className="py-3 text-center text-muted fw-medium">{i + 1}</td>
                                                             <td className="py-3 text-dark fw-medium">{item.name || item.item || "Standard Consultation"}</td>
                                                             <td className="py-3 text-muted">{item.description || "Consultation Services"}</td>
-                                                            <td className="py-3 text-center text-muted">${(item.unitCost || 0).toFixed(2)}</td>
+                                                            <td className="py-3 text-center text-muted">₹{(item.unitCost || 0).toFixed(2)}</td>
                                                             <td className="py-3 text-center text-muted">{item.quantity || 1}</td>
-                                                            <td className="py-3 text-end fw-bold text-dark px-4">${(item.amount || 0).toFixed(2)}</td>
+                                                            <td className="py-3 text-end fw-bold text-dark px-4">₹{(item.amount || 0).toFixed(2)}</td>
                                                         </tr>
                                                     )) : (
                                                         <tr>
@@ -146,15 +146,15 @@ const PatientInvoiceDetails = () => {
                                             <div className="d-flex flex-column gap-3">
                                                 <div className="d-flex align-items-center justify-content-between">
                                                     <span className="text-muted fw-bold">Sub Total</span>
-                                                    <span className="text-dark fw-bold fs-16">${(invoice.subTotal || 0).toFixed(2)}</span>
+                                                    <span className="text-dark fw-bold fs-16">₹{(invoice.subTotal || 0).toFixed(2)}</span>
                                                 </div>
                                                 <div className="d-flex align-items-center justify-content-between">
                                                     <span className="text-muted fw-bold">Tax ({invoice.tax || 0}%)</span>
-                                                    <span className="text-dark fw-bold fs-16">${((invoice.subTotal || 0) * (invoice.tax || 0) / 100).toFixed(2)}</span>
+                                                    <span className="text-dark fw-bold fs-16">₹{((invoice.subTotal || 0) * (invoice.tax || 0) / 100).toFixed(2)}</span>
                                                 </div>
                                                 <div className="d-flex align-items-center justify-content-between border-top pt-4 mt-2">
-                                                    <h4 className="text-dark fw-bold mb-0">Total (USD)</h4>
-                                                    <h3 className="text-primary fw-bold mb-0">${(invoice.totalAmount || 0).toFixed(2)}</h3>
+                                                    <h4 className="text-dark fw-bold mb-0">Total (INR)</h4>
+                                                    <h3 className="text-primary fw-bold mb-0">₹{(invoice.totalAmount || 0).toFixed(2)}</h3>
                                                 </div>
                                             </div>
                                         </div>

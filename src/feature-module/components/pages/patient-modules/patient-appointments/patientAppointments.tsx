@@ -373,15 +373,36 @@ const PatientAppointments = () => {
 
   const columns = [
     {
-      title: "Sr No",
+      title: "Sr / Queue",
       dataIndex: "SrNo",
-      render: (text: number) => <span className="fw-bold">{text}</span>,
+      render: (text: number, record: any) => {
+        return (
+          <span className="fw-bold">
+            {text} / <span className="text-primary fw-medium">{record._raw.checkinHisNo || "NULL"}</span>
+          </span>
+        );
+      },
       sorter: (a: any, b: any) => a.SrNo - b.SrNo,
     },
     {
       title: "Date & Time",
       dataIndex: "Date_Time",
+      render: (_: any, record: any) => {
+        const dateStr = record._raw.scheduledAt ? dayjs(record._raw.scheduledAt).format("DD MMM YYYY") : "NULL";
+        const timeStr = record._raw.scheduledAt ? dayjs(record._raw.scheduledAt).format("hh:mm A") : "";
+        return (
+          <div className="d-flex flex-column" style={{ lineHeight: '1.2' }}>
+            <span className="fw-medium text-dark text-nowrap">{dateStr}</span>
+            {timeStr && <span className="text-muted fs-11 mt-1 text-nowrap">{timeStr}</span>}
+          </div>
+        );
+      },
       sorter: (a: any, b: any) => a.Date_Time.localeCompare(b.Date_Time),
+    },
+    {
+      title: "Expected Time",
+      dataIndex: "expectedTime",
+      render: (_: any, record: any) => <span className="fw-bold text-dark">{record._raw.expectedTime || "NULL"}</span>,
     },
     {
       title: "Doctor",
@@ -417,12 +438,14 @@ const PatientAppointments = () => {
     },
     {
       title: "Action",
-      className: "text-center",
+      className: "text-center text-nowrap",
+      width: 140,
       align: "center" as const,
       render: (_: any, record: any) => (
-        <div className="d-flex align-items-center gap-1 justify-content-center">
-          <Link to={all_routes.patientappointmentdetails.replace(":id", record._raw.id)} className="btn btn-icon btn-sm btn-soft-info"><i className="ti ti-eye" /></Link>
-          <button className="btn btn-icon btn-sm btn-soft-secondary" onClick={() => handlePrintAppointment(record._raw)}><i className="ti ti-printer" /></button>
+        <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
+          <Link to={all_routes.patientappointmentdetails.replace(":id", record._raw.id)} className="text-info p-1" title="View"><i className="ti ti-eye fs-18" /></Link>
+          <button className="bg-transparent border-0 text-secondary p-1" onClick={() => handlePrintAppointment(record._raw)} title="Print"><i className="ti ti-printer fs-18" /></button>
+          <button className="bg-transparent border-0 text-danger p-1" data-bs-toggle="modal" data-bs-target="#delete_appointment_modal" onClick={() => setSelectedIds([record._raw.id])} title="Delete"><i className="ti ti-trash fs-18" /></button>
         </div>
       )
     }
@@ -434,8 +457,8 @@ const PatientAppointments = () => {
       <div className="page-wrapper">
         <div className="content">
           <div className="d-flex align-items-center flex-wrap pb-3 mb-3 border-bottom gap-2">
-            <h4 className="fw-bold mb-0 me-2">Appointment</h4>
-            {["All", "Schedule", "Confirmed", "Checked In"].map((s) => (
+            <h4 className="fw-bold mb-0 me-2 flex-shrink-0">Appointment</h4>
+            {["All", "Schedule", "Confirmed"].map((s) => (
               <button
                 key={s}
                 className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-2 fs-12 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
@@ -444,7 +467,7 @@ const PatientAppointments = () => {
               >
                 {s}
                 <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>
-                  {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : appointments.filter(a => a.status === s).length}
+                  {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : appointments.filter(a => a.status === s).length}
                 </span>
               </button>
             ))}
@@ -474,9 +497,25 @@ const PatientAppointments = () => {
                 ))}
               </select>
             </div>
-            <button className="btn btn-sm btn-light border d-flex align-items-center gap-2 fw-bold fs-12 flex-shrink-0 shadow-sm bg-white" style={{ height: '36px', borderRadius: '6px' }} data-bs-toggle="offcanvas" data-bs-target="#filter_drawer">
-              <i className="ti ti-filter fs-14" /> Filter
+            <button 
+              className="btn btn-sm btn-light border text-danger d-flex align-items-center gap-2 fw-bold fs-12 flex-shrink-0 shadow-sm bg-white hover-bg-light" 
+              style={{ height: '36px', borderRadius: '6px' }} 
+              onClick={() => {
+                setFilterFollowUp("All"); 
+                setFilterStatus("All"); 
+                setFilterDoctor(""); 
+                setDatePreset("All"); 
+                setFilterDate(""); 
+                setFilterDepartment(""); 
+                setFilterType("");
+              }}
+            >
+              <i className="ti ti-refresh fs-14" /> Clear
             </button>
+
+            <Link to={all_routes.newAppointment} className="btn btn-sm btn-primary ms-auto flex-shrink-0 d-flex align-items-center gap-2 fw-bold" style={{ height: '36px', borderRadius: '6px' }}>
+              <i className="ti ti-plus fs-14" /> New Appointment
+            </Link>
           </div>
 
           <div className="compact-table">

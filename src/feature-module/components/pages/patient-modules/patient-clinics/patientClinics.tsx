@@ -1,11 +1,31 @@
 import { Link } from "react-router";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import Datatable from "../../../../../core/common/dataTable";
 import { useClinics } from "../../../../../core/hooks/useClinics";
+import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppointments";
 import { all_routes } from "../../../../routes/all_routes";
 
 const PatientClinics = () => {
-    const { clinics, loading } = useClinics();
+    const { clinics, loading: clinicsLoading } = useClinics();
+    const { appointments, loading: apptLoading } = useClinicAppointments();
+
+    // Extract unique clinic IDs from patient's appointments
+    const connectedClinicIds = useMemo(() => {
+        const ids = new Set<string>();
+        appointments.forEach((a: any) => {
+            if (a.clinicId) ids.add(a.clinicId);
+            if (a.clinic?.id) ids.add(a.clinic.id);
+        });
+        return ids;
+    }, [appointments]);
+
+    // Filter clinics to only show connected ones
+    const connectedClinics = useMemo(() => {
+        if (connectedClinicIds.size === 0) return [];
+        return clinics.filter((c: any) => connectedClinicIds.has(c.id));
+    }, [clinics, connectedClinicIds]);
+
+    const loading = clinicsLoading || apptLoading;
 
     const columns = [
         {
@@ -92,12 +112,12 @@ const PatientClinics = () => {
                         <h6 className="fw-bold mb-1 d-flex align-items-center text-muted fs-12 text-uppercase">
                             <Link to={all_routes.patientdashboard} className="text-muted hover-primary">Dashboard</Link>
                             <i className="ti ti-chevron-right mx-2" />
-                            <span className="text-primary">Explore Clinics</span>
+                            <span className="text-primary">My Clinics</span>
                         </h6>
                         <h4 className="fw-bold mb-0 d-flex align-items-center">
-                            Clinic Directory
+                            My Clinics
                             <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
-                                Total : {clinics.length}
+                                Total : {connectedClinics.length}
                             </span>
                         </h4>
                     </div>
@@ -106,10 +126,12 @@ const PatientClinics = () => {
                 <div className="table-responsive bg-white rounded shadow-sm border p-0">
                     <Datatable
                         columns={columns}
-                        dataSource={clinics}
+                        dataSource={connectedClinics}
                         loading={loading}
                         Selection={true}
                         searchText=""
+                        emptyTitle="No Connected Clinics"
+                        emptyMessage="You don't have appointments at any clinic yet. Book an appointment to see your clinics here."
                     />
                 </div>
             </div>

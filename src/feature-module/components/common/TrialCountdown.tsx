@@ -100,7 +100,7 @@ const TrialCountdown = () => {
                             </div>
                         </div>
 
-                        <div className="border rounded-3 p-3 bg-light-subtle mb-3">
+                        <div className="border rounded-3 p-3 bg-light-subtle">
                             <div className="d-flex justify-content-between mb-2 pb-2 border-bottom">
                                 <span className="text-muted fs-12">Next Billing</span>
                                 <span className="fw-semibold fs-12 text-primary">{expiresAt ? dayjs(expiresAt).format('DD MMM, YYYY') : 'Never'}</span>
@@ -116,43 +116,19 @@ const TrialCountdown = () => {
                             </div>
                         </div>
 
-                        <div className="feature-list">
-                            <div className="d-flex align-items-center mb-3">
-                                <div className="bg-primary-subtle p-1.5 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ width: '28px', height: '28px' }}>
-                                    <i className="ti ti-user-check text-primary fs-14" />
-                                </div>
-                                <div className="flex-grow-1">
-                                    <p className="mb-0 fs-12 fw-semibold text-dark lh-1">Staff Management</p>
-                                    <p className="mb-0 fs-11 text-muted">Unlimited access included</p>
-                                </div>
-                            </div>
-                            <div className="d-flex align-items-center mb-3">
-                                <div className="bg-info-subtle p-1.5 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ width: '28px', height: '28px' }}>
-                                    <i className="ti ti-building-hospital text-info fs-14" />
-                                </div>
-                                <div className="flex-grow-1">
-                                    <p className="mb-0 fs-12 fw-semibold text-dark lh-1">Clinic Modules</p>
-                                    <p className="mb-0 fs-11 text-muted">Full ERP access enabled</p>
-                                </div>
-                            </div>
-                            <div className="d-flex align-items-center mb-3">
-                                <div className="bg-purple-subtle p-1.5 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ width: '28px', height: '28px', backgroundColor: '#f5f3ff' }}>
-                                    <i className="ti ti-chart-pie text-purple fs-14" style={{ color: '#7c3aed' }} />
-                                </div>
-                                <div className="flex-grow-1">
-                                    <p className="mb-0 fs-12 fw-semibold text-dark lh-1">Advanced Analytics</p>
-                                    <p className="mb-0 fs-11 text-muted">Real-time reports active</p>
-                                </div>
-                            </div>
-                            <div className="d-flex align-items-center">
-                                <div className="bg-warning-subtle p-1.5 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ width: '28px', height: '28px' }}>
-                                    <i className="ti ti-headset text-warning fs-14" />
-                                </div>
-                                <div className="flex-grow-1">
-                                    <p className="mb-0 fs-12 fw-semibold text-dark lh-1">Priority Support</p>
-                                    <p className="mb-0 fs-11 text-muted">24/7 Dedicated line</p>
-                                </div>
-                            </div>
+                        <div className="mt-3">
+                            <Link
+                                to="/super-admin/packages"
+                                className="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center gap-2"
+                                style={{
+                                    background: 'linear-gradient(90deg, #2563eb, #3b82f6)',
+                                    border: 'none',
+                                    fontSize: '13px',
+                                }}
+                            >
+                                <i className="ti ti-refresh fs-14" />
+                                Renew Plan
+                            </Link>
                         </div>
                     </div>
                 ),

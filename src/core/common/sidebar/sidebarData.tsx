@@ -211,7 +211,6 @@ export const SidebarData = [
         submenuItems: [
           { label: "Appointments", link: routes.appointments },
           { label: "New Appointment", link: routes.newAppointment },
-          { label: "Calendar", link: routes.appointmentCalendar },
         ],
       },
       {

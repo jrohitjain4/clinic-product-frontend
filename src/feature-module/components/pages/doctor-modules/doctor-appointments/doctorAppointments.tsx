@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
@@ -16,7 +16,9 @@ import {
 } from "../../../../../core/utils/appointmentForm";
 import Modal from "./modal/modals";
 import { resolveMediaUrl } from "../../../../../core/config/api";
+import { apiGet } from "../../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
+import AppointmentFormPage from "../../clinic-modules/appointment-form/appointmentFormPage";
 
 const DoctorAppointments = () => {
   const { appointments, loading, updateAppointmentStatus } = useClinicAppointments();
@@ -42,14 +44,32 @@ const DoctorAppointments = () => {
   const [searchText, setSearchText] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterPatient, setFilterPatient] = useState("");
-  const [filterDate, setFilterDate] = useState<dayjs.Dayjs | null>(null);
+  const [datePreset, setDatePreset] = useState("All");
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
   const [filterType, setFilterType] = useState("");
-  const [filterDepartment, setFilterDepartment] = useState("");
   const [filterFollowUp, setFilterFollowUp] = useState("All");
 
   const { createPrescription } = usePrescriptions();
   const [showPresModal, setShowPresModal] = useState(false);
   const [selectedAppForPres, setSelectedAppForPres] = useState<any>(null);
+
+  const [showAddAppointment, setShowAddAppointment] = useState(false);
+  const [doctorDetails, setDoctorDetails] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchDash = async () => {
+      try {
+        const res: any = await apiGet("/api/doctors/my-dashboard");
+        if (res?.doctorDetails) {
+          setDoctorDetails(res.doctorDetails);
+        }
+      } catch (err) {
+        console.error("Failed to fetch doctor details", err);
+      }
+    };
+    fetchDash();
+  }, []);
 
   // Helper for profile images
   const getProfileImage = (img?: string | null) => {
@@ -72,6 +92,28 @@ const DoctorAppointments = () => {
   }, [appointments]);
 
   const filteredData = useMemo(() => {
+    // Group all appointments by doctor, date, and slot time to determine queue ranks
+    const groups: Record<string, any[]> = {};
+    const sortedAppts = [...appointments].sort((a, b) => {
+      const timeA = new Date(a.scheduledAt).getTime();
+      const timeB = new Date(b.scheduledAt).getTime();
+      if (timeA !== timeB) return timeA - timeB;
+      const createA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const createB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (createA !== createB) return createA - createB;
+      return (a.id || "").localeCompare(b.id || "");
+    });
+
+    sortedAppts.forEach((a) => {
+      const dateStr = dayjs(a.scheduledAt).format("YYYY-MM-DD");
+      const timeStr = dayjs(a.scheduledAt).format("HH:mm");
+      const key = `${a.doctorId}_${dateStr}_${timeStr}`;
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(a);
+    });
+
     return appointments
       .filter((a) => {
         const matchStatus = filterStatus === "All" || a.status === filterStatus;
@@ -80,18 +122,31 @@ const DoctorAppointments = () => {
             a.patient?.lastName?.toLowerCase().includes(filterPatient.toLowerCase()) ||
             a.patientName?.toLowerCase().includes(filterPatient.toLowerCase()))
           : true;
-        const matchDate = filterDate
-          ? dayjs(a.scheduledAt).format("YYYY-MM-DD") === filterDate.format("YYYY-MM-DD")
-          : true;
+        let matchDate = true;
+        const rowDate = dayjs(a.scheduledAt);
+        if (datePreset === "Today") {
+          matchDate = rowDate.isSame(dayjs(), 'day');
+        } else if (datePreset === "Yesterday") {
+          matchDate = rowDate.isSame(dayjs().subtract(1, 'day'), 'day');
+        } else if (datePreset === "Last 7 Days") {
+          matchDate = rowDate.isAfter(dayjs().subtract(7, 'day'));
+        } else if (datePreset === "Custom") {
+          const rowDateStr = rowDate.format("YYYY-MM-DD");
+          if (filterStartDate && filterEndDate) {
+            matchDate = rowDateStr >= filterStartDate && rowDateStr <= filterEndDate;
+          } else if (filterStartDate) {
+            matchDate = rowDateStr >= filterStartDate;
+          } else if (filterEndDate) {
+            matchDate = rowDateStr <= filterEndDate;
+          }
+        }
+
         const matchSearch = searchText
           ? (a.patientName?.toLowerCase().includes(searchText.toLowerCase()) ||
             a.appointmentCode?.toLowerCase().includes(searchText.toLowerCase()))
           : true;
         const matchType = filterType
           ? a.mode === filterType
-          : true;
-        const matchDepartment = filterDepartment
-          ? a.department?.name?.toLowerCase().includes(filterDepartment.toLowerCase())
           : true;
         const matchFollowUp = filterFollowUp === "All"
           ? true
@@ -101,21 +156,69 @@ const DoctorAppointments = () => {
               ? a.isFollowUp
               : a.followUpStatus === filterFollowUp;
 
-        return matchStatus && matchPatient && matchDate && matchSearch && matchType && matchDepartment && matchFollowUp;
+        return matchStatus && matchPatient && matchDate && matchSearch && matchType && matchFollowUp;
       })
-      .map((app, index) => ({
-        key: app.id,
-        id: app.id,
-        SrNo: index + 1,
-        Date_Time: app.dateTimeLabel,
-        Patient: app.patientName,
-        img: getProfileImage(app.patient?.profileImage),
-        phone_number: app.patient?.phone || "",
-        Mode: app.mode,
-        Status: app.status,
-        _raw: app
-      }));
-  }, [appointments, filterStatus, filterPatient, filterDate, searchText, filterType, filterDepartment]);
+      .map((app, index) => {
+        const dateStr = dayjs(app.scheduledAt).format("YYYY-MM-DD");
+        const timeStr = dayjs(app.scheduledAt).format("HH:mm");
+        const key = `${app.doctorId}_${dateStr}_${timeStr}`;
+        const group = groups[key] || [];
+
+        const indexInGroup = group.findIndex((item) => item.id === app.id);
+        const queueNo = indexInGroup !== -1 ? indexInGroup + 1 : 1;
+
+        const slotStartTime = dayjs(app.scheduledAt);
+        const expectedTime = indexInGroup !== -1
+          ? slotStartTime.add(indexInGroup * 15, "minute").format("hh:mm A")
+          : slotStartTime.format("hh:mm A");
+
+        const checkinsBefore = indexInGroup !== -1
+          ? group.slice(0, indexInGroup).filter((item) => ["Checked In", "Checked Out"].includes(item.status)).length
+          : 0;
+
+        const checkinHisNo = `${checkinsBefore} / ${queueNo}`;
+
+        return {
+          key: app.id,
+          id: app.id,
+          SrNo: index + 1,
+          checkinHisNo,
+          queueNo,
+          expectedTime,
+          Date_Time: app.dateTimeLabel,
+          Patient: app.patientName,
+          img: getProfileImage(app.patient?.profileImage),
+          phone_number: app.patient?.phone || "",
+          Mode: app.mode,
+          Status: app.status,
+          _raw: app
+        };
+      });
+  }, [appointments, filterStatus, filterPatient, datePreset, filterStartDate, filterEndDate, searchText, filterType, filterFollowUp]);
+
+  const isAnyFilterActive = useMemo(() => {
+    return (
+      (filterStatus !== "All" && filterStatus !== "") ||
+      datePreset !== "All" ||
+      filterStartDate !== "" ||
+      filterEndDate !== "" ||
+      (filterFollowUp !== "All" && filterFollowUp !== "") ||
+      filterType !== "" ||
+      filterPatient !== "" ||
+      searchText !== ""
+    );
+  }, [filterStatus, datePreset, filterStartDate, filterEndDate, filterFollowUp, filterType, filterPatient, searchText]);
+
+  const handleClearFilters = () => {
+    setFilterPatient("");
+    setDatePreset("All");
+    setFilterStartDate("");
+    setFilterEndDate("");
+    setFilterStatus("All");
+    setFilterType("");
+    setFilterFollowUp("All");
+    setSearchText("");
+  };
 
   const handlePresSubmit = async (data: any) => {
     try {
@@ -129,9 +232,15 @@ const DoctorAppointments = () => {
 
   const columns = [
     {
-      title: "Sr No",
+      title: "Sr / Queue",
       dataIndex: "SrNo",
-      render: (text: number) => <span className="fw-bold">{text}</span>,
+      render: (text: number, record: any) => {
+        return (
+          <span className="fw-bold">
+            {text} / <span className="text-primary fw-medium">{record.checkinHisNo}</span>
+          </span>
+        );
+      },
       sorter: (a: any, b: any) => a.SrNo - b.SrNo,
     },
     {
@@ -141,6 +250,11 @@ const DoctorAppointments = () => {
         <span className="text-primary fw-bold">#{record._raw.appointmentCode || text?.slice(-6).toUpperCase()}</span>
       ),
       sorter: (a: any, b: any) => (a._raw.appointmentCode || "").localeCompare(b._raw.appointmentCode || ""),
+    },
+    {
+      title: "Expected Time",
+      dataIndex: "expectedTime",
+      render: (text: string) => <span className="fw-bold text-dark">{text}</span>,
     },
     {
       title: "Date & Time",
@@ -228,29 +342,31 @@ const DoctorAppointments = () => {
     },
     {
       title: "Action",
-      className: "text-center",
-      render: (_text: string, record: any) => (
-        <div className="d-flex align-items-center justify-content-center" style={{ gap: '8px' }}>
+      className: "text-center text-nowrap",
+      width: 140,
+      align: "center" as const,
+      render: (_: any, record: any) => (
+        <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
           {/* Quick Add Prescription */}
           <Link
             to="#"
-            className="avatar avatar-xs border border-primary text-primary rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent"
+            className="text-primary p-1"
             title="Add Prescription"
             onClick={() => {
               setSelectedAppForPres(record._raw);
               setShowPresModal(true);
             }}
           >
-            <i className="ti ti-file-plus fs-14" />
+            <i className="ti ti-file-plus fs-18" />
           </Link>
 
           {/* View Details */}
           <Link
             to={all_routes.doctorsappointmentdetails.replace(":id", record.id)}
-            className="avatar avatar-xs border border-info text-info rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent"
+            className="text-info p-1"
             title="View Details"
           >
-            <i className="ti ti-eye fs-14" />
+            <i className="ti ti-eye fs-18" />
           </Link>
         </div>
       ),
@@ -267,7 +383,7 @@ const DoctorAppointments = () => {
 
             <div className="d-flex align-items-center flex-nowrap overflow-auto" style={{ gap: '12px', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
               <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
-              {["All", "Schedule", "Confirmed", "Checked In", "Checked Out", "Cancelled"].map((s) => (
+              {["All", "Schedule", "Confirmed", "Checked In", "Checked Out"].map((s) => (
                 <button
                   key={s}
                   className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "All") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-2 fs-12 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
@@ -276,24 +392,39 @@ const DoctorAppointments = () => {
                 >
                   {s === "Checked Out" ? "Check-out" : s === "Checked In" ? "Check-in" : s}
                   <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "All") ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>
-                    {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : s === "Checked Out" ? counts.checkedOut : s === "Cancelled" ? counts.cancelled : counts.all}
+                    {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : s === "Checked Out" ? counts.checkedOut : counts.all}
                   </span>
                 </button>
               ))}
 
-              <div className="d-flex align-items-center gap-1">
-                <button className="btn btn-sm btn-icon btn-primary border shadow-sm flex-shrink-0" style={{ height: '36px', width: '36px' }}>
-                  <i className="ti ti-list fs-16" />
+
+
+              {isAnyFilterActive ? (
+                <button
+                  className="btn btn-sm btn-soft-danger d-flex align-items-center gap-2 fw-bold fs-12 flex-shrink-0 shadow-sm"
+                  onClick={handleClearFilters}
+                  style={{ height: '36px', borderRadius: '6px' }}
+                >
+                  <i className="ti ti-refresh fs-14" /> Clear
                 </button>
-              </div>
+              ) : (
+                <button
+                  className="btn btn-sm btn-light border d-flex align-items-center gap-2 fw-bold fs-12 flex-shrink-0 shadow-sm bg-white"
+                  style={{ height: '36px', borderRadius: '6px' }}
+                  data-bs-toggle="offcanvas"
+                  data-bs-target="#filter_drawer"
+                >
+                  <i className="ti ti-filter fs-14" /> Filters
+                </button>
+              )}
 
               <button
-                className="btn btn-sm btn-light border d-flex align-items-center gap-2 fw-bold fs-12 flex-shrink-0 shadow-sm bg-white"
+                type="button"
+                className="btn btn-sm btn-primary d-flex align-items-center fw-semibold flex-shrink-0 shadow-sm"
+                onClick={() => setShowAddAppointment(true)}
                 style={{ height: '36px', borderRadius: '6px' }}
-                data-bs-toggle="offcanvas"
-                data-bs-target="#filter_drawer"
               >
-                <i className="ti ti-filter fs-14" /> Filters
+                <i className="ti ti-plus me-1" /> New Appointment
               </button>
             </div>
           </div>
@@ -374,29 +505,21 @@ const DoctorAppointments = () => {
             </select>
           </div>
           <div className="mb-3">
-            <label className="form-label fw-bold small text-muted text-uppercase mb-2">Department</label>
-            <select
-              className="form-select fs-13 py-2"
-              value={filterDepartment}
-              onChange={(e) => setFilterDepartment(e.target.value)}
-            >
-              <option value="">All Departments</option>
-              {Array.from(new Set(appointments.map(a => a.department?.name))).filter(Boolean).sort().map((name) => (
-                <option key={name as string} value={name as string}>
-                  {name as string}
-                </option>
-              ))}
+            <label className="form-label fw-bold small text-muted text-uppercase mb-2">Date Range</label>
+            <select className="form-select fs-13 py-2 mb-2" value={datePreset} onChange={(e) => setDatePreset(e.target.value)}>
+              <option value="All">All Dates</option>
+              <option value="Today">Today</option>
+              <option value="Yesterday">Yesterday</option>
+              <option value="Last 7 Days">Last 7 Days</option>
+              <option value="Custom">Choose Custom Date</option>
             </select>
-          </div>
-          <div className="mb-3">
-            <label className="form-label fw-bold small text-muted text-uppercase mb-2">Appointment Date</label>
-            <DatePicker
-              className="form-control w-100 py-2 fs-13"
-              style={{ border: '1px solid #7D8BB3' }}
-              onChange={(d) => setFilterDate(d)}
-              value={filterDate}
-              placeholder="Select Date"
-            />
+            {datePreset === "Custom" && (
+              <div className="d-flex gap-1 align-items-center mt-2">
+                <input type="date" className="form-control fs-13" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} />
+                <span className="text-muted small">to</span>
+                <input type="date" className="form-control fs-13" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} />
+              </div>
+            )}
           </div>
           <div className="mb-3">
             <label className="form-label fw-bold small text-muted text-uppercase mb-2">Status</label>
@@ -429,9 +552,9 @@ const DoctorAppointments = () => {
 
           <div className="d-grid gap-2">
             <button className="btn btn-soft-danger fw-bold py-2" onClick={() => {
-              setFilterPatient(""); setFilterDate(null); setFilterStatus("All"); setFilterType(""); setFilterDepartment(""); setFilterFollowUp("All");
+              setFilterPatient(""); setDatePreset("All"); setFilterStartDate(""); setFilterEndDate(""); setFilterStatus("All"); setFilterType(""); setFilterFollowUp("All");
             }}>
-              <i className="ti ti-refresh me-2" /> Reset All Filters
+              <i className="ti ti-trash me-2" /> Clear Filters
             </button>
             <button className="btn btn-soft-info fw-bold py-2">
               <i className="ti ti-download me-2" /> Download Report
@@ -455,6 +578,35 @@ const DoctorAppointments = () => {
           linkedAppointments={appointments.filter(a => (a as any).rootParentId === ((selectedAppForPres as any).rootParentId || selectedAppForPres.id))}
         />
       )}
+
+      {/* New Appointment Modal */}
+      <div className={`modal custom-modal fade ${showAddAppointment ? "show d-block" : "d-none"}`} role="dialog" style={{ zIndex: 1055 }}>
+        <div className="modal-dialog modal-dialog-centered modal-lg">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="modal-header bg-primary text-white">
+              <h5 className="modal-title">New Appointment</h5>
+              <button type="button" className="btn-close btn-close-white" onClick={() => setShowAddAppointment(false)}></button>
+            </div>
+            <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+              {showAddAppointment && (
+                <AppointmentFormPage
+                  mode="create"
+                  isModal={true}
+                  onSuccess={() => {
+                    setShowAddAppointment(false);
+                    window.location.reload();
+                  }}
+                  onCancel={() => setShowAddAppointment(false)}
+                  onClose={() => setShowAddAppointment(false)}
+                  preSelectedDoctorId={doctorDetails?.id}
+                  preSelectedDepartmentId={doctorDetails?.departmentId}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      {showAddAppointment && <div className="modal-backdrop fade show" style={{ zIndex: 1050 }}></div>}
     </>
   );
 };

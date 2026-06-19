@@ -34,6 +34,7 @@ const CommonSelect: React.FC<SelectProps> = ({
   filterOption,
   formatOptionLabel,
   isSearchable = true,
+  styles,
 }) => {
   const isControlled = value !== undefined;
   const [selectedOption, setSelectedOption] = useState<any>(defaultValue);
@@ -46,8 +47,12 @@ const CommonSelect: React.FC<SelectProps> = ({
   const customStyles = {
     control: (base: any, state: any) => ({
       ...base,
-      backgroundColor: "white",
-      border: state.isFocused ? "1.5px solid #6366f1" : "1.5px solid #6366f1",
+      backgroundColor: state.isDisabled ? "#f8fafc" : "white",
+      border: state.isDisabled 
+        ? "1.5px solid #cbd5e1" 
+        : state.isFocused 
+          ? "1.5px solid #6366f1" 
+          : "1.5px solid #6366f1",
       boxShadow: "none",
       borderRadius: "12px",
       minHeight: "46px",
@@ -56,8 +61,13 @@ const CommonSelect: React.FC<SelectProps> = ({
       padding: "2px 8px",
       transition: "all 0.2s ease-in-out",
       "&:hover": {
-        border: "1.5px solid #6366f1",
+        border: state.isDisabled ? "1.5px solid #cbd5e1" : "1.5px solid #6366f1",
       },
+    }),
+    singleValue: (base: any, state: any) => ({
+      ...base,
+      color: state.isDisabled ? "#0f172a" : "#475569",
+      fontWeight: state.isDisabled ? "700" : "500",
     }),
     option: (base: any, state: any) => ({
       ...base,
@@ -102,6 +112,7 @@ const CommonSelect: React.FC<SelectProps> = ({
       menuPosition="fixed"
       styles={{
         ...customStyles,
+        ...styles,
         menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
       }}
     />

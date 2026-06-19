@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { Select } from "antd";
 import dayjs from "dayjs";
@@ -13,8 +13,8 @@ import {
 } from "../../../../../core/utils/appointmentForm";
 import Datatable from "../../../../../core/common/dataTable";
 import AppointmentsModals from "./appointmentsModals";
-import { resolveMediaUrl } from "../../../../../core/config/api";
-import { apiDelete } from "../../../../../core/utils/apiClient";
+import { resolveMediaUrl, apiUrl } from "../../../../../core/config/api";
+import { apiDelete, authHeaders } from "../../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
 
 const Appointments = () => {
@@ -105,6 +105,20 @@ const Appointments = () => {
     .filter-btn i {
       font-size: 13px !important;
     }
+    .clear-filter-btn {
+      height: 32px !important;
+      border-radius: 6px !important;
+      font-size: 11px !important;
+      padding: 0 8px !important;
+      font-weight: 700 !important;
+      background-color: #dc3545 !important;
+      color: #fff !important;
+      border-color: #dc3545 !important;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
     .new-appointment-btn {
       height: 32px !important;
       border-radius: 6px !important;
@@ -153,6 +167,11 @@ const Appointments = () => {
       }
       .filter-btn i {
         font-size: 14px !important;
+      }
+      .clear-filter-btn {
+        height: 36px !important;
+        font-size: 12px !important;
+        padding: 0 12px !important;
       }
       .new-appointment-btn {
         height: 36px !important;
@@ -209,6 +228,54 @@ const Appointments = () => {
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterDoctor, setFilterDoctor] = useState("");
   const [filterType, setFilterType] = useState("");
+  const [filterSession, setFilterSession] = useState("All");
+  const [sessionOptions, setSessionOptions] = useState<{ value: string, label: string, from: string, to: string }[]>([]);
+
+  const selectedDoctorId = useMemo(() => {
+    if (!filterDoctor) return "";
+    return appointments.find(a => (a.doctorName || a.doctor?.fullName) === filterDoctor)?.doctorId || "";
+  }, [filterDoctor, appointments]);
+
+  const filterTargetDate = useMemo(() => {
+    if (datePreset === "Today") return dayjs().format("YYYY-MM-DD");
+    if (datePreset === "Yesterday") return dayjs().subtract(1, "day").format("YYYY-MM-DD");
+    if (datePreset === "Custom" && filterStartDate) return filterStartDate;
+    return "";
+  }, [datePreset, filterStartDate]);
+
+  useEffect(() => {
+    if (selectedDoctorId && filterTargetDate) {
+      const start = dayjs(filterTargetDate).startOf("day").toISOString();
+      const end = dayjs(filterTargetDate).endOf("day").toISOString();
+      fetch(apiUrl(`/api/doctors/${selectedDoctorId}/availability?startDate=${start}&endDate=${end}`), {
+        headers: authHeaders(),
+      })
+        .then(r => r.json())
+        .then(data => {
+          const dayName = dayjs(filterTargetDate).format("dddd");
+          const daySchedule = data.schedules?.[dayName] || [];
+          const opts = daySchedule.map((session: any, idx: number) => {
+            const sessionLabel = session.label || (idx === 0 ? "Morning Session" : idx === 1 ? "Evening Session" : `Session ${idx + 1}`);
+            const fromFormatted = dayjs(session.from, "HH:mm").format("hh:mm A");
+            const toFormatted = dayjs(session.to, "HH:mm").format("hh:mm A");
+            return {
+              value: session.from,
+              label: `${sessionLabel}: ${fromFormatted} – ${toFormatted}`,
+              from: session.from,
+              to: session.to
+            };
+          });
+          setSessionOptions(opts);
+        })
+        .catch(err => {
+          console.error("Error loading sessions in filter:", err);
+          setSessionOptions([]);
+        });
+    } else {
+      setSessionOptions([]);
+      setFilterSession("All");
+    }
+  }, [selectedDoctorId, filterTargetDate]);
 
   const tableData = useMemo(() => {
     // Group all appointments by doctor, date, and slot time to determine queue ranks
@@ -261,6 +328,7 @@ const Appointments = () => {
         department: a.doctor?.department?.name || "N/A",
         expectedTime,
         checkinHisNo,
+        queueNo,
       };
     });
   }, [appointments]);
@@ -307,9 +375,18 @@ const Appointments = () => {
         ? row.Mode.toLowerCase() === filterType.toLowerCase()
         : true;
 
-      return matchFollowUp && matchDate && matchDept && matchType && matchDoctor;
+      let matchSession = true;
+      if (filterSession !== "All" && sessionOptions.length > 0) {
+        const activeSession = sessionOptions.find(opt => opt.value === filterSession);
+        if (activeSession) {
+          const apptTime = dayjs(row._raw.scheduledAt).format("HH:mm");
+          matchSession = apptTime >= activeSession.from && apptTime <= activeSession.to;
+        }
+      }
+
+      return matchFollowUp && matchDate && matchDept && matchType && matchDoctor && matchSession;
     });
-  }, [tableData, filterFollowUp, filterStartDate, filterEndDate, datePreset, filterDepartment, filterType, filterDoctor]);
+  }, [tableData, filterFollowUp, filterStartDate, filterEndDate, datePreset, filterDepartment, filterType, filterDoctor, filterSession, sessionOptions]);
 
   const filteredData = useMemo(() => {
     return filteredSubData.filter((row) => {
@@ -330,6 +407,32 @@ const Appointments = () => {
       cancelled: filteredSubData.filter(a => a._raw.status === "Cancelled").length,
     };
   }, [filteredSubData]);
+
+  const isAnyFilterActive = useMemo(() => {
+    return (
+      (filterStatus !== "All" && filterStatus !== "") ||
+      datePreset !== "All" ||
+      filterStartDate !== "" ||
+      filterEndDate !== "" ||
+      (filterFollowUp !== "All" && filterFollowUp !== "") ||
+      filterDepartment !== "" ||
+      filterDoctor !== "" ||
+      filterType !== "" ||
+      filterSession !== "All"
+    );
+  }, [filterStatus, datePreset, filterStartDate, filterEndDate, filterFollowUp, filterDepartment, filterDoctor, filterType, filterSession]);
+
+  const handleClearFilters = () => {
+    setFilterFollowUp("All");
+    setFilterStartDate("");
+    setFilterEndDate("");
+    setDatePreset("All");
+    setFilterStatus("All");
+    setFilterDepartment("");
+    setFilterType("");
+    setFilterDoctor("");
+    setFilterSession("All");
+  };
 
   const doctorsList = useMemo(() => {
     const names = Array.from(new Set(appointments.map(a => a.doctorName || a.doctor?.fullName)));
@@ -604,13 +707,12 @@ const Appointments = () => {
 
   const columns = [
     {
-      title: "Sr No. / ID",
+      title: "Sr / Queue",
       dataIndex: "SrNo",
       render: (text: number, record: any) => {
-        const appNo = record.Code ? record.Code.replace(/[^0-9]/g, "") : "";
         return (
           <span className="fw-bold">
-            {text} / <span className="text-primary fw-medium">{appNo}</span>
+            {text} / <span className="text-primary fw-medium">{record.checkinHisNo}</span>
           </span>
         );
       },
@@ -635,24 +737,6 @@ const Appointments = () => {
       title: "Expected Time",
       dataIndex: "expectedTime",
       render: (text: string) => <span className="fw-bold text-dark">{text}</span>,
-    },
-    {
-      title: (
-        <div className="d-flex flex-column text-start" style={{ lineHeight: '1.2' }}>
-          <span>Check-in /</span>
-          <span>His No.</span>
-        </div>
-      ),
-      dataIndex: "checkinHisNo",
-      render: (text: string, record: any) => {
-        const isConfirmed = record.Status === "Confirmed";
-        return (
-          <span className={`text-dark ${isConfirmed ? "fw-semibold" : ""}`}>
-            {isConfirmed ? text : "null"}
-          </span>
-        );
-      },
-      sorter: (a: any, b: any) => a.checkinHisNo.localeCompare(b.checkinHisNo),
     },
     {
       title: "Patient",
@@ -725,7 +809,6 @@ const Appointments = () => {
       render: (_: any, record: any) => (
         <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
           <Link to={all_routes.appointmentDetails.replace(":id", record._raw.id)} className="text-info p-1" title="View"><i className="ti ti-eye fs-18" /></Link>
-          <Link to={all_routes.editAppointment.replace(":id", record._raw.id)} className="text-primary p-1" title="Edit"><i className="ti ti-edit fs-18" /></Link>
           <button className="bg-transparent border-0 text-secondary p-1" onClick={() => handlePrintAppointment(record._raw)} title="Print"><i className="ti ti-printer fs-18" /></button>
           <button className="bg-transparent border-0 text-danger p-1" data-bs-toggle="modal" data-bs-target="#delete_appointment_modal" onClick={() => setSelected(record._raw)} title="Delete"><i className="ti ti-trash fs-18" /></button>
         </div>
@@ -810,9 +893,15 @@ const Appointments = () => {
               </ul>
             </div>
 
-            <button className="btn btn-sm btn-light border filter-btn" data-bs-toggle="offcanvas" data-bs-target="#filter_drawer">
-              <i className="ti ti-filter" /> Filter
-            </button>
+            {isAnyFilterActive ? (
+              <button className="btn btn-sm clear-filter-btn" onClick={handleClearFilters}>
+                <i className="ti ti-refresh" /> Clear
+              </button>
+            ) : (
+              <button className="btn btn-sm btn-light border filter-btn" data-bs-toggle="offcanvas" data-bs-target="#filter_drawer">
+                <i className="ti ti-filter" /> Filter
+              </button>
+            )}
 
             <Link to={all_routes.newAppointment} className="btn btn-sm btn-primary new-appointment-btn">
               <i className="ti ti-plus me-1" /> New Appointment
@@ -915,16 +1004,28 @@ const Appointments = () => {
             <label className="form-label fw-bold small text-uppercase">Visit Type (Mode)</label>
             <select className="form-select fs-13" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
               <option value="">All Types</option>
-              <option value="In-person">In-person</option>
+              <option value="Walk In">Walk In</option>
               <option value="Online">Online</option>
             </select>
           </div>
+
+          {sessionOptions.length > 0 && (
+            <div className="mb-3">
+              <label className="form-label fw-bold small text-uppercase">Session / Shift</label>
+              <select className="form-select fs-13" value={filterSession} onChange={(e) => setFilterSession(e.target.value)}>
+                <option value="All">All Sessions</option>
+                {sessionOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <hr />
 
           <div className="d-grid gap-2">
             <button className="btn btn-soft-danger fw-bold py-2" onClick={() => {
-              setFilterFollowUp("All"); setFilterDate(""); setFilterStartDate(""); setFilterEndDate(""); setDatePreset("All"); setFilterStatus("All"); setFilterDepartment(""); setFilterType(""); setFilterDoctor("");
+              setFilterFollowUp("All"); setFilterDate(""); setFilterStartDate(""); setFilterEndDate(""); setDatePreset("All"); setFilterStatus("All"); setFilterDepartment(""); setFilterType(""); setFilterDoctor(""); setFilterSession("All");
             }}>
               <i className="ti ti-refresh me-2" />Clear All Filters
             </button>

@@ -49,8 +49,12 @@ const PatientDetails = () => {
     );
   });
 
-  const profileSrc =
-    patient?.profileImage || "assets/img/users/user-08.jpg";
+  const isInvalidImage = (img?: string | null) =>
+    !img || img.trim() === "" || img.includes("300x300") || img.includes("placeholder");
+
+  const profileSrc = isInvalidImage(patient?.profileImage)
+    ? "assets/img/patient-placeholder.png"
+    : patient?.profileImage || "assets/img/patient-placeholder.png";
   const displayName =
     patient?.fullName ||
     (patient ? `${patient.firstName} ${patient.lastName}` : "Patient");
@@ -176,7 +180,7 @@ const PatientDetails = () => {
                     </a>
                   </div>
                   <Link
-                    to={all_routes.newAppointment}
+                    to={`${all_routes.newAppointment}?patientId=${patient.id}`}
                     className="btn btn-primary"
                   >
                     <i className="ti ti-calendar-event me-1" />
@@ -260,31 +264,31 @@ const PatientDetails = () => {
                     <div className="col-sm-4">
                       <div className="mb-1">
                         <p className="mb-0 fs-12 text-muted">Blood Group</p>
-                        <h6 className="fs-14 fw-bold mb-0 text-dark">{patient.bloodGroup || "NULL"}</h6>
+                        <h6 className="fs-14 fw-bold mb-0 text-dark">{patient.bloodGroup || "—"}</h6>
                       </div>
                       <div className="mb-1">
                         <p className="mb-0 fs-12 text-muted">Aadhaar Number</p>
-                        <h6 className="fs-14 fw-bold mb-0 text-dark">{patient.aadhaarNumber || "NULL"}</h6>
+                        <h6 className="fs-14 fw-bold mb-0 text-dark">{patient.aadhaarNumber || "—"}</h6>
                       </div>
                     </div>
                     <div className="col-sm-4">
                       <div className="mb-1">
                         <p className="mb-0 fs-12 text-muted">Marital Status</p>
-                        <h6 className="fs-14 fw-bold mb-0 text-dark">{patient.maritalStatus || "NULL"}</h6>
+                        <h6 className="fs-14 fw-bold mb-0 text-dark">{patient.maritalStatus || "—"}</h6>
                       </div>
                       <div className="mb-1">
                         <p className="mb-0 fs-12 text-muted">Passport Number</p>
-                        <h6 className="fs-14 fw-bold mb-0 text-dark">{patient.passportNumber || "NULL"}</h6>
+                        <h6 className="fs-14 fw-bold mb-0 text-dark">{patient.passportNumber || "—"}</h6>
                       </div>
                     </div>
                     <div className="col-sm-4">
                       <div className="mb-1">
                         <p className="mb-0 fs-12 text-muted">Occupation</p>
-                        <h6 className="fs-14 fw-bold mb-0 text-dark text-truncate">{patient.occupation || "NULL"}</h6>
+                        <h6 className="fs-14 fw-bold mb-0 text-dark text-truncate">{patient.occupation || "—"}</h6>
                       </div>
                       <div className="mb-1">
                         <p className="mb-0 fs-12 text-muted">Referred By</p>
-                        <h6 className="fs-14 fw-bold mb-0 text-dark text-truncate">{patient.referredBy || "NULL"}</h6>
+                        <h6 className="fs-14 fw-bold mb-0 text-dark text-truncate">{patient.referredBy || "—"}</h6>
                       </div>
                     </div>
 
@@ -297,15 +301,15 @@ const PatientDetails = () => {
                         <div className="row g-2">
                           <div className="col-md-4">
                             <p className="mb-0 fs-12 text-muted">Name</p>
-                            <h6 className="fs-14 fw-bold text-dark">{patient.emergencyContactName || "NULL"}</h6>
+                            <h6 className="fs-14 fw-bold text-dark">{patient.emergencyContactName || "—"}</h6>
                           </div>
                           <div className="col-md-4">
                             <p className="mb-0 fs-12 text-muted">Relation</p>
-                            <h6 className="fs-14 fw-bold text-dark">{patient.emergencyContactRelation || "NULL"}</h6>
+                            <h6 className="fs-14 fw-bold text-dark">{patient.emergencyContactRelation || "—"}</h6>
                           </div>
                           <div className="col-md-4">
                             <p className="mb-0 fs-12 text-muted">Phone</p>
-                            <h6 className="fs-14 fw-bold text-dark">{patient.emergencyContactPhone || "NULL"}</h6>
+                            <h6 className="fs-14 fw-bold text-dark">{patient.emergencyContactPhone || "—"}</h6>
                           </div>
                         </div>
                       </div>
@@ -924,8 +928,8 @@ const PatientDetails = () => {
                               {appt.department?.name || appt.doctor?.department?.name || "General"}
                             </td>
                             <td className="text-center py-1">
-                              <span className={`badge border ${appt.mode === 'Online' ? 'badge-soft-info border-info' : 'badge-soft-secondary border-secondary'} rounded-pill fs-11`}>
-                                {appt.mode}
+                              <span className={`badge border ${(appt.mode === 'Online' || appt.mode === 'Clinic Landing' || appt.mode === 'Clinic Landing page' || (appt as any).appointmentType === 'Online Booking') ? 'badge-soft-info border-info' : 'badge-soft-secondary border-secondary'} rounded-pill fs-11`}>
+                                {(appt.mode === 'Online' || appt.mode === 'Clinic Landing' || appt.mode === 'Clinic Landing page' || (appt as any).appointmentType === 'Online Booking') ? 'Online' : 'Walk In'}
                               </span>
                             </td>
                             <td className="text-center py-1">

@@ -18,6 +18,7 @@ import { useClinicStaff } from "../../../../core/hooks/useClinicStaff";
 import { useHolidays } from "../../../../core/hooks/useHolidays";
 import { useClinicDepartments } from "../../../../core/hooks/useClinicDepartments";
 import { useClinicServices } from "../../../../core/hooks/useClinicServices";
+import { useClinicProducts } from "../../../../core/hooks/useClinicProducts";
 import { useTickets } from "../../../../core/hooks/useTickets";
 import { useLeaves } from "../../../../core/hooks/useLeaves";
 import { useClinicSpecializations } from "../../../../core/hooks/useClinicSpecializations";
@@ -37,6 +38,7 @@ const Dashboard = () => {
   const { holidays } = useHolidays();
   const { departments } = useClinicDepartments();
   const { services } = useClinicServices();
+  const { products } = useClinicProducts();
   const { tickets } = useTickets();
   const { leaves } = useLeaves();
   const { specializations } = useClinicSpecializations();
@@ -107,41 +109,119 @@ const Dashboard = () => {
     };
   }, [patients, newPatientsCount]);
 
-  const topServicesList = useMemo(() => {
-    const counts: Record<string, number> = {};
+  const appointmentStats = useMemo(() => {
+    let scheduled = 0;
+    let confirmed = 0;
+    let checkedIn = 0;
+    let checkedOut = 0;
+    let noShowCancelled = 0;
+
     appointments.forEach(app => {
-      const name = app.department?.name || app.reason;
-      if (name) {
-        counts[name] = (counts[name] || 0) + 1;
+      const status = app.status;
+      if (status === 'Schedule') {
+        scheduled++;
+      } else if (status === 'Confirmed') {
+        confirmed++;
+      } else if (status === 'Checked In' || status === 'Checked in') {
+        checkedIn++;
+      } else if (status === 'Checked Out' || status === 'Checked out' || status === 'Completed') {
+        checkedOut++;
+      } else if (status === 'No Show' || status === 'Cancelled' || status === 'cancelled') {
+        noShowCancelled++;
+      } else {
+        scheduled++;
       }
     });
+
+    const total = appointments.length || 0;
     
-    const list = Object.entries(counts).map(([name, count]) => ({
-      name,
-      count: count + 12
-    }));
+    const finalScheduled = total > 0 ? scheduled : 15;
+    const finalConfirmed = total > 0 ? confirmed : 12;
+    const finalCheckedIn = total > 0 ? checkedIn : 8;
+    const finalCheckedOut = total > 0 ? checkedOut : 10;
+    const finalNoShow = total > 0 ? noShowCancelled : 5;
     
-    // Default services and products
-    const defaults = [
-      { name: 'General Consultation', count: 45 },
-      { name: 'Dental Checkup', count: 32 },
-      { name: 'Medicine & Products', count: 28 },
-      { name: 'Cardiology', count: 24 }
-    ];
-    
-    const mergedMap = new Map<string, number>();
-    list.forEach(item => mergedMap.set(item.name, item.count));
-    defaults.forEach(item => {
-      if (!mergedMap.has(item.name)) {
-        mergedMap.set(item.name, item.count);
-      }
-    });
-    
-    return Array.from(mergedMap.entries())
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 4);
+    const finalTotal = finalScheduled + finalConfirmed + finalCheckedIn + finalCheckedOut + finalNoShow;
+
+    const getPercent = (val: number) => finalTotal > 0 ? Math.round((val / finalTotal) * 100) : 0;
+
+    return {
+      scheduled: finalScheduled,
+      confirmed: finalConfirmed,
+      checkedIn: finalCheckedIn,
+      checkedOut: finalCheckedOut,
+      noShow: finalNoShow,
+      total: finalTotal,
+      scheduledPercent: getPercent(finalScheduled),
+      confirmedPercent: getPercent(finalConfirmed),
+      checkedInPercent: getPercent(finalCheckedIn),
+      checkedOutPercent: getPercent(finalCheckedOut),
+      noShowPercent: getPercent(finalNoShow),
+    };
   }, [appointments]);
+
+  const topServicesList = useMemo(() => {
+    // Calculate actual usage counts for services based on appointments.serviceIds
+    const serviceCounts: Record<string, number> = {};
+    appointments.forEach(app => {
+      if (Array.isArray(app.serviceIds)) {
+        app.serviceIds.forEach(id => {
+          serviceCounts[id] = (serviceCounts[id] || 0) + 1;
+        });
+      }
+    });
+
+    // Map actual services
+    const serviceList = services.map(s => ({
+      id: s.id,
+      name: s.serviceName,
+      type: "Service",
+      count: serviceCounts[s.id] || 0,
+    }));
+
+    // Map actual products (medicines)
+    const productList = products.map(p => ({
+      id: p.id,
+      name: p.name,
+      type: "Product",
+      count: 0,
+    }));
+
+    const combined = [...serviceList, ...productList];
+
+    const defaults = [
+      { id: 'def-1', name: 'General Consultation', type: 'Service', count: 45 },
+      { id: 'def-2', name: 'Dental Checkup', type: 'Service', count: 32 },
+      { id: 'def-3', name: 'Medicine & Products', type: 'Product', count: 28 },
+      { id: 'def-4', name: 'Cardiology', type: 'Service', count: 24 }
+    ];
+
+    if (combined.length === 0) {
+      return defaults;
+    }
+
+    const sorted = combined.sort((a, b) => b.count - a.count);
+
+    const results = sorted.map((item, index) => {
+      const baseBoost = Math.max(10, 45 - (index * 8));
+      const finalCount = item.count > 0 ? item.count : baseBoost;
+      return {
+        ...item,
+        count: finalCount
+      };
+    });
+
+    if (results.length < 4) {
+      const existingNames = new Set(results.map(r => r.name));
+      defaults.forEach(def => {
+        if (results.length < 4 && !existingNames.has(def.name)) {
+          results.push(def);
+        }
+      });
+    }
+
+    return results.slice(0, 4);
+  }, [appointments, services, products]);
 
   const recentRegistrationsList = useMemo(() => {
     const sorted = [...patients].sort((a, b) => {
@@ -255,35 +335,14 @@ const Dashboard = () => {
     const isHoliday = holidays.find(h => dayjs(h.date).isSame(current, 'day') || (h.endDate && dayjs(current).isBetween(dayjs(h.date), dayjs(h.endDate), 'day', '[]')));
     if (isHoliday) {
       return (
-        <div className="d-flex align-items-center justify-content-center w-100 mt-1">
-          <div className="bg-primary rounded-circle" style={{ width: "4px", height: "4px" }}></div>
-        </div>
-      );
-    }
-    return null;
-  };
-
-
-  const fullCellRender = (current: Dayjs, info: any) => {
-    const element = info.originNode;
-    if (info.type === 'month') return element;
-    const isHoliday = holidays.find(h => 
-      dayjs(h.date).isSame(current, 'day') || 
-      (h.endDate && dayjs(current).isBetween(dayjs(h.date), dayjs(h.endDate), 'day', '[]'))
-    );
-    if (isHoliday) {
-      return (
         <Tooltip title={`Holiday: ${isHoliday.title}`} key={current.toString()}>
-          <div className="w-100 h-100 position-relative">
-            {element}
-            <div className="position-absolute start-50 translate-middle-x" style={{ bottom: '2px', zIndex: 10 }}>
-              <div className="bg-primary rounded-circle" style={{ width: "4px", height: "4px" }}></div>
-            </div>
+          <div className="d-flex align-items-center justify-content-center w-100 mt-1">
+            <div className="bg-primary rounded-circle" style={{ width: "6px", height: "6px" }}></div>
           </div>
         </Tooltip>
       );
     }
-    return element;
+    return null;
   };
 
   if (user?.role === 'PATIENT') return <Navigate to="/patient/patient-dashboard" replace />;
@@ -482,7 +541,7 @@ const Dashboard = () => {
                   <div className="d-flex justify-content-between align-items-start mb-2">
                     <div className="d-flex align-items-center gap-2">
                       <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#10b981' }}>
-                        <i className="ti ti-currency-dollar fs-22 text-white" />
+                        <i className="ti ti-currency-rupee fs-22 text-white" />
                       </div>
                       <div>
                         <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Total Revenue</p>
@@ -646,76 +705,24 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Revenue Overview */}
+            {/* Holiday Calendar */}
             <div className="col-xl-4 col-12">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Revenue Overview</h5>
-                  <div className="dropdown">
-                    <button className="btn btn-sm btn-outline-light border text-dark dropdown-toggle fw-semibold bg-white" type="button" style={{ fontSize: '12px', borderRadius: '6px' }}>
-                      This Month
-                    </button>
-                  </div>
+                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Holiday Calendar</h5>
+                  <Link to={all_routes.holidays} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
                 </div>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex flex-column gap-3">
-                    {/* Total Revenue Block */}
-                    <div className="p-3 rounded-3" style={{ backgroundColor: '#f5f3ff' }}>
-                      <p className="mb-1 text-muted" style={{ fontSize: '11px', fontWeight: 600 }}>Total Revenue</p>
-                      <div className="d-flex align-items-center gap-2">
-                        <h3 className="mb-0 fw-bold text-dark" style={{ fontSize: '24px' }}>₹{(stats.totalIncome || 0).toLocaleString('en-IN')}</h3>
-                        <span className="badge bg-soft-success text-success rounded-pill fw-bold" style={{ fontSize: '11px' }}>
-                          <i className="ti ti-arrow-up-right me-0.5" /> + 25.8%
-                        </span>
-                      </div>
-                      <p className="mb-0 text-muted mt-1" style={{ fontSize: '11px' }}>vs last month</p>
-                    </div>
-
-                    {/* Breakdown Grid */}
-                    <div className="row g-2">
-                      <div className="col-6">
-                        <div className="p-2 border rounded-3 bg-white">
-                          <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Consultation</p>
-                          <h6 className="mb-0 fw-bold text-dark mt-1" style={{ fontSize: '14px' }}>₹{revenueBreakdown.consultation.toLocaleString('en-IN')}</h6>
-                          <span className="text-success fw-bold" style={{ fontSize: '10px' }}><i className="ti ti-arrow-up" /> + 18.5%</span>
-                        </div>
-                      </div>
-                      <div className="col-6">
-                        <div className="p-2 border rounded-3 bg-white">
-                          <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Procedures</p>
-                          <h6 className="mb-0 fw-bold text-dark mt-1" style={{ fontSize: '14px' }}>₹{revenueBreakdown.procedures.toLocaleString('en-IN')}</h6>
-                          <span className="text-success fw-bold" style={{ fontSize: '10px' }}><i className="ti ti-arrow-up" /> + 32.1%</span>
-                        </div>
-                      </div>
-                      <div className="col-6">
-                        <div className="p-2 border rounded-3 bg-white">
-                          <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Products</p>
-                          <h6 className="mb-0 fw-bold text-dark mt-1" style={{ fontSize: '14px' }}>₹{revenueBreakdown.products.toLocaleString('en-IN')}</h6>
-                          <span className="text-success fw-bold" style={{ fontSize: '10px' }}><i className="ti ti-arrow-up" /> + 12.3%</span>
-                        </div>
-                      </div>
-                      <div className="col-6">
-                        <div className="p-2 border rounded-3 bg-white">
-                          <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Discounts</p>
-                          <h6 className="mb-0 fw-bold text-dark mt-1" style={{ fontSize: '14px' }}>₹{revenueBreakdown.discounts.toLocaleString('en-IN')}</h6>
-                          <span className="text-danger fw-bold" style={{ fontSize: '10px' }}><i className="ti ti-arrow-down" /> - 5.2%</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <Link to="/accounts/transactions" className="d-flex align-items-center justify-content-between text-decoration-none border-top pt-3 mt-3" style={{ color: '#4f46e5', fontWeight: 600, fontSize: '12px' }}>
-                    <span>View full financial report</span>
-                    <i className="ti ti-arrow-right fs-16" />
-                  </Link>
+                <div className="card-body p-3">
+                  <Calendar fullscreen={false} cellRender={cellRender} />
                 </div>
               </div>
             </div>
 
-            {/* Patient Overview */}
+            {/* Appointment Overview */}
             <div className="col-xl-4 col-12">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Patient Overview</h5>
+                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Appointment Overview</h5>
                   <div className="dropdown">
                     <button className="btn btn-sm btn-outline-light border text-dark dropdown-toggle fw-semibold bg-white" type="button" style={{ fontSize: '12px', borderRadius: '6px' }}>
                       This Month
@@ -731,8 +738,8 @@ const Dashboard = () => {
                             type: 'donut',
                             sparkline: { enabled: true }
                           },
-                          colors: ['#6366f1', '#3b82f6', '#10b981'],
-                          labels: ['New Patients', 'Returning Patients', 'Inactive Patients'],
+                          colors: ['#3b82f6', '#6366f1', '#0d9488', '#10b981', '#ef4444'],
+                          labels: ['Scheduled', 'Confirmed', 'Checked In', 'Checked Out', 'No Show'],
                           legend: { show: false },
                           dataLabels: { enabled: false },
                           plotOptions: {
@@ -758,10 +765,10 @@ const Dashboard = () => {
                                   },
                                   total: {
                                     show: true,
-                                    label: 'Total Patients',
+                                    label: 'Total Appts',
                                     fontSize: '11px',
                                     color: '#64748b',
-                                    formatter: () => String(patientStats.total)
+                                    formatter: () => String(appointmentStats.total)
                                   }
                                 }
                               }
@@ -774,50 +781,190 @@ const Dashboard = () => {
                           },
                           tooltip: { enabled: true }
                         }} 
-                        series={[patientStats.newCount, patientStats.returningCount, patientStats.inactiveCount]} 
+                        series={[
+                          appointmentStats.scheduled, 
+                          appointmentStats.confirmed, 
+                          appointmentStats.checkedIn, 
+                          appointmentStats.checkedOut, 
+                          appointmentStats.noShow
+                        ]} 
                         type="donut" 
                         height={180} 
                       />
                     </div>
-                    <div className="col-sm-5 col-12 d-flex flex-column gap-2 mt-3 mt-sm-0">
-                      <div className="d-flex align-items-center gap-2">
-                        <span className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#6366f1' }}></span>
-                        <div>
-                          <p className="mb-0 text-muted" style={{ fontSize: '10px' }}>New Patients</p>
-                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '12px' }}>{patientStats.newCount} <span className="text-muted fw-normal">({patientStats.newPercent}%)</span></h6>
-                        </div>
-                      </div>
+                    <div className="col-sm-5 col-12 d-flex flex-column gap-2 mt-3 mt-sm-0" style={{ maxHeight: '180px', overflowY: 'auto' }}>
                       <div className="d-flex align-items-center gap-2">
                         <span className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#3b82f6' }}></span>
                         <div>
-                          <p className="mb-0 text-muted" style={{ fontSize: '10px' }}>Returning Patients</p>
-                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '12px' }}>{patientStats.returningCount} <span className="text-muted fw-normal">({patientStats.returningPercent}%)</span></h6>
+                          <p className="mb-0 text-muted" style={{ fontSize: '9px', lineHeight: 1.1 }}>Scheduled</p>
+                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '11px' }}>{appointmentStats.scheduled} <span className="text-muted fw-normal">({appointmentStats.scheduledPercent}%)</span></h6>
+                        </div>
+                      </div>
+                      <div className="d-flex align-items-center gap-2">
+                        <span className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#6366f1' }}></span>
+                        <div>
+                          <p className="mb-0 text-muted" style={{ fontSize: '9px', lineHeight: 1.1 }}>Confirmed</p>
+                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '11px' }}>{appointmentStats.confirmed} <span className="text-muted fw-normal">({appointmentStats.confirmedPercent}%)</span></h6>
+                        </div>
+                      </div>
+                      <div className="d-flex align-items-center gap-2">
+                        <span className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#0d9488' }}></span>
+                        <div>
+                          <p className="mb-0 text-muted" style={{ fontSize: '9px', lineHeight: 1.1 }}>Checked In</p>
+                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '11px' }}>{appointmentStats.checkedIn} <span className="text-muted fw-normal">({appointmentStats.checkedInPercent}%)</span></h6>
                         </div>
                       </div>
                       <div className="d-flex align-items-center gap-2">
                         <span className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#10b981' }}></span>
                         <div>
-                          <p className="mb-0 text-muted" style={{ fontSize: '10px' }}>Inactive Patients</p>
-                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '12px' }}>{patientStats.inactiveCount} <span className="text-muted fw-normal">({patientStats.inactivePercent}%)</span></h6>
+                          <p className="mb-0 text-muted" style={{ fontSize: '9px', lineHeight: 1.1 }}>Checked Out</p>
+                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '11px' }}>{appointmentStats.checkedOut} <span className="text-muted fw-normal">({appointmentStats.checkedOutPercent}%)</span></h6>
+                        </div>
+                      </div>
+                      <div className="d-flex align-items-center gap-2">
+                        <span className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#ef4444' }}></span>
+                        <div>
+                          <p className="mb-0 text-muted" style={{ fontSize: '9px', lineHeight: 1.1 }}>No Show</p>
+                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '11px' }}>{appointmentStats.noShow} <span className="text-muted fw-normal">({appointmentStats.noShowPercent}%)</span></h6>
                         </div>
                       </div>
                     </div>
                   </div>
-                  {/* Growth and Target Summary box */}
+                  {/* Completion and Target Summary box */}
                   <div className="p-2 rounded-3 border bg-light mb-3 d-flex justify-content-between align-items-center" style={{ fontSize: '11px', marginTop: '10px' }}>
                     <div className="text-start">
-                      <span className="text-muted d-block" style={{ fontSize: '9px' }}>Monthly Growth</span>
-                      <strong className="text-success" style={{ fontSize: '11px' }}>+14.2%</strong>
+                      <span className="text-muted d-block" style={{ fontSize: '9px' }}>Completion Rate</span>
+                      <strong className="text-success" style={{ fontSize: '11px' }}>
+                        {appointmentStats.total > 0 ? Math.round((appointmentStats.checkedOut / appointmentStats.total) * 100) : 0}%
+                      </strong>
                     </div>
                     <div className="text-end">
-                      <span className="text-muted d-block" style={{ fontSize: '9px' }}>Target Patients</span>
-                      <strong className="text-dark" style={{ fontSize: '11px' }}>50 / Month</strong>
+                      <span className="text-muted d-block" style={{ fontSize: '9px' }}>Upcoming Appts</span>
+                      <strong className="text-dark" style={{ fontSize: '11px' }}>
+                        {appointmentStats.scheduled + appointmentStats.confirmed}
+                      </strong>
                     </div>
                   </div>
-                  <Link to="/patients/patients" className="d-flex align-items-center justify-content-between text-decoration-none border-top pt-3 mt-auto" style={{ color: '#4f46e5', fontWeight: 600, fontSize: '12px' }}>
-                    <span>View all patients</span>
+                  <Link to={all_routes.appointments} className="d-flex align-items-center justify-content-between text-decoration-none border-top pt-3 mt-auto" style={{ color: '#4f46e5', fontWeight: 600, fontSize: '12px' }}>
+                    <span>View all appointments</span>
                     <i className="ti ti-arrow-right fs-16" />
                   </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          {/* Revenue Overview & Upcoming Holidays */}
+          <div className="row g-3 mb-3">
+            {/* Revenue Overview */}
+            <div className="col-xl-8 col-12">
+              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
+                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
+                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Revenue Overview</h5>
+                  <div className="dropdown">
+                    <button className="btn btn-sm btn-outline-light border text-dark dropdown-toggle fw-semibold bg-white" type="button" style={{ fontSize: '12px', borderRadius: '6px' }}>
+                      This Month
+                    </button>
+                  </div>
+                </div>
+                <div className="card-body p-3 d-flex flex-column justify-content-between">
+                  <div className="row g-3 align-items-stretch">
+                    {/* Left Column: Total Revenue Block */}
+                    <div className="col-md-5 col-12 d-flex flex-column justify-content-center">
+                      <div className="p-3 rounded-3 h-100 d-flex flex-column justify-content-center" style={{ backgroundColor: '#f5f3ff' }}>
+                        <p className="mb-1 text-muted" style={{ fontSize: '11px', fontWeight: 600 }}>Total Revenue</p>
+                        <div className="d-flex align-items-center gap-2">
+                          <h3 className="mb-0 fw-bold text-dark" style={{ fontSize: '24px' }}>₹{(stats.totalIncome || 0).toLocaleString('en-IN')}</h3>
+                          <span className="badge bg-soft-success text-success rounded-pill fw-bold" style={{ fontSize: '11px' }}>
+                            <i className="ti ti-arrow-up-right me-0.5" /> + 25.8%
+                          </span>
+                        </div>
+                        <p className="mb-0 text-muted mt-1" style={{ fontSize: '11px' }}>vs last month</p>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Breakdown Grid */}
+                    <div className="col-md-7 col-12">
+                      <div className="row g-2">
+                        <div className="col-6">
+                          <div className="p-2 border rounded-3 bg-white h-100">
+                            <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Consultation</p>
+                            <h6 className="mb-0 fw-bold text-dark mt-1" style={{ fontSize: '14px' }}>₹{revenueBreakdown.consultation.toLocaleString('en-IN')}</h6>
+                            <span className="text-success fw-bold" style={{ fontSize: '10px' }}><i className="ti ti-arrow-up" /> + 18.5%</span>
+                          </div>
+                        </div>
+                        <div className="col-6">
+                          <div className="p-2 border rounded-3 bg-white h-100">
+                            <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Procedures</p>
+                            <h6 className="mb-0 fw-bold text-dark mt-1" style={{ fontSize: '14px' }}>₹{revenueBreakdown.procedures.toLocaleString('en-IN')}</h6>
+                            <span className="text-success fw-bold" style={{ fontSize: '10px' }}><i className="ti ti-arrow-up" /> + 32.1%</span>
+                          </div>
+                        </div>
+                        <div className="col-6">
+                          <div className="p-2 border rounded-3 bg-white h-100">
+                            <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Products</p>
+                            <h6 className="mb-0 fw-bold text-dark mt-1" style={{ fontSize: '14px' }}>₹{revenueBreakdown.products.toLocaleString('en-IN')}</h6>
+                            <span className="text-success fw-bold" style={{ fontSize: '10px' }}><i className="ti ti-arrow-up" /> + 12.3%</span>
+                          </div>
+                        </div>
+                        <div className="col-6">
+                          <div className="p-2 border rounded-3 bg-white h-100">
+                            <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Discounts</p>
+                            <h6 className="mb-0 fw-bold text-dark mt-1" style={{ fontSize: '14px' }}>₹{revenueBreakdown.discounts.toLocaleString('en-IN')}</h6>
+                            <span className="text-danger fw-bold" style={{ fontSize: '10px' }}><i className="ti ti-arrow-down" /> - 5.2%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <Link to="/accounts/transactions" className="d-flex align-items-center justify-content-between text-decoration-none border-top pt-3 mt-3" style={{ color: '#4f46e5', fontWeight: 600, fontSize: '12px' }}>
+                    <span>View full financial report</span>
+                    <i className="ti ti-arrow-right fs-16" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Upcoming Holidays */}
+            <div className="col-xl-4 col-12">
+              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
+                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
+                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Upcoming Holidays</h5>
+                </div>
+                <div className="card-body p-3 d-flex flex-column shadow-none" style={{ maxHeight: '380px', overflowY: 'auto' }}>
+                  <div className="d-flex flex-column gap-2 flex-grow-1">
+                    {holidays.length === 0 ? (
+                      <div className="text-center py-5">
+                        <i className="ti ti-calendar-off text-muted fs-32 mb-2" />
+                        <p className="text-muted mb-0">No holidays scheduled</p>
+                      </div>
+                    ) : (
+                      holidays
+                        .filter(h => dayjs(h.date).isAfter(dayjs().subtract(1, 'day')) || (h.endDate && dayjs(h.endDate).isAfter(dayjs().subtract(1, 'day'))))
+                        .sort((a, b) => dayjs(a.date).diff(dayjs(b.date)))
+                        .slice(0, 5)
+                        .map(h => (
+                          <div key={h.id} className="d-flex align-items-center justify-content-between p-2 border rounded-3 holiday-item bg-white shadow-sm" style={{ borderRadius: '8px' }}>
+                            <div className="d-flex align-items-center gap-2">
+                              <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '36px', height: '36px', backgroundColor: '#f5f3ff', color: '#6366f1' }}>
+                                <i className="ti ti-calendar-event fs-18" />
+                              </div>
+                              <div>
+                                <h6 className="mb-0 text-dark fw-bold" style={{ fontSize: '13px' }}>{h.title}</h6>
+                                <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>
+                                  {dayjs(h.date).format('DD MMM YYYY')}
+                                  {h.endDate && ` - ${dayjs(h.endDate).format('DD MMM YYYY')}`}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="badge rounded-pill bg-soft-primary text-primary text-nowrap px-2 py-1" style={{ fontSize: '10px', backgroundColor: '#e0e7ff', color: '#6366f1' }}>
+                              {h.endDate ? `${dayjs(h.endDate).diff(dayjs(h.date), 'day') + 1} days` : '1 day'}
+                            </span>
+                          </div>
+                        ))
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -833,13 +980,12 @@ const Dashboard = () => {
                 </div>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex flex-column gap-3 mb-2">
-                    {topServicesList.map((service, index) => {
-                      const icons = ['ti-activity-heartbeat', 'ti-heart', 'ti-stethoscope', 'ti-activity'];
-                      const colors = ['#6366f1', '#10b981', '#f59e0b', '#3b82f6'];
-                      const lightBgs = ['#f5f3ff', '#ecfdf5', '#fffbeb', '#eff6ff'];
-                      const icon = icons[index % icons.length];
-                      const color = colors[index % colors.length];
-                      const bg = lightBgs[index % lightBgs.length];
+                    {topServicesList.map((service: any, index) => {
+                      const isProduct = service.type === 'Product';
+                      const icon = isProduct ? 'ti-pill' : 'ti-activity-heartbeat';
+                      const color = isProduct ? '#0d9488' : '#6366f1';
+                      const bg = isProduct ? '#f0fdfa' : '#f5f3ff';
+                      const progressBarColor = isProduct ? '#0d9488' : '#6366f1';
 
                       return (
                         <div key={service.name} className="d-flex align-items-center justify-content-between">
@@ -848,9 +994,14 @@ const Dashboard = () => {
                               <i className={`ti ${icon}`} style={{ color: color, fontSize: '16px' }} />
                             </div>
                             <div className="flex-grow-1 me-3">
-                              <span className="d-block text-dark fw-bold" style={{ fontSize: '12px' }}>{service.name}</span>
-                              <div className="progress mt-1" style={{ height: '4px' }}>
-                                <div className="progress-bar rounded-pill" role="progressbar" style={{ width: `${(service.count / 50) * 100}%`, backgroundColor: '#6366f1' }} aria-valuenow={(service.count / 50) * 100} aria-valuemin={0} aria-valuemax={100} />
+                              <div className="d-flex align-items-center justify-content-between mb-1">
+                                <span className="d-block text-dark fw-bold" style={{ fontSize: '12px' }}>{service.name}</span>
+                                <span className="badge badge-soft-secondary px-1 py-0.5" style={{ fontSize: '8px', lineHeight: 1 }}>
+                                  {isProduct ? 'Medicine' : 'Service'}
+                                </span>
+                              </div>
+                              <div className="progress" style={{ height: '4px' }}>
+                                <div className="progress-bar rounded-pill" role="progressbar" style={{ width: `${(service.count / 50) * 100}%`, backgroundColor: progressBarColor }} aria-valuenow={(service.count / 50) * 100} aria-valuemin={0} aria-valuemax={100} />
                               </div>
                             </div>
                           </div>
@@ -981,21 +1132,21 @@ const Dashboard = () => {
                       </button>
                     </div>
                     <div className="col-4">
-                      <Link to={all_routes.payments} className="d-flex flex-column align-items-center justify-content-center rounded-3 p-2 text-decoration-none text-center h-100 border bg-white" style={{ minHeight: '68px' }}>
-                        <i className="ti ti-receipt text-warning fs-20 mb-1" />
-                        <span className="text-dark fw-semibold" style={{ fontSize: '9px' }}>Checkout</span>
+                      <Link to={all_routes.hrmDepartments} className="d-flex flex-column align-items-center justify-content-center rounded-3 p-2 text-decoration-none text-center h-100 border bg-white" style={{ minHeight: '68px' }}>
+                        <i className="ti ti-building-bank text-info fs-20 mb-1" />
+                        <span className="text-dark fw-semibold" style={{ fontSize: '9px' }}>Add Dept</span>
                       </Link>
                     </div>
                     <div className="col-4">
-                      <Link to="/profit-and-loss" className="d-flex flex-column align-items-center justify-content-center rounded-3 p-2 text-decoration-none text-center h-100 border bg-white" style={{ minHeight: '68px' }}>
-                        <i className="ti ti-report-analytics text-info fs-20 mb-1" />
-                        <span className="text-dark fw-semibold" style={{ fontSize: '9px' }}>Reports</span>
+                      <Link to={all_routes.designation} className="d-flex flex-column align-items-center justify-content-center rounded-3 p-2 text-decoration-none text-center h-100 border bg-white" style={{ minHeight: '68px' }}>
+                        <i className="ti ti-user-cog text-warning fs-20 mb-1" />
+                        <span className="text-dark fw-semibold" style={{ fontSize: '9px' }}>Add Desig</span>
                       </Link>
                     </div>
                     <div className="col-4">
-                      <Link to={all_routes.chat} className="d-flex flex-column align-items-center justify-content-center rounded-3 p-2 text-decoration-none text-center h-100 border bg-white" style={{ minHeight: '68px' }}>
-                        <i className="ti ti-message text-secondary fs-20 mb-1" />
-                        <span className="text-dark fw-semibold" style={{ fontSize: '9px' }}>Message</span>
+                      <Link to={all_routes.specializations} className="d-flex flex-column align-items-center justify-content-center rounded-3 p-2 text-decoration-none text-center h-100 border bg-white" style={{ minHeight: '68px' }}>
+                        <i className="ti ti-user-shield text-success fs-20 mb-1" />
+                        <span className="text-dark fw-semibold" style={{ fontSize: '9px' }}>Add Spec</span>
                       </Link>
                     </div>
                   </div>

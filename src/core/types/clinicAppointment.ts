@@ -26,11 +26,21 @@ export interface ClinicAppointment {
     gender?: string | null;
     bloodGroup?: string | null;
     profileImage?: string | null;
+    maritalStatus?: string | null;
+    address1?: string | null;
+    address2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    pincode?: string | null;
   };
   doctor: {
     id: string;
     fullName: string;
     profileImage?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    consultationCharge?: number | null;
+    medicalLicenseNumber?: string | null;
     appointmentDuration?: number | null;
     yearOfExperience?: number | null;
     followUpEnabled: boolean;

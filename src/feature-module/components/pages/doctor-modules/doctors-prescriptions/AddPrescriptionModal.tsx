@@ -238,26 +238,30 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
                                                             onClick={() => setAppointmentId(apt.id)}
                                                             style={{
                                                                 cursor: 'pointer',
-                                                                border: isSelected ? '2px solid #4f46e5' : '1px solid #e2e8f0',
-                                                                backgroundColor: isSelected ? '#f5f3ff' : '#ffffff',
+                                                                border: isSelected ? '2px solid #2563eb' : '1px solid #bfdbfe',
+                                                                backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
                                                                 transition: 'all 0.2s ease-in-out',
-                                                                boxShadow: isSelected ? '0 4px 12px rgba(79, 70, 229, 0.1)' : '0 2px 4px rgba(0,0,0,0.02)'
+                                                                boxShadow: isSelected ? '0 4px 12px rgba(37, 99, 235, 0.15)' : '0 2px 4px rgba(0,0,0,0.02)'
                                                             }}
                                                         >
-                                                            <div className="card-body p-3 d-flex align-items-center gap-3">
+                                                            <div className="card-body p-3.5 d-flex align-items-center gap-3">
                                                                 <div 
                                                                     className={`rounded-circle d-flex align-items-center justify-content-center ${isSelected ? 'bg-primary text-white' : 'bg-light text-muted'}`}
-                                                                    style={{ width: '28px', height: '28px', flexShrink: 0 }}
+                                                                    style={{ width: '36px', height: '36px', flexShrink: 0 }}
                                                                 >
-                                                                    <i className={`ti ${isSelected ? 'ti-check' : 'ti-calendar-event'}`} style={{ fontSize: '15px' }} />
+                                                                    <i className={`ti ${isSelected ? 'ti-check' : 'ti-calendar-event'}`} style={{ fontSize: '18px' }} />
                                                                 </div>
-                                                                <div className="lh-sm">
-                                                                    <span className={`d-block fw-bold fs-13 ${isSelected ? 'text-primary' : 'text-dark'}`}>
+                                                                <div className="lh-base flex-grow-1">
+                                                                    <span className={`d-block fw-bold fs-15 ${isSelected ? 'text-primary' : 'text-dark'}`}>
                                                                         {apt.status === 'Follow-up' ? 'Follow-up Visit' : 'Main Consultation'}
                                                                     </span>
-                                                                    <small className="text-muted d-block fs-11 mt-1">
-                                                                        <i className="ti ti-calendar me-1" />
+                                                                    <small className="text-muted d-block fs-13 mt-1 fw-medium">
+                                                                        <i className="ti ti-calendar me-1 text-primary" />
                                                                         {dayjs(apt.scheduledAt).format('DD MMM, YYYY')}
+                                                                    </small>
+                                                                    <small className="text-primary d-block fs-12 mt-1 fw-bold bg-primary-subtle px-2 py-0.5 rounded" style={{ width: 'fit-content' }}>
+                                                                        <i className="ti ti-hash me-1" />
+                                                                        ID: {apt.appointmentCode || apt.id?.substring(0, 8).toUpperCase()}
                                                                     </small>
                                                                 </div>
                                                             </div>
@@ -284,28 +288,28 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
                                     </div>
 
                                     <div className="table-responsive border rounded" style={{ overflow: 'visible' }}>
-                                        <table className="table table-bordered mb-0" style={{ overflow: 'visible' }}>
-                                            <thead className="table-light">
-                                                <tr>
-                                                    <th style={{ width: 40 }}>#</th>
-                                                    <th>Medicine Name <span className="text-danger">*</span></th>
-                                                    <th>Dosage</th>
-                                                    <th>Frequency</th>
-                                                    <th>Duration</th>
-                                                    <th>Timings</th>
-                                                    <th style={{ width: 48 }}></th>
+                                        <table className="table mb-0" style={{ overflow: 'visible', borderCollapse: 'collapse', width: '100%' }}>
+                                            <thead style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #475569' }}>
+                                                <tr className="text-dark fw-bold">
+                                                    <th style={{ width: 50, color: '#1e293b', fontWeight: 'bold', border: '1.5px solid #475569', textAlign: 'center' }}>#</th>
+                                                    <th style={{ color: '#1e293b', fontWeight: 'bold', border: '1.5px solid #475569' }}>Medicine Name <span className="text-danger">*</span></th>
+                                                    <th style={{ color: '#1e293b', fontWeight: 'bold', border: '1.5px solid #475569' }}>Dosage</th>
+                                                    <th style={{ color: '#1e293b', fontWeight: 'bold', border: '1.5px solid #475569' }}>Frequency</th>
+                                                    <th style={{ color: '#1e293b', fontWeight: 'bold', border: '1.5px solid #475569' }}>Duration</th>
+                                                    <th style={{ color: '#1e293b', fontWeight: 'bold', border: '1.5px solid #475569' }}>Timings</th>
+                                                    <th style={{ width: 50, border: '1.5px solid #475569' }}></th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {medicines.map((med, index) => (
-                                                    <tr key={index}>
-                                                        <td className="text-muted fw-medium text-center">
+                                                    <tr key={index} style={{ borderBottom: '1px solid #475569' }}>
+                                                        <td className="text-dark fw-bold text-center" style={{ border: '1px solid #475569', verticalAlign: 'middle', color: '#0f172a' }}>
                                                             {String(index + 1).padStart(2, "0")}
                                                         </td>
-                                                        <td style={{ position: 'relative', zIndex: activeSearchIndex === index ? 10 : 1 }}>
+                                                        <td style={{ position: 'relative', zIndex: activeSearchIndex === index ? 10 : 1, border: '1px solid #475569' }}>
                                                             <input
                                                                 type="text"
-                                                                className="form-control form-control-sm"
+                                                                className="form-control form-control-sm text-dark fw-medium border-secondary"
                                                                 placeholder="e.g. Paracetamol 500mg"
                                                                 value={med.medicineName}
                                                                 onChange={(e) => {
@@ -337,7 +341,7 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
                                                                         .map((opt: string) => (
                                                                             <div
                                                                                 key={opt}
-                                                                                className="medicine-dropdown-item"
+                                                                                className="medicine-dropdown-item text-dark fw-medium"
                                                                                 onMouseDown={() => {
                                                                                     updateMedicine(index, "medicineName", opt);
                                                                                     setActiveSearchIndex(null);
@@ -356,18 +360,18 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
                                                                 </div>
                                                             )}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ border: '1px solid #475569' }}>
                                                             <input
                                                                 type="text"
-                                                                className="form-control form-control-sm"
+                                                                className="form-control form-control-sm text-dark fw-medium border-secondary"
                                                                 placeholder="e.g. 1 tablet"
                                                                 value={med.dosage}
                                                                 onChange={(e) => updateMedicine(index, "dosage", e.target.value)}
                                                             />
                                                         </td>
-                                                        <td>
+                                                        <td style={{ border: '1px solid #475569' }}>
                                                             <select
-                                                                className="form-select form-select-sm"
+                                                                className="form-select form-select-sm text-dark fw-medium border-secondary"
                                                                 value={med.frequency}
                                                                 onChange={(e) => updateMedicine(index, "frequency", e.target.value)}
                                                             >
@@ -376,9 +380,9 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
                                                                 ))}
                                                             </select>
                                                         </td>
-                                                        <td>
+                                                        <td style={{ border: '1px solid #475569' }}>
                                                             <select
-                                                                className="form-select form-select-sm"
+                                                                className="form-select form-select-sm text-dark fw-medium border-secondary"
                                                                 value={med.duration}
                                                                 onChange={(e) => updateMedicine(index, "duration", e.target.value)}
                                                             >
@@ -387,9 +391,9 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
                                                                 ))}
                                                             </select>
                                                         </td>
-                                                        <td>
+                                                        <td style={{ border: '1px solid #475569' }}>
                                                             <select
-                                                                className="form-select form-select-sm"
+                                                                className="form-select form-select-sm text-dark fw-medium border-secondary"
                                                                 value={med.timings}
                                                                 onChange={(e) => updateMedicine(index, "timings", e.target.value)}
                                                             >
@@ -398,7 +402,7 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
                                                                 ))}
                                                             </select>
                                                         </td>
-                                                        <td className="text-center">
+                                                        <td className="text-center" style={{ border: '1px solid #475569', verticalAlign: 'middle' }}>
                                                             {medicines.length > 1 && (
                                                                 <button
                                                                     type="button"

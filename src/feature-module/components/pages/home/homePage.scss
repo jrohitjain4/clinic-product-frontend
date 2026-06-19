@@ -112,8 +112,8 @@
 
   li a {
     color: var(--navy);
-    font-weight: 600;
-    font-size: 0.9rem;
+    font-weight: 500;
+    font-size: 1.1rem;
     text-decoration: none;
     position: relative;
     padding-bottom: 6px;
@@ -1215,7 +1215,7 @@
 }
 
 .dy-footer {
-  padding: 4rem 0 0;
+  padding: 2.5rem 0 0;
   background: #041424;
   border-top: none;
 }
@@ -1223,8 +1223,8 @@
 .dy-footer-grid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1.5fr;
-  gap: 2rem;
-  margin-bottom: 2.5rem;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
 
   .dy-footer-brand {
     .footer-logo {
@@ -1265,7 +1265,7 @@
     margin: 0;
 
     li {
-      margin-bottom: 0.7rem;
+      margin-bottom: 0.45rem;
 
       a {
         font-size: 0.82rem;

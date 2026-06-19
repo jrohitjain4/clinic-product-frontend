@@ -27,7 +27,7 @@ interface ClinicData {
     about: string; established: number; patientsServed: string; experience: number;
     logo: string; headerImage: string; aboutImage: string; facebook: string; instagram: string;
     doctors: Doctor[]; services: Service[]; reviews: Review[];
-    gallery: { url: string; category: string }[];
+    gallery: { url: string; category: string; caption?: string }[];
     workingDays: { schedules: any[]; offDays: number[] } | null;
     onboardingStep?: number;
     nextAppointmentCode?: string;
@@ -105,6 +105,8 @@ export default function ClinicLandingPage() {
 
     // ── Doctor Profile Modal State ──
     const [selectedDocDetails, setSelectedDocDetails] = useState<Doctor | null>(null);
+    const [activePhoto, setActivePhoto] = useState<string | null>(null);
+    const [showAllReviews, setShowAllReviews] = useState(false);
     const [activeTab, setActiveTab] = useState("Monday");
 
     const openBooking = (doctorId = "") => {
@@ -280,7 +282,7 @@ export default function ClinicLandingPage() {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Booking failed");
-            
+
             setGeneratedCreds({
                 email: data.email,
                 password: data.generatedPassword,
@@ -299,7 +301,7 @@ export default function ClinicLandingPage() {
     const handleDownloadSlip = () => {
         const docId = bookForm.doctorId || preselectedDoctor;
         const doctorObj = clinic?.doctors.find(d => d.id === docId);
-        
+
         const slipHtml = `
             <html>
             <head>
@@ -558,6 +560,17 @@ export default function ClinicLandingPage() {
 
     const totalReviews = clinic.reviews.length > 0 ? clinic.reviews.length : "350+";
 
+    const allReviewsList = clinic.reviews && clinic.reviews.length > 0
+        ? clinic.reviews
+        : [
+            { rating: 5, feedback: "Excellent experience! The doctor was very attentive and the staff was friendly.", name: "Amit Kumar" },
+            { rating: 5, feedback: "Very easy appointment booking process and minimal waiting time.", name: "Anita Singh" },
+            { rating: 5, feedback: "Best clinic experience so far. Highly recommended!", name: "Rahul Verma" },
+            { rating: 5, feedback: "Quick appointment and proper guidance. Very satisfied with the service.", name: "Sandeep Kumar" }
+        ];
+
+    const reviewsToShow = showAllReviews ? allReviewsList : allReviewsList.slice(0, 5);
+
     // Show only real doctors
     const displayDoctors = clinic.doctors;
 
@@ -571,6 +584,10 @@ export default function ClinicLandingPage() {
                 .dy-landing img:not(.dy-brand img) { 
                     border: 1px solid rgba(29, 78, 216, 0.25) !important; 
                     box-shadow: 0 4px 12px rgba(29, 78, 216, 0.08) !important;
+                }
+                .dy-nav-links li a {
+                    font-size: 1.05rem !important;
+                    font-weight: 500 !important;
                 }
             `}</style>
             {isAdminOfThisClinic && isIncomplete && (
@@ -599,22 +616,21 @@ export default function ClinicLandingPage() {
                         <li><a href="#hero" onClick={(e) => { e.preventDefault(); setSelectedDocDetails(null); document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' }); }}>Features</a></li>
                         <li><a href="#about" onClick={(e) => { e.preventDefault(); setSelectedDocDetails(null); document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' }); }}>About Us</a></li>
                         <li><a href="#services" onClick={(e) => { e.preventDefault(); setSelectedDocDetails(null); document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); }}>Services</a></li>
-                        <li><a href="#contact" onClick={(e) => { e.preventDefault(); setSelectedDocDetails(null); document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }); }}>Contact</a></li>
                     </ul>
 
                     <div className="dy-nav-actions d-flex align-items-center gap-2">
                         <Link
                             to={all_routes.login}
-                            className="btn btn-outline-primary px-4 py-2 fw-semibold d-flex align-items-center justify-content-center"
-                            style={{ borderRadius: '8px', minHeight: '44px', border: '2px solid #1d4ed8', color: '#1d4ed8' }}
+                            className="btn btn-outline-primary px-4 py-2 d-flex align-items-center justify-content-center"
+                            style={{ borderRadius: '8px', minHeight: '44px', border: '2px solid #1d4ed8', color: '#1d4ed8', fontSize: '15px', fontWeight: 500 }}
                         >
                             Login
                         </Link>
                         <button
                             type="button"
                             onClick={() => openBooking("")}
-                            className="btn btn-primary px-4 py-2 fw-semibold d-flex align-items-center justify-content-center"
-                            style={{ borderRadius: '8px', minHeight: '44px' }}
+                            className="btn btn-primary px-4 py-2 d-flex align-items-center justify-content-center"
+                            style={{ borderRadius: '8px', minHeight: '44px', fontSize: '15px', fontWeight: 500 }}
                         >
                             Book Appointment
                         </button>
@@ -660,7 +676,9 @@ export default function ClinicLandingPage() {
                                             </div>
                                             <div>
                                                 <h6 className="fw-bold mb-0 text-white">Emergency Call</h6>
-                                                <p className="fs-14 fw-bold mb-0">+91 12345 67890</p>
+                                                <p className="fs-14 fw-bold mb-0"><a href={`tel:${clinic.phone.replace(/\s+/g, '')}`} className="text-white text-decoration-none fw-bold">
+                                                        {clinic.phone}
+                                                    </a></p>
                                             </div>
                                         </div>
                                     </div>
@@ -1025,7 +1043,7 @@ export default function ClinicLandingPage() {
             ) : (
                 <>
                     {/* ══════ HERO ══════ */}
-                    <section id="hero" className="position-relative overflow-hidden" style={{ padding: "40px 0 110px", background: "transparent" }}>
+                    <section id="hero" className="position-relative overflow-hidden" style={{ padding: "40px 0 60px", background: "transparent" }}>
                         <div className="container position-relative z-1">
                             <div className="row align-items-center g-5">
                                 <div className="col-lg-6">
@@ -1039,21 +1057,21 @@ export default function ClinicLandingPage() {
                                             <i className="ti ti-star-filled text-warning fs-3" />
                                             <div>
                                                 <h6 className="mb-0 fw-bold fs-5 text-dark">{avgRating}.0 Rating</h6>
-                                                <small className="text-secondary fw-medium">{totalReviews} Reviews</small>
+                                                <span className="text-secondary fw-medium" style={{ fontSize: "14px" }}>{totalReviews} Reviews</span>
                                             </div>
                                         </div>
                                         <div className="d-flex align-items-center gap-3">
                                             <i className="ti ti-user-scan text-primary fs-3" />
                                             <div>
                                                 <h6 className="mb-0 fw-bold fs-5 text-dark">{clinic.doctors.length}+ Doctors</h6>
-                                                <small className="text-secondary fw-medium">Experienced</small>
+                                                <span className="text-secondary fw-medium" style={{ fontSize: "14px" }}>Experienced</span>
                                             </div>
                                         </div>
                                         <div className="d-flex align-items-center gap-3">
                                             <i className="ti ti-shield-check text-primary fs-3" />
                                             <div>
                                                 <h6 className="mb-0 fw-bold fs-5 text-dark">{clinic.patientsServed}</h6>
-                                                <small className="text-secondary fw-medium">Patients Treated</small>
+                                                <span className="text-secondary fw-medium" style={{ fontSize: "14px" }}>Patients Treated</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1065,7 +1083,7 @@ export default function ClinicLandingPage() {
                                         </div>
                                         <div className="d-flex align-items-center gap-3 text-dark fw-medium" style={{ fontSize: "15px" }}>
                                             <div className="bg-white rounded-circle p-2 shadow-sm"><i className="ti ti-phone text-primary" /></div>
-                                            {clinic.phone}
+                                            <span>{clinic.phone}</span>
                                         </div>
                                     </div>
 
@@ -1102,34 +1120,6 @@ export default function ClinicLandingPage() {
                         </div>
                     </section>
 
-                    {/* ══════ FEATURE BAR ══════ */}
-                    <div className="position-relative z-2" style={{ marginTop: "-55px" }}>
-                        <div className="container">
-                            <div className="col-lg-11 mx-auto">
-                                <div className="bg-white rounded-4 shadow-lg py-3 px-2" style={{ border: "1px solid #f1f5f9" }}>
-                                    <div className="row text-center g-2 row-cols-2 row-cols-md-3 row-cols-lg-6 justify-content-center">
-                                        {[
-                                            { icon: "ti-user-circle", text: "Experienced Doctors" },
-                                            { icon: "ti-device-heart-monitor", text: "Modern Equipment" },
-                                            { icon: "ti-calendar-time", text: "Online Booking" },
-                                            { icon: "ti-pill", text: "Digital Prescriptions" },
-                                            { icon: "ti-wallet", text: "Affordable Fees" },
-                                            { icon: "ti-headset", text: "24/7 Support Emergency" },
-                                        ].map((f, i) => (
-                                            <div key={i} className="col">
-                                                <div className="d-flex flex-column align-items-center gap-2">
-                                                    <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style={{ width: 44, height: 44 }}>
-                                                        <i className={`ti ${f.icon} fs-4`} style={{ color: "#1d4ed8" }} />
-                                                    </div>
-                                                    <span className="fw-bold text-dark mt-1" style={{ fontSize: "12.5px", letterSpacing: "-0.2px" }}>{f.text}</span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     {/* ══════ ABOUT US ══════ */}
                     <section id="about" className="bg-white">
@@ -1137,31 +1127,31 @@ export default function ClinicLandingPage() {
                             <div className="row g-5 align-items-center">
                                 {/* Text Content */}
                                 <div className="col-lg-6">
-                                    <h5 className="fw-bold text-uppercase mb-4" style={{ color: "#1d4ed8", letterSpacing: "1px" }}>ABOUT {clinic.name.toUpperCase()}</h5>
-                                    <p className="fs-5 text-dark mb-4" style={{ lineHeight: 1.6 }}>
+                                    <h3 className="fw-bold text-uppercase mb-4" style={{ color: "#1d4ed8", letterSpacing: "1px", fontSize: "26px", lineHeight: "1.3" }}>ABOUT {clinic.name.toUpperCase()}</h3>
+                                    <div className="d-flex align-items-center gap-3 text-dark fw-medium mb-4" style={{ fontSize: "15px" }}>
                                         {clinic.about
                                             ? clinic.about
                                             : `${clinic.name} is a multi-speciality healthcare center committed to providing high-quality medical services with compassion and care. We have a team of experienced doctors and modern facilities to ensure the best treatment for you and your family.`
                                         }
-                                    </p>
+                                    </div>
 
                                     <div className="row g-3 mt-4 text-center">
                                         <div className="col-4">
                                             <div className="border rounded-4 p-3 shadow-sm h-100 d-flex flex-column justify-content-center">
                                                 <h4 className="fw-bold mb-1" style={{ color: "#1d4ed8" }}>{clinic.established || "—"}</h4>
-                                                <small className="text-secondary fw-semibold">Established</small>
+                                                <span className="text-secondary fw-semibold" style={{ fontSize: "14px" }}>Established</span>
                                             </div>
                                         </div>
                                         <div className="col-4">
                                             <div className="border rounded-4 p-3 shadow-sm h-100 d-flex flex-column justify-content-center">
                                                 <h4 className="fw-bold mb-1" style={{ color: "#1d4ed8" }}>{clinic.patientsServed || "—"}</h4>
-                                                <small className="text-secondary fw-semibold">Patients Served</small>
+                                                <span className="text-secondary fw-semibold" style={{ fontSize: "14px" }}>Patients Served</span>
                                             </div>
                                         </div>
                                         <div className="col-4">
                                             <div className="border rounded-4 p-3 shadow-sm h-100 d-flex flex-column justify-content-center">
                                                 <h4 className="fw-bold mb-1" style={{ color: "#1d4ed8" }}>{clinic.experience ? `${clinic.experience}+` : "—"}</h4>
-                                                <small className="text-secondary fw-semibold">Years Experience</small>
+                                                <span className="text-secondary fw-semibold" style={{ fontSize: "14px" }}>Years Experience</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1186,53 +1176,87 @@ export default function ClinicLandingPage() {
                     <section id="doctors" className="bg-white">
                         <div className="container pb-5">
                             <div className="text-center mb-5">
-                                <h3 className="fw-bold text-uppercase" style={{ letterSpacing: "1px", color: "#1d4ed8" }}>OUR DOCTORS</h3>
+                                <h3 className="fw-bold text-uppercase" style={{ color: "#1d4ed8", letterSpacing: "1px", fontSize: "26px", lineHeight: "1.3" }}>OUR DOCTORS</h3>
                             </div>
 
-                            <div className="row g-4 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 justify-content-center">
+                            <div className="row g-4 justify-content-center">
                                 {displayDoctors.map((doc, idx) => (
-                                    <div key={idx} className="col">
+                                    <div key={idx} className="col-12 col-md-6 col-lg-6">
                                         <div
-                                            className="card h-100 border bg-white shadow-sm rounded-4 text-center overflow-hidden d-flex flex-column"
+                                            className="card h-100 border bg-white shadow-sm rounded-4 overflow-hidden d-flex flex-column flex-sm-row text-start"
                                             style={{ cursor: "pointer", transition: "all 0.2s ease-in-out" }}
-                                            onMouseOver={e => e.currentTarget.style.transform = "translateY(-5px)"}
+                                            onMouseOver={e => e.currentTarget.style.transform = "translateY(-4px)"}
                                             onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}
+                                            onClick={() => setSelectedDocDetails(doc)}
                                         >
-                                            <div onClick={() => setSelectedDocDetails(doc)}>
-                                                {/* Photo at the very top */}
-                                                <div className="pt-4 bg-white d-flex justify-content-center">
-                                                    <img
-                                                        src={doc.photo ? (
-                                                            doc.photo.startsWith('http') || doc.photo.startsWith('data:')
-                                                                ? doc.photo
-                                                                : doc.photo.includes('uploads')
-                                                                    ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}${doc.photo.startsWith('/') ? '' : '/'}${doc.photo}`
-                                                                    : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/uploads/doctors/${doc.photo}`
-                                                        ) : "/assets/img/doctor-placeholder.png"}
-                                                        alt={doc.name}
-                                                        className="rounded-circle object-fit-cover shadow-sm bg-light"
-                                                        style={{ width: "110px", height: "110px", border: "4px solid #f8f9fa" }}
-                                                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/assets/img/doctor-placeholder.png" }}
-                                                    />
-                                                </div>
-                                                <div className="card-body px-3 pt-3 pb-2 d-flex flex-column" style={{ minHeight: "0" }}>
-                                                    <h5 className="fw-bold mb-1 text-dark fs-6">{doc.name}</h5>
-                                                    <p className="text-dark fw-semibold small mb-1">{doc.qualification}</p>
-                                                    <p className="text-secondary small mb-1">{doc.experience} Years Exp.</p>
-                                                    <p className="text-secondary small mb-3">{doc.specialization}</p>
-
-                                                    <h4 className="text-success fw-bold mb-1 fs-5 mt-2">₹{doc.fee}</h4>
-                                                    <small className="d-block text-secondary fw-medium mb-3">{doc.days} | {doc.timing}</small>
-                                                </div>
+                                            {/* Photo container */}
+                                            <div className="p-4 d-flex align-items-center justify-content-center bg-light bg-opacity-25" style={{ minWidth: "160px", maxWidth: "160px" }}>
+                                                <img
+                                                    src={doc.photo ? (
+                                                        doc.photo.startsWith('http') || doc.photo.startsWith('data:')
+                                                            ? doc.photo
+                                                            : doc.photo.includes('uploads')
+                                                                ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}${doc.photo.startsWith('/') ? '' : '/'}${doc.photo}`
+                                                                : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/uploads/doctors/${doc.photo}`
+                                                    ) : "/assets/img/doctor-placeholder.png"}
+                                                    alt={doc.name}
+                                                    className="rounded-circle object-fit-cover shadow-sm bg-white"
+                                                    style={{ width: "110px", height: "110px", border: "4px solid #fff" }}
+                                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/assets/img/doctor-placeholder.png" }}
+                                                />
                                             </div>
-                                            <div className="px-3 pb-4 mt-auto">
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => { e.stopPropagation(); openBooking(doc.id); }}
-                                                    className="btn btn-primary w-100 fw-bold rounded-3"
-                                                >
-                                                    Book Appointment
-                                                </button>
+
+                                            {/* Doctor details */}
+                                            <div className="card-body p-4 d-flex flex-column justify-content-between">
+                                                <div>
+                                                    <div className="d-flex align-items-start justify-content-between mb-1 gap-2">
+                                                        <h5 className="fw-bold text-dark mb-0 fs-6">{doc.name}</h5>
+                                                        <span className="badge bg-primary bg-opacity-10 text-primary fw-bold px-2 py-1" style={{ fontSize: "11px", whiteSpace: "normal" }}>
+                                                            {doc.specialization}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-secondary fw-semibold mb-2" style={{ fontSize: "13px" }}>{doc.qualification}</p>
+
+                                                    {/* Truncated Biography/Bio */}
+                                                    {(doc as any).bio && (
+                                                        <p className="text-dark mb-3" style={{ fontSize: "14px", display: "-webkit-box", WebkitLineClamp: "2", WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: "1.4" }}>
+                                                            {(doc as any).bio}
+                                                        </p>
+                                                    )}
+
+                                                    <div className="d-flex flex-wrap gap-3 mb-3 text-secondary" style={{ fontSize: "12px" }}>
+                                                        <span><i className="ti ti-briefcase me-1" />{doc.experience} Yrs Exp.</span>
+                                                        {(doc as any).medicalLicenseNumber && (
+                                                            <span><i className="ti ti-id me-1" />Lic: {(doc as any).medicalLicenseNumber}</span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="bg-light rounded-3 p-2 mb-3" style={{ fontSize: "12px" }}>
+                                                        <div className="d-flex align-items-center justify-content-between mb-1">
+                                                            <span className="text-secondary"><i className="ti ti-calendar me-1" />Days:</span>
+                                                            <span className="text-dark fw-semibold">{doc.days}</span>
+                                                        </div>
+                                                        <div className="d-flex align-items-center justify-content-between">
+                                                            <span className="text-secondary"><i className="ti ti-clock me-1" />Timings:</span>
+                                                            <span className="text-dark fw-semibold">{doc.timing}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="d-flex align-items-center justify-content-between gap-2 pt-2">
+                                                    <div>
+                                                        <span className="text-secondary d-block" style={{ fontSize: "11px" }}>Consultation Fee</span>
+                                                        <span className="text-success fw-bold fs-5">₹{doc.fee}</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => { e.stopPropagation(); openBooking(doc.id); }}
+                                                        className="btn btn-primary fw-bold px-3 py-2 rounded-3"
+                                                        style={{ fontSize: "12px" }}
+                                                    >
+                                                        Book Appointment
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1246,7 +1270,7 @@ export default function ClinicLandingPage() {
                         <div className="container">
                             <div className="row g-4">
                                 {/* Services Card */}
-                                <div className="col-lg-4">
+                                <div className="col-lg-6">
                                     <div className="card h-100 p-4 border rounded-4 shadow-sm bg-white text-center d-flex flex-column">
                                         <h6 className="fw-bold mb-4" style={{ color: "#1d4ed8", letterSpacing: "0.5px" }}>SERVICES WE OFFER</h6>
                                         <div className="row row-cols-2 g-3 flex-grow-1">
@@ -1281,62 +1305,8 @@ export default function ClinicLandingPage() {
                                     </div>
                                 </div>
 
-                                {/* Booking Card */}
-                                <div className="col-lg-4">
-                                    <div id="booking-widget" className="card h-100 p-4 border-0 rounded-4 shadow-sm text-white d-flex flex-column justify-content-between" style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)" }}>
-                                        <div>
-                                            <div className="d-flex align-items-center justify-content-center mb-3 rounded-circle bg-white bg-opacity-10" style={{ width: "50px", height: "50px" }}>
-                                                <i className="ti ti-calendar-event fs-3 text-white" />
-                                            </div>
-                                            <h5 className="fw-bold mb-3 text-white" style={{ letterSpacing: "0.5px" }}>Book Appointment Online</h5>
-                                            <p className="text-white text-opacity-80 small mb-4" style={{ lineHeight: "1.6" }}>
-                                                Skip the queue! Book your appointment directly online with our simplified booking system.
-                                            </p>
-                                            
-                                            <div className="d-flex flex-column gap-3 mb-4">
-                                                <div className="d-flex gap-3 align-items-start">
-                                                    <div className="d-flex align-items-center justify-content-center rounded-circle bg-white bg-opacity-20 mt-1" style={{ width: "24px", height: "24px", minWidth: "24px" }}>
-                                                        <span className="fw-bold small" style={{ fontSize: "11px" }}>1</span>
-                                                    </div>
-                                                    <div>
-                                                        <h6 className="fw-bold mb-1 text-white small">Choose Your Doctor</h6>
-                                                        <p className="text-white text-opacity-70 mb-0" style={{ fontSize: "12px" }}>Select from our team of qualified specialists.</p>
-                                                    </div>
-                                                </div>
-                                                <div className="d-flex gap-3 align-items-start">
-                                                    <div className="d-flex align-items-center justify-content-center rounded-circle bg-white bg-opacity-20 mt-1" style={{ width: "24px", height: "24px", minWidth: "24px" }}>
-                                                        <span className="fw-bold small" style={{ fontSize: "11px" }}>2</span>
-                                                    </div>
-                                                    <div>
-                                                        <h6 className="fw-bold mb-1 text-white small">Select Date & Time</h6>
-                                                        <p className="text-white text-opacity-70 mb-0" style={{ fontSize: "12px" }}>Pick a slot from the live availability calendar.</p>
-                                                    </div>
-                                                </div>
-                                                <div className="d-flex gap-3 align-items-start">
-                                                    <div className="d-flex align-items-center justify-content-center rounded-circle bg-white bg-opacity-20 mt-1" style={{ width: "24px", height: "24px", minWidth: "24px" }}>
-                                                        <span className="fw-bold small" style={{ fontSize: "11px" }}>3</span>
-                                                    </div>
-                                                    <div>
-                                                        <h6 className="fw-bold mb-1 text-white small">Instant Account Info</h6>
-                                                        <p className="text-white text-opacity-70 mb-0" style={{ fontSize: "12px" }}>Receive credentials & confirmation instantly via email.</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => openBooking("")}
-                                            className="btn w-100 mt-auto fw-bold text-dark bg-white shadow py-3 rounded-3 d-flex align-items-center justify-content-center gap-2 border-0"
-                                            style={{ fontSize: "14px", transition: "all 0.3s ease" }}
-                                        >
-                                            <i className="ti ti-circle-plus fs-5" /> Book Online Appointment
-                                        </button>
-                                    </div>
-                                </div>
-
                                 {/* Timings Card */}
-                                <div className="col-lg-4">
+                                <div className="col-lg-6">
                                     <div className="card h-100 p-4 border rounded-4 shadow-sm bg-white d-flex flex-column">
                                         <h6 className="fw-bold mb-4" style={{ color: "#1d4ed8", letterSpacing: "0.5px" }}>CLINIC TIMINGS</h6>
                                         <div className="d-flex flex-column gap-3 flex-grow g-2-1">
@@ -1362,55 +1332,71 @@ export default function ClinicLandingPage() {
                     </section>
 
                     {/* ══════ REVIEWS ══════ */}
-                    <section id="reviews" className="bg-white border-top border-bottom">
-                        <div className="container py-5">
+                    <section id="reviews" className="bg-white border-top border-bottom py-5">
+                        <div className="container py-2">
                             <div className="d-flex justify-content-between align-items-center mb-4">
                                 <div className="d-flex align-items-center gap-3">
-                                    <h6 className="fw-bold text-uppercase mb-0" style={{ color: "#1d4ed8", letterSpacing: "0.5px" }}>PATIENT REVIEWS</h6>
+                                    <h3 className="fw-bold text-uppercase mb-0" style={{ color: "#1d4ed8", letterSpacing: "1px", fontSize: "26px", lineHeight: "1.3" }}>
+                                        RECENT REVIEWS
+                                    </h3>
                                     <div className="d-flex align-items-center gap-2">
                                         <Stars n={avgRating} size={15} />
-                                        <span className="text-secondary fw-semibold" style={{ fontSize: "13px" }}>({totalReviews} Reviews)</span>
+                                        <span className="text-secondary fw-semibold" style={{ fontSize: "14px" }}>({totalReviews} Reviews)</span>
                                     </div>
                                 </div>
-                                <button className="btn btn-sm bg-white fw-bold px-3 rounded-pill" style={{ color: "#1d4ed8", border: "1px solid #e2e8f0", fontSize: "13px" }}>View All Reviews</button>
+                                {allReviewsList.length > 5 && (
+                                    <a
+                                        href="#"
+                                        className="fw-bold text-decoration-none d-flex align-items-center gap-1"
+                                        style={{ color: "#1d4ed8", fontSize: "14px" }}
+                                        onClick={(e) => { e.preventDefault(); setShowAllReviews(!showAllReviews); }}
+                                    >
+                                        {showAllReviews ? "Show Less Reviews" : "View All Reviews"} <i className={`ti ti-arrow-${showAllReviews ? 'up' : 'right'}`} />
+                                    </a>
+                                )}
                             </div>
 
-                            <div className="row g-3">
-                                {clinic.reviews.slice(0, 4).length > 0 ? clinic.reviews.slice(0, 4).map((r, i) => (
-                                    <div key={i} className="col-12 col-sm-6 col-lg-3">
-                                        <div className="card h-100 border p-3 rounded-3 shadow-none bg-white">
-                                            <div className="mb-2">
-                                                <Stars n={r.rating} size={14} />
+                            <div className="card rounded-4 border bg-white overflow-hidden shadow-sm">
+                                <div className="divide-y">
+                                    {reviewsToShow.map((r, i, arr) => (
+                                        <div key={i} className={`d-flex flex-column flex-md-row p-4 align-items-start align-items-md-center justify-content-between gap-4 ${i < arr.length - 1 ? 'border-bottom' : ''}`}>
+
+                                            {/* Left Column: Author details */}
+                                            <div style={{ minWidth: "160px" }}>
+                                                <h6 className="fw-bold text-dark mb-1" style={{ fontSize: "16px" }}>{r.name}</h6>
+                                                <span className="text-secondary d-block mb-1" style={{ fontSize: "13px" }}>Patient</span>
+                                                <span className="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1 fw-semibold d-inline-flex align-items-center gap-1" style={{ fontSize: "11px" }}>
+                                                    <i className="ti ti-circle-check-filled text-success" /> Verified
+                                                </span>
                                             </div>
-                                            <p className="text-dark mb-0 fw-medium" style={{ fontSize: "13px", lineHeight: 1.5 }}>
-                                                {r.feedback.length > 80 ? r.feedback.substring(0, 80) + '...' : r.feedback}
-                                            </p>
-                                            <div className="mt-4 pt-3">
-                                                <span className="text-secondary fw-semibold mb-0 d-block" style={{ fontSize: "11.5px" }}>— {r.name}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )) : (
-                                    /* Fallback Mock Reviews if none exist */
-                                    [
-                                        { f: "Excellent experience with City Care Clinic. Doctors are very cooperative and staff is also very helpful.", n: "Rahul Verma" },
-                                        { f: "Very clean clinic and good treatment. I got my dental treatment here. Highly recommended!", n: "Priya Sinha" },
-                                        { f: "Best child specialist doctor. My child is much better now. Thank you so much!", n: "Anjali Kumari" },
-                                        { f: "Quick appointment and proper guidance. Very satisfied with the service.", n: "Sandeep Kumar" }
-                                    ].map((r, i) => (
-                                        <div key={i} className="col-12 col-sm-6 col-lg-3">
-                                            <div className="card h-100 border p-3 rounded-3 shadow-none bg-white">
-                                                <div className="mb-2">
-                                                    <Stars n={5} size={14} />
+
+                                            {/* Middle Column: Star Rating & Feedback text */}
+                                            <div className="flex-grow-1 text-start">
+                                                <div className="d-flex align-items-center gap-2 mb-2" style={{ whiteSpace: "nowrap" }}>
+                                                    <Stars n={r.rating} size={15} />
+                                                    <span className="fw-bold text-dark" style={{ fontSize: "14px", whiteSpace: "nowrap" }}>{r.rating.toFixed(1)}</span>
                                                 </div>
-                                                <p className="text-dark mb-0 fw-medium" style={{ fontSize: "13px", lineHeight: 1.5 }}>{r.f}</p>
-                                                <div className="mt-4 pt-3">
-                                                    <span className="text-secondary fw-semibold mb-0 d-block" style={{ fontSize: "11.5px" }}>— {r.n}</span>
-                                                </div>
+                                                <p className="text-dark mb-0 fw-medium" style={{ fontSize: "15px", lineHeight: "1.6" }}>
+                                                    {r.feedback}
+                                                </p>
                                             </div>
+
+                                            {/* Right Column: Date & Helpful Button */}
+                                            <div className="text-md-end d-flex flex-row flex-md-column justify-content-between justify-content-md-start align-items-center align-items-md-end w-100 w-md-auto gap-2">
+                                                <span className="text-secondary small d-block mb-0 mb-md-2" style={{ fontSize: "13px" }}>
+                                                    {["12 Jun, 2024", "8 Jun, 2024", "5 Jun, 2024", "1 Jun, 2024"][i % 4]}
+                                                </span>
+                                                <button
+                                                    className="btn btn-sm d-flex align-items-center gap-1 rounded-3 px-3 py-1.5 bg-white text-secondary hover-primary"
+                                                    style={{ fontSize: "13px", border: "1px solid #cbd5e1" }}
+                                                >
+                                                    <i className="ti ti-thumb-up" /> Helpful ({[25, 18, 12, 8][i % 4]})
+                                                </button>
+                                            </div>
+
                                         </div>
-                                    ))
-                                )}
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -1420,14 +1406,52 @@ export default function ClinicLandingPage() {
                         clinic.gallery.length > 0 && (
                             <section id="gallery" className="py-5 bg-white">
                                 <div className="container py-4 text-center">
-                                    <h5 className="fw-bold text-uppercase mb-4" style={{ color: "#1d4ed8", letterSpacing: "1px" }}>CLINIC GALLERY</h5>
+                                    <h3 className="fw-bold text-uppercase mb-5" style={{ color: "#1d4ed8", letterSpacing: "1px", fontSize: "26px", lineHeight: "1.3" }}>CLINIC GALLERY</h3>
 
-                                    <div className="d-flex gap-4 overflow-auto pb-4 px-2 custom-scrollbar justify-content-lg-center">
+                                    <div className="row g-4 justify-content-center">
                                         {clinic.gallery.map((img, i) => (
-                                            <div key={i} style={{ minWidth: "280px", maxWidth: "280px" }}>
-                                                <div className="card border-0 bg-transparent text-center">
-                                                    <img src={img.url} alt={img.category} className="img-fluid rounded-4 shadow-sm mb-3" style={{ height: "160px", objectFit: "cover", width: "100%", border: "2px solid #f1f5f9" }} />
-                                                    <span className="fs-14 text-dark fw-bold">{img.category || "Gallery Image"}</span>
+                                            <div key={i} className="col-lg-4 col-md-6 col-12">
+                                                <div 
+                                                    className="card border rounded-3 overflow-hidden bg-white shadow-sm" 
+                                                    style={{ 
+                                                        borderColor: "#cbd5e1",
+                                                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                                                        cursor: "pointer"
+                                                    }}
+                                                    onClick={() => setActivePhoto(img.url)}
+                                                    onMouseOver={(e) => {
+                                                        e.currentTarget.style.transform = "translateY(-4px)";
+                                                        e.currentTarget.style.boxShadow = "0 10px 20px rgba(0, 0, 0, 0.08)";
+                                                        const imgEl = e.currentTarget.querySelector('.dy-gallery-img') as HTMLImageElement;
+                                                        if (imgEl) imgEl.style.transform = "scale(1.05)";
+                                                    }}
+                                                    onMouseOut={(e) => {
+                                                        e.currentTarget.style.transform = "translateY(0)";
+                                                        const imgEl = e.currentTarget.querySelector('.dy-gallery-img') as HTMLImageElement;
+                                                        if (imgEl) imgEl.style.transform = "scale(1)";
+                                                    }}
+                                                >
+                                                    <div className="position-relative overflow-hidden" style={{ height: "220px" }}>
+                                                        <img 
+                                                            src={img.url} 
+                                                            alt={img.category} 
+                                                            className="w-100 h-100 dy-gallery-img" 
+                                                            style={{ transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)", objectFit: "cover" }} 
+                                                        />
+                                                        <div className="position-absolute inset-0 d-flex align-items-center justify-content-center bg-dark bg-opacity-25 opacity-0 hover-opacity-100 transition-all duration-300" style={{ transition: "all 0.3s" }}>
+                                                            <i className="ti ti-zoom-in text-white fs-1" />
+                                                        </div>
+                                                    </div>
+                                                    <div className="card-body p-3 text-center border-top bg-light-50" style={{ borderColor: "#e2e8f0" }}>
+                                                        <h6 className="fw-bold mb-1" style={{ fontSize: "16px", color: "#1d4ed8" }}>
+                                                            {img.category || "Gallery Image"}
+                                                        </h6>
+                                                        {img.caption && (
+                                                            <p className="text-secondary mb-0" style={{ fontSize: "13px" }}>
+                                                                {img.caption}
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
@@ -1437,185 +1461,14 @@ export default function ClinicLandingPage() {
                         )
                     }
 
-                    {/* ══════ PACKAGES & FAQ ══════ */}
-                    <section className="py-5" style={{ background: "#f8f9fa" }}>
-                        <div className="container py-4">
 
-                            <h5 className="fw-bold text-center text-uppercase mb-4" style={{ color: "#1d4ed8", letterSpacing: "1px" }}>HEALTH PACKAGES / OFFERS</h5>
-
-                            <div className="row g-2 row-cols-1 row-cols-md-2 row-cols-lg-5 justify-content-center mb-5">
-                                {/* Package 1 */}
-                                <div className="col">
-                                    <div className="card border p-3 rounded-3 shadow-none bg-white text-start">
-                                        <h6 className="fw-bold mb-0 text-dark" style={{ fontSize: "13px" }}>Full Body Checkup</h6>
-                                        <span className="text-secondary d-block fw-medium mb-3" style={{ fontSize: "11px" }}>Complete Health Analysis</span>
-
-                                        <div className="d-flex align-items-end gap-2 mb-2">
-                                            <h4 className="fw-bold text-success mb-0">₹1499</h4>
-                                            <span className="text-secondary text-decoration-line-through fw-medium" style={{ fontSize: "12px", paddingBottom: "2px" }}>₹2000</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Package 2 */}
-                                <div className="col">
-                                    <div className="card border p-3 rounded-3 shadow-none bg-white text-start">
-                                        <h6 className="fw-bold mb-0 text-dark" style={{ fontSize: "13px" }}>Diabetes Package</h6>
-                                        <span className="text-secondary d-block fw-medium mb-3" style={{ fontSize: "11px" }}>Sugar & Related Tests</span>
-
-                                        <div className="d-flex align-items-end gap-2 mb-2">
-                                            <h4 className="fw-bold text-success mb-0">₹799</h4>
-                                            <span className="text-secondary text-decoration-line-through fw-medium" style={{ fontSize: "12px", paddingBottom: "2px" }}>₹1200</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Package 3 */}
-                                <div className="col">
-                                    <div className="card border p-3 rounded-3 shadow-none bg-white text-start">
-                                        <h6 className="fw-bold mb-0 text-dark" style={{ fontSize: "13px" }}>Dental Care Package</h6>
-                                        <span className="text-secondary d-block fw-medium mb-3" style={{ fontSize: "11px" }}>Dental Checkup + Cleaning</span>
-
-                                        <div className="d-flex align-items-end gap-2 mb-2">
-                                            <h4 className="fw-bold text-success mb-0">₹999</h4>
-                                            <span className="text-secondary text-decoration-line-through fw-medium" style={{ fontSize: "12px", paddingBottom: "2px" }}>₹1500</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Package 4 */}
-                                <div className="col">
-                                    <div className="card border p-3 rounded-3 shadow-none bg-white text-start">
-                                        <h6 className="fw-bold mb-0 text-dark" style={{ fontSize: "13px" }}>Women Health Package</h6>
-                                        <span className="text-secondary d-block fw-medium mb-3" style={{ fontSize: "11px" }}>Complete Women Care</span>
-
-                                        <div className="d-flex align-items-end gap-2 mb-2">
-                                            <h4 className="fw-bold text-success mb-0">₹1299</h4>
-                                            <span className="text-secondary text-decoration-line-through fw-medium" style={{ fontSize: "12px", paddingBottom: "2px" }}>₹1800</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Insurance Info */}
-                                <div className="col">
-                                    <div className="card border p-2 rounded-3 shadow-none bg-white text-center">
-                                        <h6 className="fw-bold mb-1" style={{ color: "#1d4ed8", fontSize: "11px" }}>Insurance & Cashless Facility</h6>
-                                        <p className="text-secondary fw-semibold mb-2 px-1" style={{ fontSize: "9.5px", lineHeight: 1.3 }}>
-                                            We accept all major insurance providers for cashless treatment.
-                                        </p>
-                                        <div className="d-flex justify-content-center align-items-center flex-wrap gap-1">
-                                            <span className="fw-bold text-primary" style={{ fontSize: "9px", letterSpacing: "-0.5px" }}><i className="ti ti-star-filled text-primary" /> STAR</span>
-                                            <span className="fw-bold text-white bg-danger px-1" style={{ fontSize: "8px" }}>HDFC ERGO</span>
-                                            <span className="fw-bold text-primary" style={{ fontSize: "9px", letterSpacing: "-0.5px" }}><i className="ti ti-bolt text-danger" /> ICICI Lombard</span>
-                                            <div className="w-100 m-0" />
-                                            <span className="fw-bold text-primary" style={{ fontSize: "9px", letterSpacing: "-0.5px" }}>BAJAJ Allianz</span>
-                                            <span className="text-secondary fw-semibold" style={{ fontSize: "9px" }}>& More</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <h6 className="fw-bold text-center text-uppercase mb-4 mt-4" style={{ color: "#1d4ed8", fontSize: "14px", letterSpacing: "0.5px" }}>FREQUENTLY ASKED QUESTIONS</h6>
-                            <div className="row g-2 justify-content-center mb-3">
-                                <div className="col-lg-12">
-                                    <div className="row g-2">
-                                        {[
-                                            { q: 'How can I book an appointment?', a: 'You can book an appointment online through our portal or by calling our clinic reception directly.' },
-                                            { q: 'What are the consultation charges?', a: 'Consultation charges vary by doctor and specialty. Please check the doctor profile for exact fees.' },
-                                            { q: 'Do you provide online consultation?', a: 'Yes, we offer video consultations for selected specialties to help you consult from home.' },
-                                            { q: 'Is walk-in consultation available?', a: 'Walk-ins are welcome, but we highly recommend booking an appointment online to avoid waiting.' },
-                                            { q: 'When will I get my test reports?', a: 'Most standard test reports are available within 24 hours online or can be collected at the clinic.' },
-                                            { q: 'Do you provide home sample collection?', a: 'Yes, we provide home sample collection for lab tests within a 10km radius.' }
-                                        ].map((faq, i) => (
-                                            <div key={i} className="col-md-6">
-                                                <div className="card shadow-none rounded-2 border" style={{ borderColor: "#f1f5f9" }}>
-                                                    <div
-                                                        className="d-flex justify-content-between align-items-center py-2 px-3 text-dark fw-medium"
-                                                        style={{ fontSize: "12px", cursor: "pointer" }}
-                                                        data-bs-toggle="collapse"
-                                                        data-bs-target={`#faq-${i}`}
-                                                    >
-                                                        <span>{faq.q}</span>
-                                                        <i className="ti ti-chevron-down text-secondary" style={{ fontSize: "12px" }} />
-                                                    </div>
-                                                    <div id={`faq-${i}`} className="collapse">
-                                                        <div className="card-body pt-0 pb-2 px-3 text-secondary" style={{ fontSize: "11.5px" }}>
-                                                            {faq.a}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
                 </>
             )
             }
 
-            {/* ══════ FOOTER ══════ */}
-            <footer id="contact" className="bg-white py-4 mt-2 border-top">
-                <div className="container">
-                    <div className="row g-4 align-items-center justify-content-between">
 
-                        {/* Map Image */}
-                        <div className="col-lg-4">
-                            <h6 className="fw-bold text-uppercase mb-3" style={{ color: "#1d4ed8", fontSize: "12px" }}>OUR LOCATION</h6>
-                            <div className="position-relative rounded-3 overflow-hidden border bg-light" style={{ height: "140px" }}>
-                                <img src="https://placehold.co/600x200/e2e8f0/94a3b8?text=Map+Location" alt="Map Location" className="w-100 h-100 object-fit-cover opacity-50 pe-none" />
-                                <div className="position-absolute bg-white rounded shadow-sm p-2" style={{ top: "10px", left: "10px", width: "160px" }}>
-                                    <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: "11px" }}>{clinic.name}</h6>
-                                    <small className="text-secondary d-block lh-sm mb-1" style={{ fontSize: "9px" }}>{clinic.address}, {clinic.city}</small>
-                                    <a href={clinic.directionsUrl} className="text-primary text-decoration-none fw-bold mt-1 d-block" style={{ fontSize: "9px" }}>View larger map</a>
-                                </div>
-                                <div className="position-absolute" style={{ top: "60%", left: "55%", transform: "translate(-50%, -50%)" }}>
-                                    <div className="d-flex align-items-center gap-1">
-                                        <i className="ti ti-map-pin-filled text-danger drop-shadow" style={{ fontSize: "28px" }} />
-                                        <span className="text-danger fw-bold shadow-sm px-1 rounded bg-white" style={{ fontSize: "10px" }}>{clinic.name}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Get Directions */}
-                        <div className="col-lg-2 text-center">
-                            <h6 className="fw-bold text-uppercase mb-2" style={{ color: "#1d4ed8", fontSize: "12px" }}>GET DIRECTIONS</h6>
-                            <p className="text-secondary fw-bold mx-auto mb-3" style={{ fontSize: "10px", lineHeight: 1.4, maxWidth: "150px" }}>{clinic.address}, {clinic.city}</p>
-                            <a href={clinic.directionsUrl} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary rounded-2 fw-bold px-3 py-1" style={{ fontSize: "11px", color: "#1d4ed8", borderColor: "#e2e8f0" }}>
-                                Get Directions <i className="ti ti-external-link ms-1" />
-                            </a>
-                        </div>
-
-                        {/* Contact Us */}
-                        <div className="col-lg-3 border-start ps-4">
-                            <h6 className="fw-bold text-uppercase mb-3" style={{ color: "#1d4ed8", fontSize: "12px" }}>CONTACT US</h6>
-                            <ul className="list-unstyled d-flex flex-column gap-2 mb-0 fw-bold text-secondary" style={{ fontSize: "10.5px" }}>
-                                <li className="d-flex align-items-center gap-2"><i className="ti ti-phone-call text-primary fs-6" style={{ color: "#1d4ed8" }} /> {clinic.phone}</li>
-                                <li className="d-flex align-items-center gap-2"><i className="ti ti-brand-whatsapp text-success fs-6" /> {clinic.whatsapp}</li>
-                                <li className="d-flex align-items-center gap-2 text-break"><i className="ti ti-mail text-primary fs-6" style={{ color: "#1d4ed8" }} /> {clinic.email || 'info@clinic.com'}</li>
-                                <li className="d-flex align-items-center gap-2"><i className="ti ti-world text-primary fs-6" style={{ color: "#1d4ed8" }} /> www.clinic.com</li>
-                                <li className="d-flex align-items-start gap-2 pt-1"><i className="ti ti-map-pin text-primary fs-6" style={{ color: "#1d4ed8" }} /> <span>{clinic.address}, {clinic.city}</span></li>
-                            </ul>
-                        </div>
-
-                        {/* Follow Us */}
-                        <div className="col-lg-2 text-center">
-                            <h6 className="fw-bold text-uppercase mb-3" style={{ color: "#1d4ed8", fontSize: "12px" }}>FOLLOW US</h6>
-                            <div className="d-flex gap-2 justify-content-center">
-                                <a href={clinic.facebook} className="btn rounded-circle p-0 d-flex align-items-center justify-content-center text-white" style={{ width: 28, height: 28, background: "#1877f2" }}><i className="ti ti-brand-facebook fs-6" /></a>
-                                <a href={clinic.instagram} className="btn rounded-circle p-0 d-flex align-items-center justify-content-center text-white" style={{ width: 28, height: 28, background: "#e1306c" }}><i className="ti ti-brand-instagram fs-6" /></a>
-                                <a href="#" className="btn rounded-circle p-0 d-flex align-items-center justify-content-center text-white" style={{ width: 28, height: 28, background: "#ff0000" }}><i className="ti ti-brand-youtube fs-6" /></a>
-                                <a href="#" className="btn rounded-circle p-0 d-flex align-items-center justify-content-center text-white" style={{ width: 28, height: 28, background: "#0077b5" }}><i className="ti ti-brand-linkedin fs-6" /></a>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </footer>
             {/* ══════ DARK BOTTOM FOOTER ══════ */}
-            <FooterFront />
+            <FooterFront clinic={clinic} />
 
             {/* WA FAB */}
             <a href={`https://wa.me/${clinic.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer"
@@ -1668,14 +1521,14 @@ export default function ClinicLandingPage() {
                                         </div>
                                         <h5 className="fw-bold text-dark mb-1">Appointment Scheduled!</h5>
                                         <p className="text-secondary fw-semibold mb-3" style={{ fontSize: "12px" }}>{bookSuccess}</p>
-                                        
+
                                         {/* Appointment ID Details */}
                                         <div className="mb-3 p-3 bg-light rounded-3 text-start border" style={{ borderColor: "#e2e8f0" }}>
                                             <div className={`d-flex justify-content-between ${generatedCreds?.isNewUserCreated ? 'mb-2 pb-2 border-bottom' : ''}`} style={{ borderColor: "#cbd5e1" }}>
                                                 <span className="text-secondary fw-semibold fs-13">Appointment ID:</span>
                                                 <span className="text-dark fw-bold fs-13">{generatedCreds?.appointmentCode || "AP..."}</span>
                                             </div>
-                                            
+
                                             {/* Account Details if user was created */}
                                             {generatedCreds?.isNewUserCreated && (
                                                 <div className="mt-2">
@@ -1700,7 +1553,7 @@ export default function ClinicLandingPage() {
                                         {/* Redesigned Notes Section - Blue & Black highlighted, detailed */}
                                         <div className="p-3 mb-4 rounded-3 text-start" style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
                                             <h6 className="fw-bold text-dark mb-3" style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Important Notes</h6>
-                                            
+
                                             {/* Note 1 */}
                                             <div className="d-flex align-items-start gap-2 mb-3 pb-3 border-bottom" style={{ borderColor: "#e2e8f0" }}>
                                                 <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: "22px", height: "22px", background: "#1d4ed8", color: "white" }}>
@@ -1712,7 +1565,7 @@ export default function ClinicLandingPage() {
                                                     </p>
                                                 </div>
                                             </div>
-                                            
+
                                             {/* Note 2 */}
                                             <div className="d-flex align-items-start gap-2">
                                                 <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: "22px", height: "22px", background: "#0f172a", color: "white" }}>
@@ -1990,6 +1843,28 @@ export default function ClinicLandingPage() {
                     </div>
                 )
             }
+
+            {/* Gallery Lightbox Overlay */}
+            {activePhoto && (
+                <div 
+                    className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+                    style={{ zIndex: 999999, background: "rgba(15, 23, 42, 0.9)", backdropFilter: "blur(6px)" }}
+                    onClick={() => setActivePhoto(null)}
+                >
+                    <button 
+                        type="button" 
+                        className="btn-close btn-close-white position-absolute top-0 end-0 m-4"
+                        style={{ fontSize: "1.5rem", filter: "invert(1)" }}
+                        onClick={() => setActivePhoto(null)}
+                    />
+                    <img 
+                        src={activePhoto} 
+                        alt="Gallery Preview" 
+                        className="img-fluid rounded-3 shadow-lg" 
+                        style={{ maxHeight: "85vh", maxWidth: "95vw", objectFit: "contain" }} 
+                    />
+                </div>
+            )}
 
         </div >
     );

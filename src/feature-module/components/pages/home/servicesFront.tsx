@@ -137,10 +137,7 @@ const ServicesFront = () => {
                   <i className={`ti ${m.icon} fs-24`} />
                 </div>
                 <h5 className="fw-bold mb-2 text-dark" style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>{m.name}</h5>
-                <p className="text-muted fs-13 mb-4 flex-grow-1" style={{ color: '#475569', lineHeight: '1.5' }}>{m.desc}</p>
-                <div className="fw-bold" style={{ color: i % 2 === 0 ? '#2563eb' : '#0d9488', fontSize: '13px', cursor: 'pointer' }}>
-                  Learn More <i className="ti ti-arrow-right ms-1" />
-                </div>
+                <p className="text-muted fs-13 mb-0 flex-grow-1" style={{ color: '#475569', lineHeight: '1.5' }}>{m.desc}</p>
               </div>
             ))}
           </div>

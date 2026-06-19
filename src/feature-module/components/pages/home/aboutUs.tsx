@@ -116,7 +116,7 @@ const AboutUs = () => {
                                     </div>
                                     <div className="fw-bold mb-2" style={{ color: i < 3 ? '#2563eb' : '#0ea5e9', fontSize: '14px' }}>0{i + 1}</div>
                                     <h4 className="fw-bold text-dark fs-16 mb-2">{s.title}</h4>
-                                    <p className="text-muted fs-14 m-0 lh-lg">{s.desc}</p>
+                                    <p className="text-muted fs-14 m-0 lh-lg fw-bold">{s.desc}</p>
                                 </div>
                             ))}
                         </div>
@@ -130,7 +130,7 @@ const AboutUs = () => {
                                 <div className="text-primary flex-shrink-0 mt-1"><i className="ti ti-target fs-32" /></div>
                                 <div>
                                     <div className="fw-bold fs-12 mb-2 text-uppercase letter-spacing-1 text-primary">OUR MISSION</div>
-                                    <p className="text-muted fs-15 m-0 lh-lg">
+                                    <p className="text-muted fs-15 m-0 lh-lg fw-bold">
                                         To simplify clinic management through technology and automation, allowing healthcare professionals to focus on what matters most — patient care.
                                     </p>
                                 </div>
@@ -143,7 +143,7 @@ const AboutUs = () => {
                                 <div className="text-info flex-shrink-0 mt-1"><i className="ti ti-eye fs-32" /></div>
                                 <div>
                                     <div className="fw-bold fs-12 mb-2 text-uppercase letter-spacing-1 text-info">OUR VISION</div>
-                                    <p className="text-muted fs-15 m-0 lh-lg">
+                                    <p className="text-muted fs-15 m-0 lh-lg fw-bold">
                                         To become a trusted healthcare technology partner for clinics across India and empower every healthcare provider with modern digital tools.
                                     </p>
                                 </div>
@@ -177,7 +177,7 @@ const AboutUs = () => {
                                         <i className={`${f.icon} fs-24`} />
                                     </div>
                                     <h4 className="fw-bold text-dark fs-16 mb-2">{f.title}</h4>
-                                    <p className="text-muted fs-14 m-0 lh-lg">{f.desc}</p>
+                                    <p className="text-muted fs-14 m-0 lh-lg fw-bold">{f.desc}</p>
                                 </div>
                             </div>
                         ))}
@@ -206,7 +206,7 @@ const AboutUs = () => {
                                 <div className="bg-white border rounded-4 p-4 text-center shadow-sm h-100" style={{ borderColor: '#e2e8f0' }}>
                                     <div className="text-primary mb-3"><i className={`${w.icon} fs-32`} /></div>
                                     <h4 className="fw-bold text-dark fs-16 mb-2">{w.title}</h4>
-                                    <p className="text-muted fs-14 m-0 lh-lg">{w.desc}</p>
+                                    <p className="text-muted fs-14 m-0 lh-lg fw-bold">{w.desc}</p>
                                 </div>
                             </div>
                         ))}

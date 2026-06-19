@@ -281,7 +281,7 @@ const SuperAdminDashboard = () => {
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
                   <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Enterprises Overview</h5>
-                  <Link to={all_routes.superAdminTenants} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
+                  <Link to={all_routes.tenants} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
                 </div>
                 <div className="card-body p-3 d-flex flex-column justify-content-center align-items-center">
                   <div style={{ width: '100%', maxWidth: '300px' }}>
@@ -356,7 +356,7 @@ const SuperAdminDashboard = () => {
                   <div className="d-flex align-items-center gap-2">
                     <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Recent Emails</h5>
                   </div>
-                  <Link to={all_routes.emailSettings || "#"} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>Settings</Link>
+                  <Link to={all_routes.superAdminEmailSettings || "#"} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>Settings</Link>
                 </div>
                 <div className="card-body p-3">
                   <div className="d-flex flex-column gap-3">
@@ -394,7 +394,7 @@ const SuperAdminDashboard = () => {
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
                   <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Demo Bookings</h5>
-                  <Link to={all_routes.demoAdmin || "#"} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
+                  <Link to={all_routes.demoBookings || "#"} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
                 </div>
                 <div className="card-body p-3">
                   {analytics.demoBookingsList && analytics.demoBookingsList.length > 0 ? (
@@ -431,7 +431,7 @@ const SuperAdminDashboard = () => {
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
                   <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Razorpay Payments</h5>
-                  <Link to={all_routes.superAdminTransactions || "#"} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
+                  <Link to={all_routes.purchaseTransaction || "#"} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
                 </div>
                 <div className="card-body p-3">
                   {analytics.transactionHistory && analytics.transactionHistory.length > 0 ? (
@@ -471,7 +471,7 @@ const SuperAdminDashboard = () => {
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
                   <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Packages</h5>
-                  <Link to={all_routes.superAdminPackages || "#"} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
+                  <Link to={all_routes.packages || "#"} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
                 </div>
                 <div className="card-body p-3">
                   {analytics.packagesList && analytics.packagesList.length > 0 ? (

@@ -22,7 +22,7 @@ const ProfileSettings = () => {
       : null
   );
   const [profileImage, setProfileImage] = useState<string | null>(userObj.profileImage || null);
-  
+
   // Clinic logo cropper states
   const [isLogoCropOpen, setIsLogoCropOpen] = useState(false);
   const [logoCropImageSrc, setLogoCropImageSrc] = useState<string | null>(null);

@@ -344,7 +344,7 @@ const OrganizationSettings = () => {
                         {([
                           { label: "Clinic Name / Title", key: "name" as keyof HeroForm, type: "text", ph: "e.g. HealthCare Plus Clinic", required: true, disabled: true },
                           { label: "Tagline", key: "tagline" as keyof HeroForm, type: "text", ph: "e.g. Trusted Healthcare for Your Family", required: true },
-                          { label: "Phone Number", key: "phone" as keyof HeroForm, type: "text", ph: "+91 98765 43210", required: true, disabled: true },
+                          { label: "Phone Number / Emergency", key: "phone" as keyof HeroForm, type: "text", ph: "+91 98765 43210", required: true, disabled: true },
                           { label: "WhatsApp Number", key: "whatsapp" as keyof HeroForm, type: "text", ph: "+91 98765 43210" },
                           { label: "Email Address", key: "email" as keyof HeroForm, type: "email", ph: "clinic@example.com" },
                           { label: "Social – Facebook", key: "facebook" as keyof HeroForm, type: "text", ph: "https://facebook.com/yourclinic" },

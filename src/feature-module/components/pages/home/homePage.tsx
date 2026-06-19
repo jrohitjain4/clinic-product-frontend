@@ -128,50 +128,6 @@ const HomePage = () => {
             {/* RIGHT */}
             <div className="col-lg-6 position-relative">
               <img src="/hero-image.png" alt="Dashboard Mockup" className="w-100 h-auto rounded-4 d-block bg-white" style={{ border: '4px solid #0ea5e9', boxShadow: '0 20px 45px rgba(14, 165, 233, 0.25), 0 25px 50px -12px rgba(0, 0, 0, 0.15)' }} />
-              
-              {/* Horizontal Floating Cards */}
-              <div className="d-none d-lg-flex flex-wrap flex-md-nowrap justify-content-center" style={{ position: 'absolute', bottom: '-45px', left: '50%', transform: 'translateX(-50%)', gap: '10px', zIndex: 2, width: '105%' }}>
-                
-                <div className="bg-white shadow-sm" style={{ padding: '12px 18px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 auto', minWidth: '130px' }}>
-                  <div style={{ background: '#eef2ff', width: '40px', height: '40px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5', flexShrink: 0 }}>
-                    <i className="ti ti-calendar-event fs-20 m-auto" />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>New Appointment</div>
-                    <div className="d-flex align-items-baseline gap-1">
-                      <div style={{ fontSize: '16px', color: '#0f172a', fontWeight: 800 }}>+24</div>
-                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Today</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white shadow-sm" style={{ padding: '12px 18px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 auto', minWidth: '130px' }}>
-                  <div style={{ background: '#e0f2fe', width: '40px', height: '40px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7', flexShrink: 0 }}>
-                    <i className="ti ti-user fs-20 m-auto" />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>Patient Registered</div>
-                    <div className="d-flex align-items-baseline gap-1">
-                      <div style={{ fontSize: '16px', color: '#0f172a', fontWeight: 800 }}>+18</div>
-                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Today</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white shadow-sm" style={{ padding: '12px 18px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 auto', minWidth: '130px' }}>
-                  <div style={{ background: '#ccfbf1', width: '40px', height: '40px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0d9488', flexShrink: 0 }}>
-                    <i className="ti ti-wallet fs-20 m-auto" />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>Payment Received</div>
-                    <div className="d-flex align-items-baseline gap-1">
-                      <div style={{ fontSize: '16px', color: '#0f172a', fontWeight: 800 }}>₹45,600</div>
-                      <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Today</div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
             </div>
           </div>
         </div>
@@ -361,7 +317,7 @@ const HomePage = () => {
                     <div className="card h-100 border shadow-sm rounded-4 bg-white" style={{ borderColor: '#e2e8f0' }}>
                       <div className="card-body p-3 d-flex flex-column">
                         <div className="fs-24 mb-3" style={{ color: '#2563eb' }}><i className="ti ti-quote" /></div>
-                        <p className="fs-12 flex-grow-1 mb-4" style={{ color: '#475569', lineHeight: '1.6' }}>{t.quote}</p>
+                        <p className="fs-12 flex-grow-1 mb-4" style={{ color: '#334155', lineHeight: '1.6', fontWeight: 500 }}>{t.quote}</p>
                         <div className="d-flex align-items-center gap-2 mt-auto">
                           <img src={t.img} alt={t.name} className="rounded-circle shadow-sm" style={{ width: 36, height: 36, objectFit: 'cover' }} />
                           <div>

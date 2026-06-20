@@ -655,6 +655,7 @@ const Dashboard = () => {
                   <div className="row align-items-center mb-3">
                     <div className="col-sm-7 col-12">
                       <Chart 
+                        key={appointmentStats.total}
                         options={{
                           chart: {
                             type: 'donut',
@@ -690,7 +691,14 @@ const Dashboard = () => {
                                     label: 'Total Appts',
                                     fontSize: '11px',
                                     color: '#64748b',
-                                    formatter: () => String(appointmentStats.total)
+                                    formatter: (w: any) => {
+                                      return String(
+                                        w.globals.seriesTotals.reduce(
+                                          (a: number, b: number) => a + b,
+                                          0
+                                        )
+                                      );
+                                    }
                                   }
                                 }
                               }

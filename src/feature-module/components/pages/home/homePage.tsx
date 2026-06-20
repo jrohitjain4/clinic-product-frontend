@@ -4,7 +4,6 @@ import { all_routes } from "../../../routes/all_routes";
 import FooterFront from "./FooterFront";
 import FloatingActions from "./FloatingActions";
 import NavbarFront from "./NavbarFront";
-import { DemoBookingModal } from "./DemoBookingModal";
 import CtaBanner from "./CtaBanner";
 import "./homePage.scss";
 
@@ -62,7 +61,6 @@ const HomePage = () => {
 
   return (
     <div className="dy-landing" style={{ overflowX: 'hidden' }}>
-      <DemoBookingModal />
       <NavbarFront />
 
       {/* ── HERO ───────────────────────────────── */}

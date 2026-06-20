@@ -4,12 +4,26 @@ import { apiUrl } from "../../../../../core/config/api";
 interface Tenant {
     id: string;
     name: string;
+    username: string;
     ownerName: string;
     ownerEmail: string;
     packageName: string;
     status: 'IN_PROGRESS' | 'TRIAL' | 'TRIAL_EXPIRED' | 'TRIAL_COMPLETED_NOT_UPGRADED' | 'UPGRADED' | 'FAILED';
     expiresAt: string | null;
     createdAt: string;
+    phone?: string;
+    whatsappNumber?: string;
+    addressLine1?: string;
+    addressLine2?: string;
+    district?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    pincode?: string;
+    doctorCount?: number | null;
+    doctorsCount?: number;
+    staffsCount?: number;
+    patientsCount?: number;
 }
 
 interface Package {
@@ -279,18 +293,18 @@ const TenantsAdmin = () => {
                     </div>
                 </div>
             </div>
-            
+
             {/* View Modal */}
             {viewModal && activeTenant && (
                 <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
                     <div className="modal-dialog modal-dialog-centered modal-lg">
                         <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '15px' }}>
-                            <div className="modal-header border-bottom-0 bg-primary-subtle" style={{ borderTopLeftRadius: '15px', borderTopRightRadius: '15px' }}>
-                                <h5 className="modal-title fw-bold d-flex align-items-center">
-                                    <i className="ti ti-building-hospital me-2 text-primary fs-20"></i>
+                            <div className="modal-header border-bottom-0 bg-primary" style={{ borderTopLeftRadius: '15px', borderTopRightRadius: '15px' }}>
+                                <h5 className="modal-title fw-bold d-flex align-items-center text-white">
+                                    <i className="ti ti-building-hospital me-2 fs-20"></i>
                                     Clinic Profile: {activeTenant.name}
                                 </h5>
-                                <button type="button" className="btn-close" onClick={() => setViewModal(false)}></button>
+                                <button type="button" className="btn-close btn-close-white" onClick={() => setViewModal(false)}></button>
                             </div>
                             <div className="modal-body p-4">
                                 <div className="row g-4">
@@ -303,17 +317,17 @@ const TenantsAdmin = () => {
                                                 <h6 className="fw-bold fs-14 text-dark mb-0">{activeTenant.name}</h6>
                                             </div>
                                             <div className="mb-3">
-                                                <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Clinic ID</p>
-                                                <p className="fs-13 text-dark font-monospace mb-0">{activeTenant.id}</p>
+                                                <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Clinic Username / Subdomain</p>
+                                                <h6 className="fw-bold fs-14 text-dark mb-0 font-monospace text-primary">{activeTenant.username || "N/A"}</h6>
                                             </div>
                                             <div className="mb-0">
-                                                <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Address</p>
-                                                <p className="fs-13 text-dark mb-0">123 Health Ave, Medical District, NY 10001</p>
+                                                <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Clinic ID</p>
+                                                <p className="fs-13 text-dark font-monospace mb-0">{activeTenant.id}</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Column 2: Owner Info */}
+                                    {/* Column 2: Owner Details */}
                                     <div className="col-md-6">
                                         <div className="p-3 bg-light rounded-3 h-100 border border-light-subtle shadow-sm">
                                             <h6 className="fw-bold mb-3 d-flex align-items-center text-dark"><i className="ti ti-user-circle me-2 text-primary fs-18"></i>Owner Details</h6>
@@ -327,16 +341,60 @@ const TenantsAdmin = () => {
                                                     <i className="ti ti-mail me-2 text-muted"></i>{activeTenant.ownerEmail}
                                                 </p>
                                             </div>
-                                            <div className="mb-0">
+                                            <div className="mb-3">
                                                 <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Phone Number</p>
                                                 <p className="fs-13 text-dark mb-0 d-flex align-items-center">
-                                                    <i className="ti ti-phone me-2 text-muted"></i>+1 (555) 123-4567
+                                                    <i className="ti ti-phone me-2 text-muted"></i>{activeTenant.phone || "N/A"}
+                                                </p>
+                                            </div>
+                                            <div className="mb-0">
+                                                <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">WhatsApp Number</p>
+                                                <p className="fs-13 text-dark mb-0 d-flex align-items-center">
+                                                    <i className="ti ti-brand-whatsapp me-2 text-success"></i>{activeTenant.whatsappNumber || "N/A"}
                                                 </p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Column 3: Subscription & Status */}
+                                    {/* Column 3: Location Details */}
+                                    <div className="col-md-6">
+                                        <div className="p-3 bg-light rounded-3 h-100 border border-light-subtle shadow-sm">
+                                            <h6 className="fw-bold mb-3 d-flex align-items-center text-dark"><i className="ti ti-map-pin me-2 text-primary fs-18"></i>Location Details</h6>
+                                            <div className="mb-2">
+                                                <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Primary Address</p>
+                                                <p className="fs-13 text-dark mb-0">{activeTenant.addressLine1 || "N/A"}</p>
+                                            </div>
+                                            {activeTenant.addressLine2 && activeTenant.addressLine2 !== "N/A" && (
+                                                <div className="mb-2">
+                                                    <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Secondary Address</p>
+                                                    <p className="fs-13 text-dark mb-0">{activeTenant.addressLine2}</p>
+                                                </div>
+                                            )}
+                                            <div className="row g-2">
+                                                <div className="col-6 mb-2">
+                                                    <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">City</p>
+                                                    <p className="fs-13 text-dark mb-0">{activeTenant.city || "N/A"}</p>
+                                                </div>
+                                                <div className="col-6 mb-2">
+                                                    <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">District</p>
+                                                    <p className="fs-13 text-dark mb-0">{activeTenant.district || "N/A"}</p>
+                                                </div>
+                                                <div className="col-6">
+                                                    <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">State & Country</p>
+                                                    <p className="fs-13 text-dark mb-0">
+                                                        {activeTenant.state ? `${activeTenant.state}, ` : ""}
+                                                        {activeTenant.country || "N/A"}
+                                                    </p>
+                                                </div>
+                                                <div className="col-6">
+                                                    <p className="text-muted fs-11 fw-semibold text-uppercase mb-0">Pincode</p>
+                                                    <p className="fs-13 text-dark mb-0">{activeTenant.pincode || "N/A"}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Column 4: Subscription & Status */}
                                     <div className="col-md-6">
                                         <div className="p-3 bg-light rounded-3 h-100 border border-light-subtle shadow-sm">
                                             <h6 className="fw-bold mb-3 d-flex align-items-center text-dark"><i className="ti ti-shield-check me-2 text-success fs-18"></i>Subscription & Status</h6>
@@ -369,31 +427,6 @@ const TenantsAdmin = () => {
                                             </div>
                                         </div>
                                     </div>
-
-                                    {/* Column 4: System Usage Stats */}
-                                    <div className="col-md-6">
-                                        <div className="p-3 bg-light rounded-3 h-100 border border-light-subtle shadow-sm">
-                                            <h6 className="fw-bold mb-3 d-flex align-items-center text-dark"><i className="ti ti-chart-pie me-2 text-warning fs-18"></i>System Usage</h6>
-                                            <div className="mb-3">
-                                                <div className="d-flex justify-content-between mb-1">
-                                                    <span className="text-muted fs-12 fw-medium">Storage Quota</span>
-                                                    <span className="text-dark fs-12 fw-bold">15 GB / 50 GB</span>
-                                                </div>
-                                                <div className="progress" style={{ height: '6px' }}>
-                                                    <div className="progress-bar bg-warning rounded-pill" role="progressbar" style={{ width: '30%' }} aria-valuenow={30} aria-valuemin={0} aria-valuemax={100}></div>
-                                                </div>
-                                            </div>
-                                            <div className="d-flex align-items-center justify-content-between mb-2">
-                                                <span className="text-muted fs-13 d-flex align-items-center"><i className="ti ti-users me-2"></i>Total Staff</span>
-                                                <span className="fw-bold text-dark fs-13">24 Active</span>
-                                            </div>
-                                            <div className="d-flex align-items-center justify-content-between">
-                                                <span className="text-muted fs-13 d-flex align-items-center"><i className="ti ti-wheelchair me-2"></i>Total Patients</span>
-                                                <span className="fw-bold text-dark fs-13">1,402 Registered</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                 </div>
                             </div>
                             <div className="modal-footer border-top-0 pt-0 justify-content-center">
@@ -409,9 +442,12 @@ const TenantsAdmin = () => {
                 <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
                     <div className="modal-dialog modal-dialog-centered">
                         <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '15px' }}>
-                            <div className="modal-header border-bottom-0 bg-light" style={{ borderTopLeftRadius: '15px', borderTopRightRadius: '15px' }}>
-                                <h5 className="modal-title fw-bold">Edit Clinic Details</h5>
-                                <button type="button" className="btn-close" onClick={() => setEditModal(false)}></button>
+                            <div className="modal-header border-bottom-0 bg-primary" style={{ borderTopLeftRadius: '15px', borderTopRightRadius: '15px' }}>
+                                <h5 className="modal-title fw-bold d-flex align-items-center text-white">
+                                    <i className="ti ti-edit me-2 fs-20"></i>
+                                    Edit Clinic Details
+                                </h5>
+                                <button type="button" className="btn-close btn-close-white" onClick={() => setEditModal(false)}></button>
                             </div>
                             <div className="modal-body p-4">
                                 <div className="mb-3">

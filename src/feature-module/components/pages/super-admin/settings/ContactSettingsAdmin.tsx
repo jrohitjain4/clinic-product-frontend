@@ -9,7 +9,11 @@ const ContactSettingsAdmin = () => {
         contact_phone: "",
         contact_email: "",
         contact_website: "",
-        contact_whatsapp: ""
+        contact_whatsapp: "",
+        contact_facebook: "",
+        contact_twitter: "",
+        contact_linkedin: "",
+        contact_youtube: ""
     });
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
@@ -17,7 +21,17 @@ const ContactSettingsAdmin = () => {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const keys = ["contact_address", "contact_phone", "contact_email", "contact_website", "contact_whatsapp"];
+                const keys = [
+                    "contact_address", 
+                    "contact_phone", 
+                    "contact_email", 
+                    "contact_website", 
+                    "contact_whatsapp",
+                    "contact_facebook",
+                    "contact_twitter",
+                    "contact_linkedin",
+                    "contact_youtube"
+                ];
                 const fetched = await Promise.all(
                     keys.map(async (key) => {
                         const res = await fetch(`${API}/api/settings/${key}`);
@@ -34,7 +48,11 @@ const ContactSettingsAdmin = () => {
                     contact_phone: mergedSettings.contact_phone || "",
                     contact_email: mergedSettings.contact_email || "",
                     contact_website: mergedSettings.contact_website || "",
-                    contact_whatsapp: mergedSettings.contact_whatsapp || ""
+                    contact_whatsapp: mergedSettings.contact_whatsapp || "",
+                    contact_facebook: mergedSettings.contact_facebook || "",
+                    contact_twitter: mergedSettings.contact_twitter || "",
+                    contact_linkedin: mergedSettings.contact_linkedin || "",
+                    contact_youtube: mergedSettings.contact_youtube || ""
                 });
             } catch (err: any) {
                 // message.error("Failed to fetch contact settings.");
@@ -181,6 +199,79 @@ const ContactSettingsAdmin = () => {
                                                         style={{ borderRadius: "8px", height: "46px" }}
                                                         required
                                                     />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr className="my-2" />
+                                        <h5 className="fw-bold mb-0 text-dark"><i className="ti ti-share me-2 text-primary"></i>Social Media Links</h5>
+
+                                        <div className="row g-3">
+                                            <div className="col-md-6">
+                                                <div className="form-group">
+                                                    <label className="form-label fw-semibold text-muted">Facebook URL</label>
+                                                    <div className="input-group">
+                                                        <span className="input-group-text bg-light border-end-0"><i className="ti ti-brand-facebook text-primary fs-18"></i></span>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control border-start-0 ps-0"
+                                                            placeholder="e.g. https://facebook.com/docyori"
+                                                            value={settings.contact_facebook}
+                                                            onChange={(e) => handleChange("contact_facebook", e.target.value)}
+                                                            style={{ borderRadius: "0 8px 8px 0", height: "46px" }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="form-group">
+                                                    <label className="form-label fw-semibold text-muted">Twitter URL</label>
+                                                    <div className="input-group">
+                                                        <span className="input-group-text bg-light border-end-0"><i className="ti ti-brand-twitter text-info fs-18"></i></span>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control border-start-0 ps-0"
+                                                            placeholder="e.g. https://twitter.com/docyori"
+                                                            value={settings.contact_twitter}
+                                                            onChange={(e) => handleChange("contact_twitter", e.target.value)}
+                                                            style={{ borderRadius: "0 8px 8px 0", height: "46px" }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="row g-3">
+                                            <div className="col-md-6">
+                                                <div className="form-group">
+                                                    <label className="form-label fw-semibold text-muted">LinkedIn URL</label>
+                                                    <div className="input-group">
+                                                        <span className="input-group-text bg-light border-end-0"><i className="ti ti-brand-linkedin text-primary fs-18"></i></span>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control border-start-0 ps-0"
+                                                            placeholder="e.g. https://linkedin.com/company/docyori"
+                                                            value={settings.contact_linkedin}
+                                                            onChange={(e) => handleChange("contact_linkedin", e.target.value)}
+                                                            style={{ borderRadius: "0 8px 8px 0", height: "46px" }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="form-group">
+                                                    <label className="form-label fw-semibold text-muted">YouTube URL</label>
+                                                    <div className="input-group">
+                                                        <span className="input-group-text bg-light border-end-0"><i className="ti ti-brand-youtube text-danger fs-18"></i></span>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control border-start-0 ps-0"
+                                                            placeholder="e.g. https://youtube.com/c/docyori"
+                                                            value={settings.contact_youtube}
+                                                            onChange={(e) => handleChange("contact_youtube", e.target.value)}
+                                                            style={{ borderRadius: "0 8px 8px 0", height: "46px" }}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

@@ -22,7 +22,7 @@ const MultiStepRegister: React.FC = () => {
     const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
     const [usernameWarning, setUsernameWarning] = useState<string | null>(null);
     const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
-    
+
     // Location Data
     const [selectedCountryCode, setSelectedCountryCode] = useState("IN");
     const [selectedStateCode, setSelectedStateCode] = useState("");
@@ -313,7 +313,7 @@ const MultiStepRegister: React.FC = () => {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ packageId }),
                 });
-                
+
                 const orderData = await orderRes.json();
                 if (!orderRes.ok) {
                     throw new Error(orderData.message || "Failed to initiate payment. Please contact support.");

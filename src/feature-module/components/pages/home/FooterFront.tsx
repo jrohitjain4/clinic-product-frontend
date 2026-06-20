@@ -26,7 +26,11 @@ const FooterFront = ({ clinic }: FooterFrontProps) => {
         whatsapp: "+91 99999 99999",
         phone: "+91 99999 99999",
         email: "hello@docyori.com",
-        website: "www.docyori.com"
+        website: "www.docyori.com",
+        facebook: "",
+        twitter: "",
+        linkedin: "",
+        youtube: ""
     });
 
     useEffect(() => {
@@ -36,7 +40,7 @@ const FooterFront = ({ clinic }: FooterFrontProps) => {
                 const res = await fetch(`${API}/api/settings/contact_phone`);
                 if (!res.ok) return;
 
-                const keys = ["contact_phone", "contact_email", "contact_website", "contact_whatsapp"];
+                const keys = ["contact_phone", "contact_email", "contact_website", "contact_whatsapp", "contact_facebook", "contact_twitter", "contact_linkedin", "contact_youtube"];
                 const fetched = await Promise.all(
                     keys.map(async (key) => {
                         try {
@@ -55,6 +59,10 @@ const FooterFront = ({ clinic }: FooterFrontProps) => {
                     email: mergedSettings.contact_email || prev.email,
                     website: mergedSettings.contact_website || prev.website,
                     whatsapp: mergedSettings.contact_whatsapp || prev.whatsapp,
+                    facebook: mergedSettings.contact_facebook || prev.facebook,
+                    twitter: mergedSettings.contact_twitter || prev.twitter,
+                    linkedin: mergedSettings.contact_linkedin || prev.linkedin,
+                    youtube: mergedSettings.contact_youtube || prev.youtube,
                 }));
             } catch { /* settings API not available, use defaults */ }
         };
@@ -162,10 +170,10 @@ const FooterFront = ({ clinic }: FooterFrontProps) => {
                     <p className="tag-line">Smarter Care. Better Health.</p>
                     <p>All-in-one clinic management software to automate operations, manage staff, and deliver better patient care.</p>
                     <div className="dy-socials">
-                        <a href="#"><i className="ti ti-brand-facebook" /></a>
-                        <a href="#"><i className="ti ti-brand-twitter" /></a>
-                        <a href="#"><i className="ti ti-brand-linkedin" /></a>
-                        <a href="#"><i className="ti ti-brand-youtube" /></a>
+                        <a href={siteSettings.facebook || "#"} target="_blank" rel="noreferrer"><i className="ti ti-brand-facebook" /></a>
+                        <a href={siteSettings.twitter || "#"} target="_blank" rel="noreferrer"><i className="ti ti-brand-twitter" /></a>
+                        <a href={siteSettings.linkedin || "#"} target="_blank" rel="noreferrer"><i className="ti ti-brand-linkedin" /></a>
+                        <a href={siteSettings.youtube || "#"} target="_blank" rel="noreferrer"><i className="ti ti-brand-youtube" /></a>
                     </div>
                 </div>
                 <div className="dy-footer-col">

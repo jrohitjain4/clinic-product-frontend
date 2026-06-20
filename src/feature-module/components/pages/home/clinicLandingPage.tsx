@@ -16,7 +16,15 @@ interface Doctor {
     days: string;
     timing: string;
     photo: string;
-    bio: string;
+    bio?: string;
+    medicalLicenseNumber?: string;
+    gender?: string;
+    dob?: string;
+    bloodGroup?: string;
+    educations?: any[];
+    awards?: any[];
+    certifications?: any[];
+    schedules?: any;
 }
 interface Review { name: string; rating: number; feedback: string; }
 interface Service { icon: string; label: string; }
@@ -105,6 +113,7 @@ export default function ClinicLandingPage() {
 
     // ── Doctor Profile Modal State ──
     const [selectedDocDetails, setSelectedDocDetails] = useState<Doctor | null>(null);
+    const [expandedDocId, setExpandedDocId] = useState<string | null>(null);
     const [activePhoto, setActivePhoto] = useState<string | null>(null);
     const [showAllReviews, setShowAllReviews] = useState(false);
     const [activeTab, setActiveTab] = useState("Monday");
@@ -503,8 +512,8 @@ export default function ClinicLandingPage() {
         </div>
     );
 
-    const avgRating = clinic.reviews.length
-        ? Math.round(clinic.reviews.reduce((s, r) => s + r.rating, 0) / clinic.reviews.length)
+    const avgRating = (clinic.reviews || []).length
+        ? Math.round((clinic.reviews || []).reduce((s, r) => s + r.rating, 0) / (clinic.reviews || []).length)
         : 5;
 
     // ── Pre-rendering logic for incomplete data ──
@@ -558,9 +567,9 @@ export default function ClinicLandingPage() {
         );
     }
 
-    const totalReviews = clinic.reviews.length > 0 ? clinic.reviews.length : "350+";
+    const totalReviews = (clinic.reviews || []).length > 0 ? (clinic.reviews || []).length : "350+";
 
-    const allReviewsList = clinic.reviews && clinic.reviews.length > 0
+    const allReviewsList = clinic.reviews && (clinic.reviews || []).length > 0
         ? clinic.reviews
         : [
             { rating: 5, feedback: "Excellent experience! The doctor was very attentive and the staff was friendly.", name: "Amit Kumar" },
@@ -637,411 +646,6 @@ export default function ClinicLandingPage() {
                     </div>
                 </div>
             </nav>
-
-            {/* ══════ DOCTOR DETAILS PROFILE PAGE MODE (CLONE OF ADMIN PANEL) ══════ */}
-            {selectedDocDetails ? (
-                <div className="page-wrapper" style={{ background: "#f1f5f9", minHeight: "calc(100vh - 80px)", margin: 0 }}>
-                    <div className="container-fluid p-0">
-                        {/* ═══ Main Layout Row with Left Sidebar Ads ═══ */}
-                        <div className="row g-0">
-                            {/* Left Sidebar Ads (The Functional Sidebar) */}
-                            <div className="col-lg-3 d-none d-lg-block bg-white border-end shadow-sm" style={{ maxWidth: "300px", minHeight: "calc(100vh - 80px)" }}>
-                                <div className="sticky-top p-3" style={{ top: "80px", zIndex: 10 }}>
-                                    <div className="card border-0 mb-3 overflow-hidden rounded shadow-sm">
-                                        <img src="/assets/img/ad-banner-1.png" className="img-fluid w-100" alt="Ad 1" />
-                                    </div>
-                                    <div className="card bg-primary text-white border-0 mb-3 p-3 rounded shadow-sm">
-                                        <h6 className="fw-bold mb-2 text-white">Health Tip</h6>
-                                        <p className="fs-12 mb-0 opacity-75">Stay hydrated and exercise daily for a better heart health. Book a consultation now!</p>
-                                    </div>
-                                    <div className="card border-0 mb-3 overflow-hidden rounded shadow-sm">
-                                        <img src="/assets/img/ad-banner-tall.png" className="img-fluid w-100" alt="Tall Ad" />
-                                    </div>
-                                    <div className="card border-0 mb-3 overflow-hidden rounded shadow-sm">
-                                        <img src="/assets/img/ad-banner-2.png" className="img-fluid w-100" alt="Ad 2" />
-                                    </div>
-                                    <div className="card bg-success text-white border-0 mb-3 p-3 rounded shadow-sm">
-                                        <h6 className="fw-bold mb-2 text-white">Latest News</h6>
-                                        <p className="fs-12 mb-0 opacity-75">New cardiology department opening next week. Modern equipment and top specialists.</p>
-                                    </div>
-                                    <div className="card border-0 mb-3 overflow-hidden rounded shadow-sm">
-                                        <img src="/assets/img/ad-banner-3.png" className="img-fluid w-100" alt="Ad 3" />
-                                    </div>
-
-                                    {/* ═══ Left Sidebar Extra Content ═══ */}
-                                    <div className="card bg-danger text-white border-0 mb-3 p-3 rounded shadow-sm">
-                                        <div className="d-flex align-items-center gap-3">
-                                            <div className="bg-white text-danger rounded-circle p-2 d-flex align-items-center justify-content-center shadow-sm" style={{ width: 45, height: 45 }}>
-                                                <i className="ti ti-phone-filled fs-4" />
-                                            </div>
-                                            <div>
-                                                <h6 className="fw-bold mb-0 text-white">Emergency Call</h6>
-                                                <p className="fs-14 fw-bold mb-0"><a href={`tel:${clinic.phone.replace(/\s+/g, '')}`} className="text-white text-decoration-none fw-bold">
-                                                        {clinic.phone}
-                                                    </a></p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Main Doctor Content Area */}
-                            <div className="col-lg-9 flex-fill p-4">
-                                {/* Top Navigation */}
-                                <div className="mb-4">
-                                    <h6 className="fw-semibold fs-14 mb-0">
-                                        <a href="#" onClick={(e) => { e.preventDefault(); setSelectedDocDetails(null); }} className="text-secondary text-decoration-none hover-primary">
-                                            <i className="ti ti-arrow-left me-1" />
-                                            Back to Search Results
-                                        </a>
-                                    </h6>
-                                </div>
-
-                                {/* Top Hero Card */}
-                                <div className="card border-0 shadow-sm mb-4">
-                                    <div className="card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
-                                        <div className="d-flex align-items-center flex-sm-nowrap flex-wrap gap-3">
-                                            <div className="me-3 doctor-profile-img">
-                                                <img
-                                                    src={selectedDocDetails.photo ? (
-                                                        selectedDocDetails.photo.startsWith('http') || selectedDocDetails.photo.startsWith('data:')
-                                                            ? selectedDocDetails.photo
-                                                            : selectedDocDetails.photo.includes('uploads')
-                                                                ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}${selectedDocDetails.photo.startsWith('/') ? '' : '/'}${selectedDocDetails.photo}`
-                                                                : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/uploads/doctors/${selectedDocDetails.photo}`
-                                                    ) : `https://placehold.co/120x120/1d4ed8/FFF?text=${selectedDocDetails.name.slice(0, 2).toUpperCase()}`}
-                                                    alt={selectedDocDetails.name}
-                                                    className="rounded"
-                                                    style={{ width: "100px", height: "100px", objectFit: "cover" }}
-                                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = `https://placehold.co/120x120/1d4ed8/FFF?text=${selectedDocDetails.name.slice(0, 2).toUpperCase()}` }}
-                                                />
-                                            </div>
-                                            <div className="flex-fill">
-                                                <div className="d-flex align-items-center mb-1 flex-wrap gap-2">
-                                                    <h6 className="mb-0 fw-semibold">{selectedDocDetails.name}</h6>
-                                                    {selectedDocDetails.specialization && (
-                                                        <span className="badge border bg-white text-dark fw-medium">
-                                                            <i className="ti ti-point-filled me-1 text-info" />
-                                                            {selectedDocDetails.specialization}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <span className="d-block mb-3 fs-13">
-                                                    {selectedDocDetails.qualification} {(selectedDocDetails as any).medicalLicenseNumber ? ` · License: ${(selectedDocDetails as any).medicalLicenseNumber}` : ""}
-                                                </span>
-                                                <div className="d-flex align-items-center flex-wrap gap-2">
-                                                    <p className="mb-0 fs-13">
-                                                        <i className="ti ti-building-hospital me-1" />
-                                                        Clinic : {(selectedDocDetails as any).clinicName || clinic.name}
-                                                    </p>
-                                                    <span className="badge fw-medium badge-soft-success">
-                                                        <i className="ti ti-point-filled me-1 text-success" />
-                                                        Available
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="text-end">
-                                            <p className="mb-2">Consultation Charge</p>
-                                            <h6 className="fs-18 fw-bold mb-3 text-dark">
-                                                ₹{selectedDocDetails.fee}
-                                                <span className="fw-normal text-secondary fs-14">
-                                                    {" "}
-                                                    / 30 Min
-                                                </span>
-                                            </h6>
-                                            <button
-                                                type="button"
-                                                onClick={() => openBooking(selectedDocDetails.id)}
-                                                className="btn btn-primary"
-                                            >
-                                                <i className="ti ti-calendar-event me-1" />
-                                                Book Appointment
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="row g-3">
-                                    <div className="col-lg-8">
-                                        <div className="card mb-3">
-                                            <div className="card-body">
-                                                <h5 className="fw-bold mb-3">Availability</h5>
-                                                <ul className="nav nav-tabs nav-bordered nav-border-bottom mb-3">
-                                                    {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-                                                        <li key={day} className="nav-item flex-fill">
-                                                            <button
-                                                                type="button"
-                                                                className={`nav-link text-center w-100 fw-semibold bg-transparent ${activeTab === day ? "active" : ""}`}
-                                                                onClick={() => setActiveTab(day)}
-                                                            >
-                                                                {day}
-                                                            </button>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                                <div className="d-flex align-items-center flex-wrap gap-2">
-                                                    {(() => {
-                                                        let scheds = (selectedDocDetails as any).schedules;
-                                                        if (typeof scheds === 'string') {
-                                                            try { scheds = JSON.parse(scheds); } catch (e) { scheds = {}; }
-                                                        }
-                                                        if (!scheds || typeof scheds !== 'object') scheds = {};
-
-                                                        const slots = (scheds as any)[activeTab] || [];
-                                                        if (!Array.isArray(slots) || slots.length === 0) {
-                                                            return <span className="text-muted">Not Available</span>;
-                                                        }
-
-                                                        return slots.map((slot: any, idx: number) => (
-                                                            <span key={idx} className="d-inline-flex align-items-center bg-light rounded flex-fill text-center justify-content-center p-2 text-dark" style={{ minWidth: "140px" }}>
-                                                                {slot.session ? `${slot.session}: ` : ""}{slot.from || slot.startTime} - {slot.to || slot.endTime}
-                                                            </span>
-                                                        ));
-                                                    })()}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="card mb-3">
-                                            <div className="card-body">
-                                                <h5 className="fw-bold mb-3">Short Bio</h5>
-                                                <p className="mb-0 text-muted">{selectedDocDetails.bio || "No bio provided."}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="card mb-3">
-                                            <div className="card-body">
-                                                <h5 className="fw-bold mb-3">Education Information</h5>
-                                                {((selectedDocDetails as any).educations || []).length > 0 ? (
-                                                    <ul className="activity-feed rounded mb-0">
-                                                        {((selectedDocDetails as any).educations || []).map((edu: any, idx: number) => (
-                                                            <li key={`edu-${idx}`} className="feed-item timeline-item" style={{ listStyle: "none", position: "relative", paddingLeft: "30px", marginBottom: "20px", borderLeft: "2px solid #e2e8f0" }}>
-                                                                <h6 className="fw-bold mb-1 fs-14">{edu.university ? `${edu.university} - ` : ""}{edu.degree}</h6>
-                                                                <p className="mb-0 text-muted fs-13">
-                                                                    {edu.from ? new Date(edu.from).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' }) : ""} - {edu.to ? new Date(edu.to).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' }) : "Present"}
-                                                                </p>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                ) : (
-                                                    <p className="text-muted mb-0">No education information added.</p>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="card mb-3">
-                                            <div className="card-body">
-                                                <h5 className="fw-bold mb-3">Awards &amp; Recognition</h5>
-                                                {((selectedDocDetails as any).awards || []).length > 0 ? (
-                                                    ((selectedDocDetails as any).awards || []).map((award: any, idx: number) => (
-                                                        <div key={`award-${idx}`} className={idx < (selectedDocDetails as any).awards.length - 1 ? "mb-3" : ""}>
-                                                            <div className="d-flex align-items-center mb-2">
-                                                                <span className="me-2">
-                                                                    <i className="ti ti-award" />
-                                                                </span>
-                                                                <h6 className="mb-0 fw-bold">{award.name || award.award} {award.year ? `(${award.year})` : ""}</h6>
-                                                            </div>
-                                                            <p className="mb-0 text-muted fs-13">{award.description || "—"}</p>
-                                                        </div>
-                                                    ))
-                                                ) : (
-                                                    <p className="text-muted mb-0">No awards added.</p>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="card">
-                                            <div className="card-body">
-                                                <h5 className="fw-bold mb-3">Certifications</h5>
-                                                {((selectedDocDetails as any).certifications || []).length > 0 ? (
-                                                    ((selectedDocDetails as any).certifications || []).map((cert: any, idx: number) => (
-                                                        <div key={`cert-${idx}`} className={idx < (selectedDocDetails as any).certifications.length - 1 ? "mb-3" : ""}>
-                                                            <div className="d-flex align-items-center mb-2">
-                                                                <span className="me-2">
-                                                                    <i className="ti ti-award" />
-                                                                </span>
-                                                                <h6 className="mb-0 fw-bold">{cert.name || cert.certification} {cert.year ? `(${cert.year})` : ""}</h6>
-                                                            </div>
-                                                            <p className="mb-0 text-muted fs-13">{cert.description || "—"}</p>
-                                                        </div>
-                                                    ))
-                                                ) : (
-                                                    <p className="text-muted mb-0">No certifications added.</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="col-lg-4">
-                                        <div className="card">
-                                            <div className="card-body">
-                                                <h6 className="fw-bold mb-4 fs-16">About</h6>
-                                                <div className="d-flex flex-column gap-3">
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="avatar rounded-circle bg-light text-dark fs-16 flex-shrink-0 me-3 d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                                                            <i className="ti ti-file" />
-                                                        </span>
-                                                        <div>
-                                                            <h6 className="fw-semibold fs-13 mb-1">Medical License Number</h6>
-                                                            <p className="mb-0 text-secondary" style={{ fontSize: "14px" }}>{(selectedDocDetails as any).medicalLicenseNumber || "—"}</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="avatar rounded-circle bg-light text-dark fs-16 flex-shrink-0 me-3 d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                                                            <i className="ti ti-map-pin" />
-                                                        </span>
-                                                        <div>
-                                                            <h6 className="fw-semibold fs-13 mb-1">Location</h6>
-                                                            <p className="mb-0 text-secondary" style={{ fontSize: "14px" }}>{clinic.address}</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="avatar rounded-circle bg-light text-dark fs-16 flex-shrink-0 me-3 d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                                                            <i className="ti ti-calendar-event" />
-                                                        </span>
-                                                        <div>
-                                                            <h6 className="fw-semibold fs-13 mb-1">DOB</h6>
-                                                            <p className="mb-0 text-secondary" style={{ fontSize: "14px" }}>{(selectedDocDetails as any).dob ? new Date((selectedDocDetails as any).dob).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' }) : "—"}</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="avatar rounded-circle bg-light text-dark fs-16 flex-shrink-0 me-3 d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                                                            <i className="ti ti-droplet-filled" />
-                                                        </span>
-                                                        <div>
-                                                            <h6 className="fw-semibold fs-13 mb-1">Blood Group</h6>
-                                                            <p className="mb-0 text-secondary" style={{ fontSize: "14px" }}>{(selectedDocDetails as any).bloodGroup || "—"}</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="avatar rounded-circle bg-light text-dark fs-16 flex-shrink-0 me-3 d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                                                            <i className="ti ti-user-check" />
-                                                        </span>
-                                                        <div>
-                                                            <h6 className="fw-semibold fs-13 mb-1">Year of Experience</h6>
-                                                            <p className="mb-0 text-secondary" style={{ fontSize: "14px" }}>{selectedDocDetails.experience ? `${selectedDocDetails.experience}+ Years` : "—"}</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="avatar rounded-circle bg-light text-dark fs-16 flex-shrink-0 me-3 d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                                                            <i className="ti ti-gender-male" />
-                                                        </span>
-                                                        <div>
-                                                            <h6 className="fw-semibold fs-13 mb-1">Gender</h6>
-                                                            <p className="mb-0 text-secondary" style={{ fontSize: "14px" }}>{(selectedDocDetails as any).gender || "—"}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* ═══ Right Sidebar Fill Widgets ═══ */}
-                                        <div className="card border-0 shadow-sm mb-4">
-                                            <div className="card-body p-2 px-3">
-                                                <h6 className="fw-bold mb-2 fs-14 d-flex align-items-center">
-                                                    <i className="ti ti-clock-hour-4 me-2 text-primary" />
-                                                    Clinic Hours
-                                                </h6>
-                                                <table className="table table-borderless table-sm mb-0">
-                                                    <tbody className="fs-13">
-                                                        {clinic.workingDays?.schedules ? (
-                                                            clinic.workingDays.schedules.map((s: any, i: number) => {
-                                                                const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                                                                return (
-                                                                    <tr key={i} className={!s.isActive ? 'opacity-50' : ''}>
-                                                                        <td>{dayNames[s.day]}</td>
-                                                                        <td className={`text-end fw-medium ${s.isActive ? 'text-primary' : 'text-danger'}`}>
-                                                                            {s.isActive ? `${s.startTime} - ${s.endTime}` : 'Closed'}
-                                                                        </td>
-                                                                    </tr>
-                                                                );
-                                                            })
-                                                        ) : (
-                                                            <>
-                                                                <tr><td>Mon - Fri</td><td className="text-end text-primary fw-medium">09:00 - 18:00</td></tr>
-                                                                <tr className="text-danger"><td>Saturday</td><td className="text-end fw-medium">10:00 - 14:00</td></tr>
-                                                                <tr className="opacity-50"><td>Sunday</td><td className="text-end">Closed</td></tr>
-                                                            </>
-                                                        )}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Bottom Proper Section: Patient Reviews & Trust elements */}
-                                <div className="mt-4">
-                                    <div className="card shadow-sm border-0">
-                                        <div className="card-body p-4">
-                                            <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
-                                                <h5 className="fw-bold mb-0">Patient Reviews & Feedback</h5>
-                                                <div className="d-flex align-items-center gap-2">
-                                                    <span className="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fw-bold">4.8 / 5.0 Rating</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Stylized Review Cards */}
-                                            <div className="row g-3">
-                                                {[
-                                                    { name: "Rahul Sharma", date: "12 May 2026", rating: 5, initial: "R", color: "primary", comment: "Excellent experience. The doctor was very professional and explained the diagnosis clearly." },
-                                                    { name: "Sanya Gupta", date: "05 May 2026", rating: 5, initial: "S", color: "success", comment: "The staff was helpful and the treatment was very effective. Minimal wait time." },
-                                                    { name: "Ankit Verma", date: "28 April 2026", rating: 4, initial: "A", color: "info", comment: "Highly recommended for orthopedic consultation. Modern clinic and great facilities." }
-                                                ].map((rev, i) => (
-                                                    <div key={i} className="col-lg-4">
-                                                        <div className="p-3 rounded-3 border bg-white h-100 shadow-none hover-shadow-sm transition-all">
-                                                            <div className="d-flex align-items-center mb-3">
-                                                                <div className={`avatar avatar-sm rounded-circle bg-soft-${rev.color} text-${rev.color} fw-bold me-2 d-flex align-items-center justify-content-center`} style={{ width: 35, height: 35 }}>{rev.initial}</div>
-                                                                <div className="flex-fill">
-                                                                    <div className="text-warning small mb-0">
-                                                                        {Array.from({ length: rev.rating }).map((_, idx) => <i key={idx} className="ti ti-star-filled" />)}
-                                                                    </div>
-                                                                    <small className="text-muted fs-11">{rev.date}</small>
-                                                                </div>
-                                                            </div>
-                                                            <h6 className="fw-bold fs-13 mb-1">{rev.name}</h6>
-                                                            <p className="text-secondary fs-12 mb-0 line-clamp-3">"{rev.comment}"</p>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-
-                                            <div className="text-center mt-4">
-                                                <button className="btn btn-primary px-5 py-2 rounded-pill fw-bold shadow-sm">
-                                                    View All 120+ Reviews
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Final Action Bar */}
-                                    <div className="card shadow-sm border-0 mt-4 overflow-hidden" style={{ background: "linear-gradient(90deg, #1d4ed8 0%, #3b82f6 100%)" }}>
-                                        <div className="card-body p-4">
-                                            <div className="d-flex align-items-center justify-content-between flex-wrap gap-4 text-white">
-                                                <div>
-                                                    <h5 className="fw-bold text-white mb-1">Still Have Questions?</h5>
-                                                    <p className="mb-0 opacity-75 fs-14">Get a free pre-consultation chat with our support team to clear your doubts.</p>
-                                                </div>
-                                                <div className="d-flex gap-3">
-                                                    <button className="btn btn-light fw-bold px-4" onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}>Contact Support</button>
-                                                    <button type="button" onClick={() => openBooking("")} className="btn btn-warning fw-bold px-4">Book Appointment</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            ) : (
-                <>
                     {/* ══════ HERO ══════ */}
                     <section id="hero" className="position-relative overflow-hidden" style={{ padding: "40px 0 60px", background: "transparent" }}>
                         <div className="container position-relative z-1">
@@ -1180,87 +784,185 @@ export default function ClinicLandingPage() {
                             </div>
 
                             <div className="row g-4 justify-content-center">
-                                {displayDoctors.map((doc, idx) => (
-                                    <div key={idx} className="col-12 col-md-6 col-lg-6">
-                                        <div
-                                            className="card h-100 border bg-white shadow-sm rounded-4 overflow-hidden d-flex flex-column flex-sm-row text-start"
-                                            style={{ cursor: "pointer", transition: "all 0.2s ease-in-out" }}
-                                            onMouseOver={e => e.currentTarget.style.transform = "translateY(-4px)"}
-                                            onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}
-                                            onClick={() => setSelectedDocDetails(doc)}
-                                        >
-                                            {/* Photo container */}
-                                            <div className="p-4 d-flex align-items-center justify-content-center bg-light bg-opacity-25" style={{ minWidth: "160px", maxWidth: "160px" }}>
-                                                <img
-                                                    src={doc.photo ? (
-                                                        doc.photo.startsWith('http') || doc.photo.startsWith('data:')
-                                                            ? doc.photo
-                                                            : doc.photo.includes('uploads')
-                                                                ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}${doc.photo.startsWith('/') ? '' : '/'}${doc.photo}`
-                                                                : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/uploads/doctors/${doc.photo}`
-                                                    ) : "/assets/img/doctor-placeholder.png"}
-                                                    alt={doc.name}
-                                                    className="rounded-circle object-fit-cover shadow-sm bg-white"
-                                                    style={{ width: "110px", height: "110px", border: "4px solid #fff" }}
-                                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/assets/img/doctor-placeholder.png" }}
-                                                />
-                                            </div>
-
-                                            {/* Doctor details */}
-                                            <div className="card-body p-4 d-flex flex-column justify-content-between">
-                                                <div>
-                                                    <div className="d-flex align-items-start justify-content-between mb-1 gap-2">
-                                                        <h5 className="fw-bold text-dark mb-0 fs-6">{doc.name}</h5>
-                                                        <span className="badge bg-primary bg-opacity-10 text-primary fw-bold px-2 py-1" style={{ fontSize: "11px", whiteSpace: "normal" }}>
-                                                            {doc.specialization}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-secondary fw-semibold mb-2" style={{ fontSize: "13px" }}>{doc.qualification}</p>
-
-                                                    {/* Truncated Biography/Bio */}
-                                                    {(doc as any).bio && (
-                                                        <p className="text-dark mb-3" style={{ fontSize: "14px", display: "-webkit-box", WebkitLineClamp: "2", WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: "1.4" }}>
-                                                            {(doc as any).bio}
-                                                        </p>
-                                                    )}
-
-                                                    <div className="d-flex flex-wrap gap-3 mb-3 text-secondary" style={{ fontSize: "12px" }}>
-                                                        <span><i className="ti ti-briefcase me-1" />{doc.experience} Yrs Exp.</span>
-                                                        {(doc as any).medicalLicenseNumber && (
-                                                            <span><i className="ti ti-id me-1" />Lic: {(doc as any).medicalLicenseNumber}</span>
-                                                        )}
+                                {displayDoctors.map((doc, idx) => {
+                                    return (
+                                        <div key={idx} className="col-12 col-md-6 col-lg-6">
+                                            <div
+                                                className="card h-100 border bg-white shadow-sm rounded-4 overflow-hidden d-flex flex-column text-start"
+                                                style={{ transition: "all 0.2s ease-in-out" }}
+                                                onMouseOver={e => e.currentTarget.style.transform = "translateY(-4px)"}
+                                                onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}
+                                            >
+                                                {/* Top Section: Photo and Basic Info Row */}
+                                                <div className="d-flex flex-column flex-sm-row p-3 pb-2 align-items-center align-items-sm-start gap-3">
+                                                    {/* Photo container */}
+                                                    <div className="d-flex align-items-center justify-content-center" style={{ minWidth: "90px", maxWidth: "90px" }}>
+                                                        <img
+                                                            src={doc.photo ? (
+                                                                doc.photo.startsWith('http') || doc.photo.startsWith('data:')
+                                                                    ? doc.photo
+                                                                    : doc.photo.includes('uploads')
+                                                                        ? `${import.meta.env.VITE_API_URL || "http://localhost:5000"}${doc.photo.startsWith('/') ? '' : '/'}${doc.photo}`
+                                                                        : `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/uploads/doctors/${doc.photo}`
+                                                            ) : "/assets/img/doctor-placeholder.png"}
+                                                            alt={doc.name}
+                                                            className="rounded-circle object-fit-cover shadow-sm bg-white"
+                                                            style={{ width: "80px", height: "80px", border: "3px solid #fff" }}
+                                                            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/assets/img/doctor-placeholder.png" }}
+                                                        />
                                                     </div>
 
-                                                    <div className="bg-light rounded-3 p-2 mb-3" style={{ fontSize: "12px" }}>
-                                                        <div className="d-flex align-items-center justify-content-between mb-1">
-                                                            <span className="text-secondary"><i className="ti ti-calendar me-1" />Days:</span>
-                                                            <span className="text-dark fw-semibold">{doc.days}</span>
+                                                    {/* Doctor details */}
+                                                    <div className="flex-grow-1 w-100">
+                                                        <div className="d-flex align-items-start justify-content-between mb-1 gap-2">
+                                                            <h5 className="fw-bold text-dark mb-0 fs-6">{doc.name}</h5>
+                                                            <span className="badge bg-primary bg-opacity-10 text-primary fw-bold px-2 py-0.5" style={{ fontSize: "11px", whiteSpace: "normal" }}>
+                                                                {doc.specialization}
+                                                            </span>
                                                         </div>
-                                                        <div className="d-flex align-items-center justify-content-between">
-                                                            <span className="text-secondary"><i className="ti ti-clock me-1" />Timings:</span>
-                                                            <span className="text-dark fw-semibold">{doc.timing}</span>
+                                                        <p className="fw-semibold mb-1 text-secondary" style={{ fontSize: "13px" }}>
+                                                            {doc.qualification}
+                                                        </p>
+
+                                                        <div className="d-flex flex-wrap gap-2.5 mb-1" style={{ fontSize: "12px", color: "#64748b" }}>
+                                                            <span><i className="ti ti-briefcase me-1" />{doc.experience} Yrs Exp.</span>
+                                                            {doc.medicalLicenseNumber && (
+                                                                <span><i className="ti ti-id me-1" />Lic: {doc.medicalLicenseNumber}</span>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="d-flex align-items-center justify-content-between pt-1">
+                                                            <div>
+                                                                <span className="text-secondary" style={{ fontSize: "11px" }}>Fee: </span>
+                                                                <span className="text-success fw-bold fs-6 ms-1">₹{doc.fee}</span>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => { e.stopPropagation(); openBooking(doc.id); }}
+                                                                className="btn btn-primary fw-bold px-3 py-1 rounded-3"
+                                                                style={{ fontSize: "12px" }}
+                                                            >
+                                                                Book Appointment
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <div className="d-flex align-items-center justify-content-between gap-2 pt-2">
-                                                    <div>
-                                                        <span className="text-secondary d-block" style={{ fontSize: "11px" }}>Consultation Fee</span>
-                                                        <span className="text-success fw-bold fs-5">₹{doc.fee}</span>
+                                                {/* Detailed Info Block (Permanent & Compact) */}
+                                                <div className="border-top p-3 bg-light bg-opacity-25 w-100 flex-grow-1" style={{ borderColor: "#e2e8f0" }}>
+                                                    <div className="row g-2">
+                                                        {/* Col 1: Bio & Lists */}
+                                                        <div className="col-12 col-md-7">
+                                                            {doc.bio && (
+                                                                <div className="mb-2">
+                                                                    <h6 className="fw-bold mb-0.5 text-dark" style={{ fontSize: "14px" }}>Short Bio</h6>
+                                                                    <p className="text-dark mb-0" style={{ fontSize: "15px", lineHeight: "1.4" }}>
+                                                                        {doc.bio}
+                                                                    </p>
+                                                                </div>
+                                                            )}
+
+                                                            {(doc.educations || []).length > 0 && (
+                                                                <div className="mb-2">
+                                                                    <h6 className="fw-bold mb-0.5 text-dark" style={{ fontSize: "14px" }}>Education</h6>
+                                                                    <ul className="ps-3 mb-0 text-dark" style={{ fontSize: "13px" }}>
+                                                                        {(doc.educations || []).map((edu: any, idx: number) => (
+                                                                            <li key={idx} className="mb-0.5">
+                                                                                <strong>{edu.degree}</strong>{edu.university ? ` - ${edu.university}` : ""}
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+
+                                                            {(doc.awards || []).length > 0 && (
+                                                                <div className="mb-2">
+                                                                    <h6 className="fw-bold mb-0.5 text-dark" style={{ fontSize: "14px" }}>Awards</h6>
+                                                                    <ul className="ps-3 mb-0 text-dark" style={{ fontSize: "13px" }}>
+                                                                        {(doc.awards || []).map((award: any, idx: number) => (
+                                                                            <li key={idx} className="mb-0.5">
+                                                                                <strong>{award.name || award.award}</strong>{award.year ? ` (${award.year})` : ""}
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+
+                                                            {(doc.certifications || []).length > 0 && (
+                                                                <div>
+                                                                    <h6 className="fw-bold mb-0.5 text-dark" style={{ fontSize: "14px" }}>Certifications</h6>
+                                                                    <ul className="ps-3 mb-0 text-dark" style={{ fontSize: "13px" }}>
+                                                                        {(doc.certifications || []).map((cert: any, idx: number) => (
+                                                                            <li key={idx} className="mb-0.5">
+                                                                                <strong>{cert.name || cert.certification}</strong>{cert.year ? ` (${cert.year})` : ""}
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Col 2: About Details & Availability */}
+                                                        <div className="col-12 col-md-5">
+                                                            <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: "14px" }}>About Doctor</h6>
+                                                            <div className="d-flex flex-column gap-1 mb-2" style={{ fontSize: "12px" }}>
+                                                                <div className="d-flex justify-content-between border-bottom pb-0.5">
+                                                                    <span className="text-muted">License:</span>
+                                                                    <span className="text-dark fw-semibold">{doc.medicalLicenseNumber || "—"}</span>
+                                                                </div>
+                                                                <div className="d-flex justify-content-between border-bottom pb-0.5">
+                                                                    <span className="text-muted">Gender:</span>
+                                                                    <span className="text-dark fw-semibold">{doc.gender || "—"}</span>
+                                                                </div>
+                                                                <div className="d-flex justify-content-between border-bottom pb-0.5">
+                                                                    <span className="text-muted">DOB:</span>
+                                                                    <span className="text-dark fw-semibold">{doc.dob ? new Date(doc.dob).toLocaleDateString("en-GB") : "—"}</span>
+                                                                </div>
+                                                                <div className="d-flex justify-content-between border-bottom pb-0.5">
+                                                                    <span className="text-muted">Blood Group:</span>
+                                                                    <span className="text-dark fw-semibold">{doc.bloodGroup || "—"}</span>
+                                                                </div>
+                                                                <div className="d-flex justify-content-between border-bottom pb-0.5">
+                                                                    <span className="text-muted">Location:</span>
+                                                                    <span className="text-dark fw-semibold text-end" style={{ maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={clinic.address}>{clinic.address}</span>
+                                                                </div>
+                                                            </div>
+
+                                                            <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: "14px" }}>Weekly Availability</h6>
+                                                            <div className="bg-light p-1.5 rounded border" style={{ fontSize: "11.5px", maxHeight: "120px", overflowY: "auto" }}>
+                                                                {(() => {
+                                                                    let scheds = doc.schedules;
+                                                                    if (typeof scheds === 'string') {
+                                                                        try { scheds = JSON.parse(scheds); } catch (e) { scheds = {}; }
+                                                                    }
+                                                                    if (!scheds || typeof scheds !== 'object') scheds = {};
+                                                                    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+                                                                    return days.map(day => {
+                                                                        const slots = scheds[day] || [];
+                                                                        return (
+                                                                            <div key={day} className="mb-1 pb-0.5 border-bottom last-border-0">
+                                                                                <div className="fw-semibold text-primary">{day}</div>
+                                                                                {slots.length > 0 ? (
+                                                                                    slots.map((slot: any, sIdx: number) => (
+                                                                                        <div key={sIdx} className="text-muted ps-1">
+                                                                                            • {slot.session ? `${slot.session}: ` : ""}{slot.from || slot.startTime} - {slot.to || slot.endTime}
+                                                                                        </div>
+                                                                                    ))
+                                                                                ) : (
+                                                                                    <div className="text-muted ps-1 italic">Not Available</div>
+                                                                                )}
+                                                                            </div>
+                                                                        );
+                                                                    });
+                                                                })()}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => { e.stopPropagation(); openBooking(doc.id); }}
-                                                        className="btn btn-primary fw-bold px-3 py-2 rounded-3"
-                                                        style={{ fontSize: "12px" }}
-                                                    >
-                                                        Book Appointment
-                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </section>
@@ -1408,9 +1110,9 @@ export default function ClinicLandingPage() {
                                 <div className="container py-4 text-center">
                                     <h3 className="fw-bold text-uppercase mb-5" style={{ color: "#1d4ed8", letterSpacing: "1px", fontSize: "26px", lineHeight: "1.3" }}>CLINIC GALLERY</h3>
 
-                                    <div className="row g-4 justify-content-center">
+                                    <div className="row g-4">
                                         {clinic.gallery.map((img, i) => (
-                                            <div key={i} className="col-lg-4 col-md-6 col-12">
+                                            <div key={i} className="col-lg-3 col-md-6 col-12">
                                                 <div 
                                                     className="card border rounded-3 overflow-hidden bg-white shadow-sm" 
                                                     style={{ 
@@ -1442,12 +1144,12 @@ export default function ClinicLandingPage() {
                                                             <i className="ti ti-zoom-in text-white fs-1" />
                                                         </div>
                                                     </div>
-                                                    <div className="card-body p-3 text-center border-top bg-light-50" style={{ borderColor: "#e2e8f0" }}>
+                                                    <div className="card-body py-2 px-3 text-start border-top bg-light-50" style={{ borderColor: "#e2e8f0" }}>
                                                         <h6 className="fw-bold mb-1" style={{ fontSize: "16px", color: "#1d4ed8" }}>
                                                             {img.category || "Gallery Image"}
                                                         </h6>
                                                         {img.caption && (
-                                                            <p className="text-secondary mb-0" style={{ fontSize: "13px" }}>
+                                                            <p className="text-dark mb-0" style={{ fontSize: "13px", color: "#000000" }}>
                                                                 {img.caption}
                                                             </p>
                                                         )}
@@ -1462,9 +1164,7 @@ export default function ClinicLandingPage() {
                     }
 
 
-                </>
-            )
-            }
+
 
 
             {/* ══════ DARK BOTTOM FOOTER ══════ */}

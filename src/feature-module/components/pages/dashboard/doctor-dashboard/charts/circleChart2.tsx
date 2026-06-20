@@ -1,7 +1,13 @@
 import { useState } from "react";
 import Chart from "react-apexcharts";
 
-const CircleChart2 = () => {
+interface CircleChart2Props {
+  completed?: number;
+  pending?: number;
+  cancelled?: number;
+}
+
+const CircleChart2 = ({ completed = 0, pending = 0, cancelled = 0 }: CircleChart2Props) => {
   const [chartOptions] = useState<any>({
     chart: {
       type: "donut",
@@ -35,7 +41,7 @@ const CircleChart2 = () => {
     },
   });
 
-  const [series] = useState([80, 10, 10]);
+  const series = [completed, pending, cancelled];
 
   return (
     <div id="circle-chart-2">

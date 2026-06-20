@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Link, useParams } from "react-router";
 import { all_routes } from "../../../routes/all_routes";
 import FooterFront from "./FooterFront";
-import { DatePicker } from "antd";
+import { DatePicker, Select } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import { resolveMediaUrl } from "../../../../core/config/api";
 
@@ -25,6 +25,10 @@ interface Doctor {
     awards?: any[];
     certifications?: any[];
     schedules?: any;
+    maritalStatus?: string;
+    languagesSpoken?: string[];
+    department?: string;
+    designation?: string;
 }
 interface Review { name: string; rating: number; feedback: string; }
 interface Service { icon: string; label: string; }
@@ -39,6 +43,7 @@ interface ClinicData {
     workingDays: { schedules: any[]; offDays: number[] } | null;
     onboardingStep?: number;
     nextAppointmentCode?: string;
+    rawServices?: { id: string; name: string; price: number; departmentId: string }[];
 }
 
 const Stars = ({ n, color, size }: { n: number; color?: string; size?: number }) => (
@@ -88,6 +93,8 @@ export default function ClinicLandingPage() {
     });
     const [bookFormErrors, setBookFormErrors] = useState<any>({});
     const [bookLoading, setBookLoading] = useState(false);
+    const [isSessionMode, setIsSessionMode] = useState(false);
+    const [selectedServices, setSelectedServices] = useState<string[]>([]);
     const [bookSuccess, setBookSuccess] = useState<string | null>(null);
     const [bookError, setBookError] = useState<string | null>(null);
 
@@ -135,6 +142,8 @@ export default function ClinicLandingPage() {
         setBookSuccess(null);
         setBookError(null);
         setGeneratedCreds(null);
+        setIsSessionMode(false);
+        setSelectedServices([]);
         setShowModal(true);
         setSelectedDocDetails(null); // Close doctor details modal if it was open
     };
@@ -264,6 +273,10 @@ export default function ClinicLandingPage() {
         if (!docId) { newErrors.doctorId = "Please select a doctor"; hasError = true; }
         if (!bookForm.date) { newErrors.date = "Please select a date"; hasError = true; }
         if (!bookForm.time) { newErrors.time = "Please select a time slot"; hasError = true; }
+        if (selectedServices.length === 0 && clinic?.rawServices && clinic.rawServices.length > 0) {
+            newErrors.services = "Please select at least one service";
+            hasError = true;
+        }
 
         if (hasError) {
             setBookFormErrors(newErrors);
@@ -286,7 +299,9 @@ export default function ClinicLandingPage() {
                     doctorId: docId,
                     date: bookForm.date!.format("YYYY-MM-DD"),
                     time: bookForm.time,
-                    reason: bookForm.reason
+                    reason: bookForm.reason,
+                    appointmentType: isSessionMode ? "Session" : "Online Booking",
+                    serviceIds: isSessionMode ? selectedServices : []
                 }),
             });
             const data = await res.json();
@@ -785,6 +800,7 @@ export default function ClinicLandingPage() {
 
                             <div className="row g-4 justify-content-center">
                                 {displayDoctors.map((doc, idx) => {
+                                    const ratingValue = 4.0 + ((idx * 3 + 5) % 11) / 10;
                                     return (
                                         <div key={idx} className="col-12 col-md-6 col-lg-6">
                                             <div
@@ -816,15 +832,21 @@ export default function ClinicLandingPage() {
                                                     <div className="flex-grow-1 w-100">
                                                         <div className="d-flex align-items-start justify-content-between mb-1 gap-2">
                                                             <h5 className="fw-bold text-dark mb-0 fs-6">{doc.name}</h5>
-                                                            <span className="badge bg-primary bg-opacity-10 text-primary fw-bold px-2 py-0.5" style={{ fontSize: "11px", whiteSpace: "normal" }}>
-                                                                {doc.specialization}
-                                                            </span>
+                                                            <div className="d-flex flex-column align-items-end gap-1">
+                                                                <span className="badge bg-primary bg-opacity-10 text-primary fw-bold px-2 py-0.5" style={{ fontSize: "11px", whiteSpace: "normal" }}>
+                                                                    {doc.specialization}
+                                                                </span>
+                                                                <span className="d-flex align-items-center gap-1">
+                                                                    <Stars n={ratingValue} size={12} />
+                                                                    <span className="fw-bold text-dark" style={{ fontSize: "11px" }}>{ratingValue.toFixed(1)}</span>
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        <p className="fw-semibold mb-1 text-secondary" style={{ fontSize: "13px" }}>
+                                                        <p className="fw-semibold mb-1 text-dark" style={{ fontSize: "13px", color: "#212529" }}>
                                                             {doc.qualification}
                                                         </p>
 
-                                                        <div className="d-flex flex-wrap gap-2.5 mb-1" style={{ fontSize: "12px", color: "#64748b" }}>
+                                                        <div className="d-flex flex-wrap gap-2.5 mb-1 align-items-center" style={{ fontSize: "12px", color: "#64748b" }}>
                                                             <span><i className="ti ti-briefcase me-1" />{doc.experience} Yrs Exp.</span>
                                                             {doc.medicalLicenseNumber && (
                                                                 <span><i className="ti ti-id me-1" />Lic: {doc.medicalLicenseNumber}</span>
@@ -834,7 +856,7 @@ export default function ClinicLandingPage() {
                                                         <div className="d-flex align-items-center justify-content-between pt-1">
                                                             <div>
                                                                 <span className="text-secondary" style={{ fontSize: "11px" }}>Fee: </span>
-                                                                <span className="text-success fw-bold fs-6 ms-1">₹{doc.fee}</span>
+                                                                <span className="text-dark fw-bold fs-6 ms-1" style={{ color: "#212529" }}>₹{doc.fee}</span>
                                                             </div>
                                                             <button
                                                                 type="button"
@@ -851,7 +873,7 @@ export default function ClinicLandingPage() {
                                                 {/* Detailed Info Block (Permanent & Compact) */}
                                                 <div className="border-top p-3 bg-light bg-opacity-25 w-100 flex-grow-1" style={{ borderColor: "#e2e8f0" }}>
                                                     <div className="row g-2">
-                                                        {/* Col 1: Bio & Lists */}
+                                                        {/* Col 1: Bio & Weekly Availability */}
                                                         <div className="col-12 col-md-7">
                                                             {doc.bio && (
                                                                 <div className="mb-2">
@@ -862,99 +884,94 @@ export default function ClinicLandingPage() {
                                                                 </div>
                                                             )}
 
-                                                            {(doc.educations || []).length > 0 && (
-                                                                <div className="mb-2">
-                                                                    <h6 className="fw-bold mb-0.5 text-dark" style={{ fontSize: "14px" }}>Education</h6>
-                                                                    <ul className="ps-3 mb-0 text-dark" style={{ fontSize: "13px" }}>
-                                                                        {(doc.educations || []).map((edu: any, idx: number) => (
-                                                                            <li key={idx} className="mb-0.5">
-                                                                                <strong>{edu.degree}</strong>{edu.university ? ` - ${edu.university}` : ""}
-                                                                            </li>
-                                                                        ))}
-                                                                    </ul>
+                                                            {/* Weekly Availability Grid (No scrollbar, occupies the empty bio area) */}
+                                                            <div className="mt-3">
+                                                                <h6 className="fw-bold mb-2 text-dark" style={{ fontSize: "14px" }}>Weekly Availability</h6>
+                                                                <div className="row row-cols-2 row-cols-sm-3 g-2">
+                                                                    {(() => {
+                                                                        let scheds = doc.schedules;
+                                                                        if (typeof scheds === 'string') {
+                                                                            try { scheds = JSON.parse(scheds); } catch (e) { scheds = {}; }
+                                                                        }
+                                                                        if (!scheds || typeof scheds !== 'object') scheds = {};
+                                                                        const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+                                                                        return days.map(day => {
+                                                                            const slots = scheds[day] || [];
+                                                                            return (
+                                                                                <div key={day} className="col">
+                                                                                    <div className="bg-light p-2 rounded border h-100" style={{ minHeight: "56px" }}>
+                                                                                        <div className="fw-bold text-primary mb-1" style={{ fontSize: "12px" }}>{day}</div>
+                                                                                        {slots.length > 0 ? (
+                                                                                            slots.map((slot: any, sIdx: number) => {
+                                                                                                const fmt = (t: string) => t ? dayjs(t, ["HH:mm:ss", "HH:mm"]).format("h:mm A") : "";
+                                                                                                const fromTime = fmt(slot.from || slot.startTime || "");
+                                                                                                const toTime = fmt(slot.to || slot.endTime || "");
+                                                                                                return (
+                                                                                                    <div key={sIdx} className="text-dark fw-medium" style={{ fontSize: "11px" }}>
+                                                                                                        {fromTime} – {toTime}
+                                                                                                    </div>
+                                                                                                );
+                                                                                            })
+                                                                                        ) : (
+                                                                                            <span className="text-muted italic" style={{ fontSize: "11px" }}>Closed</span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            );
+                                                                        });
+                                                                    })()}
                                                                 </div>
-                                                            )}
-
-                                                            {(doc.awards || []).length > 0 && (
-                                                                <div className="mb-2">
-                                                                    <h6 className="fw-bold mb-0.5 text-dark" style={{ fontSize: "14px" }}>Awards</h6>
-                                                                    <ul className="ps-3 mb-0 text-dark" style={{ fontSize: "13px" }}>
-                                                                        {(doc.awards || []).map((award: any, idx: number) => (
-                                                                            <li key={idx} className="mb-0.5">
-                                                                                <strong>{award.name || award.award}</strong>{award.year ? ` (${award.year})` : ""}
-                                                                            </li>
-                                                                        ))}
-                                                                    </ul>
-                                                                </div>
-                                                            )}
-
-                                                            {(doc.certifications || []).length > 0 && (
-                                                                <div>
-                                                                    <h6 className="fw-bold mb-0.5 text-dark" style={{ fontSize: "14px" }}>Certifications</h6>
-                                                                    <ul className="ps-3 mb-0 text-dark" style={{ fontSize: "13px" }}>
-                                                                        {(doc.certifications || []).map((cert: any, idx: number) => (
-                                                                            <li key={idx} className="mb-0.5">
-                                                                                <strong>{cert.name || cert.certification}</strong>{cert.year ? ` (${cert.year})` : ""}
-                                                                            </li>
-                                                                        ))}
-                                                                    </ul>
-                                                                </div>
-                                                            )}
+                                                            </div>
                                                         </div>
 
-                                                        {/* Col 2: About Details & Availability */}
+                                                        {/* Col 2: About Details, Education, Awards, Certifications */}
                                                         <div className="col-12 col-md-5">
                                                             <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: "14px" }}>About Doctor</h6>
-                                                            <div className="d-flex flex-column gap-1 mb-2" style={{ fontSize: "12px" }}>
+                                                            <div className="d-flex flex-column gap-1" style={{ fontSize: "12px" }}>
                                                                 <div className="d-flex justify-content-between border-bottom pb-0.5">
-                                                                    <span className="text-muted">License:</span>
-                                                                    <span className="text-dark fw-semibold">{doc.medicalLicenseNumber || "—"}</span>
+                                                                    <span className="text-dark fw-bold">License:</span>
+                                                                    <span className="text-dark fw-semibold">{doc.medicalLicenseNumber || "null"}</span>
                                                                 </div>
                                                                 <div className="d-flex justify-content-between border-bottom pb-0.5">
-                                                                    <span className="text-muted">Gender:</span>
-                                                                    <span className="text-dark fw-semibold">{doc.gender || "—"}</span>
+                                                                    <span className="text-dark fw-bold">Gender:</span>
+                                                                    <span className="text-dark fw-semibold">{doc.gender || "null"}</span>
                                                                 </div>
                                                                 <div className="d-flex justify-content-between border-bottom pb-0.5">
-                                                                    <span className="text-muted">DOB:</span>
-                                                                    <span className="text-dark fw-semibold">{doc.dob ? new Date(doc.dob).toLocaleDateString("en-GB") : "—"}</span>
+                                                                    <span className="text-dark fw-bold">Years of Experience:</span>
+                                                                    <span className="text-dark fw-semibold">{doc.experience ? `${doc.experience} Yrs Exp.` : "null"}</span>
                                                                 </div>
                                                                 <div className="d-flex justify-content-between border-bottom pb-0.5">
-                                                                    <span className="text-muted">Blood Group:</span>
-                                                                    <span className="text-dark fw-semibold">{doc.bloodGroup || "—"}</span>
+                                                                    <span className="text-dark fw-bold">Marital Status:</span>
+                                                                    <span className="text-dark fw-semibold">{doc.maritalStatus || "null"}</span>
                                                                 </div>
                                                                 <div className="d-flex justify-content-between border-bottom pb-0.5">
-                                                                    <span className="text-muted">Location:</span>
-                                                                    <span className="text-dark fw-semibold text-end" style={{ maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={clinic.address}>{clinic.address}</span>
+                                                                    <span className="text-dark fw-bold">Blood Group:</span>
+                                                                    <span className="text-dark fw-semibold">{doc.bloodGroup || "null"}</span>
+                                                                </div>
+                                                                <div className="d-flex justify-content-between border-bottom pb-0.5">
+                                                                    <span className="text-dark fw-bold">Languages:</span>
+                                                                    <span className="text-dark fw-semibold">{(doc.languagesSpoken && doc.languagesSpoken.length > 0) ? doc.languagesSpoken.join(", ") : "null"}</span>
+                                                                </div>
+                                                                <div className="d-flex justify-content-between border-bottom pb-0.5">
+                                                                    <span className="text-dark fw-bold">Location:</span>
+                                                                    <span className="text-dark fw-semibold text-end" style={{ maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={clinic.address}>{clinic.address || "null"}</span>
                                                                 </div>
                                                             </div>
 
-                                                            <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: "14px" }}>Weekly Availability</h6>
-                                                            <div className="bg-light p-1.5 rounded border" style={{ fontSize: "11.5px", maxHeight: "120px", overflowY: "auto" }}>
-                                                                {(() => {
-                                                                    let scheds = doc.schedules;
-                                                                    if (typeof scheds === 'string') {
-                                                                        try { scheds = JSON.parse(scheds); } catch (e) { scheds = {}; }
-                                                                    }
-                                                                    if (!scheds || typeof scheds !== 'object') scheds = {};
-                                                                    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-                                                                    return days.map(day => {
-                                                                        const slots = scheds[day] || [];
-                                                                        return (
-                                                                            <div key={day} className="mb-1 pb-0.5 border-bottom last-border-0">
-                                                                                <div className="fw-semibold text-primary">{day}</div>
-                                                                                {slots.length > 0 ? (
-                                                                                    slots.map((slot: any, sIdx: number) => (
-                                                                                        <div key={sIdx} className="text-muted ps-1">
-                                                                                            • {slot.session ? `${slot.session}: ` : ""}{slot.from || slot.startTime} - {slot.to || slot.endTime}
-                                                                                        </div>
-                                                                                    ))
-                                                                                ) : (
-                                                                                    <div className="text-muted ps-1 italic">Not Available</div>
-                                                                                )}
-                                                                            </div>
-                                                                        );
-                                                                    });
-                                                                })()}
+                                                            {/* Specialization, Department & Designation */}
+                                                            <div className="mt-3">
+                                                                <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: "14px" }}>Specialization</h6>
+                                                                <p className="text-dark mb-2 fw-medium" style={{ fontSize: "13px" }}>
+                                                                    {doc.specialization || "null"}
+                                                                </p>
+                                                                <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: "14px" }}>Department</h6>
+                                                                <p className="text-dark mb-2 fw-medium" style={{ fontSize: "13px" }}>
+                                                                    {doc.department || "null"}
+                                                                </p>
+                                                                <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: "14px" }}>Designation</h6>
+                                                                <p className="text-dark mb-0 fw-medium" style={{ fontSize: "13px" }}>
+                                                                    {doc.designation || doc.qualification || "null"}
+                                                                </p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -997,13 +1014,6 @@ export default function ClinicLandingPage() {
                                                 </div>
                                             ))}
                                         </div>
-                                        <button
-                                            className="btn w-100 mt-3 fw-bold py-2"
-                                            style={{ border: "2px solid #1d4ed8", color: "#1d4ed8", fontSize: "14px" }}
-                                            onClick={() => document.getElementById('booking-widget')?.scrollIntoView({ behavior: 'smooth' })}
-                                        >
-                                            View All Services
-                                        </button>
                                     </div>
                                 </div>
 
@@ -1034,7 +1044,7 @@ export default function ClinicLandingPage() {
                     </section>
 
                     {/* ══════ REVIEWS ══════ */}
-                    <section id="reviews" className="bg-white border-top border-bottom py-5">
+                    <section id="reviews" className="bg-white border-top border-bottom pt-5 pb-3">
                         <div className="container py-2">
                             <div className="d-flex justify-content-between align-items-center mb-4">
                                 <div className="d-flex align-items-center gap-3">
@@ -1106,9 +1116,9 @@ export default function ClinicLandingPage() {
                     {/* ══════ GALLERY ══════ */}
                     {
                         clinic.gallery.length > 0 && (
-                            <section id="gallery" className="py-5 bg-white">
-                                <div className="container py-4 text-center">
-                                    <h3 className="fw-bold text-uppercase mb-5" style={{ color: "#1d4ed8", letterSpacing: "1px", fontSize: "26px", lineHeight: "1.3" }}>CLINIC GALLERY</h3>
+                            <section id="gallery" className="pt-3 pb-5 bg-white">
+                                <div className="container pt-1 pb-4 text-center">
+                                    <h3 className="fw-bold text-uppercase mb-4" style={{ color: "#1d4ed8", letterSpacing: "1px", fontSize: "26px", lineHeight: "1.3" }}>CLINIC GALLERY</h3>
 
                                     <div className="row g-4">
                                         {clinic.gallery.map((img, i) => (
@@ -1310,6 +1320,89 @@ export default function ClinicLandingPage() {
                                     /* Booking Form State */
                                     <form onSubmit={handleBookSubmit} noValidate>
                                         <div className="row g-2">
+                                            <div className="col-12 mb-2 d-flex justify-content-center">
+                                                <div
+                                                    style={{
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                        backgroundColor: "#ffffff",
+                                                        border: "1px solid #e2e8f0",
+                                                        borderRadius: "9999px",
+                                                        padding: "4px",
+                                                        boxShadow: "0 4px 15px rgba(0, 0, 0, 0.04)",
+                                                        cursor: "pointer",
+                                                        userSelect: "none",
+                                                    }}
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setIsSessionMode(false); setSelectedServices([]); }}
+                                                        style={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: "8px",
+                                                            padding: "8px 20px",
+                                                            borderRadius: "9999px",
+                                                            fontSize: "13px",
+                                                            fontWeight: 600,
+                                                            transition: "all 0.3s ease",
+                                                            border: "none",
+                                                            outline: "none",
+                                                            background: !isSessionMode
+                                                                ? "linear-gradient(90deg, #1d4ed8, #3b82f6)"
+                                                                : "transparent",
+                                                            color: !isSessionMode ? "#ffffff" : "#475569",
+                                                            boxShadow: !isSessionMode
+                                                                ? "0 4px 12px rgba(29, 78, 216, 0.25)"
+                                                                : "none",
+                                                        }}
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <path d="M4 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                                                            <circle cx="10" cy="7" r="4" />
+                                                            <path d="M21 8a2 2 0 0 0 -2 -2h-3a2 2 0 0 0 -2 2v3a2 2 0 0 0 2 2h1l2 2v-2a2 2 0 0 0 1 -2z" />
+                                                        </svg>
+                                                        Consultation
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setIsSessionMode(true)}
+                                                        style={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: "8px",
+                                                            padding: "8px 20px",
+                                                            borderRadius: "9999px",
+                                                            fontSize: "13px",
+                                                            fontWeight: 600,
+                                                            transition: "all 0.3s ease",
+                                                            border: "none",
+                                                            outline: "none",
+                                                            background: isSessionMode
+                                                                ? "linear-gradient(90deg, #1d4ed8, #3b82f6)"
+                                                                : "transparent",
+                                                            color: isSessionMode ? "#ffffff" : "#475569",
+                                                            boxShadow: isSessionMode
+                                                                ? "0 4px 12px rgba(29, 78, 216, 0.25)"
+                                                                : "none",
+                                                        }}
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                                            <line x1="16" y1="2" x2="16" y2="6" />
+                                                            <line x1="8" y1="2" x2="8" y2="6" />
+                                                            <line x1="3" y1="10" x2="21" y2="10" />
+                                                            <path d="M8 14h.01" />
+                                                            <path d="M12 14h.01" />
+                                                            <path d="M16 14h.01" />
+                                                            <path d="M8 18h.01" />
+                                                            <path d="M12 18h.01" />
+                                                            <path d="M16 18h.01" />
+                                                        </svg>
+                                                        Session
+                                                    </button>
+                                                </div>
+                                            </div>
                                             {/* Appointment ID - TOP */}
                                             <div className="col-12">
                                                 <div className="d-flex align-items-center gap-2 p-2 rounded-3" style={{ background: "linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%)", border: "1px solid #bfdbfe" }}>
@@ -1496,6 +1589,28 @@ export default function ClinicLandingPage() {
                                                 </select>
                                                 {bookFormErrors.time && <div className="invalid-feedback">{bookFormErrors.time}</div>}
                                             </div>
+
+                                            {/* Services Multi-Select — always visible when services exist */}
+                                            {clinic?.rawServices && clinic.rawServices.length > 0 && (
+                                                <div className="col-12">
+                                                    <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Select Services <span className="text-danger">*</span></label>
+                                                    <Select
+                                                        mode="multiple"
+                                                        placeholder="Select one or more services"
+                                                        value={selectedServices}
+                                                        onChange={(val) => setSelectedServices(val)}
+                                                        className={`w-100 ${bookFormErrors.services ? 'is-invalid' : ''}`}
+                                                        style={{ minHeight: '38px', borderRadius: '8px' }}
+                                                        options={clinic.rawServices.map(s => ({ value: s.id, label: s.name }))}
+                                                        getPopupContainer={() => document.getElementById("modal-datepicker-container") || document.body}
+                                                        showSearch
+                                                        filterOption={(input, option) =>
+                                                            (option?.label as string ?? '').toLowerCase().includes(input.toLowerCase())
+                                                        }
+                                                    />
+                                                    {bookFormErrors.services && <div className="invalid-feedback d-block">{bookFormErrors.services}</div>}
+                                                </div>
+                                            )}
 
                                             {/* Reason Symptoms */}
                                             <div className="col-12">

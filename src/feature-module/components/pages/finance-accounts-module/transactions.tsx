@@ -5,14 +5,11 @@ import { useClinicInvoices } from "../../../../core/hooks/useClinicInvoices";
 import { usePayroll } from "../../../../core/hooks/usePayroll";
 import { useExpenses } from "../../../../core/hooks/useExpenses";
 import Datatable from "../../../../core/common/dataTable";
-import { DatePicker, message } from "antd";
+import { DatePicker } from "antd";
 import dayjs from "dayjs";
-import { apiUrl } from "../../../../core/config/api";
-import { authHeaders } from "../../../../core/utils/apiClient";
-import { all_routes } from "../../../routes/all_routes";
 
 const TransactionsList = () => {
-  const { invoices, loading: invLoading, error: invError, refetch } = useClinicInvoices();
+  const { invoices, loading: invLoading, error: invError } = useClinicInvoices();
   const { payrolls, loading: payLoading, error: payError } = usePayroll();
   const { expenses, loading: expLoading, error: expError } = useExpenses();
 
@@ -221,25 +218,6 @@ const TransactionsList = () => {
         </span>
       ),
       sorter: (a: any, b: any) => a.Status.localeCompare(b.Status),
-    },
-    {
-      title: "Action",
-      dataIndex: "Action",
-      render: (_: any, record: any) => {
-        if (record.raw.type !== "INVOICE") return null;
-        return (
-          <div className="d-flex align-items-center">
-            <Link
-              to={all_routes.editInvoices.replace(":id", record.id)}
-              className="btn btn-icon btn-sm btn-soft-primary"
-              title="Full Edit"
-              style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <i className="ti ti-edit" />
-            </Link>
-          </div>
-        );
-      },
     },
   ];
 

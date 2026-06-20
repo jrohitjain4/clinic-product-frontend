@@ -4,6 +4,9 @@ import { Link } from "react-router";
 import Datatable from "../../../../../core/common/dataTable";
 import ExpenseCategoryModal from "../modal/expenseCategoryModal";
 import { useExpenseCategories } from "../../../../../core/hooks/useExpenseCategories";
+import { toast } from "react-toastify";
+import ImageWithBasePath from "../../../../../core/imageWithBasePath";
+import { apiDelete } from "../../../../../core/utils/apiClient";
 
 const ExpenseCategory = () => {
   const { categories, refetch, loading, error } = useExpenseCategories();
@@ -11,6 +14,31 @@ const ExpenseCategory = () => {
   const [viewCategory, setViewCategory] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState("All");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setDeleteLoading(true);
+    try {
+      let successCount = 0;
+      for (const id of selectedIds) {
+        try {
+          await apiDelete(`/api/expense-categories/${id}`);
+          successCount++;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      setSelectedIds([]);
+      toast.success(`${successCount} categories deleted successfully`);
+      document.getElementById("btn-close-bulk-delete-category")?.click();
+      refetch();
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to delete categories");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const filteredData = useMemo(() => {
     return categories.filter((cat: any) => {
@@ -241,7 +269,7 @@ const ExpenseCategory = () => {
               <button
                 className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
                 data-bs-toggle="modal"
-                data-bs-target="#delete_expense_category"
+                data-bs-target="#bulk_delete_expense_category_modal"
                 style={{
                   borderRadius: "8px",
                   minHeight: "42px",
@@ -327,6 +355,63 @@ const ExpenseCategory = () => {
               >
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== BULK DELETE MODAL ===== */}
+      <div className="modal fade" id="bulk_delete_expense_category_modal">
+        <div className="modal-dialog modal-dialog-centered modal-sm">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "12px", overflow: "hidden" }}>
+            <div className="modal-body text-center position-relative z-1 pt-5 pb-5">
+              <ImageWithBasePath
+                src="assets/img/bg/delete-modal-bg-01.png"
+                alt=""
+                className="img-fluid position-absolute top-0 start-0 z-n1"
+              />
+              <ImageWithBasePath
+                src="assets/img/bg/delete-modal-bg-02.png"
+                alt=""
+                className="img-fluid position-absolute bottom-0 end-0 z-n1"
+              />
+              <div className="mb-3">
+                <span className="avatar avatar-lg bg-danger text-white">
+                  <i className="ti ti-trash fs-24"></i>
+                </span>
+              </div>
+              <h5 className="fw-bold mb-2">Delete Confirmation</h5>
+              <p className="text-muted mb-4">
+                Are you sure you want to delete selected categories?
+              </p>
+              <div className="d-flex justify-content-center gap-2">
+                <button
+                  id="btn-close-bulk-delete-category"
+                  type="button"
+                  className="btn btn-light position-relative z-1 px-4"
+                  data-bs-dismiss="modal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger position-relative z-1 px-4"
+                  onClick={handleBulkDelete}
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <i className="ti ti-trash me-2" />
+                      Yes, Delete
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

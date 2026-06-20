@@ -22,6 +22,10 @@ export interface DashboardStats {
     recentTransactions: { id: string, type: 'income' | 'expense', description: string, invoiceCode: string | null, amount: number, status: string, method: string | null, date: string }[];
     recentAppointments: { id: string, doctor: { fullName: string, profileImage: string | null }, patient: { firstName: string, lastName: string, phone: string | null }, department: { name: string } | null, scheduledAt: string, status: string, mode: string }[];
     profileCompletion: number;
+    revenueBreakdown?: { consultation: number, procedures: number, products: number, discounts: number };
+    patientStats?: { newCount: number, returningCount: number, inactiveCount: number };
+    staffAttendance?: { total: number, present: number, absent: number, percentage: number };
+    topServices?: { name: string, count: number, type: string }[];
 }
 
 export const useDashboardStats = () => {

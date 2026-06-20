@@ -6,18 +6,38 @@ import { closeBootstrapModal } from "../../../../../core/utils/staffForm";
 
 interface PatientsDeleteModalProps {
   patient: ClinicPatient | null;
-  onDeleted: () => void;
+  selectedCount?: number;        // number of bulk-selected patients
+  onDeleted: () => void;         // called after single delete succeeds
   onClear: () => void;
+  onConfirmBulk?: () => void;    // called when user confirms bulk delete
 }
 
 const PatientsDeleteModal = ({
   patient,
+  selectedCount = 0,
   onDeleted,
   onClear,
+  onConfirmBulk,
 }: PatientsDeleteModalProps) => {
   const [deleting, setDeleting] = useState(false);
 
+  const isBulk = !patient && selectedCount > 0;
+
   const handleDelete = async () => {
+    // ── BULK MODE ──────────────────────────────────────────────────────────
+    if (isBulk) {
+      setDeleting(true);
+      try {
+        closeBootstrapModal("delete_patient_modal");
+        onClear();
+        onConfirmBulk?.();   // parent handles the actual API calls & toast
+      } finally {
+        setDeleting(false);
+      }
+      return;
+    }
+
+    // ── SINGLE MODE ────────────────────────────────────────────────────────
     if (!patient?.id) return;
     setDeleting(true);
     try {
@@ -62,7 +82,10 @@ const PatientsDeleteModal = ({
             </div>
             <h5 className="fw-bold mb-1">Delete Confirmation</h5>
             <p className="mb-3">
-              Delete <strong>{patient?.fullName || "this patient"}</strong>?
+              {isBulk
+                ? <>Delete <strong>{selectedCount} selected patient{selectedCount > 1 ? "s" : ""}</strong>? This cannot be undone.</>
+                : <>Delete <strong>{patient?.fullName || "this patient"}</strong>?</>
+              }
             </p>
             <div className="d-flex justify-content-center">
               <button

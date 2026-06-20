@@ -27,23 +27,23 @@ export const appointmentToTableRow = (a: ClinicAppointment, index: number) => {
   const isInvalidImage = (img?: string | null) =>
     !img || img.trim() === "" || img.includes("300x300") || img.includes("placeholder");
 
-  const patientImg = isInvalidImage(a.patient.profileImage)
+  const patientImg = isInvalidImage(a.patient?.profileImage)
     ? "assets/img/patient-placeholder.png"
-    : a.patient.profileImage!;
+    : a.patient!.profileImage!;
 
-  const doctorImg = isInvalidImage(a.doctor.profileImage)
+  const doctorImg = isInvalidImage(a.doctor?.profileImage)
     ? "assets/img/doctor-placeholder.png"
-    : a.doctor.profileImage!;
+    : a.doctor!.profileImage!;
 
   return {
     key: a.id,
     Date_Time: a.dateTimeLabel || "—",
-    Patient: a.patientName || `${a.patient.firstName} ${a.patient.lastName}`,
-    Phone: a.patient.phone || "—",
+    Patient: a.patientName || (a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : "(Patient Deleted)"),
+    Phone: a.patient?.phone || "—",
     Patient_Image: patientImg,
     Doctor_Image: doctorImg,
-    Doctor: a.doctorName || a.doctor.fullName,
-    role: a.doctorRole || a.doctor.designation?.name || "—",
+    Doctor: a.doctorName || a.doctor?.fullName || "(Doctor Deleted)",
+    role: a.doctorRole || a.doctor?.designation?.name || "—",
     Mode: (a.appointmentType === "Online Booking" || a.mode === "Clinic Landing page" || a.mode === "Clinic Landing" || a.mode === "Online")
       ? "Online"
       : (a.mode === "In-person" || a.mode === "In Person" || a.mode === "Walk-in" || a.mode === "Walk In" || !a.mode)

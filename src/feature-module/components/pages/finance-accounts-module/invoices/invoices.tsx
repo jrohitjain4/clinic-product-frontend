@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { toast } from "react-toastify";
 import EmptyState from "../../../../../core/common/emptyState";
 import { Link } from "react-router-dom";
 import { all_routes } from "../../../../routes/all_routes";
@@ -6,11 +7,13 @@ import { useClinicInvoices } from "../../../../../core/hooks/useClinicInvoices";
 import Datatable from "../../../../../core/common/dataTable";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
-import { resolveMediaUrl } from "../../../../../core/config/api";
+import { resolveMediaUrl, apiUrl } from "../../../../../core/config/api";
 
 const InvoicesList = () => {
   const { invoices, loading, error, refetch } = useClinicInvoices();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [deleteInvoiceId, setDeleteInvoiceId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterDate, setFilterDate] = useState<dayjs.Dayjs | null>(null);
 
@@ -24,6 +27,36 @@ const InvoicesList = () => {
       return matchStatus && matchDate;
     });
   }, [invoices, filterStatus, filterDate]);
+
+  const executeDelete = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    const token = localStorage.getItem("token");
+    setDeleteLoading(true);
+    try {
+      let successCount = 0;
+      for (const id of ids) {
+        const res = await fetch(apiUrl(`/api/invoices/${id}`), {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) successCount++;
+      }
+      if (successCount === ids.length) {
+        toast.success(`${successCount} invoice(s) deleted successfully`);
+      } else if (successCount > 0) {
+        toast.warning(`${successCount} of ${ids.length} invoices deleted.`);
+      } else {
+        toast.error("Failed to delete invoices");
+      }
+      setSelectedIds([]);
+      setDeleteInvoiceId(null);
+      refetch();
+    } catch {
+      toast.error("Could not complete deletion.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const handleDownloadPDF = () => {
     const printWindow = window.open('', '_blank');
@@ -293,6 +326,7 @@ const InvoicesList = () => {
             title="Delete"
             data-bs-toggle="modal"
             data-bs-target="#delete_invoice"
+            onClick={() => setDeleteInvoiceId(record.id)}
           >
             <i className="ti ti-trash fs-18"></i>
           </button>
@@ -494,6 +528,7 @@ const InvoicesList = () => {
                 className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
                 data-bs-toggle="modal"
                 data-bs-target="#delete_invoice"
+                onClick={() => setDeleteInvoiceId(null)}
                 style={{
                   borderRadius: "8px",
                   minHeight: "42px",
@@ -534,13 +569,16 @@ const InvoicesList = () => {
               </div>
               <h5 className="fw-bold mb-2">Delete Invoice</h5>
               <p className="text-muted mb-4">
-                Are you sure you want to delete this invoice?
+                {deleteInvoiceId
+                  ? "Are you sure you want to delete this invoice?"
+                  : `Delete ${selectedIds.length} selected invoice${selectedIds.length > 1 ? "s" : ""}? This cannot be undone.`}
               </p>
               <div className="d-flex justify-content-center gap-2">
                 <button
                   type="button"
                   className="btn btn-light position-relative z-1 px-4"
                   data-bs-dismiss="modal"
+                  onClick={() => setDeleteInvoiceId(null)}
                 >
                   Cancel
                 </button>
@@ -548,9 +586,14 @@ const InvoicesList = () => {
                   type="button"
                   className="btn btn-danger position-relative z-1 px-4"
                   data-bs-dismiss="modal"
+                  disabled={deleteLoading}
+                  onClick={() => {
+                    const ids = deleteInvoiceId ? [deleteInvoiceId] : selectedIds;
+                    executeDelete(ids);
+                  }}
                 >
                   <i className="ti ti-trash me-2" />
-                  Yes, Delete
+                  {deleteLoading ? "Deleting…" : "Yes, Delete"}
                 </button>
               </div>
             </div>

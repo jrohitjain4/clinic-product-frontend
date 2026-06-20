@@ -313,7 +313,11 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch,
                 </span>
               </div>
               <h5 className="fw-bold mb-1">Delete Confirmation</h5>
-              <p className="mb-3">Are you sure want to delete?</p>
+              <p className="mb-3">
+                {selectedHoliday 
+                  ? "Are you sure you want to delete this holiday?" 
+                  : `Are you sure you want to delete the selected ${selectedIds?.length || 0} holidays?`}
+              </p>
               <div className="d-flex justify-content-center">
                 <Link
                   to="#"

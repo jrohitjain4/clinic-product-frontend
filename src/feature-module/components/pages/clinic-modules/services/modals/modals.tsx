@@ -5,6 +5,7 @@ import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import { StatusActive } from "../../../../../../core/common/selectOption";
 import { useClinicDepartments } from "../../../../../../core/hooks/useClinicDepartments";
 import { apiPost, apiPut, apiDelete } from "../../../../../../core/utils/apiClient";
+import { toast } from "react-toastify";
 interface ModalsProps {
   selectedService?: any;
   selectedProduct?: any;
@@ -32,6 +33,7 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
         status: "Active",
       });
       refetch?.();
+      toast.success("Service added successfully");
       setAddName(""); setAddPrice(""); setAddDuration(""); setAddDept(null);
       document.getElementById("close-add-modal")?.click();
     } catch (err) { console.error(err); }
@@ -70,6 +72,7 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
         status: editStatus.value,
       });
       refetch?.();
+      toast.success("Service details updated successfully");
       document.getElementById("close-edit-modal")?.click();
     } catch (err) { console.error(err); }
   };
@@ -81,6 +84,7 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
     try {
       await apiDelete(`/api/services/${selectedService.id}`);
       refetch?.();
+      toast.success("Service deleted successfully");
       document.getElementById("close-delete-modal")?.click();
     } catch (err) { console.error(err); }
   };
@@ -102,6 +106,7 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
         key: productKey,
       });
       refetch?.();
+      toast.success("Medicine added successfully");
       setProductName(""); setProductPrice(""); setProductDesc(""); setProductKey("");
       document.getElementById("close-add-product-modal")?.click();
     } catch (err) { console.error(err); }
@@ -133,6 +138,7 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
         key: editProductKey,
       });
       refetch?.();
+      toast.success("Medicine details updated successfully");
       document.getElementById("close-edit-product-modal")?.click();
     } catch (err) { console.error(err); }
   };
@@ -144,6 +150,7 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
     try {
       await apiDelete(`/api/products/${selectedProduct.id}`);
       refetch?.();
+      toast.success("Medicine deleted successfully");
       document.getElementById("close-delete-product-modal")?.click();
     } catch (err) { console.error(err); }
   };
@@ -321,17 +328,19 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
 
       {/* Start Delete Product Modal */}
       <div id="delete_product" className="modal fade">
-        <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-dialog modal-dialog-centered modal-sm">
           <div className="modal-content">
-            <div className="modal-body pb-0 text-center">
-              <span className="avatar avatar-xxl bg-transparent text-danger mb-3 border border-danger">
-                <i className="ti ti-trash-x fs-36" />
-              </span>
-              <h4 className="mb-2">Delete this medicine?</h4>
-              <p>This action cannot be undone.</p>
-              <div className="d-flex align-items-center justify-content-center mt-4">
-                <Link to="#" className="btn btn-light me-2" data-bs-dismiss="modal" id="close-delete-product-modal">Cancel</Link>
-                <button onClick={handleDeleteProduct} className="btn btn-danger">Yes, Delete it</button>
+            <div className="modal-body text-center position-relative z-1">
+              <ImageWithBasePath src="assets/img/bg/delete-modal-bg-01.png" alt="" className="img-fluid position-absolute top-0 start-0 z-n1" />
+              <ImageWithBasePath src="assets/img/bg/delete-modal-bg-02.png" alt="" className="img-fluid position-absolute bottom-0 end-0 z-n1" />
+              <div className="mb-3">
+                <span className="avatar avatar-lg bg-danger text-white"><i className="ti ti-trash fs-24" /></span>
+              </div>
+              <h5 className="fw-bold mb-1">Delete Confirmation</h5>
+              <p className="mb-3">Are you sure want to delete?</p>
+              <div className="d-flex justify-content-center">
+                <button type="button" className="btn btn-light position-relative z-1 me-3" data-bs-dismiss="modal" id="close-delete-product-modal">Cancel</button>
+                <button type="button" className="btn btn-danger position-relative z-1" onClick={handleDeleteProduct}>Yes, Delete</button>
               </div>
             </div>
           </div>

@@ -241,6 +241,13 @@ const DesignationList = () => {
   };
 
   const handleDelete = async () => {
+    // Bulk mode: deleteId is empty but selectedIds has items
+    if (!deleteId && selectedIds.length > 0) {
+      await handleBulkDelete();
+      document.getElementById("btn-close-delete-desig")?.click();
+      return;
+    }
+    if (!deleteId) return;
     setDeleteLoading(true);
     try {
       const res = await fetch(apiUrl(`/api/designations/${deleteId}`), {
@@ -1008,7 +1015,9 @@ const DesignationList = () => {
               </div>
               <h5 className="fw-bold mb-2">Delete Designation</h5>
               <p className="text-muted mb-4">
-                Are you sure you want to delete <strong>{deleteName}</strong>?
+                {deleteId
+                  ? <>Are you sure you want to delete <strong>{deleteName}</strong>?</>
+                  : <>Delete <strong>{selectedIds.length} selected designation{selectedIds.length > 1 ? "s" : ""}</strong>? This cannot be undone.</>}
               </p>
               <div className="d-flex justify-content-center gap-2">
                 <button

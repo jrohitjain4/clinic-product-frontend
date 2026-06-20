@@ -49,10 +49,8 @@ const Patients = () => {
     setCustomRange([null, null]);
   };
 
-  const handleBulkDelete = async () => {
-    const idsToDelete = patientToDelete ? [patientToDelete] : selectedIds;
+  const executeBulkDelete = async (idsToDelete: string[]) => {
     if (idsToDelete.length === 0) return;
-
     const token = localStorage.getItem("token");
     try {
       let successCount = 0;
@@ -390,8 +388,15 @@ const Patients = () => {
 
       <PatientsDeleteModal
         patient={patients.find(p => p.id === (patientToDelete || "")) || null}
+        selectedCount={patientToDelete ? 1 : selectedIds.length}
         onClear={() => { setPatientToDelete(null); setSelectedIds([]); }}
-        onDeleted={handleBulkDelete}
+        onDeleted={refetch}
+        onConfirmBulk={() => {
+          const ids = patientToDelete ? [patientToDelete] : selectedIds;
+          setPatientToDelete(null);
+          setSelectedIds([]);
+          executeBulkDelete(ids);
+        }}
       />
     </>
   );

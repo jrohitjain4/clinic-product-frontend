@@ -425,7 +425,7 @@ const DoctorDahboard = () => {
                       Completed Appointments
                     </p>
                   </div>
-                  <SCol20Chart />
+                  <SCol20Chart totals={dashData?.monthlyStats?.totals} completed={dashData?.monthlyStats?.completed} />
                 </div>
               </div>
             </div>
@@ -541,7 +541,7 @@ const DoctorDahboard = () => {
                         />
                         <path
                           className="text-success"
-                          strokeDasharray="85, 100"
+                          strokeDasharray={`${dashData?.attendance?.percentage || 0}, 100`}
                           d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                           fill="none"
                           stroke="#10b981"
@@ -549,7 +549,7 @@ const DoctorDahboard = () => {
                         />
                       </svg>
                       <div className="position-absolute top-50 start-50 translate-middle text-center">
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '20px' }}>85%</h4>
+                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '20px' }}>{dashData?.attendance?.percentage || 0}%</h4>
                         <span className="text-muted" style={{ fontSize: '10px', fontWeight: 600 }}>Present</span>
                       </div>
                     </div>
@@ -560,21 +560,21 @@ const DoctorDahboard = () => {
                         <span className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#10b981' }}></span>
                         <span className="text-dark fw-semibold" style={{ fontSize: '12px' }}>Present</span>
                       </div>
-                      <span className="fw-bold text-dark" style={{ fontSize: '13px' }}>24 Days</span>
+                      <span className="fw-bold text-dark" style={{ fontSize: '13px' }}>{dashData?.attendance?.present || 0} Days</span>
                     </div>
                     <div className="d-flex align-items-center justify-content-between">
                       <div className="d-flex align-items-center gap-2">
                         <span className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#ef4444' }}></span>
                         <span className="text-dark fw-semibold" style={{ fontSize: '12px' }}>Absent</span>
                       </div>
-                      <span className="fw-bold text-dark" style={{ fontSize: '13px' }}>2 Days</span>
+                      <span className="fw-bold text-dark" style={{ fontSize: '13px' }}>{dashData?.attendance?.absent || 0} Days</span>
                     </div>
                     <div className="d-flex align-items-center justify-content-between">
                       <div className="d-flex align-items-center gap-2">
                         <span className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#f59e0b' }}></span>
                         <span className="text-dark fw-semibold" style={{ fontSize: '12px' }}>Leaves</span>
                       </div>
-                      <span className="fw-bold text-dark" style={{ fontSize: '13px' }}>4 Days</span>
+                      <span className="fw-bold text-dark" style={{ fontSize: '13px' }}>{dashData?.attendance?.leaves || 0} Days</span>
                     </div>
                   </div>
                 </div>
@@ -599,30 +599,33 @@ const DoctorDahboard = () => {
                     </div>
                     <div>
                       <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 600 }}>Issued Today</p>
-                      <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '24px' }}>12</h4>
+                      <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '24px' }}>{dashData?.prescriptions?.issuedToday || 0}</h4>
                     </div>
                   </div>
                   
                   <h6 className="fs-13 fw-bold text-dark mb-3">Recent Prescriptions</h6>
                   <div className="d-flex flex-column gap-3 mb-3">
-                    {[
-                      { name: 'Paracetamol 500mg', patient: 'Rahul Sharma', time: '10:30 AM' },
-                      { name: 'Amoxicillin 250mg', patient: 'Priya Patel', time: '11:15 AM' },
-                      { name: 'Vitamin C Complex', patient: 'Amit Kumar', time: '01:20 PM' }
-                    ].map((med, idx) => (
-                      <div key={idx} className="d-flex align-items-center justify-content-between border-bottom pb-2">
-                        <div className="d-flex align-items-center gap-2">
-                          <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                            <i className="ti ti-prescription text-primary fs-16" />
+                    {(dashData?.prescriptions?.recent || []).map((med: any, idx: number) => {
+                      const medNames = med.medicines?.map((m: any) => m.medicineName).join(', ') || 'No medicine details';
+                      const timeStr = new Date(med.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                      return (
+                        <div key={med.id || idx} className="d-flex align-items-center justify-content-between border-bottom pb-2">
+                          <div className="d-flex align-items-center gap-2">
+                            <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                              <i className="ti ti-prescription text-primary fs-16" />
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                              <h6 className="mb-0 text-dark fw-bold text-truncate" style={{ fontSize: '12px', maxWidth: '120px' }}>{medNames}</h6>
+                              <p className="mb-0 text-muted text-truncate" style={{ fontSize: '10px', maxWidth: '120px' }}>{med.patient ? `${med.patient.firstName} ${med.patient.lastName}` : 'Unknown Patient'}</p>
+                            </div>
                           </div>
-                          <div>
-                            <h6 className="mb-0 text-dark fw-bold text-truncate" style={{ fontSize: '12px', maxWidth: '100px' }}>{med.name}</h6>
-                            <p className="mb-0 text-muted" style={{ fontSize: '10px' }}>{med.patient}</p>
-                          </div>
+                          <span className="text-muted fw-medium" style={{ fontSize: '10px' }}>{timeStr}</span>
                         </div>
-                        <span className="text-muted fw-medium" style={{ fontSize: '10px' }}>{med.time}</span>
-                      </div>
-                    ))}
+                      );
+                    })}
+                    {(!dashData?.prescriptions?.recent || dashData.prescriptions.recent.length === 0) && (
+                      <div className="text-center text-muted py-3">No recent prescriptions</div>
+                    )}
                   </div>
                   
                   <Link to="#" className="btn btn-primary w-100 fw-semibold mt-auto" style={{ borderRadius: '8px', backgroundColor: '#6366f1', borderColor: '#6366f1' }}>
@@ -643,19 +646,28 @@ const DoctorDahboard = () => {
                 </div>
                 <div className="card-body p-3">
                   <div className="d-flex flex-column gap-2">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                      <div key={day} className="d-flex align-items-center justify-content-between p-2 rounded" style={{ backgroundColor: '#f8fafc' }}>
-                        <span className="text-dark fw-bold" style={{ fontSize: '13px' }}>{day}</span>
-                        <div className="d-flex align-items-center gap-1 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>
-                          <i className="ti ti-clock text-primary" />
-                          <span>10:00 AM - 07:00 PM</span>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="d-flex align-items-center justify-content-between p-2 rounded mt-1" style={{ backgroundColor: '#fef2f2', border: '1px solid #fee2e2' }}>
-                      <span className="text-danger fw-bold" style={{ fontSize: '13px' }}>Sun</span>
-                      <span className="badge bg-soft-danger text-danger fw-bold rounded-pill" style={{ fontSize: '11px' }}>Closed</span>
-                    </div>
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
+                      const slots = dashData?.schedules?.[day] || [];
+                      const displayDay = day.substring(0, 3);
+                      if (slots.length > 0) {
+                        return (
+                          <div key={day} className="d-flex align-items-center justify-content-between p-2 rounded" style={{ backgroundColor: '#f8fafc' }}>
+                            <span className="text-dark fw-bold" style={{ fontSize: '13px' }}>{displayDay}</span>
+                            <div className="d-flex align-items-center gap-1 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>
+                              <i className="ti ti-clock text-primary" />
+                              <span>{slots.map((s: any) => `${s.from} - ${s.to}`).join(', ')}</span>
+                            </div>
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div key={day} className="d-flex align-items-center justify-content-between p-2 rounded mt-1" style={{ backgroundColor: '#fef2f2', border: '1px solid #fee2e2' }}>
+                            <span className="text-danger fw-bold" style={{ fontSize: '13px' }}>{displayDay}</span>
+                            <span className="badge bg-soft-danger text-danger fw-bold rounded-pill" style={{ fontSize: '11px' }}>Closed</span>
+                          </div>
+                        );
+                      }
+                    })}
                   </div>
                   <Link to="#" className="btn btn-light w-100 mt-3 fw-semibold" style={{ fontSize: '13px', borderRadius: '8px' }}>
                     Edit Availability
@@ -678,7 +690,11 @@ const DoctorDahboard = () => {
                 <div className="card-body p-4 d-flex flex-column">
                   <div className="d-flex align-items-center justify-content-center flex-grow-1" style={{ minHeight: '200px' }}>
                     <div style={{ transform: 'scale(0.8)' }}>
-                      <CircleChart2 />
+                      <CircleChart2 
+                        completed={dashData?.stats?.completed || 0} 
+                        pending={dashData?.stats?.pendingAppointments || 0} 
+                        cancelled={dashData?.stats?.cancelledAppointments || 0} 
+                      />
                     </div>
                   </div>
                   <div className="d-flex align-items-center justify-content-around w-100 mt-3 pt-3 border-top">

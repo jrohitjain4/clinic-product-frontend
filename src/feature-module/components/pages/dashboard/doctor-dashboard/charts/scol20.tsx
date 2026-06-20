@@ -1,7 +1,12 @@
 import { useState } from "react";
 import Chart from "react-apexcharts";
 
-const SCol20Chart = () => {
+interface SCol20ChartProps {
+  totals?: number[];
+  completed?: number[];
+}
+
+const SCol20Chart = ({ totals = [], completed = [] }: SCol20ChartProps) => {
   const [chartOptions] = useState<any>({
     chart: {
       height: 250,
@@ -67,7 +72,6 @@ const SCol20Chart = () => {
     },
     yaxis: {
       min: 0,
-      max: 400,
       labels: {
         style: {
           fontSize: "13px",
@@ -80,11 +84,11 @@ const SCol20Chart = () => {
       intersect: false,
       custom: function ({ series, dataPointIndex, w }: any) {
         const total = series[0][dataPointIndex];
-        const completed = series[1][dataPointIndex];
-        return `<div class="apex-tooltip">
+        const completedVal = series[1][dataPointIndex];
+        return `<div class="apex-tooltip" style="padding: 8px;">
           <strong>${w.globals.labels[dataPointIndex]}</strong><br/>
           <span style="color:#3B28CC">●</span> Total Appointments: ${total}<br/>
-          <span style="color:#00B96B">●</span> Completed: ${completed}
+          <span style="color:#00B96B">●</span> Completed: ${completedVal}
         </div>`;
       },
     },
@@ -99,18 +103,18 @@ const SCol20Chart = () => {
     },
   });
 
-  const [series] = useState([
+  const series = [
     {
       name: "Total Appointments",
       type: "bar",
-      data: [360, 280, 290, 270, 340, 220, 230, 180, 260, 200, 350, 400],
+      data: totals.length ? totals : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
     {
       name: "Completed",
       type: "area",
-      data: [200, 195, 190, 185, 200, 160, 170, 165, 210, 215, 225, 230],
+      data: completed.length ? completed : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
-  ]);
+  ];
 
   return (
     <div id="s-col-20">

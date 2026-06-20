@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import AppointmentFormPage from "../../clinic-modules/appointment-form/appointmentFormPage";
 import SCol8Chart from "./chart/scol8Chart";
@@ -12,6 +12,7 @@ import { usePrescriptions } from "../../../../../core/hooks/usePrescriptions";
 import { useClinicInvoices } from "../../../../../core/hooks/useClinicInvoices";
 import { useClinics } from "../../../../../core/hooks/useClinics";
 import { all_routes, doctorDetailsPath } from "../../../../routes/all_routes";
+import { apiUrl } from "../../../../../core/config/api";
 
 const PatientDashboard = () => {
   const [showAddAppointment, setShowAddAppointment] = useState(false);
@@ -20,6 +21,25 @@ const PatientDashboard = () => {
   const { doctors } = useClinicDoctors();
   const { prescriptions } = usePrescriptions();
   const { invoices } = useClinicInvoices();
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(apiUrl("/api/auth/me"), {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setProfile(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch patient profile", err);
+      }
+    };
+    fetchMe();
+  }, []);
 
   const totalAppointments = appointments?.length || 0;
   const totalClinics = clinics?.length || 0;
@@ -115,12 +135,14 @@ const PatientDashboard = () => {
                       </div>
                       <div>
                         <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Blood Pressure</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>89 <span className="fs-14 fw-normal text-muted">mg/dl</span></h4>
+                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{profile?.details?.vitals?.bp || "—"}</h4>
                       </div>
                     </div>
-                    <span className="badge fw-semibold" style={{ color: '#f59e0b', backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Normal</span>
+                    {profile?.details?.vitals?.bp && (
+                      <span className="badge fw-semibold" style={{ color: '#f59e0b', backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Normal</span>
+                    )}
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Last checked 2 hours ago</p>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{profile?.details?.vitals?.bp ? "Last recorded vital sign" : "No vital data recorded"}</p>
                 </div>
               </div>
             </div>
@@ -136,12 +158,16 @@ const PatientDashboard = () => {
                       </div>
                       <div>
                         <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Heart Rate</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>87 <span className="fs-14 fw-normal text-muted">bpm</span></h4>
+                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>
+                          {profile?.details?.vitals?.heartRate ? `${profile.details.vitals.heartRate} bpm` : "—"}
+                        </h4>
                       </div>
                     </div>
-                    <span className="badge fw-semibold" style={{ color: '#10b981', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Good</span>
+                    {profile?.details?.vitals?.heartRate && (
+                      <span className="badge fw-semibold" style={{ color: '#10b981', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Good</span>
+                    )}
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Last checked 1 hour ago</p>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{profile?.details?.vitals?.heartRate ? "Last recorded vital sign" : "No vital data recorded"}</p>
                 </div>
               </div>
             </div>
@@ -220,12 +246,16 @@ const PatientDashboard = () => {
                       </div>
                       <div>
                         <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Glucose Level</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>92 <span className="fs-14 fw-normal text-muted">mg/dl</span></h4>
+                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>
+                          {profile?.details?.vitals?.glucose ? `${profile.details.vitals.glucose} mg/dl` : "—"}
+                        </h4>
                       </div>
                     </div>
-                    <span className="badge fw-semibold" style={{ color: '#0ea5e9', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Normal</span>
+                    {profile?.details?.vitals?.glucose && (
+                      <span className="badge fw-semibold" style={{ color: '#0ea5e9', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Normal</span>
+                    )}
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Last checked 2 days ago</p>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{profile?.details?.vitals?.glucose ? "Last recorded vital sign" : "No vital data recorded"}</p>
                 </div>
               </div>
             </div>
@@ -289,39 +319,31 @@ const PatientDashboard = () => {
                 </div>
                 <div className="card-body">
                   <div className="d-flex flex-column gap-3">
-                    {/* Hardcoded clinics for demonstration since `clinics` variable isn't properly defined here */}
-                    <div className="d-flex align-items-center p-3 border rounded-3 bg-light-transparent hover-bg-light transition-all">
-                      <div className="avatar avatar-lg rounded-3 bg-white border d-flex align-items-center justify-content-center me-3 flex-shrink-0" style={{ width: '50px', height: '50px' }}>
-                        <i className="ti ti-building-hospital fs-24 text-primary" />
-                      </div>
-                      <div className="flex-grow-1">
-                        <h6 className="fs-14 fw-semibold mb-1 text-dark">City Care Clinic</h6>
-                        <p className="fs-12 text-muted mb-1 d-flex align-items-center"><i className="ti ti-map-pin me-1 text-danger"></i> 123 Health Ave, NY</p>
-                      </div>
-                      <Link to="#" className="btn btn-sm btn-outline-primary rounded-pill fs-12 px-3 py-1 text-nowrap">View</Link>
-                    </div>
-
-                    <div className="d-flex align-items-center p-3 border rounded-3 bg-light-transparent hover-bg-light transition-all">
-                      <div className="avatar avatar-lg rounded-3 bg-white border d-flex align-items-center justify-content-center me-3 flex-shrink-0" style={{ width: '50px', height: '50px' }}>
-                        <i className="ti ti-building-hospital fs-24 text-info" />
-                      </div>
-                      <div className="flex-grow-1">
-                        <h6 className="fs-14 fw-semibold mb-1 text-dark">Metro Health Center</h6>
-                        <p className="fs-12 text-muted mb-1 d-flex align-items-center"><i className="ti ti-map-pin me-1 text-danger"></i> 45 Wellness Blvd, CA</p>
-                      </div>
-                      <Link to="#" className="btn btn-sm btn-outline-primary rounded-pill fs-12 px-3 py-1 text-nowrap">View</Link>
-                    </div>
-
-                    <div className="d-flex align-items-center p-3 border rounded-3 bg-light-transparent hover-bg-light transition-all">
-                      <div className="avatar avatar-lg rounded-3 bg-white border d-flex align-items-center justify-content-center me-3 flex-shrink-0" style={{ width: '50px', height: '50px' }}>
-                        <i className="ti ti-building-hospital fs-24 text-success" />
-                      </div>
-                      <div className="flex-grow-1">
-                        <h6 className="fs-14 fw-semibold mb-1 text-dark">Family Wellness Center</h6>
-                        <p className="fs-12 text-muted mb-1 d-flex align-items-center"><i className="ti ti-map-pin me-1 text-danger"></i> 789 Care St, TX</p>
-                      </div>
-                      <Link to="#" className="btn btn-sm btn-outline-primary rounded-pill fs-12 px-3 py-1 text-nowrap">View</Link>
-                    </div>
+                    {(clinics || []).slice(0, 3).map((clinic: any, idx: number) => {
+                      const colors = ['primary', 'info', 'success', 'warning', 'danger'];
+                      const badgeColor = colors[idx % colors.length];
+                      const location = [clinic.addressLine1, clinic.city, clinic.state]
+                        .filter(Boolean)
+                        .join(", ") || "No address specified";
+                      return (
+                        <div key={clinic.id} className="d-flex align-items-center p-3 border rounded-3 bg-light-transparent hover-bg-light transition-all">
+                          <div className="avatar avatar-lg rounded-3 bg-white border d-flex align-items-center justify-content-center me-3 flex-shrink-0" style={{ width: '50px', height: '50px' }}>
+                            <i className={`ti ti-building-hospital fs-24 text-${badgeColor}`} />
+                          </div>
+                          <div className="flex-grow-1">
+                            <h6 className="fs-14 fw-semibold mb-1 text-dark">{clinic.name}</h6>
+                            <p className="fs-12 text-muted mb-1 d-flex align-items-center">
+                              <i className="ti ti-map-pin me-1 text-danger"></i>
+                              {location}
+                            </p>
+                          </div>
+                          <Link to="#" className="btn btn-sm btn-outline-primary rounded-pill fs-12 px-3 py-1 text-nowrap">View</Link>
+                        </div>
+                      );
+                    })}
+                    {(!clinics || clinics.length === 0) && (
+                      <div className="text-center text-muted py-3">No clinics found.</div>
+                    )}
                   </div>
                 </div>
               </div>

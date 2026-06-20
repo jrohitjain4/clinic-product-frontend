@@ -66,37 +66,28 @@ const Dashboard = () => {
   }, [appointments]);
 
   const todayAppointmentsList = useMemo(() => {
-    const todayOnly = appointments.filter(a => dayjs(a.scheduledAt).isSame(dayjs(), 'day'));
-    if (todayOnly.length > 0) {
-      return todayOnly.sort((a, b) => dayjs(a.scheduledAt).diff(dayjs(b.scheduledAt)));
-    }
-    // Fallback to recent/all appointments if none scheduled for today, to keep it populated
-    return appointments.slice(0, 4).sort((a, b) => dayjs(a.scheduledAt).diff(dayjs(b.scheduledAt)));
+    return appointments.filter(a => dayjs(a.scheduledAt).isSame(dayjs(), 'day'))
+      .sort((a, b) => dayjs(a.scheduledAt).diff(dayjs(b.scheduledAt)));
   }, [appointments]);
 
   const revenueBreakdown = useMemo(() => {
-    const total = stats.totalIncome || 0;
     return {
-      consultation: Math.round(total * 0.59),
-      procedures: Math.round(total * 0.31),
-      products: Math.round(total * 0.10),
-      discounts: Math.round(total * 0.02),
+      consultation: stats.revenueBreakdown?.consultation || 0,
+      procedures: stats.revenueBreakdown?.procedures || 0,
+      products: stats.revenueBreakdown?.products || 0,
+      discounts: stats.revenueBreakdown?.discounts || 0,
     };
-  }, [stats.totalIncome]);
+  }, [stats.revenueBreakdown]);
 
   const patientStats = useMemo(() => {
-    const realTotal = patients.length || 0;
-    const realNew = newPatientsCount || 0;
-    
-    // Ensure there are always at least 22 patients in the stats so the chart is beautifully filled
-    const newCount = realNew > 0 ? realNew : 12;
-    const returningCount = realTotal > realNew ? (realTotal - realNew) : 8;
-    const inactiveCount = 2;
+    const newCount = stats.patientStats?.newCount || 0;
+    const returningCount = stats.patientStats?.returningCount || 0;
+    const inactiveCount = stats.patientStats?.inactiveCount || 0;
     const total = newCount + returningCount + inactiveCount;
     
-    const newPercent = Math.round((newCount / total) * 100);
-    const returningPercent = Math.round((returningCount / total) * 100);
-    const inactivePercent = Math.round((inactiveCount / total) * 100);
+    const newPercent = total > 0 ? Math.round((newCount / total) * 100) : 0;
+    const returningPercent = total > 0 ? Math.round((returningCount / total) * 100) : 0;
+    const inactivePercent = total > 0 ? Math.round((inactiveCount / total) * 100) : 0;
     
     return {
       newCount,
@@ -107,7 +98,7 @@ const Dashboard = () => {
       inactivePercent,
       total
     };
-  }, [patients, newPatientsCount]);
+  }, [stats.patientStats]);
 
   const appointmentStats = useMemo(() => {
     let scheduled = 0;
@@ -133,95 +124,27 @@ const Dashboard = () => {
       }
     });
 
-    const total = appointments.length || 0;
-    
-    const finalScheduled = total > 0 ? scheduled : 15;
-    const finalConfirmed = total > 0 ? confirmed : 12;
-    const finalCheckedIn = total > 0 ? checkedIn : 8;
-    const finalCheckedOut = total > 0 ? checkedOut : 10;
-    const finalNoShow = total > 0 ? noShowCancelled : 5;
-    
-    const finalTotal = finalScheduled + finalConfirmed + finalCheckedIn + finalCheckedOut + finalNoShow;
-
-    const getPercent = (val: number) => finalTotal > 0 ? Math.round((val / finalTotal) * 100) : 0;
+    const total = appointments.length;
+    const getPercent = (val: number) => total > 0 ? Math.round((val / total) * 100) : 0;
 
     return {
-      scheduled: finalScheduled,
-      confirmed: finalConfirmed,
-      checkedIn: finalCheckedIn,
-      checkedOut: finalCheckedOut,
-      noShow: finalNoShow,
-      total: finalTotal,
-      scheduledPercent: getPercent(finalScheduled),
-      confirmedPercent: getPercent(finalConfirmed),
-      checkedInPercent: getPercent(finalCheckedIn),
-      checkedOutPercent: getPercent(finalCheckedOut),
-      noShowPercent: getPercent(finalNoShow),
+      scheduled,
+      confirmed,
+      checkedIn,
+      checkedOut,
+      noShow: noShowCancelled,
+      total,
+      scheduledPercent: getPercent(scheduled),
+      confirmedPercent: getPercent(confirmed),
+      checkedInPercent: getPercent(checkedIn),
+      checkedOutPercent: getPercent(checkedOut),
+      noShowPercent: getPercent(noShowCancelled),
     };
   }, [appointments]);
 
   const topServicesList = useMemo(() => {
-    // Calculate actual usage counts for services based on appointments.serviceIds
-    const serviceCounts: Record<string, number> = {};
-    appointments.forEach(app => {
-      if (Array.isArray(app.serviceIds)) {
-        app.serviceIds.forEach(id => {
-          serviceCounts[id] = (serviceCounts[id] || 0) + 1;
-        });
-      }
-    });
-
-    // Map actual services
-    const serviceList = services.map(s => ({
-      id: s.id,
-      name: s.serviceName,
-      type: "Service",
-      count: serviceCounts[s.id] || 0,
-    }));
-
-    // Map actual products (medicines)
-    const productList = products.map(p => ({
-      id: p.id,
-      name: p.name,
-      type: "Product",
-      count: 0,
-    }));
-
-    const combined = [...serviceList, ...productList];
-
-    const defaults = [
-      { id: 'def-1', name: 'General Consultation', type: 'Service', count: 45 },
-      { id: 'def-2', name: 'Dental Checkup', type: 'Service', count: 32 },
-      { id: 'def-3', name: 'Medicine & Products', type: 'Product', count: 28 },
-      { id: 'def-4', name: 'Cardiology', type: 'Service', count: 24 }
-    ];
-
-    if (combined.length === 0) {
-      return defaults;
-    }
-
-    const sorted = combined.sort((a, b) => b.count - a.count);
-
-    const results = sorted.map((item, index) => {
-      const baseBoost = Math.max(10, 45 - (index * 8));
-      const finalCount = item.count > 0 ? item.count : baseBoost;
-      return {
-        ...item,
-        count: finalCount
-      };
-    });
-
-    if (results.length < 4) {
-      const existingNames = new Set(results.map(r => r.name));
-      defaults.forEach(def => {
-        if (results.length < 4 && !existingNames.has(def.name)) {
-          results.push(def);
-        }
-      });
-    }
-
-    return results.slice(0, 4);
-  }, [appointments, services, products]);
+    return stats.topServices || [];
+  }, [stats.topServices]);
 
   const recentRegistrationsList = useMemo(() => {
     const sorted = [...patients].sort((a, b) => {
@@ -229,29 +152,21 @@ const Dashboard = () => {
       const dateB = b.createdAt ? dayjs(b.createdAt) : dayjs(0);
       return dateB.diff(dateA);
     });
-    const top3 = sorted.slice(0, 3);
-    if (top3.length > 0) {
-      return top3.map(p => ({
-        id: p.id,
-        firstName: p.firstName,
-        lastName: p.lastName,
-        createdAt: p.createdAt || new Date().toISOString()
-      }));
-    }
-    return [
-      { id: '1', firstName: 'John', lastName: 'Doe', createdAt: dayjs().subtract(1, 'hour').toISOString() },
-      { id: '2', firstName: 'Sarah', lastName: 'Mitchell', createdAt: dayjs().subtract(3, 'hour').toISOString() },
-      { id: '3', firstName: 'Robert', lastName: 'Johnson', createdAt: dayjs().subtract(1, 'day').toISOString() }
-    ];
+    return sorted.slice(0, 3).map(p => ({
+      id: p.id,
+      firstName: p.firstName,
+      lastName: p.lastName,
+      createdAt: p.createdAt || new Date().toISOString()
+    }));
   }, [patients]);
 
   const staffAttendanceStats = useMemo(() => {
-    const total = staffs.length || 20;
-    const present = Math.round(total * 0.85);
-    const absent = total - present;
-    const percentage = total ? Math.round((present / total) * 100) : 85;
+    const total = stats.staffAttendance?.total || 0;
+    const present = stats.staffAttendance?.present || 0;
+    const absent = stats.staffAttendance?.absent || 0;
+    const percentage = stats.staffAttendance?.percentage || 0;
     return { total, present, absent, percentage };
-  }, [staffs]);
+  }, [stats.staffAttendance]);
 
   const staffChartOptions = useMemo((): ApexOptions => ({
     chart: {
@@ -649,53 +564,60 @@ const Dashboard = () => {
                 </div>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex flex-column gap-3 mb-3">
-                    {todayAppointmentsList.slice(0, 4).map((app) => {
-                      const initials = `${app.patient?.firstName?.charAt(0) || ''}${app.patient?.lastName?.charAt(0) || ''}`.toUpperCase();
-                      const avatarColors = (() => {
-                        const colors = [
-                          { bg: '#f5f3ff', text: '#8b5cf6' }, // Purple
-                          { bg: '#ecfdf5', text: '#10b981' }, // Green
-                          { bg: '#eff6ff', text: '#3b82f6' }, // Blue
-                          { bg: '#fff7ed', text: '#f97316' }, // Orange
-                        ];
-                        const name = app.patient?.firstName || '';
-                        let hash = 0;
-                        for (let i = 0; i < name.length; i++) {
-                          hash = name.charCodeAt(i) + ((hash << 5) - hash);
-                        }
-                        return colors[Math.abs(hash) % colors.length];
-                      })();
+                    {todayAppointmentsList.length === 0 ? (
+                      <div className="text-center py-4">
+                        <i className="ti ti-calendar-off text-muted fs-32 mb-2" />
+                        <p className="text-muted mb-0 fs-13">No appointments scheduled for today</p>
+                      </div>
+                    ) : (
+                      todayAppointmentsList.slice(0, 4).map((app) => {
+                        const initials = `${app.patient?.firstName?.charAt(0) || ''}${app.patient?.lastName?.charAt(0) || ''}`.toUpperCase();
+                        const avatarColors = (() => {
+                          const colors = [
+                            { bg: '#f5f3ff', text: '#8b5cf6' }, // Purple
+                            { bg: '#ecfdf5', text: '#10b981' }, // Green
+                            { bg: '#eff6ff', text: '#3b82f6' }, // Blue
+                            { bg: '#fff7ed', text: '#f97316' }, // Orange
+                          ];
+                          const name = app.patient?.firstName || '';
+                          let hash = 0;
+                          for (let i = 0; i < name.length; i++) {
+                            hash = name.charCodeAt(i) + ((hash << 5) - hash);
+                          }
+                          return colors[Math.abs(hash) % colors.length];
+                        })();
 
-                      return (
-                        <div key={app.id} className="d-flex align-items-center justify-content-between gap-2">
-                          <div className="d-flex align-items-center gap-2">
-                            {/* Time Badge */}
-                            <div className="rounded text-center py-1 px-2 flex-shrink-0" style={{ backgroundColor: '#f5f3ff', color: '#6366f1', fontSize: '11px', fontWeight: 600, minWidth: '72px' }}>
-                              {dayjs(app.scheduledAt).format('hh:mm A')}
+                        return (
+                          <div key={app.id} className="d-flex align-items-center justify-content-between gap-2">
+                            <div className="d-flex align-items-center gap-2">
+                              {/* Time Badge */}
+                              <div className="rounded text-center py-1 px-2 flex-shrink-0" style={{ backgroundColor: '#f5f3ff', color: '#6366f1', fontSize: '11px', fontWeight: 600, minWidth: '72px' }}>
+                                {dayjs(app.scheduledAt).format('hh:mm A')}
+                              </div>
+                              {/* Patient Avatar/Initials */}
+                              <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '36px', height: '36px', backgroundColor: avatarColors.bg, color: avatarColors.text, fontWeight: 700, fontSize: '12px' }}>
+                                {initials || 'P'}
+                              </div>
+                              {/* Patient Info */}
+                              <div>
+                                <h6 className="mb-0 text-dark fw-bold" style={{ fontSize: '13px' }}>{app.patient?.firstName} {app.patient?.lastName}</h6>
+                                <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{app.reason || 'General Consultation'}</p>
+                              </div>
                             </div>
-                            {/* Patient Avatar/Initials */}
-                            <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '36px', height: '36px', backgroundColor: avatarColors.bg, color: avatarColors.text, fontWeight: 700, fontSize: '12px' }}>
-                              {initials || 'P'}
-                            </div>
-                            {/* Patient Info */}
-                            <div>
-                              <h6 className="mb-0 text-dark fw-bold" style={{ fontSize: '13px' }}>{app.patient?.firstName} {app.patient?.lastName}</h6>
-                              <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{app.reason || 'General Consultation'}</p>
+                            <div className="text-end">
+                              <span className="d-block text-dark fw-semibold" style={{ fontSize: '11px' }}>{app.doctor?.fullName || 'Dr. Sarah Johnson'}</span>
+                              <span className={`badge rounded px-2 py-0.5 fw-semibold mt-1`} style={{ 
+                                fontSize: '10px',
+                                backgroundColor: app.status === 'Completed' || app.status === 'Checked Out' ? '#ecfdf4' : app.status === 'Cancelled' || app.status === 'No Show' ? '#fef2f2' : '#fff9db',
+                                color: app.status === 'Completed' || app.status === 'Checked Out' ? '#10b981' : app.status === 'Cancelled' || app.status === 'No Show' ? '#ef4444' : '#fab005'
+                              }}>
+                                {app.status}
+                              </span>
                             </div>
                           </div>
-                          <div className="text-end">
-                            <span className="d-block text-dark fw-semibold" style={{ fontSize: '11px' }}>{app.doctor?.fullName || 'Dr. Sarah Johnson'}</span>
-                            <span className={`badge rounded px-2 py-0.5 fw-semibold mt-1`} style={{ 
-                              fontSize: '10px',
-                              backgroundColor: app.status === 'Completed' || app.status === 'Checked Out' ? '#ecfdf4' : app.status === 'Cancelled' || app.status === 'No Show' ? '#fef2f2' : '#fff9db',
-                              color: app.status === 'Completed' || app.status === 'Checked Out' ? '#10b981' : app.status === 'Cancelled' || app.status === 'No Show' ? '#ef4444' : '#fab005'
-                            }}>
-                              {app.status}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
                   <Link to={all_routes.appointments} className="d-flex align-items-center justify-content-between text-decoration-none border-top pt-3 mt-auto" style={{ color: '#4f46e5', fontWeight: 600, fontSize: '12px' }}>
                     <span>You have {Math.max(0, todayAppointmentsCount - 4)} more appointments today</span>
@@ -980,35 +902,42 @@ const Dashboard = () => {
                 </div>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex flex-column gap-3 mb-2">
-                    {topServicesList.map((service: any, index) => {
-                      const isProduct = service.type === 'Product';
-                      const icon = isProduct ? 'ti-pill' : 'ti-activity-heartbeat';
-                      const color = isProduct ? '#0d9488' : '#6366f1';
-                      const bg = isProduct ? '#f0fdfa' : '#f5f3ff';
-                      const progressBarColor = isProduct ? '#0d9488' : '#6366f1';
+                    {topServicesList.length === 0 ? (
+                      <div className="text-center py-4">
+                        <i className="ti ti-activity-heartbeat text-muted fs-32 mb-2" />
+                        <p className="text-muted mb-0 fs-13">No services utilized yet</p>
+                      </div>
+                    ) : (
+                      topServicesList.map((service: any, index) => {
+                        const isProduct = service.type === 'Product';
+                        const icon = isProduct ? 'ti-pill' : 'ti-activity-heartbeat';
+                        const color = isProduct ? '#0d9488' : '#6366f1';
+                        const bg = isProduct ? '#f0fdfa' : '#f5f3ff';
+                        const progressBarColor = isProduct ? '#0d9488' : '#6366f1';
 
-                      return (
-                        <div key={service.name} className="d-flex align-items-center justify-content-between">
-                          <div className="d-flex align-items-center gap-2 flex-grow-1">
-                            <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: bg }}>
-                              <i className={`ti ${icon}`} style={{ color: color, fontSize: '16px' }} />
-                            </div>
-                            <div className="flex-grow-1 me-3">
-                              <div className="d-flex align-items-center justify-content-between mb-1">
-                                <span className="d-block text-dark fw-bold" style={{ fontSize: '12px' }}>{service.name}</span>
-                                <span className="badge badge-soft-secondary px-1 py-0.5" style={{ fontSize: '8px', lineHeight: 1 }}>
-                                  {isProduct ? 'Medicine' : 'Service'}
-                                </span>
+                        return (
+                          <div key={service.name} className="d-flex align-items-center justify-content-between">
+                            <div className="d-flex align-items-center gap-2 flex-grow-1">
+                              <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: bg }}>
+                                <i className={`ti ${icon}`} style={{ color: color, fontSize: '16px' }} />
                               </div>
-                              <div className="progress" style={{ height: '4px' }}>
-                                <div className="progress-bar rounded-pill" role="progressbar" style={{ width: `${(service.count / 50) * 100}%`, backgroundColor: progressBarColor }} aria-valuenow={(service.count / 50) * 100} aria-valuemin={0} aria-valuemax={100} />
+                              <div className="flex-grow-1 me-3">
+                                <div className="d-flex align-items-center justify-content-between mb-1">
+                                  <span className="d-block text-dark fw-bold" style={{ fontSize: '12px' }}>{service.name}</span>
+                                  <span className="badge badge-soft-secondary px-1 py-0.5" style={{ fontSize: '8px', lineHeight: 1 }}>
+                                    {isProduct ? 'Medicine' : 'Service'}
+                                  </span>
+                                </div>
+                                <div className="progress" style={{ height: '4px' }}>
+                                  <div className="progress-bar rounded-pill" role="progressbar" style={{ width: `${Math.min(100, (service.count / 50) * 100)}%`, backgroundColor: progressBarColor }} aria-valuenow={(service.count / 50) * 100} aria-valuemin={0} aria-valuemax={100} />
+                                </div>
                               </div>
                             </div>
+                            <span className="fw-bold text-dark" style={{ fontSize: '13px' }}>{service.count}</span>
                           </div>
-                          <span className="fw-bold text-dark" style={{ fontSize: '13px' }}>{service.count}</span>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               </div>
@@ -1023,39 +952,46 @@ const Dashboard = () => {
                 </div>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex flex-column gap-3 mb-2">
-                    {recentRegistrationsList.map((patient) => {
-                      const initials = `${patient.firstName?.charAt(0) || ''}${patient.lastName?.charAt(0) || ''}`.toUpperCase();
-                      const avatarColors = (() => {
-                        const colors = [
-                          { bg: '#f5f3ff', text: '#8b5cf6' },
-                          { bg: '#ecfdf5', text: '#10b981' },
-                          { bg: '#eff6ff', text: '#3b82f6' },
-                        ];
-                        const name = patient.firstName || '';
-                        let hash = 0;
-                        for (let i = 0; i < name.length; i++) {
-                          hash = name.charCodeAt(i) + ((hash << 5) - hash);
-                        }
-                        return colors[Math.abs(hash) % colors.length];
-                      })();
+                    {recentRegistrationsList.length === 0 ? (
+                      <div className="text-center py-4">
+                        <i className="ti ti-users text-muted fs-32 mb-2" />
+                        <p className="text-muted mb-0 fs-13">No recent registrations</p>
+                      </div>
+                    ) : (
+                      recentRegistrationsList.map((patient) => {
+                        const initials = `${patient.firstName?.charAt(0) || ''}${patient.lastName?.charAt(0) || ''}`.toUpperCase();
+                        const avatarColors = (() => {
+                          const colors = [
+                            { bg: '#f5f3ff', text: '#8b5cf6' },
+                            { bg: '#ecfdf5', text: '#10b981' },
+                            { bg: '#eff6ff', text: '#3b82f6' },
+                          ];
+                          const name = patient.firstName || '';
+                          let hash = 0;
+                          for (let i = 0; i < name.length; i++) {
+                            hash = name.charCodeAt(i) + ((hash << 5) - hash);
+                          }
+                          return colors[Math.abs(hash) % colors.length];
+                        })();
 
-                      return (
-                        <div key={patient.id} className="d-flex align-items-center justify-content-between">
-                          <div className="d-flex align-items-center gap-2">
-                            <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: avatarColors.bg, color: avatarColors.text, fontWeight: 700, fontSize: '11px' }}>
-                              {initials || 'P'}
+                        return (
+                          <div key={patient.id} className="d-flex align-items-center justify-content-between">
+                            <div className="d-flex align-items-center gap-2">
+                              <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: avatarColors.bg, color: avatarColors.text, fontWeight: 700, fontSize: '11px' }}>
+                                {initials || 'P'}
+                              </div>
+                              <div>
+                                <h6 className="mb-0 text-dark fw-bold" style={{ fontSize: '12px' }}>{patient.firstName} {patient.lastName}</h6>
+                                <p className="mb-0 text-muted" style={{ fontSize: '10px' }}>
+                                  {dayjs(patient.createdAt).format('DD MMM YYYY')} <span className="mx-1">•</span> {dayjs(patient.createdAt).format('hh:mm A')}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <h6 className="mb-0 text-dark fw-bold" style={{ fontSize: '12px' }}>{patient.firstName} {patient.lastName}</h6>
-                              <p className="mb-0 text-muted" style={{ fontSize: '10px' }}>
-                                {dayjs(patient.createdAt).format('DD MMM YYYY')} <span className="mx-1">•</span> {dayjs(patient.createdAt).format('hh:mm A')}
-                              </p>
-                            </div>
+                            <span className="badge bg-soft-success text-success rounded px-1.5 py-0.5 fw-semibold" style={{ fontSize: '9px' }}>New</span>
                           </div>
-                          <span className="badge bg-soft-success text-success rounded px-1.5 py-0.5 fw-semibold" style={{ fontSize: '9px' }}>New</span>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               </div>

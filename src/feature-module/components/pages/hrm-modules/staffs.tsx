@@ -11,12 +11,37 @@ import { ViewModal } from "../../../../core/common/modal/ViewModal";
 import { useClinicStaff } from "../../../../core/hooks/useClinicStaff";
 import type { ClinicStaff } from "../../../../core/types/clinicStaff";
 import { staffToTableRow } from "../../../../core/utils/staffForm";
+import { apiUrl } from "../../../../core/config/api";
+import { toast } from "react-toastify";
 
 const StaffsList = () => {
   const { staffs, loading, error, refetch, reload } = useClinicStaff();
   const [selected, setSelected] = useState<ClinicStaff | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [viewStaff, setViewStaff] = useState<any>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setDeleteLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      for (const id of selectedIds) {
+        await fetch(apiUrl(`/api/staffs/${id}`), {
+          method: "DELETE",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+      }
+      setSelectedIds([]);
+      refetch();
+      toast.success("Selected staff members deleted successfully");
+      document.getElementById("btn-close-bulk-delete-staff")?.click();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete staff");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const [filterDesignation, setFilterDesignation] = useState("All");
   const [filterRole, setFilterRole] = useState("All");
@@ -381,7 +406,7 @@ const StaffsList = () => {
               <button
                 className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
                 data-bs-toggle="modal"
-                data-bs-target="#delete_staff"
+                data-bs-target="#bulk_delete_staff_modal"
                 style={{ borderRadius: '8px', minHeight: '42px', fontWeight: 'bold' }}
               >
                 <i className="ti ti-trash fs-18"></i>
@@ -434,6 +459,63 @@ const StaffsList = () => {
         editLabel="Edit Staff"
         editModalTarget="#edit_staff"
       />
+
+      {/* ===== BULK DELETE MODAL ===== */}
+      <div className="modal fade" id="bulk_delete_staff_modal">
+        <div className="modal-dialog modal-dialog-centered modal-sm">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "12px", overflow: "hidden" }}>
+            <div className="modal-body text-center position-relative z-1 pt-5 pb-5">
+              <ImageWithBasePath
+                src="assets/img/bg/delete-modal-bg-01.png"
+                alt=""
+                className="img-fluid position-absolute top-0 start-0 z-n1"
+              />
+              <ImageWithBasePath
+                src="assets/img/bg/delete-modal-bg-02.png"
+                alt=""
+                className="img-fluid position-absolute bottom-0 end-0 z-n1"
+              />
+              <div className="mb-3">
+                <span className="avatar avatar-lg bg-danger text-white">
+                  <i className="ti ti-trash fs-24"></i>
+                </span>
+              </div>
+              <h5 className="fw-bold mb-2">Delete Confirmation</h5>
+              <p className="text-muted mb-4">
+                Are you sure you want to delete selected staff members?
+              </p>
+              <div className="d-flex justify-content-center gap-2">
+                <button
+                  id="btn-close-bulk-delete-staff"
+                  type="button"
+                  className="btn btn-light position-relative z-1 px-4"
+                  data-bs-dismiss="modal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger position-relative z-1 px-4"
+                  onClick={handleBulkDelete}
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <i className="ti ti-trash me-2" />
+                      Yes, Delete
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 };

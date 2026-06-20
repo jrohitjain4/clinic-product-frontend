@@ -6,6 +6,8 @@ import { useClinicServices } from "../../../../../core/hooks/useClinicServices";
 import { useClinicProducts } from "../../../../../core/hooks/useClinicProducts";
 import { useClinicDepartments } from "../../../../../core/hooks/useClinicDepartments";
 import { apiDelete } from "../../../../../core/utils/apiClient";
+import ImageWithBasePath from "../../../../../core/imageWithBasePath";
+import { toast } from "react-toastify";
 
 const Services = () => {
   const { services, refetch: refetchServices } = useClinicServices();
@@ -27,15 +29,18 @@ const Services = () => {
   };
 
   const handleBulkDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete selected items?")) return;
     try {
       for (const key of selectedIds) {
-        const [type, id] = key.split("-");
+        const parts = key.split("-");
+        const type = parts[0];
+        const id = parts.slice(1).join("-");
         if (type === "service") await apiDelete(`/api/services/${id}`);
         else if (type === "product") await apiDelete(`/api/products/${id}`);
       }
       setSelectedIds([]);
       refetchAll();
+      toast.success("Selected items deleted successfully");
+      document.getElementById("close-bulk-delete-modal")?.click();
     } catch (err) {
       console.error(err);
     }
@@ -287,7 +292,8 @@ const Services = () => {
         {selectedIds.length > 0 && (
           <div className="d-flex justify-content-center mt-4">
             <button
-              onClick={handleBulkDelete}
+              data-bs-toggle="modal"
+              data-bs-target="#bulk_delete_modal"
               className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow"
               style={{ borderRadius: '8px', fontWeight: 'bold' }}
             >
@@ -314,6 +320,27 @@ const Services = () => {
         selectedProduct={selectedProduct}
         refetch={refetchAll}
       />
+
+      {/* Start Bulk Delete Modal */}
+      <div className="modal fade" id="bulk_delete_modal">
+        <div className="modal-dialog modal-dialog-centered modal-sm">
+          <div className="modal-content">
+            <div className="modal-body text-center position-relative z-1">
+              <ImageWithBasePath src="assets/img/bg/delete-modal-bg-01.png" alt="" className="img-fluid position-absolute top-0 start-0 z-n1" />
+              <ImageWithBasePath src="assets/img/bg/delete-modal-bg-02.png" alt="" className="img-fluid position-absolute bottom-0 end-0 z-n1" />
+              <div className="mb-3">
+                <span className="avatar avatar-lg bg-danger text-white"><i className="ti ti-trash fs-24" /></span>
+              </div>
+              <h5 className="fw-bold mb-1">Delete Confirmation</h5>
+              <p className="mb-3">Are you sure want to delete selected items?</p>
+              <div className="d-flex justify-content-center">
+                <button type="button" className="btn btn-light position-relative z-1 me-3" data-bs-dismiss="modal" id="close-bulk-delete-modal">Cancel</button>
+                <button type="button" className="btn btn-danger position-relative z-1" onClick={handleBulkDelete}>Yes, Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

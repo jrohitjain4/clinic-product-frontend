@@ -683,21 +683,21 @@ export default function ClinicLandingPage() {
                                             <i className="ti ti-star-filled text-warning fs-3" />
                                             <div>
                                                 <h6 className="mb-0 fw-bold fs-5 text-dark">{avgRating}.0 Rating</h6>
-                                                <span className="text-secondary fw-medium" style={{ fontSize: "14px" }}>{totalReviews} Reviews</span>
+                                                <span className="fw-medium" style={{ fontSize: "14px", color: "#0f172a" }}>{totalReviews} Reviews</span>
                                             </div>
                                         </div>
                                         <div className="d-flex align-items-center gap-3">
                                             <i className="ti ti-user-scan text-primary fs-3" />
                                             <div>
                                                 <h6 className="mb-0 fw-bold fs-5 text-dark">{clinic.doctors.length}+ Doctors</h6>
-                                                <span className="text-secondary fw-medium" style={{ fontSize: "14px" }}>Experienced</span>
+                                                <span className="fw-medium" style={{ fontSize: "14px", color: "#0f172a" }}>Experienced</span>
                                             </div>
                                         </div>
                                         <div className="d-flex align-items-center gap-3">
                                             <i className="ti ti-shield-check text-primary fs-3" />
                                             <div>
                                                 <h6 className="mb-0 fw-bold fs-5 text-dark">{clinic.patientsServed}</h6>
-                                                <span className="text-secondary fw-medium" style={{ fontSize: "14px" }}>Patients Treated</span>
+                                                <span className="fw-medium" style={{ fontSize: "14px", color: "#0f172a" }}>Patients Treated</span>
                                             </div>
                                         </div>
                                     </div>
@@ -753,7 +753,7 @@ export default function ClinicLandingPage() {
                             <div className="row g-5 align-items-center">
                                 {/* Text Content */}
                                 <div className="col-lg-6">
-                                    <h3 className="fw-bold text-uppercase mb-4" style={{ color: "#1d4ed8", letterSpacing: "1px", fontSize: "26px", lineHeight: "1.3" }}>ABOUT {clinic.name.toUpperCase()}</h3>
+                                    <h3 className="display-6 fw-bold mb-4" style={{ color: "#1d4ed8", letterSpacing: "-1px" }}>ABOUT {clinic.name.toUpperCase()}</h3>
                                     <div className="d-flex align-items-center gap-3 text-dark fw-medium mb-4" style={{ fontSize: "15px" }}>
                                         {clinic.about
                                             ? clinic.about
@@ -764,20 +764,20 @@ export default function ClinicLandingPage() {
                                     <div className="row g-3 mt-4 text-center">
                                         <div className="col-4">
                                             <div className="border rounded-4 p-3 shadow-sm h-100 d-flex flex-column justify-content-center">
-                                                <h4 className="fw-bold mb-1" style={{ color: "#1d4ed8" }}>{clinic.established || "—"}</h4>
-                                                <span className="text-secondary fw-semibold" style={{ fontSize: "14px" }}>Established</span>
+                                                <h4 className="fw-bold mb-1" style={{ color: "#0f172a" }}>{clinic.established || "—"}</h4>
+                                                <span className="fw-semibold" style={{ fontSize: "14px", color: "#0f172a" }}>Established</span>
                                             </div>
                                         </div>
                                         <div className="col-4">
                                             <div className="border rounded-4 p-3 shadow-sm h-100 d-flex flex-column justify-content-center">
-                                                <h4 className="fw-bold mb-1" style={{ color: "#1d4ed8" }}>{clinic.patientsServed || "—"}</h4>
-                                                <span className="text-secondary fw-semibold" style={{ fontSize: "14px" }}>Patients Served</span>
+                                                <h4 className="fw-bold mb-1" style={{ color: "#0f172a" }}>{clinic.patientsServed || "—"}</h4>
+                                                <span className="fw-semibold" style={{ fontSize: "14px", color: "#0f172a" }}>Patients Served</span>
                                             </div>
                                         </div>
                                         <div className="col-4">
                                             <div className="border rounded-4 p-3 shadow-sm h-100 d-flex flex-column justify-content-center">
-                                                <h4 className="fw-bold mb-1" style={{ color: "#1d4ed8" }}>{clinic.experience ? `${clinic.experience}+` : "—"}</h4>
-                                                <span className="text-secondary fw-semibold" style={{ fontSize: "14px" }}>Years Experience</span>
+                                                <h4 className="fw-bold mb-1" style={{ color: "#0f172a" }}>{clinic.experience ? `${clinic.experience}+` : "—"}</h4>
+                                                <span className="fw-semibold" style={{ fontSize: "14px", color: "#0f172a" }}>Years Experience</span>
                                             </div>
                                         </div>
                                     </div>
@@ -802,7 +802,7 @@ export default function ClinicLandingPage() {
                     <section id="doctors" className="bg-white">
                         <div className="container pb-5">
                             <div className="text-center mb-5">
-                                <h3 className="fw-bold text-uppercase" style={{ color: "#1d4ed8", letterSpacing: "1px", fontSize: "26px", lineHeight: "1.3" }}>OUR DOCTORS</h3>
+                                <h3 className="display-6 fw-bold" style={{ color: "#1d4ed8", letterSpacing: "-1px" }}>OUR DOCTORS</h3>
                             </div>
 
                             <div className="row g-4 justify-content-center">
@@ -998,11 +998,11 @@ export default function ClinicLandingPage() {
                                 {/* Services Card */}
                                 <div className="col-lg-6">
                                     <div className="card h-100 p-4 border rounded-4 shadow-sm bg-white text-center d-flex flex-column">
-                                        <h6 className="fw-bold mb-4" style={{ color: "#1d4ed8", letterSpacing: "0.5px" }}>SERVICES WE OFFER</h6>
+                                        <h6 className="fw-bold mb-4" style={{ color: "#0f172a", letterSpacing: "0.5px" }}>SERVICES WE OFFER</h6>
                                         <div className="row row-cols-2 g-3 flex-grow-1">
                                             {[
                                                 { i: "ti-stethoscope", t: "General Physician" },
-                                                { i: "ti-tooth", t: "Dental Care" },
+                                                { i: "ti-dental", t: "Dental Care" },
                                                 { i: "ti-baby-bottle", t: "Child Care" },
                                                 { i: "ti-woman", t: "Gynecology" },
                                                 { i: "ti-flask", t: "Pathology Lab" },
@@ -1027,12 +1027,12 @@ export default function ClinicLandingPage() {
                                 {/* Timings Card */}
                                 <div className="col-lg-6">
                                     <div className="card h-100 p-4 border rounded-4 shadow-sm bg-white d-flex flex-column">
-                                        <h6 className="fw-bold mb-4" style={{ color: "#1d4ed8", letterSpacing: "0.5px" }}>CLINIC TIMINGS</h6>
+                                        <h6 className="fw-bold mb-4" style={{ color: "#0f172a", letterSpacing: "0.5px" }}>CLINIC TIMINGS</h6>
                                         <div className="d-flex flex-column gap-3 flex-grow g-2-1">
                                             {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map(day => (
                                                 <div key={day} className="d-flex justify-content-between align-items-center border-bottom pb-2">
                                                     <span className="fw-bold text-dark" style={{ fontSize: "14px" }}>{day}</span>
-                                                    <span className="text-secondary fw-semibold" style={{ fontSize: "13px" }}>09:00 AM - 08:00 PM</span>
+                                                    <span className="fw-semibold" style={{ fontSize: "13px", color: "#0f172a" }}>09:00 AM - 08:00 PM</span>
                                                 </div>
                                             ))}
                                             <div className="d-flex justify-content-between align-items-center pb-2">
@@ -1055,7 +1055,7 @@ export default function ClinicLandingPage() {
                         <div className="container py-2">
                             <div className="d-flex justify-content-between align-items-center mb-4">
                                 <div className="d-flex align-items-center gap-3">
-                                    <h3 className="fw-bold text-uppercase mb-0" style={{ color: "#0f172a", letterSpacing: "1px", fontSize: "26px", lineHeight: "1.3" }}>
+                                    <h3 className="display-6 fw-bold mb-0" style={{ color: "#0f172a", letterSpacing: "-1px" }}>
                                         RECENT REVIEWS
                                     </h3>
                                     <div className="d-flex align-items-center gap-2">
@@ -1098,32 +1098,12 @@ export default function ClinicLandingPage() {
                                                 </p>
                                             </div>
 
-                                            {/* Right Column: Date & Helpful Button */}
-                                            <div className="d-flex flex-column align-items-end gap-2" style={{ minWidth: "130px", flexShrink: 0 }}>
-                                                <span className="text-secondary" style={{ fontSize: "13px" }}>
-                                                    {["12 Jun, 2024", "8 Jun, 2024", "5 Jun, 2024", "1 Jun, 2024"][i % 4]}
-                                                </span>
-                                                <button
-                                                    className="btn btn-sm d-flex align-items-center gap-1 rounded-pill px-3 py-1"
-                                                    style={{ fontSize: "13px", border: "1.5px solid #0f172a", color: "#0f172a", background: "#fff" }}
-                                                >
-                                                    <i className="ti ti-thumb-up" /> Helpful ({[25, 18, 12, 8][i % 4]})
-                                                </button>
-                                            </div>
 
                                         </div>
                                     ))}
                                 </div>
 
-                                {/* Write a Review Button */}
-                                <div className="text-center py-4 border-top">
-                                    <button
-                                        className="btn rounded-pill px-5 py-2 fw-bold d-inline-flex align-items-center gap-2 text-white"
-                                        style={{ background: "#1d4ed8", border: "2px solid #1d4ed8", fontSize: "15px" }}
-                                    >
-                                        <i className="ti ti-pencil" /> Write a Review
-                                    </button>
-                                </div>
+
                             </div>
                         </div>
                     </section>
@@ -1133,7 +1113,7 @@ export default function ClinicLandingPage() {
                         clinic.gallery.length > 0 && (
                             <section id="gallery" className="pt-3 pb-5 bg-white">
                                 <div className="container pt-1 pb-4 text-center">
-                                    <h3 className="fw-bold text-uppercase mb-4" style={{ color: "#1d4ed8", letterSpacing: "1px", fontSize: "26px", lineHeight: "1.3" }}>CLINIC GALLERY</h3>
+                                    <h3 className="display-6 fw-bold mb-4" style={{ color: "#1d4ed8", letterSpacing: "-1px" }}>CLINIC GALLERY</h3>
 
                                     <div className="row g-4">
                                         {clinic.gallery.map((img, i) => (

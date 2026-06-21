@@ -588,10 +588,16 @@ export default function ClinicLandingPage() {
     const allReviewsList = clinic.reviews && (clinic.reviews || []).length > 0
         ? clinic.reviews
         : [
-            { rating: 5, feedback: "Excellent experience! The doctor was very attentive and the staff was friendly.", name: "Amit Kumar" },
-            { rating: 5, feedback: "Very easy appointment booking process and minimal waiting time.", name: "Anita Singh" },
-            { rating: 5, feedback: "Best clinic experience so far. Highly recommended!", name: "Rahul Verma" },
-            { rating: 5, feedback: "Quick appointment and proper guidance. Very satisfied with the service.", name: "Sandeep Kumar" }
+            { rating: 5, feedback: "Excellent experience! The doctor was very attentive and the staff was friendly. Will definitely visit again.", name: "Amit Kumar" },
+            { rating: 5, feedback: "Very easy appointment booking process and minimal waiting time. The clinic is well-maintained and hygienic.", name: "Anita Singh" },
+            { rating: 5, feedback: "Best clinic experience so far. Highly recommended! The doctor explained everything in detail.", name: "Rahul Verma" },
+            { rating: 5, feedback: "Quick appointment and proper guidance. Very satisfied with the service. Staff is very cooperative.", name: "Sandeep Kumar" },
+            { rating: 5, feedback: "Very professional and caring doctors. The treatment was effective and the recovery was quick. Highly satisfied.", name: "Priya Sharma" },
+            { rating: 4, feedback: "Good clinic with experienced doctors. Waiting time was reasonable and the staff was polite and helpful.", name: "Vikram Patel" },
+            { rating: 5, feedback: "Amazing experience from start to finish. The online booking was seamless and the doctor was thorough.", name: "Neha Gupta" },
+            { rating: 5, feedback: "One of the best clinics in the area. Clean, modern facilities and very knowledgeable doctors.", name: "Rajesh Mehta" },
+            { rating: 4, feedback: "Great service and friendly staff. The doctor took time to understand my concerns and provided excellent care.", name: "Sunita Devi" },
+            { rating: 5, feedback: "Wonderful experience. The clinic has state-of-the-art equipment and the treatment was top-notch.", name: "Arun Kapoor" }
         ];
 
     const reviewsToShow = showAllReviews ? allReviewsList : allReviewsList.slice(0, 5);
@@ -1110,10 +1116,10 @@ export default function ClinicLandingPage() {
                                 </div>
 
                                 {/* Write a Review Button */}
-                                <div className="text-center py-3 border-top">
+                                <div className="text-center py-4 border-top">
                                     <button
-                                        className="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold d-inline-flex align-items-center gap-2"
-                                        style={{ color: "#0f172a", borderColor: "#0f172a", fontSize: "14px" }}
+                                        className="btn rounded-pill px-5 py-2 fw-bold d-inline-flex align-items-center gap-2 text-white"
+                                        style={{ background: "#0f172a", border: "2px solid #0f172a", fontSize: "15px" }}
                                     >
                                         <i className="ti ti-pencil" /> Write a Review
                                     </button>

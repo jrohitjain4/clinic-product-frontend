@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
-import { City, Country, State } from "../../../../../../core/common/selectOption";
+import { Country, State, City } from "country-state-city";
 import { useState, useRef } from "react";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import DoctorProfileUpload from "../../../../../../core/common/doctor-profile-upload/DoctorProfileUpload";
@@ -45,6 +45,79 @@ const ProfileSettings = () => {
     gstNo: userObj.clinic?.gstNumber || ""
   });
 
+  // Find initial country, state, city from userObj.clinic
+  const initialCountryName = userObj.clinic?.country || "";
+  const initialCountryObj = Country.getAllCountries().find(
+    (c) => c.name.toLowerCase() === initialCountryName.toLowerCase()
+  );
+  const initialCountryCode = initialCountryObj?.isoCode || "";
+
+  const initialStateName = userObj.clinic?.state || "";
+  const initialStateObj = initialCountryCode
+    ? State.getStatesOfCountry(initialCountryCode).find(
+        (s) => s.name.toLowerCase() === initialStateName.toLowerCase()
+      )
+    : null;
+  const initialStateCode = initialStateObj?.isoCode || "";
+
+  const initialCityName = userObj.clinic?.city || "";
+
+  const [selectedCountry, setSelectedCountry] = useState<any>(
+    initialCountryObj ? { value: initialCountryObj.isoCode, label: initialCountryObj.name } : null
+  );
+  const [selectedState, setSelectedState] = useState<any>(
+    initialStateObj ? { value: initialStateObj.isoCode, label: initialStateObj.name } : null
+  );
+  const [selectedCity, setSelectedCity] = useState<any>(
+    initialCityName ? { value: initialCityName, label: initialCityName } : null
+  );
+
+  const [countriesList] = useState(() =>
+    Country.getAllCountries().map((c) => ({ value: c.isoCode, label: c.name }))
+  );
+
+  const [statesList, setStatesList] = useState<any[]>(() => {
+    if (initialCountryCode) {
+      return State.getStatesOfCountry(initialCountryCode).map((s) => ({ value: s.isoCode, label: s.name }));
+    }
+    return [];
+  });
+
+  const [citiesList, setCitiesList] = useState<any[]>(() => {
+    if (initialCountryCode && initialStateCode) {
+      return City.getCitiesOfState(initialCountryCode, initialStateCode).map((c) => ({ value: c.name, label: c.name }));
+    }
+    return [];
+  });
+
+  const handleCountryChange = (option: any) => {
+    setSelectedCountry(option);
+    setSelectedState(null);
+    setSelectedCity(null);
+    if (option) {
+      const states = State.getStatesOfCountry(option.value).map((s) => ({ value: s.isoCode, label: s.name }));
+      setStatesList(states);
+    } else {
+      setStatesList([]);
+    }
+    setCitiesList([]);
+  };
+
+  const handleStateChange = (option: any) => {
+    setSelectedState(option);
+    setSelectedCity(null);
+    if (option && selectedCountry) {
+      const cities = City.getCitiesOfState(selectedCountry.value, option.value).map((c) => ({ value: c.name, label: c.name }));
+      setCitiesList(cities);
+    } else {
+      setCitiesList([]);
+    }
+  };
+
+  const handleCityChange = (option: any) => {
+    setSelectedCity(option);
+  };
+
   const [saving, setSaving] = useState(false);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -65,6 +138,9 @@ const ProfileSettings = () => {
         },
         body: JSON.stringify({
           ...formData,
+          country: selectedCountry?.label || "",
+          state: selectedState?.label || "",
+          city: selectedCity?.label || "",
           profileImage: profileImage !== userObj.profileImage ? profileImage : undefined,
           clinicLogo: logoPreview || undefined
         })
@@ -273,9 +349,11 @@ const ProfileSettings = () => {
                             {/* end col */}
                             <div className="col-lg-12">
                               <CommonSelect
-                                options={Country}
+                                options={countriesList}
                                 className="select"
-                                defaultValue={Country[0]}
+                                value={selectedCountry}
+                                onChange={handleCountryChange}
+                                isDisabled={!isEditing}
                               />
                             </div>
                             {/* end col */}
@@ -292,9 +370,11 @@ const ProfileSettings = () => {
                             {/* end col */}
                             <div className="col-lg-12">
                               <CommonSelect
-                                options={State}
+                                options={statesList}
                                 className="select"
-                                defaultValue={State[0]}
+                                value={selectedState}
+                                onChange={handleStateChange}
+                                isDisabled={!isEditing || !selectedCountry}
                               />
                             </div>
                             {/* end col */}
@@ -311,9 +391,11 @@ const ProfileSettings = () => {
                             {/* end col */}
                             <div className="col-lg-12">
                               <CommonSelect
-                                options={City}
+                                options={citiesList}
                                 className="select"
-                                defaultValue={City[0]}
+                                value={selectedCity}
+                                onChange={handleCityChange}
+                                isDisabled={!isEditing || !selectedState}
                               />
                             </div>
                             {/* end col */}

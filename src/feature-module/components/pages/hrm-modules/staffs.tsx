@@ -103,6 +103,7 @@ const StaffsList = () => {
     {
       title: "S.No",
       dataIndex: "S_No",
+      render: (text: number) => <span className="text-dark fw-medium">{text}</span>,
       sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) => a.S_No - b.S_No,
     },
     {
@@ -144,24 +145,28 @@ const StaffsList = () => {
     {
       title: "Designation",
       dataIndex: "Designation",
+      render: (text: string) => <span className="text-dark fw-medium">{text}</span>,
       sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
         a.Designation.localeCompare(b.Designation),
     },
     {
       title: "Role",
       dataIndex: "Role",
+      render: (text: string) => <span className="text-dark fw-medium">{text}</span>,
       sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
         a.Role.localeCompare(b.Role),
     },
     {
       title: "Phone",
       dataIndex: "Phone",
+      render: (text: string) => <span className="text-dark fw-medium">{text}</span>,
       sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
         a.Phone.localeCompare(b.Phone),
     },
     {
       title: "Email",
       dataIndex: "Email",
+      render: (text: string) => <span className="text-dark fw-medium">{text}</span>,
       sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
         a.Email.localeCompare(b.Email),
     },

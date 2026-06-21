@@ -90,8 +90,8 @@ const Specializations = () => {
       render: (text: string) => (
         <span
           className={`badge border ${text === "Active"
-              ? "badge-soft-success border-success"
-              : "badge-soft-danger border-danger"
+            ? "badge-soft-success border-success"
+            : "badge-soft-danger border-danger"
             } px-2 py-1 fs-13 fw-medium`}
         >
           {text}
@@ -348,16 +348,16 @@ const Specializations = () => {
         headerIcon={<i className="ti ti-stethoscope" />}
         highlightTitle={viewSpec?.name || "Specialization"}
         highlightStatus={
-            <span className={`badge border ${viewSpec?.status === "Active" ? "bg-success-transparent text-success border-success" : "bg-danger-transparent text-danger border-danger"} fw-bold px-2 py-1`} style={{ fontSize: "10px", borderRadius: "10px" }}>
-                <i className="ti ti-point-filled me-1"></i>{viewSpec?.status || "Active"}
-            </span>
+          <span className={`badge border ${viewSpec?.status === "Active" ? "bg-success-transparent text-success border-success" : "bg-danger-transparent text-danger border-danger"} fw-bold px-2 py-1`} style={{ fontSize: "10px", borderRadius: "10px" }}>
+            <i className="ti ti-point-filled me-1"></i>{viewSpec?.status || "Active"}
+          </span>
         }
         highlightColor="#e0e7ff"
         details={[
-            { icon: <i className="ti ti-file-description" />, label: "Description", value: viewSpec?.description || "No description provided", fullWidth: true }
+          { icon: <i className="ti ti-file-description" />, label: "Description", value: viewSpec?.description || "No description provided", fullWidth: true }
         ]}
         onEdit={() => {
-            setSelectedSpecialization(viewSpec);
+          setSelectedSpecialization(viewSpec);
         }}
         editLabel="Edit Specialization"
         editModalTarget="#edit_specialization"

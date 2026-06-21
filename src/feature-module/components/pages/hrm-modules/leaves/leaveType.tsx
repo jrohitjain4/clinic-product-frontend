@@ -102,8 +102,8 @@ const LeaveType = () => {
       render: (text: string) => (
         <span
           className={`badge border ${text === "Active"
-              ? "badge-soft-success border-success"
-              : "badge-soft-danger border-danger"
+            ? "badge-soft-success border-success"
+            : "badge-soft-danger border-danger"
             } px-2 py-1 fs-13 fw-medium`}
         >
           {text}

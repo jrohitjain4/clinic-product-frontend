@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import Datatable from "../../../../../core/common/dataTable";
 import ExpensesModal from "../modal/expensesModal";
 import { useExpenses } from "../../../../../core/hooks/useExpenses";
+import { ViewModal } from "../../../../../core/common/modal/ViewModal";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
@@ -402,152 +403,37 @@ const ExpensesList = () => {
       <ExpensesModal selectedExpense={selectedExpense} refetch={refetch} />
 
       {/* ===== VIEW EXPENSE MODAL ===== */}
-      <div id="view_expense" className="modal fade" role="dialog">
-        <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div
-            className="modal-content border-0 shadow-lg"
-            style={{ borderRadius: "12px", overflow: "hidden" }}
-          >
-            <div className="modal-header bg-info text-white">
-              <h5 className="modal-title fw-bold">Expense Details</h5>
-              <button
-                type="button"
-                className="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-                onClick={() => setViewExpense(null)}
-              ></button>
-            </div>
-            <div className="modal-body">
-              {viewExpense && (
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Expense Name
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewExpense.name || ""}
-                      readOnly
-                    />
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Category
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewExpense.category || ""}
-                      readOnly
-                    />
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Amount
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light fw-bold text-success"
-                      value={`$${viewExpense.amount}`}
-                      readOnly
-                    />
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Date
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={new Date(viewExpense.date).toLocaleDateString(
-                        "en-GB"
-                      )}
-                      readOnly
-                    />
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Purchased By
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewExpense.purchasedBy || ""}
-                      readOnly
-                    />
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Payment Method
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewExpense.paymentMethod || ""}
-                      readOnly
-                    />
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Status
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewExpense.status || ""}
-                      readOnly
-                    />
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold small text-uppercase text-muted">
-                      Receipt
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control bg-light"
-                      value={viewExpense.receipt || "N/A"}
-                      readOnly
-                    />
-                  </div>
-
-                  {viewExpense.description && (
-                    <div className="col-md-12">
-                      <label className="form-label fw-bold small text-uppercase text-muted">
-                        Description
-                      </label>
-                      <textarea
-                        className="form-control bg-light"
-                        rows={3}
-                        value={viewExpense.description}
-                        readOnly
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            <div className="modal-footer border-top pt-3">
-              <button
-                type="button"
-                className="btn btn-primary px-5"
-                data-bs-dismiss="modal"
-                onClick={() => setViewExpense(null)}
-                style={{ borderRadius: "6px" }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ViewModal
+        id="view_expense"
+        title="Expense Details"
+        subtitle="View expense information"
+        headerIcon={<i className="ti ti-receipt" />}
+        highlightTitle={viewExpense?.name || "Expense"}
+        highlightStatus={
+          <span className={`badge border ${viewExpense?.status === 'Paid' ? 'badge-soft-success border-success' : viewExpense?.status === 'Pending' ? 'badge-soft-warning border-warning' : 'badge-soft-danger border-danger'} fw-bold px-2 py-1`} style={{ fontSize: "10px", borderRadius: "10px" }}>
+            <i className="ti ti-point-filled me-1"></i>{viewExpense?.status || "Pending"}
+          </span>
+        }
+        highlightRightText={viewExpense?.amount ? `₹${viewExpense.amount.toLocaleString()}` : "₹0"}
+        highlightRightSubText="Amount"
+        highlightColor="#fee2e2"
+        details={[
+          { icon: <i className="ti ti-file-text" />, label: "Expense Name", value: viewExpense?.name || "—" },
+          { icon: <i className="ti ti-category" />, label: "Category", value: viewExpense?.category || "—" },
+          { icon: <i className="ti ti-currency-rupee" />, label: "Amount", value: viewExpense?.amount ? `₹${viewExpense.amount.toLocaleString()}` : "—" },
+          { icon: <i className="ti ti-calendar" />, label: "Date", value: viewExpense?.date ? new Date(viewExpense.date).toLocaleDateString("en-GB") : "—" },
+          { icon: <i className="ti ti-user" />, label: "Purchased By", value: viewExpense?.purchasedBy || "—" },
+          { icon: <i className="ti ti-credit-card" />, label: "Payment Method", value: viewExpense?.paymentMethod || "—" },
+          { icon: <i className="ti ti-circle-check" />, label: "Status", value: viewExpense?.status || "—" },
+          { icon: <i className="ti ti-paperclip" />, label: "Receipt", value: viewExpense?.receipt || "N/A" },
+          { icon: <i className="ti ti-file-description" />, label: "Description", value: viewExpense?.description || "No description provided", fullWidth: true }
+        ]}
+        onEdit={() => {
+          if (viewExpense) setSelectedExpense(viewExpense);
+        }}
+        editLabel="Edit Expense"
+        editModalTarget="#edit_new_expense"
+      />
 
       {/* ===== BULK DELETE MODAL ===== */}
       <div className="modal fade" id="bulk_delete_expenses_modal">

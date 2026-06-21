@@ -59,12 +59,12 @@ export const ViewModal: React.FC<ViewModalProps> = ({
         <div className="modal fade" id={id} tabIndex={-1} aria-hidden="true">
             <div className="modal-dialog modal-dialog-centered modal-lg">
                 <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "16px", overflow: "hidden" }}>
-                    
+
                     {/* Header */}
                     <div className="modal-header border-0 d-flex align-items-center position-relative pb-2" style={{ backgroundColor: "#fbfbfe" }}>
                         {/* Decorative background shape */}
                         <div className="position-absolute top-0 end-0 h-100" style={{ width: "30%", background: "linear-gradient(to right, transparent, #ede9fe)", opacity: 0.5, borderBottomLeftRadius: "100%" }}></div>
-                        
+
                         <div className="d-flex align-items-center w-100 position-relative z-1">
                             <div className="d-flex align-items-center justify-content-center flex-shrink-0 me-3" style={{ width: "40px", height: "40px", backgroundColor: "#f3e8ff", color: "#6d28d9", borderRadius: "50%", fontSize: "18px" }}>
                                 {headerIcon || <i className="ti ti-file-text" />}
@@ -79,7 +79,7 @@ export const ViewModal: React.FC<ViewModalProps> = ({
 
                     {/* Body */}
                     <div className="modal-body p-3 bg-white">
-                        
+
                         {/* Highlight Banner */}
                         <div className="rounded-3 p-2 mb-3 d-flex flex-wrap align-items-center justify-content-between border" style={{ backgroundColor: "#f8fafc", borderColor: "#cbd5e1" }}>
                             <div className="d-flex align-items-center mb-2 mb-sm-0">
@@ -97,7 +97,7 @@ export const ViewModal: React.FC<ViewModalProps> = ({
                                     )}
                                 </div>
                             </div>
-                            
+
                             {(highlightRightText || highlightRightIcon) && (
                                 <div className="d-flex align-items-center">
                                     {highlightRightIcon && (

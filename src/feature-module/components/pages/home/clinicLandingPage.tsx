@@ -5,6 +5,7 @@ import FooterFront from "./FooterFront";
 import { DatePicker, Select } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import { resolveMediaUrl } from "../../../../core/config/api";
+import "./homePage.scss";
 
 interface Doctor {
     id: string;
@@ -1048,37 +1049,35 @@ export default function ClinicLandingPage() {
                         <div className="container py-2">
                             <div className="d-flex justify-content-between align-items-center mb-4">
                                 <div className="d-flex align-items-center gap-3">
-                                    <h3 className="fw-bold text-uppercase mb-0" style={{ color: "#1d4ed8", letterSpacing: "1px", fontSize: "26px", lineHeight: "1.3" }}>
+                                    <h3 className="fw-bold text-uppercase mb-0" style={{ color: "#0f172a", letterSpacing: "1px", fontSize: "26px", lineHeight: "1.3" }}>
                                         RECENT REVIEWS
                                     </h3>
                                     <div className="d-flex align-items-center gap-2">
                                         <Stars n={avgRating} size={15} />
-                                        <span className="text-secondary fw-semibold" style={{ fontSize: "14px" }}>({totalReviews} Reviews)</span>
+                                        <span className="fw-semibold" style={{ fontSize: "14px", color: "#0f172a" }}>({totalReviews} Reviews)</span>
                                     </div>
                                 </div>
-                                {allReviewsList.length > 5 && (
-                                    <a
-                                        href="#"
-                                        className="fw-bold text-decoration-none d-flex align-items-center gap-1"
-                                        style={{ color: "#1d4ed8", fontSize: "14px" }}
-                                        onClick={(e) => { e.preventDefault(); setShowAllReviews(!showAllReviews); }}
-                                    >
-                                        {showAllReviews ? "Show Less Reviews" : "View All Reviews"} <i className={`ti ti-arrow-${showAllReviews ? 'up' : 'right'}`} />
-                                    </a>
-                                )}
+                                <a
+                                    href="#"
+                                    className="fw-bold text-decoration-none d-flex align-items-center gap-1"
+                                    style={{ color: "#0f172a", fontSize: "14px" }}
+                                    onClick={(e) => { e.preventDefault(); setShowAllReviews(!showAllReviews); }}
+                                >
+                                    {showAllReviews ? "Show Less Reviews" : "View All Reviews"} <i className={`ti ti-arrow-${showAllReviews ? 'up' : 'right'}`} />
+                                </a>
                             </div>
 
                             <div className="card rounded-4 border bg-white overflow-hidden shadow-sm">
                                 <div className="divide-y">
                                     {reviewsToShow.map((r, i, arr) => (
-                                        <div key={i} className={`d-flex flex-column flex-md-row p-4 align-items-start align-items-md-center justify-content-between gap-4 ${i < arr.length - 1 ? 'border-bottom' : ''}`}>
+                                        <div key={i} className={`d-flex flex-column flex-md-row p-4 align-items-start align-items-md-center justify-content-between gap-3 ${i < arr.length - 1 ? 'border-bottom' : ''}`}>
 
                                             {/* Left Column: Author details */}
-                                            <div style={{ minWidth: "160px" }}>
-                                                <h6 className="fw-bold text-dark mb-1" style={{ fontSize: "16px" }}>{r.name}</h6>
-                                                <span className="text-secondary d-block mb-1" style={{ fontSize: "13px" }}>Patient</span>
-                                                <span className="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1 fw-semibold d-inline-flex align-items-center gap-1" style={{ fontSize: "11px" }}>
-                                                    <i className="ti ti-circle-check-filled text-success" /> Verified
+                                            <div style={{ minWidth: "140px", flexShrink: 0 }}>
+                                                <h6 className="fw-bold text-dark mb-1" style={{ fontSize: "15px" }}>{r.name}</h6>
+                                                <span className="d-block mb-1" style={{ fontSize: "13px", color: "#0f172a" }}>Patient</span>
+                                                <span className="d-inline-flex align-items-center gap-1 fw-semibold" style={{ fontSize: "11px", color: "#16a34a" }}>
+                                                    <i className="ti ti-circle-check-filled" style={{ color: "#16a34a" }} /> Verified
                                                 </span>
                                             </div>
 
@@ -1086,21 +1085,21 @@ export default function ClinicLandingPage() {
                                             <div className="flex-grow-1 text-start">
                                                 <div className="d-flex align-items-center gap-2 mb-2" style={{ whiteSpace: "nowrap" }}>
                                                     <Stars n={r.rating} size={15} />
-                                                    <span className="fw-bold text-dark" style={{ fontSize: "14px", whiteSpace: "nowrap" }}>{r.rating.toFixed(1)}</span>
+                                                    <span className="fw-bold text-dark" style={{ fontSize: "14px" }}>{r.rating.toFixed(1)}</span>
                                                 </div>
-                                                <p className="text-dark mb-0 fw-medium" style={{ fontSize: "15px", lineHeight: "1.6" }}>
+                                                <p className="text-dark mb-0 fw-medium" style={{ fontSize: "14px", lineHeight: "1.5" }}>
                                                     {r.feedback}
                                                 </p>
                                             </div>
 
                                             {/* Right Column: Date & Helpful Button */}
-                                            <div className="text-md-end d-flex flex-row flex-md-column justify-content-between justify-content-md-start align-items-center align-items-md-end w-100 w-md-auto gap-2">
-                                                <span className="text-secondary small d-block mb-0 mb-md-2" style={{ fontSize: "13px" }}>
+                                            <div className="d-flex flex-column align-items-end gap-2" style={{ minWidth: "130px", flexShrink: 0 }}>
+                                                <span className="text-secondary" style={{ fontSize: "13px" }}>
                                                     {["12 Jun, 2024", "8 Jun, 2024", "5 Jun, 2024", "1 Jun, 2024"][i % 4]}
                                                 </span>
                                                 <button
-                                                    className="btn btn-sm d-flex align-items-center gap-1 rounded-3 px-3 py-1.5 bg-white text-secondary hover-primary"
-                                                    style={{ fontSize: "13px", border: "1px solid #cbd5e1" }}
+                                                    className="btn btn-sm d-flex align-items-center gap-1 rounded-pill px-3 py-1"
+                                                    style={{ fontSize: "13px", border: "1.5px solid #0f172a", color: "#0f172a", background: "#fff" }}
                                                 >
                                                     <i className="ti ti-thumb-up" /> Helpful ({[25, 18, 12, 8][i % 4]})
                                                 </button>
@@ -1108,6 +1107,16 @@ export default function ClinicLandingPage() {
 
                                         </div>
                                     ))}
+                                </div>
+
+                                {/* Write a Review Button */}
+                                <div className="text-center py-3 border-top">
+                                    <button
+                                        className="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold d-inline-flex align-items-center gap-2"
+                                        style={{ color: "#0f172a", borderColor: "#0f172a", fontSize: "14px" }}
+                                    >
+                                        <i className="ti ti-pencil" /> Write a Review
+                                    </button>
                                 </div>
                             </div>
                         </div>

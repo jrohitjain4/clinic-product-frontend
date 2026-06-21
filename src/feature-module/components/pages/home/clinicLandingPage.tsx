@@ -1119,7 +1119,7 @@ export default function ClinicLandingPage() {
                                 <div className="text-center py-4 border-top">
                                     <button
                                         className="btn rounded-pill px-5 py-2 fw-bold d-inline-flex align-items-center gap-2 text-white"
-                                        style={{ background: "#0f172a", border: "2px solid #0f172a", fontSize: "15px" }}
+                                        style={{ background: "#1d4ed8", border: "2px solid #1d4ed8", fontSize: "15px" }}
                                     >
                                         <i className="ti ti-pencil" /> Write a Review
                                     </button>

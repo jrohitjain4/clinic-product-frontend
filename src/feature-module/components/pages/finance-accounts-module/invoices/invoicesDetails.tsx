@@ -130,12 +130,22 @@ const InvoicesDetails = () => {
                             {dayjs(invoice.dueDate).format("DD MMM YYYY")}
                           </span>
                         </p>
-                        <p className="text-body mb-0">
+                        <p className={`text-body ${invoice.appointment ? "mb-1" : "mb-0"}`}>
                           Payment Method :{" "}
                           <span className="text-dark">
                             {invoice.paymentMethod || ""}
                           </span>
                         </p>
+                        {invoice.appointment && (
+                          <p className="text-body mb-0">
+                            Appointment :{" "}
+                            <span className="text-dark fw-semibold">
+                              #{invoice.appointment.appointmentCode || invoice.appointment.id.slice(-6)} (
+                              {invoice.appointment.doctor?.fullName ? `Dr. ${invoice.appointment.doctor.fullName}` : "Doctor"} -{" "}
+                              {dayjs(invoice.appointment.scheduledAt).format("DD MMM YYYY, hh:mm A")})
+                            </span>
+                          </p>
+                        )}
                       </div>
                       <div className="col-lg-4">
                         <h5 className="mb-2 fs-16 fw-bold">Clinic</h5>
@@ -153,7 +163,7 @@ const InvoicesDetails = () => {
                         <p className="text-dark fw-medium mb-1">
                           {invoice.patient
                             ? `${invoice.patient.firstName} ${invoice.patient.lastName}`
-                            : ""}
+                            : "Patient not found (Deleted)"}
                         </p>
                         {invoice.patient?.email && (
                           <p className="text-body mb-1">
@@ -194,10 +204,10 @@ const InvoicesDetails = () => {
                                   <td className="text-muted">
                                     {item.description || ""}
                                   </td>
-                                  <td>${Number(item.unitCost).toFixed(2)}</td>
+                                  <td>₹{Number(item.unitCost).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                   <td>{item.quantity}</td>
                                   <td className="fw-semibold">
-                                    ${Number(item.amount).toFixed(2)}
+                                    ₹{Number(item.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </td>
                                 </tr>
                               ))
@@ -227,7 +237,7 @@ const InvoicesDetails = () => {
                         <div className="d-flex align-items-center justify-content-between mb-2">
                           <h6 className="fs-14 fw-medium text-body">Sub Total</h6>
                           <h6 className="fs-14 fw-semibold text-dark">
-                            ${Number(invoice.subTotal).toFixed(2)}
+                            ₹{Number(invoice.subTotal).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </h6>
                         </div>
                         <div className="d-flex align-items-center justify-content-between mb-2">
@@ -235,21 +245,21 @@ const InvoicesDetails = () => {
                             Tax ({invoice.tax}%)
                           </h6>
                           <h6 className="fs-14 fw-semibold text-dark">
-                            ${(Number(invoice.subTotal) * Number(invoice.tax) / 100).toFixed(2)}
+                            ₹{(Number(invoice.subTotal) * Number(invoice.tax) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </h6>
                         </div>
                         {Number(invoice.discount) > 0 && (
                           <div className="d-flex align-items-center justify-content-between mb-2">
                             <h6 className="fs-14 fw-medium text-body">Discount</h6>
                             <h6 className="fs-14 fw-semibold text-danger">
-                              -${Number(invoice.discount).toFixed(2)}
+                              -₹{Number(invoice.discount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </h6>
                           </div>
                         )}
                         <div className="d-flex align-items-center justify-content-between border-top pt-3 mt-2">
                           <h6 className="fs-18 fw-bold">Total (INR)</h6>
                           <h6 className="fs-18 fw-bold text-primary">
-                            ${Number(invoice.totalAmount).toFixed(2)}
+                            ₹{Number(invoice.totalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </h6>
                         </div>
                       </div>

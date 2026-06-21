@@ -294,7 +294,7 @@ const AddInvoices = () => {
                                 <input type="number" className="form-control" value={invoice.quantity} onChange={(e) => handleItemUpdate(invoice.id, "quantity", e.target.value)} />
                               </td>
                               <td>
-                                <input type="text" className="form-control" readOnly value={`$${invoice.amount.toFixed(2)}`} />
+                                <input type="text" className="form-control" readOnly value={`₹${invoice.amount.toFixed(2)}`} />
                               </td>
                               <td>
                                 <button type="button" className="btn remove-invoices btn-sm border shadow-sm p-2 d-flex align-items-center justify-content-center rounded fs-14" onClick={() => handleRemoveInvoice(invoice.id)}>
@@ -321,15 +321,15 @@ const AddInvoices = () => {
                     <div className="">
                       <div className="d-flex align-items-center justify-content-between mb-2">
                         <h6 className="fs-14 fw-normal text-dark">Sub Total</h6>
-                        <h6 className="fs-14 fw-semibold text-dark">${totals.amount.toFixed(2)}</h6>
+                        <h6 className="fs-14 fw-semibold text-dark">₹{totals.amount.toFixed(2)}</h6>
                       </div>
                       <div className="d-flex align-items-center justify-content-between mb-2">
                         <h6 className="fs-14 fw-normal text-dark">Tax ({selectedTax ? selectedTax.value : 0}%)</h6>
-                        <h6 className="fs-14 fw-semibold text-dark">${totals.taxValue.toFixed(2)}</h6>
+                        <h6 className="fs-14 fw-semibold text-dark">₹{totals.taxValue.toFixed(2)}</h6>
                       </div>
                       <div className="d-flex align-items-center justify-content-between mb-2">
-                        <h6 className="fs-18 fw-bold">Total (USD)</h6>
-                        <h6 className="fs-18 fw-bold">${totals.total.toFixed(2)}</h6>
+                        <h6 className="fs-18 fw-bold">Total (INR)</h6>
+                        <h6 className="fs-18 fw-bold">₹{totals.total.toFixed(2)}</h6>
                       </div>
                     </div>
                   </div>

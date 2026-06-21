@@ -86,9 +86,9 @@ const DoctorsGrid = ({ doctors, loading, error, onRetry, onDelete }: DoctorsGrid
                       />
                     </Link>
                   </div>
-                  <div className="flex-fill pe-2">
-                    <div className="d-flex align-items-center justify-content-between mb-1">
-                      <h5 className="mb-0 fw-bold">
+                  <div className="flex-fill pe-2" style={{ minWidth: 0 }}>
+                    <div className="d-flex align-items-center justify-content-between mb-1" style={{ minWidth: 0 }}>
+                      <h5 className="mb-0 fw-bold text-truncate me-2" style={{ flex: "1 1 auto", minWidth: 0 }} title={doctor.fullName}>
                         <Link to={doctorDetailsPath(doctor.id)} className="text-dark">{doctor.fullName}</Link>
                       </h5>
                       <div className="action-item">
@@ -122,9 +122,9 @@ const DoctorsGrid = ({ doctors, loading, error, onRetry, onDelete }: DoctorsGrid
                         </ul>
                       </div>
                     </div>
-                    <span className="d-block mb-1 fs-14 text-primary fw-medium">{designation}</span>
+                    <span className="d-block mb-1 fs-14 text-primary fw-medium text-truncate" style={{ maxWidth: "150px" }} title={designation}>{designation}</span>
                     <p className="mb-2 fs-13 d-flex align-items-center gap-2">
-                      <span className="text-muted fw-medium">{doctor.department?.name || "—"}</span>
+                      <span className="text-muted fw-medium text-truncate" style={{ maxWidth: "90px" }} title={doctor.department?.name || "—"}>{doctor.department?.name || "—"}</span>
                       <span className="text-muted">|</span>
                       <span
                         className={`badge ${statusLabel === "Available"

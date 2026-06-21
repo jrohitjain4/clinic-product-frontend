@@ -2,11 +2,11 @@ import { Link } from "react-router";
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import { Country, State, City } from "country-state-city";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import DoctorProfileUpload from "../../../../../../core/common/doctor-profile-upload/DoctorProfileUpload";
 import { toast } from "react-toastify";
-import { resolveMediaUrl } from "../../../../../../core/config/api";
+import { resolveMediaUrl, apiUrl } from "../../../../../../core/config/api";
 import ImageCropperModal from "../../../../../../core/common/crop/ImageCropperModal";
 
 const ProfileSettings = () => {
@@ -117,6 +117,75 @@ const ProfileSettings = () => {
   const handleCityChange = (option: any) => {
     setSelectedCity(option);
   };
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(apiUrl("/api/auth/me"), {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          // Update localStorage
+          localStorage.setItem("user", JSON.stringify(data));
+          
+          // Now set the form data and selected options!
+          const nameParts = (data.fullName || "Admin User").split(" ");
+          const fName = nameParts[0] || "Admin";
+          const lName = nameParts.slice(1).join(" ") || (data.fullName && !data.fullName.includes(" ") ? "" : "User");
+
+          setFormData({
+            firstName: fName,
+            lastName: lName,
+            email: data.email || "",
+            phone: data.clinic?.phone || "",
+            addressLine1: data.clinic?.addressLine1 || "",
+            addressLine2: data.clinic?.addressLine2 || "",
+            pincode: data.clinic?.pincode || "",
+            clinicName: data.clinic?.name || "",
+            gstNo: data.clinic?.gstNumber || ""
+          });
+
+          if (data.clinic?.landingPage?.logo && data.clinic?.landingPage?.logo !== "/logo.png") {
+            setLogoPreview(data.clinic.landingPage.logo);
+          }
+          if (data.profileImage) {
+            setProfileImage(data.profileImage);
+          }
+
+          // Populate country/state/city dropdowns
+          const countryName = data.clinic?.country || "";
+          const countryObj = Country.getAllCountries().find(
+            (c) => c.name.toLowerCase() === countryName.toLowerCase()
+          );
+          if (countryObj) {
+            setSelectedCountry({ value: countryObj.isoCode, label: countryObj.name });
+            const states = State.getStatesOfCountry(countryObj.isoCode).map((s) => ({ value: s.isoCode, label: s.name }));
+            setStatesList(states);
+
+            const stateName = data.clinic?.state || "";
+            const stateObj = State.getStatesOfCountry(countryObj.isoCode).find(
+              (s) => s.name.toLowerCase() === stateName.toLowerCase()
+            );
+            if (stateObj) {
+              setSelectedState({ value: stateObj.isoCode, label: stateObj.name });
+              const cities = City.getCitiesOfState(countryObj.isoCode, stateObj.isoCode).map((c) => ({ value: c.name, label: c.name }));
+              setCitiesList(cities);
+
+              const cityName = data.clinic?.city || "";
+              if (cityName) {
+                setSelectedCity({ value: cityName, label: cityName });
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching profile settings", err);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const [saving, setSaving] = useState(false);
 

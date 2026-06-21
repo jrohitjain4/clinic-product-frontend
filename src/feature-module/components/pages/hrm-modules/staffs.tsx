@@ -116,7 +116,7 @@ const StaffsList = () => {
             className="avatar me-2 border-0 bg-transparent p-0"
             data-bs-toggle="modal"
             data-bs-target="#view_staff"
-            onClick={() => openStaff(record._raw)}
+            onClick={() => { openStaff(record._raw); setViewStaff(record._raw); }}
           >
             <ImageWithBasePath
               src={record.Image}
@@ -131,7 +131,7 @@ const StaffsList = () => {
                 className="btn btn-link p-0 text-dark fw-semibold fs-14"
                 data-bs-toggle="modal"
                 data-bs-target="#view_staff"
-                onClick={() => openStaff(record._raw)}
+                onClick={() => { openStaff(record._raw); setViewStaff(record._raw); }}
               >
                 {text}
               </button>

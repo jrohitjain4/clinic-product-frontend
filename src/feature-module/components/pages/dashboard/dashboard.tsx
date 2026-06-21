@@ -14,16 +14,7 @@ import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { useDashboardStats } from "../../../../core/hooks/useDashboardStats";
-import { useClinicStaff } from "../../../../core/hooks/useClinicStaff";
 import { useHolidays } from "../../../../core/hooks/useHolidays";
-import { useClinicDepartments } from "../../../../core/hooks/useClinicDepartments";
-import { useClinicServices } from "../../../../core/hooks/useClinicServices";
-import { useClinicProducts } from "../../../../core/hooks/useClinicProducts";
-import { useTickets } from "../../../../core/hooks/useTickets";
-import { useLeaves } from "../../../../core/hooks/useLeaves";
-import { useClinicSpecializations } from "../../../../core/hooks/useClinicSpecializations";
-import { usePayroll } from "../../../../core/hooks/usePayroll";
-import { useClinicRoles } from "../../../../core/hooks/useClinicRoles";
 import { useClinicAppointments } from "../../../../core/hooks/useClinicAppointments";
 import { useClinicPatients } from "../../../../core/hooks/useClinicPatients";
 import { apiUrl } from "../../../../core/config/api";
@@ -34,19 +25,9 @@ dayjs.extend(isBetween);
 const Dashboard = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const { stats } = useDashboardStats();
-  const { staffs } = useClinicStaff();
   const { holidays } = useHolidays();
-  const { departments } = useClinicDepartments();
-  const { services } = useClinicServices();
-  const { products } = useClinicProducts();
-  const { tickets } = useTickets();
-  const { leaves } = useLeaves();
-  const { specializations } = useClinicSpecializations();
-  const { payrolls } = usePayroll();
-  const { roles } = useClinicRoles();
   const { appointments } = useClinicAppointments();
   const { patients } = useClinicPatients();
-  const [designations, setDesignations] = useState<any[]>([]);
   const [showAddAppointment, setShowAddAppointment] = useState(false);
 
   const todayAppointmentsCount = useMemo(() => {
@@ -204,14 +185,7 @@ const Dashboard = () => {
     }
   }), []);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-    fetch(apiUrl("/api/designations?type=Staff"), { headers })
-      .then(r => r.json())
-      .then(data => setDesignations(Array.isArray(data) ? data : []))
-      .catch(() => {});
-  }, []);
+
 
   const [sColChart] = useState<any>({
     chart: {
@@ -387,7 +361,7 @@ const Dashboard = () => {
           {/* Row 1 Stats */}
           <div className="row g-2 mb-2">
             {/* Total Doctors */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">
@@ -408,7 +382,7 @@ const Dashboard = () => {
             </div>
 
             {/* Total Patients */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">
@@ -429,7 +403,7 @@ const Dashboard = () => {
             </div>
 
             {/* Appointments */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">
@@ -450,7 +424,7 @@ const Dashboard = () => {
             </div>
 
             {/* Total Revenue */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">
@@ -474,7 +448,7 @@ const Dashboard = () => {
           {/* Row 2 Stats */}
           <div className="row g-2 mb-3">
             {/* Today's Appointments */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">
@@ -494,7 +468,7 @@ const Dashboard = () => {
             </div>
 
             {/* Completed Appointments */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">
@@ -514,7 +488,7 @@ const Dashboard = () => {
             </div>
 
             {/* New Patients */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">
@@ -534,7 +508,7 @@ const Dashboard = () => {
             </div>
 
             {/* No Show Appointments */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">

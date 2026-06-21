@@ -9,6 +9,7 @@ import dayjs from "dayjs";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
+import { ViewModal } from "../../../../core/common/modal/ViewModal";
 
 interface Department {
   id: string;
@@ -23,6 +24,7 @@ interface Department {
 const HrmDepartments = () => {
   const location = useLocation();
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [viewDept, setViewDept] = useState<Department | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [error, setError] = useState("");
@@ -310,9 +312,9 @@ const HrmDepartments = () => {
             type="button"
             className="bg-transparent border-0 text-info p-1"
             title="View Details"
-            onClick={() => {
-              // Add view functionality if needed
-            }}
+            data-bs-toggle="modal"
+            data-bs-target="#view_department"
+            onClick={() => setViewDept(record)}
           >
             <i className="ti ti-eye fs-18"></i>
           </button>
@@ -802,6 +804,31 @@ const HrmDepartments = () => {
           </div>
         </div>
       </div>
+      {/* ===== VIEW DEPARTMENT MODAL ===== */}
+      <ViewModal
+        id="view_department"
+        title="Department Details"
+        subtitle="View department information"
+        headerIcon={<i className="ti ti-building" />}
+        highlightTitle={viewDept?.name || "Department"}
+        highlightStatus={
+          <span className={`badge border ${viewDept?.status === "Active" ? "badge-soft-success border-success" : "badge-soft-danger border-danger"} fw-bold px-2 py-1`} style={{ fontSize: "10px", borderRadius: "10px" }}>
+            <i className="ti ti-point-filled me-1"></i>{viewDept?.status || "Active"}
+          </span>
+        }
+        highlightColor="#e0e7ff"
+        details={[
+          { icon: <i className="ti ti-calendar" />, label: "Created Date", value: viewDept?.createdAt ? new Date(viewDept.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—" },
+          { icon: <i className="ti ti-user" />, label: "No. of Doctors", value: String(viewDept?.noOfDoctors || 0) },
+          { icon: <i className="ti ti-tag" />, label: "No. of Designations", value: String(viewDept?.noOfDesignations || 0) },
+          { icon: <i className="ti ti-file-description" />, label: "Description", value: viewDept?.description || "No description provided", fullWidth: true }
+        ]}
+        onEdit={() => {
+          if (viewDept) openEdit(viewDept);
+        }}
+        editLabel="Edit Department"
+        editModalTarget="#edit_department"
+      />
     </>
   );
 };

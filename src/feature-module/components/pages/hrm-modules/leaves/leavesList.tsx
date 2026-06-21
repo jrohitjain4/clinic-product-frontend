@@ -17,6 +17,10 @@ const LeavesList = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [viewRecord, setViewRecord] = useState<any>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteId, setDeleteId] = useState("");
+  const [deleteEmployee, setDeleteEmployee] = useState("");
+  const [withdrawId, setWithdrawId] = useState("");
+  const [cancelId, setCancelId] = useState("");
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
@@ -30,6 +34,57 @@ const LeavesList = () => {
       document.getElementById("btn-close-bulk-delete-leaves")?.click();
     } catch (e: any) {
       toast.error(e?.message || "Failed to delete leaves");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleteLoading(true);
+    try {
+      const ok = await deleteLeave(deleteId);
+      if (ok) {
+        toast.success("Leave record deleted");
+        document.getElementById("btn-close-delete-leave")?.click();
+      } else {
+        toast.error("Failed to delete leave record");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Error deleting leave");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    setDeleteLoading(true);
+    try {
+      const ok = await withdrawLeave(withdrawId);
+      if (ok) {
+        toast.success("Leave request withdrawn successfully");
+        document.getElementById("btn-close-withdraw-leave")?.click();
+      } else {
+        toast.error("Failed to withdraw leave request");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Error withdrawing leave");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    setDeleteLoading(true);
+    try {
+      const ok = await updateStatus(cancelId, { status: "CANCELLED" });
+      if (ok) {
+        toast.success("Leave request cancelled successfully");
+        document.getElementById("btn-close-cancel-leave")?.click();
+      } else {
+        toast.error("Failed to cancel leave request");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Error cancelling leave");
     } finally {
       setDeleteLoading(false);
     }
@@ -241,24 +296,18 @@ const LeavesList = () => {
             </button>
 
             {/* Delete */}
-            <Popconfirm
-              title="Permanently delete this leave record?"
-              onConfirm={async () => {
-                const ok = await deleteLeave(record.id);
-                if (ok) toast.success("Leave record deleted");
-                else toast.error("Failed to delete leave record");
+            <button
+              className="bg-transparent border-0 text-danger p-1"
+              title="Delete"
+              data-bs-toggle="modal"
+              data-bs-target="#delete_leave_modal"
+              onClick={() => {
+                setDeleteId(record.id);
+                setDeleteEmployee(record.Employee);
               }}
-              okText="Yes, Delete"
-              cancelText="No"
-              okButtonProps={{ danger: true }}
             >
-              <button
-                className="bg-transparent border-0 text-danger p-1"
-                title="Delete"
-              >
-                <i className="ti ti-trash fs-18"></i>
-              </button>
-            </Popconfirm>
+              <i className="ti ti-trash fs-18"></i>
+            </button>
 
             {/* Edit/Review */}
             {(record.rawStatus === "APPLIED" ||
@@ -288,45 +337,28 @@ const LeavesList = () => {
 
             {/* Withdraw */}
             {canWithdraw && isSelf && (
-              <Popconfirm
-                title="Withdraw this leave request?"
-                onConfirm={async () => {
-                  const ok = await withdrawLeave(record.id);
-                  if (ok) toast.success("Leave withdrawn successfully");
-                  else toast.error("Failed to withdraw leave");
-                }}
-                okText="Yes, Withdraw"
-                cancelText="No"
+              <button
+                className="bg-transparent border-0 text-warning p-1"
+                title="Withdraw"
+                data-bs-toggle="modal"
+                data-bs-target="#withdraw_leave_modal"
+                onClick={() => setWithdrawId(record.id)}
               >
-                <button
-                  className="bg-transparent border-0 text-warning p-1"
-                  title="Withdraw"
-                >
-                  <i className="ti ti-arrow-back fs-18"></i>
-                </button>
-              </Popconfirm>
+                <i className="ti ti-arrow-back fs-18"></i>
+              </button>
             )}
 
             {/* Cancel */}
             {canCancel && (
-              <Popconfirm
-                title="Cancel this approved leave?"
-                onConfirm={async () => {
-                  const ok = await updateStatus(record.id, { status: "CANCELLED" });
-                  if (ok) toast.success("Leave cancelled successfully");
-                  else toast.error("Failed to cancel leave");
-                }}
-                okText="Yes, Cancel"
-                cancelText="No"
-                okButtonProps={{ danger: true }}
+              <button
+                className="bg-transparent border-0 text-dark p-1"
+                title="Cancel Leave"
+                data-bs-toggle="modal"
+                data-bs-target="#cancel_leave_modal"
+                onClick={() => setCancelId(record.id)}
               >
-                <button
-                  className="bg-transparent border-0 text-dark p-1"
-                  title="Cancel Leave"
-                >
-                  <i className="ti ti-ban fs-18"></i>
-                </button>
-              </Popconfirm>
+                <i className="ti ti-ban fs-18"></i>
+              </button>
             )}
           </div>
         );
@@ -798,6 +830,177 @@ const LeavesList = () => {
                     <>
                       <i className="ti ti-trash me-2" />
                       Yes, Delete
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== DELETE LEAVE MODAL ===== */}
+      <div className="modal fade" id="delete_leave_modal">
+        <div className="modal-dialog modal-dialog-centered modal-sm">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "12px", overflow: "hidden" }}>
+            <div className="modal-body text-center position-relative z-1 pt-5 pb-5">
+              <ImageWithBasePath
+                src="assets/img/bg/delete-modal-bg-01.png"
+                alt=""
+                className="img-fluid position-absolute top-0 start-0 z-n1"
+              />
+              <ImageWithBasePath
+                src="assets/img/bg/delete-modal-bg-02.png"
+                alt=""
+                className="img-fluid position-absolute bottom-0 end-0 z-n1"
+              />
+              <div className="mb-3">
+                <span className="avatar avatar-lg bg-danger text-white">
+                  <i className="ti ti-trash fs-24"></i>
+                </span>
+              </div>
+              <h5 className="fw-bold mb-2">Delete Leave Request</h5>
+              <p className="text-muted mb-4">
+                Are you sure you want to delete the leave request for <strong>{deleteEmployee}</strong>?
+              </p>
+              <div className="d-flex justify-content-center gap-2">
+                <button
+                  id="btn-close-delete-leave"
+                  type="button"
+                  className="btn btn-light position-relative z-1 px-4"
+                  data-bs-dismiss="modal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger position-relative z-1 px-4"
+                  onClick={handleDelete}
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <i className="ti ti-trash me-2" />
+                      Yes, Delete
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== WITHDRAW LEAVE MODAL ===== */}
+      <div className="modal fade" id="withdraw_leave_modal">
+        <div className="modal-dialog modal-dialog-centered modal-sm">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "12px", overflow: "hidden" }}>
+            <div className="modal-body text-center position-relative z-1 pt-5 pb-5">
+              <ImageWithBasePath
+                src="assets/img/bg/delete-modal-bg-01.png"
+                alt=""
+                className="img-fluid position-absolute top-0 start-0 z-n1"
+              />
+              <ImageWithBasePath
+                src="assets/img/bg/delete-modal-bg-02.png"
+                alt=""
+                className="img-fluid position-absolute bottom-0 end-0 z-n1"
+              />
+              <div className="mb-3">
+                <span className="avatar avatar-lg bg-warning text-white">
+                  <i className="ti ti-arrow-back fs-24"></i>
+                </span>
+              </div>
+              <h5 className="fw-bold mb-2">Withdraw Leave Request</h5>
+              <p className="text-muted mb-4">
+                Are you sure you want to withdraw this leave request?
+              </p>
+              <div className="d-flex justify-content-center gap-2">
+                <button
+                  id="btn-close-withdraw-leave"
+                  type="button"
+                  className="btn btn-light position-relative z-1 px-4"
+                  data-bs-dismiss="modal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-warning position-relative z-1 px-4 text-white"
+                  onClick={handleWithdraw}
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" />
+                      Withdrawing...
+                    </>
+                  ) : (
+                    <>
+                      <i className="ti ti-arrow-back me-2" />
+                      Yes, Withdraw
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== CANCEL LEAVE MODAL ===== */}
+      <div className="modal fade" id="cancel_leave_modal">
+        <div className="modal-dialog modal-dialog-centered modal-sm">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "12px", overflow: "hidden" }}>
+            <div className="modal-body text-center position-relative z-1 pt-5 pb-5">
+              <ImageWithBasePath
+                src="assets/img/bg/delete-modal-bg-01.png"
+                alt=""
+                className="img-fluid position-absolute top-0 start-0 z-n1"
+              />
+              <ImageWithBasePath
+                src="assets/img/bg/delete-modal-bg-02.png"
+                alt=""
+                className="img-fluid position-absolute bottom-0 end-0 z-n1"
+              />
+              <div className="mb-3">
+                <span className="avatar avatar-lg bg-dark text-white">
+                  <i className="ti ti-ban fs-24"></i>
+                </span>
+              </div>
+              <h5 className="fw-bold mb-2">Cancel Approved Leave</h5>
+              <p className="text-muted mb-4">
+                Are you sure you want to cancel this approved leave?
+              </p>
+              <div className="d-flex justify-content-center gap-2">
+                <button
+                  id="btn-close-cancel-leave"
+                  type="button"
+                  className="btn btn-light position-relative z-1 px-4"
+                  data-bs-dismiss="modal"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger position-relative z-1 px-4"
+                  onClick={handleCancel}
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <i className="ti ti-ban me-2" />
+                      Yes, Cancel
                     </>
                   )}
                 </button>

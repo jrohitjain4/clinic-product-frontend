@@ -203,7 +203,7 @@ const InvoicesList = () => {
     Image: inv.patient?.profileImage || "avatar-01.jpg",
     CreatedDate: dayjs(inv.invoiceDate).format("DD MMM YYYY"),
     DueDate: dayjs(inv.dueDate).format("DD MMM YYYY"),
-    Amount: `$${inv.totalAmount.toFixed(2)}`,
+    Amount: `₹${inv.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     Status: inv.paymentStatus,
     raw: inv,
   }));

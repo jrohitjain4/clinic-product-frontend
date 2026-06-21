@@ -754,17 +754,17 @@ const AppointmentDetails = () => {
                     <div className="d-flex align-items-center gap-2 mt-3 mt-md-0 action-buttons-row">
                         {/* Print / Download Dropdown */}
                         <div className="dropdown">
-                            <button className="btn btn-outline-light border bg-white text-dark dropdown-toggle d-flex align-items-center gap-2 fw-bold shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i className="ti ti-printer" /> Print / Download
+                            <button className="btn btn-sm btn-outline-light border bg-white text-dark dropdown-toggle d-flex align-items-center gap-2 fw-bold shadow-sm fs-12" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i className="ti ti-printer" /> Print/Download
                             </button>
                             <ul className="dropdown-menu dropdown-menu-end shadow-sm">
                                 <li>
-                                    <button className="dropdown-item d-flex align-items-center gap-2 text-dark" onClick={() => window.print()}>
+                                    <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-12" onClick={() => window.print()}>
                                         <i className="ti ti-printer" /> Print
                                     </button>
                                 </li>
                                 <li>
-                                    <button className="dropdown-item d-flex align-items-center gap-2 text-dark" onClick={handleDownload}>
+                                    <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-12" onClick={handleDownload}>
                                         <i className="ti ti-download" /> Download PDF
                                     </button>
                                 </li>
@@ -772,35 +772,30 @@ const AppointmentDetails = () => {
                         </div>
 
                         {/* Add Prescription Button */}
-                        <button className="btn btn-soft-info d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={() => { setSelectedPres(null); setEditingPrescription(null); setShowPresModal(true); }}>
-                            <i className="ti ti-file-plus" /> Add Prescription
-                        </button>
-
-                        {/* Add Note Button */}
-                        <button className="btn btn-soft-primary d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={() => { setClinicalNote(""); setShowNoteModal(true); }}>
-                            <i className="ti ti-notes" /> Add Note
+                        <button className="btn btn-sm btn-soft-info d-flex align-items-center gap-2 fw-bold shadow-sm fs-12" onClick={() => { setSelectedPres(null); setEditingPrescription(null); setShowPresModal(true); }}>
+                            <i className="ti ti-file-plus" /> Prescription
                         </button>
 
                         {/* Schedule Follow-up Button */}
                         {appointment?.doctor?.followUpEnabled && (
                             <button
-                                className="btn btn-soft-success d-flex align-items-center gap-2 fw-bold shadow-sm"
+                                className="btn btn-sm btn-soft-success d-flex align-items-center gap-2 fw-bold shadow-sm fs-12"
                                 onClick={() => setShowFollowUpModal(true)}
                                 disabled={appointment.status === "Cancelled"}
                             >
-                                <i className="ti ti-calendar-plus" /> Schedule Follow-up
+                                <i className="ti ti-calendar-plus" /> Follow-up
                             </button>
                         )}
 
                         {/* Edit Button */}
-                        <Link to={all_routes.editAppointment.replace(":id", appointment.id)} className="btn btn-primary d-flex align-items-center gap-2 fw-bold shadow-sm">
+                        <Link to={all_routes.editAppointment.replace(":id", appointment.id)} className="btn btn-sm btn-primary d-flex align-items-center gap-2 fw-bold shadow-sm fs-12">
                             <i className="ti ti-edit" /> Edit
                         </Link>
 
                         {/* Cancel Appointment Button (Only shown in Confirmed/Schedule status) */}
                         {(appointment.status === "Confirmed" || appointment.status === "Schedule") && (
-                            <button className="btn btn-danger d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={handleCancelAppointment}>
-                                <i className="ti ti-circle-x" /> Cancel Appointment
+                            <button className="btn btn-sm btn-danger d-flex align-items-center gap-2 fw-bold shadow-sm fs-12" onClick={handleCancelAppointment}>
+                                <i className="ti ti-circle-x" /> Cancel
                             </button>
                         )}
                     </div>

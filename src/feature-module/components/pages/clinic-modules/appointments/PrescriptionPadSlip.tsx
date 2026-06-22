@@ -70,7 +70,6 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
           </div>
           <div className="d-flex justify-content-end gap-3 mb-1">
             <div className="d-flex align-items-center gap-1"><i className="ti ti-mail" /><span>{clinicEmail}</span></div>
-            <div className="d-flex align-items-center gap-1"><i className="ti ti-world" /><span>{clinicWebsite}</span></div>
           </div>
           <div className="d-flex justify-content-end gap-3">
             <div className="d-flex align-items-center gap-1"><i className="ti ti-clock" /><span>Mon-Sat: 9AM-8PM | Sun: 10AM-2PM</span></div>
@@ -194,8 +193,6 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
           <div className="d-flex align-items-center gap-1"><i className="ti ti-phone" /> {clinicPhone}</div>
           <span>|</span>
           <div className="d-flex align-items-center gap-1"><i className="ti ti-mail" /> {clinicEmail}</div>
-          <span>|</span>
-          <div className="d-flex align-items-center gap-1"><i className="ti ti-world" /> {clinicWebsite}</div>
         </div>
       </div>
 
@@ -222,28 +219,29 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
         }
 
         /* ---- HEADER ---- */
-        .pad-clinic-name { font-size: 16px; font-weight: 800 !important; color: #0d4b83 !important; margin: 0; line-height: 1.1; }
-        .pad-clinic-tagline { font-size: 9px; font-weight: 600 !important; color: #55ad6f !important; margin: 0; }
-        .pad-contact-grid { font-size: 7.5px; color: #333333 !important; line-height: 1.25; }
+        .pad-header { margin-bottom: 16px !important; }
+        .pad-clinic-name { font-size: 20px; font-weight: 800 !important; color: #0d4b83 !important; margin: 0; line-height: 1.1; }
+        .pad-clinic-tagline { font-size: 11px; font-weight: 600 !important; color: #55ad6f !important; margin: 0; }
+        .pad-contact-grid { font-size: 9.5px; color: #111111 !important; line-height: 1.35; }
         .pad-contact-grid i { color: #0d4b83 !important; }
 
         /* ---- DIVIDERS ---- */
-        .divider-thick { height: 2.5px; background-color: #0d4b83 !important; margin: 2px 0; flex-shrink: 0; }
-        .divider-thin { height: 1px; background-color: #0d4b83 !important; margin: 2px 0; flex-shrink: 0; }
+        .divider-thick { height: 2.5px; background-color: #0d4b83 !important; margin: 10px 0 20px 0; flex-shrink: 0; }
+        .divider-thin { height: 1px; background-color: #0d4b83 !important; margin: 4px 0; flex-shrink: 0; }
 
         /* ---- META GRID ---- */
-        .pad-section-title { font-size: 8.5px; font-weight: 800 !important; color: #0d4b83 !important; letter-spacing: 0.4px; margin-bottom: 2px; }
+        .pad-section-title { font-size: 11px; font-weight: 800 !important; color: #0d4b83 !important; letter-spacing: 0.4px; margin-bottom: 4px; }
         .border-right-divider { border-right: 1.5px solid #0d4b83 !important; }
-        table.pad-table { font-size: 8px; line-height: 1.1; border-collapse: collapse; width: 100%; }
-        table.pad-table tr { line-height: 1.1; }
+        table.pad-table { font-size: 10.5px; line-height: 1.25; border-collapse: collapse; width: 100%; }
+        table.pad-table tr { line-height: 1.25; }
         table.pad-table td,
-        table.pad-table th { padding: 0px 2px !important; margin: 0 !important; border: none !important; line-height: 1.1; vertical-align: top; }
-        table.pad-table .pad-lbl { font-weight: 700 !important; color: #222222 !important; width: 72px; white-space: nowrap; }
-        table.pad-table .pad-val { color: #000000 !important; font-weight: 600 !important; }
+        table.pad-table th { padding: 2px 2px !important; margin: 0 !important; border: none !important; line-height: 1.25; vertical-align: top; }
+        table.pad-table .pad-lbl { font-weight: 700 !important; color: #000000 !important; width: 100px; white-space: nowrap; }
+        table.pad-table .pad-val { color: #000000 !important; font-weight: 700 !important; }
 
         /* ---- DOCS ROW ---- */
-        .checkbox-box { width: 9px; height: 9px; border: 1px solid #000000 !important; display: inline-block; vertical-align: middle; margin-right: 2px; flex-shrink: 0; }
-        .pad-docs-row { font-size: 7.8px; font-weight: 700 !important; color: #000000 !important; padding: 0; flex-shrink: 0; }
+        .checkbox-box { width: 12px; height: 12px; border: 1.5px solid #000000 !important; display: inline-block; vertical-align: middle; margin-right: 4px; flex-shrink: 0; }
+        .pad-docs-row { font-size: 10px; font-weight: 700 !important; color: #000000 !important; padding: 2px 0; flex-shrink: 0; }
         .docs-title { font-weight: 800 !important; color: #0d4b83 !important; }
 
         /* ---- BODY ---- */
@@ -252,7 +250,7 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
           flex: 1 1 0;
           min-height: 0;
           border: 1.5px solid #0d4b83 !important;
-          margin-top: 2px;
+          margin-top: 4px;
           overflow: hidden;
         }
         .pad-left-notes-col {
@@ -260,14 +258,14 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
           border-right: 1.5px solid #0d4b83 !important;
           display: flex;
           flex-direction: column;
-          padding: 5px 5px;
+          padding: 8px 8px;
           overflow: hidden;
         }
-        .notes-col-title { font-size: 8.5px; font-weight: 800 !important; color: #0d4b83 !important; border-bottom: 1.5px solid #0d4b83 !important; padding-bottom: 2px; margin-bottom: 4px; text-align: center; flex-shrink: 0; }
-        .notes-vitals-list { display: flex; flex-direction: column; gap: 2.5px; flex-shrink: 0; }
-        .vital-item { font-size: 7.8px; font-weight: 700 !important; color: #000000 !important; line-height: 1.15; }
-        .ruled-notes-lines { flex: 1 1 0; display: flex; flex-direction: column; margin-top: 5px; justify-content: space-evenly; min-height: 0; }
-        .notes-ruled-line { border-bottom: 0.75px solid #000000 !important; opacity: 0.18; min-height: 0; }
+        .notes-col-title { font-size: 11px; font-weight: 800 !important; color: #0d4b83 !important; border-bottom: 1.5px solid #0d4b83 !important; padding-bottom: 4px; margin-bottom: 8px; text-align: center; flex-shrink: 0; }
+        .notes-vitals-list { display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
+        .vital-item { font-size: 12px; font-weight: 700 !important; color: #000000 !important; line-height: 1.35; }
+        .ruled-notes-lines { flex: 1 1 0; display: flex; flex-direction: column; margin-top: 10px; justify-content: space-evenly; min-height: 0; }
+        .notes-ruled-line { border-bottom: 0.75px solid #000000 !important; opacity: 0.3; min-height: 0; }
 
         .pad-right-rx-col {
           width: 72%;
@@ -284,12 +282,12 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
         .watermark-clinic-tagline { font-size: 8px; font-weight: 600 !important; margin: 0; }
         .rx-signature-container { align-self: flex-end; text-align: center; width: 150px; margin-bottom: 5px; }
         .sig-line { border-top: 1px solid #000000 !important; width: 100%; margin-bottom: 3px; }
-        .sig-text { font-size: 8px; font-weight: 700 !important; color: #000000 !important; }
+        .sig-text { font-size: 10px; font-weight: 700 !important; color: #000000 !important; }
 
         /* ---- FOOTER ---- */
-        .pad-footer { text-align: center; padding: 2px 0 0 0; font-size: 8px; flex-shrink: 0; }
+        .pad-footer { text-align: center; padding: 2px 0 0 0; font-size: 9.5px; flex-shrink: 0; }
         .footer-thanks { font-weight: 800 !important; color: #0d4b83 !important; margin-bottom: 1px; }
-        .footer-contacts { color: #555555 !important; font-size: 7.5px; }
+        .footer-contacts { color: #555555 !important; font-size: 9px; }
 
         /* ---- PRINT ---- */
         @media print {

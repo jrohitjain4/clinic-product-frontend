@@ -337,8 +337,8 @@ const InvoiceSlip: React.FC<InvoiceSlipProps> = ({ invoice }) => {
           font-size: 8px;
           letter-spacing: 0.3px;
           border: 1px solid #0d47a1;
-          color: #fff;
-          background: #0d47a1;
+          color: #ffffff !important;
+          background: #0d47a1 !important;
         }
         .inv-table tbody tr { border-bottom: 1px solid #e2e8f0; }
         .inv-table tbody tr:nth-child(even) { background: #f5f9ff; }

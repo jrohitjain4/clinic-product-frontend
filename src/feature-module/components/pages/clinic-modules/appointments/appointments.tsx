@@ -208,6 +208,7 @@ const Appointments = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchText, setSearchText] = useState("");
   const [printAppointment, setPrintAppointment] = useState<any | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (printAppointment) {
@@ -234,12 +235,21 @@ const Appointments = () => {
     else if (currentStatus === "Checked In") nextStatus = "Checked Out";
 
     if (nextStatus) {
+      setTogglingId(appointmentId);
+      const startTime = Date.now();
       try {
         await updateAppointmentStatus(appointmentId, nextStatus);
         toast.success(`Appointment marked as ${nextStatus}`);
       } catch (err) {
         console.error("Error updating status:", err);
         toast.error("Failed to update status");
+      } finally {
+        const elapsedTime = Date.now() - startTime;
+        const minDelay = 400; // minimum duration to let transition animate smoothly
+        if (elapsedTime < minDelay) {
+          await new Promise(resolve => setTimeout(resolve, minDelay - elapsedTime));
+        }
+        setTogglingId(null);
       }
     }
   };
@@ -661,11 +671,11 @@ const Appointments = () => {
                   className="form-check-input ms-0"
                   type="checkbox"
                   role="switch"
-                  checked={false}
+                  checked={togglingId === raw.id}
                   onChange={() => handleStatusToggle(raw.id, text)}
                   style={{ cursor: 'pointer', width: '30px', height: '16px' }}
                 />
-                <label className="text-muted small ms-1" style={{ fontSize: '10px' }}>
+                <label className="text-black fw-bold small ms-1" style={{ fontSize: '10px' }}>
                   {text === "Schedule" ? "Confirm" : text === "Confirmed" ? "Checkin" : "Checkout"}
                 </label>
               </div>

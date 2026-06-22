@@ -41,6 +41,17 @@ const AppointmentDetails = () => {
     const [printDropdownOpen, setPrintDropdownOpen] = useState(false);
     const [presDropdownOpen, setPresDropdownOpen] = useState(false);
 
+    useEffect(() => {
+        const handleClickOutside = () => {
+            setPrintDropdownOpen(false);
+            setPresDropdownOpen(false);
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, []);
+
     // Selection state
     const [selectedPresKeys, setSelectedPresKeys] = useState<any[]>([]);
     const [selectedFollowUpKeys, setSelectedFollowUpKeys] = useState<any[]>([]);
@@ -700,24 +711,24 @@ const AppointmentDetails = () => {
                         <h3 className="fw-bold mb-0">Visit # {appointment.appointmentCode || id?.slice(-6).toUpperCase()}</h3>
                     </div>
                     <div className="d-flex align-items-center gap-2 mt-3 mt-md-0 action-buttons-row">
-                        {/* Print / Download Dropdown - Appointment Slip */}
+                         {/* Print / Download Dropdown - Appointment Slip */}
                         <div className="dropdown">
                             <button 
-                                className="btn btn-sm btn-outline-light border bg-white text-dark dropdown-toggle d-flex align-items-center gap-2 fw-bold shadow-sm fs-12" 
+                                className="btn btn-sm btn-outline-light border bg-white text-dark dropdown-toggle d-flex align-items-center gap-2 fw-bold shadow-sm fs-14" 
                                 type="button" 
-                                onClick={() => setPrintDropdownOpen(!printDropdownOpen)}
+                                onClick={(e) => { e.stopPropagation(); setPrintDropdownOpen(!printDropdownOpen); setPresDropdownOpen(false); }}
                                 aria-expanded={printDropdownOpen}
                             >
                                 <i className="ti ti-printer" /> Appt. Slip
                             </button>
                             <ul className={`dropdown-menu dropdown-menu-end shadow-sm ${printDropdownOpen ? 'show' : ''}`} style={{ display: printDropdownOpen ? 'block' : 'none' }}>
                                 <li>
-                                    <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-12" onClick={() => { setPrintDropdownOpen(false); window.print(); }}>
+                                    <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-14 fw-semibold" onClick={() => { setPrintDropdownOpen(false); window.print(); }}>
                                         <i className="ti ti-printer" /> Print Slip
                                     </button>
                                 </li>
                                 <li>
-                                    <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-12" onClick={() => { setPrintDropdownOpen(false); handleDownload(); }}>
+                                    <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-14 fw-semibold" onClick={() => { setPrintDropdownOpen(false); handleDownload(); }}>
                                         <i className="ti ti-download" /> Download Slip PDF
                                     </button>
                                 </li>
@@ -727,21 +738,21 @@ const AppointmentDetails = () => {
                         {/* Prescription Pad Dropdown */}
                         <div className="dropdown">
                             <button
-                                className="btn btn-sm btn-outline-primary dropdown-toggle d-flex align-items-center gap-2 fw-bold shadow-sm fs-12"
+                                className="btn btn-sm btn-outline-primary dropdown-toggle d-flex align-items-center gap-2 fw-bold shadow-sm fs-14"
                                 type="button"
-                                onClick={() => setPresDropdownOpen(!presDropdownOpen)}
+                                onClick={(e) => { e.stopPropagation(); setPresDropdownOpen(!presDropdownOpen); setPrintDropdownOpen(false); }}
                                 aria-expanded={presDropdownOpen}
                             >
                                 <i className="ti ti-file-text" /> Prescription Pad
                             </button>
                             <ul className={`dropdown-menu dropdown-menu-end shadow-sm ${presDropdownOpen ? 'show' : ''}`} style={{ display: presDropdownOpen ? 'block' : 'none' }}>
                                 <li>
-                                    <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-12" onClick={() => { setPresDropdownOpen(false); handlePrescriptionPadPrint(); }}>
+                                    <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-14 fw-semibold" onClick={() => { setPresDropdownOpen(false); handlePrescriptionPadPrint(); }}>
                                         <i className="ti ti-printer" /> Print Prescription Pad
                                     </button>
                                 </li>
                                 <li>
-                                    <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-12" onClick={() => { setPresDropdownOpen(false); handlePrescriptionPadDownload(); }}>
+                                    <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-14 fw-semibold" onClick={() => { setPresDropdownOpen(false); handlePrescriptionPadDownload(); }}>
                                         <i className="ti ti-download" /> Download Prescription PDF
                                     </button>
                                 </li>
@@ -812,37 +823,37 @@ const AppointmentDetails = () => {
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-user fs-14 text-primary" />
-                                            <span className="text-muted fw-normal">Gender:</span>
-                                            <span className="text-dark">{appointment.patient?.gender || "N/A"}</span>
+                                            <span className="text-black fw-bold">Gender:</span>
+                                            <span className="text-black fw-bold">{appointment.patient?.gender || "N/A"}</span>
                                         </div>
                                     </div>
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-calendar fs-14 text-primary" />
-                                            <span className="text-muted fw-normal">Age:</span>
-                                            <span className="text-dark">{appointment.patient?.dob ? `${dayjs().diff(appointment.patient.dob, 'year')} Yrs` : "N/A"}</span>
+                                            <span className="text-black fw-bold">Age:</span>
+                                            <span className="text-black fw-bold">{appointment.patient?.dob ? `${dayjs().diff(appointment.patient.dob, 'year')} Yrs` : "N/A"}</span>
                                         </div>
                                     </div>
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-droplet fs-14 text-danger" />
-                                            <span className="text-muted fw-normal">Blood:</span>
-                                            <span className="text-dark">{appointment.patient?.bloodGroup || "N/A"}</span>
+                                            <span className="text-black fw-bold">Blood:</span>
+                                            <span className="text-black fw-bold">{appointment.patient?.bloodGroup || "N/A"}</span>
                                         </div>
                                     </div>
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-heart-handshake fs-14 text-primary" />
-                                            <span className="text-muted fw-normal">Marital:</span>
-                                            <span className="text-dark">{appointment.patient?.maritalStatus || "N/A"}</span>
+                                            <span className="text-black fw-bold">Marital:</span>
+                                            <span className="text-black fw-bold">{appointment.patient?.maritalStatus || "N/A"}</span>
                                         </div>
                                     </div>
 
                                     <div className="col-12">
                                         <div className="py-2 px-2 bg-light rounded-2 text-black fw-bold d-flex align-items-center gap-2">
                                             <i className="ti ti-phone-filled fs-14 text-primary" />
-                                            <span className="text-muted fw-normal">Phone:</span>
-                                            <span className="text-dark">{appointment.patient?.phone || "N/A"}</span>
+                                            <span className="text-black fw-bold">Phone:</span>
+                                            <span className="text-black fw-bold">{appointment.patient?.phone || "N/A"}</span>
                                         </div>
                                     </div>
 
@@ -850,11 +861,11 @@ const AppointmentDetails = () => {
                                         <div className="py-2 px-2 bg-light rounded-2 text-black fw-bold d-flex align-items-start gap-2">
                                             <i className="ti ti-map-pin fs-14 text-primary mt-0.5" />
                                             <div className="flex-grow-1 lh-sm">
-                                                <span className="text-muted fw-normal d-block fs-10 text-uppercase letter-spacing-1 mb-1">Address</span>
-                                                <div className="text-dark fw-bold mb-1">
+                                                <span className="text-black fw-bold d-block fs-10 text-uppercase letter-spacing-1 mb-1">Address</span>
+                                                <div className="text-black fw-bold mb-1">
                                                     {[appointment.patient?.address1, appointment.patient?.address2].filter(p => p && p.trim() !== "").join(", ") || "N/A"}
                                                 </div>
-                                                <div className="text-dark fw-bold">
+                                                <div className="text-black fw-bold">
                                                     {[appointment.patient?.city, appointment.patient?.state, appointment.patient?.pincode].filter(p => p && p.trim() !== "").join(", ") || "N/A"}
                                                 </div>
                                             </div>
@@ -923,29 +934,29 @@ const AppointmentDetails = () => {
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-briefcase fs-14 text-info" />
-                                            <span className="text-muted fw-normal">Exp:</span>
-                                            <span className="text-dark">{appointment.doctor?.yearOfExperience ? `${appointment.doctor.yearOfExperience}+ Yrs` : "8+ Yrs"}</span>
+                                            <span className="text-black fw-bold">Exp:</span>
+                                            <span className="text-black fw-bold">{appointment.doctor?.yearOfExperience ? `${appointment.doctor.yearOfExperience}+ Yrs` : "8+ Yrs"}</span>
                                         </div>
                                     </div>
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-building fs-14 text-info" />
-                                            <span className="text-muted fw-normal">Specialty:</span>
-                                            <span className="text-dark text-truncate">{appointment.doctor?.department?.name || "General"}</span>
+                                            <span className="text-black fw-bold">Specialty:</span>
+                                            <span className="text-black fw-bold text-truncate">{appointment.doctor?.department?.name || "General"}</span>
                                         </div>
                                     </div>
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-shield-check-filled fs-14 text-info" />
-                                            <span className="text-muted fw-normal">Role:</span>
-                                            <span className="text-dark text-truncate">{appointment.doctor?.designation?.name || "Consultant"}</span>
+                                            <span className="text-black fw-bold">Role:</span>
+                                            <span className="text-black fw-bold text-truncate">{appointment.doctor?.designation?.name || "Consultant"}</span>
                                         </div>
                                     </div>
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-coin fs-14 text-success" />
-                                            <span className="text-muted fw-normal">Fee:</span>
-                                            <span className="text-dark">₹{appointment.doctor?.consultationCharge || "500"}</span>
+                                            <span className="text-black fw-bold">Fee:</span>
+                                            <span className="text-black fw-bold">₹{appointment.doctor?.consultationCharge || "500"}</span>
                                         </div>
                                     </div>
 
@@ -953,8 +964,8 @@ const AppointmentDetails = () => {
                                         <div className="col-12">
                                             <div className="py-2 px-2 bg-light rounded-2 text-black fw-bold d-flex align-items-center gap-2">
                                                 <i className="ti ti-license fs-14 text-info" />
-                                                <span className="text-muted fw-normal">License:</span>
-                                                <span className="text-dark">{appointment.doctor.medicalLicenseNumber}</span>
+                                                <span className="text-black fw-bold">License:</span>
+                                                <span className="text-black fw-bold">{appointment.doctor.medicalLicenseNumber}</span>
                                             </div>
                                         </div>
                                     )}
@@ -962,16 +973,16 @@ const AppointmentDetails = () => {
                                     <div className="col-12">
                                         <div className="py-2 px-2 bg-light rounded-2 text-black fw-bold d-flex align-items-center gap-2">
                                             <i className="ti ti-phone-filled fs-14 text-info" />
-                                            <span className="text-muted fw-normal">Phone:</span>
-                                            <span className="text-dark">{appointment.doctor?.phone || "N/A"}</span>
+                                            <span className="text-black fw-bold">Phone:</span>
+                                            <span className="text-black fw-bold">{appointment.doctor?.phone || "N/A"}</span>
                                         </div>
                                     </div>
 
                                     <div className="col-12">
                                         <div className="py-2 px-2 bg-light rounded-2 text-black fw-bold d-flex align-items-center gap-2">
                                             <i className="ti ti-mail fs-14 text-info" />
-                                            <span className="text-muted fw-normal">Email:</span>
-                                            <span className="text-dark text-truncate">{appointment.doctor?.email || "N/A"}</span>
+                                            <span className="text-black fw-bold">Email:</span>
+                                            <span className="text-black fw-bold text-truncate">{appointment.doctor?.email || "N/A"}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1019,63 +1030,63 @@ const AppointmentDetails = () => {
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-building-hospital fs-14 text-primary" />
-                                            <span className="text-muted fw-normal">Type:</span>
+                                            <span className="text-black fw-bold">Type:</span>
                                             <span className="text-primary badge bg-soft-primary fs-11 px-2 py-1 rounded-pill">{appointment.appointmentType || "Routine"}</span>
                                         </div>
                                     </div>
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-device-laptop fs-14 text-info" />
-                                            <span className="text-muted fw-normal">Mode:</span>
-                                            <span className="text-dark">{appointment.mode || "In-person"}</span>
+                                            <span className="text-black fw-bold">Mode:</span>
+                                            <span className="text-black fw-bold">{appointment.mode || "In-person"}</span>
                                         </div>
                                     </div>
                                     <div className="col-12">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-clock-hour-4 fs-14 text-info" />
-                                            <span className="text-muted fw-normal">Scheduled Slot:</span>
-                                            <span className="text-dark fw-bold">{formatAppointmentTimeRange(appointment.scheduledAt, appointment.endAt)}</span>
+                                            <span className="text-black fw-bold">Scheduled Slot:</span>
+                                            <span className="text-black fw-bold">{formatAppointmentTimeRange(appointment.scheduledAt, appointment.endAt)}</span>
                                         </div>
                                     </div>
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-hourglass-low fs-14 text-warning" />
-                                            <span className="text-muted fw-normal">Expected:</span>
-                                            <span className="text-dark fw-bold">{slotDetails.expectedTime}</span>
+                                            <span className="text-black fw-bold">Expected:</span>
+                                            <span className="text-black fw-bold">{slotDetails.expectedTime}</span>
                                         </div>
                                     </div>
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-users fs-14 text-success" />
-                                            <span className="text-muted fw-normal">Check-in:</span>
-                                            <span className="text-dark fw-bold">{slotDetails.checkinHisNo}</span>
+                                            <span className="text-black fw-bold">Check-in:</span>
+                                            <span className="text-black fw-bold">{slotDetails.checkinHisNo}</span>
                                         </div>
                                     </div>
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-building fs-14 text-primary" />
-                                            <span className="text-muted fw-normal">Dept:</span>
-                                            <span className="text-dark text-truncate">{appointment.department?.name || "General"}</span>
+                                            <span className="text-black fw-bold">Dept:</span>
+                                            <span className="text-black fw-bold text-truncate">{appointment.department?.name || "General"}</span>
                                         </div>
                                     </div>
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-stopwatch fs-14 text-info" />
-                                            <span className="text-muted fw-normal">Duration:</span>
-                                            <span className="text-dark">{appointment.doctor?.appointmentDuration || 30} Mins</span>
+                                            <span className="text-black fw-bold">Duration:</span>
+                                            <span className="text-black fw-bold">{appointment.doctor?.appointmentDuration || 30} Mins</span>
                                         </div>
                                     </div>
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-map-pin fs-14 text-muted" />
-                                            <span className="text-muted fw-normal">Location:</span>
-                                            <span className="text-dark text-truncate">{appointment.location || "OPD"}</span>
+                                            <span className="text-black fw-bold">Location:</span>
+                                            <span className="text-black fw-bold text-truncate">{appointment.location || "OPD"}</span>
                                         </div>
                                     </div>
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-cash fs-14 text-success" />
-                                            <span className="text-muted fw-normal">Payment:</span>
+                                            <span className="text-black fw-bold">Payment:</span>
                                             <span className={`badge ${appointment.paymentStatus === 'Paid' ? 'bg-soft-success text-success' : appointment.paymentStatus === 'Free' ? 'bg-soft-info text-info' : 'bg-soft-warning text-warning'} fs-11 px-2 py-1 rounded-pill`}>{appointment.paymentStatus || "Unpaid"}</span>
                                         </div>
                                     </div>
@@ -1083,8 +1094,8 @@ const AppointmentDetails = () => {
                                         <div className="d-flex align-items-start gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-notes fs-14 text-muted mt-0.5" />
                                             <div className="flex-grow-1 lh-sm">
-                                                <span className="text-muted fw-normal d-block fs-10 text-uppercase letter-spacing-1 mb-1">Reason</span>
-                                                <span className="text-dark">{appointment.reason || "General Consultation"}</span>
+                                                <span className="text-black fw-bold d-block fs-10 text-uppercase letter-spacing-1 mb-1">Reason</span>
+                                                <span className="text-black fw-bold">{appointment.reason || "General Consultation"}</span>
                                             </div>
                                         </div>
                                     </div>

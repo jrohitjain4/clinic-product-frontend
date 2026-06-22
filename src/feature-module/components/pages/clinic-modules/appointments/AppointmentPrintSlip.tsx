@@ -1,6 +1,7 @@
 import React from "react";
 import dayjs from "dayjs";
 import { resolveMediaUrl } from "../../../../../core/config/api";
+import { useClinicServices } from "../../../../../core/hooks/useClinicServices";
 
 interface AppointmentPrintSlipProps {
   appointment: any;
@@ -13,7 +14,22 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
   notes = [],
   linkedPrescriptions = [],
 }) => {
+  const { services } = useClinicServices();
+
   if (!appointment) return null;
+
+  const isSessionAppointment = appointment?.serviceIds && appointment.serviceIds.length > 0;
+  const sessionServices = services.filter((s: any) => appointment.serviceIds?.includes(s.id));
+
+  const totalSessionDays = sessionServices.reduce((sum: number, s: any) => {
+    const match = (s.duration || '').match(/(\d+)/);
+    return sum + (match ? parseInt(match[1], 10) : 0);
+  }, 0);
+
+  const sessionStartDate = appointment?.scheduledAt ? dayjs(appointment.scheduledAt) : null;
+  const sessionEndDate = (sessionStartDate && totalSessionDays > 0) 
+    ? sessionStartDate.add(totalSessionDays - 1, "day") 
+    : sessionStartDate;
 
   const clinicName = appointment?.clinic?.name || appointment?.clinicName || "CITY CARE CLINIC";
   const clinicTagline = appointment?.clinic?.landingPage?.tagline || "Compassionate Care, Better Health";
@@ -59,7 +75,9 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
     : "—";
   const patientBloodGroup = appointment?.patient?.bloodGroup || "—";
   
-  const patientAddress = appointment?.patient?.address || "—";
+  const patientAddress = [appointment?.patient?.address1, appointment?.patient?.address2]
+    .filter(p => p && p.trim() !== "")
+    .join(", ") || "—";
   const patientReferredBy = appointment?.patient?.referredBy || "Self";
   const patientEmergencyContact = appointment?.patient?.emergencyContact || "—";
   const patientEmail = appointment?.patient?.email || "—";
@@ -84,28 +102,31 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
         <div className="appointment-slip-container">
           
           {/* Header Info Section */}
-          <div className="slip-header pb-2 border-bottom-double mb-2">
+          <div className="slip-header border-bottom-solid mb-2" style={{ paddingBottom: "10px" }}>
             <div className="d-flex flex-column align-items-start text-start w-100">
-              <h2 className="clinic-title mb-1" style={{ fontSize: "20px", fontWeight: "900", color: "#000000" }}>{clinicName}</h2>
-              {clinicTagline && <p className="clinic-tagline text-muted mb-1.5" style={{ fontSize: "11px", fontStyle: "italic", color: "#64748b" }}>{clinicTagline}</p>}
+              <h2 className="clinic-title mb-0" style={{ fontSize: "20px", fontWeight: "900", color: "#000000", lineHeight: "1.1" }}>{clinicName}</h2>
+              {clinicTagline && <p className="clinic-tagline text-muted mb-0" style={{ fontSize: "11px", fontStyle: "italic", color: "#64748b", marginTop: "3px", lineHeight: "1.1" }}>{clinicTagline}</p>}
               
-              <div className="d-flex flex-row flex-wrap align-items-center text-dark mt-1" style={{ fontSize: "10px", gap: "4px 16px" }}>
+              <div className="w-100 mt-2">
                 {(hasRealAddress || defaultAddress) && (
-                  <span className="d-flex align-items-center gap-1.5">
-                    <i className="ti ti-map-pin text-primary" style={{ fontSize: "12px" }} /> {hasRealAddress || defaultAddress}
-                  </span>
+                  <div className="d-flex align-items-center gap-1.5 text-dark mb-1" style={{ fontSize: "10px", lineHeight: "1.1" }}>
+                    <i className="ti ti-map-pin text-primary" style={{ fontSize: "12px" }} />
+                    <span>{hasRealAddress || defaultAddress}</span>
+                  </div>
                 )}
-                {(hasRealPhone || hasRealAltPhone || defaultPhone) && (
-                  <span className="d-flex align-items-center gap-1.5">
-                    <i className="ti ti-phone text-primary" style={{ fontSize: "12px" }} />
-                    {hasRealPhone || hasRealAltPhone || defaultPhone}
-                  </span>
-                )}
-                {(hasRealEmail || defaultEmail) && (
-                  <span className="d-flex align-items-center gap-1.5">
-                    <i className="ti ti-mail text-primary" style={{ fontSize: "11px" }} /> {hasRealEmail || defaultEmail}
-                  </span>
-                )}
+                <div className="d-flex flex-row flex-wrap align-items-center text-dark" style={{ fontSize: "10px", gap: "16px", lineHeight: "1.1" }}>
+                  {(hasRealPhone || hasRealAltPhone || defaultPhone) && (
+                    <span className="d-flex align-items-center gap-1.5">
+                      <i className="ti ti-phone text-primary" style={{ fontSize: "12px" }} />
+                      {hasRealPhone || hasRealAltPhone || defaultPhone}
+                    </span>
+                  )}
+                  {(hasRealEmail || defaultEmail) && (
+                    <span className="d-flex align-items-center gap-1.5">
+                      <i className="ti ti-mail text-primary" style={{ fontSize: "11px" }} /> {hasRealEmail || defaultEmail}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -181,6 +202,42 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Section: Session Details */}
+          {isSessionAppointment && sessionServices.length > 0 && (
+            <div className="slip-section mb-2">
+              <h6 className="section-header-title text-center mb-2">
+                <span className="title-text">SESSION DETAILS</span>
+              </h6>
+              <div className="row g-0 border rounded-1">
+                <div className="col-12">
+                  <table className="table table-borderless slip-subtable mb-0 w-100">
+                    <tbody>
+                      <tr>
+                        <td className="fw-semibold text-dark width-30 bg-light-gray">
+                          <i className="ti ti-settings text-primary me-2" />Selected Services
+                        </td>
+                        <td className="width-5">:</td>
+                        <td className="text-dark fw-bold">
+                          {sessionServices.map((s: any) => s.serviceName).join(", ")}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="fw-semibold text-dark width-30 bg-light-gray">
+                          <i className="ti ti-calendar text-primary me-2" />Session Date Range
+                        </td>
+                        <td>:</td>
+                        <td className="text-dark fw-bold">
+                          {sessionStartDate?.format("DD MMMM YYYY (dddd)")} <span className="mx-1 text-muted">to</span> {sessionEndDate?.format("DD MMMM YYYY (dddd)")} 
+                          {totalSessionDays > 0 && ` (${totalSessionDays} Days)`}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Section: Patient Details */}
           <div className="slip-section mb-2">
@@ -299,19 +356,13 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
             </div>
             
             {/* Signature & Seal */}
-            <div className="col-sm-5 mt-3 mt-sm-0 d-flex justify-content-between align-items-end">
-              <div className="text-center w-100 pr-3">
+            <div className="col-sm-5 mt-3 mt-sm-0 d-flex justify-content-end align-items-end">
+              <div className="text-center w-100">
                 <p className="fs-11 text-dark mb-0 fw-semibold">For {clinicName.toUpperCase()}</p>
                 <div className="signature-area border-bottom-dashed py-2 my-1" style={{ minHeight: "40px" }}>
                   {/* Authorized Signature spacing */}
                 </div>
                 <p className="fs-12 text-dark fw-bold mb-0">Authorized Signature</p>
-              </div>
-              
-              <div className="clinic-seal-box d-flex flex-column align-items-center">
-                <div className="seal-circle d-flex align-items-center justify-content-center">
-                  <span className="text-muted fs-10 text-uppercase fw-semibold">Clinic Seal</span>
-                </div>
               </div>
             </div>
           </div>
@@ -456,8 +507,8 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
           font-weight: 800 !important;
         }
 
-        .border-bottom-double {
-          border-bottom: 3px double #000000 !important;
+        .border-bottom-solid {
+          border-bottom: 2px solid #000000 !important;
         }
 
         .border-right-divider {

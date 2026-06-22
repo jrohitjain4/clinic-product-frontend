@@ -69,60 +69,43 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
   return (
     <>
       <div className="appointment-slip-card border shadow-sm mx-auto mb-4 bg-white">
+        {/* Watermark logo in center background */}
+        {appointment?.clinic?.landingPage?.logo && (
+          <div className="slip-watermark">
+            <img 
+              src={resolveMediaUrl(appointment.clinic.landingPage.logo)} 
+              alt="Watermark" 
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          </div>
+        )}
         <div className="appointment-slip-container">
           
           {/* Header Info Section */}
-          <div className="slip-header pb-1.5 border-bottom-double mb-1.5">
-            <div className="d-flex justify-content-between align-items-center gap-3">
-              {/* Left Side: Logo + Clinic Name Info */}
-              <div className="d-flex align-items-center gap-2.5">
-                {/* Clinic Logo */}
-                {appointment?.clinic?.landingPage?.logo ? (
-                  <div className="logo-container d-flex align-items-center" style={{ height: "55px", maxHeight: "55px" }}>
-                    <img 
-                      src={resolveMediaUrl(appointment.clinic.landingPage.logo)} 
-                      alt="logo" 
-                      style={{ maxHeight: "55px", maxWidth: "120px", objectFit: "contain" }}
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                    />
-                  </div>
-                ) : null}
-                <div>
-                  <h2 className="clinic-title mb-0.5" style={{ fontSize: "18px", fontWeight: "900", color: "#000000" }}>{clinicName}</h2>
-                  {clinicTagline && <p className="clinic-tagline text-muted mb-0.5" style={{ fontSize: "10px", fontStyle: "italic", color: "#64748b" }}>{clinicTagline}</p>}
-                  
-                  <div className="d-flex flex-row flex-wrap align-items-center text-dark" style={{ fontSize: "10px", gap: "2px 12px" }}>
-                    {(hasRealAddress || defaultAddress) && (
-                      <span className="d-flex align-items-center gap-1">
-                        <i className="ti ti-map-pin text-primary" style={{ fontSize: "11px" }} /> {hasRealAddress || defaultAddress}
-                      </span>
-                    )}
-                    {(hasRealPhone || hasRealAltPhone || defaultPhone) && (
-                      <span className="d-flex align-items-center gap-1">
-                        <i className="ti ti-phone text-primary" style={{ fontSize: "11px" }} />
-                        {hasRealPhone || hasRealAltPhone || defaultPhone}
-                      </span>
-                    )}
-                    {(hasRealEmail || defaultEmail) && (
-                      <span className="d-flex align-items-center gap-1">
-                        <i className="ti ti-mail text-primary" style={{ fontSize: "10px" }} /> {hasRealEmail || defaultEmail}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
+          <div className="slip-header pb-2 border-bottom-double mb-2">
+            <div className="d-flex flex-column align-items-start text-start w-100">
+              <h2 className="clinic-title mb-1" style={{ fontSize: "20px", fontWeight: "900", color: "#000000" }}>{clinicName}</h2>
+              {clinicTagline && <p className="clinic-tagline text-muted mb-1.5" style={{ fontSize: "11px", fontStyle: "italic", color: "#64748b" }}>{clinicTagline}</p>}
               
-              {/* Right Side: QR Scanner */}
-              <div className="qr-container text-center" style={{ width: "55px", minWidth: "55px" }}>
-                <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=55x55&data=https://docyari.com/verify/${appointment.id || 'visit'}`} 
-                  alt="Scan to Verify" 
-                  className="border p-0.5 bg-white" 
-                  style={{ width: "50px", height: "50px" }} 
-                />
-                <p className="mb-0 text-dark fw-bold" style={{ fontSize: "8px", marginTop: "1px" }}>Scan to Verify</p>
+              <div className="d-flex flex-row flex-wrap align-items-center text-dark mt-1" style={{ fontSize: "10px", gap: "4px 16px" }}>
+                {(hasRealAddress || defaultAddress) && (
+                  <span className="d-flex align-items-center gap-1.5">
+                    <i className="ti ti-map-pin text-primary" style={{ fontSize: "12px" }} /> {hasRealAddress || defaultAddress}
+                  </span>
+                )}
+                {(hasRealPhone || hasRealAltPhone || defaultPhone) && (
+                  <span className="d-flex align-items-center gap-1.5">
+                    <i className="ti ti-phone text-primary" style={{ fontSize: "12px" }} />
+                    {hasRealPhone || hasRealAltPhone || defaultPhone}
+                  </span>
+                )}
+                {(hasRealEmail || defaultEmail) && (
+                  <span className="d-flex align-items-center gap-1.5">
+                    <i className="ti ti-mail text-primary" style={{ fontSize: "11px" }} /> {hasRealEmail || defaultEmail}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -340,23 +323,9 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
           <div className="container-fluid">
             <div className="row align-items-center">
               <div className="col-sm-4 text-center text-sm-start mb-2 mb-sm-0">
-                <div className="d-flex align-items-center gap-2">
-                  {appointment?.clinic?.landingPage?.logo ? (
-                    <div className="d-flex align-items-center me-2" style={{ height: "40px", maxHeight: "40px" }}>
-                      <img 
-                        src={resolveMediaUrl(appointment.clinic.landingPage.logo)} 
-                        alt="logo" 
-                        style={{ maxHeight: "40px", maxWidth: "80px", objectFit: "contain" }}
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  ) : null}
-                  <div>
-                    <h6 className="fw-bold mb-0 text-white fs-13">{clinicName}</h6>
-                    <p className="mb-0 text-white-50 fs-10">{clinicTagline}</p>
-                  </div>
+                <div>
+                  <h6 className="fw-bold mb-0 text-white fs-13">{clinicName}</h6>
+                  <p className="mb-0 text-white-50 fs-10">{clinicTagline}</p>
                 </div>
               </div>
               <div className="col-sm-4 text-center mb-2 mb-sm-0 border-left-divider-white border-right-divider-white px-2">
@@ -407,6 +376,32 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
           flex-direction: column;
           justify-content: flex-start;
           gap: 6px;
+          position: relative;
+          z-index: 1;
+        }
+
+        .slip-watermark {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 350px;
+          height: 350px;
+          opacity: 0.08 !important;
+          pointer-events: none;
+          z-index: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        
+        .slip-watermark img {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+          opacity: 0.08 !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
 
         /* Pure Dark Black Highlight for Print and Screen */
@@ -433,6 +428,12 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
           font-size: 11px;
           font-weight: 700 !important;
           color: #000000 !important;
+        }
+
+        /* Exception for watermark, must not be forced to solid black */
+        .slip-watermark,
+        .slip-watermark img {
+          color: transparent !important;
         }
 
         /* Exception for footer text color */
@@ -530,11 +531,15 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
         .slip-subtable td i {
           font-size: 10px !important;
           vertical-align: middle !important;
+          width: 14px;
+          display: inline-block;
+          text-align: center;
+          margin-right: 6px;
         }
 
         .visit-info-box {
           border: 1.5px solid #000000 !important;
-          background-color: #fff;
+          background-color: transparent !important;
           padding: 6px 10px !important;
         }
 

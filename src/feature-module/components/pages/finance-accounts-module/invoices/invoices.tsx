@@ -9,6 +9,32 @@ import { DatePicker } from "antd";
 import dayjs from "dayjs";
 import { resolveMediaUrl, apiUrl } from "../../../../../core/config/api";
 
+const PendingToggle = ({ onToggle }: { onToggle: () => void }) => {
+  return (
+    <div className="d-flex flex-column align-items-center justify-content-center gap-1 py-1 w-100">
+      <span className="badge border badge-soft-danger border-danger fw-medium">
+        Pending
+      </span>
+      <div className="form-check form-switch p-0 m-0 d-flex justify-content-center align-items-center">
+        <input
+          className="form-check-input m-0"
+          type="checkbox"
+          role="switch"
+          checked={false}
+          onChange={onToggle}
+          style={{
+            cursor: "pointer",
+            width: "2.2em",
+            height: "1.1em",
+            float: "none",
+          }}
+          title="Toggle to mark as Paid"
+        />
+      </div>
+    </div>
+  );
+};
+
 const InvoicesList = () => {
   const { invoices, loading, error, refetch } = useClinicInvoices();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -55,6 +81,31 @@ const InvoicesList = () => {
       toast.error("Could not complete deletion.");
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (invoiceId: string, newStatus: string) => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(apiUrl(`/api/invoices/${invoiceId}`), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          paymentStatus: newStatus,
+        }),
+      });
+      if (res.ok) {
+        toast.success(`Invoice status updated to ${newStatus}`);
+        refetch();
+      } else {
+        toast.error("Failed to update status");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error updating invoice status");
     }
   };
 
@@ -283,11 +334,20 @@ const InvoicesList = () => {
     {
       title: "Status",
       dataIndex: "Status",
-      render: (text: string) => {
+      align: "center" as const,
+      render: (text: string, record: any) => {
         let badgeClass = "badge-soft-danger border-danger";
         if (text === "Paid") badgeClass = "badge-soft-success border-success";
         else if (text === "Partially Paid")
           badgeClass = "badge-soft-warning border-warning";
+        else if (text === "Draft")
+          badgeClass = "badge-soft-secondary border-secondary";
+        else if (text === "Cancelled")
+          badgeClass = "badge-soft-dark border-dark";
+
+        if (text === "Pending") {
+          return <PendingToggle onToggle={() => handleUpdateStatus(record.id, "Paid")} />;
+        }
 
         return (
           <span className={`badge border ${badgeClass} fw-medium`}>

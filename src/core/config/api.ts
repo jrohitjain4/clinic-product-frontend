@@ -9,6 +9,7 @@ export const apiUrl = (path: string) =>
 export const resolveMediaUrl = (src?: string | null) => {
   if (!src) return "";
   if (src.startsWith("data:") || src.startsWith("http://") || src.startsWith("https://")) return src;
+  if (src.startsWith("uploads/")) return `${API_BASE_URL}/${src}`;
   if (src.startsWith("/uploads/")) return `${API_BASE_URL}${src}`;
   if (src.startsWith("/")) return src;
   return `/${src}`;

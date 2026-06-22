@@ -17,6 +17,7 @@ import { toast } from "react-toastify";
 import html2pdf from 'html2pdf.js';
 import { useNotes } from "../../../../../core/hooks/useNotes";
 import Footer from "../../../../../core/common/footer/footer";
+import AppointmentPrintSlip from "../../clinic-modules/appointments/AppointmentPrintSlip";
 
 const PatientAppointmentDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,157 +44,35 @@ const PatientAppointmentDetails = () => {
   );
 
   const handleDownload = () => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow || !appointment) return;
+    const element = document.getElementById('print-appointment');
+    if (!element || !appointment) return;
 
-    const html = `<html>
-        <head>
-          <title>Clinical Summary - ${appointment.appointmentCode || 'Record'}</title>
-          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-          <style>
-            body { background: #fff; padding: 40px; font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; }
-            .report-header { border-bottom: 2px solid #4f46e5; margin-bottom: 30px; padding-bottom: 20px; }
-            .logo-box { width: 80px; height: 80px; border: 1px dashed #4f46e5; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #fff; }
-            .section-title { font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 15px; font-size: 11px; color: #64748b; letter-spacing: 1px; }
-            .info-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; font-weight: 700; }
-            .info-value { font-size: 13px; font-weight: 700; color: #1e293b; }
-            .badge-status { padding: 4px 12px; border-radius: 4px; font-weight: 700; font-size: 10px; text-transform: uppercase; border: 1px solid #cbd5e1; }
-            .clinical-box { padding: 20px; border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 8px; font-size: 13px; line-height: 1.6; min-height: 100px; }
-            @media print { body { padding: 0; } .no-print { display: none; } }
-          </style>
-        </head>
-        <body>
-          <div class="d-flex justify-content-between align-items-start report-header">
-            <div class="d-flex gap-3">
-              <div class="logo-box">
-                <img src="${resolveMediaUrl((appointment as any)?.clinic?.landingPage?.logo) || '/logo.png'}" alt="logo" style="max-height: 60px; max-width: 60px; object-fit: contain;">
-              </div>
-              <div>
-                <h4 class="fw-bold mb-1" style="color: #1e293b; font-size: 22px;">${appointment.clinicName || "DocYari Health Hub"}</h4>
-                <p class="mb-1 text-muted small"><i class="ti ti-map-pin"></i> ${appointment.location || "Clinic Address"}</p>
-                <div class="d-flex gap-2">
-                   <p class="mb-0 small fw-bold text-primary">ID: ${appointment.appointmentCode || "#---"}</p>
-                   <p class="mb-0 small text-muted">|</p>
-                   <p class="mb-0 small text-muted">Domain: Clinical Portal</p>
-                </div>
-              </div>
-            </div>
-            <div class="text-end">
-               <div class="info-label">Report Date</div>
-               <div class="info-value mb-2">${dayjs().format('DD MMM YYYY')}</div>
-               <span class="badge-status bg-light text-primary border-primary">OFFICIAL RECORD</span>
-            </div>
-          </div>
+    // Temporarily display the element block so html2pdf can capture it
+    const originalDisplay = element.style.display;
+    element.style.display = 'block';
 
-          <div class="row g-4 mb-4">
-            <div class="col-6">
-              <h6 class="section-title">Patient Profile</h6>
-              <div class="p-3 border rounded shadow-sm">
-                <div class="row g-3">
-                  <div class="col-12">
-                    <div class="info-label">Full Name</div>
-                    <div class="info-value" style="font-size: 15px; color: #4f46e5;">${appointment.patient?.firstName} ${appointment.patient?.lastName}</div>
-                  </div>
-                  <div class="col-6">
-                    <div class="info-label">Age / Gender</div>
-                    <div class="info-value">${appointment.patient?.dob ? dayjs().diff(appointment.patient.dob, 'year') : '--'}Y / ${appointment.patient?.gender || '--'}</div>
-                  </div>
-                  <div class="col-6">
-                    <div class="info-label">Blood Group</div>
-                    <div class="info-value">${appointment.patient?.bloodGroup || 'N/A'}</div>
-                  </div>
-                  <div class="col-12">
-                    <div class="info-label">Phone</div>
-                    <div class="info-value">${appointment.patient?.phone || 'N/A'}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-6">
-              <h6 class="section-title">Consulting Practitioner</h6>
-              <div class="p-3 border rounded shadow-sm">
-                <div class="row g-3">
-                  <div class="col-12">
-                    <div class="info-label">Practitioner Name</div>
-                    <div class="info-value" style="font-size: 15px;">${appointment.doctor?.fullName?.startsWith('Dr.') ? appointment.doctor.fullName : `Dr. ${appointment.doctor?.fullName}`}</div>
-                  </div>
-                  <div class="col-6">
-                    <div class="info-label">Specialization</div>
-                    <div class="info-value">${appointment.doctor?.department?.name || 'General'}</div>
-                  </div>
-                  <div class="col-6">
-                    <div class="info-label">Experience</div>
-                    <div class="info-value">${appointment.doctor?.yearOfExperience || '8'}+ Years</div>
-                  </div>
-                  <div class="col-12">
-                    <div class="info-label">Facility Location</div>
-                    <div class="info-value">${appointment.location || 'Preclinic Main Tower'}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+    const opt = {
+      margin: 0,
+      filename: `Appointment-Slip-${appointment.appointmentCode || 'Record'}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
 
-          <div class="mb-4">
-            <h6 class="section-title">Appointment Summary</h6>
-            <div class="table-responsive">
-              <table class="table table-bordered border-light-subtle">
-                <thead class="table-light">
-                  <tr style="font-size: 10px;">
-                    <th class="py-2">VISIT TYPE</th>
-                    <th class="py-2">MODE</th>
-                    <th class="py-2">SCHEDULED ON</th>
-                    <th class="py-2 text-center">STATUS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="align-middle">
-                    <td class="py-3 fw-bold">${appointment.appointmentType || 'Routine Consultation'}</td>
-                    <td class="py-3 fw-bold">${appointment.mode}</td>
-                    <td class="py-3 fw-bold">${dayjs(appointment.scheduledAt).format('DD MMM YYYY, hh:mm A')}</td>
-                    <td class="py-3 text-center"><span class="badge-status bg-success-subtle text-success border-success">${appointment.status}</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+    toast.info("Generating PDF, please wait...");
 
-          <div class="mb-5">
-            <h6 class="section-title">Clinical Findings & Notes</h6>
-            <div class="clinical-box">
-              <div class="fw-bold mb-2 text-primary">Reason for Visit:</div>
-              <p class="mb-3">${appointment.reason || "General Patient Assessment"}</p>
-              
-              ${notes.length > 0 ? `
-                <div class="fw-bold mb-2 text-primary">Clinical Assessment:</div>
-                <div class="ps-3 border-start border-3 border-primary-subtle">
-                  ${notes.map(n => `<p class="mb-2 italic">"${n.content}" <span class="text-muted small">(${dayjs(n.createdAt).format('DD MMM')})</span></p>`).join('')}
-                </div>
-              ` : ''}
-            </div>
-          </div>
-
-          <div class="mt-auto pt-5 text-center border-top">
-            <p class="mb-1 fw-bold fs-11 text-muted text-uppercase letter-spacing-1">Generated via Docyari PHR System</p>
-            <div class="d-flex justify-content-center gap-5 mt-4">
-                <div class="text-center">
-                    <p class="info-label mb-1">Authorised Signatory</p>
-                    <p class="fw-bold small mb-0">${appointment.doctor?.fullName?.startsWith('Dr.') ? appointment.doctor.fullName : `Dr. ${appointment.doctor?.fullName}`}</p>
-                </div>
-            </div>
-            <p class="mb-0 text-muted small mt-4">This is a system generated document. For any discrepancies, please contact the clinic.</p>
-          </div>
-
-          <script>
-            window.onload = () => {
-              setTimeout(() => { window.print(); window.close(); }, 500);
-            };
-          </script>
-        </body>
-      </html>`;
-
-    printWindow.document.write(html);
-    printWindow.document.close();
+    html2pdf()
+      .from(element)
+      .set(opt)
+      .save()
+      .then(() => {
+        element.style.display = originalDisplay;
+        toast.success("Download started!");
+      })
+      .catch((err: any) => {
+        console.error("PDF generation failed:", err);
+        element.style.display = originalDisplay;
+      });
   };
 
   if (loading) {
@@ -957,7 +836,199 @@ const PatientAppointmentDetails = () => {
 
                         {/* Actions */}
                         <div className="text-center d-flex align-items-center justify-content-center gap-2 mt-4">
-                          <button onClick={() => window.print()} className="btn btn-md btn-dark d-flex align-items-center">
+                          <button onClick={() => {
+                            const printWindow = window.open('', '_blank');
+                            if (!printWindow || !appointment) return;
+                            const medicinesHtml = selectedPres.medicines && selectedPres.medicines.length > 0
+                              ? selectedPres.medicines.map((med: any, i: number) => `
+                                  <tr>
+                                      <td class="text-center text-muted">${String(i + 1).padStart(2, "0")}</td>
+                                      <td class="text-primary" style="font-weight: 700;">${med.medicineName}</td>
+                                      <td>${med.dosage || "—"}</td>
+                                      <td class="text-center">${med.frequency || "—"}</td>
+                                      <td class="text-center">${med.duration || "—"}</td>
+                                      <td class="text-center">${med.timings || "—"}</td>
+                                  </tr>
+                              `).join('')
+                              : `<tr><td colspan="6" class="text-center text-muted">No medicines added</td></tr>`;
+
+                            const logoSrc = resolveMediaUrl((appointment as any)?.clinic?.landingPage?.logo) || '/logo.png';
+                            const clinicName = (appointment as any)?.clinic?.name || (appointment as any)?.clinicName || "Preclinic Central";
+                            const clinicAddress = (appointment as any)?.clinic
+                              ? [(appointment as any).clinic.addressLine1, (appointment as any).clinic.addressLine2, (appointment as any).clinic.city].filter(Boolean).join(", ")
+                              : (appointment as any)?.location || "City Med Tower, 4F";
+
+                            const html = `<html>
+                                <head>
+                                  <title>Prescription Summary - ${selectedPres.prescriptionCode || 'Record'}</title>
+                                  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+                                  <style>
+                                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                                    body { background: #fff; padding: 30px; font-family: 'Inter', sans-serif; color: #0f172a; }
+                                    .header-banner {
+                                      background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+                                      color: #ffffff !important;
+                                      padding: 24px !important;
+                                      border-radius: 8px !important;
+                                      margin-bottom: 25px !important;
+                                      display: flex;
+                                      justify-content: space-between;
+                                      align-items: center;
+                                      -webkit-print-color-adjust: exact;
+                                      print-color-adjust: exact;
+                                    }
+                                    .header-banner h4 { color: #ffffff !important; font-weight: 700; margin: 0 0 4px 0; font-size: 22px; }
+                                    .header-banner p { color: #e0f2fe !important; margin: 0; font-size: 13px; }
+                                    .header-banner h6 { color: #ffffff !important; margin: 8px 0 2px 0; font-size: 15px; font-weight: 600; }
+                                    .logo-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+                                    .section-title { font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #0f172a !important; padding-bottom: 8px; margin-bottom: 15px; font-size: 12px; color: #0f172a !important; letter-spacing: 0.5px; }
+                                    
+                                    /* Dark Styled Tables */
+                                    .table-bordered { border: 2px solid #0f172a !important; }
+                                    .table-bordered th { 
+                                      background-color: #0f172a !important; 
+                                      color: #ffffff !important; 
+                                      border: 2px solid #0f172a !important; 
+                                      font-weight: 700; 
+                                      font-size: 12px; 
+                                      letter-spacing: 0.5px; 
+                                      padding: 12px 10px !important;
+                                      -webkit-print-color-adjust: exact;
+                                      print-color-adjust: exact;
+                                    }
+                                    .table-bordered td { border: 1px solid #334155 !important; color: #0f172a !important; font-weight: 600; font-size: 13px; padding: 12px 10px !important; }
+                                    
+                                    .text-primary { color: #1e3a8a !important; }
+                                    .clinical-findings { border: 2px solid #0f172a !important; padding: 20px; background: #f8fafc; min-height: 120px; line-height: 1.6; font-size: 13px; color: #000000 !important; font-weight: 500; border-radius: 6px; }
+                                    @media print { 
+                                      .no-print { display: none; } 
+                                      body { padding: 0; }
+                                      .header-banner {
+                                        background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+                                        -webkit-print-color-adjust: exact;
+                                        print-color-adjust: exact;
+                                      }
+                                      .table-bordered th {
+                                        background-color: #0f172a !important;
+                                        color: #ffffff !important;
+                                        -webkit-print-color-adjust: exact;
+                                        print-color-adjust: exact;
+                                      }
+                                    }
+                                  </style>
+                                </head>
+                                <body>
+                                  <div class="header-banner">
+                                    <div class="d-flex align-items-center gap-3">
+                                      <div class="logo-box">
+                                        <img src="${logoSrc}" alt="logo" style="max-height: 55px; max-width: 55px; object-fit: contain;">
+                                      </div>
+                                      <div>
+                                        <h4>${clinicName}</h4>
+                                        <p><i class="ti ti-map-pin"></i> ${clinicAddress}</p>
+                                        <h6>${appointment.doctorName || appointment.doctor?.fullName}</h6>
+                                        <p>${appointment.doctor?.designation?.name || "Consultant"} · ${appointment.doctor?.department?.name || "Medicine"}</p>
+                                      </div>
+                                    </div>
+                                    <div class="text-end text-white">
+                                      <span class="badge bg-white text-primary fw-bold px-3 py-2 mb-2" style="font-size: 12px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                        ${selectedPres.prescriptionCode || `#P-${selectedPres.id?.substring(0, 4)}`}
+                                      </span>
+                                      <div class="small mt-1 opacity-90">
+                                        <div class="mb-1"><strong>Dept:</strong> ${appointment.doctor?.department?.name || "General"}</div>
+                                        <div><strong>Date:</strong> ${new Date(selectedPres.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div class="mb-4">
+                                    <h6 class="section-title">Patient Clinical Profile</h6>
+                                    <table class="table table-bordered mb-0">
+                                      <thead>
+                                        <tr>
+                                          <th class="text-white">PATIENT NAME</th>
+                                          <th class="text-center text-white">AGE / GENDER</th>
+                                          <th class="text-center text-white">BLOOD GROUP</th>
+                                          <th class="text-center text-white">PATIENT ID</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          <td class="text-primary" style="font-size: 15px; font-weight: 700;">${appointment.patient?.firstName} ${appointment.patient?.lastName}</td>
+                                          <td class="text-center">${appointment.patient?.dob ? Math.floor((new Date().getTime() - new Date(appointment.patient.dob).getTime()) / 31557600000) : '--'}Y / ${appointment.patient?.gender || '--'}</td>
+                                          <td class="text-center">${appointment.patient?.bloodGroup || 'N/A'}</td>
+                                          <td class="text-center">${appointment.patient?.patientCode || appointment.patientId?.slice(-6).toUpperCase()}</td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+
+                                  <div class="text-center mb-4 pt-3">
+                                    <h5 class="fw-bold text-dark text-uppercase tracking-wider" style="border-bottom: 3px solid #0f172a; display: inline-block; padding-bottom: 8px;">
+                                      Prescription Summary
+                                    </h5>
+                                  </div>
+
+                                  <div class="mb-4">
+                                    <h6 class="section-title">Medicines Details</h6>
+                                    <table class="table table-bordered mb-0">
+                                      <thead>
+                                        <tr>
+                                          <th class="text-center text-white">S.NO</th>
+                                          <th class="text-white">Medicine Name</th>
+                                          <th class="text-white">Dosage</th>
+                                          <th class="text-center text-white">Frequency</th>
+                                          <th class="text-center text-white">Duration</th>
+                                          <th class="text-center text-white">Timings</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        ${medicinesHtml}
+                                      </tbody>
+                                    </table>
+                                  </div>
+
+                                  ${selectedPres.advice ? `
+                                  <div class="mb-4">
+                                    <h6 class="section-title">Advice / Instructions</h6>
+                                    <div class="clinical-findings">
+                                      ${selectedPres.advice}
+                                    </div>
+                                  </div>
+                                  ` : ''}
+
+                                  <div class="pb-3 mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2 mt-5">
+                                    <div>
+                                      <h6 class="mb-1 fs-14 fw-semibold text-uppercase tracking-wider opacity-75 text-secondary">Follow Up</h6>
+                                      <p class="mb-0 fw-bold">
+                                        ${selectedPres.followUpDate
+                                          ? new Date(selectedPres.followUpDate).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })
+                                          : "—"}
+                                        ${selectedPres.followUpNotes ? ` · ${selectedPres.followUpNotes}` : ""}
+                                      </p>
+                                    </div>
+                                    <div class="text-end">
+                                      <h6 class="fs-14 fw-bold mb-0">${appointment.doctorName || appointment.doctor?.fullName || "—"}</h6>
+                                      <p class="fs-13 fw-normal text-muted mb-0">${appointment.doctor?.designation?.name || ""}</p>
+                                    </div>
+                                  </div>
+
+                                  <div class="mt-auto pt-4 border-top text-center text-muted small">
+                                    <p class="mb-1 fw-bold" style="color: #64748b; letter-spacing: 0.5px;">2025 &copy; <span style="color: #1e3a8a;">Docyari</span>, All Rights Reserved</p>
+                                    <p class="mb-0 italic opacity-50" style="font-size: 10px;">This is a computer-generated prescription summary and does not require a physical signature.</p>
+                                  </div>
+
+                                  <script>
+                                    window.onload = () => {
+                                      setTimeout(() => { window.print(); window.close(); }, 500);
+                                    };
+                                  </script>
+                                </body>
+                              </html>`;
+
+                            printWindow.document.write(html);
+                            printWindow.document.close();
+                          }} className="btn btn-md btn-dark d-flex align-items-center">
                             <i className="ti ti-printer me-1" /> Print
                           </button>
                         </div>
@@ -994,7 +1065,69 @@ const PatientAppointmentDetails = () => {
 
       <Footer />
 
+      {/* Printable Appointment Summary */}
+      <div id="print-appointment" style={{ display: 'none' }}>
+        <AppointmentPrintSlip appointment={appointment} notes={notes} linkedPrescriptions={linkedPrescriptions} />
+      </div>
+
       <style>{`
+                @media print {
+                    @page { size: A4; margin: 0; }
+                    body * { visibility: hidden !important; }
+                    #print-appointment, #print-appointment * {
+                        visibility: visible !important;
+                    }
+                    #print-appointment {
+                        visibility: visible !important;
+                        display: block !important;
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: 100% !important;
+                        background: white !important;
+                        z-index: 99999 !important;
+                        padding: 1.5cm !important;
+                        margin: 0 !important;
+                    }
+                    .bg-light { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
+                }
+
+                /* Badge Contrast and Visibility Fixes */
+                .badge {
+                    color: #fff !important;
+                }
+                .badge.bg-light, .badge.text-dark, .badge.text-black {
+                    color: #000 !important;
+                }
+                .badge.bg-soft-primary, .badge.badge-soft-primary, .badge.text-primary {
+                    color: #4f46e5 !important;
+                    background-color: rgba(79, 70, 229, 0.1) !important;
+                }
+                .badge.bg-soft-success, .badge.badge-soft-success, .badge.text-success {
+                    color: #27ae60 !important;
+                    background-color: rgba(39, 174, 96, 0.1) !important;
+                }
+                .badge.bg-soft-info, .badge.badge-soft-info, .badge.text-info {
+                    color: #00cfdd !important;
+                    background-color: rgba(0, 207, 221, 0.1) !important;
+                }
+                .badge.bg-soft-warning, .badge.badge-soft-warning, .badge.text-warning {
+                    color: #d97706 !important;
+                    background-color: rgba(217, 119, 6, 0.1) !important;
+                }
+                .badge.bg-soft-danger, .badge.badge-soft-danger, .badge.text-danger {
+                    color: #dc2626 !important;
+                    background-color: rgba(220, 38, 38, 0.1) !important;
+                }
+                .badge.badge-soft-purple, .badge.text-purple {
+                    color: #8b5cf6 !important;
+                    background-color: rgba(139, 92, 246, 0.1) !important;
+                }
+                .badge.badge-soft-dark, .badge.text-dark {
+                    color: #374151 !important;
+                    background-color: rgba(55, 65, 81, 0.1) !important;
+                }
+
                 .bg-primary-dark { background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); }
                 .min-height-200 { min-height: 200px; }
                 .avatar-xxl { width: 64px; height: 64px; }

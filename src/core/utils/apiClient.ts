@@ -54,3 +54,27 @@ export async function apiPut<T>(path: string, body?: any): Promise<T> {
 export async function apiDelete<T>(path: string): Promise<T> {
   return apiRequest<T>(path, "DELETE");
 }
+
+export const setLocalStorageUser = (user: any) => {
+  if (!user) return;
+  try {
+    const sanitized = JSON.parse(JSON.stringify(user));
+    
+    // Recursively strip all base64 data URLs (data:image) to prevent QuotaExceededError
+    const stripBase64 = (obj: any) => {
+      if (!obj || typeof obj !== "object") return;
+      for (const key in obj) {
+        if (typeof obj[key] === "string" && obj[key].startsWith("data:image")) {
+          obj[key] = "";
+        } else if (typeof obj[key] === "object") {
+          stripBase64(obj[key]);
+        }
+      }
+    };
+    
+    stripBase64(sanitized);
+    localStorage.setItem("user", JSON.stringify(sanitized));
+  } catch (e) {
+    console.error("Error saving user to localStorage", e);
+  }
+};

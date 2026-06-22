@@ -67,7 +67,15 @@ const AddInvoices = () => {
   const [invoiceDate, setInvoiceDate] = useState<any>(null);
   const [dueDate, setDueDate] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState<any>(null);
+  const [status, setStatus] = useState<any>(null);
   const [otherInfo, setOtherInfo] = useState<string>("");
+
+  const statusOptions = [
+    { value: "Paid", label: "Paid" },
+    { value: "Unpaid", label: "Unpaid" },
+    { value: "Partially Paid", label: "Partially Paid" },
+    { value: "Overdue", label: "Overdue" },
+  ];
 
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
@@ -127,6 +135,7 @@ const AddInvoices = () => {
           subTotal: totals.amount,
           totalAmount: totals.total,
           paymentMethod: paymentMethod?.value || "Cash",
+          paymentStatus: status?.value || "Unpaid",
           otherInfo: otherInfo,
           items: invoices.filter(inv => inv.serviceId).map(inv => ({
             serviceId: inv.serviceId?.type === "service" ? inv.serviceId?.value : null,
@@ -137,7 +146,7 @@ const AddInvoices = () => {
           })),
         }),
       });
-      if (res.ok) navigate(all_routes.transactions);
+      if (res.ok) navigate(all_routes.invoices);
       else alert("Failed to save invoice");
     } catch (e) {
       console.error(e);
@@ -154,9 +163,9 @@ const AddInvoices = () => {
           <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
             <div className="flex-grow-1">
               <h6 className="fw-bold mb-0 d-flex align-items-center">
-                <Link to={all_routes.transactions} className="">
+                <Link to={all_routes.invoices} className="">
                   <i className="ti ti-chevron-left me-1 fs-14" />
-                  Transactions
+                  Invoices
                 </Link>
               </h6>
             </div>
@@ -216,7 +225,7 @@ const AddInvoices = () => {
                       />
                     </div>
                   </div>
-                  <div className="col-lg-6 col-md-6">
+                  <div className="col-lg-4 col-md-6">
                     <div className="mb-3">
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">
                         Invoice Date <span className="text-danger">*</span>
@@ -227,7 +236,7 @@ const AddInvoices = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="col-lg-6 col-md-6">
+                  <div className="col-lg-4 col-md-6">
                     <div className="mb-3">
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">
                         Due Date <span className="text-danger">*</span>
@@ -236,6 +245,14 @@ const AddInvoices = () => {
                         <DatePicker className="form-control datetimepicker" format="DD-MM-YYYY" getPopupContainer={getModalContainer} placeholder="DD-MM-YYYY" suffixIcon={null} value={dueDate} onChange={setDueDate} />
                         <span className="input-icon-addon"><i className="ti ti-calendar" /></span>
                       </div>
+                    </div>
+                  </div>
+                  <div className="col-lg-4 col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                        Status <span className="text-danger">*</span>
+                      </label>
+                      <CommonSelect options={statusOptions} value={status} onChange={setStatus} className="select" />
                     </div>
                   </div>
                   <div className="col-lg-12 col-md-12">
@@ -348,7 +365,7 @@ const AddInvoices = () => {
             </div>
             <div className="card-footer">
               <div className="d-flex gap-2 align-items-center justify-content-end mb-0">
-                <Link to={all_routes.transactions} className="btn btn-md bg-light text-dark fs-13 fw-medium rounded">Cancel</Link>
+                <Link to={all_routes.invoices} className="btn btn-md bg-light text-dark fs-13 fw-medium rounded">Cancel</Link>
                 <button type="button" onClick={handleSave} disabled={saving} className="btn btn-md btn-primary fs-13 fw-medium rounded">
                   {saving ? "Saving..." : "Save Invoice"}
                 </button>

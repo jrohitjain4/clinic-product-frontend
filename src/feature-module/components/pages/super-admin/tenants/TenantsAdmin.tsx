@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiUrl } from "../../../../../core/config/api";
+import { toast } from "react-toastify";
 
 interface Tenant {
     id: string;
@@ -49,9 +50,52 @@ const TenantsAdmin = () => {
     const [deleteModal, setDeleteModal] = useState(false);
     const [activeTenant, setActiveTenant] = useState<Tenant | null>(null);
 
+    const [editPackageId, setEditPackageId] = useState<string>("");
+    const [editStatus, setEditStatus] = useState<string>("");
+    const [saving, setSaving] = useState(false);
+
     const openViewModal = (tenant: Tenant) => { setActiveTenant(tenant); setViewModal(true); };
-    const openEditModal = (tenant: Tenant) => { setActiveTenant(tenant); setEditModal(true); };
+    const openEditModal = (tenant: Tenant) => { 
+        setActiveTenant(tenant); 
+        const currentPkg = packages.find(p => p.name === tenant.packageName);
+        setEditPackageId(currentPkg?.id || "");
+        setEditStatus(tenant.status);
+        setEditModal(true); 
+    };
     const openDeleteModal = (tenant: Tenant) => { setActiveTenant(tenant); setDeleteModal(true); };
+
+    const handleSaveChanges = async () => {
+        if (!activeTenant) return;
+        setSaving(true);
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(apiUrl(`/api/tenants/${activeTenant.id}/status`), {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    status: editStatus,
+                    packageId: editPackageId
+                })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.message || "Failed to update tenant");
+            }
+
+            toast.success("Tenant subscription details updated successfully");
+            setEditModal(false);
+            fetchTenants(); // Reload tenants
+        } catch (error: any) {
+            console.error("Error updating tenant:", error);
+            toast.error(error.message || "Error updating tenant");
+        } finally {
+            setSaving(false);
+        }
+    };
 
     const fetchTenants = async () => {
         try {
@@ -456,36 +500,43 @@ const TenantsAdmin = () => {
                                 </div>
                                 <div className="mb-3">
                                     <label className="form-label fw-semibold fs-13 text-muted">Assign Package</label>
-                                    <select className="form-select" defaultValue={activeTenant.packageName}>
-                                        {packages.filter(p => p.isActive).length > 0 ? (
-                                            packages.filter(p => p.isActive).map(pkg => (
-                                                <option key={pkg.id} value={pkg.name}>{pkg.name}</option>
-                                            ))
-                                        ) : (
-                                            <>
-                                                <option value="Days Free Trial">Days Free Trial</option>
-                                                <option value="Premium Plan (Annually)">Premium Plan (Annually)</option>
-                                            </>
-                                        )}
+                                    <select 
+                                        className="form-select" 
+                                        value={editPackageId} 
+                                        onChange={(e) => setEditPackageId(e.target.value)}
+                                    >
+                                        <option value="">No Plan</option>
+                                        {packages.filter(p => p.isActive).map(pkg => (
+                                            <option key={pkg.id} value={pkg.id}>{pkg.name}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="mb-0">
                                     <label className="form-label fw-semibold fs-13 text-muted">Status</label>
-                                    <select className="form-select" defaultValue={activeTenant.status}>
+                                    <select 
+                                        className="form-select" 
+                                        value={editStatus} 
+                                        onChange={(e) => setEditStatus(e.target.value)}
+                                    >
                                         <option value="IN_PROGRESS">In Progress</option>
                                         <option value="TRIAL">Trial Active</option>
+                                        <option value="TRIAL_EXPIRED">Trial Expired</option>
+                                        <option value="TRIAL_COMPLETED_NOT_UPGRADED">Trial Complete (Not Upgraded)</option>
                                         <option value="UPGRADED">Upgraded</option>
-                                        <option value="TRIAL_EXPIRED">Expired</option>
+                                        <option value="FAILED">Failed</option>
                                     </select>
                                     <div className="form-text mt-2 text-info d-flex align-items-center">
                                         <i className="ti ti-info-circle me-1"></i>
-                                        <span style={{ fontSize: '11px' }}>Changes are for demonstration purposes.</span>
+                                        <span style={{ fontSize: '11px' }}>Apply package upgrade and lifecycle status here.</span>
                                     </div>
                                 </div>
                             </div>
                             <div className="modal-footer border-top-0 pt-0">
-                                <button type="button" className="btn btn-light" onClick={() => setEditModal(false)}>Cancel</button>
-                                <button type="button" className="btn btn-primary" onClick={() => setEditModal(false)}>Save Changes</button>
+                                <button type="button" className="btn btn-light" onClick={() => setEditModal(false)} disabled={saving}>Cancel</button>
+                                <button type="button" className="btn btn-primary d-flex align-items-center gap-2" onClick={handleSaveChanges} disabled={saving}>
+                                    {saving && <span className="spinner-border spinner-border-sm" role="status" />}
+                                    Save Changes
+                                </button>
                             </div>
                         </div>
                     </div>

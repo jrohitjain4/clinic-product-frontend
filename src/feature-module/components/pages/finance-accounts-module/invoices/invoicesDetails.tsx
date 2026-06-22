@@ -3,12 +3,38 @@ import { Link, useParams } from "react-router-dom";
 import { all_routes } from "../../../../routes/all_routes";
 import { apiUrl } from "../../../../../core/config/api";
 import dayjs from "dayjs";
+import InvoiceSlip from "../../patient-modules/patient-invoice-details/InvoiceSlip";
+import html2pdf from "html2pdf.js";
 
 const InvoicesDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [invoice, setInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const handleInvoicePrint = () => {
+    const el = document.getElementById('print-invoice-slip');
+    if (!el) return;
+    el.style.display = 'block';
+    window.print();
+    setTimeout(() => { el.style.display = 'none'; }, 1500);
+  };
+
+  const handleInvoiceDownload = () => {
+    const el = document.getElementById('print-invoice-slip');
+    if (!el || !invoice) return;
+    el.style.display = 'block';
+    const opt = {
+      margin: 0,
+      filename: `Invoice-${invoice.invoiceCode || 'record'}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().from(el).set(opt).save()
+      .then(() => { el.style.display = 'none'; })
+      .catch(() => { el.style.display = 'none'; });
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -266,16 +292,22 @@ const InvoicesDetails = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="text-center d-flex align-items-center justify-content-center gap-2">
+                    <div className="text-center d-flex align-items-center justify-content-center gap-2 d-print-none">
                       <button
-                        onClick={() => window.print()}
+                        onClick={handleInvoicePrint}
                         className="btn btn-md btn-dark d-flex align-items-center"
                       >
                         <i className="ti ti-printer me-1" /> Print
                       </button>
+                      <button
+                        onClick={handleInvoiceDownload}
+                        className="btn btn-md btn-primary d-flex align-items-center shadow-primary"
+                      >
+                        <i className="ti ti-download me-1" /> Download PDF
+                      </button>
                       <Link
-                        to={all_routes.editInvoices}
-                        className="btn btn-md btn-primary d-flex align-items-center"
+                        to={all_routes.editInvoices.replace(":id", id || "")}
+                        className="btn btn-md btn-secondary d-flex align-items-center"
                       >
                         <i className="ti ti-edit me-1" /> Edit Invoice
                       </Link>
@@ -296,6 +328,30 @@ const InvoicesDetails = () => {
           </p>
         </div>
       </div>
+
+      {/* Hidden Invoice Slip for Print/Download */}
+      <div id="print-invoice-slip" style={{ display: 'none' }}>
+        <InvoiceSlip invoice={invoice} />
+      </div>
+
+      <style>{`
+        .shadow-primary { box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39); }
+        @media print {
+          body * { visibility: hidden !important; }
+          #print-invoice-slip, #print-invoice-slip * { visibility: visible !important; }
+          #print-invoice-slip {
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 21cm !important;
+            height: 29.7cm !important;
+            z-index: 99999 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+          }
+        }
+      `}</style>
     </>
   );
 };

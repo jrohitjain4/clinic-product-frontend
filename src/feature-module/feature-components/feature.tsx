@@ -8,6 +8,8 @@ import SidebarTwo from "../../core/common/sidebar-two/sidebarTwo";
 import Sidebarthree from "../../core/common/sidebarthree/sidebarthree";
 
 import { apiUrl } from "../../core/config/api";
+import { setLocalStorageUser } from "../../core/utils/apiClient";
+
 
 interface SubscriptionPackage {
   id: string;
@@ -42,7 +44,7 @@ const Feature = () => {
         .then(r => r.json())
         .then(data => {
           if (data.id) {
-            localStorage.setItem("user", JSON.stringify(data));
+            setLocalStorageUser(data);
           }
         })
         .catch(err => console.error("Profile refresh failed", err));
@@ -99,7 +101,7 @@ const Feature = () => {
         if (userStr) {
           const user = JSON.parse(userStr);
           user.clinic = { ...user.clinic, ...data.clinic };
-          localStorage.setItem("user", JSON.stringify(user));
+          setLocalStorageUser(user);
         }
         setTimeout(() => window.location.reload(), 1800);
       } else {

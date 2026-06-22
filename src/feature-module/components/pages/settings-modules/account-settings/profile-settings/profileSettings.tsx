@@ -8,6 +8,8 @@ import DoctorProfileUpload from "../../../../../../core/common/doctor-profile-up
 import { toast } from "react-toastify";
 import { resolveMediaUrl, apiUrl } from "../../../../../../core/config/api";
 import ImageCropperModal from "../../../../../../core/common/crop/ImageCropperModal";
+import { setLocalStorageUser as setSanitizedUser } from "../../../../../../core/utils/apiClient";
+
 
 const ProfileSettings = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -15,6 +17,7 @@ const ProfileSettings = () => {
   try {
     userObj = JSON.parse(localStorage.getItem("user") || "{}");
   } catch (e) { }
+
 
   const [logoPreview, setLogoPreview] = useState<string | null>(
     userObj.clinic?.landingPage?.logo && userObj.clinic?.landingPage?.logo !== "/logo.png"
@@ -128,7 +131,7 @@ const ProfileSettings = () => {
         if (res.ok) {
           const data = await res.json();
           // Update localStorage
-          localStorage.setItem("user", JSON.stringify(data));
+          setSanitizedUser(data);
           
           // Now set the form data and selected options!
           const nameParts = (data.fullName || "Admin User").split(" ");
@@ -187,6 +190,37 @@ const ProfileSettings = () => {
     fetchProfile();
   }, []);
 
+  const [logoUploading, setLogoUploading] = useState(false);
+
+  const uploadClinicLogo = async (file: File) => {
+    setLogoUploading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch(apiUrl("/api/uploads/landing-image"), {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Upload failed");
+      }
+
+      const data = await res.json();
+      setLogoPreview(data.url);
+      toast.success("Clinic logo uploaded successfully");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(`Error: ${e.message || "Failed to upload logo"}`);
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
   const [saving, setSaving] = useState(false);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -217,7 +251,7 @@ const ProfileSettings = () => {
       const data = await res.json();
       if (res.ok) {
         toast.success("Profile updated successfully", { position: "top-center" });
-        localStorage.setItem("user", JSON.stringify(data.user));
+        setSanitizedUser(data.user);
         setIsEditing(false);
         setTimeout(() => window.location.reload(), 1500); // Wait a bit so they can see the success toast
       } else {
@@ -562,13 +596,7 @@ const ProfileSettings = () => {
                                     if (logoInputRef.current) logoInputRef.current.value = "";
                                   }}
                                   onCropComplete={(croppedFile) => {
-                                    const reader = new FileReader();
-                                    reader.onload = (event) => {
-                                      if (event.target?.result) {
-                                        setLogoPreview(event.target.result as string);
-                                      }
-                                    };
-                                    reader.readAsDataURL(croppedFile);
+                                    uploadClinicLogo(croppedFile);
                                   }}
                                   title="Crop Clinic Logo"
                                   fileName={logoCropFileName}

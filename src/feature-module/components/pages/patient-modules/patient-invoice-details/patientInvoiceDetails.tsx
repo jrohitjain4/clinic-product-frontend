@@ -5,6 +5,8 @@ import { useClinicInvoices } from "../../../../../core/hooks/useClinicInvoices";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import dayjs from "dayjs";
 import { resolveMediaUrl } from "../../../../../core/config/api";
+import InvoiceSlip from "./InvoiceSlip";
+import html2pdf from "html2pdf.js";
 
 const PatientInvoiceDetails = () => {
     const [searchParams] = useSearchParams();
@@ -21,7 +23,29 @@ const PatientInvoiceDetails = () => {
             .finally(() => setLoading(false));
     }, [id, getInvoiceById]);
 
-    const handlePrint = () => window.print();
+    const handleInvoicePrint = () => {
+        const el = document.getElementById('print-invoice-slip');
+        if (!el) return;
+        el.style.display = 'block';
+        window.print();
+        setTimeout(() => { el.style.display = 'none'; }, 1500);
+    };
+
+    const handleInvoiceDownload = () => {
+        const el = document.getElementById('print-invoice-slip');
+        if (!el || !invoice) return;
+        el.style.display = 'block';
+        const opt = {
+            margin: 0,
+            filename: `Invoice-${invoice.invoiceCode || 'record'}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().from(el).set(opt).save()
+            .then(() => { el.style.display = 'none'; })
+            .catch(() => { el.style.display = 'none'; });
+    };
 
     if (loading) {
         return (
@@ -162,177 +186,11 @@ const PatientInvoiceDetails = () => {
 
                                     {/* Footer Actions */}
                                     <div className="d-flex align-items-center justify-content-center gap-3 d-print-none border-top pt-5">
-                                        <button onClick={handlePrint} className="btn btn-dark px-5 py-2 fw-bold d-flex align-items-center">
+                                        <button onClick={handleInvoicePrint} className="btn btn-dark px-5 py-2 fw-bold d-flex align-items-center">
                                             <i className="ti ti-printer me-2 fs-18" /> Print
                                         </button>
-                                        <button onClick={() => {
-                                            const printWindow = window.open('', '_blank');
-                                            if (!printWindow || !invoice) return;
-
-                                            const html = `<html>
-                                                <head>
-                                                    <title>Invoice - ${invoice.invoiceCode || 'Record'}</title>
-                                                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-                                                    <style>
-                                                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-                                                        body { background: #fff; padding: 30px; font-family: 'Inter', sans-serif; color: #0f172a; }
-                                                        .header-banner {
-                                                            background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
-                                                            color: #ffffff !important;
-                                                            padding: 24px !important;
-                                                            border-radius: 8px !important;
-                                                            margin-bottom: 25px !important;
-                                                            display: flex;
-                                                            justify-content: space-between;
-                                                            align-items: center;
-                                                            -webkit-print-color-adjust: exact;
-                                                            print-color-adjust: exact;
-                                                        }
-                                                        .header-banner h4 { color: #ffffff !important; font-weight: 700; margin: 0 0 4px 0; font-size: 22px; }
-                                                        .header-banner p { color: #e0f2fe !important; margin: 0; font-size: 13px; }
-                                                        .header-banner h6 { color: #ffffff !important; margin: 8px 0 2px 0; font-size: 15px; font-weight: 600; }
-                                                        .logo-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-                                                        .info-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 700; }
-                                                        .info-value { font-size: 14px; font-weight: 700; color: #1e293b; }
-                                                        
-                                                        /* Dark Styled Tables */
-                                                        .table-bordered { border: 2px solid #0f172a !important; }
-                                                        .table th { background: #0f172a !important; color: #ffffff !important; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 10px; border: 2px solid #0f172a !important; font-weight: 700; }
-                                                        .table td { padding: 12px 10px; font-size: 13px; border: 1px solid #334155 !important; color: #0f172a !important; font-weight: 600; }
-                                                        
-                                                        .total-box { background: #f8fafc; padding: 25px; border-radius: 12px; border: 2px solid #0f172a; }
-                                                        .badge-paid { background: #ecfdf5; color: #059669; padding: 6px 16px; border-radius: 50px; font-weight: 800; font-size: 11px; }
-                                                        .badge-unpaid { background: #fff7ed; color: #ea580c; padding: 6px 16px; border-radius: 50px; font-weight: 800; font-size: 11px; }
-                                                        @media print { 
-                                                            body { padding: 0; } 
-                                                            .no-print { display: none; }
-                                                            .header-banner {
-                                                                background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
-                                                                -webkit-print-color-adjust: exact;
-                                                                print-color-adjust: exact;
-                                                            }
-                                                        }
-                                                    </style>
-                                                </head>
-                                                <body>
-                                                    <div class="header-banner">
-                                                        <div class="d-flex align-items-center gap-3">
-                                                            <div class="logo-box">
-                                                                <img src="${resolveMediaUrl(invoice.clinic?.landingPage?.logo) || '/logo.png'}" alt="logo" style="max-height: 55px; max-width: 55px; object-fit: contain;">
-                                                            </div>
-                                                            <div>
-                                                                <h4>${invoice.clinic?.name || invoice.clinicName || "Docyari Healthcare"}</h4>
-                                                                <p><i class="ti ti-map-pin"></i> ${invoice.clinic?.landingPage?.address || 'Clinic Support Network'}</p>
-                                                                <h6 class="text-white opacity-90 mt-2" style="font-size: 14px; font-weight: bold;">OFFICIAL INVOICE</h6>
-                                                                <p class="mb-0 opacity-80" style="font-size: 12px;">Ref: ${invoice.invoiceCode || "#INV-0001"}</p>
-                                                            </div>
-                                                        </div>
-                                                        <div class="text-end text-white">
-                                                            <span class="${invoice.paymentStatus === 'Paid' ? 'badge bg-success text-white' : 'badge bg-warning text-dark'} fw-bold px-3 py-2 mb-2 text-uppercase" style="font-size: 12px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                                                ${invoice.paymentStatus || 'PENDING'}
-                                                            </span>
-                                                            <div class="small mt-1 opacity-90">
-                                                                <div class="mb-1"><strong>Billing Date:</strong> ${dayjs(invoice.invoiceDate).format("DD MMM YYYY")}</div>
-                                                                <div><strong>Due Date:</strong> ${dayjs(invoice.dueDate).format("DD MMM YYYY")}</div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="row g-4 mb-5">
-                                                        <div class="col-4">
-                                                            <div class="info-label">Recipient / Patient</div>
-                                                            <div class="info-value" style="font-size: 16px; color: #4f46e5;">${invoice.patient?.firstName} ${invoice.patient?.lastName}</div>
-                                                            <div class="text-muted small">Phone: ${invoice.patient?.phone || 'N/A'}</div>
-                                                            <div class="text-muted small">Email: ${invoice.patient?.email || 'N/A'}</div>
-                                                        </div>
-                                                        <div class="col-4">
-                                                            <div class="info-label">Issuance Details</div>
-                                                            <div class="mb-2">
-                                                                <div class="text-muted small">Billing Date</div>
-                                                                <div class="info-value">${dayjs(invoice.invoiceDate).format("DD MMM YYYY")}</div>
-                                                            </div>
-                                                            <div>
-                                                                <div class="text-muted small">Payment Method</div>
-                                                                <div class="info-value">${invoice.paymentMethod || "Direct Payment"}</div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-4 text-end">
-                                                            <div class="info-label">Total Payable</div>
-                                                            <div class="info-value text-primary" style="font-size: 24px; letter-spacing: -1px;">$${(invoice.totalAmount || 0).toFixed(2)}</div>
-                                                            <div class="text-muted small mt-1">Due Date: ${dayjs(invoice.dueDate).format("DD MMM YYYY")}</div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="table-responsive">
-                                                        <table class="table table-bordered mb-5">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th class="text-center" style="width: 60px;">S.NO</th>
-                                                                    <th>SERVICE DESCRIPTION</th>
-                                                                    <th class="text-center">QTY</th>
-                                                                    <th class="text-center">UNIT PRICE</th>
-                                                                    <th class="text-end">LINE TOTAL</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                ${(invoice.items || []).map((item: any, i: number) => `
-                                                                    <tr>
-                                                                        <td class="text-center text-muted fw-bold">${i + 1}</td>
-                                                                        <td>
-                                                                            <div class="fw-bold text-dark">${item.name || item.item || "Health Consultation"}</div>
-                                                                            <div class="text-muted small mt-1">${item.description || "General practitioner consultation fee"}</div>
-                                                                        </td>
-                                                                        <td class="text-center fw-bold">${item.quantity || 1}</td>
-                                                                        <td class="text-center text-muted">$${(item.unitCost || 0).toFixed(2)}</td>
-                                                                        <td class="text-end fw-bold text-dark">$${(item.amount || 0).toFixed(2)}</td>
-                                                                    </tr>
-                                                                `).join('')}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-
-                                                    <div class="row justify-content-end mb-5 pt-3">
-                                                        <div class="col-5">
-                                                            <div class="total-box shadow-sm">
-                                                                <div class="d-flex justify-content-between mb-2">
-                                                                    <span class="text-muted fw-bold small">SUBTOTAL</span>
-                                                                    <span class="fw-bold">$${(invoice.subTotal || 0).toFixed(2)}</span>
-                                                                </div>
-                                                                <div class="d-flex justify-content-between mb-3 text-secondary">
-                                                                    <span class="fw-bold small">TAXABLE (${invoice.tax || 0}%)</span>
-                                                                    <span class="fw-bold">$${((invoice.subTotal || 0) * (invoice.tax || 0) / 100).toFixed(2)}</span>
-                                                                </div>
-                                                                <div class="d-flex justify-content-between border-top pt-3 mt-1">
-                                                                    <h5 class="fw-bold mb-0 text-dark">GRAND TOTAL</h5>
-                                                                    <h4 class="fw-bold text-primary mb-0">$${(invoice.totalAmount || 0).toFixed(2)}</h4>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="mt-5 pt-5 text-center">
-                                                        <div class="d-flex justify-content-center gap-5 mb-4">
-                                                            <div style="border-top: 1px solid #e2e8f0; width: 150px; padding-top: 8px;">
-                                                                <p class="info-label mb-0">Patient Sig.</p>
-                                                            </div>
-                                                            <div style="border-top: 1px solid #e2e8f0; width: 150px; padding-top: 8px;">
-                                                                <p class="info-label mb-0">Authorized By</p>
-                                                            </div>
-                                                        </div>
-                                                        <p class="mb-1 text-muted small">Thank you for your visit. For billing inquiries, please contact our clinic support.</p>
-                                                        <p class="fw-bold fs-11 text-muted mb-0">2025 &copy; Docyari PHR Billing Gateway</p>
-                                                    </div>
-
-                                                    <script>
-                                                        window.onload = () => { setTimeout(() => { window.print(); window.close(); }, 500); };
-                                                    </script>
-                                                </body>
-                                            </html>`;
-
-                                            printWindow.document.write(html);
-                                            printWindow.document.close();
-                                        }} className="btn btn-primary px-5 py-2 fw-bold d-flex align-items-center shadow-primary">
-                                            <i className="ti ti-download me-2 fs-18" /> Download
+                                        <button onClick={handleInvoiceDownload} className="btn btn-primary px-5 py-2 fw-bold d-flex align-items-center shadow-primary">
+                                            <i className="ti ti-download me-2 fs-18" /> Download PDF
                                         </button>
                                     </div>
                                 </div>
@@ -347,6 +205,11 @@ const PatientInvoiceDetails = () => {
                         2025 © <span className="text-primary fw-bold">Docyari</span>, All Rights Reserved
                     </p>
                 </div>
+            </div>
+
+            {/* Hidden Invoice Slip for Print/Download */}
+            <div id="print-invoice-slip" style={{ display: 'none' }}>
+                <InvoiceSlip invoice={invoice} />
             </div>
 
             <style>{`

@@ -6,6 +6,7 @@ import { apiUrl } from "../../../../core/config/api";
 import { Input } from "../../../../core/common/input/Input";
 import { Button } from "../../../../core/common/button/Button";
 import { User, Lock, Eye, EyeOff, LogIn } from "react-feather";
+import { setLocalStorageUser } from "../../../../core/utils/apiClient";
 
 const getDashboardPath = (role: string): string => {
   switch (role) {
@@ -69,7 +70,7 @@ const Login = () => {
       }
 
       localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      setLocalStorageUser(data.user);
       toast.success("Welcome back!");
       navigate(getDashboardPath(data.user.role), { replace: true });
     } catch (err: any) {

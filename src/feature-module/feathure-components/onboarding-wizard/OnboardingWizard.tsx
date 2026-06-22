@@ -5,7 +5,9 @@ import dayjs from "dayjs";
 import { City, Country, State } from "../../../core/common/selectOption";
 import DoctorProfileUpload from "../../../core/common/doctor-profile-upload/DoctorProfileUpload";
 import { apiUrl, resolveMediaUrl } from "../../../core/config/api";
+import { setLocalStorageUser } from "../../../core/utils/apiClient";
 import ImageCropperModal from "../../../core/common/crop/ImageCropperModal";
+
 
 interface OnboardingWizardProps {
   onComplete: () => void;
@@ -181,7 +183,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
           ...(userWithoutProfileImage.clinic?.logo ? { logo: undefined } : {})
         }
       };
-      localStorage.setItem("user", JSON.stringify(trimmedUser));
+      setLocalStorageUser(trimmedUser);
 
       toast.success("Step 1 completed successfully!", { position: "top-center" });
       setStep(1);
@@ -248,7 +250,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
           ...localUser.clinic,
           onboardingStep: 2
         };
-        localStorage.setItem("user", JSON.stringify(localUser));
+        setLocalStorageUser(localUser);
       }
 
       toast.success("Clinic onboarding completed successfully!", { position: "top-center" });

@@ -163,7 +163,6 @@ const PackagesAdmin = () => {
                                     </div>
                                 </div>
                                 <div className="card-body p-4">
-
                                     <div className="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
                                         <div className="form-check form-switch m-0 d-flex align-items-center">
                                             <input className="form-check-input" type="checkbox" checked={pkg.isActive} onChange={() => toggleStatus(pkg)} id={`status-${pkg.id}`} style={{ width: '40px', height: '20px', cursor: 'pointer' }} />
@@ -209,7 +208,6 @@ const PackagesAdmin = () => {
                                             <label className="form-label fw-bold">Duration (Days)</label>
                                             <input type="number" className="form-control form-control-lg" required value={formData.durationInDays} onChange={e => setFormData({ ...formData, durationInDays: e.target.value })} />
                                         </div>
-
                                     </div>
 
                                     <div className="d-flex justify-content-end gap-2 mt-5">

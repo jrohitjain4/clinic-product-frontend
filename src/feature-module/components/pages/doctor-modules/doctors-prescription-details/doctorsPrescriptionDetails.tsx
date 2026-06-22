@@ -1,4 +1,4 @@
-﻿import { Link, useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
 import { useState, useEffect } from "react";

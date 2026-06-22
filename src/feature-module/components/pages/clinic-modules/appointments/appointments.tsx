@@ -16,6 +16,7 @@ import AppointmentsModals from "./appointmentsModals";
 import { resolveMediaUrl, apiUrl } from "../../../../../core/config/api";
 import { apiDelete, authHeaders } from "../../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
+import AppointmentPrintSlip from "./AppointmentPrintSlip";
 
 const Appointments = () => {
   const customSelectStyles = `
@@ -179,12 +180,52 @@ const Appointments = () => {
         padding: 0 12px !important;
       }
     }
+
+    @media print {
+      @page { size: A4; margin: 0; }
+      body * { visibility: hidden !important; }
+      #print-appointment, #print-appointment * {
+        visibility: visible !important;
+      }
+      #print-appointment {
+        visibility: visible !important;
+        display: block !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        background: white !important;
+        z-index: 99999 !important;
+        padding: 1.5cm !important;
+        margin: 0 !important;
+      }
+      .bg-light { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
+    }
   `;
 
   const { appointments, loading, error, refetch, reload, updateAppointmentStatus } = useClinicAppointments();
   const [selected, setSelected] = useState<ClinicAppointment | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchText, setSearchText] = useState("");
+  const [printAppointment, setPrintAppointment] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (printAppointment) {
+      const handleAfterPrint = () => {
+        setPrintAppointment(null);
+        window.removeEventListener("afterprint", handleAfterPrint);
+      };
+      window.addEventListener("afterprint", handleAfterPrint);
+
+      const timer = setTimeout(() => {
+        window.print();
+      }, 300);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener("afterprint", handleAfterPrint);
+      };
+    }
+  }, [printAppointment]);
 
   const handleStatusToggle = async (appointmentId: string, currentStatus: string) => {
     let nextStatus = "";
@@ -444,168 +485,8 @@ const Appointments = () => {
     return names.filter(n => n).sort();
   }, [appointments]);
 
-  const handlePrintAppointment = (a: ClinicAppointment) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const html = `<html>
-        <head>
-          <title>Appointment Summary - ${a.appointmentCode || 'Record'}</title>
-          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-            body { background: #fff; padding: 30px; font-family: 'Inter', sans-serif; color: #0f172a; }
-            .header-banner {
-              background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
-              color: #ffffff !important;
-              padding: 24px !important;
-              border-radius: 8px !important;
-              margin-bottom: 25px !important;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            .header-banner h4 { color: #ffffff !important; font-weight: 700; margin: 0 0 4px 0; font-size: 22px; }
-            .header-banner p { color: #e0f2fe !important; margin: 0; font-size: 13px; }
-            .header-banner h6 { color: #ffffff !important; margin: 8px 0 2px 0; font-size: 15px; font-weight: 600; }
-            .logo-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-            .section-title { font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #0f172a !important; padding-bottom: 8px; margin-bottom: 15px; font-size: 12px; color: #0f172a !important; letter-spacing: 0.5px; }
-            
-            /* Dark Styled Tables */
-            .table-bordered { border: 2px solid #0f172a !important; }
-            .table-bordered th { 
-              background-color: #0f172a !important; 
-              color: #ffffff !important; 
-              border: 2px solid #0f172a !important; 
-              font-weight: 700; 
-              font-size: 12px; 
-              letter-spacing: 0.5px; 
-              padding: 12px 10px !important;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            .table-bordered td { border: 1px solid #334155 !important; color: #0f172a !important; font-weight: 600; font-size: 13px; padding: 12px 10px !important; }
-            
-            .text-primary { color: #1e3a8a !important; }
-            .clinical-findings { border: 2px solid #0f172a !important; padding: 20px; background: #f8fafc; min-height: 120px; line-height: 1.6; font-size: 13px; color: #000000 !important; font-weight: 500; border-radius: 6px; }
-            @media print { 
-              .no-print { display: none; } 
-              body { padding: 0; }
-              .header-banner {
-                background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-              }
-              .table-bordered th {
-                background-color: #0f172a !important;
-                color: #ffffff !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header-banner">
-            <div class="d-flex align-items-center gap-3">
-              <div class="logo-box">
-                <img src="${resolveMediaUrl(a.clinic?.landingPage?.logo) || '/logo.png'}" alt="logo" style="max-height: 55px; max-width: 55px; object-fit: contain;">
-              </div>
-              <div>
-                <h4>${a.clinic?.name || a.clinicName || "DocYari Clinical Network"}</h4>
-                <p><i class="ti ti-map-pin"></i> ${a.clinic?.landingPage?.address || a.location || "Clinic Address"}</p>
-                <h6>${a.doctorName || a.doctor?.fullName}</h6>
-                <p>${a.doctor?.designation?.name || "Consultant"} · ${a.doctor?.department?.name || "Medicine"}</p>
-              </div>
-            </div>
-            <div class="text-end text-white">
-              <span class="badge bg-white text-primary fw-bold px-3 py-2 mb-2" style="font-size: 12px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                ${a.appointmentCode || "#---"}
-              </span>
-              <div class="small mt-1 opacity-90">
-                <div class="mb-1"><strong>Dept:</strong> ${a.doctor?.department?.name || "General"}</div>
-                <div><strong>Date:</strong> ${new Date(a.scheduledAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="mb-4">
-            <h6 class="section-title">Patient Clinical Profile</h6>
-            <table class="table table-bordered mb-0">
-              <thead>
-                <tr>
-                  <th class="text-white">PATIENT NAME</th>
-                  <th class="text-center text-white">AGE / GENDER</th>
-                  <th class="text-center text-white">BLOOD GROUP</th>
-                  <th class="text-center text-white">PATIENT ID</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="text-primary" style="font-size: 15px; font-weight: 700;">${a.patientName}</td>
-                  <td class="text-center">${a.patient?.dob ? Math.floor((new Date().getTime() - new Date(a.patient.dob).getTime()) / 31557600000) : '--'}Y / ${a.patient?.gender || '--'}</td>
-                  <td class="text-center">${a.patient?.bloodGroup || 'N/A'}</td>
-                  <td class="text-center">${a.patient?.patientCode || a.patientId?.slice(-6).toUpperCase()}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="text-center mb-4 pt-3">
-            <h5 class="fw-bold text-dark text-uppercase tracking-wider" style="border-bottom: 3px solid #0f172a; display: inline-block; padding-bottom: 8px;">
-              Clinical Appointment Summary
-            </h5>
-          </div>
-
-          <div class="mb-4">
-            <h6 class="section-title">Appointment Registration Details</h6>
-            <table class="table table-bordered mb-0">
-              <thead>
-                <tr>
-                  <th class="text-center text-white">S.NO</th>
-                  <th class="text-white">APPOINT ID</th>
-                  <th class="text-white">PATIENT NAME</th>
-                  <th class="text-white">DOCTOR NAME</th>
-                  <th class="text-center text-white">MODE</th>
-                  <th class="text-center text-white">STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="text-center text-muted">01</td>
-                  <td>${a.appointmentCode}</td>
-                  <td class="text-primary" style="font-weight: 700;">${a.patientName}</td>
-                  <td>${a.doctorName || a.doctor?.fullName}</td>
-                  <td class="text-center">${a.mode}</td>
-                  <td class="text-center"><span class="badge bg-dark text-white border px-3 py-1 text-uppercase" style="font-size: 10px; font-weight: 700;">${a.status}</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="mb-5">
-            <h6 class="section-title">Clinical Findings / Assessment</h6>
-            <div class="clinical-findings">
-              ${a.reason || "Patient presented for follow-up review. Clinical status stable."}
-            </div>
-          </div>
-
-          <div class="mt-auto pt-4 border-top text-center text-muted small">
-            <p class="mb-1 fw-bold" style="color: #64748b; letter-spacing: 0.5px;">2025 &copy; <span style="color: #1e3a8a;">Docyari</span>, All Rights Reserved</p>
-            <p class="mb-0 italic opacity-50" style="font-size: 10px;">This is a computer-generated clinical summary and does not require a physical signature.</p>
-          </div>
-
-          <script>
-            window.onload = () => {
-              setTimeout(() => { window.print(); window.close(); }, 500);
-            };
-          </script>
-        </body>
-      </html>`;
-    printWindow.document.write(html);
-    printWindow.document.close();
+  const handlePrintAppointment = (a: any) => {
+    setPrintAppointment(a);
   };
 
   const handleExportCSV = () => {
@@ -1034,6 +915,12 @@ const Appointments = () => {
           </div>
         </div>
       </div>
+
+      {printAppointment && (
+        <div id="print-appointment" style={{ display: 'none' }}>
+          <AppointmentPrintSlip appointment={printAppointment} />
+        </div>
+      )}
 
       <AppointmentsModals selected={selected} onClear={() => setSelected(null)} onDeleted={refetch} />
     </>

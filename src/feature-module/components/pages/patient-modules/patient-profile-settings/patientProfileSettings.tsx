@@ -5,6 +5,8 @@ import { apiUrl } from "../../../../../core/config/api";
 import { toast } from "react-toastify";
 import PatientProfileUpload from "../../../../../core/common/patient-profile-upload/PatientProfileUpload";
 import Footer from "../../../../../core/common/footer/footer";
+import { setLocalStorageUser } from "../../../../../core/utils/apiClient";
+
 
 const PatientProfileSettings = () => {
   const [formData, setFormData] = useState({
@@ -106,7 +108,7 @@ const PatientProfileSettings = () => {
           user.fullName = `${formData.firstName} ${formData.lastName}`.trim();
           user.email = formData.email;
           user.profileImage = formData.profileImage;
-          localStorage.setItem("user", JSON.stringify(user));
+          setLocalStorageUser(user);
           window.dispatchEvent(new Event("storage"));
         }
       } else {

@@ -1,4 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { setLocalStorageUser } from '../utils/apiClient';
+
 
 // Types
 interface ClinicInfo {
@@ -57,7 +59,7 @@ const authSlice = createSlice({
             state.isAuthenticated = true;
             // Persist to localStorage
             localStorage.setItem('token', action.payload.token);
-            localStorage.setItem('user', JSON.stringify(action.payload.user));
+            setLocalStorageUser(action.payload.user);
         },
         logout(state) {
             state.user = null;
@@ -69,7 +71,7 @@ const authSlice = createSlice({
         updateUser(state, action: PayloadAction<Partial<AuthUser>>) {
             if (state.user) {
                 state.user = { ...state.user, ...action.payload };
-                localStorage.setItem('user', JSON.stringify(state.user));
+                setLocalStorageUser(state.user);
             }
         },
     },

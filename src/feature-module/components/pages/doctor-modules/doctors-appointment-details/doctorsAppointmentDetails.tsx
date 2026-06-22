@@ -19,6 +19,7 @@ import { toast } from "react-toastify";
 import html2pdf from 'html2pdf.js';
 import { useNotes } from "../../../../../core/hooks/useNotes";
 import Footer from "../../../../../core/common/footer/footer";
+import AppointmentPrintSlip from "../../clinic-modules/appointments/AppointmentPrintSlip";
 
 const DoctorsAppointmentDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +32,8 @@ const DoctorsAppointmentDetails = () => {
   const [clinicalNote, setClinicalNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
   const [editingNote, setEditingNote] = useState<any>(null);
+  const [printDropdownOpen, setPrintDropdownOpen] = useState(false);
+
 
   const { notes, addNote, deleteNote, updateNote } = useNotes({ appointmentId: id });
 
@@ -138,32 +141,34 @@ const DoctorsAppointmentDetails = () => {
 
   const handleDownload = () => {
     const element = document.getElementById('print-appointment');
-    if (!element) return;
+    if (!element || !appointment) return;
+
+    // Temporarily display the element block so html2pdf can capture it
+    const originalDisplay = element.style.display;
+    element.style.display = 'block';
 
     const opt = {
-      margin: 0.3,
-      filename: `appointment_${appointment?.appointmentCode || 'report'}.pdf`,
-      image: { type: 'jpeg' as const, quality: 0.98 },
+      margin: 0,
+      filename: `Appointment-Slip-${appointment.appointmentCode || 'Record'}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-
-    const originalStyle = element.getAttribute('style') || '';
-    element.style.display = 'block';
-    element.style.visibility = 'visible';
-    element.style.position = 'fixed';
-    element.style.left = '-9999px';
-    element.style.background = 'white';
-    element.style.padding = '30px';
 
     toast.info("Generating PDF, please wait...");
 
-    setTimeout(() => {
-      html2pdf().set(opt).from(element).save().finally(() => {
-        element.setAttribute('style', originalStyle);
+    html2pdf()
+      .from(element)
+      .set(opt)
+      .save()
+      .then(() => {
+        element.style.display = originalDisplay;
         toast.success("Download started!");
+      })
+      .catch((err: any) => {
+        console.error("PDF generation failed:", err);
+        element.style.display = originalDisplay;
       });
-    }, 500);
   };
 
   if (loading) {
@@ -358,7 +363,30 @@ const DoctorsAppointmentDetails = () => {
               <h3 className="fw-bold mb-0">Visit # {appointment.appointmentCode || id?.slice(-6).toUpperCase()}</h3>
             </div>
           </div>
-          <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
+          <div className="d-flex align-items-center gap-2 mt-3 mt-md-0 action-buttons-row">
+            <div className="dropdown">
+              <button 
+                className="btn btn-sm btn-outline-light border bg-white text-dark dropdown-toggle d-flex align-items-center gap-2 fw-bold shadow-sm fs-12" 
+                type="button" 
+                onClick={() => setPrintDropdownOpen(!printDropdownOpen)}
+                aria-expanded={printDropdownOpen}
+              >
+                <i className="ti ti-printer" /> Print/Download
+              </button>
+              <ul className={`dropdown-menu dropdown-menu-end shadow-sm ${printDropdownOpen ? 'show' : ''}`} style={{ display: printDropdownOpen ? 'block' : 'none' }}>
+                <li>
+                  <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-12" onClick={() => { setPrintDropdownOpen(false); window.print(); }}>
+                    <i className="ti ti-printer" /> Print
+                  </button>
+                </li>
+                <li>
+                  <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-12" onClick={() => { setPrintDropdownOpen(false); handleDownload(); }}>
+                    <i className="ti ti-download" /> Download PDF
+                  </button>
+                </li>
+              </ul>
+            </div>
+
             <button className="btn btn-soft-primary d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={() => { setClinicalNote(""); setShowNoteModal(true); }}>
               <i className="ti ti-notes" /> Add Note
             </button>
@@ -935,28 +963,69 @@ const DoctorsAppointmentDetails = () => {
 
       <Footer />
 
-      {/* Printable Area (Minimal / Hidden) */}
+      {/* Printable Appointment Summary */}
       <div id="print-appointment" style={{ display: 'none' }}>
-        <div className="p-4" style={{ width: '21cm', margin: 'auto', background: '#fff' }}>
-          <h4 className="text-center fw-bold mb-4">Appointment Summary</h4>
-          <div className="row mb-4">
-            <div className="col-6">
-              <p><strong>Patient:</strong> {appointment.patient?.firstName} {appointment.patient?.lastName}</p>
-              <p><strong>Doctor:</strong> {appointment.doctor?.fullName}</p>
-            </div>
-            <div className="col-6 text-end">
-              <p><strong>Date:</strong> {dayjs(appointment.scheduledAt).format('DD MMM YYYY')}</p>
-              <p><strong>Status:</strong> {appointment.status}</p>
-            </div>
-          </div>
-          <div className="border-top pt-4">
-            <h6>Reason / Observation</h6>
-            <p>{appointment.reason || "General visit recorded."}</p>
-          </div>
-        </div>
+        <AppointmentPrintSlip appointment={appointment} notes={notes} linkedPrescriptions={prescriptions} />
       </div>
 
       <style>{`
+                @media print {
+                    @page { size: A4; margin: 0; }
+                    body * { visibility: hidden !important; }
+                    #print-appointment, #print-appointment * {
+                        visibility: visible !important;
+                    }
+                    #print-appointment {
+                        visibility: visible !important;
+                        display: block !important;
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: 100% !important;
+                        background: white !important;
+                        z-index: 99999 !important;
+                        padding: 1.5cm !important;
+                        margin: 0 !important;
+                    }
+                    .bg-light { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
+                }
+
+                /* Badge Contrast and Visibility Fixes */
+                .badge {
+                    color: #fff !important;
+                }
+                .badge.bg-light, .badge.text-dark, .badge.text-black {
+                    color: #000 !important;
+                }
+                .badge.bg-soft-primary, .badge.badge-soft-primary, .badge.text-primary {
+                    color: #4f46e5 !important;
+                    background-color: rgba(79, 70, 229, 0.1) !important;
+                }
+                .badge.bg-soft-success, .badge.badge-soft-success, .badge.text-success {
+                    color: #27ae60 !important;
+                    background-color: rgba(39, 174, 96, 0.1) !important;
+                }
+                .badge.bg-soft-info, .badge.badge-soft-info, .badge.text-info {
+                    color: #00cfdd !important;
+                    background-color: rgba(0, 207, 221, 0.1) !important;
+                }
+                .badge.bg-soft-warning, .badge.badge-soft-warning, .badge.text-warning {
+                    color: #d97706 !important;
+                    background-color: rgba(217, 119, 6, 0.1) !important;
+                }
+                .badge.bg-soft-danger, .badge.badge-soft-danger, .badge.text-danger {
+                    color: #dc2626 !important;
+                    background-color: rgba(220, 38, 38, 0.1) !important;
+                }
+                .badge.badge-soft-purple, .badge.text-purple {
+                    color: #8b5cf6 !important;
+                    background-color: rgba(139, 92, 246, 0.1) !important;
+                }
+                .badge.badge-soft-dark, .badge.text-dark {
+                    color: #374151 !important;
+                    background-color: rgba(55, 65, 81, 0.1) !important;
+                }
+
                 .bg-primary-dark { background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); }
                 .min-height-200 { min-height: 200px; }
                 .btn-xs { padding: 4px 10px; font-size: 11px; border-radius: 6px; }
@@ -967,6 +1036,21 @@ const DoctorsAppointmentDetails = () => {
                 .btn-soft-info:hover { background-color: #0baccc; color: white; }
                 .card-decoration-circle { position: absolute; width: 200px; height: 200px; background: rgba(255,255,255,0.05); border-radius: 50%; bottom: -50px; right: -50px; }
                 .bg-primary-light-large { position: absolute; width: 300px; height: 300px; background: rgba(255,255,255,0.03); border-radius: 50%; top: -100px; left: -100px; }
+                
+                .action-buttons-row .btn, .action-buttons-row a.btn {
+                    height: 48px !important;
+                    padding: 0 24px !important;
+                    font-size: 15px !important;
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    gap: 8px !important;
+                    border-radius: 8px !important;
+                    font-weight: 700 !important;
+                }
+                .action-buttons-row .btn i, .action-buttons-row a.btn i {
+                    font-size: 18px !important;
+                }
             `}</style>
     </div>
   );

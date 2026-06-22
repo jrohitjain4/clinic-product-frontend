@@ -274,8 +274,8 @@ export default function ClinicLandingPage() {
         if (!docId) { newErrors.doctorId = "Please select a doctor"; hasError = true; }
         if (!bookForm.date) { newErrors.date = "Please select a date"; hasError = true; }
         if (!bookForm.time) { newErrors.time = "Please select a time slot"; hasError = true; }
-        if (selectedServices.length === 0 && clinic?.rawServices && clinic.rawServices.length > 0) {
-            newErrors.services = "Please select at least one service";
+        if (isSessionMode && selectedServices.length === 0 && clinic?.rawServices && clinic.rawServices.length > 0) {
+            newErrors.services = "Please select a service";
             hasError = true;
         }
 
@@ -802,7 +802,7 @@ export default function ClinicLandingPage() {
                     <section id="doctors" className="bg-white">
                         <div className="container pb-5">
                             <div className="text-center mb-5">
-                                <h3 className="display-6 fw-bold" style={{ color: "#1d4ed8", letterSpacing: "-1px" }}>OUR DOCTORS</h3>
+                                <h3 className="display-6 fw-bold" style={{ color: "#000000", letterSpacing: "-1px" }}>OUR DOCTORS</h3>
                             </div>
 
                             <div className="row g-4 justify-content-center">
@@ -1113,7 +1113,7 @@ export default function ClinicLandingPage() {
                         clinic.gallery.length > 0 && (
                             <section id="gallery" className="pt-3 pb-5 bg-white">
                                 <div className="container pt-1 pb-4 text-center">
-                                    <h3 className="display-6 fw-bold mb-4" style={{ color: "#1d4ed8", letterSpacing: "-1px" }}>CLINIC GALLERY</h3>
+                                    <h3 className="display-6 fw-bold mb-4" style={{ color: "#000000", letterSpacing: "-1px" }}>CLINIC GALLERY</h3>
 
                                     <div className="row g-4">
                                         {clinic.gallery.map((img, i) => (
@@ -1138,7 +1138,7 @@ export default function ClinicLandingPage() {
                                                         if (imgEl) imgEl.style.transform = "scale(1)";
                                                     }}
                                                 >
-                                                    <div className="position-relative overflow-hidden" style={{ height: "220px" }}>
+                                                    <div className="position-relative overflow-hidden" style={{ aspectRatio: "1 / 1" }}>
                                                         <img 
                                                             src={img.url} 
                                                             alt={img.category} 
@@ -1193,16 +1193,13 @@ export default function ClinicLandingPage() {
                         style={{ zIndex: 99999, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
                         onClick={(e) => { if (e.target === e.currentTarget) { setShowModal(false); } }}
                     >
-                        <div className="bg-white rounded-4 shadow-lg d-flex flex-column" style={{ width: "100%", maxWidth: bookSuccess ? "460px" : "760px", margin: "20px", maxHeight: "90vh", overflow: "hidden", transition: "max-width 0.3s ease" }}>
+                        <div className="bg-white rounded-4 shadow-lg d-flex flex-column" style={{ width: "100%", maxWidth: bookSuccess ? "650px" : "760px", margin: "20px", maxHeight: "90vh", overflow: "hidden", transition: "max-width 0.3s ease" }}>
                             {/* Modal Header — fixed */}
                             <div className="d-flex align-items-center justify-content-between p-3 border-bottom flex-shrink-0" style={{ background: "#1d4ed8", borderRadius: "16px 16px 0 0" }}>
                                 <div className="d-flex align-items-center gap-3">
-                                    <div className="bg-white bg-opacity-20 rounded-circle p-2 d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
-                                        <i className="ti ti-calendar-event text-white fs-5" />
-                                    </div>
                                     <div>
-                                        <h5 className="fw-bold text-white mb-0" style={{ fontSize: "15px" }}>Book Appointment</h5>
-                                        <small className="text-white opacity-75" style={{ fontSize: "12px" }}>{clinic.name}</small>
+                                        <h5 className="fw-bold text-white mb-0" style={{ fontSize: "16px" }}>Book Appointment</h5>
+                                        <small className="text-white opacity-75" style={{ fontSize: "13px" }}>{clinic.name}</small>
                                     </div>
                                 </div>
                                 <button
@@ -1224,61 +1221,61 @@ export default function ClinicLandingPage() {
                                                 <i className="ti ti-circle-check-filled" style={{ fontSize: 36, color: "#1d4ed8" }} />
                                             </div>
                                         </div>
-                                        <h5 className="fw-bold text-dark mb-1">Appointment Scheduled!</h5>
-                                        <p className="text-secondary fw-semibold mb-3" style={{ fontSize: "12px" }}>{bookSuccess}</p>
+                                        <h4 className="fw-bold text-dark mb-1" style={{ fontSize: "24px" }}>Appointment Scheduled!</h4>
+                                        <p className="text-secondary fw-semibold mb-3" style={{ fontSize: "15px" }}>{bookSuccess}</p>
 
                                         {/* Appointment ID Details */}
-                                        <div className="mb-3 p-3 bg-light rounded-3 text-start border" style={{ borderColor: "#e2e8f0" }}>
-                                            <div className={`d-flex justify-content-between ${generatedCreds?.isNewUserCreated ? 'mb-2 pb-2 border-bottom' : ''}`} style={{ borderColor: "#cbd5e1" }}>
-                                                <span className="text-secondary fw-semibold fs-13">Appointment ID:</span>
-                                                <span className="text-dark fw-bold fs-13">{generatedCreds?.appointmentCode || "AP..."}</span>
+                                        <div className="mb-3 p-4 bg-light rounded-3 text-start border" style={{ borderColor: "#e2e8f0" }}>
+                                            <div className={`d-flex justify-content-between ${generatedCreds?.isNewUserCreated ? 'mb-3 pb-3 border-bottom' : ''}`} style={{ borderColor: "#cbd5e1" }}>
+                                                <span className="text-secondary fw-semibold" style={{ fontSize: "15px" }}>Appointment ID:</span>
+                                                <span className="text-dark fw-bold" style={{ fontSize: "16px" }}>{generatedCreds?.appointmentCode || "AP..."}</span>
                                             </div>
 
                                             {/* Account Details if user was created */}
                                             {generatedCreds?.isNewUserCreated && (
-                                                <div className="mt-2">
-                                                    <div className="alert alert-info py-2 px-3 rounded-2 fs-12 mb-2 d-flex align-items-start gap-2" style={{ backgroundColor: "#eff6ff", borderColor: "#bfdbfe", color: "#1e3a8a" }}>
-                                                        <i className="ti ti-info-circle-filled mt-0.5 flex-shrink-0" />
+                                                <div className="mt-3">
+                                                    <div className="alert alert-info py-2 px-3 rounded-2 mb-3 d-flex align-items-start gap-2" style={{ backgroundColor: "#eff6ff", borderColor: "#bfdbfe", color: "#1e3a8a", fontSize: "14px" }}>
+                                                        <i className="ti ti-info-circle-filled mt-1 flex-shrink-0" />
                                                         <span>
                                                             Your login account has been created! A credentials email has been sent to your Gmail.
                                                         </span>
                                                     </div>
-                                                    <div className="d-flex justify-content-between mb-1">
-                                                        <span className="text-secondary fs-12">Login Email:</span>
-                                                        <span className="text-dark fw-bold fs-12">{generatedCreds?.email}</span>
+                                                    <div className="d-flex justify-content-between mb-2">
+                                                        <span className="text-secondary" style={{ fontSize: "14px" }}>Login Email:</span>
+                                                        <span className="text-dark fw-bold" style={{ fontSize: "14px" }}>{generatedCreds?.email}</span>
                                                     </div>
                                                     <div className="d-flex justify-content-between">
-                                                        <span className="text-secondary fs-12">Temporary Password:</span>
-                                                        <span className="text-primary fw-bold fs-12" style={{ letterSpacing: "0.5px" }}>{generatedCreds?.password}</span>
+                                                        <span className="text-secondary" style={{ fontSize: "14px" }}>Temporary Password:</span>
+                                                        <span className="text-primary fw-bold" style={{ fontSize: "14px", letterSpacing: "0.5px" }}>{generatedCreds?.password}</span>
                                                     </div>
                                                 </div>
                                             )}
                                         </div>
 
                                         {/* Redesigned Notes Section - Blue & Black highlighted, detailed */}
-                                        <div className="p-3 mb-4 rounded-3 text-start" style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                                            <h6 className="fw-bold text-dark mb-3" style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Important Notes</h6>
+                                        <div className="p-4 mb-4 rounded-3 text-start" style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                                            <h6 className="fw-bold text-dark mb-3" style={{ fontSize: "13px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Important Notes</h6>
 
                                             {/* Note 1 */}
-                                            <div className="d-flex align-items-start gap-2 mb-3 pb-3 border-bottom" style={{ borderColor: "#e2e8f0" }}>
-                                                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: "22px", height: "22px", background: "#1d4ed8", color: "white" }}>
-                                                    <span className="fw-bold" style={{ fontSize: "10px" }}>1</span>
+                                            <div className="d-flex align-items-start gap-3 mb-3 pb-3 border-bottom" style={{ borderColor: "#e2e8f0" }}>
+                                                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: "28px", height: "28px", background: "#1d4ed8", color: "white" }}>
+                                                    <span className="fw-bold" style={{ fontSize: "14px" }}>1</span>
                                                 </div>
                                                 <div>
-                                                    <p className="mb-0 text-dark fw-bold" style={{ fontSize: "12px", lineHeight: "1.4" }}>
+                                                    <p className="mb-0 text-dark fw-bold" style={{ fontSize: "15px", lineHeight: "1.5" }}>
                                                         Credentials for logging into the portal have been sent to your email.
                                                     </p>
                                                 </div>
                                             </div>
 
                                             {/* Note 2 */}
-                                            <div className="d-flex align-items-start gap-2">
-                                                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: "22px", height: "22px", background: "#0f172a", color: "white" }}>
-                                                    <span className="fw-bold" style={{ fontSize: "10px" }}>2</span>
+                                            <div className="d-flex align-items-start gap-3">
+                                                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: "28px", height: "28px", background: "#0f172a", color: "white" }}>
+                                                    <span className="fw-bold" style={{ fontSize: "14px" }}>2</span>
                                                 </div>
                                                 <div>
-                                                    <p className="mb-0 text-dark fw-bold" style={{ fontSize: "12px", lineHeight: "1.4" }}>
-                                                        Call admin to confirm your booking. Now it is just scheduled.
+                                                    <p className="mb-0 text-dark fw-bold" style={{ fontSize: "15px", lineHeight: "1.5" }}>
+                                                        Please contact the clinic admin at <strong style={{ color: "#1d4ed8", fontSize: "16px" }}>{clinic.phone || clinic.whatsapp}</strong> to confirm your appointment. Your booking is currently scheduled.
                                                     </p>
                                                 </div>
                                             </div>
@@ -1585,24 +1582,23 @@ export default function ClinicLandingPage() {
                                                 {bookFormErrors.time && <div className="invalid-feedback">{bookFormErrors.time}</div>}
                                             </div>
 
-                                            {/* Services Multi-Select — always visible when services exist */}
-                                            {clinic?.rawServices && clinic.rawServices.length > 0 && (
+                                            {/* Services Multi-Select — visible only in Session mode */}
+                                            {isSessionMode && (
                                                 <div className="col-12">
                                                     <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Select Services <span className="text-danger">*</span></label>
-                                                    <Select
-                                                        mode="multiple"
-                                                        placeholder="Select one or more services"
-                                                        value={selectedServices}
-                                                        onChange={(val) => setSelectedServices(val)}
-                                                        className={`w-100 ${bookFormErrors.services ? 'is-invalid' : ''}`}
-                                                        style={{ minHeight: '38px', borderRadius: '8px' }}
-                                                        options={clinic.rawServices.map(s => ({ value: s.id, label: s.name }))}
-                                                        getPopupContainer={() => document.getElementById("modal-datepicker-container") || document.body}
-                                                        showSearch
-                                                        filterOption={(input, option) =>
-                                                            (option?.label as string ?? '').toLowerCase().includes(input.toLowerCase())
-                                                        }
-                                                    />
+                                                    <select
+                                                        className={`form-select rounded-3 text-secondary ${bookFormErrors.services ? 'is-invalid' : ''}`}
+                                                        value={selectedServices.length > 0 ? selectedServices[0] : ""}
+                                                        onChange={(e) => setSelectedServices(e.target.value ? [e.target.value] : [])}
+                                                        style={{ fontSize: "14px" }}
+                                                    >
+                                                        <option value="">Select a service</option>
+                                                        {clinic?.rawServices?.map((s) => (
+                                                            <option key={s.id} value={s.id}>
+                                                                {s.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
                                                     {bookFormErrors.services && <div className="invalid-feedback d-block">{bookFormErrors.services}</div>}
                                                 </div>
                                             )}

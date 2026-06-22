@@ -187,7 +187,7 @@ const EditInvoices = () => {
           paymentMethod: paymentMethod?.value || "Cash",
           paymentStatus: status?.value || "Pending",
           otherInfo: otherInfo,
-          items: invoices.map(inv => ({
+          items: invoices.filter(inv => inv.serviceId || inv.description).map(inv => ({
             serviceId: inv.serviceId?.type === "service" ? inv.serviceId?.value : null,
             description: inv.description,
             quantity: inv.quantity,
@@ -196,7 +196,7 @@ const EditInvoices = () => {
           })),
         }),
       });
-      if (res.ok) navigate(all_routes.transactions);
+      if (res.ok) navigate(all_routes.invoices);
       else alert("Failed to update invoice");
     } catch (e) {
       console.error(e);
@@ -215,9 +215,9 @@ const EditInvoices = () => {
           <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
             <div className="flex-grow-1">
               <h6 className="fw-bold mb-0 d-flex align-items-center">
-                <Link to={all_routes.transactions} className="">
+                <Link to={all_routes.invoices} className="">
                   <i className="ti ti-chevron-left me-1 fs-14" />
-                  Transactions
+                  Invoices
                 </Link>
               </h6>
             </div>
@@ -422,7 +422,7 @@ const EditInvoices = () => {
             </div>
             <div className="card-footer">
               <div className="d-flex gap-2 align-items-center justify-content-end mb-0">
-                <Link to={all_routes.transactions} className="btn btn-md bg-light text-dark fs-13 fw-medium rounded">Cancel</Link>
+                <Link to={all_routes.invoices} className="btn btn-md bg-light text-dark fs-13 fw-medium rounded">Cancel</Link>
                 <button type="button" onClick={handleSave} disabled={saving} className="btn btn-md btn-primary fs-13 fw-medium rounded">
                   {saving ? "Saving..." : "Update Invoice"}
                 </button>

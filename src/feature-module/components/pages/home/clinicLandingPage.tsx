@@ -1053,19 +1053,19 @@ export default function ClinicLandingPage() {
                     {/* ══════ REVIEWS ══════ */}
                     <section id="reviews" className="bg-white border-top border-bottom pt-5 pb-3">
                         <div className="container py-2">
-                            <div className="d-flex justify-content-between align-items-center mb-4">
-                                <div className="d-flex align-items-center gap-3">
-                                    <h3 className="display-6 fw-bold mb-0" style={{ color: "#0f172a", letterSpacing: "-1px" }}>
+                            <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4 gap-3">
+                                <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 gap-sm-3 w-100">
+                                    <h3 className="display-6 fw-bold mb-0 text-nowrap" style={{ color: "#0f172a", letterSpacing: "-1px" }}>
                                         RECENT REVIEWS
                                     </h3>
-                                    <div className="d-flex align-items-center gap-2">
+                                    <div className="d-flex align-items-center gap-2 flex-wrap">
                                         <Stars n={avgRating} size={15} />
-                                        <span className="fw-semibold" style={{ fontSize: "14px", color: "#0f172a" }}>({totalReviews} Reviews)</span>
+                                        <span className="fw-semibold text-nowrap" style={{ fontSize: "14px", color: "#0f172a" }}>({totalReviews} Reviews)</span>
                                     </div>
                                 </div>
                                 <a
                                     href="#"
-                                    className="fw-bold text-decoration-none d-flex align-items-center gap-1"
+                                    className="fw-bold text-decoration-none d-flex align-items-center gap-1 text-nowrap mt-2 mt-md-0"
                                     style={{ color: "#0f172a", fontSize: "14px" }}
                                     onClick={(e) => { e.preventDefault(); setShowAllReviews(!showAllReviews); }}
                                 >

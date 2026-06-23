@@ -631,7 +631,7 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
             margin: 0;
           }
           
-          body * {
+          body {
             visibility: hidden !important;
           }
           

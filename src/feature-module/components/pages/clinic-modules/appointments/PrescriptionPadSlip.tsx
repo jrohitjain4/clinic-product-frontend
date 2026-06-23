@@ -292,7 +292,7 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
         /* ---- PRINT ---- */
         @media print {
           @page { size: A4; margin: 0; }
-          body * { visibility: hidden !important; }
+          body { visibility: hidden !important; }
           #print-prescription-pad, #print-prescription-pad * { visibility: visible !important; }
           #print-prescription-pad {
             visibility: visible !important;

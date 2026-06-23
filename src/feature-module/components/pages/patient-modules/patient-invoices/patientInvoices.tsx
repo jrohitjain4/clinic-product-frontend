@@ -67,12 +67,30 @@ const PatientInvoices = () => {
     {
       title: "Description",
       dataIndex: "Description",
-      render: (text: string) => (
-        <span className="text-dark fw-medium d-flex align-items-center">
-          <i className="ti ti-notes me-2 text-muted fs-14" />
-          {text}
-        </span>
-      ),
+      render: (text: string) => {
+        const parts = text.split(" - ");
+        if (parts.length > 1) {
+          const mainDesc = parts[0];
+          const doctorName = parts.slice(1).join(" - ");
+          return (
+            <div className="d-flex flex-column" style={{ lineHeight: '1.3' }}>
+              <span className="text-dark fw-bold fs-13 d-flex align-items-center">
+                <i className="ti ti-notes me-2 text-muted fs-14" />
+                {mainDesc}
+              </span>
+              <span className="text-muted fw-semibold fs-11 ps-4" style={{ marginTop: '2px' }}>
+                {doctorName}
+              </span>
+            </div>
+          );
+        }
+        return (
+          <span className="text-dark fw-medium d-flex align-items-center">
+            <i className="ti ti-notes me-2 text-muted fs-14" />
+            {text}
+          </span>
+        );
+      },
       sorter: (a: any, b: any) => a.Description.localeCompare(b.Description),
     },
     {

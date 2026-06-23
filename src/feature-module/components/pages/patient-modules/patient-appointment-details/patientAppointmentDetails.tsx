@@ -1073,8 +1073,9 @@ const PatientAppointmentDetails = () => {
       <style>{`
                 @media print {
                     @page { size: A4; margin: 0; }
-                    body * { visibility: hidden !important; }
-                    #print-appointment, #print-appointment * {
+                    body { visibility: hidden !important; }
+                    #print-appointment, 
+                    #print-appointment * {
                         visibility: visible !important;
                     }
                     #print-appointment {

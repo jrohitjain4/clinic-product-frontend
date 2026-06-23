@@ -20,6 +20,7 @@ import html2pdf from 'html2pdf.js';
 import { useNotes } from "../../../../../core/hooks/useNotes";
 import Footer from "../../../../../core/common/footer/footer";
 import AppointmentPrintSlip from "../../clinic-modules/appointments/AppointmentPrintSlip";
+import PrescriptionPadSlip from "../../clinic-modules/appointments/PrescriptionPadSlip";
 
 const DoctorsAppointmentDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,6 +34,8 @@ const DoctorsAppointmentDetails = () => {
   const [savingNote, setSavingNote] = useState(false);
   const [editingNote, setEditingNote] = useState<any>(null);
   const [printDropdownOpen, setPrintDropdownOpen] = useState(false);
+  const [presDropdownOpen, setPresDropdownOpen] = useState(false);
+
 
 
   const { notes, addNote, deleteNote, updateNote } = useNotes({ appointmentId: id });
@@ -170,6 +173,58 @@ const DoctorsAppointmentDetails = () => {
         element.style.display = originalDisplay;
       });
   };
+
+  const handlePrescriptionPadPrint = () => {
+    const pad = document.getElementById('print-prescription-pad');
+    const slip = document.getElementById('print-appointment');
+    if (!pad) return;
+    pad.style.display = 'block';
+    if (slip) slip.setAttribute('data-hidden-for-print', 'true');
+    window.print();
+    setTimeout(() => {
+      pad.style.display = 'none';
+      if (slip) slip.removeAttribute('data-hidden-for-print');
+    }, 1500);
+  };
+
+  const handlePrescriptionPadDownload = () => {
+    const element = document.getElementById('print-prescription-pad');
+    if (!element || !appointment) return;
+    const originalDisplay = element.style.display;
+    element.style.display = 'block';
+    const opt = {
+      margin: 0,
+      filename: `Prescription-Pad-${appointment.appointmentCode || 'Record'}.pdf`,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+    };
+    html2pdf()
+      .from(element)
+      .set(opt)
+      .save()
+      .then(() => {
+        element.style.display = originalDisplay;
+      })
+      .catch((err: any) => {
+        console.error("Prescription Pad PDF failed:", err);
+        element.style.display = originalDisplay;
+      });
+  };
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".dropdown")) {
+        setPrintDropdownOpen(false);
+        setPresDropdownOpen(false);
+      }
+    };
+    document.addEventListener("click", handleOutsideClick);
+    return () => {
+      document.removeEventListener("click", handleOutsideClick);
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -366,30 +421,59 @@ const DoctorsAppointmentDetails = () => {
           <div className="d-flex align-items-center gap-2 mt-3 mt-md-0 action-buttons-row">
             <div className="dropdown">
               <button 
-                className="btn btn-sm btn-outline-light border bg-white text-dark dropdown-toggle d-flex align-items-center gap-2 fw-bold shadow-sm fs-12" 
+                className="btn btn-sm btn-outline-light border bg-white text-dark dropdown-toggle d-flex align-items-center gap-2 fw-bold shadow-sm fs-14" 
                 type="button" 
-                onClick={() => setPrintDropdownOpen(!printDropdownOpen)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPrintDropdownOpen(!printDropdownOpen);
+                  setPresDropdownOpen(false);
+                }}
                 aria-expanded={printDropdownOpen}
               >
                 <i className="ti ti-printer" /> Print/Download
               </button>
               <ul className={`dropdown-menu dropdown-menu-end shadow-sm ${printDropdownOpen ? 'show' : ''}`} style={{ display: printDropdownOpen ? 'block' : 'none' }}>
                 <li>
-                  <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-12" onClick={() => { setPrintDropdownOpen(false); window.print(); }}>
+                  <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-14 fw-semibold" onClick={() => { setPrintDropdownOpen(false); window.print(); }}>
                     <i className="ti ti-printer" /> Print
                   </button>
                 </li>
                 <li>
-                  <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-12" onClick={() => { setPrintDropdownOpen(false); handleDownload(); }}>
+                  <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-14 fw-semibold" onClick={() => { setPrintDropdownOpen(false); handleDownload(); }}>
                     <i className="ti ti-download" /> Download PDF
                   </button>
                 </li>
               </ul>
             </div>
 
-            <button className="btn btn-soft-primary d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={() => { setClinicalNote(""); setShowNoteModal(true); }}>
-              <i className="ti ti-notes" /> Add Note
-            </button>
+            {/* Prescription Pad Dropdown */}
+            <div className="dropdown">
+              <button
+                className="btn btn-sm btn-outline-primary dropdown-toggle d-flex align-items-center gap-2 fw-bold shadow-sm fs-14"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPresDropdownOpen(!presDropdownOpen);
+                  setPrintDropdownOpen(false);
+                }}
+                aria-expanded={presDropdownOpen}
+              >
+                <i className="ti ti-file-text" /> Prescription Pad
+              </button>
+              <ul className={`dropdown-menu dropdown-menu-end shadow-sm ${presDropdownOpen ? 'show' : ''}`} style={{ display: presDropdownOpen ? 'block' : 'none' }}>
+                <li>
+                  <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-14 fw-semibold" onClick={() => { setPresDropdownOpen(false); handlePrescriptionPadPrint(); }}>
+                    <i className="ti ti-printer" /> Print Prescription Pad
+                  </button>
+                </li>
+                <li>
+                  <button className="dropdown-item d-flex align-items-center gap-2 text-dark fs-14 fw-semibold" onClick={() => { setPresDropdownOpen(false); handlePrescriptionPadDownload(); }}>
+                    <i className="ti ti-download" /> Download Prescription PDF
+                  </button>
+                </li>
+              </ul>
+            </div>
+
             <button className="btn btn-primary d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={() => setShowPresModal(true)}>
               <i className="ti ti-prescription" /> Add Prescription
             </button>
@@ -968,14 +1052,36 @@ const DoctorsAppointmentDetails = () => {
         <AppointmentPrintSlip appointment={appointment} notes={notes} linkedPrescriptions={prescriptions} />
       </div>
 
+      {/* Prescription Pad (pre-printed blank pad) */}
+      <div id="print-prescription-pad" style={{ display: 'none' }}>
+        <PrescriptionPadSlip appointment={appointment} prescription={selectedPres || linkedPrescriptions?.[0] || null} />
+      </div>
+
       <style>{`
                 @media print {
                     @page { size: A4; margin: 0; }
-                    body * { visibility: hidden !important; }
-                    #print-appointment, #print-appointment * {
+                    body { visibility: hidden !important; }
+                    #print-appointment:not([data-hidden-for-print]), 
+                    #print-appointment:not([data-hidden-for-print]) * {
                         visibility: visible !important;
                     }
-                    #print-appointment {
+                    #print-appointment:not([data-hidden-for-print]) {
+                        visibility: visible !important;
+                        display: block !important;
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: 100% !important;
+                        background: white !important;
+                        z-index: 99999 !important;
+                        padding: 1.5cm !important;
+                        margin: 0 !important;
+                    }
+                    #print-prescription-pad, 
+                    #print-prescription-pad * {
+                        visibility: visible !important;
+                    }
+                    #print-prescription-pad {
                         visibility: visible !important;
                         display: block !important;
                         position: absolute !important;

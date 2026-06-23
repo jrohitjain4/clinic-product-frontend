@@ -125,7 +125,7 @@ const DoctorDahboard = () => {
               <p className="text-muted mb-0 fs-13">Here's what's happening in your schedule today.</p>
             </div>
             <div className="d-flex align-items-center flex-wrap gap-2">
-              <Link to="/profile-settings" className="btn btn-outline-light border text-dark bg-white d-inline-flex align-items-center justify-content-center fw-semibold px-3 py-2" style={{ borderRadius: '8px', fontSize: '13px', minHeight: '38px' }}>
+              <Link to={all_routes.doctorsprofilesettings} className="btn btn-outline-light border text-dark bg-white d-inline-flex align-items-center justify-content-center fw-semibold px-3 py-2" style={{ borderRadius: '8px', fontSize: '13px', minHeight: '38px' }}>
                 Profile Setting <i className="ti ti-settings ms-2" />
               </Link>
               <button

@@ -21,7 +21,7 @@ import { toast } from "react-toastify";
 import AppointmentFormPage from "../../clinic-modules/appointment-form/appointmentFormPage";
 
 const DoctorAppointments = () => {
-  const { appointments, loading, updateAppointmentStatus } = useClinicAppointments();
+  const { appointments, loading, updateAppointmentStatus, refetch } = useClinicAppointments();
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const handleStatusToggle = async (appointmentId: string, currentStatus: string) => {
@@ -246,8 +246,8 @@ const DoctorAppointments = () => {
       dataIndex: "SrNo",
       render: (text: number, record: any) => {
         return (
-          <span className="fw-bold">
-            {text} / <span className="text-primary fw-medium">{record.checkinHisNo}</span>
+          <span className="text-black fw-bold">
+            {text} / <span className="text-black fw-bold">{record.checkinHisNo}</span>
           </span>
         );
       },
@@ -257,18 +257,29 @@ const DoctorAppointments = () => {
       title: "Appointment ID",
       dataIndex: "id",
       render: (text: string, record: any) => (
-        <span className="text-primary fw-bold">#{record._raw.appointmentCode || text?.slice(-6).toUpperCase()}</span>
+        <span className="text-black fw-bold">#{record._raw.appointmentCode || text?.slice(-6).toUpperCase()}</span>
       ),
       sorter: (a: any, b: any) => (a._raw.appointmentCode || "").localeCompare(b._raw.appointmentCode || ""),
     },
     {
       title: "Expected Time",
       dataIndex: "expectedTime",
-      render: (text: string) => <span className="fw-bold text-dark">{text}</span>,
+      render: (text: string) => <span className="fw-bold text-black">{text}</span>,
     },
     {
       title: "Date & Time",
       dataIndex: "Date_Time",
+      render: (text: string) => {
+        const parts = text.split(" - ");
+        const date = parts[0] || text;
+        const time = parts[1] || "";
+        return (
+          <div className="d-flex flex-column align-items-start">
+            <span className="text-black fw-bold mb-0" style={{ fontSize: '13px' }}>{date}</span>
+            {time && <span className="text-black fw-semibold fs-11" style={{ marginTop: '2px' }}>{time}</span>}
+          </div>
+        );
+      },
       sorter: (a: any, b: any) => a.Date_Time.localeCompare(b.Date_Time),
     },
     {
@@ -293,8 +304,8 @@ const DoctorAppointments = () => {
             )}
           </Link>
           <div>
-            <Link to={all_routes.doctorspatientdetails} className="fw-bold text-dark d-block mb-0">{text}</Link>
-            <span className="text-muted fs-11 d-block fw-medium">{record.phone_number}</span>
+            <Link to={all_routes.doctorspatientdetails} className="fw-bold text-black d-block mb-0">{text}</Link>
+            <span className="text-black fs-11 d-block fw-semibold">{record.phone_number}</span>
           </div>
         </div>
       ),
@@ -304,7 +315,7 @@ const DoctorAppointments = () => {
       title: "Mode",
       dataIndex: "Mode",
       render: (text: string) => (
-        <span className="fw-medium text-dark-emphasis small">{text}</span>
+        <span className="fw-bold text-black small">{text}</span>
       ),
       sorter: (a: any, b: any) => a.Mode.localeCompare(b.Mode),
     },
@@ -388,61 +399,110 @@ const DoctorAppointments = () => {
       <div className="page-wrapper d-flex flex-column" style={{ minHeight: '100vh' }}>
         <div className="content flex-grow-1">
           {/* Header with Filters - Cloned from Admin Design */}
-          <div className="d-flex align-items-center pb-3 mb-4 border-bottom" style={{ gap: '16px', overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
-            <h3 className="fw-bolder mb-0 flex-shrink-0 text-dark">Appointment</h3>
-
-            <div className="d-flex align-items-center flex-nowrap overflow-auto" style={{ gap: '12px', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
-              <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
-              {["All", "Schedule", "Confirmed", "Checked In", "Checked Out"].map((s) => (
-                <button
-                  key={s}
-                  className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "All") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-2 fs-12 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
-                  onClick={() => setFilterStatus(s)}
-                  style={{ borderRadius: '6px', height: '36px' }}
-                >
-                  {s === "Checked Out" ? "Check-out" : s === "Checked In" ? "Check-in" : s}
-                  <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "All") ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>
-                    {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : s === "Checked Out" ? counts.checkedOut : counts.all}
-                  </span>
-                </button>
-              ))}
-
-
-
-              {isAnyFilterActive ? (
-                <button
-                  className="btn btn-sm btn-soft-danger d-flex align-items-center gap-2 fw-bold fs-12 flex-shrink-0 shadow-sm"
-                  onClick={handleClearFilters}
-                  style={{ height: '36px', borderRadius: '6px' }}
-                >
-                  <i className="ti ti-refresh fs-14" /> Clear
-                </button>
-              ) : (
-                <button
-                  className="btn btn-sm btn-light border d-flex align-items-center gap-2 fw-bold fs-12 flex-shrink-0 shadow-sm bg-white"
-                  style={{ height: '36px', borderRadius: '6px' }}
-                  data-bs-toggle="offcanvas"
-                  data-bs-target="#filter_drawer"
-                >
-                  <i className="ti ti-filter fs-14" /> Filters
-                </button>
-              )}
-
+          <div className="d-flex align-items-center pb-3 mb-4 border-bottom flex-wrap appointment-header" style={{ minWidth: 0 }}>
+            <h3 className="fw-bolder mb-0 flex-shrink-0 text-dark" style={{ fontSize: '20px' }}>Appointment</h3>
+            
+            {["All", "Schedule", "Confirmed", "Checked In", "Checked Out"].map((s) => (
               <button
-                type="button"
-                className="btn btn-sm btn-primary d-flex align-items-center fw-semibold flex-shrink-0 shadow-sm"
-                onClick={() => setShowAddAppointment(true)}
-                style={{ height: '36px', borderRadius: '6px' }}
+                key={s}
+                className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "All") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-3 fs-13 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
+                onClick={() => setFilterStatus(s)}
+                style={{ borderRadius: '8px', height: '38px' }}
               >
-                <i className="ti ti-plus me-1" /> New Appointment
+                {s === "Checked Out" ? "Check-out" : s === "Checked In" ? "Check-in" : s}
+                <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "All") ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>
+                  {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : s === "Checked Out" ? counts.checkedOut : counts.all}
+                </span>
               </button>
-            </div>
+            ))}
+
+            {isAnyFilterActive ? (
+              <button
+                className="btn btn-sm btn-soft-danger d-flex align-items-center gap-2 fw-bold fs-13 flex-shrink-0 shadow-sm"
+                onClick={handleClearFilters}
+                style={{ height: '38px', borderRadius: '8px' }}
+              >
+                <i className="ti ti-refresh fs-14" /> Clear
+              </button>
+            ) : (
+              <button
+                className="btn btn-sm btn-light border d-flex align-items-center gap-2 fw-bold fs-13 flex-shrink-0 shadow-sm bg-white"
+                style={{ height: '38px', borderRadius: '8px' }}
+                data-bs-toggle="offcanvas"
+                data-bs-target="#filter_drawer"
+              >
+                <i className="ti ti-filter fs-14" /> Filters
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="btn btn-sm btn-primary d-inline-flex align-items-center justify-content-center fw-semibold flex-shrink-0 shadow-sm text-white"
+              onClick={() => setShowAddAppointment(true)}
+              style={{ borderRadius: '8px', fontSize: '13px', height: '38px', backgroundColor: '#3b82f6', borderColor: '#3b82f6', paddingLeft: '16px', paddingRight: '16px' }}
+            >
+              New Appointment <i className="ti ti-plus ms-2" />
+            </button>
           </div>
 
           {/* Table Content - Premium HRM Style */}
           <div className="mb-4">
             <div className="p-0">
               <style>{`
+                .appointment-header {
+                  gap: 16px;
+                  flex-wrap: nowrap !important;
+                }
+                @media (max-width: 991px) {
+                  .appointment-header {
+                    flex-wrap: wrap !important;
+                  }
+                }
+                 @media (max-width: 1400px) {
+                  .appointment-header {
+                    gap: 8px !important;
+                  }
+                  .appointment-header h3 {
+                    font-size: 18px !important;
+                  }
+                  .appointment-header button.btn,
+                  .appointment-header .btn {
+                    padding-top: 4px !important;
+                    padding-bottom: 4px !important;
+                    padding-left: 6px !important;
+                    padding-right: 6px !important;
+                    font-size: 11px !important;
+                    height: 32px !important;
+                  }
+                  .appointment-header .btn .badge {
+                    margin-left: 2px !important;
+                  }
+                }
+                @media (max-width: 1200px) {
+                  .appointment-header {
+                    gap: 5px !important;
+                  }
+                  .appointment-header h3 {
+                    font-size: 15px !important;
+                  }
+                  .appointment-header button.btn,
+                  .appointment-header .btn {
+                    padding-top: 3px !important;
+                    padding-bottom: 3px !important;
+                    padding-left: 5px !important;
+                    padding-right: 5px !important;
+                    font-size: 9.5px !important;
+                    height: 30px !important;
+                  }
+                  .appointment-header .btn i {
+                    margin-right: 2px !important;
+                  }
+                  .appointment-header .btn .badge {
+                    font-size: 8.5px !important;
+                    margin-left: 2px !important;
+                    padding: 1px 3px !important;
+                  }
+                }
                 .custom-table .ant-table { background: transparent; border: 0 !important; }
                 .custom-table .ant-table-container { border: 0 !important; }
                 .custom-table .ant-table-thead > tr > th { 
@@ -604,7 +664,7 @@ const DoctorAppointments = () => {
                   isModal={true}
                   onSuccess={() => {
                     setShowAddAppointment(false);
-                    window.location.reload();
+                    refetch();
                   }}
                   onCancel={() => setShowAddAppointment(false)}
                   onClose={() => setShowAddAppointment(false)}

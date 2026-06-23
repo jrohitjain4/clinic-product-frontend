@@ -125,15 +125,15 @@ const DoctorDahboard = () => {
               <p className="text-muted mb-0 fs-13">Here's what's happening in your schedule today.</p>
             </div>
             <div className="d-flex align-items-center flex-wrap gap-2">
-              <Link to={all_routes.doctorsprofilesettings} className="btn btn-outline-light border text-dark bg-white d-inline-flex align-items-center justify-content-center fw-semibold px-3 py-2" style={{ borderRadius: '8px', fontSize: '13px', minHeight: '38px' }}>
+              <Link to={all_routes.doctorsprofilesettings} className="btn btn-outline-light border text-dark bg-white d-inline-flex align-items-center justify-content-center fw-semibold px-4 py-2" style={{ borderRadius: '8px', fontSize: '14px', minHeight: '46px' }}>
                 Profile Setting <i className="ti ti-settings ms-2" />
               </Link>
               <button
                 type="button"
-                className={`btn d-inline-flex align-items-center justify-content-center fw-semibold px-3 py-2 text-white`}
+                className={`btn d-inline-flex align-items-center justify-content-center fw-semibold px-4 py-2 text-white`}
                 onClick={handleMarkAttendance}
                 disabled={marking || marked}
-                style={{ borderRadius: '8px', fontSize: '13px', minHeight: '38px', backgroundColor: marked ? '#10b981' : '#6366f1', borderColor: marked ? '#10b981' : '#6366f1' }}
+                style={{ borderRadius: '8px', fontSize: '14px', minHeight: '46px', backgroundColor: marked ? '#10b981' : '#6366f1', borderColor: marked ? '#10b981' : '#6366f1' }}
               >
                 {marking ? (
                   <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
@@ -144,12 +144,11 @@ const DoctorDahboard = () => {
               </button>
               <button
                 type="button"
-                className="btn btn-primary d-inline-flex align-items-center justify-content-center fw-semibold px-3 py-2 text-white shadow-sm"
+                className="btn btn-primary d-inline-flex align-items-center justify-content-center fw-semibold px-4 py-2 text-white shadow-sm"
                 onClick={() => setShowAddAppointment(true)}
-                style={{ borderRadius: '8px', fontSize: '13px', minHeight: '38px', backgroundColor: '#3b82f6', borderColor: '#3b82f6' }}
+                style={{ borderRadius: '8px', fontSize: '14px', minHeight: '46px', backgroundColor: '#3b82f6', borderColor: '#3b82f6' }}
               >
-                <i className="ti ti-plus ms-2 order-2" />
-                New Appointment
+                New Appointment <i className="ti ti-plus ms-2" />
               </button>
             </div>
           </div>
@@ -157,7 +156,7 @@ const DoctorDahboard = () => {
           {/* Row 1 Stats */}
           <div className="row g-2 mb-2">
             {/* Today's Appointments */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">
@@ -177,7 +176,7 @@ const DoctorDahboard = () => {
             </div>
 
             {/* Total Patients */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">
@@ -197,7 +196,7 @@ const DoctorDahboard = () => {
             </div>
 
             {/* Scheduled */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">
@@ -217,7 +216,7 @@ const DoctorDahboard = () => {
             </div>
 
             {/* Confirmed */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">
@@ -240,7 +239,7 @@ const DoctorDahboard = () => {
           {/* Row 2 Stats */}
           <div className="row g-2 mb-3">
             {/* Checked In */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">
@@ -260,7 +259,7 @@ const DoctorDahboard = () => {
             </div>
 
             {/* Checked Out */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">
@@ -280,7 +279,7 @@ const DoctorDahboard = () => {
             </div>
 
             {/* Completed */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">
@@ -300,7 +299,7 @@ const DoctorDahboard = () => {
             </div>
 
             {/* Cancelled */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
+            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
               <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
                 <div className="card-body p-3 d-flex flex-column justify-content-between">
                   <div className="d-flex justify-content-between align-items-start mb-2">

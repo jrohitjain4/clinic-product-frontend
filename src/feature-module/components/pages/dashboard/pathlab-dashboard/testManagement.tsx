@@ -18,7 +18,7 @@ const TestManagement = () => {
   const { tests, loading, createTest, updateTest, deleteTest, bulkDeleteTests } = useLabTests();
   const { categories: categoryList } = useLabCategories();
   const { doctors } = useClinicDoctors();
-  const { staff } = useClinicStaff();
+  const { staffs: staff } = useClinicStaff();
 
   const doctorOptions = useMemo(() => doctors?.map((d: any) => ({ value: d.id, label: d.fullName })) || [], [doctors]);
   const staffOptions = useMemo(() => staff?.map((s: any) => ({ value: s.id, label: s.fullName })) || [], [staff]);
@@ -639,7 +639,7 @@ const TestManagement = () => {
             { icon: <i className="ti ti-calendar-event" />, label: "Slot Booking", value: <span className="badge bg-danger-transparent text-danger">Disabled</span> },
           ])
         ]}
-        onEdit={() => { document.getElementById("btn-close-view-test")?.click(); handleOpenEdit(viewTest); }} editLabel="Edit Test" editModalTarget="" showOnly={true}
+        onEdit={() => { document.getElementById("btn-close-view-test")?.click(); handleOpenEdit(viewTest); }} editLabel="Edit Test" editModalTarget=""
       >
         {viewTest?.schedules && Object.keys(viewTest.schedules).length > 0 && (
           <div className="mt-4 border-top pt-3">

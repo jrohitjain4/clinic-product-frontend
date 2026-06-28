@@ -22,6 +22,9 @@ export interface LabBooking {
     tax: number;
     totalAmount: number;
     invoiceNo: string | null;
+    sessionSlot: string | null;
+    assignedUserId: string | null;
+    remarks: string | null;
     clinicId: string;
     createdAt: string;
     updatedAt: string;

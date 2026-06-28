@@ -108,10 +108,10 @@ export default function ClinicLandingPage() {
         patientCode?: string;
     } | null>(null);
 
-    // Selected Doctor's Availability State
     const [availability, setAvailability] = useState<{
         schedules: any;
         duration?: number;
+        maxBookingsPerSlot?: number;
         holidays: any[];
         leaves: any[];
         appointments: any[];

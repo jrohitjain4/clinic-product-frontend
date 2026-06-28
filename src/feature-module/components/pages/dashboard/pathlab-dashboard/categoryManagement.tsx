@@ -401,7 +401,7 @@ const CategoryManagement = () => {
           { icon: <i className="ti ti-calendar" />, label: "Created Date", value: viewCategory?.createdAt ? dayjs(viewCategory.createdAt).format("DD MMM YYYY") : "—" },
           { icon: <i className="ti ti-file-description" />, label: "Description", value: viewCategory?.description || "No description provided", fullWidth: true },
         ]}
-        onEdit={() => { document.getElementById("btn-close-view-category")?.click(); handleOpenEdit(viewCategory); }} editLabel="Edit Category" editModalTarget="" showOnly={true}
+        onEdit={() => { document.getElementById("btn-close-view-category")?.click(); handleOpenEdit(viewCategory); }} editLabel="Edit Category" editModalTarget=""
       />
     </>
   );

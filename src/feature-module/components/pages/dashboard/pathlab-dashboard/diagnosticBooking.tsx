@@ -44,9 +44,9 @@ const DiagnosticBooking = () => {
   const { bookings, loading, createBooking, updateBooking, deleteBooking, bulkDeleteBookings } = useLabBookings();
   const { tests: allTests } = useLabTests();
   const { categories: allCategories } = useLabCategories();
-  const { patients: allPatients, createPatient } = useClinicPatients();
+  const { patients: allPatients } = useClinicPatients();
   const { doctors } = useClinicDoctors();
-  const { staff } = useClinicStaff();
+  const { staffs: staff } = useClinicStaff();
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>("All");
@@ -80,12 +80,12 @@ const DiagnosticBooking = () => {
 
   const doctorList = useMemo(() => {
     const names = Array.from(new Set(bookings.map(b => doctors.find((d: any) => d.id === b.assignedUserId)?.fullName || staff.find((s: any) => s.id === b.assignedUserId)?.fullName)));
-    return names.filter(n => n).sort();
+    return names.filter((n): n is string => !!n).sort();
   }, [bookings, doctors, staff]);
 
   const slotList = useMemo(() => {
     const names = Array.from(new Set(bookings.map(b => b.sessionSlot)));
-    return names.filter(n => n).sort();
+    return names.filter((n): n is string => !!n).sort();
   }, [bookings]);
 
   const categoryList = useMemo(() => {
@@ -207,7 +207,7 @@ const DiagnosticBooking = () => {
     return Object.keys(availableSchedules).filter(day => Array.isArray(availableSchedules[day]) && availableSchedules[day].length > 0);
   }, [availableSchedules]);
 
-  const disabledDate = (current: dayjs.Dayjs) => {
+  const disabledDate = (current: any) => {
     if (!current) return false;
     if (current < dayjs().startOf('day')) return true;
     if (availableDays.length === 0) return false; // If no schedule defined, allow all
@@ -215,7 +215,7 @@ const DiagnosticBooking = () => {
     return !availableDays.includes(currentDay);
   };
 
-  const cellRender = (current: dayjs.Dayjs, info: any) => {
+  const cellRender = (current: any, info: any) => {
     if (info.type !== 'date') return info.originNode;
     const currentDay = current.format('dddd');
     const isAvailable = availableDays.includes(currentDay);
@@ -787,7 +787,7 @@ const DiagnosticBooking = () => {
           { icon: <i className="ti ti-cash" />, label: "Total Amount", value: `₹${(viewBooking?.totalAmount || 0).toLocaleString("en-IN")}` },
           { icon: <i className="ti ti-file-description" />, label: "Remarks", value: viewBooking?.remarks || "--", fullWidth: true },
         ]}
-        onEdit={() => { handleOpenEdit(viewBooking); }} editLabel="Edit Booking" editModalTarget="" showOnly={true} onClose={() => setViewBooking(null)}
+        onEdit={() => { handleOpenEdit(viewBooking); }} editLabel="Edit Booking" editModalTarget=""
       />
       <AddPatientModal 
         show={showAddPatientModal} 
@@ -829,7 +829,7 @@ const DiagnosticBooking = () => {
             <select className="form-select fs-13" value={filterSlot} onChange={(e) => setFilterSlot(e.target.value)}>
               <option value="">All Slots</option>
               {slotList.map(s => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s || ""}>{s}</option>
               ))}
             </select>
           </div>

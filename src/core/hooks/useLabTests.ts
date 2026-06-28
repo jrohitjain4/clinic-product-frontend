@@ -15,6 +15,12 @@ export interface LabTest {
     status: string;
     categoryId: string;
     category: { id: string; name: string };
+    assignedDoctors: any;
+    assignedStaff: any;
+    schedules: any;
+    isSlotBookingEnabled: boolean;
+    slotDuration: number | null;
+    maxBookingsPerSlot: number | null;
     clinicId: string;
     createdAt: string;
     updatedAt: string;
@@ -43,13 +49,13 @@ export const useLabTests = () => {
         fetchTests();
     }, [fetchTests]);
 
-    const createTest = async (body: { name: string; shortName?: string; testCode?: string; description?: string; price?: number; homeCollectionCharge?: number; duration?: string; preparationInfo?: string; assignment?: string; status?: string; categoryId: string }) => {
+    const createTest = async (body: any) => {
         const created = await apiPost<LabTest>("/api/lab-tests", body);
         setTests((prev) => [created, ...prev]);
         return created;
     };
 
-    const updateTest = async (id: string, body: Partial<{ name: string; shortName: string; testCode: string; description: string; price: number; homeCollectionCharge: number; duration: string; preparationInfo: string; assignment: string; status: string; categoryId: string }>) => {
+    const updateTest = async (id: string, body: any) => {
         const updated = await apiPut<LabTest>(`/api/lab-tests/${id}`, body);
         setTests((prev) => prev.map((t) => (t.id === id ? { ...t, ...updated } : t)));
         return updated;

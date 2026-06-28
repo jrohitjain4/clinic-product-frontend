@@ -245,9 +245,10 @@ const DoctorAppointments = () => {
       title: "Sr / Queue",
       dataIndex: "SrNo",
       render: (text: number, record: any) => {
+        const isSlotBooking = !!(record._raw.doctor?.appointmentDuration && record._raw.doctor?.maxBookingsPerSlot);
         return (
           <span className="text-black fw-bold">
-            {text} / <span className="text-black fw-bold">{record.checkinHisNo}</span>
+            {text} / <span className="text-black fw-bold">{isSlotBooking ? "Slot" : record.checkinHisNo}</span>
           </span>
         );
       },

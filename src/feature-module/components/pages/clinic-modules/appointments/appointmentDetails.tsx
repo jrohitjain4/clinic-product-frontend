@@ -269,6 +269,55 @@ const AppointmentDetails = () => {
         });
     }, [doctorAvailability, followUpDate]);
 
+    const isSlotBookingActive = useMemo(() => {
+        return !!(
+            doctorAvailability &&
+            doctorAvailability.duration &&
+            doctorAvailability.duration > 0 &&
+            doctorAvailability.maxBookingsPerSlot &&
+            doctorAvailability.maxBookingsPerSlot > 0
+        );
+    }, [doctorAvailability]);
+
+    const slotOptions = useMemo(() => {
+        if (!isSlotBookingActive || !doctorAvailability || !followUpDate) return [];
+        const dayName = followUpDate.format("dddd");
+        const dateStr = followUpDate.format("YYYY-MM-DD");
+        const daySchedule = doctorAvailability.schedules?.[dayName] || [];
+
+        const duration = doctorAvailability.duration || 30;
+        const maxBookings = doctorAvailability.maxBookingsPerSlot || 1;
+        const slots: any[] = [];
+
+        daySchedule.forEach((session: any) => {
+            let currentSlot = dayjs(session.from, "HH:mm");
+            const sessionEnd = dayjs(session.to, "HH:mm");
+
+            while (currentSlot.isBefore(sessionEnd)) {
+                const slotTime = currentSlot.format("HH:mm");
+                const bookedCount = doctorAvailability.appointments?.filter((a: any) => {
+                    return (
+                        dayjs(a.start).format("YYYY-MM-DD") === dateStr &&
+                        dayjs(a.start).format("HH:mm") === slotTime
+                    );
+                }).length || 0;
+
+                const bookingsAvailable = Math.max(0, maxBookings - bookedCount);
+
+                slots.push({
+                    value: slotTime,
+                    label: `${currentSlot.format("hh:mm A")} (${bookingsAvailable} slots remaining)`,
+                    bookingsAvailable,
+                    isDisabled: bookingsAvailable <= 0
+                });
+
+                currentSlot = currentSlot.add(duration, "minute");
+            }
+        });
+
+        return slots;
+    }, [isSlotBookingActive, doctorAvailability, followUpDate]);
+
     const handleFollowUpSubmit = async () => {
         if (!id || !followUpDate || !followUpTimeSlot) {
             toast.error("Please select a date and time slot for the follow-up");
@@ -1735,12 +1784,28 @@ const AppointmentDetails = () => {
                                                 <i className="ti ti-clock-hour-4 me-1 text-primary" /> Select Shift
                                             </label>
                                             <CommonSelect
-                                                options={sessionOptions}
-                                                value={sessionOptions.find((o: any) => o.value === followUpTimeSlot)}
+                                                key={isSlotBookingActive ? `slot-${slotOptions.length}-${followUpDate?.toString()}` : `session-${sessionOptions.length}-${followUpDate?.toString()}`}
+                                                options={isSlotBookingActive ? slotOptions : sessionOptions}
+                                                value={isSlotBookingActive 
+                                                    ? slotOptions.find((o: any) => o.value === followUpTimeSlot)
+                                                    : sessionOptions.find((o: any) => o.value === followUpTimeSlot)}
                                                 onChange={(opt: any) => setFollowUpTimeSlot(opt?.value)}
-                                                placeholder={followUpDate ? "Choose slot" : "Select date first"}
-                                                isDisabled={!followUpDate || sessionOptions.length === 0}
+                                                placeholder={followUpDate 
+                                                    ? (isSlotBookingActive ? "Choose slot" : "Choose session") 
+                                                    : "Select date first"}
+                                                isDisabled={!followUpDate || (isSlotBookingActive ? slotOptions.length === 0 : sessionOptions.length === 0)}
                                             />
+                                            {followUpTimeSlot && isSlotBookingActive && (
+                                                (() => {
+                                                    const selectedSlotInfo = slotOptions.find(o => o.value === followUpTimeSlot);
+                                                    return selectedSlotInfo ? (
+                                                        <div className="text-info fs-13 mt-1 fw-medium">
+                                                            <i className="ti ti-info-circle me-1" />
+                                                            {selectedSlotInfo.bookingsAvailable} {selectedSlotInfo.bookingsAvailable === 1 ? 'booking' : 'bookings'} available at that slot
+                                                        </div>
+                                                    ) : null;
+                                                })()
+                                            )}
                                         </div>
                                     </div>
                                 </div>

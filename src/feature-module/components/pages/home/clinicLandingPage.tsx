@@ -185,6 +185,56 @@ export default function ClinicLandingPage() {
         });
     }, [availability, bookForm.date]);
 
+    const isSlotBookingActive = useMemo(() => {
+        return !!(
+            availability &&
+            availability.duration &&
+            availability.duration > 0 &&
+            availability.maxBookingsPerSlot &&
+            availability.maxBookingsPerSlot > 0
+        );
+    }, [availability]);
+
+    const slotOptions = useMemo(() => {
+        if (!isSlotBookingActive || !availability || !bookForm.date) return [];
+        const dayName = bookForm.date.format("dddd");
+        const dateStr = bookForm.date.format("YYYY-MM-DD");
+        const daySchedule = availability.schedules?.[dayName];
+        if (!Array.isArray(daySchedule)) return [];
+
+        const duration = availability.duration || 30;
+        const maxBookings = availability.maxBookingsPerSlot || 1;
+        const slots: any[] = [];
+
+        daySchedule.forEach((session: any) => {
+            let currentSlot = dayjs(session.from, "HH:mm");
+            const sessionEnd = dayjs(session.to, "HH:mm");
+
+            while (currentSlot.isBefore(sessionEnd)) {
+                const slotTime = currentSlot.format("HH:mm");
+                const bookedCount = availability.appointments?.filter((a: any) => {
+                    return (
+                        dayjs(a.start).format("YYYY-MM-DD") === dateStr &&
+                        dayjs(a.start).format("HH:mm") === slotTime
+                    );
+                }).length || 0;
+
+                const bookingsAvailable = Math.max(0, maxBookings - bookedCount);
+
+                slots.push({
+                    value: slotTime,
+                    label: `${currentSlot.format("hh:mm A")} (${bookingsAvailable} slots remaining)`,
+                    bookingsAvailable,
+                    isDisabled: bookingsAvailable <= 0
+                });
+
+                currentSlot = currentSlot.add(duration, "minute");
+            }
+        });
+
+        return slots;
+    }, [isSlotBookingActive, availability, bookForm.date]);
+
     // Calendar Date Styling Custom Cell Render
     const cellRender = (current: Dayjs | any, info: any) => {
         if (info.type !== 'date' || !availability || !dayjs.isDayjs(current)) return info.originNode;
@@ -1561,7 +1611,7 @@ export default function ClinicLandingPage() {
                                                 <select
                                                     className={`form-select rounded-3 text-secondary ${bookFormErrors.time ? 'is-invalid' : ''}`}
                                                     value={bookForm.time}
-                                                    disabled={!bookForm.date || sessionOptions.length === 0}
+                                                    disabled={!bookForm.date || (isSlotBookingActive ? slotOptions.length === 0 : sessionOptions.length === 0)}
                                                     onChange={e => setBookForm(f => ({ ...f, time: e.target.value }))}
                                                     required
                                                     style={{ fontSize: "14px" }}
@@ -1569,17 +1619,28 @@ export default function ClinicLandingPage() {
                                                     <option value="">
                                                         {!bookForm.date
                                                             ? "Select date first"
-                                                            : sessionOptions.length > 0
-                                                                ? "Select slot"
-                                                                : "No slots available"}
+                                                            : isSlotBookingActive
+                                                                ? (slotOptions.length > 0 ? "Select slot" : "No slots available")
+                                                                : (sessionOptions.length > 0 ? "Select slot" : "No slots available")}
                                                     </option>
-                                                    {sessionOptions.map((opt: any) => (
-                                                        <option key={opt.value} value={opt.value}>
+                                                    {(isSlotBookingActive ? slotOptions : sessionOptions).map((opt: any) => (
+                                                        <option key={opt.value} value={opt.value} disabled={opt.isDisabled}>
                                                             {opt.label}
                                                         </option>
                                                     ))}
                                                 </select>
                                                 {bookFormErrors.time && <div className="invalid-feedback">{bookFormErrors.time}</div>}
+                                                {bookForm.time && isSlotBookingActive && (
+                                                    (() => {
+                                                        const selectedSlotInfo = slotOptions.find(opt => opt.value === bookForm.time);
+                                                        return selectedSlotInfo ? (
+                                                            <div className="text-info mt-1 fw-semibold" style={{ fontSize: "12px" }}>
+                                                                <i className="ti ti-info-circle me-1" />
+                                                                {selectedSlotInfo.bookingsAvailable} {selectedSlotInfo.bookingsAvailable === 1 ? 'booking' : 'bookings'} available at that slot
+                                                            </div>
+                                                        ) : null;
+                                                    })()
+                                                )}
                                             </div>
 
                                             {/* Services Multi-Select — visible only in Session mode */}

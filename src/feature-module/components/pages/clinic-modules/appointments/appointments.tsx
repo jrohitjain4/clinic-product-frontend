@@ -305,18 +305,42 @@ const Appointments = () => {
         .then(data => {
           const dayName = dayjs(filterTargetDate).format("dddd");
           const daySchedule = data.schedules?.[dayName] || [];
-          const opts = daySchedule.map((session: any, idx: number) => {
-            const sessionLabel = session.label || (idx === 0 ? "Morning Session" : idx === 1 ? "Evening Session" : `Session ${idx + 1}`);
-            const fromFormatted = dayjs(session.from, "HH:mm").format("hh:mm A");
-            const toFormatted = dayjs(session.to, "HH:mm").format("hh:mm A");
-            return {
-              value: session.from,
-              label: `${sessionLabel}: ${fromFormatted} – ${toFormatted}`,
-              from: session.from,
-              to: session.to
-            };
-          });
-          setSessionOptions(opts);
+          const isSlotBookingActive = !!(data.duration && data.duration > 0 && data.maxBookingsPerSlot && data.maxBookingsPerSlot > 0);
+
+          if (isSlotBookingActive) {
+            const duration = data.duration;
+            const opts: any[] = [];
+            daySchedule.forEach((session: any) => {
+              let currentSlot = dayjs(session.from, "HH:mm");
+              const sessionEnd = dayjs(session.to, "HH:mm");
+
+              while (currentSlot.isBefore(sessionEnd)) {
+                const slotTime = currentSlot.format("HH:mm");
+                const label = currentSlot.format("hh:mm A");
+                opts.push({
+                  value: slotTime,
+                  label: label,
+                  from: slotTime,
+                  to: slotTime,
+                });
+                currentSlot = currentSlot.add(duration, "minute");
+              }
+            });
+            setSessionOptions(opts);
+          } else {
+            const opts = daySchedule.map((session: any, idx: number) => {
+              const sessionLabel = session.label || (idx === 0 ? "Morning Session" : idx === 1 ? "Evening Session" : `Session ${idx + 1}`);
+              const fromFormatted = dayjs(session.from, "HH:mm").format("hh:mm A");
+              const toFormatted = dayjs(session.to, "HH:mm").format("hh:mm A");
+              return {
+                value: session.from,
+                label: `${sessionLabel}: ${fromFormatted} – ${toFormatted}`,
+                from: session.from,
+                to: session.to
+              };
+            });
+            setSessionOptions(opts);
+          }
         })
         .catch(err => {
           console.error("Error loading sessions in filter:", err);
@@ -601,9 +625,10 @@ const Appointments = () => {
       title: "Sr / Queue",
       dataIndex: "SrNo",
       render: (text: number, record: any) => {
+        const isSlotBooking = !!(record._raw.doctor?.appointmentDuration && record._raw.doctor?.maxBookingsPerSlot);
         return (
           <span className="fw-bold">
-            {text} / <span className="text-primary fw-medium">{record.checkinHisNo}</span>
+            {text} / <span className="text-primary fw-medium">{isSlotBooking ? "Slot" : record.checkinHisNo}</span>
           </span>
         );
       },

@@ -345,4 +345,11 @@ export const all_routes = {
   formPickers: "/form-pickers",
   formWizard: "/form-wizard",
   formMask: "/form-mask",
+
+  // PathLab
+  pathlabDashboard: "/pathlab/dashboard",
+  pathlabCategories: "/pathlab/categories",
+  pathlabTests: "/pathlab/tests",
+  pathlabBookings: "/pathlab/bookings",
+  pathlabInvoices: "/pathlab/invoices",
 };

@@ -7,12 +7,14 @@ interface AppointmentPrintSlipProps {
   appointment: any;
   notes?: any[];
   linkedPrescriptions?: any[];
+  isDiagnostic?: boolean;
 }
 
 const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
   appointment,
   notes = [],
   linkedPrescriptions = [],
+  isDiagnostic = false,
 }) => {
   const { services } = useClinicServices();
 
@@ -134,7 +136,7 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
           {/* Section: Appointment Details */}
           <div className="slip-section mb-2">
             <h6 className="section-header-title text-center mb-2">
-              <span className="title-text">APPOINTMENT DETAILS</span>
+              <span className="title-text">{isDiagnostic ? "DIAGNOSTIC DETAILS" : "APPOINTMENT DETAILS"}</span>
             </h6>
             <div className="row g-0 border rounded-1">
               {/* Left Column */}
@@ -142,17 +144,17 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
                 <table className="table table-borderless slip-subtable mb-0">
                   <tbody>
                     <tr>
-                      <td className="fw-semibold text-dark width-40 bg-light-gray"><i className="ti ti-hash text-primary me-2" />Appointment ID</td>
+                      <td className="fw-semibold text-dark width-40 bg-light-gray"><i className="ti ti-hash text-primary me-2" />{isDiagnostic ? "Booking ID" : "Appointment ID"}</td>
                       <td className="width-5">:</td>
-                      <td className="fw-bold text-dark">{appointment.appointmentCode || "—"}</td>
+                      <td className="fw-bold text-dark">{appointment.appointmentCode || appointment.bookingCode || "—"}</td>
                     </tr>
                     <tr>
-                      <td className="fw-semibold text-dark bg-light-gray"><i className="ti ti-calendar text-primary me-2" />Appointment Date</td>
+                      <td className="fw-semibold text-dark bg-light-gray"><i className="ti ti-calendar text-primary me-2" />{isDiagnostic ? "Booking Date" : "Appointment Date"}</td>
                       <td>:</td>
                       <td className="text-dark">{apptDate}</td>
                     </tr>
                     <tr>
-                      <td className="fw-semibold text-dark bg-light-gray"><i className="ti ti-clock text-primary me-2" />Appointment Time</td>
+                      <td className="fw-semibold text-dark bg-light-gray"><i className="ti ti-clock text-primary me-2" />{isDiagnostic ? "Booking Time" : "Appointment Time"}</td>
                       <td>:</td>
                       <td className="text-dark fw-bold">{apptTime}</td>
                     </tr>
@@ -186,10 +188,10 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
                       <td className="text-dark text-truncate">{appointment.doctor?.department?.name || "General"}</td>
                     </tr>
                     <tr>
-                      <td className="fw-semibold text-dark bg-light-gray"><i className="ti ti-file-text text-primary me-2" />Visit Type</td>
+                      <td className="fw-semibold text-dark bg-light-gray"><i className="ti ti-file-text text-primary me-2" />{isDiagnostic ? "Test Type" : "Visit Type"}</td>
                       <td>:</td>
                       <td className="text-dark text-truncate">
-                        {appointment.isFollowUp ? "Follow-up" : "First Consultation"} {appointment.mode && `(${appointment.mode})`}
+                        {isDiagnostic ? (appointment.testName || appointment.test?.name || "Laboratory Test") : (appointment.isFollowUp ? "Follow-up" : "First Consultation")} {appointment.mode && !isDiagnostic && `(${appointment.mode})`}
                       </td>
                     </tr>
                     <tr>

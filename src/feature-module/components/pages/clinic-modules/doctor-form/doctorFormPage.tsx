@@ -158,6 +158,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   const [showCertifications, setShowCertifications] = useState(false);
   const [showDocuments, setShowDocuments] = useState(false);
   const [showOptionalFields, setShowOptionalFields] = useState(false);
+  const [showSlotBooking, setShowSlotBooking] = useState(false);
+  const [slotBookingEnabled, setSlotBookingEnabled] = useState(false);
 
   const serializeSchedules = (raw: Record<string, RowType[]>) => {
     const out: Record<string, { session: string; from: string; to: string }[]> = {};
@@ -171,6 +173,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
     }
     return Object.keys(out).length ? out : null;
   };
+
+
 
 
   // UI state
@@ -324,6 +328,9 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         setMaxBookingsPerSlot(
           d.maxBookingsPerSlot != null ? String(d.maxBookingsPerSlot) : ""
         );
+        const slotEnabled = !!d.appointmentDuration && d.maxBookingsPerSlot != null;
+        setSlotBookingEnabled(slotEnabled);
+        if (slotEnabled) setShowSlotBooking(true); // Auto-expand section if slot booking was enabled
         setDisplayOnBookingPage(!!d.displayOnBookingPage);
         setFollowUpEnabled(!!d.followUpEnabled);
         setFollowUpValidityDays(
@@ -576,6 +583,18 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
       return;
     }
 
+    if (slotBookingEnabled) {
+      if (!appointmentDuration || parseInt(appointmentDuration, 10) <= 0) {
+        toast.error("Please enter a valid slot duration in minutes.");
+        return;
+      }
+      if (!maxBookingsPerSlot || parseInt(maxBookingsPerSlot, 10) <= 0) {
+        toast.error("Please enter a valid number of bookings per slot.");
+        return;
+      }
+    }
+
+
     setSubmitting(true);
     try {
       const token = localStorage.getItem("token");
@@ -613,9 +632,9 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         pincode,
         appointmentType: acceptingAppointments ? appointmentType : null,
         acceptBookingsInAdvance: acceptingAppointments ? acceptBookingsInAdvance : null,
-        appointmentDuration: acceptingAppointments ? appointmentDuration : null,
+        appointmentDuration: slotBookingEnabled ? appointmentDuration : null,
         consultationCharge: acceptingAppointments ? consultationCharge : null,
-        maxBookingsPerSlot: acceptingAppointments ? maxBookingsPerSlot : null,
+        maxBookingsPerSlot: slotBookingEnabled ? maxBookingsPerSlot : null,
         displayOnBookingPage: acceptingAppointments ? displayOnBookingPage : false,
         followUpEnabled: followUpEnabled,
         followUpValidityDays: followUpEnabled ? followUpValidityDays : null,
@@ -1479,8 +1498,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                     </div>
                     <div className={`pb-0 ${!acceptingAppointments ? "opacity-50 pointer-events-none" : ""}`}>
                       <div className="row">
-                        {/* All 4 fields on one row to reduce empty space */}
-                        <div className="col-lg-3">
+                        {/* All fields on one row to reduce empty space */}
+                        <div className="col-lg-4">
                           <div style={{ marginBottom: "10px" }}>
                             <label className="form-label mb-0">Appointment Type</label>
                             <CommonSelect
@@ -1495,7 +1514,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                             />
                           </div>
                         </div>
-                        <div className="col-lg-3">
+                        <div className="col-lg-4">
                           <div style={{ marginBottom: "10px" }}>
                             <label className="form-label mb-0">Accept bookings (in Advance)</label>
                             <input
@@ -1509,21 +1528,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                             />
                           </div>
                         </div>
-                        <div className="col-lg-3">
-                          <div style={{ marginBottom: "10px" }}>
-                            <label className="form-label mb-0">Appointment Duration</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              min={0}
-                              disabled={!acceptingAppointments}
-                              value={appointmentDuration}
-                              onChange={(e) => setAppointmentDuration(e.target.value)}
-                              placeholder="Enter minutes (e.g. 30)"
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-3">
+                        <div className="col-lg-4">
                           <div style={{ marginBottom: "10px" }}>
                             <label className="form-label mb-0">Consultation Charge</label>
                             <input
@@ -1615,6 +1620,99 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           </>
                         )}
                       </div>
+                    </div>
+
+                    {/* -- Slot Booking Settings (Collapsible) -- */}
+                    <div className="border rounded mb-3 mx-0 bg-white">
+                      <div
+                        className="bg-light px-3 py-2 d-flex align-items-center justify-content-between"
+                        onClick={() => setShowSlotBooking(!showSlotBooking)}
+                        style={{ cursor: "pointer", userSelect: "none", borderRadius: showSlotBooking ? "0.375rem 0.375rem 0 0" : "0.375rem" }}
+                      >
+                        <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                          <i className="ti ti-calendar-time text-primary fs-18" />
+                          Slot Booking Settings
+                          {slotBookingEnabled && (
+                            <span className="badge bg-soft-success text-success fw-normal fs-11 ms-2">
+                              Enabled
+                            </span>
+                          )}
+                        </h6>
+                        <i className={`ti ${showSlotBooking ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-dark`} />
+                      </div>
+                      {showSlotBooking && (
+                        <div className="p-3">
+                          <div className="row">
+                            <div className="col-lg-4">
+                              <div style={{ marginBottom: "15px" }}>
+                                <label className="form-label mb-1 fw-bold">Slot Booking Enabled</label>
+                                <div className="d-flex align-items-center gap-3 mt-1">
+                                  <div className="form-check form-check-inline">
+                                    <input
+                                      className="form-check-input"
+                                      type="radio"
+                                      name="slotBookingToggle"
+                                      id="slot_booking_yes"
+                                      checked={slotBookingEnabled}
+                                      onChange={() => setSlotBookingEnabled(true)}
+                                    />
+                                    <label className="form-check-label text-success fw-semibold" htmlFor="slot_booking_yes">
+                                      Yes
+                                    </label>
+                                  </div>
+                                  <div className="form-check form-check-inline">
+                                    <input
+                                      className="form-check-input"
+                                      type="radio"
+                                      name="slotBookingToggle"
+                                      id="slot_booking_no"
+                                      checked={!slotBookingEnabled}
+                                      onChange={() => setSlotBookingEnabled(false)}
+                                    />
+                                    <label className="form-check-label text-danger fw-semibold" htmlFor="slot_booking_no">
+                                      No
+                                    </label>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {slotBookingEnabled && (
+                              <>
+                                <div className="col-lg-4">
+                                  <div style={{ marginBottom: "15px" }}>
+                                    <label className="form-label mb-1 fw-bold">Slot Duration (Minutes) <span className="text-danger">*</span></label>
+                                    <input
+                                      type="number"
+                                      className="form-control"
+                                      min={1}
+                                      value={appointmentDuration}
+                                      onChange={(e) => setAppointmentDuration(e.target.value)}
+                                      placeholder="Enter duration (e.g. 10)"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="col-lg-4">
+                                  <div style={{ marginBottom: "15px" }}>
+                                    <label className="form-label mb-1 fw-bold">Bookings per Slot <span className="text-danger">*</span></label>
+                                    <input
+                                      type="number"
+                                      className="form-control"
+                                      min={1}
+                                      value={maxBookingsPerSlot}
+                                      onChange={(e) => setMaxBookingsPerSlot(e.target.value)}
+                                      placeholder="Enter bookings (e.g. 1)"
+                                    />
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+
+
+                        </div>
+                      )}
                     </div>
 
                     {/* -- Actions ---------------------------- */}

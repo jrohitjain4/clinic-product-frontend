@@ -80,6 +80,7 @@ const AppointmentFormPage = ({ mode = "create", isModal = false, onSuccess, onCa
   const [availability, setAvailability] = useState<{
     schedules: any;
     duration?: number;
+    maxBookingsPerSlot?: number;
     holidays: any[];
     leaves: any[];
     appointments: any[];
@@ -224,6 +225,61 @@ const AppointmentFormPage = ({ mode = "create", isModal = false, onSuccess, onCa
       };
     });
   }, [availability, form.appointmentDate]);
+
+  const isSlotBookingActive = useMemo(() => {
+    return !!(
+      availability &&
+      availability.duration &&
+      availability.duration > 0 &&
+      availability.maxBookingsPerSlot &&
+      availability.maxBookingsPerSlot > 0
+    );
+  }, [availability]);
+
+  const slotOptions = useMemo(() => {
+    if (!isSlotBookingActive || !availability || !form.appointmentDate) return [];
+    const dayName = form.appointmentDate.format("dddd");
+    const dateStr = form.appointmentDate.format("YYYY-MM-DD");
+    const daySchedule = availability.schedules?.[dayName];
+    if (!Array.isArray(daySchedule)) return [];
+
+    const duration = availability.duration || 30;
+    const maxBookings = availability.maxBookingsPerSlot || 1;
+    const slots: any[] = [];
+
+    daySchedule.forEach((session: any) => {
+      let currentSlot = dayjs(session.from, "HH:mm");
+      const sessionEnd = dayjs(session.to, "HH:mm");
+
+      while (currentSlot.isBefore(sessionEnd)) {
+        const slotTime = currentSlot.format("HH:mm");
+        const bookedCount = availability.appointments?.filter((a: any) => {
+          if (mode === "edit" && appointment?.id && a.id === appointment.id) {
+            return false;
+          }
+          return (
+            dayjs(a.start).format("YYYY-MM-DD") === dateStr &&
+            dayjs(a.start).format("HH:mm") === slotTime
+          );
+        }).length || 0;
+
+        const bookingsAvailable = Math.max(0, maxBookings - bookedCount);
+
+        slots.push({
+          value: slotTime,
+          label: `${currentSlot.format("hh:mm A")} (${bookingsAvailable} slots remaining)`,
+          bookingsAvailable,
+          bookedCount,
+          maxBookings,
+          isDisabled: bookingsAvailable <= 0,
+        });
+
+        currentSlot = currentSlot.add(duration, "minute");
+      }
+    });
+
+    return slots;
+  }, [isSlotBookingActive, availability, form.appointmentDate, mode, appointment?.id]);
 
   // ── Auto-check for Follow-up status ────────────────────────────
   useEffect(() => {
@@ -674,7 +730,7 @@ const AppointmentFormPage = ({ mode = "create", isModal = false, onSuccess, onCa
                   }
                   isDisabled={optionsLoading || doctorOptions.length === 0 || !!preSelectedDoctorId}
                   onChange={(opt) =>
-                    setForm((f) => ({ ...f, doctorId: opt?.value || "" }))
+                    setForm((f) => ({ ...f, doctorId: opt?.value || "", appointmentTime: null }))
                   }
                   filterOption={filterDoctor}
                   formatOptionLabel={formatDoctorLabel}
@@ -719,7 +775,7 @@ const AppointmentFormPage = ({ mode = "create", isModal = false, onSuccess, onCa
                     cellRender={cellRender}
                     value={form.appointmentDate}
                     onChange={(d: Dayjs | null) =>
-                      setForm((f) => ({ ...f, appointmentDate: d }))
+                      setForm((f) => ({ ...f, appointmentDate: d, appointmentTime: null }))
                     }
                   />
                   <span className="input-icon-addon">
@@ -734,25 +790,40 @@ const AppointmentFormPage = ({ mode = "create", isModal = false, onSuccess, onCa
                   Shift / Session<span className="text-danger ms-1">*</span>
                 </label>
                 <CommonSelect
-                  key={`session-${sessionOptions.length}-${form.appointmentDate?.toString()}`}
-                  options={sessionOptions}
+                  key={isSlotBookingActive 
+                    ? `slot-${slotOptions.length}-${form.appointmentDate?.toString()}-${form.doctorId}` 
+                    : `session-${sessionOptions.length}-${form.appointmentDate?.toString()}-${form.doctorId}`}
+                  options={isSlotBookingActive ? slotOptions : sessionOptions}
                   className="select"
-                  value={sessionOptions.find(opt => opt.value === form.appointmentTime?.format("HH:mm"))}
+                  value={isSlotBookingActive 
+                    ? slotOptions.find(opt => opt.value === form.appointmentTime?.format("HH:mm"))
+                    : sessionOptions.find(opt => opt.value === form.appointmentTime?.format("HH:mm"))}
                   placeholder={
                     !form.appointmentDate
                       ? "Select date first"
-                      : sessionOptions.length > 0
-                        ? "Select session"
-                        : "No shifts available on this day"
+                      : isSlotBookingActive
+                        ? (slotOptions.length > 0 ? "Select slot" : "No slots available on this day")
+                        : (sessionOptions.length > 0 ? "Select session" : "No shifts available on this day")
                   }
-                  isDisabled={!form.appointmentDate || sessionOptions.length === 0}
+                  isDisabled={!form.appointmentDate || (isSlotBookingActive ? slotOptions.length === 0 : sessionOptions.length === 0)}
                   onChange={(opt: any) => {
                     if (opt?.value) {
                       setForm(f => ({ ...f, appointmentTime: dayjs(opt.value, "HH:mm") }));
                     }
                   }}
                 />
-                {form.appointmentTime && sessionOptions.length > 0 && (
+                {form.appointmentTime && isSlotBookingActive && (
+                  (() => {
+                    const selectedSlotInfo = slotOptions.find(opt => opt.value === form.appointmentTime?.format("HH:mm"));
+                    return selectedSlotInfo ? (
+                      <div className="text-info fs-13 mt-1 fw-medium">
+                        <i className="ti ti-info-circle me-1" />
+                        {selectedSlotInfo.bookingsAvailable} {selectedSlotInfo.bookingsAvailable === 1 ? 'booking' : 'bookings'} available at that slot
+                      </div>
+                    ) : null;
+                  })()
+                )}
+                {form.appointmentTime && !isSlotBookingActive && sessionOptions.length > 0 && (
                   <div className="text-success fs-12 mt-1">
                     <i className="ti ti-check me-1" />
                     Slot selected: {form.appointmentTime.format("hh:mm A")}

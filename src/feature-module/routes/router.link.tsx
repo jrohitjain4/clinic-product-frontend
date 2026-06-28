@@ -101,6 +101,11 @@ const Testimonials = lazy(() => import("../components/pages/content-modules/test
 const Dashboard = lazy(() => import("../components/pages/dashboard/dashboard"));
 const DoctorDahboard = lazy(() => import("../components/pages/dashboard/doctor-dashboard/doctorDahboard"));
 const PatientDashboard = lazy(() => import("../components/pages/dashboard/patient-dashboard/patientDashboard"));
+const PathlabDashboard = lazy(() => import("../components/pages/dashboard/pathlab-dashboard/pathlabDashboard"));
+const CategoryManagement = lazy(() => import("../components/pages/dashboard/pathlab-dashboard/categoryManagement"));
+const DiagnosticTestManagement = lazy(() => import("../components/pages/dashboard/pathlab-dashboard/testManagement"));
+const DiagnosticBooking = lazy(() => import("../components/pages/dashboard/pathlab-dashboard/diagnosticBooking"));
+const InvoiceManagement = lazy(() => import("../components/pages/dashboard/pathlab-dashboard/invoiceManagement"));
 const DoctorAppointments = lazy(() => import("../components/pages/doctor-modules/doctor-appointments/doctorAppointments"));
 const DoctorsAppointmentDetails = lazy(() => import("../components/pages/doctor-modules/doctors-appointment-details/doctorsAppointmentDetails"));
 const DoctorsLeaves = lazy(() => import("../components/pages/doctor-modules/doctors-leaves/doctorsLeaves"));
@@ -291,6 +296,31 @@ export const publicRoutes = [
   {
     path: routes.dashboard,
     element: <Dashboard />,
+    route: Route,
+  },
+  {
+    path: routes.pathlabDashboard,
+    element: <PathlabDashboard />,
+    route: Route,
+  },
+  {
+    path: routes.pathlabCategories,
+    element: <CategoryManagement />,
+    route: Route,
+  },
+  {
+    path: routes.pathlabTests,
+    element: <DiagnosticTestManagement />,
+    route: Route,
+  },
+  {
+    path: routes.pathlabBookings,
+    element: <DiagnosticBooking />,
+    route: Route,
+  },
+  {
+    path: routes.pathlabInvoices,
+    element: <InvoiceManagement />,
     route: Route,
   },
   {

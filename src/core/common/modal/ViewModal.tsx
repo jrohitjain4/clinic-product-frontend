@@ -131,6 +131,7 @@ export const ViewModal: React.FC<ViewModalProps> = ({
                                 </div>
                             ))}
                         </div>
+                        {children}
                     </div>
 
                     {/* Footer */}
@@ -144,7 +145,6 @@ export const ViewModal: React.FC<ViewModalProps> = ({
                             )}
                         </div>
                         <div className="d-flex gap-2">
-                            {children}
                             {onEdit && (
                                 <button type="button" className="btn btn-outline-primary fw-medium d-flex align-items-center" onClick={onEdit} data-bs-dismiss="modal" data-bs-toggle={editModalTarget ? "modal" : undefined} data-bs-target={editModalTarget}>
                                     <i className="ti ti-pencil me-2" />

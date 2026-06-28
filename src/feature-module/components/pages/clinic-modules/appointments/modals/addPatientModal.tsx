@@ -20,9 +20,10 @@ interface AddPatientModalProps {
     show: boolean;
     onHide: () => void;
     onSuccess: (newPatient: any) => void;
+    hideBackdrop?: boolean;
 }
 
-const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
+const AddPatientModal = ({ show, onHide, onSuccess, hideBackdrop = false }: AddPatientModalProps) => {
     const [form, setForm] = useState(emptyPatientForm);
     const [doctors, setDoctors] = useState<{ id: string; fullName: string }[]>([]);
     const [submitting, setSubmitting] = useState(false);
@@ -308,7 +309,7 @@ const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
                     </div>
                 </div>
             </div>
-            {show && <div className="modal-backdrop fade show" style={{ zIndex: 1050 }}></div>}
+            {show && !hideBackdrop && <div className="modal-backdrop fade show" style={{ zIndex: 1050 }}></div>}
         </>
     );
 };

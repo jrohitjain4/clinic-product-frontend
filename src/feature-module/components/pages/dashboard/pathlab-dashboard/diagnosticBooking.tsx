@@ -541,7 +541,7 @@ const DiagnosticBooking = () => {
             <span className={`badge ${statusBadgeClass(text)} px-2 py-1 text-uppercase`} style={{ fontSize: '10px' }}>
               {text}
             </span>
-            {["Schedule", "Confirmed", "Checked In"].includes(text) && (
+            {user?.role !== "PATIENT" && ["Schedule", "Confirmed", "Checked In"].includes(text) && (
               <div className="form-check form-switch p-0 ms-1 mt-1" style={{ minHeight: 'auto' }}>
                 <input
                   className="form-check-input ms-0"
@@ -568,8 +568,12 @@ const DiagnosticBooking = () => {
         <div className="d-flex align-items-center justify-content-center gap-2">
           <button className="bg-transparent border-0 text-info p-1" title="View" data-bs-toggle="modal" data-bs-target="#view_booking" onClick={() => setViewBooking(record.raw)}><i className="ti ti-eye fs-18"></i></button>
           <button className="bg-transparent border-0 text-secondary p-1" onClick={() => setPrintBooking(record.raw)} title="Print"><i className="ti ti-printer fs-18" /></button>
-          <button className="bg-transparent border-0 text-primary p-1" title="Edit Booking" onClick={() => handleOpenEdit(record.raw)}><i className="ti ti-edit fs-18"></i></button>
-          <button className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={() => handleOpenDelete(record.raw)}><i className="ti ti-trash fs-18"></i></button>
+          {user?.role !== "PATIENT" && (
+            <>
+              <button className="bg-transparent border-0 text-primary p-1" title="Edit Booking" onClick={() => handleOpenEdit(record.raw)}><i className="ti ti-edit fs-18"></i></button>
+              <button className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={() => handleOpenDelete(record.raw)}><i className="ti ti-trash fs-18"></i></button>
+            </>
+          )}
         </div>
       ),
     },
@@ -581,7 +585,7 @@ const DiagnosticBooking = () => {
       <div className="page-wrapper">
         <div className="content">
           <div className="d-flex align-items-center flex-wrap pb-3 mb-3 border-bottom gap-2">
-            <h4 className="fw-bold mb-0 me-2 flex-shrink-0">{user?.role === "DOCTOR" ? "Diagnostic Appointment" : "Diagnostic Booking"}</h4>
+            <h4 className="fw-bold mb-0 me-2 flex-shrink-0">{user?.role === "DOCTOR" || user?.role === "PATIENT" ? "Diagnostic Appointment" : "Diagnostic Booking"}</h4>
             {["All", "Schedule", "Confirmed", "Checked In"].map((s) => (
               <button
                 key={s}
@@ -624,9 +628,11 @@ const DiagnosticBooking = () => {
                   <i className="ti ti-filter me-2 fs-14" /> Filters
                 </button>
               )}
-              <button className="btn btn-primary d-flex align-items-center justify-content-center" style={{ height: "36px", whiteSpace: "nowrap", borderRadius: '6px', fontWeight: 'bold' }} onClick={handleOpenAdd}>
-                <i className="fa fa-plus me-2 fs-14" /> New Booking
-              </button>
+              {user?.role !== "PATIENT" && (
+                <button className="btn btn-primary d-flex align-items-center justify-content-center" style={{ height: "36px", whiteSpace: "nowrap", borderRadius: '6px', fontWeight: 'bold' }} onClick={handleOpenAdd}>
+                  <i className="fa fa-plus me-2 fs-14" /> New Booking
+                </button>
+              )}
             </div>
           </div>
 
@@ -635,10 +641,10 @@ const DiagnosticBooking = () => {
           ) : bookings.length === 0 ? (
             <div className="border rounded bg-white"><EmptyState title="No bookings yet" message="Create your first diagnostic booking." /></div>
           ) : (
-            <div className="table-responsive"><Datatable columns={columns} dataSource={data} Selection={true} searchText={searchText} onSelectionChange={(keys) => setSelectedIds(keys as string[])} /></div>
+            <div className="table-responsive"><Datatable columns={columns} dataSource={data} Selection={user?.role !== "PATIENT"} searchText={searchText} onSelectionChange={(keys) => setSelectedIds(keys as string[])} /></div>
           )}
 
-          {selectedIds.length > 0 && (
+          {user?.role !== "PATIENT" && selectedIds.length > 0 && (
             <div className="d-flex justify-content-center pt-4 pb-4 sticky-delete-bar">
               <button className="btn btn-danger d-flex align-items-center gap-2 px-4 py-2 shadow" onClick={handleBulkDelete} disabled={submitting} style={{ borderRadius: "8px", minHeight: "42px", fontWeight: "bold" }}>
                 <i className="ti ti-trash fs-18"></i> Delete Selected ({selectedIds.length})

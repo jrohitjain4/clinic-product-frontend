@@ -136,7 +136,8 @@ const Feature = () => {
   if (user?.role === 'PATIENT') {
     const isPublicPath = path === "/" || path === "/login" || path === "/register";
     const isPatientPath = path.startsWith("/patient/");
-    if (!isPublicPath && !isPatientPath && path !== "/patient/patient-dashboard" && !path.startsWith("/new-appointment")) {
+    const isLabPath = path === "/pathlab/bookings";
+    if (!isPublicPath && !isPatientPath && !isLabPath && path !== "/patient/patient-dashboard" && !path.startsWith("/new-appointment")) {
       return <Navigate to="/patient/patient-dashboard" replace />;
     }
   }

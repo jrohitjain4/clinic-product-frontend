@@ -174,6 +174,12 @@ const Sidebarthree = () => {
                       <span>Invoice</span>
                     </Link>
                   </li>
+                  <li className={isActive(routes.pathlabBookings) ? "active" : ""}>
+                    <Link to={routes.pathlabBookings}>
+                      <i className="ti ti-calendar-event" />
+                      <span>Diagnostic Appointment</span>
+                    </Link>
+                  </li>
                   <li
                     className={`submenu${openSubmenus.settings ? " active" : ""
                       }`}

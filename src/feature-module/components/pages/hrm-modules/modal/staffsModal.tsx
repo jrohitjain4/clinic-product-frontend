@@ -449,6 +449,12 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
             value={form.email}
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
           />
+          {!selected && (
+            <small className="text-success d-block mt-1" style={{ fontSize: "11px" }}>
+              <i className="ti ti-mail me-1" />
+              If email is provided, login credentials will be auto-emailed to the staff member.
+            </small>
+          )}
         </div>
         <div className="col-md-6">
           <label className="form-label">

@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { apiUrl } from "../../../../core/config/api";
 import { Input } from "../../../../core/common/input/Input";
 import { Button } from "../../../../core/common/button/Button";
-import { User, Lock, Eye, EyeOff, LogIn } from "react-feather";
+import { User, Lock, Eye, EyeOff, LogIn, Phone, MessageSquare, ArrowLeft } from "react-feather";
 import { setLocalStorageUser } from "../../../../core/utils/apiClient";
 
 const getDashboardPath = (role: string): string => {
@@ -18,6 +18,7 @@ const getDashboardPath = (role: string): string => {
       return all_routes.patientdashboard;
     case "ADMIN":
     case "PORTER":
+    case "STAFF":
     default:
       return all_routes.dashboard;
   }
@@ -25,12 +26,23 @@ const getDashboardPath = (role: string): string => {
 
 const Login = () => {
   const navigate = useNavigate();
+  
+  // Normal Password Login States
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [formErrors, setFormErrors] = useState<{ identifier?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
+
+  // OTP Login States
+  const [loginMode, setLoginMode] = useState<"password" | "otp">("password");
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpError, setOtpError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,6 +93,87 @@ const Login = () => {
     }
   };
 
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setOtpError("");
+    const cleanPhone = phone.replace(/\D/g, "").slice(-10);
+    
+    if (cleanPhone.length !== 10) {
+      setOtpError("Please enter a valid 10-digit mobile number");
+      return;
+    }
+
+    setSendingOtp(true);
+    try {
+      const response = await fetch(apiUrl("/api/auth/send-otp"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: cleanPhone }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send OTP.");
+      }
+      setOtpSent(true);
+      toast.success("OTP sent to your mobile number successfully");
+    } catch (err: any) {
+      setOtpError(err.message);
+      toast.error(err.message || "Failed to send OTP");
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setOtpError("");
+    
+    if (!otp.trim()) {
+      setOtpError("OTP is required");
+      return;
+    }
+
+    setVerifyingOtp(true);
+    try {
+      const response = await fetch(apiUrl("/api/auth/verify-otp-login"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, otp }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Invalid OTP code");
+      }
+      localStorage.setItem("token", data.token);
+      setLocalStorageUser(data.user);
+      toast.success("Welcome back!");
+      navigate(getDashboardPath(data.user.role), { replace: true });
+    } catch (err: any) {
+      setOtpError(err.message);
+      toast.error(err.message || "OTP verification failed");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  const switchToPasswordLogin = () => {
+    setLoginMode("password");
+    setOtpSent(false);
+    setPhone("");
+    setOtp("");
+    setOtpError("");
+    setError("");
+  };
+
+  const switchToOtpLogin = () => {
+    setLoginMode("otp");
+    setOtpSent(false);
+    setPhone("");
+    setOtp("");
+    setOtpError("");
+    setError("");
+  };
+
   return (
     <>
       <div className="container-fuild position-relative z-1">
@@ -128,107 +221,217 @@ const Login = () => {
                     <img src="/logo.png" className="img-fluid" alt="DocYori Logo" style={{ maxHeight: "60px", width: "auto" }} />
                   </div>
 
-                  <form onSubmit={handleLogin} className="d-flex justify-content-center align-items-center" noValidate>
-                    <div className="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill">
-
-                      <div className="card border-1 p-lg-3 shadow-md rounded-3 m-0">
-                        <div className="card-body">
-                          <div className="text-start mb-4">
-                            <div className="d-flex align-items-center mb-3">
-                              <div className="d-flex align-items-center justify-content-center bg-light rounded-circle me-3" style={{ width: '45px', height: '45px', border: '1.5px solid #e2e8f0' }}>
-                                <LogIn size={22} color="#6366f1" strokeWidth={2.5} />
-                              </div>
-                              <h5 className="mb-0 fs-28 fw-bold text-dark">Login</h5>
+                  <div className="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill">
+                    <div className="card border-1 p-lg-3 shadow-md rounded-3 m-0">
+                      <div className="card-body">
+                        
+                        <div className="text-start mb-4">
+                          <div className="d-flex align-items-center mb-3">
+                            <div className="d-flex align-items-center justify-content-center bg-light rounded-circle me-3" style={{ width: '45px', height: '45px', border: '1.5px solid #e2e8f0' }}>
+                              <LogIn size={22} color="#6366f1" strokeWidth={2.5} />
                             </div>
-                            <p className="mb-0 text-muted fs-15">
-                              This panel is strictly for authorized administrators.<br />
-                              Unauthorized access is prohibited.
-                            </p>
+                            <h5 className="mb-0 fs-28 fw-bold text-dark">{loginMode === "password" ? "Login" : "OTP Login"}</h5>
                           </div>
-
-
-                          {error && (
-                            <div className="alert alert-danger alert-dismissible fade show p-2 mb-3 rounded" role="alert" style={{ fontSize: "13px" }}>
-                              <i className="ti ti-alert-triangle me-1"></i> {error}
-                            </div>
-                          )}
-
-                          <Input
-                            label="Email / Mobile / Username"
-                            type="text"
-                            required
-                            value={identifier}
-                            onChange={(e) => setIdentifier(e.target.value)}
-                            placeholder="Enter Username, Mobile or Email"
-                            leftAddon={<User size={20} strokeWidth={2.5} color="#0f172a" />}
-                            error={formErrors.identifier}
-                          />
-
-                          <Input
-                            label="Password"
-                            type={showPassword ? "text" : "password"}
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="****************"
-                            leftAddon={<Lock size={20} strokeWidth={2.5} color="#0f172a" />}
-                            error={formErrors.password}
-                            rightIcon={
-                              <div
-                                onClick={() => setShowPassword(!showPassword)}
-                                style={{ cursor: "pointer", display: "flex", alignItems: "center", height: "100%" }}
-                              >
-                                {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
-                              </div>
-                            }
-                          />
-
-                          <div className="d-flex align-items-center justify-content-between mb-3 mt-2">
-                            <div className="form-check form-check-md mb-0">
-                              <input className="form-check-input" id="remember_me" type="checkbox" />
-                              <label htmlFor="remember_me" className="form-check-label mt-0 text-dark">
-                                Remember Me
-                              </label>
-                            </div>
-                            <Link to={all_routes.forgotpasswordbasic} className="text-danger">
-                              Forgot Password?
-                            </Link>
-                          </div>
-
-                          <div className="mb-3">
-                            <Button
-                              type="submit"
-                              disabled={loading}
-                              variant="primary"
-                              size="large"
-                              className="w-100 fs-15"
-                              style={{ padding: "12px", minHeight: "50px" }}
-                              icon={<LogIn size={18} strokeWidth={2.5} />}
-                              iconPosition="right"
-                            >
-                              {loading ? (
-                                <>
-                                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                  Authenticating...
-                                </>
-                              ) : (
-                                "Login"
-                              )}
-                            </Button>
-                          </div>
-
-                          <div className="text-center mt-4">
-                            <h6 className="fw-normal fs-14 text-dark mb-0">
-                              Don't have an account yet?{" "}
-                              <Link to={all_routes.registerbasic} className="hover-a text-primary fw-medium ms-1">
-                                Register
-                              </Link>
-                            </h6>
-                          </div>
+                          <p className="mb-0 text-muted fs-15">
+                            This panel is strictly for authorized administrators.<br />
+                            Unauthorized access is prohibited.
+                          </p>
                         </div>
+
+                        {/* ─── PASSWORD LOGIN MODE ─── */}
+                        {loginMode === "password" && (
+                          <form onSubmit={handleLogin} noValidate>
+                            {error && (
+                              <div className="alert alert-danger alert-dismissible fade show p-2 mb-3 rounded" role="alert" style={{ fontSize: "13px" }}>
+                                <i className="ti ti-alert-triangle me-1"></i> {error}
+                              </div>
+                            )}
+
+                            <Input
+                              label="Email / Mobile / Username"
+                              type="text"
+                              required
+                              value={identifier}
+                              onChange={(e) => setIdentifier(e.target.value)}
+                              placeholder="Enter Username, Mobile or Email"
+                              leftAddon={<User size={20} strokeWidth={2.5} color="#0f172a" />}
+                              error={formErrors.identifier}
+                            />
+
+                            <Input
+                              label="Password"
+                              type={showPassword ? "text" : "password"}
+                              required
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              placeholder="****************"
+                              leftAddon={<Lock size={20} strokeWidth={2.5} color="#0f172a" />}
+                              error={formErrors.password}
+                              rightIcon={
+                                <div
+                                  onClick={() => setShowPassword(!showPassword)}
+                                  style={{ cursor: "pointer", display: "flex", alignItems: "center", height: "100%" }}
+                                >
+                                  {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
+                                </div>
+                              }
+                            />
+
+                            <div className="d-flex align-items-center justify-content-between mb-3 mt-2">
+                              <div className="form-check form-check-md mb-0">
+                                <input className="form-check-input" id="remember_me" type="checkbox" />
+                                <label htmlFor="remember_me" className="form-check-label mt-0 text-dark">
+                                  Remember Me
+                                </label>
+                              </div>
+                              <Link to={all_routes.forgotpasswordbasic} className="text-danger">
+                                Forgot Password?
+                              </Link>
+                            </div>
+
+                            <div className="mb-3">
+                              <Button
+                                type="submit"
+                                disabled={loading}
+                                variant="primary"
+                                size="large"
+                                className="w-100 fs-15"
+                                style={{ padding: "12px", minHeight: "50px" }}
+                                icon={<LogIn size={18} strokeWidth={2.5} />}
+                                iconPosition="right"
+                              >
+                                {loading ? (
+                                  <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Authenticating...
+                                  </>
+                                ) : (
+                                  "Login"
+                                )}
+                              </Button>
+                            </div>
+                          </form>
+                        )}
+
+                        {/* ─── OTP LOGIN MODE ─── */}
+                        {loginMode === "otp" && (
+                          <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} noValidate>
+                            {otpError && (
+                              <div className="alert alert-danger alert-dismissible fade show p-2 mb-3 rounded" role="alert" style={{ fontSize: "13px" }}>
+                                <i className="ti ti-alert-triangle me-1"></i> {otpError}
+                              </div>
+                            )}
+
+                            <Input
+                              label="Mobile Number (registered)"
+                              type="tel"
+                              required
+                              disabled={otpSent}
+                              value={phone}
+                              onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                              placeholder="Enter 10-digit registered number"
+                              leftAddon={<Phone size={20} strokeWidth={2.5} color="#0f172a" />}
+                            />
+
+                            {otpSent && (
+                              <Input
+                                label="One Time Passcode (OTP)"
+                                type="text"
+                                required
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                                placeholder="Enter 6-digit OTP"
+                                maxLength={6}
+                                leftAddon={<MessageSquare size={20} strokeWidth={2.5} color="#0f172a" />}
+                              />
+                            )}
+
+                            <div className="mb-3 mt-4">
+                              {!otpSent ? (
+                                <Button
+                                  type="submit"
+                                  disabled={sendingOtp}
+                                  variant="primary"
+                                  size="large"
+                                  className="w-100 fs-15"
+                                  style={{ padding: "12px", minHeight: "50px" }}
+                                >
+                                  {sendingOtp ? (
+                                    <>
+                                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                      Sending OTP...
+                                    </>
+                                  ) : (
+                                    "Send OTP"
+                                  )}
+                                </Button>
+                              ) : (
+                                <div className="d-flex flex-column gap-2">
+                                  <Button
+                                    type="submit"
+                                    disabled={verifyingOtp}
+                                    variant="primary"
+                                    size="large"
+                                    className="w-100 fs-15"
+                                    style={{ padding: "12px", minHeight: "50px" }}
+                                  >
+                                    {verifyingOtp ? (
+                                      <>
+                                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        Verifying...
+                                      </>
+                                    ) : (
+                                      "Verify & Login"
+                                    )}
+                                  </Button>
+                                  <button
+                                    type="button"
+                                    onClick={handleSendOtp}
+                                    className="btn btn-link text-primary fs-13 mt-1"
+                                    disabled={sendingOtp}
+                                  >
+                                    {sendingOtp ? "Sending..." : "Resend OTP"}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={switchToPasswordLogin}
+                              className="btn btn-light w-100 d-flex align-items-center justify-content-center gap-2 mt-2"
+                              style={{ padding: "10px", minHeight: "45px", borderRadius: "8px" }}
+                            >
+                              <ArrowLeft size={16} /> Back to Password Login
+                            </button>
+                          </form>
+                        )}
+
+                        {/* Continue with Mobile No. & OTP Link */}
+                        {loginMode === "password" && (
+                          <div className="text-center mt-3 mb-2">
+                            <button
+                              type="button"
+                              onClick={switchToOtpLogin}
+                              className="btn btn-link text-primary fw-medium fs-14 p-0"
+                            >
+                              Continue with Mobile No. & OTP
+                            </button>
+                          </div>
+                        )}
+
+                        <div className="text-center mt-4">
+                          <h6 className="fw-normal fs-14 text-dark mb-0">
+                            Don't have an account yet?{" "}
+                            <Link to={all_routes.registerbasic} className="hover-a text-primary fw-medium ms-1">
+                              Register
+                            </Link>
+                          </h6>
+                        </div>
+
                       </div>
                     </div>
-                  </form>
+                  </div>
 
                 </div>
               </div>

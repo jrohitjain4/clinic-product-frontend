@@ -20,6 +20,28 @@ const StaffsList = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [viewStaff, setViewStaff] = useState<any>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [resetStaff, setResetStaff] = useState<ClinicStaff | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const handleResetPassword = async () => {
+    if (!resetStaff) return;
+    setResetLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(apiUrl(`/api/staffs/${resetStaff.id}/reset-password`), {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || "Failed to reset password");
+      toast.success(data.message || "Password reset! New credentials sent to email.");
+      setResetStaff(null);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to reset password");
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
@@ -215,6 +237,19 @@ const StaffsList = () => {
           >
             <i className="ti ti-edit fs-18" />
           </button>
+
+          {/* Reset Password */}
+          {record._raw.email && (
+            <button
+              type="button"
+              className="bg-transparent border-0 text-warning p-1"
+              title="Reset Login Password"
+              onClick={() => setResetStaff(record._raw)}
+            >
+              <i className="ti ti-key fs-18" />
+            </button>
+          )}
+
           <button
             type="button"
             className="bg-transparent border-0 text-danger p-1"
@@ -521,6 +556,50 @@ const StaffsList = () => {
           </div>
         </div>
       </div>
+
+      {/* ===== RESET PASSWORD CONFIRM MODAL ===== */}
+      <Modal
+        open={!!resetStaff}
+        onCancel={() => setResetStaff(null)}
+        footer={null}
+        centered
+        width={400}
+        title={null}
+        styles={{ body: { textAlign: 'center', padding: '32px 24px' } }}
+      >
+        <div className="mb-3">
+          <span className="avatar avatar-lg bg-warning text-white">
+            <i className="ti ti-key fs-24" />
+          </span>
+        </div>
+        <h5 className="fw-bold mb-2">Reset Login Password?</h5>
+        <p className="text-muted mb-4" style={{ fontSize: '14px' }}>
+          A new random password will be generated and sent to <strong>{resetStaff?.email}</strong>.
+          The staff member will need to use the new password to log in.
+        </p>
+        <div className="d-flex justify-content-center gap-2">
+          <button
+            type="button"
+            className="btn btn-light px-4"
+            onClick={() => setResetStaff(null)}
+            disabled={resetLoading}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn btn-warning px-4 text-white"
+            onClick={handleResetPassword}
+            disabled={resetLoading}
+          >
+            {resetLoading ? (
+              <><span className="spinner-border spinner-border-sm me-2" />Resetting...</>
+            ) : (
+              <><i className="ti ti-key me-2" />Yes, Reset Password</>
+            )}
+          </button>
+        </div>
+      </Modal>
     </>
   );
 };

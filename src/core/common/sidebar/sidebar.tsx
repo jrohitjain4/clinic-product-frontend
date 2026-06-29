@@ -204,7 +204,7 @@ const Sidebar = () => {
               }).map((mainLabel, index) => {
                 // Filter submenu items by staff permissions
                 const filteredItems = user?.role === "STAFF"
-                  ? mainLabel?.submenuItems?.filter((title: any) => canSeeMenuItem(title?.label))
+                  ? mainLabel?.submenuItems?.filter((title: any) => canSeeMenuItem(title?.label, mainLabel?.tittle))
                   : mainLabel?.submenuItems;
 
                 // Skip rendering if no items left after filter

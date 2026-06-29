@@ -7,18 +7,58 @@ import { useClinicRoles } from "../../../../../../core/hooks/useClinicRoles";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import dayjs from "dayjs";
 
-const MODULE_GROUPS = [
+const SIDEBAR_SECTIONS = [
   {
-    group: "Clinic",
-    modules: ["Doctors", "Patients", "Appointments", "Locations", "Visits", "Services", "Designations", "Departments", "Activities"]
+    section: "Main Menu",
+    items: [
+      { key: "Dashboard", label: "Dashboard" }
+    ]
   },
   {
-    group: "Hrm",
-    modules: ["Staffs", "Departments", "Designation", "Attendance", "Leaves", "Holidays", "Payroll"]
+    section: "Clinic",
+    items: [
+      { key: "Doctors", label: "Doctors" },
+      { key: "Patients", label: "Patients" },
+      { key: "Appointments", label: "Appointments" },
+      { key: "Services", label: "Services and Medicines" }
+    ]
   },
   {
-    group: "Finance & Accounts",
-    modules: ["Expenses", "Income", "Invoices", "Payments", "Transactions"]
+    section: "Diagnostic",
+    items: [
+      { key: "Diagnostic Dashboard", label: "Dashboard" },
+      { key: "Category", label: "Category" },
+      { key: "Diagnostic Test", label: "Diagnostic Test" },
+      { key: "Diagnostic Booking", label: "Diagnostic Booking" },
+      { key: "Invoice (Diagnostic)", label: "Invoice" }
+    ]
+  },
+  {
+    section: "HRM",
+    items: [
+      { key: "Staffs", label: "Staffs" },
+      { key: "Departments", label: "Departments" },
+      { key: "Designation", label: "Designations" },
+      { key: "Attendance", label: "Attendance" },
+      { key: "Leaves", label: "Leaves" },
+      { key: "Holidays", label: "Holidays" },
+      { key: "Payroll", label: "Payroll" },
+      { key: "Specializations", label: "Specializations" }
+    ]
+  },
+  {
+    section: "Finance & Accounts",
+    items: [
+      { key: "Expenses", label: "Expenses" },
+      { key: "Invoices", label: "Invoices" },
+      { key: "Transactions", label: "Transactions" }
+    ]
+  },
+  {
+    section: "Administration",
+    items: [
+      { key: "Roles & Permissions", label: "Roles & Permissions" }
+    ]
   }
 ];
 
@@ -109,27 +149,17 @@ const RolesAndPermissions = () => {
     }
   }, [role]);
 
-  const handleActionToggle = (module: string, action: string, checked: boolean) => {
-    setPermissions(prev => ({
-      ...prev,
-      [module]: {
-        ...(prev[module] || {}),
-        [action]: checked
-      }
-    }));
-  };
-
-  const handleRowToggle = (module: string, checked: boolean) => {
+  const handleSingleToggle = (moduleKey: string, checked: boolean) => {
     setPermissions(prev => {
       const allActions = ACTIONS.reduce((acc, a) => ({ ...acc, [a]: checked }), {});
-      return { ...prev, [module]: allActions };
+      return { ...prev, [moduleKey]: allActions };
     });
   };
 
-  const handleGroupToggle = (groupModules: string[], checked: boolean) => {
+  const handleSectionToggle = (moduleKeys: string[], checked: boolean) => {
     setPermissions(prev => {
       const next = { ...prev };
-      groupModules.forEach(mod => {
+      moduleKeys.forEach(mod => {
         next[mod] = ACTIONS.reduce((acc, a) => ({ ...acc, [a]: checked }), {});
       });
       return next;
@@ -497,21 +527,22 @@ const RolesAndPermissions = () => {
                 </div>
               ) : (
                 <div>
-                  {MODULE_GROUPS.map((mg) => (
-                    <div className="card mb-4 border shadow-sm" key={mg.group} style={{ borderRadius: "10px" }}>
+                  {SIDEBAR_SECTIONS.map((mg) => (
+                    <div className="card mb-4 border shadow-sm" key={mg.section} style={{ borderRadius: "10px" }}>
                       <div className="card-header bg-light py-3">
                         <div className="d-flex align-items-center justify-content-between">
-                          <h6 className="fw-bold mb-0 text-dark">{mg.group} Module Group</h6>
+                          <h6 className="fw-bold mb-0 text-dark">{mg.section} Section</h6>
                           <div className="form-check form-switch form-check-md">
                             <input
                               className="form-check-input"
                               type="checkbox"
-                              id={`select-all-${mg.group}`}
-                              checked={mg.modules.every(mod => ACTIONS.every(a => permissions[mod]?.[a]))}
-                              onChange={(e) => handleGroupToggle(mg.modules, e.target.checked)}
+                              id={`select-all-${mg.section}`}
+                              checked={mg.items.every(item => ACTIONS.every(a => permissions[item.key]?.[a]))}
+                              onChange={(e) => handleSectionToggle(mg.items.map(i => i.key), e.target.checked)}
+                              style={{ cursor: "pointer" }}
                             />
-                            <label className="form-check-label fw-medium text-muted ms-2" htmlFor={`select-all-${mg.group}`}>
-                              Allow All in {mg.group}
+                            <label className="form-check-label fw-medium text-muted ms-2" htmlFor={`select-all-${mg.section}`} style={{ cursor: "pointer" }}>
+                              Allow All in {mg.section}
                             </label>
                           </div>
                         </div>
@@ -521,43 +552,32 @@ const RolesAndPermissions = () => {
                           <table className="table table-nowrap table-hover mb-0">
                             <thead className="thead-light">
                               <tr>
-                                <th style={{ width: "30%", paddingLeft: "24px" }}>Module Name</th>
-                                {ACTIONS.map((a) => (
-                                  <th key={a} className="text-center">{a}</th>
-                                ))}
-                                <th className="text-center">ALLOW ALL</th>
+                                <th style={{ width: "60%", paddingLeft: "24px" }}>Sidebar Option</th>
+                                <th className="text-center" style={{ width: "40%" }}>Status / Access</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {mg.modules.map((mod) => (
-                                <tr key={mod}>
-                                  <td style={{ paddingLeft: "24px" }}>
-                                    <p className="fw-semibold text-dark mb-0">{mod}</p>
-                                  </td>
-                                  {ACTIONS.map((a) => (
-                                    <td key={a} className="text-center">
+                              {mg.items.map((item) => {
+                                const isChecked = ACTIONS.every(a => permissions[item.key]?.[a]);
+                                return (
+                                  <tr key={item.key}>
+                                    <td style={{ paddingLeft: "24px" }}>
+                                      <p className="fw-semibold text-dark mb-0">{item.label}</p>
+                                    </td>
+                                    <td className="text-center">
                                       <div className="form-check form-check-md d-inline-block">
                                         <input
                                           className="form-check-input"
                                           type="checkbox"
-                                          checked={!!permissions[mod]?.[a]}
-                                          onChange={(e) => handleActionToggle(mod, a, e.target.checked)}
+                                          checked={isChecked}
+                                          onChange={(e) => handleSingleToggle(item.key, e.target.checked)}
+                                          style={{ cursor: "pointer", width: "20px", height: "20px" }}
                                         />
                                       </div>
                                     </td>
-                                  ))}
-                                  <td className="text-center">
-                                    <div className="form-check form-check-md d-inline-block">
-                                      <input
-                                        className="form-check-input"
-                                        type="checkbox"
-                                        checked={ACTIONS.every(a => permissions[mod]?.[a])}
-                                        onChange={(e) => handleRowToggle(mod, e.target.checked)}
-                                      />
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))}
+                                  </tr>
+                                );
+                              })}
                             </tbody>
                           </table>
                         </div>

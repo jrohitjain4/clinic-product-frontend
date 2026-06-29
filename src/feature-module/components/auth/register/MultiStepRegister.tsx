@@ -609,7 +609,7 @@ const MultiStepRegister: React.FC = () => {
 
                                                         <div className="mb-3">
                                                             <Input
-                                                                label="Mobile Number"
+                                                                label="Mobile Number (primary no.)"
                                                                 required
                                                                 type="tel"
                                                                 placeholder="e.g. 9876543210"

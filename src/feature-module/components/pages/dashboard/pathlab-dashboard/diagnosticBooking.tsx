@@ -48,14 +48,6 @@ const DiagnosticBooking = () => {
   const { doctors } = useClinicDoctors();
   const { staffs: staff } = useClinicStaff();
 
-  const user = useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem("user") || "{}");
-    } catch {
-      return {};
-    }
-  }, []);
-
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>("All");
   const [searchText, setSearchText] = useState<string>("");
@@ -143,9 +135,9 @@ const DiagnosticBooking = () => {
     if (currentStatus === "Schedule") nextStatus = "Confirmed";
     else if (currentStatus === "Confirmed") nextStatus = "Checked In";
     else if (currentStatus === "Checked In") nextStatus = "Checked Out";
-    
+
     if (nextStatus === currentStatus) return; // No toggle available
-    
+
     setTogglingId(id);
     try {
       await updateBooking(id, { status: nextStatus });
@@ -228,21 +220,21 @@ const DiagnosticBooking = () => {
     const currentDay = current.format('dddd');
     const isAvailable = availableDays.includes(currentDay);
     const isPast = current < dayjs().startOf('day');
-    
+
     if (availableDays.length > 0) {
-        if (isAvailable && !isPast) {
-          return (
-            <div className="ant-picker-cell-inner" style={{ backgroundColor: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: '4px', color: '#237804' }}>
-              {current.date()}
-            </div>
-          );
-        } else if (!isAvailable && !isPast) {
-          return (
-            <div className="ant-picker-cell-inner" style={{ backgroundColor: '#fff1f0', border: '1px solid #ffa39e', borderRadius: '4px', color: '#a8071a' }}>
-              {current.date()}
-            </div>
-          );
-        }
+      if (isAvailable && !isPast) {
+        return (
+          <div className="ant-picker-cell-inner" style={{ backgroundColor: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: '4px', color: '#237804' }}>
+            {current.date()}
+          </div>
+        );
+      } else if (!isAvailable && !isPast) {
+        return (
+          <div className="ant-picker-cell-inner" style={{ backgroundColor: '#fff1f0', border: '1px solid #ffa39e', borderRadius: '4px', color: '#a8071a' }}>
+            {current.date()}
+          </div>
+        );
+      }
     }
     return info.originNode;
   };
@@ -262,13 +254,13 @@ const DiagnosticBooking = () => {
       const sessionName = session.session || "Session";
       const startTime = session.from || "00:00:00";
       const endTime = session.to || "23:59:59";
-      
+
       if (!isSlotEnabled) {
         options.push({ label: `${sessionName} (${startTime} - ${endTime})`, value: `${sessionName} (${startTime} - ${endTime})` });
       } else {
         let currentSlotTime = dayjs(`${formDate.format("YYYY-MM-DD")}T${startTime}`);
         const endSessionTime = dayjs(`${formDate.format("YYYY-MM-DD")}T${endTime}`);
-        
+
         while (currentSlotTime.add(slotDur, 'minute').isBefore(endSessionTime) || currentSlotTime.add(slotDur, 'minute').isSame(endSessionTime)) {
           const slotEnd = currentSlotTime.add(slotDur, 'minute');
           const slotStr = `${currentSlotTime.format("HH:mm")} - ${slotEnd.format("HH:mm")}`;
@@ -282,12 +274,12 @@ const DiagnosticBooking = () => {
 
   const maxLimit = selectedTestObj?.maxBookingsPerSlot || 1;
   const slotAvailabilities = useMemo(() => {
-     const availabilities: Record<string, { booked: number; limit: number; isFull: boolean }> = {};
-     dateOptions.forEach(opt => {
-         const bookedCount = bookings.filter((b: any) => b.testId === formTestId && dayjs(b.scheduledAt).format("YYYY-MM-DD") === formDate?.format("YYYY-MM-DD") && b.sessionSlot === opt.value && b.status !== "Cancelled").length;
-         availabilities[opt.value] = { booked: bookedCount, limit: maxLimit, isFull: bookedCount >= maxLimit };
-     });
-     return availabilities;
+    const availabilities: Record<string, { booked: number; limit: number; isFull: boolean }> = {};
+    dateOptions.forEach(opt => {
+      const bookedCount = bookings.filter((b: any) => b.testId === formTestId && dayjs(b.scheduledAt).format("YYYY-MM-DD") === formDate?.format("YYYY-MM-DD") && b.sessionSlot === opt.value && b.status !== "Cancelled").length;
+      availabilities[opt.value] = { booked: bookedCount, limit: maxLimit, isFull: bookedCount >= maxLimit };
+    });
+    return availabilities;
   }, [bookings, formTestId, formDate, dateOptions, maxLimit]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -302,8 +294,8 @@ const DiagnosticBooking = () => {
     try {
       let startTime = "10:00";
       if (formSessionSlot) {
-          const match = formSessionSlot.match(/(\d{2}:\d{2})/);
-          if (match) startTime = match[1];
+        const match = formSessionSlot.match(/(\d{2}:\d{2})/);
+        if (match) startTime = match[1];
       }
       const scheduledAt = formDate.format("YYYY-MM-DD") + "T" + startTime + ":00";
       const tax = Math.round(mappedPrice * 0.18);
@@ -340,7 +332,7 @@ const DiagnosticBooking = () => {
         setSelectedBooking(null);
       }
       setShowFormModal(false);
-    } catch (err: any) { 
+    } catch (err: any) {
       toast.error(err.message || (formMode === "add" ? "Failed to create booking" : "Failed to update booking"));
     } finally { setSubmitting(false); }
   };
@@ -394,7 +386,7 @@ const DiagnosticBooking = () => {
       }
 
       const matchPatient = filterPatient ? patientName === filterPatient : true;
-      
+
       const assignedName = doctors.find((d: any) => d.id === bk.assignedUserId)?.fullName || staff.find((s: any) => s.id === bk.assignedUserId)?.fullName || "";
       const matchDoctor = filterDoctor ? assignedName === filterDoctor : true;
       const matchSlot = filterSlot ? bk.sessionSlot === filterSlot : true;
@@ -527,7 +519,7 @@ const DiagnosticBooking = () => {
             <span className={`badge ${statusBadgeClass(text)} px-2 py-1 text-uppercase`} style={{ fontSize: '10px' }}>
               {text}
             </span>
-            {user?.role !== "DOCTOR" && ["Schedule", "Confirmed", "Checked In"].includes(text) && (
+            {["Schedule", "Confirmed", "Checked In"].includes(text) && (
               <div className="form-check form-switch p-0 ms-1 mt-1" style={{ minHeight: 'auto' }}>
                 <input
                   className="form-check-input ms-0"
@@ -554,12 +546,8 @@ const DiagnosticBooking = () => {
         <div className="d-flex align-items-center justify-content-center gap-2">
           <button className="bg-transparent border-0 text-info p-1" title="View" data-bs-toggle="modal" data-bs-target="#view_booking" onClick={() => setViewBooking(record.raw)}><i className="ti ti-eye fs-18"></i></button>
           <button className="bg-transparent border-0 text-secondary p-1" onClick={() => setPrintBooking(record.raw)} title="Print"><i className="ti ti-printer fs-18" /></button>
-          {user?.role !== "DOCTOR" && (
-            <>
-              <button className="bg-transparent border-0 text-primary p-1" title="Edit Booking" onClick={() => handleOpenEdit(record.raw)}><i className="ti ti-edit fs-18"></i></button>
-              <button className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={() => handleOpenDelete(record.raw)}><i className="ti ti-trash fs-18"></i></button>
-            </>
-          )}
+          <button className="bg-transparent border-0 text-primary p-1" title="Edit Booking" onClick={() => handleOpenEdit(record.raw)}><i className="ti ti-edit fs-18"></i></button>
+          <button className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={() => handleOpenDelete(record.raw)}><i className="ti ti-trash fs-18"></i></button>
         </div>
       ),
     },
@@ -571,7 +559,7 @@ const DiagnosticBooking = () => {
       <div className="page-wrapper">
         <div className="content">
           <div className="d-flex align-items-center flex-wrap pb-3 mb-3 border-bottom gap-2">
-            <h4 className="fw-bold mb-0 me-2 flex-shrink-0">{user?.role === "DOCTOR" ? "Diagnostic Appointment" : "Diagnostic Booking"}</h4>
+            <h4 className="fw-bold mb-0 me-2 flex-shrink-0">Diagnostic Booking</h4>
             {["All", "Schedule", "Confirmed", "Checked In"].map((s) => (
               <button
                 key={s}
@@ -591,18 +579,18 @@ const DiagnosticBooking = () => {
             </div>
 
 
-            
+
             <div className="d-flex align-items-center gap-2 ms-auto flex-shrink-0">
               {(filterStatus !== "All" || filterPatient !== "" || filterDoctor !== "" || filterSlot !== "" || datePreset !== "All" || filterDate !== "" || searchText !== "") ? (
-                <button 
-                  className="btn btn-soft-danger d-flex align-items-center justify-content-center" 
-                  style={{ height: '36px', borderRadius: '6px', fontWeight: 'bold' }} 
+                <button
+                  className="btn btn-soft-danger d-flex align-items-center justify-content-center"
+                  style={{ height: '36px', borderRadius: '6px', fontWeight: 'bold' }}
                   onClick={() => {
-                    setFilterStatus("All"); 
-                    setFilterPatient(""); 
-                    setFilterDoctor(""); 
+                    setFilterStatus("All");
+                    setFilterPatient("");
+                    setFilterDoctor("");
                     setFilterSlot("");
-                    setDatePreset("All"); 
+                    setDatePreset("All");
                     setFilterDate("");
                     setSearchText("");
                   }}
@@ -614,11 +602,9 @@ const DiagnosticBooking = () => {
                   <i className="ti ti-filter me-2 fs-14" /> Filters
                 </button>
               )}
-              {user?.role !== "DOCTOR" && (
-                <button className="btn btn-primary d-flex align-items-center justify-content-center" style={{ height: "36px", whiteSpace: "nowrap", borderRadius: '6px', fontWeight: 'bold' }} onClick={handleOpenAdd}>
-                  <i className="fa fa-plus me-2 fs-14" /> New Booking
-                </button>
-              )}
+              <button className="btn btn-primary d-flex align-items-center justify-content-center" style={{ height: "36px", whiteSpace: "nowrap", borderRadius: '6px', fontWeight: 'bold' }} onClick={handleOpenAdd}>
+                <i className="fa fa-plus me-2 fs-14" /> New Booking
+              </button>
             </div>
           </div>
 
@@ -627,7 +613,7 @@ const DiagnosticBooking = () => {
           ) : bookings.length === 0 ? (
             <div className="border rounded bg-white"><EmptyState title="No bookings yet" message="Create your first diagnostic booking." /></div>
           ) : (
-            <div className="table-responsive"><Datatable columns={columns} dataSource={data} Selection={user?.role !== "DOCTOR"} searchText={searchText} onSelectionChange={(keys) => setSelectedIds(keys as string[])} /></div>
+            <div className="table-responsive"><Datatable columns={columns} dataSource={data} Selection={true} searchText={searchText} onSelectionChange={(keys) => setSelectedIds(keys as string[])} /></div>
           )}
 
           {selectedIds.length > 0 && (
@@ -655,7 +641,7 @@ const DiagnosticBooking = () => {
                       <div className="d-flex justify-content-between align-items-center mb-1">
                         <label className="form-label fw-semibold mb-0">Patient <span className="text-danger">*</span></label>
                         <button type="button" className="btn btn-primary btn-sm d-flex align-items-center py-1 px-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddPatientModal(true); }}>
-                           <i className="ti ti-plus me-1" /> Add New
+                          <i className="ti ti-plus me-1" /> Add New
                         </button>
                       </div>
                       <select className="form-select" value={formPatientId} onChange={(e) => setFormPatientId(e.target.value)} required>
@@ -688,13 +674,13 @@ const DiagnosticBooking = () => {
                     <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold">Assign Doctor / Staff</label>
                       <select className="form-select" value={formAssignedUserId} onChange={(e) => setFormAssignedUserId(e.target.value)}>
-                         <option value="">Auto / Any Available</option>
-                         {selectedTestObj?.assignedDoctors?.map((d: any) => (
-                             <option key={d.value} value={d.value}>Dr. {d.label} (Doctor)</option>
-                         ))}
-                         {selectedTestObj?.assignedStaff?.map((s: any) => (
-                             <option key={s.value} value={s.value}>{s.label} (Staff)</option>
-                         ))}
+                        <option value="">Auto / Any Available</option>
+                        {selectedTestObj?.assignedDoctors?.map((d: any) => (
+                          <option key={d.value} value={d.value}>Dr. {d.label} (Doctor)</option>
+                        ))}
+                        {selectedTestObj?.assignedStaff?.map((s: any) => (
+                          <option key={s.value} value={s.value}>{s.label} (Staff)</option>
+                        ))}
                       </select>
                     </div>
                     <div className="col-md-6 mb-3">
@@ -707,11 +693,11 @@ const DiagnosticBooking = () => {
                   <div className="row">
                     <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold d-block">Booking Date <span className="text-danger">*</span></label>
-                      <DatePicker 
-                        format="YYYY-MM-DD" 
-                        className="form-control py-2 fs-14" 
-                        value={formDate} 
-                        onChange={(d) => { setFormDate(d); setFormSessionSlot(""); }} 
+                      <DatePicker
+                        format="YYYY-MM-DD"
+                        className="form-control py-2 fs-14"
+                        value={formDate}
+                        onChange={(d) => { setFormDate(d); setFormSessionSlot(""); }}
                         disabledDate={disabledDate}
                         cellRender={cellRender}
                         disabled={!formTestId}
@@ -721,15 +707,15 @@ const DiagnosticBooking = () => {
                     <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold">{selectedTestObj?.isSlotBookingEnabled ? "Booking Slot" : "Booking Session"} <span className="text-danger">*</span></label>
                       <select className="form-select" value={formSessionSlot} onChange={(e) => setFormSessionSlot(e.target.value)} disabled={!formDate || dateOptions.length === 0} required>
-                         <option value="">Select {selectedTestObj?.isSlotBookingEnabled ? "Slot" : "Session"}</option>
-                         {dateOptions.map((opt) => {
-                             const avail = slotAvailabilities[opt.value];
-                             return (
-                                 <option key={opt.value} value={opt.value} disabled={avail?.isFull}>
-                                     {opt.label} {avail ? `(${avail.booked}/${avail.limit} Booked)` : ""}
-                                 </option>
-                             );
-                         })}
+                        <option value="">Select {selectedTestObj?.isSlotBookingEnabled ? "Slot" : "Session"}</option>
+                        {dateOptions.map((opt) => {
+                          const avail = slotAvailabilities[opt.value];
+                          return (
+                            <option key={opt.value} value={opt.value} disabled={avail?.isFull}>
+                              {opt.label} {avail ? `(${avail.booked}/${avail.limit} Booked)` : ""}
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
                   </div>
@@ -803,11 +789,11 @@ const DiagnosticBooking = () => {
         ]}
         onEdit={() => { handleOpenEdit(viewBooking); }} editLabel="Edit Booking" editModalTarget=""
       />
-      <AddPatientModal 
-        show={showAddPatientModal} 
-        onHide={() => setShowAddPatientModal(false)} 
+      <AddPatientModal
+        show={showAddPatientModal}
+        onHide={() => setShowAddPatientModal(false)}
         onSuccess={(newPatient) => {
-           setFormPatientId(newPatient.id);
+          setFormPatientId(newPatient.id);
         }}
       />
 

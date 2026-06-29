@@ -182,6 +182,19 @@ const SidebarTwo = () => {
                     </Link>
                   </li>
 
+                  <li className={isActive(all_routes.pathlabTests) ? "active" : ""}>
+                    <Link to={all_routes.pathlabTests}>
+                      <i className="ti ti-microscope" />
+                      <span>Diagnostic Test</span>
+                    </Link>
+                  </li>
+                  <li className={isActive(all_routes.pathlabBookings) ? "active" : ""}>
+                    <Link to={all_routes.pathlabBookings}>
+                      <i className="ti ti-calendar-event" />
+                      <span>Diagnostic Appointment</span>
+                    </Link>
+                  </li>
+
                   {/* Settings Submenu */}
                   <li
                     className={`submenu${openSubmenus.settings ? " active" : ""

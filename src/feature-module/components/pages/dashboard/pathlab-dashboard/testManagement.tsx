@@ -20,14 +20,6 @@ const TestManagement = () => {
   const { doctors } = useClinicDoctors();
   const { staffs: staff } = useClinicStaff();
 
-  const user = useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem("user") || "{}");
-    } catch {
-      return {};
-    }
-  }, []);
-
   const doctorOptions = useMemo(() => doctors?.map((d: any) => ({ value: d.id, label: d.fullName })) || [], [doctors]);
   const staffOptions = useMemo(() => staff?.map((s: any) => ({ value: s.id, label: s.fullName })) || [], [staff]);
 
@@ -118,22 +110,22 @@ const TestManagement = () => {
     setSubmitting(true);
     try {
       await createTest({
-          name: formName.trim(),
-          shortName: formShortName.trim(),
-          description: formDesc.trim(),
-          price: parseFloat(formPrice) || 0,
-          homeCollectionCharge: parseFloat(formHomeCharge) || 0,
-          duration: formDuration.trim(),
-          preparationInfo: formPrep.trim(),
-          assignment: formAssignment,
-          status: formStatus,
-          categoryId: formCategoryId || null,
-          isSlotBookingEnabled: formIsSlotBookingEnabled,
-          slotDuration: formSlotDuration,
-          maxBookingsPerSlot: formMaxBookingsPerSlot,
-          assignedDoctors: formAssignedDoctors,
-          assignedStaff: formAssignedStaff,
-          schedules: serializeSchedules(schedules)
+        name: formName.trim(),
+        shortName: formShortName.trim(),
+        description: formDesc.trim(),
+        price: parseFloat(formPrice) || 0,
+        homeCollectionCharge: parseFloat(formHomeCharge) || 0,
+        duration: formDuration.trim(),
+        preparationInfo: formPrep.trim(),
+        assignment: formAssignment,
+        status: formStatus,
+        categoryId: formCategoryId || null,
+        isSlotBookingEnabled: formIsSlotBookingEnabled,
+        slotDuration: formSlotDuration,
+        maxBookingsPerSlot: formMaxBookingsPerSlot,
+        assignedDoctors: formAssignedDoctors,
+        assignedStaff: formAssignedStaff,
+        schedules: serializeSchedules(schedules)
       });
       toast.success("Test added successfully!");
       setShowAddModal(false);
@@ -177,22 +169,22 @@ const TestManagement = () => {
       setSubmitting(true);
       try {
         await updateTest(selectedTest.id, {
-            name: formName.trim(),
-            shortName: formShortName.trim(),
-            description: formDesc.trim(),
-            price: parseFloat(formPrice) || 0,
-            homeCollectionCharge: parseFloat(formHomeCharge) || 0,
-            duration: formDuration.trim(),
-            preparationInfo: formPrep.trim(),
-            assignment: formAssignment,
-            status: formStatus,
-            categoryId: formCategoryId || null,
-            isSlotBookingEnabled: formIsSlotBookingEnabled,
-            slotDuration: formSlotDuration,
-            maxBookingsPerSlot: formMaxBookingsPerSlot,
-            assignedDoctors: formAssignedDoctors,
-            assignedStaff: formAssignedStaff,
-            schedules: serializeSchedules(schedules)
+          name: formName.trim(),
+          shortName: formShortName.trim(),
+          description: formDesc.trim(),
+          price: parseFloat(formPrice) || 0,
+          homeCollectionCharge: parseFloat(formHomeCharge) || 0,
+          duration: formDuration.trim(),
+          preparationInfo: formPrep.trim(),
+          assignment: formAssignment,
+          status: formStatus,
+          categoryId: formCategoryId || null,
+          isSlotBookingEnabled: formIsSlotBookingEnabled,
+          slotDuration: formSlotDuration,
+          maxBookingsPerSlot: formMaxBookingsPerSlot,
+          assignedDoctors: formAssignedDoctors,
+          assignedStaff: formAssignedStaff,
+          schedules: serializeSchedules(schedules)
         });
         toast.success("Test updated successfully!");
         setShowEditModal(false);
@@ -265,16 +257,12 @@ const TestManagement = () => {
           <Link to="#" className="bg-transparent border-0 text-info p-1" title="View Details" onClick={(e) => { e.preventDefault(); setViewTest(record.raw); triggerModal("view_test"); }}>
             <i className="ti ti-eye fs-18"></i>
           </Link>
-          {user?.role !== "DOCTOR" && (
-            <>
-              <Link to="#" className="bg-transparent border-0 text-primary p-1" title="Edit" onClick={(e) => { e.preventDefault(); handleOpenEdit(record.raw); }}>
-                <i className="ti ti-edit fs-18"></i>
-              </Link>
-              <Link to="#" className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={(e) => { e.preventDefault(); handleOpenDelete(record.raw); }}>
-                <i className="ti ti-trash fs-18"></i>
-              </Link>
-            </>
-          )}
+          <Link to="#" className="bg-transparent border-0 text-primary p-1" title="Edit" onClick={(e) => { e.preventDefault(); handleOpenEdit(record.raw); }}>
+            <i className="ti ti-edit fs-18"></i>
+          </Link>
+          <Link to="#" className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={(e) => { e.preventDefault(); handleOpenDelete(record.raw); }}>
+            <i className="ti ti-trash fs-18"></i>
+          </Link>
         </div>
       ),
     },
@@ -316,11 +304,9 @@ const TestManagement = () => {
                   <li><Link to="#" className="dropdown-item rounded-1 fs-13" onClick={(e) => { e.preventDefault(); setFilterStatus("Inactive"); }}>Inactive</Link></li>
                 </ul>
               </div>
-              {user?.role !== "DOCTOR" && (
-                <button className="btn btn-primary d-flex align-items-center justify-content-center" style={{ minHeight: "38px", whiteSpace: "nowrap" }} onClick={handleOpenAdd}>
-                  Add Test <i className="fa fa-plus ms-2" />
-                </button>
-              )}
+              <button className="btn btn-primary d-flex align-items-center justify-content-center" style={{ minHeight: "38px", whiteSpace: "nowrap" }} onClick={handleOpenAdd}>
+                Add Test <i className="fa fa-plus ms-2" />
+              </button>
             </div>
           </div>
 
@@ -329,7 +315,7 @@ const TestManagement = () => {
           ) : tests.length === 0 ? (
             <div className="border rounded bg-white"><EmptyState title="No tests yet" message="Create your first diagnostic test to get started." /></div>
           ) : (
-            <div className="table-responsive"><Datatable columns={columns} dataSource={data} Selection={user?.role !== "DOCTOR"} searchText={searchText} onSelectionChange={(keys) => setSelectedIds(keys as string[])} /></div>
+            <div className="table-responsive"><Datatable columns={columns} dataSource={data} Selection={true} searchText={searchText} onSelectionChange={(keys) => setSelectedIds(keys as string[])} /></div>
           )}
 
           {selectedIds.length > 0 && (
@@ -357,13 +343,13 @@ const TestManagement = () => {
                     <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Short Name <span className="text-muted fw-normal">(Optional)</span></label><input type="text" className="form-control" placeholder="e.g. CBC" value={formShortName} onChange={(e) => setFormShortName(e.target.value)} /></div>
                   </div>
                   <div className="row">
-                        <div className="mb-3">
-                          <label className="form-label">Category</label>
-                          <select className="form-select" value={formCategoryId} onChange={(e) => setFormCategoryId(e.target.value)}>
-                            <option value="">No Category</option>
-                            {categoryList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                          </select>
-                        </div>
+                    <div className="mb-3">
+                      <label className="form-label">Category</label>
+                      <select className="form-select" value={formCategoryId} onChange={(e) => setFormCategoryId(e.target.value)}>
+                        <option value="">No Category</option>
+                        {categoryList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
                   </div>
                   <div className="row">
                     <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Test Fee (₹) <span className="text-danger">*</span></label><input type="number" className="form-control" placeholder="0" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} min="0" required /></div>
@@ -481,13 +467,13 @@ const TestManagement = () => {
                     <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Short Name <span className="text-muted fw-normal">(Optional)</span></label><input type="text" className="form-control" placeholder="e.g. CBC" value={formShortName} onChange={(e) => setFormShortName(e.target.value)} /></div>
                   </div>
                   <div className="row">
-                        <div className="mb-3">
-                          <label className="form-label">Category</label>
-                          <select className="form-select" value={formCategoryId} onChange={(e) => setFormCategoryId(e.target.value)}>
-                            <option value="">No Category</option>
-                            {categoryList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                          </select>
-                        </div>
+                    <div className="mb-3">
+                      <label className="form-label">Category</label>
+                      <select className="form-select" value={formCategoryId} onChange={(e) => setFormCategoryId(e.target.value)}>
+                        <option value="">No Category</option>
+                        {categoryList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
                   </div>
                   <div className="row">
                     <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Test Fee (₹) <span className="text-danger">*</span></label><input type="number" className="form-control" placeholder="0" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} min="0" required /></div>
@@ -670,7 +656,7 @@ const TestManagement = () => {
                     <div className="card-body p-2">
                       {Array.isArray(sessions) && sessions.map((s: any, idx: number) => (
                         <div key={idx} className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-light">
-                          <span className="text-muted fs-13"><i className="ti ti-clock me-1"></i>{s.session || `Session ${idx+1}`}</span>
+                          <span className="text-muted fs-13"><i className="ti ti-clock me-1"></i>{s.session || `Session ${idx + 1}`}</span>
                           <span className="badge bg-primary-transparent text-primary fw-medium px-2 py-1">
                             {s.from} - {s.to}
                           </span>

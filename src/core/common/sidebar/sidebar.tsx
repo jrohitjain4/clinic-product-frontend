@@ -187,6 +187,12 @@ const Sidebar = () => {
                 if (section.tittle === "Super Admin") {
                   return false;
                 }
+
+                // Doctor only sees Main Menu, Clinic, and Diagnostic
+                if (user?.role === "DOCTOR") {
+                  return ["Main Menu", "Clinic", "Diagnostic"].includes(section.tittle);
+                }
+
                 // Hide demo-only sections for admin users
                 if (
                   section.tittle === "UI Interface" ||
@@ -202,10 +208,59 @@ const Sidebar = () => {
                 }
                 return true;
               }).map((mainLabel, index) => {
-                // Filter submenu items by staff permissions
-                const filteredItems = user?.role === "STAFF"
-                  ? mainLabel?.submenuItems?.filter((title: any) => canSeeMenuItem(title?.label))
-                  : mainLabel?.submenuItems;
+                // Filter submenu items by permissions or role
+                let filteredItems: any[] = mainLabel?.submenuItems || [];
+
+                if (user?.role === "DOCTOR") {
+                  if (mainLabel.tittle === "Main Menu") {
+                    filteredItems = mainLabel.submenuItems.map(item => {
+                      if (item.label === "Dashboard") {
+                        return { ...item, link: all_routes.doctordashboard };
+                      }
+                      return item;
+                    });
+                  } else if (mainLabel.tittle === "Clinic") {
+                    filteredItems = mainLabel.submenuItems.map(item => {
+                      if (item.label === "Doctors") {
+                        return {
+                          ...item,
+                          submenuItems: [
+                            { label: "Doctor Schedule", link: all_routes.doctorschedule }
+                          ]
+                        };
+                      }
+                      if (item.label === "Patients") {
+                        return {
+                          ...item,
+                          submenu: false,
+                          link: all_routes.doctorPatients,
+                          submenuItems: []
+                        };
+                      }
+                      if (item.label === "Appointments") {
+                        return {
+                          ...item,
+                          submenu: false,
+                          link: all_routes.doctorsappointments,
+                          submenuItems: []
+                        };
+                      }
+                      return null;
+                    }).filter(Boolean) as any[];
+                  } else if (mainLabel.tittle === "Diagnostic") {
+                    filteredItems = mainLabel.submenuItems.map(item => {
+                      if (item.label === "Diagnostic Test") {
+                        return item;
+                      }
+                      if (item.label === "Diagnostic Booking") {
+                        return { ...item, label: "Diagnostic Appointment" };
+                      }
+                      return null;
+                    }).filter(Boolean) as any[];
+                  }
+                } else if (user?.role === "STAFF") {
+                  filteredItems = mainLabel?.submenuItems?.filter((title: any) => canSeeMenuItem(title?.label));
+                }
 
                 // Skip rendering if no items left after filter
                 if (!filteredItems || filteredItems.length === 0) return null;

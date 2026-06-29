@@ -34,9 +34,11 @@ export interface LabDashboardStats {
     totalBookings: number;
     todaysBookings: number;
     pendingBookings: number;
+    confirmedBookings: number;
     completedBookings: number;
     cancelledBookings: number;
     todaysRevenue: number;
+    totalRevenue: number;
     recentBookings: any[];
     categoryStats: any[];
 }

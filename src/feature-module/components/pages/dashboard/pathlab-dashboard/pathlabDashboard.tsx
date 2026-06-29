@@ -40,9 +40,20 @@ const PathlabDashboard = () => {
       sub: "Awaiting confirmation",
     },
     {
+      title: "Confirmed Bookings",
+      value: stats?.confirmedBookings ?? 0,
+      icon: "ti-circle-check",
+      bg: "#8b5cf6",
+      badge: "Confirmed",
+      badgeColor: "#8b5cf6",
+      badgeBg: "#f5f3ff",
+      badgeBorder: "#ddd6fe",
+      sub: "Confirmed & scheduled",
+    },
+    {
       title: "Completed Bookings",
       value: stats?.completedBookings ?? 0,
-      icon: "ti-circle-check",
+      icon: "ti-checkbox",
       bg: "#10b981",
       badge: "Done",
       badgeColor: "#10b981",
@@ -71,6 +82,17 @@ const PathlabDashboard = () => {
       badgeBg: "#f0fdfa",
       badgeBorder: "#99f6e4",
       sub: "Revenue collected today",
+    },
+    {
+      title: "Total Revenue",
+      value: `₹${(stats?.totalRevenue ?? 0).toLocaleString("en-IN")}`,
+      icon: "ti-cash",
+      bg: "#2563eb",
+      badge: "Total",
+      badgeColor: "#2563eb",
+      badgeBg: "#dbeafe",
+      badgeBorder: "#bfdbfe",
+      sub: "All time lab revenue",
     },
   ];
 
@@ -143,10 +165,10 @@ const PathlabDashboard = () => {
             </div>
           ) : (
             <>
-              {/* Row 1 — Stat Cards (3+3) */}
+              {/* Row 1 — Stat Cards (4+4) */}
               <div className="row g-2 mb-2">
-                {statCards.slice(0, 3).map((card, i) => (
-                  <div className="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12" key={i}>
+                {statCards.slice(0, 4).map((card, i) => (
+                  <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12" key={i}>
                     <div className="card h-100 border-0 pathlab-stat-card">
                       <div className="card-body p-3 d-flex flex-column justify-content-between">
                         <div className="d-flex justify-content-between align-items-start mb-2">
@@ -169,8 +191,8 @@ const PathlabDashboard = () => {
               </div>
 
               <div className="row g-2 mb-3">
-                {statCards.slice(3).map((card, i) => (
-                  <div className="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-6 col-12" key={i}>
+                {statCards.slice(4).map((card, i) => (
+                  <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12" key={i}>
                     <div className="card h-100 border-0 pathlab-stat-card">
                       <div className="card-body p-3 d-flex flex-column justify-content-between">
                         <div className="d-flex justify-content-between align-items-start mb-2">
@@ -288,9 +310,9 @@ const PathlabDashboard = () => {
                       <div className="d-flex flex-column gap-2">
                         {[
                           { label: "Pending", val: stats?.pendingBookings ?? 0, color: "#f97316", bg: "#fff7ed", border: "#fed7aa" },
+                          { label: "Confirmed", val: stats?.confirmedBookings ?? 0, color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe" },
                           { label: "Completed", val: stats?.completedBookings ?? 0, color: "#10b981", bg: "#ecfdf5", border: "#a7f3d0" },
                           { label: "Cancelled", val: stats?.cancelledBookings ?? 0, color: "#ef4444", bg: "#fef2f2", border: "#fecaca" },
-                          { label: "Today", val: stats?.todaysBookings ?? 0, color: "#6366f1", bg: "#f5f3ff", border: "#c7d2fe" },
                         ].map((item, i) => {
                           const total = stats?.totalBookings || 1;
                           const pct = Math.min(100, Math.round((item.val / total) * 100));

@@ -20,6 +20,14 @@ const TestManagement = () => {
   const { doctors } = useClinicDoctors();
   const { staffs: staff } = useClinicStaff();
 
+  const user = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "{}");
+    } catch {
+      return {};
+    }
+  }, []);
+
   const doctorOptions = useMemo(() => doctors?.map((d: any) => ({ value: d.id, label: d.fullName })) || [], [doctors]);
   const staffOptions = useMemo(() => staff?.map((s: any) => ({ value: s.id, label: s.fullName })) || [], [staff]);
 
@@ -257,12 +265,16 @@ const TestManagement = () => {
           <Link to="#" className="bg-transparent border-0 text-info p-1" title="View Details" onClick={(e) => { e.preventDefault(); setViewTest(record.raw); triggerModal("view_test"); }}>
             <i className="ti ti-eye fs-18"></i>
           </Link>
-          <Link to="#" className="bg-transparent border-0 text-primary p-1" title="Edit" onClick={(e) => { e.preventDefault(); handleOpenEdit(record.raw); }}>
-            <i className="ti ti-edit fs-18"></i>
-          </Link>
-          <Link to="#" className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={(e) => { e.preventDefault(); handleOpenDelete(record.raw); }}>
-            <i className="ti ti-trash fs-18"></i>
-          </Link>
+          {user?.role !== "DOCTOR" && (
+            <>
+              <Link to="#" className="bg-transparent border-0 text-primary p-1" title="Edit" onClick={(e) => { e.preventDefault(); handleOpenEdit(record.raw); }}>
+                <i className="ti ti-edit fs-18"></i>
+              </Link>
+              <Link to="#" className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={(e) => { e.preventDefault(); handleOpenDelete(record.raw); }}>
+                <i className="ti ti-trash fs-18"></i>
+              </Link>
+            </>
+          )}
         </div>
       ),
     },
@@ -304,9 +316,11 @@ const TestManagement = () => {
                   <li><Link to="#" className="dropdown-item rounded-1 fs-13" onClick={(e) => { e.preventDefault(); setFilterStatus("Inactive"); }}>Inactive</Link></li>
                 </ul>
               </div>
-              <button className="btn btn-primary d-flex align-items-center justify-content-center" style={{ minHeight: "38px", whiteSpace: "nowrap" }} onClick={handleOpenAdd}>
-                Add Test <i className="fa fa-plus ms-2" />
-              </button>
+              {user?.role !== "DOCTOR" && (
+                <button className="btn btn-primary d-flex align-items-center justify-content-center" style={{ minHeight: "38px", whiteSpace: "nowrap" }} onClick={handleOpenAdd}>
+                  Add Test <i className="fa fa-plus ms-2" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -315,7 +329,7 @@ const TestManagement = () => {
           ) : tests.length === 0 ? (
             <div className="border rounded bg-white"><EmptyState title="No tests yet" message="Create your first diagnostic test to get started." /></div>
           ) : (
-            <div className="table-responsive"><Datatable columns={columns} dataSource={data} Selection={true} searchText={searchText} onSelectionChange={(keys) => setSelectedIds(keys as string[])} /></div>
+            <div className="table-responsive"><Datatable columns={columns} dataSource={data} Selection={user?.role !== "DOCTOR"} searchText={searchText} onSelectionChange={(keys) => setSelectedIds(keys as string[])} /></div>
           )}
 
           {selectedIds.length > 0 && (

@@ -183,7 +183,7 @@ const DiagnosticBooking = () => {
 
   const handleOpenAdd = () => {
     setFormMode("add");
-    setFormPatientId("");
+    setFormPatientId(user?.role === "PATIENT" ? (user?.patientId || user?.details?.id || "") : "");
     setFormCategoryId("");
     setFormTestId("");
     setFormDate(null);
@@ -320,15 +320,15 @@ const DiagnosticBooking = () => {
         if (match) startTime = match[1];
       }
       const scheduledAt = formDate.format("YYYY-MM-DD") + "T" + startTime + ":00";
-      const tax = Math.round(mappedPrice * 0.18);
-      const totalAmount = mappedPrice + tax;
+      const tax = 0;
+      const totalAmount = mappedPrice;
 
       if (formMode === "add") {
         await createBooking({
           patientId: formPatientId,
           testId: formTestId,
           scheduledAt,
-          status: formStatus,
+          status: user?.role === "PATIENT" ? "Schedule" : formStatus,
           paymentStatus: "Unpaid",
           discount: 0,
           tax,
@@ -628,13 +628,21 @@ const DiagnosticBooking = () => {
                   <i className="ti ti-filter me-2 fs-14" /> Filters
                 </button>
               )}
-              {user?.role !== "PATIENT" && (
-                <button className="btn btn-primary d-flex align-items-center justify-content-center" style={{ height: "36px", whiteSpace: "nowrap", borderRadius: '6px', fontWeight: 'bold' }} onClick={handleOpenAdd}>
-                  <i className="fa fa-plus me-2 fs-14" /> New Booking
-                </button>
-              )}
+              <button className="btn btn-primary d-flex align-items-center justify-content-center" style={{ height: "36px", whiteSpace: "nowrap", borderRadius: '6px', fontWeight: 'bold' }} onClick={handleOpenAdd}>
+                <i className="fa fa-plus me-2 fs-14" /> New Booking
+              </button>
             </div>
           </div>
+
+          {user?.role === "PATIENT" && (
+            <div className="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-4 p-3" style={{ borderRadius: '8px', backgroundColor: '#fffbeb', color: '#b45309' }}>
+              <i className="ti ti-info-circle me-3 fs-22" style={{ color: '#d97706' }} />
+              <div>
+                <strong className="d-block fw-bold mb-0.5" style={{ fontSize: '14px' }}>Appointment Status Details</strong>
+                <span className="fs-13">Your appointment has been scheduled. Please speak with the clinic owner to get it confirmed.</span>
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <div className="text-center py-5"><span className="spinner-border text-primary" role="status" /><p className="text-muted mt-2 mb-0">Loading bookings...</p></div>
@@ -668,11 +676,13 @@ const DiagnosticBooking = () => {
                     <div className="col-md-6 mb-3">
                       <div className="d-flex justify-content-between align-items-center mb-1">
                         <label className="form-label fw-semibold mb-0">Patient <span className="text-danger">*</span></label>
-                        <button type="button" className="btn btn-primary btn-sm d-flex align-items-center py-1 px-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddPatientModal(true); }}>
-                          <i className="ti ti-plus me-1" /> Add New
-                        </button>
+                        {user?.role !== "PATIENT" && (
+                          <button type="button" className="btn btn-primary btn-sm d-flex align-items-center py-1 px-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddPatientModal(true); }}>
+                            <i className="ti ti-plus me-1" /> Add New
+                          </button>
+                        )}
                       </div>
-                      <select className="form-select" value={formPatientId} onChange={(e) => setFormPatientId(e.target.value)} required>
+                      <select className="form-select" value={formPatientId} onChange={(e) => setFormPatientId(e.target.value)} required disabled={user?.role === "PATIENT"}>
                         <option value="">Select Patient</option>
                         {allPatients.map((p: any) => (<option key={p.id} value={p.id}>{p.firstName} {p.lastName} ({p.patientCode || ""})</option>))}
                       </select>
@@ -753,18 +763,20 @@ const DiagnosticBooking = () => {
                       </select>
                     </div>
                   </div>
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label fw-semibold">Status <span className="text-danger">*</span></label>
-                      <select className="form-select" value={formStatus} onChange={(e) => setFormStatus(e.target.value)} required>
-                        <option value="Schedule">Schedule</option>
-                        <option value="Confirmed">Confirmed</option>
-                        <option value="Checked In">Checked In</option>
-                        <option value="Checked Out">Checked Out</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
+                  {user?.role !== "PATIENT" && (
+                    <div className="row">
+                      <div className="col-md-6 mb-3">
+                        <label className="form-label fw-semibold">Status <span className="text-danger">*</span></label>
+                        <select className="form-select" value={formStatus} onChange={(e) => setFormStatus(e.target.value)} required>
+                          <option value="Schedule">Schedule</option>
+                          <option value="Confirmed">Confirmed</option>
+                          <option value="Checked In">Checked In</option>
+                          <option value="Checked Out">Checked Out</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </select>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <div className="modal-footer bg-light">
                   <button type="button" className="btn btn-light" onClick={() => setShowFormModal(false)}>Cancel</button>
@@ -815,7 +827,6 @@ const DiagnosticBooking = () => {
           { icon: <i className="ti ti-clock" />, label: "Time Slot/Session", value: viewBooking?.sessionSlot || (viewBooking?.scheduledAt ? dayjs(viewBooking.scheduledAt).format("hh:mm A") : "--") },
           { icon: <i className="ti ti-user-plus" />, label: "Assigned To", value: doctors?.find((d: any) => d.id === viewBooking?.assignedUserId)?.fullName || staff?.find((s: any) => s.id === viewBooking?.assignedUserId)?.fullName || "Auto / Any" },
           { icon: <i className="ti ti-currency-rupee" />, label: "Base Price", value: `₹${(viewBooking?.test?.price || 0).toLocaleString("en-IN")}` },
-          { icon: <i className="ti ti-receipt-tax" />, label: "Tax (18%)", value: `₹${(viewBooking?.tax || 0).toLocaleString("en-IN")}` },
           { icon: <i className="ti ti-cash" />, label: "Total Amount", value: `₹${(viewBooking?.totalAmount || 0).toLocaleString("en-IN")}` },
           { icon: <i className="ti ti-file-description" />, label: "Remarks", value: viewBooking?.remarks || "--", fullWidth: true },
         ]}

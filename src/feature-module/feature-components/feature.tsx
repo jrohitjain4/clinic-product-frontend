@@ -145,7 +145,8 @@ const Feature = () => {
   if (user?.role === 'DOCTOR') {
     const isPublicPath = path === "/" || path === "/login" || path === "/register";
     const isDoctorPath = path.startsWith("/doctor/");
-    if (!isPublicPath && !isDoctorPath && path !== "/doctor/doctor-dashboard" && !path.startsWith("/new-appointment")) {
+    const isLabPath = path === "/pathlab/tests" || path === "/pathlab/bookings";
+    if (!isPublicPath && !isDoctorPath && !isLabPath && path !== "/doctor/doctor-dashboard" && !path.startsWith("/new-appointment")) {
       return <Navigate to="/doctor/doctor-dashboard" replace />;
     }
   }
@@ -180,9 +181,9 @@ const Feature = () => {
       >
         <div className="main-wrapper">
           <Header />
-          {path.startsWith("/doctor/") ? (
+          {user?.role === "DOCTOR" ? (
             <SidebarTwo />
-          ) : path.startsWith("/patient/") ? (
+          ) : user?.role === "PATIENT" ? (
             <Sidebarthree />
           ) : (
             <Sidebar />

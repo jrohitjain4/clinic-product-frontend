@@ -36,7 +36,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   // OTP Login States
-  const [loginMode, setLoginMode] = useState<"password" | "otp">("password");
+  const [loginMode, setLoginMode] = useState<"password" | "otp">("otp");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -395,15 +395,15 @@ const Login = () => {
                                 </div>
                               )}
                             </div>
-
-                            <button
-                              type="button"
-                              onClick={switchToPasswordLogin}
-                              className="btn btn-light w-100 d-flex align-items-center justify-content-center gap-2 mt-2"
-                              style={{ padding: "10px", minHeight: "45px", borderRadius: "8px" }}
-                            >
-                              <ArrowLeft size={16} /> Back to Password Login
-                            </button>
+                            <div className="text-center mt-3 mb-2">
+                               <button
+                                 type="button"
+                                 onClick={switchToPasswordLogin}
+                                 className="btn btn-link text-primary fw-medium fs-14 p-0"
+                               >
+                                 Login with Email/Username and Password
+                               </button>
+                             </div>
                           </form>
                         )}
 

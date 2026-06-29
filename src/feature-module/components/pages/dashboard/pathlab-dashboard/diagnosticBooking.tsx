@@ -188,7 +188,7 @@ const DiagnosticBooking = () => {
     setFormTestId("");
     setFormDate(null);
     setFormSessionSlot("");
-    setFormAssignedUserId("");
+    setFormAssignedUserId(user?.role === "DOCTOR" && user?.doctorId ? user.doctorId : "");
     setFormRemarks("");
     setFormStatus("Schedule");
     setShowFormModal(true);
@@ -541,7 +541,7 @@ const DiagnosticBooking = () => {
             <span className={`badge ${statusBadgeClass(text)} px-2 py-1 text-uppercase`} style={{ fontSize: '10px' }}>
               {text}
             </span>
-            {user?.role !== "DOCTOR" && ["Schedule", "Confirmed", "Checked In"].includes(text) && (
+            {["Schedule", "Confirmed", "Checked In"].includes(text) && (
               <div className="form-check form-switch p-0 ms-1 mt-1" style={{ minHeight: 'auto' }}>
                 <input
                   className="form-check-input ms-0"
@@ -568,12 +568,8 @@ const DiagnosticBooking = () => {
         <div className="d-flex align-items-center justify-content-center gap-2">
           <button className="bg-transparent border-0 text-info p-1" title="View" data-bs-toggle="modal" data-bs-target="#view_booking" onClick={() => setViewBooking(record.raw)}><i className="ti ti-eye fs-18"></i></button>
           <button className="bg-transparent border-0 text-secondary p-1" onClick={() => setPrintBooking(record.raw)} title="Print"><i className="ti ti-printer fs-18" /></button>
-          {user?.role !== "DOCTOR" && (
-            <>
-              <button className="bg-transparent border-0 text-primary p-1" title="Edit Booking" onClick={() => handleOpenEdit(record.raw)}><i className="ti ti-edit fs-18"></i></button>
-              <button className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={() => handleOpenDelete(record.raw)}><i className="ti ti-trash fs-18"></i></button>
-            </>
-          )}
+          <button className="bg-transparent border-0 text-primary p-1" title="Edit Booking" onClick={() => handleOpenEdit(record.raw)}><i className="ti ti-edit fs-18"></i></button>
+          <button className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={() => handleOpenDelete(record.raw)}><i className="ti ti-trash fs-18"></i></button>
         </div>
       ),
     },
@@ -600,8 +596,8 @@ const DiagnosticBooking = () => {
               </button>
             ))}
 
-            <div className="search-field position-relative ms-2" style={{ width: "149px" }}>
-              <input type="text" className="form-control fs-13" style={{ height: '36px' }} placeholder="Search..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+            <div className="search-field position-relative ms-1" style={{ width: "110px" }}>
+              <input type="text" className="form-control fs-13" style={{ height: '36px', paddingLeft: '8px', paddingRight: '8px' }} placeholder="Search..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
             </div>
 
 
@@ -639,7 +635,7 @@ const DiagnosticBooking = () => {
           ) : bookings.length === 0 ? (
             <div className="border rounded bg-white"><EmptyState title="No bookings yet" message="Create your first diagnostic booking." /></div>
           ) : (
-            <div className="table-responsive"><Datatable columns={columns} dataSource={data} Selection={user?.role !== "DOCTOR"} searchText={searchText} onSelectionChange={(keys) => setSelectedIds(keys as string[])} /></div>
+            <div className="table-responsive"><Datatable columns={columns} dataSource={data} Selection={true} searchText={searchText} onSelectionChange={(keys) => setSelectedIds(keys as string[])} /></div>
           )}
 
           {selectedIds.length > 0 && (
@@ -699,14 +695,20 @@ const DiagnosticBooking = () => {
                   <div className="row">
                     <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold">Assign Doctor / Staff</label>
-                      <select className="form-select" value={formAssignedUserId} onChange={(e) => setFormAssignedUserId(e.target.value)}>
-                        <option value="">Auto / Any Available</option>
-                        {selectedTestObj?.assignedDoctors?.map((d: any) => (
-                          <option key={d.value} value={d.value}>Dr. {d.label} (Doctor)</option>
-                        ))}
-                        {selectedTestObj?.assignedStaff?.map((s: any) => (
-                          <option key={s.value} value={s.value}>{s.label} (Staff)</option>
-                        ))}
+                      <select className="form-select" value={formAssignedUserId} onChange={(e) => setFormAssignedUserId(e.target.value)} disabled={user?.role === "DOCTOR"}>
+                        {user?.role === "DOCTOR" ? (
+                          <option value={user.doctorId}>Dr. {doctors.find((d: any) => d.id === user.doctorId)?.fullName || "Me"} (Doctor)</option>
+                        ) : (
+                          <>
+                            <option value="">Auto / Any Available</option>
+                            {selectedTestObj?.assignedDoctors?.map((d: any) => (
+                              <option key={d.value} value={d.value}>Dr. {d.label} (Doctor)</option>
+                            ))}
+                            {selectedTestObj?.assignedStaff?.map((s: any) => (
+                              <option key={s.value} value={s.value}>{s.label} (Staff)</option>
+                            ))}
+                          </>
+                        )}
                       </select>
                     </div>
                     <div className="col-md-6 mb-3">
@@ -745,20 +747,18 @@ const DiagnosticBooking = () => {
                       </select>
                     </div>
                   </div>
-                  {formMode === "edit" && (
-                    <div className="row">
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label fw-semibold">Status <span className="text-danger">*</span></label>
-                        <select className="form-select" value={formStatus} onChange={(e) => setFormStatus(e.target.value)} required>
-                          <option value="Schedule">Schedule</option>
-                          <option value="Confirmed">Confirmed</option>
-                          <option value="Checked In">Checked In</option>
-                          <option value="Checked Out">Checked Out</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </select>
-                      </div>
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label fw-semibold">Status <span className="text-danger">*</span></label>
+                      <select className="form-select" value={formStatus} onChange={(e) => setFormStatus(e.target.value)} required>
+                        <option value="Schedule">Schedule</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Checked In">Checked In</option>
+                        <option value="Checked Out">Checked Out</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
                     </div>
-                  )}
+                  </div>
                 </div>
                 <div className="modal-footer bg-light">
                   <button type="button" className="btn btn-light" onClick={() => setShowFormModal(false)}>Cancel</button>

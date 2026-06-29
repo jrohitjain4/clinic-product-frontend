@@ -80,7 +80,9 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
   const patientAddress = [appointment?.patient?.address1, appointment?.patient?.address2]
     .filter(p => p && p.trim() !== "")
     .join(", ") || "—";
-  const patientReferredBy = appointment?.patient?.referredBy || "Self";
+  const patientReferredBy = isDiagnostic 
+    ? (appointment?.referredBy || appointment?.patient?.referredBy || "Self") 
+    : (appointment?.patient?.referredBy || "Self");
   const patientEmergencyContact = appointment?.patient?.emergencyContact || "—";
   const patientEmail = appointment?.patient?.email || "—";
   const patientOccupation = appointment?.patient?.occupation || "—";

@@ -130,6 +130,7 @@ const DiagnosticBooking = () => {
   const [formSessionSlot, setFormSessionSlot] = useState("");
   const [formAssignedUserId, setFormAssignedUserId] = useState("");
   const [formRemarks, setFormRemarks] = useState("");
+  const [formReferredBy, setFormReferredBy] = useState("");
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
 
   const [showFormModal, setShowFormModal] = useState(false);
@@ -190,6 +191,7 @@ const DiagnosticBooking = () => {
     setFormSessionSlot("");
     setFormAssignedUserId(user?.role === "DOCTOR" && user?.doctorId ? user.doctorId : "");
     setFormRemarks("");
+    setFormReferredBy("");
     setFormStatus("Schedule");
     setShowFormModal(true);
   };
@@ -204,6 +206,7 @@ const DiagnosticBooking = () => {
     setFormSessionSlot(bk.sessionSlot || "");
     setFormAssignedUserId(bk.assignedUserId || "");
     setFormRemarks(bk.remarks || "");
+    setFormReferredBy(bk.referredBy || "");
     setFormStatus(bk.status || "Schedule");
     setShowFormModal(true);
   };
@@ -336,6 +339,7 @@ const DiagnosticBooking = () => {
           sessionSlot: formSessionSlot,
           assignedUserId: formAssignedUserId,
           remarks: formRemarks,
+          referredBy: formReferredBy,
         });
         toast.success("Booking created successfully!");
       } else if (formMode === "edit" && selectedBooking) {
@@ -349,6 +353,7 @@ const DiagnosticBooking = () => {
           sessionSlot: formSessionSlot,
           assignedUserId: formAssignedUserId,
           remarks: formRemarks,
+          referredBy: formReferredBy,
         });
         toast.success("Booking updated successfully!");
         setSelectedBooking(null);
@@ -728,8 +733,14 @@ const DiagnosticBooking = () => {
                       </select>
                     </div>
                     <div className="col-md-6 mb-3">
+                      <label className="form-label fw-semibold">Referred By</label>
+                      <input type="text" className="form-control" value={formReferredBy} onChange={(e) => setFormReferredBy(e.target.value)} placeholder="e.g. Dr. Amit Sharma, Self" />
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="col-md-12 mb-3">
                       <label className="form-label fw-semibold">Remarks</label>
-                      <textarea className="form-control" rows={1} value={formRemarks} onChange={(e) => setFormRemarks(e.target.value)} placeholder="Any special notes or remarks..." />
+                      <textarea className="form-control" rows={2} value={formRemarks} onChange={(e) => setFormRemarks(e.target.value)} placeholder="Any special notes or remarks..." />
                     </div>
                   </div>
                   <hr className="my-2" />
@@ -828,6 +839,7 @@ const DiagnosticBooking = () => {
           { icon: <i className="ti ti-user-plus" />, label: "Assigned To", value: doctors?.find((d: any) => d.id === viewBooking?.assignedUserId)?.fullName || staff?.find((s: any) => s.id === viewBooking?.assignedUserId)?.fullName || "Auto / Any" },
           { icon: <i className="ti ti-currency-rupee" />, label: "Base Price", value: `₹${(viewBooking?.test?.price || 0).toLocaleString("en-IN")}` },
           { icon: <i className="ti ti-cash" />, label: "Total Amount", value: `₹${(viewBooking?.totalAmount || 0).toLocaleString("en-IN")}` },
+          { icon: <i className="ti ti-user-check" />, label: "Referred By", value: viewBooking?.referredBy || "--" },
           { icon: <i className="ti ti-file-description" />, label: "Remarks", value: viewBooking?.remarks || "--", fullWidth: true },
         ]}
         onEdit={() => { handleOpenEdit(viewBooking); }} editLabel="Edit Booking" editModalTarget=""

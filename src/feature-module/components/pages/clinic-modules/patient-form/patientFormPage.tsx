@@ -306,7 +306,16 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1 fw-medium">
                           Phone Number<span className="text-danger ms-1">*</span>
                         </label>
-                        <PhoneInput defaultCountry="IN" placeholder="Enter Phone Number" value={form.phone} onChange={(v) => setForm((f) => ({ ...f, phone: v || "" }))} />
+                        <PhoneInput 
+                          defaultCountry="IN" 
+                          placeholder="Enter Phone Number" 
+                          value={form.phone} 
+                          onChange={(v) => setForm((f) => ({ ...f, phone: v || "" }))} 
+                          disabled={mode === "edit"}
+                        />
+                        {mode === "edit" && (
+                          <div className="text-muted fs-11 mt-1">Mobile number is permanent and cannot be changed.</div>
+                        )}
                         {phoneWarning && (
                           <div className="text-warning fs-12 mt-1"><i className="ti ti-alert-triangle me-1" />{phoneWarning}</div>
                         )}
@@ -315,7 +324,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     <div className="col-md-4">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
-                          Email Address<span className="text-danger ms-1">*</span>
+                          Email Address <span className="text-muted fw-normal fs-12">(Optional)</span>
                         </label>
                         <input type="email" className="form-control" placeholder="Enter Email Address" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
                       </div>

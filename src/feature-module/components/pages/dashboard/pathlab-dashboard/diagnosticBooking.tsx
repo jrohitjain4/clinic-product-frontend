@@ -159,9 +159,23 @@ const DiagnosticBooking = () => {
 
   // Dynamic tests based on selected category
   const filteredTests = useMemo(() => {
-    if (!formCategoryId) return allTests.filter(t => t.status === "Active");
-    return allTests.filter(t => t.categoryId === formCategoryId && t.status === "Active");
-  }, [allTests, formCategoryId]);
+    let list = allTests.filter(t => t.status === "Active");
+    if (formCategoryId) {
+      list = list.filter(t => t.categoryId === formCategoryId);
+    }
+    if (user?.role === "DOCTOR" && user?.doctorId) {
+      const docId = user.doctorId;
+      list = list.filter(t => {
+        const doctors = Array.isArray(t.assignedDoctors) ? t.assignedDoctors : [];
+        return doctors.some((d: any) => {
+          if (typeof d === "string") return d === docId;
+          if (d && typeof d === "object") return d.value === docId;
+          return false;
+        });
+      });
+    }
+    return list;
+  }, [allTests, formCategoryId, user]);
 
   // Auto price
   const selectedTestObj = useMemo(() => allTests.find(t => t.id === formTestId), [allTests, formTestId]);
@@ -614,11 +628,9 @@ const DiagnosticBooking = () => {
                   <i className="ti ti-filter me-2 fs-14" /> Filters
                 </button>
               )}
-              {user?.role !== "DOCTOR" && (
-                <button className="btn btn-primary d-flex align-items-center justify-content-center" style={{ height: "36px", whiteSpace: "nowrap", borderRadius: '6px', fontWeight: 'bold' }} onClick={handleOpenAdd}>
-                  <i className="fa fa-plus me-2 fs-14" /> New Booking
-                </button>
-              )}
+              <button className="btn btn-primary d-flex align-items-center justify-content-center" style={{ height: "36px", whiteSpace: "nowrap", borderRadius: '6px', fontWeight: 'bold' }} onClick={handleOpenAdd}>
+                <i className="fa fa-plus me-2 fs-14" /> New Booking
+              </button>
             </div>
           </div>
 

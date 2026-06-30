@@ -106,6 +106,12 @@ const CategoryManagement = lazy(() => import("../components/pages/dashboard/path
 const DiagnosticTestManagement = lazy(() => import("../components/pages/dashboard/pathlab-dashboard/testManagement"));
 const DiagnosticBooking = lazy(() => import("../components/pages/dashboard/pathlab-dashboard/diagnosticBooking"));
 const InvoiceManagement = lazy(() => import("../components/pages/dashboard/pathlab-dashboard/invoiceManagement"));
+const PharmacyDashboard = lazy(() => import("../components/pages/dashboard/pharmacy-dashboard/pharmacyDashboard"));
+const PharmacyCategoryManagement = lazy(() => import("../components/pages/dashboard/pharmacy-dashboard/pharmacyCategoryManagement"));
+const MedicineManagement = lazy(() => import("../components/pages/dashboard/pharmacy-dashboard/medicineManagement"));
+const InventoryManagement = lazy(() => import("../components/pages/dashboard/pharmacy-dashboard/inventoryManagement"));
+const PharmacyBilling = lazy(() => import("../components/pages/dashboard/pharmacy-dashboard/pharmacyBilling"));
+const SalesHistory = lazy(() => import("../components/pages/dashboard/pharmacy-dashboard/salesHistory"));
 const DoctorAppointments = lazy(() => import("../components/pages/doctor-modules/doctor-appointments/doctorAppointments"));
 const DoctorsAppointmentDetails = lazy(() => import("../components/pages/doctor-modules/doctors-appointment-details/doctorsAppointmentDetails"));
 const DoctorsLeaves = lazy(() => import("../components/pages/doctor-modules/doctors-leaves/doctorsLeaves"));
@@ -321,6 +327,36 @@ export const publicRoutes = [
   {
     path: routes.pathlabInvoices,
     element: <InvoiceManagement />,
+    route: Route,
+  },
+  {
+    path: routes.pharmacyDashboard,
+    element: <PharmacyDashboard />,
+    route: Route,
+  },
+  {
+    path: routes.pharmacyCategories,
+    element: <PharmacyCategoryManagement />,
+    route: Route,
+  },
+  {
+    path: routes.pharmacyMedicines,
+    element: <MedicineManagement />,
+    route: Route,
+  },
+  {
+    path: routes.pharmacyInventory,
+    element: <InventoryManagement />,
+    route: Route,
+  },
+  {
+    path: routes.pharmacyBilling,
+    element: <PharmacyBilling />,
+    route: Route,
+  },
+  {
+    path: routes.pharmacySalesHistory,
+    element: <SalesHistory />,
     route: Route,
   },
   {

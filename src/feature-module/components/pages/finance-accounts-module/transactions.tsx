@@ -22,19 +22,22 @@ const TransactionsList = () => {
   const transactions = useMemo(() => {
     const invTrans = invoices
       .filter((inv) => inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed" || inv.paymentStatus === "Pending")
-      .map((inv) => ({
-        id: inv.id,
-        code: inv.invoiceCode,
-        patientName: inv.patient ? `${inv.patient.firstName || ""} ${inv.patient.lastName || ""}`.trim() : "—",
-        image: inv.patient?.profileImage,
-        description: inv.items?.[0]?.description || "Invoice Payment",
-        date: inv.invoiceDate,
-        method: inv.paymentMethod || "—",
-        amount: inv.totalAmount,
-        status: inv.paymentStatus,
-        type: "INVOICE",
-        color: inv.paymentStatus === "Pending" ? "warning" : "success"
-      }));
+      .map((inv) => {
+        const isPharmacy = inv.otherInfo === "Pharmacy" || inv.invoiceCode?.startsWith("PH-");
+        return {
+          id: inv.id,
+          code: inv.invoiceCode,
+          patientName: inv.patient ? `${inv.patient.firstName || ""} ${inv.patient.lastName || ""}`.trim() : "—",
+          image: inv.patient?.profileImage,
+          description: isPharmacy ? "Pharmacy Medicine Purchase" : (inv.items?.[0]?.description || "Invoice Payment"),
+          date: inv.invoiceDate,
+          method: inv.paymentMethod || "—",
+          amount: inv.totalAmount,
+          status: inv.paymentStatus,
+          type: isPharmacy ? "PHARMACY" : "INVOICE",
+          color: inv.paymentStatus === "Pending" ? "warning" : "success"
+        };
+      });
 
     const payTrans = payrolls
       .filter((p) => p.status === "Paid" || p.status === "Salary_Paid")
@@ -121,7 +124,7 @@ const TransactionsList = () => {
     let input = 0;
     let output = 0;
     filteredData.forEach((t: any) => {
-      if (t.type === "INVOICE") {
+      if (t.type === "INVOICE" || t.type === "PHARMACY") {
         input += t.amount;
       } else if (t.type === "EXPENSE" || t.type === "PAYROLL") {
         output += t.amount;

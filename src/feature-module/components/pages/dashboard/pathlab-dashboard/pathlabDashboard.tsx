@@ -111,7 +111,7 @@ const PathlabDashboard = () => {
             padding: 15px 15px 2px 15px !important;
           }
           .pathlab-dashboard-wrapper .card {
-            border: 1px solid #e2e8f0 !important;
+            border: 1px solid #94a3b8 !important;
             border-radius: 12px !important;
             box-shadow: 0 4px 12px rgba(0,0,0,0.04) !important;
             background-color: #ffffff;

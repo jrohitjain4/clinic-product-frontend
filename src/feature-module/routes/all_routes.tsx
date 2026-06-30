@@ -352,4 +352,12 @@ export const all_routes = {
   pathlabTests: "/pathlab/tests",
   pathlabBookings: "/pathlab/bookings",
   pathlabInvoices: "/pathlab/invoices",
+
+  // Pharmacy
+  pharmacyDashboard: "/pharmacy/dashboard",
+  pharmacyCategories: "/pharmacy/categories",
+  pharmacyMedicines: "/pharmacy/medicines",
+  pharmacyInventory: "/pharmacy/inventory",
+  pharmacyBilling: "/pharmacy/billing",
+  pharmacySalesHistory: "/pharmacy/sales-history",
 };

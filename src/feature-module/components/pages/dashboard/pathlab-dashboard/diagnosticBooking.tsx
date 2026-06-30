@@ -16,6 +16,7 @@ import AddPatientModal from "../../clinic-modules/appointments/modals/addPatient
 import { statusBadgeClass } from "../../../../../core/utils/appointmentForm";
 import AppointmentPrintSlip from "../../clinic-modules/appointments/AppointmentPrintSlip";
 import { resolveMediaUrl } from "../../../../../core/config/api";
+import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 
 const customSelectStyles = `
   @media print {
@@ -47,6 +48,7 @@ const DiagnosticBooking = () => {
   const { patients: allPatients } = useClinicPatients();
   const { doctors } = useClinicDoctors();
   const { staffs: staff } = useClinicStaff();
+
 
   const user = useMemo(() => {
     try {
@@ -122,6 +124,17 @@ const DiagnosticBooking = () => {
   }, [printBooking]);
 
   const [formPatientId, setFormPatientId] = useState("");
+
+  const patientOptions = useMemo(() => {
+    return allPatients.map((p: any) => ({
+      value: p.id,
+      label: `${p.firstName} ${p.lastName} (${p.patientCode || ""})`,
+    }));
+  }, [allPatients]);
+
+  const selectedPatientOption = useMemo(() => {
+    return patientOptions.find((opt) => opt.value === formPatientId) || null;
+  }, [patientOptions, formPatientId]);
   const [formCategoryId, setFormCategoryId] = useState("");
   const [formTestId, setFormTestId] = useState("");
   const [formDate, setFormDate] = useState<dayjs.Dayjs | null>(null);
@@ -687,10 +700,41 @@ const DiagnosticBooking = () => {
                           </button>
                         )}
                       </div>
-                      <select className="form-select" value={formPatientId} onChange={(e) => setFormPatientId(e.target.value)} required disabled={user?.role === "PATIENT"}>
-                        <option value="">Select Patient</option>
-                        {allPatients.map((p: any) => (<option key={p.id} value={p.id}>{p.firstName} {p.lastName} ({p.patientCode || ""})</option>))}
-                      </select>
+                      <CommonSelect
+                        options={patientOptions}
+                        value={selectedPatientOption}
+                        onChange={(option: any) => setFormPatientId(option ? option.value : "")}
+                        placeholder="Select Patient"
+                        isDisabled={user?.role === "PATIENT"}
+                        styles={{
+                          control: (base: any, state: any) => ({
+                            ...base,
+                            minHeight: "38px",
+                            height: "38px",
+                            borderRadius: "6px",
+                            border: state.isDisabled
+                              ? "1px solid #cbd5e1"
+                              : state.isFocused
+                                ? "1px solid #86b7fe"
+                                : "1px solid #dee2e6",
+                            boxShadow: state.isFocused ? "0 0 0 0.25rem rgba(13, 110, 253, 0.25)" : "none",
+                            fontSize: "14px",
+                            transition: "all 0.2s ease-in-out",
+                            "&:hover": {
+                              border: state.isDisabled ? "1px solid #cbd5e1" : "1px solid #86b7fe",
+                            }
+                          }),
+                          valueContainer: (base: any) => ({
+                            ...base,
+                            padding: "0 6px",
+                            height: "36px",
+                          }),
+                          indicatorsContainer: (base: any) => ({
+                            ...base,
+                            height: "36px",
+                          }),
+                        }}
+                      />
                     </div>
                     <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold">Category</label>

@@ -1465,6 +1465,7 @@ const PatientDetails = () => {
                   <thead className="thead-light">
                     <tr>
                       <th className="no-sort">Transaction ID</th>
+                      <th>Type</th>
                       <th>Description</th>
                       <th>Paid Date</th>
                       <th>Payment Method</th>
@@ -1475,32 +1476,45 @@ const PatientDetails = () => {
                   <tbody>
                     {invLoading ? (
                       <tr>
-                        <td colSpan={6} className="text-center py-4">
+                        <td colSpan={7} className="text-center py-4">
                           <span className="spinner-border spinner-border-sm text-primary" role="status" />
                         </td>
                       </tr>
                     ) : invoices.filter(inv => inv.patientId === id && (inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed")).length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="text-center py-4 text-muted">No transactions found</td>
+                        <td colSpan={7} className="text-center py-4 text-muted">No transactions found</td>
                       </tr>
                     ) : invoices
                       .filter(inv => inv.patientId === id && (inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed"))
-                      .map((inv) => (
-                        <tr key={inv.id}>
-                          <td>
-                            <Link to="#">{inv.invoiceCode}</Link>
-                          </td>
-                          <td className="text-dark"> {inv.items?.[0]?.description || "Invoice"} </td>
-                          <td className="text-dark"> {dayjs(inv.invoiceDate).format("DD MMM YYYY")}</td>
-                          <td className="text-dark"> {inv.paymentMethod || ""}</td>
-                          <td className="text-dark"> ${inv.totalAmount.toFixed(2)}</td>
-                          <td>
-                            <span className="badge fs-13 badge-soft-success rounded text-success fw-medium border border-success">
-                              {inv.paymentStatus.toUpperCase()}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
+                      .map((inv) => {
+                        const isPharmacy = (inv as any).otherInfo === "Pharmacy" || inv.invoiceCode?.startsWith("PH-");
+                        const isPathlab = inv.invoiceCode?.startsWith("INV-AUTO-LB");
+                        const txnType = isPharmacy ? "Pharmacy" : isPathlab ? "Pathlab" : "Consultation";
+                        const badgeClass = isPharmacy ? "badge-soft-warning border-warning text-warning" : isPathlab ? "badge-soft-info border-info text-info" : "badge-soft-primary border-primary text-primary";
+                        return (
+                          <tr key={inv.id}>
+                            <td>
+                              <Link to="#">{inv.invoiceCode}</Link>
+                            </td>
+                            <td>
+                              <span className={`badge border ${badgeClass} fs-11 fw-medium`}>{txnType}</span>
+                            </td>
+                            <td className="text-dark">
+                              {isPharmacy
+                                ? (inv.items?.[0]?.description || "Medicine Purchase")
+                                : (inv.items?.[0]?.description || "Invoice")}
+                            </td>
+                            <td className="text-dark"> {dayjs(inv.invoiceDate).format("DD MMM YYYY")}</td>
+                            <td className="text-dark"> {inv.paymentMethod || ""}</td>
+                            <td className="text-dark"> ₹{inv.totalAmount.toFixed(2)}</td>
+                            <td>
+                              <span className="badge fs-13 badge-soft-success rounded text-success fw-medium border border-success">
+                                {inv.paymentStatus.toUpperCase()}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
                   </tbody>
                 </table>
               </div>

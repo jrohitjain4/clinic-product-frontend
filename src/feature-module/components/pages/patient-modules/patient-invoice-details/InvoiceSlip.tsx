@@ -34,10 +34,11 @@ const InvoiceSlip: React.FC<InvoiceSlipProps> = ({ invoice }) => {
   const visitDate = invoice.appointment?.scheduledAt || invoice.createdAt;
   const department = doctor?.department?.name || invoice.appointment?.doctor?.department?.name || "General";
 
+  const isPharmacy = invoice.invoiceCode?.startsWith("PH-") || invoice.isPharmacy || invoice.invoiceNo?.startsWith("PH-") || false;
   const subTotal = invoice.subTotal || items.reduce((s: number, i: any) => s + (i.amount || 0), 0);
   const discount = invoice.discount || 0;
   const tax = invoice.tax || 0;
-  const taxAmount = (subTotal * tax) / 100;
+  const taxAmount = isPharmacy ? tax : (subTotal * tax) / 100;
   const totalAmount = invoice.totalAmount || (subTotal - discount + taxAmount);
 
   return (
@@ -132,25 +133,52 @@ const InvoiceSlip: React.FC<InvoiceSlipProps> = ({ invoice }) => {
       {/* ========== ITEMS TABLE ========== */}
       <table className="inv-table">
         <thead>
-          <tr>
-            <th style={{ width: "45%" }}>DESCRIPTION</th>
-            <th style={{ width: "20%", textAlign: "center" }}>QTY.</th>
-            <th style={{ width: "35%", textAlign: "right" }}>AMOUNT (₹)</th>
-          </tr>
+          {isPharmacy ? (
+            <tr>
+              <th style={{ width: "35%" }}>MEDICINE</th>
+              <th style={{ width: "20%" }}>SKU CODE</th>
+              <th style={{ width: "15%", textAlign: "center" }}>QTY.</th>
+              <th style={{ width: "15%", textAlign: "right" }}>UNIT COST</th>
+              <th style={{ width: "15%", textAlign: "right" }}>AMOUNT (₹)</th>
+            </tr>
+          ) : (
+            <tr>
+              <th style={{ width: "45%" }}>DESCRIPTION</th>
+              <th style={{ width: "20%", textAlign: "center" }}>QTY.</th>
+              <th style={{ width: "35%", textAlign: "right" }}>AMOUNT (₹)</th>
+            </tr>
+          )}
         </thead>
         <tbody>
           {items.length > 0 ? items.map((item: any, i: number) => (
-            <tr key={i}>
-              <td>
-                <div style={{ fontWeight: 700 }}>{item.service?.serviceName || item.name || item.item || "Consultation"}</div>
-                {item.description && <div style={{ fontSize: "7px", color: "#64748b", marginTop: "2px" }}>{item.description}</div>}
-              </td>
-              <td style={{ textAlign: "center" }}>{item.quantity || 1}</td>
-              <td style={{ textAlign: "right" }}>{(item.amount || 0).toFixed(2)}</td>
-            </tr>
+            isPharmacy ? (
+              <tr key={i}>
+                <td>
+                  <div style={{ fontWeight: 700 }}>{item.medicineName || item.name}</div>
+                  {item.medicine?.genericName && (
+                    <div style={{ fontSize: "7.5px", color: "#64748b", marginTop: "2px" }}>
+                      Generic: {item.medicine.genericName}
+                    </div>
+                  )}
+                </td>
+                <td>{item.medicine?.medicineCode || item.sku || "—"}</td>
+                <td style={{ textAlign: "center" }}>{item.quantity || 1}</td>
+                <td style={{ textAlign: "right" }}>₹ {(item.unitCost || 0).toFixed(2)}</td>
+                <td style={{ textAlign: "right" }}>₹ {(item.amount || 0).toFixed(2)}</td>
+              </tr>
+            ) : (
+              <tr key={i}>
+                <td>
+                  <div style={{ fontWeight: 700 }}>{item.service?.serviceName || item.name || item.item || "Consultation"}</div>
+                  {item.description && <div style={{ fontSize: "7px", color: "#64748b", marginTop: "2px" }}>{item.description}</div>}
+                </td>
+                <td style={{ textAlign: "center" }}>{item.quantity || 1}</td>
+                <td style={{ textAlign: "right" }}>{(item.amount || 0).toFixed(2)}</td>
+              </tr>
+            )
           )) : (
             <tr>
-              <td>Consultation Fee</td>
+              <td colSpan={isPharmacy ? 4 : 2}>Consultation Fee</td>
               <td style={{ textAlign: "center" }}>1</td>
               <td style={{ textAlign: "right" }}>{totalAmount.toFixed(2)}</td>
             </tr>
@@ -158,23 +186,25 @@ const InvoiceSlip: React.FC<InvoiceSlipProps> = ({ invoice }) => {
         </tbody>
         <tfoot>
           <tr className="inv-subtotal-row">
-            <td colSpan={2} style={{ textAlign: "right" }}>Sub Total</td>
+            <td colSpan={isPharmacy ? 4 : 2} style={{ textAlign: "right" }}>Sub Total</td>
             <td style={{ textAlign: "right" }}>₹ {subTotal.toFixed(2)}</td>
           </tr>
           {discount > 0 && (
             <tr className="inv-discount-row">
-              <td colSpan={2} style={{ textAlign: "right" }}>Discount</td>
+              <td colSpan={isPharmacy ? 4 : 2} style={{ textAlign: "right" }}>Discount</td>
               <td style={{ textAlign: "right", color: "#c0392b" }}>- ₹ {discount.toFixed(2)}</td>
             </tr>
           )}
           {tax > 0 && (
             <tr className="inv-tax-row">
-              <td colSpan={2} style={{ textAlign: "right" }}>Tax ({tax}%)</td>
+              <td colSpan={isPharmacy ? 4 : 2} style={{ textAlign: "right" }}>
+                {isPharmacy ? "GST Tax" : `Tax (${tax}%)`}
+              </td>
               <td style={{ textAlign: "right" }}>₹ {taxAmount.toFixed(2)}</td>
             </tr>
           )}
           <tr className="inv-total-row">
-            <td colSpan={2} style={{ textAlign: "right" }}>TOTAL AMOUNT</td>
+            <td colSpan={isPharmacy ? 4 : 2} style={{ textAlign: "right" }}>TOTAL AMOUNT</td>
             <td style={{ textAlign: "right" }}>₹ {totalAmount.toFixed(2)}</td>
           </tr>
         </tfoot>

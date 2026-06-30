@@ -112,7 +112,7 @@ const PharmacyBilling = () => {
     }
 
     const existingItem = billingItems.find(item => item.medicineId === med.id);
-    const totalQtyNeeded = 1 + (existingItem ? existingItem.quantity : 0);
+    const totalQtyNeeded = 1 + (existingItem ? (Number(existingItem.quantity) || 0) : 0);
 
     if (totalQtyNeeded > currentStock) {
       toast.error(`Insufficient stock! Only ${currentStock} units remaining.`);
@@ -122,7 +122,7 @@ const PharmacyBilling = () => {
     if (existingItem) {
       setBillingItems(prev => prev.map(item => {
         if (item.medicineId === med.id) {
-          const newQty = item.quantity + 1;
+          const newQty = (Number(item.quantity) || 0) + 1;
           const costBeforeGst = newQty * item.unitCost;
           const gstAmount = costBeforeGst * (item.gst / 100);
           return {
@@ -241,7 +241,7 @@ const PharmacyBilling = () => {
         items: billingItems.map(item => ({
           medicineId: item.medicineId,
           medicineName: item.medicineName,
-          quantity: item.quantity,
+          quantity: Number(item.quantity) || 1,
           unitCost: item.unitCost,
           gst: item.gst,
           amount: item.amount

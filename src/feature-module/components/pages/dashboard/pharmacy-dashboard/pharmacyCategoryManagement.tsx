@@ -175,7 +175,7 @@ const PharmacyCategoryManagement = () => {
       dataIndex: "Description",
       render: (text: string) => (
         <span
-          className="text-muted d-inline-block"
+          className="text-muted"
           style={{
             maxWidth: "300px",
             display: "-webkit-box",
@@ -183,6 +183,7 @@ const PharmacyCategoryManagement = () => {
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
             whiteSpace: "normal",
+            wordBreak: "break-all",
           }}
         >
           {text}

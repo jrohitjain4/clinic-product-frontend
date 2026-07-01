@@ -524,7 +524,7 @@ const MedicineManagement = () => {
                               setFilterExpiryStartDate(date);
                             }}
                             value={filterExpiryStartDate}
-                            getPopupContainer={(trigger) => trigger.parentElement}
+                            getPopupContainer={(trigger) => trigger.parentElement || document.body}
                           />
                         </div>
                         <div>
@@ -541,7 +541,7 @@ const MedicineManagement = () => {
                               setFilterExpiryEndDate(date);
                             }}
                             value={filterExpiryEndDate}
-                            getPopupContainer={(trigger) => trigger.parentElement}
+                            getPopupContainer={(trigger) => trigger.parentElement || document.body}
                           />
                         </div>
                       </div>

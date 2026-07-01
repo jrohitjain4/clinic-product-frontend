@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import Datatable from "../../../../../core/common/dataTable";
 import { Link } from "react-router";
 import { ViewModal } from "../../../../../core/common/modal/ViewModal";
+import DeleteModal from "../../../../../core/common/modal/DeleteModal";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { useLabCategories } from "../../../../../core/hooks/useLabCategories";
@@ -24,6 +25,7 @@ const CategoryManagement = () => {
   const [formStatus, setFormStatus] = useState<"Active" | "Inactive">("Active");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const triggerModal = (id: string) => {
@@ -92,7 +94,7 @@ const CategoryManagement = () => {
 
   const handleOpenDelete = (cat: any) => {
     setSelectedCategory(cat);
-    triggerModal("delete_category");
+    setShowDeleteModal(true);
   };
 
   const handleDeleteConfirm = async () => {
@@ -102,7 +104,7 @@ const CategoryManagement = () => {
         await deleteCategory(selectedCategory.id);
         setSelectedIds(selectedIds.filter((id) => id !== selectedCategory.id));
         toast.success("Category deleted successfully!");
-        document.getElementById("btn-close-delete-category")?.click();
+        setShowDeleteModal(false);
         setSelectedCategory(null);
       } catch (err: any) {
         // handled
@@ -356,22 +358,14 @@ const CategoryManagement = () => {
         </div>
       )}
 
-      {/* DELETE MODAL (HRM STYLE) */}
-      <div className="modal fade" id="delete_category">
-        <div className="modal-dialog modal-dialog-centered modal-sm">
-          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "12px", overflow: "hidden" }}>
-            <div className="modal-body text-center position-relative z-1 pt-5 pb-5">
-              <div className="mb-3"><span className="avatar avatar-lg bg-danger text-white"><i className="ti ti-trash fs-24"></i></span></div>
-              <h5 className="fw-bold mb-2">Delete Confirmation</h5>
-              <p className="text-muted mb-4">Are you sure you want to delete <strong>{selectedCategory?.name}</strong>?</p>
-              <div className="d-flex justify-content-center gap-2">
-                <button id="btn-close-delete-category" type="button" className="btn btn-light position-relative z-1 px-4" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" className="btn btn-danger position-relative z-1 px-4" onClick={handleDeleteConfirm} disabled={submitting}>{submitting ? "Deleting..." : "Yes, Delete"}</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DeleteModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Category?"
+        message={<>Are you sure you want to delete <strong>{selectedCategory?.name}</strong>?</>}
+        submitting={submitting}
+      />
 
       {/* BULK DELETE MODAL (HRM STYLE) */}
       <div className="modal fade" id="bulk_delete_category">

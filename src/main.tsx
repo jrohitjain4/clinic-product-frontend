@@ -10,7 +10,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import ALLRoutes from './feature-module/routes/router'
 import ThemeRouteHandler from './core/common/theme-route-handler/themeRouteHandler'
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
-import "../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js";
+import * as bootstrap from "bootstrap";
+(window as any).bootstrap = bootstrap;
 import "../src/style/css/iconsax.css";
 import "../src/style/css/feather.css";
 import "../node_modules/@tabler/icons-webfont/dist/tabler-icons.css";

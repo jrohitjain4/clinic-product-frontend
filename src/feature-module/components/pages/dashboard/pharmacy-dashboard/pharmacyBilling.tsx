@@ -3,6 +3,7 @@ import Datatable from "../../../../../core/common/dataTable";
 import { DatePicker } from "antd";
 import { Link } from "react-router";
 import { ViewModal } from "../../../../../core/common/modal/ViewModal";
+import DeleteModal from "../../../../../core/common/modal/DeleteModal";
 import html2pdf from "html2pdf.js";
 import InvoiceSlip from "../../patient-modules/patient-invoice-details/InvoiceSlip";
 import { toast } from "react-toastify";
@@ -39,12 +40,14 @@ const PharmacyBilling = () => {
   const [showAddBillModal, setShowAddBillModal] = useState(false);
   const [printInvoiceData, setPrintInvoiceData] = useState<PharmacyInvoice | null>(null);
   const [viewInvoiceData, setViewInvoiceData] = useState<PharmacyInvoice | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
   // Form states inside modal
   const [selectedPatientId, setSelectedPatientId] = useState("");
   const [billingItems, setBillingItems] = useState<BillingItem[]>([]);
   const [selectedMedId, setSelectedMedId] = useState("");
-  const [discount, setDiscount] = useState<number>(0);
+  const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [paymentStatus, setPaymentStatus] = useState("Paid");
   const [submitting, setSubmitting] = useState(false);
@@ -67,7 +70,7 @@ const PharmacyBilling = () => {
     return medicines
       .filter(m => m.status === "Active")
       .map(m => {
-        const currentStock = (m.openingStock || 0) + (m.stockIn || 0) - (m.stockOut || 0);
+        const currentStock = (m.stockIn || 0) - (m.stockOut || 0);
         const isExpired = m.expiryDate && new Date(m.expiryDate) < new Date();
         let label = `${m.medicineName} (${m.medicineCode || ""}) - Stock: ${currentStock} ${m.unit || "Tablet"} | Price: ₹${m.sellingPrice}`;
         if (isExpired) {
@@ -87,7 +90,7 @@ const PharmacyBilling = () => {
     setSelectedPatientId("");
     setBillingItems([]);
     setSelectedMedId("");
-    setDiscount(0);
+    setDiscountPercent(0);
     setPaymentMethod("Cash");
     setPaymentStatus("Paid");
     setShowAddBillModal(true);
@@ -105,7 +108,7 @@ const PharmacyBilling = () => {
       return;
     }
 
-    const currentStock = (med.openingStock || 0) + (med.stockIn || 0) - (med.stockOut || 0);
+    const currentStock = (med.stockIn || 0) - (med.stockOut || 0);
     if (currentStock <= 0) {
       toast.error("This medicine is out of stock!");
       return;
@@ -172,7 +175,7 @@ const PharmacyBilling = () => {
 
     const med = medicines.find(m => m.id === medId);
     if (!med) return;
-    const currentStock = (med.openingStock || 0) + (med.stockIn || 0) - (med.stockOut || 0);
+    const currentStock = (med.stockIn || 0) - (med.stockOut || 0);
 
     if (newQty > currentStock) {
       toast.error(`Insufficient stock! Only ${currentStock} units remaining.`);
@@ -212,10 +215,15 @@ const PharmacyBilling = () => {
     return billingItems.reduce((sum, item) => sum + ((Number(item.quantity) || 0) * item.unitCost * (item.gst / 100)), 0);
   }, [billingItems]);
 
+  const discountAmount = useMemo(() => {
+    const amt = (subTotal * discountPercent) / 100;
+    return amt < 0 ? 0 : amt;
+  }, [subTotal, discountPercent]);
+
   const totalAmount = useMemo(() => {
-    const total = subTotal + totalGst - discount;
+    const total = subTotal + totalGst - discountAmount;
     return total < 0 ? 0 : total;
-  }, [subTotal, totalGst, discount]);
+  }, [subTotal, totalGst, discountAmount]);
 
   // Generate Bill
   const handleSubmitBill = async () => {
@@ -232,7 +240,7 @@ const PharmacyBilling = () => {
     try {
       const payload = {
         patientId: selectedPatientId,
-        discount,
+        discount: discountAmount,
         tax: totalGst,
         subTotal,
         totalAmount,
@@ -314,9 +322,9 @@ const PharmacyBilling = () => {
       if (!el) return;
       el.style.display = 'block';
       window.print();
-      setTimeout(() => { 
-        el.style.display = 'none'; 
-        setPrintInvoiceData(null); 
+      setTimeout(() => {
+        el.style.display = 'none';
+        setPrintInvoiceData(null);
       }, 1500);
     }, 100);
   };
@@ -340,15 +348,24 @@ const PharmacyBilling = () => {
     }, 100);
   };
 
-  const handleDeleteClick = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this invoice? This will restore the deducted medicine stock to inventory.")) {
-      try {
-        await deleteInvoice(id);
-        toast.success("Invoice deleted successfully and stock restored!");
-        refetchMedicines();
-      } catch (err: any) {
-        toast.error(err?.message || "Failed to delete invoice");
-      }
+  const handleDeleteClick = (inv: any) => {
+    setSelectedInvoice(inv);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedInvoice) return;
+    setSubmitting(true);
+    try {
+      await deleteInvoice(selectedInvoice.id);
+      toast.success("Invoice deleted successfully and stock restored!");
+      setShowDeleteModal(false);
+      setSelectedInvoice(null);
+      refetchMedicines();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete invoice");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -447,9 +464,9 @@ const PharmacyBilling = () => {
       align: "center" as const,
       render: (_text: string, record: any) => (
         <div className="d-flex align-items-center justify-content-center gap-2">
-          <button 
-            type="button" 
-            className="bg-transparent border-0 text-info p-1" 
+          <button
+            type="button"
+            className="bg-transparent border-0 text-info p-1"
             title="View Details"
             onClick={() => {
               setViewInvoiceData(record.raw);
@@ -458,27 +475,27 @@ const PharmacyBilling = () => {
           >
             <i className="ti ti-eye fs-18"></i>
           </button>
-          <button 
-            type="button" 
-            className="bg-transparent border-0 text-secondary p-1" 
+          <button
+            type="button"
+            className="bg-transparent border-0 text-secondary p-1"
             title="Print Invoice"
             onClick={() => handlePrint(record.raw)}
           >
             <i className="ti ti-printer fs-18"></i>
           </button>
-          <button 
-            type="button" 
-            className="bg-transparent border-0 text-success p-1" 
+          <button
+            type="button"
+            className="bg-transparent border-0 text-success p-1"
             title="Download PDF"
             onClick={() => handleDownload(record.raw)}
           >
             <i className="ti ti-download fs-18"></i>
           </button>
-          <button 
-            type="button" 
-            className="bg-transparent border-0 text-danger p-1" 
+          <button
+            type="button"
+            className="bg-transparent border-0 text-danger p-1"
             title="Delete Invoice"
-            onClick={() => handleDeleteClick(record.raw.id)}
+            onClick={() => handleDeleteClick(record.raw)}
           >
             <i className="ti ti-trash fs-18"></i>
           </button>
@@ -578,9 +595,9 @@ const PharmacyBilling = () => {
                   <div className="col-md-6">
                     <div className="d-flex justify-content-between align-items-center mb-1">
                       <label className="form-label fw-semibold mb-0">Patient Name <span className="text-danger">*</span></label>
-                      <button 
-                        type="button" 
-                        className="btn btn-primary btn-sm d-flex align-items-center py-1 px-2" 
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm d-flex align-items-center py-1 px-2"
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddBillModal(false); setShowAddPatientModal(true); }}
                       >
                         <i className="ti ti-plus me-1" /> Add Patient
@@ -626,12 +643,12 @@ const PharmacyBilling = () => {
                               <tr key={item.medicineId}>
                                 <td className="fw-semibold text-dark">{item.medicineName}</td>
                                 <td className="text-center">
-                                  <input 
-                                    type="number" 
-                                    className="form-control form-control-sm text-center px-1" 
-                                    min={1} 
-                                    value={item.quantity} 
-                                    onChange={(e) => handleUpdateItemQty(item.medicineId, e.target.value)} 
+                                  <input
+                                    type="number"
+                                    className="form-control form-control-sm text-center px-1"
+                                    min={1}
+                                    value={item.quantity}
+                                    onChange={(e) => handleUpdateItemQty(item.medicineId, e.target.value)}
                                     onBlur={() => handleBlurItemQty(item.medicineId, item.quantity)}
                                   />
                                 </td>
@@ -664,16 +681,17 @@ const PharmacyBilling = () => {
                         <span className="fw-bold text-dark fs-14">₹{totalGst.toFixed(2)}</span>
                       </div>
                       <div className="col-md-3">
-                        <label className="form-label text-muted mb-0">Discount (₹)</label>
+                        <label className="form-label text-muted mb-0">Discount (%)</label>
                         <input
                           type="number"
                           min={0}
+                          max={100}
                           className="form-control form-control-sm"
                           placeholder="0"
-                          value={discount}
-                          onChange={(e) => setDiscount(Math.max(0, parseFloat(e.target.value) || 0))}
-                          onFocus={() => { if (discount === 0) setDiscount("" as any); }}
-                          onBlur={() => { if (discount.toString().trim() === "") setDiscount(0); }}
+                          value={discountPercent}
+                          onChange={(e) => setDiscountPercent(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+                          onFocus={() => { if (discountPercent === 0) setDiscountPercent("" as any); }}
+                          onBlur={() => { if (discountPercent.toString().trim() === "") setDiscountPercent(0); }}
                         />
                       </div>
                       <div className="col-md-3">
@@ -704,9 +722,9 @@ const PharmacyBilling = () => {
               </div>
               <div className="modal-footer bg-light">
                 <button type="button" className="btn btn-light" onClick={() => setShowAddBillModal(false)}>Cancel</button>
-                <button 
-                  type="button" 
-                  className="btn btn-primary px-4 fw-bold" 
+                <button
+                  type="button"
+                  className="btn btn-primary px-4 fw-bold"
                   disabled={submitting || billingItems.length === 0}
                   onClick={handleSubmitBill}
                 >
@@ -758,16 +776,16 @@ const PharmacyBilling = () => {
         details={
           viewInvoiceData
             ? [
-                { icon: <i className="ti ti-receipt" />, label: "Invoice No", value: viewInvoiceData.invoiceNo },
-                { icon: <i className="ti ti-calendar" />, label: "Invoice Date", value: dayjs(viewInvoiceData.invoiceDate).format("DD MMM YYYY") },
-                { icon: <i className="ti ti-user" />, label: "Patient / Customer", value: viewInvoiceData.patient ? `${viewInvoiceData.patient.firstName} ${viewInvoiceData.patient.lastName} (${viewInvoiceData.patient.patientCode || "--"})` : viewInvoiceData.customerName || "Walk-in Patient", fullWidth: true },
-                { icon: <i className="ti ti-phone" />, label: "Mobile No.", value: viewInvoiceData.patient?.phone || viewInvoiceData.customerPhone || "—" },
-                { icon: <i className="ti ti-credit-card" />, label: "Payment Mode", value: viewInvoiceData.paymentMethod },
-                { icon: <i className="ti ti-cash" />, label: "Sub Total", value: `₹${viewInvoiceData.subTotal.toFixed(2)}` },
-                { icon: <i className="ti ti-discount" />, label: "Discount Amount", value: `₹${viewInvoiceData.discount.toFixed(2)}` },
-                { icon: <i className="ti ti-receipt-tax" />, label: "GST Tax", value: `₹${viewInvoiceData.tax.toFixed(2)}` },
-                { icon: <i className="ti ti-currency-rupee" />, label: "Total Paid Amount", value: `₹${viewInvoiceData.totalAmount.toFixed(2)}`, fullWidth: true },
-              ]
+              { icon: <i className="ti ti-receipt" />, label: "Invoice No", value: viewInvoiceData.invoiceNo },
+              { icon: <i className="ti ti-calendar" />, label: "Invoice Date", value: dayjs(viewInvoiceData.invoiceDate).format("DD MMM YYYY") },
+              { icon: <i className="ti ti-user" />, label: "Patient / Customer", value: viewInvoiceData.patient ? `${viewInvoiceData.patient.firstName} ${viewInvoiceData.patient.lastName} (${viewInvoiceData.patient.patientCode || "--"})` : viewInvoiceData.customerName || "Walk-in Patient", fullWidth: true },
+              { icon: <i className="ti ti-phone" />, label: "Mobile No.", value: viewInvoiceData.patient?.phone || viewInvoiceData.customerPhone || "—" },
+              { icon: <i className="ti ti-credit-card" />, label: "Payment Mode", value: viewInvoiceData.paymentMethod },
+              { icon: <i className="ti ti-cash" />, label: "Sub Total", value: `₹${viewInvoiceData.subTotal.toFixed(2)}` },
+              { icon: <i className="ti ti-discount" />, label: "Discount Amount", value: `₹${viewInvoiceData.discount.toFixed(2)}` },
+              { icon: <i className="ti ti-receipt-tax" />, label: "GST Tax", value: `₹${viewInvoiceData.tax.toFixed(2)}` },
+              { icon: <i className="ti ti-currency-rupee" />, label: "Total Paid Amount", value: `₹${viewInvoiceData.totalAmount.toFixed(2)}`, fullWidth: true },
+            ]
             : []
         }
       >
@@ -791,7 +809,7 @@ const PharmacyBilling = () => {
                     if (item.medicine?.genericName) descParts.push(`Generic: ${item.medicine.genericName}`);
                     if (item.medicine?.medicineCode) descParts.push(`SKU: ${item.medicine.medicineCode}`);
                     const desc = descParts.join(" | ");
-                    
+
                     return (
                       <tr key={i} className="text-start">
                         <td className="text-start">
@@ -810,6 +828,21 @@ const PharmacyBilling = () => {
           </div>
         )}
       </ViewModal>
+
+      <DeleteModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Invoice?"
+        message={
+          <>
+            Are you sure you want to delete <strong>{selectedInvoice?.invoiceNo}</strong>?
+            <br />
+            This will restore the deducted medicine stock to inventory.
+          </>
+        }
+        submitting={submitting}
+      />
 
       <style>{`
         @media print {

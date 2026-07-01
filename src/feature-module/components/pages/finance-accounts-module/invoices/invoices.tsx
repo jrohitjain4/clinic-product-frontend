@@ -523,14 +523,7 @@ const InvoicesList = () => {
                 </ul>
               </div>
 
-              {/* New Invoice Button */}
-              <Link
-                to={all_routes.addInvoices}
-                className="btn btn-primary d-flex align-items-center justify-content-center"
-                style={{ minHeight: "38px", whiteSpace: "nowrap" }}
-              >
-                New Invoice <i className="fa fa-plus ms-2" />
-              </Link>
+              {/* New Invoice Button Removed */}
             </div>
           </div>
 
@@ -559,14 +552,6 @@ const InvoicesList = () => {
               <EmptyState
                 title="No invoices yet"
                 message="Invoice your patients for consultations, treatments, or medicines to maintain financial records."
-                action={
-                  <Link
-                    to={all_routes.addInvoices}
-                    className="btn btn-primary"
-                  >
-                    New Invoice <i className="ti ti-plus ms-2" />
-                  </Link>
-                }
               />
             </div>
           ) : (

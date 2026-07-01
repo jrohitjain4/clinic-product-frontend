@@ -34,6 +34,17 @@ const SIDEBAR_SECTIONS = [
     ]
   },
   {
+    section: "Pharmacy",
+    items: [
+      { key: "Pharmacy Dashboard", label: "Dashboard" },
+      { key: "Pharmacy Category", label: "Category" },
+      { key: "Medicine", label: "Medicine" },
+      { key: "Inventory", label: "Inventory" },
+      { key: "Pharmacy Billing", label: "Pharmacy Billing" },
+      { key: "Sales History", label: "Sales History" }
+    ]
+  },
+  {
     section: "HRM",
     items: [
       { key: "Staffs", label: "Staffs" },

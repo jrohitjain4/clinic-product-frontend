@@ -265,15 +265,6 @@ const Services = () => {
             >
               New Service <i className="ti ti-plus ms-1" />
             </Link>
-            <Link
-              to="#"
-              data-bs-toggle="modal"
-              data-bs-target="#add_product"
-              className="btn btn-info text-white d-flex align-items-center"
-              style={{ minHeight: '38px' }}
-            >
-              New Medicine <i className="ti ti-plus ms-1" />
-            </Link>
           </div>
         </div>
 

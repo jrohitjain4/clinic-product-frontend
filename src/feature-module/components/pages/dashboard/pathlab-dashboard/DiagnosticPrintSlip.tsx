@@ -9,16 +9,38 @@ interface DiagnosticPrintSlipProps {
 const DiagnosticPrintSlip: React.FC<DiagnosticPrintSlipProps> = ({ booking }) => {
   if (!booking) return null;
 
+  let loginClinic: any = {};
+  try {
+    const userObj = JSON.parse(localStorage.getItem("user") || "{}");
+    loginClinic = userObj.clinic || {};
+  } catch (e) {}
+
+  const clinic = booking.clinic || loginClinic || {};
+  const clinicName = clinic.name || booking.clinicName || "Clinic";
+  const logoUrl = clinic.landingPage?.logo ? resolveMediaUrl(clinic.landingPage.logo) : '/logo.png';
+
+  const addressParts = [
+    clinic.addressLine1,
+    clinic.addressLine2,
+    clinic.city,
+    clinic.state,
+    clinic.country,
+    clinic.pincode ? `PIN - ${clinic.pincode}` : ""
+  ].filter(Boolean);
+  const clinicAddress = addressParts.length > 0 
+    ? addressParts.join(", ") 
+    : (booking.location || "Address");
+
   return (
     <div className="bg-white p-5 mx-auto" style={{ maxWidth: '800px', border: '1px solid #ddd', borderRadius: '8px' }}>
       <div className="d-flex justify-content-between align-items-start border-bottom pb-4 mb-4">
         <div className="d-flex align-items-center gap-3">
           <div style={{ width: '80px', height: '80px', background: '#f8f9fa', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src={resolveMediaUrl(booking.clinic?.landingPage?.logo) || '/logo.png'} alt="Clinic Logo" style={{ maxHeight: '60px', maxWidth: '60px', objectFit: 'contain' }} />
+            <img src={logoUrl} alt="Clinic Logo" style={{ maxHeight: '60px', maxWidth: '60px', objectFit: 'contain' }} />
           </div>
           <div>
-            <h3 className="fw-bold mb-1 text-dark" style={{ letterSpacing: '-0.5px' }}>{booking.clinic?.name || booking.clinicName || "Clinic"}</h3>
-            <p className="text-muted mb-0 small"><i className="ti ti-map-pin me-1" />{booking.clinic?.landingPage?.address || booking.location || "Address"}</p>
+            <h3 className="fw-bold mb-1 text-dark" style={{ letterSpacing: '-0.5px' }}>{clinicName}</h3>
+            <p className="text-muted mb-0 small"><i className="ti ti-map-pin me-1" />{clinicAddress}</p>
           </div>
         </div>
         <div className="text-end">

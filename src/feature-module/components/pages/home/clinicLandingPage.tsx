@@ -45,6 +45,19 @@ interface ClinicData {
     onboardingStep?: number;
     nextAppointmentCode?: string;
     rawServices?: { id: string; name: string; price: number; departmentId: string }[];
+    labTests?: {
+        id: string;
+        name: string;
+        price: number;
+        testCode: string;
+        categoryName: string;
+        assignment?: string;
+        assignedDoctors?: any;
+        assignedStaff?: any;
+        schedules?: any;
+        isSlotBookingEnabled?: boolean;
+        slotDuration?: number;
+    }[];
 }
 
 const Stars = ({ n, color, size }: { n: number; color?: string; size?: number }) => (
@@ -125,6 +138,201 @@ export default function ClinicLandingPage() {
     const [activePhoto, setActivePhoto] = useState<string | null>(null);
     const [showAllReviews, setShowAllReviews] = useState(false);
     const [activeTab, setActiveTab] = useState("Monday");
+
+    // ── Diagnostic Booking Modal State ──
+    const [showDiagModal, setShowDiagModal] = useState(false);
+    const [diagForm, setDiagForm] = useState({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        gender: "",
+        address: "",
+        testId: "",
+        assignedUserId: "",
+        date: null as Dayjs | null,
+        time: "",
+        reason: ""
+    });
+    const [diagFormErrors, setDiagFormErrors] = useState<any>({});
+    const [diagLoading, setDiagLoading] = useState(false);
+    const [diagSuccess, setDiagSuccess] = useState<string | null>(null);
+    const [diagError, setDiagError] = useState<string | null>(null);
+    const [diagGeneratedCreds, setDiagGeneratedCreds] = useState<{
+        email?: string;
+        password?: string;
+        isNewUserCreated?: boolean;
+        bookingCode?: string;
+        patientCode?: string;
+        testName?: string;
+    } | null>(null);
+
+    const openDiagBooking = () => {
+        setDiagForm({
+            firstName: "", lastName: "", email: "", phone: "",
+            gender: "", address: "", testId: "", assignedUserId: "", date: null, time: "", reason: ""
+        });
+        setDiagSuccess(null);
+        setDiagError(null);
+        setDiagGeneratedCreds(null);
+        setDiagFormErrors({});
+        setShowDiagModal(true);
+    };
+
+    const handleDiagSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setDiagFormErrors({});
+        setDiagError(null);
+
+        let hasError = false;
+        const newErrors: any = {};
+
+        if (!diagForm.firstName.trim()) { newErrors.firstName = "First name is required"; hasError = true; }
+        if (!diagForm.lastName.trim()) { newErrors.lastName = "Last name is required"; hasError = true; }
+        if (!diagForm.email.trim()) { newErrors.email = "Email is required"; hasError = true; }
+        if (!diagForm.phone.trim()) { newErrors.phone = "Phone number is required"; hasError = true; }
+        if (!diagForm.gender) { newErrors.gender = "Gender is required"; hasError = true; }
+        if (!diagForm.testId) { newErrors.testId = "Please select a test"; hasError = true; }
+        if (!diagForm.date) { newErrors.date = "Please select a date"; hasError = true; }
+
+        if (hasError) { setDiagFormErrors(newErrors); return; }
+        if (!clinic?.id) return;
+
+        setDiagLoading(true);
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/landing/id/${clinic.id}/book-diagnostic`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    firstName: diagForm.firstName,
+                    lastName: diagForm.lastName,
+                    email: diagForm.email,
+                    phone: diagForm.phone,
+                    gender: diagForm.gender,
+                    address: diagForm.address,
+                    testId: diagForm.testId,
+                    assignedUserId: diagForm.assignedUserId || undefined,
+                    date: diagForm.date!.format("YYYY-MM-DD"),
+                    time: diagForm.time || "09:00",
+                    reason: diagForm.reason,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Booking failed");
+
+            setDiagGeneratedCreds({
+                email: data.email,
+                password: data.generatedPassword,
+                isNewUserCreated: data.isNewUserCreated,
+                bookingCode: data.bookingCode,
+                patientCode: data.patientCode,
+                testName: data.testName,
+            });
+            setDiagSuccess(data.message || "Diagnostic test scheduled successfully!");
+        } catch (err: any) {
+            setDiagError(err.message);
+        } finally {
+            setDiagLoading(false);
+        }
+    };
+
+    // Selected diagnostic test object
+    const selectedDiagTestObj = useMemo(() => {
+        if (!diagForm.testId || !clinic?.labTests) return null;
+        return clinic.labTests.find(t => t.id === diagForm.testId) || null;
+    }, [diagForm.testId, clinic?.labTests]);
+
+    // Diagnostic Schedule Logic
+    const diagAvailableSchedules = useMemo(() => {
+        if (!selectedDiagTestObj?.schedules) return null;
+        try {
+            const parsed = typeof selectedDiagTestObj.schedules === "string"
+                ? JSON.parse(selectedDiagTestObj.schedules)
+                : selectedDiagTestObj.schedules;
+            return typeof parsed === "object" && parsed !== null ? parsed : null;
+        } catch {
+            return null;
+        }
+    }, [selectedDiagTestObj]);
+
+    const diagAvailableDays = useMemo(() => {
+        if (!diagAvailableSchedules) return [];
+        return Object.keys(diagAvailableSchedules).filter(day => {
+            const sessions = diagAvailableSchedules[day];
+            return Array.isArray(sessions) && sessions.length > 0;
+        });
+    }, [diagAvailableSchedules]);
+
+    const diagDisabledDate = (current: any) => {
+        if (!current) return false;
+        if (current < dayjs().startOf('day')) return true;
+        if (diagAvailableDays.length === 0) return false;
+        const currentDay = current.format('dddd');
+        return !diagAvailableDays.includes(currentDay);
+    };
+
+    const diagCellRender = (current: any, info: any) => {
+        if (info.type !== 'date') return info.originNode;
+        const currentDay = current.format('dddd');
+        const isAvailable = diagAvailableDays.includes(currentDay);
+        const isPast = current < dayjs().startOf('day');
+
+        if (diagAvailableDays.length > 0) {
+            if (isAvailable && !isPast) {
+                return (
+                    <div className="ant-picker-cell-inner" style={{ backgroundColor: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: '4px', color: '#237804' }}>
+                        {current.date()}
+                    </div>
+                );
+            } else if (!isAvailable && !isPast) {
+                return (
+                    <div className="ant-picker-cell-inner" style={{ backgroundColor: '#fff1f0', border: '1px solid #ffa39e', borderRadius: '4px', color: '#a8071a' }}>
+                        {current.date()}
+                    </div>
+                );
+            }
+        }
+        return info.originNode;
+    };
+
+    // Computed time slots options based on selected date
+    const diagTimeSlots = useMemo(() => {
+        if (!diagForm.date || !diagAvailableSchedules || !selectedDiagTestObj) return [];
+        const currentDay = diagForm.date.format('dddd');
+        const daySessions = diagAvailableSchedules[currentDay];
+        if (!Array.isArray(daySessions) || daySessions.length === 0) return [];
+
+        let options: { label: string; value: string }[] = [];
+        const isSlotEnabled = selectedDiagTestObj.isSlotBookingEnabled;
+        const slotDur = selectedDiagTestObj.slotDuration || 30;
+
+        daySessions.forEach((session: any) => {
+            const sessionName = session.session || "Session";
+            const startTime = session.from || "09:00:00";
+            const endTime = session.to || "17:00:00";
+
+            if (!isSlotEnabled) {
+                options.push({
+                    label: `${sessionName} (${dayjs(startTime, ["HH:mm:ss", "HH:mm"]).format("h:mm A")} - ${dayjs(endTime, ["HH:mm:ss", "HH:mm"]).format("h:mm A")})`,
+                    value: startTime.substring(0, 5)
+                });
+            } else {
+                let currentSlotTime = dayjs(`${diagForm.date!.format("YYYY-MM-DD")}T${startTime}`);
+                const endSessionTime = dayjs(`${diagForm.date!.format("YYYY-MM-DD")}T${endTime}`);
+
+                while (currentSlotTime.add(slotDur, 'minute').isBefore(endSessionTime) || currentSlotTime.add(slotDur, 'minute').isSame(endSessionTime)) {
+                    const slotEnd = currentSlotTime.add(slotDur, 'minute');
+                    const slotStr = `${currentSlotTime.format("hh:mm A")} - ${slotEnd.format("hh:mm A")}`;
+                    options.push({
+                        label: slotStr,
+                        value: currentSlotTime.format("HH:mm")
+                    });
+                    currentSlotTime = slotEnd;
+                }
+            }
+        });
+        return options;
+    }, [diagForm.date, diagAvailableSchedules, selectedDiagTestObj]);
 
     const openBooking = (doctorId = "") => {
         setPreselectedDoctor(doctorId);
@@ -702,19 +910,29 @@ export default function ClinicLandingPage() {
                     <div className="dy-nav-actions d-flex align-items-center gap-2">
                         <Link
                             to={all_routes.login}
-                            className="btn btn-outline-primary px-4 py-2 d-flex align-items-center justify-content-center"
-                            style={{ borderRadius: '8px', minHeight: '44px', border: '2px solid #1d4ed8', color: '#1d4ed8', fontSize: '15px', fontWeight: 500 }}
+                            className="btn btn-outline-primary px-3 py-2 d-flex align-items-center justify-content-center"
+                            style={{ borderRadius: '8px', minHeight: '44px', border: '2px solid #1d4ed8', color: '#1d4ed8', fontSize: '14px', fontWeight: 500 }}
                         >
                             Login
                         </Link>
                         <button
                             type="button"
                             onClick={() => openBooking("")}
-                            className="btn btn-primary px-4 py-2 d-flex align-items-center justify-content-center"
-                            style={{ borderRadius: '8px', minHeight: '44px', fontSize: '15px', fontWeight: 500 }}
+                            className="btn btn-primary px-3 py-2 d-flex align-items-center justify-content-center"
+                            style={{ borderRadius: '8px', minHeight: '44px', fontSize: '14px', fontWeight: 500 }}
                         >
                             Book Appointment
                         </button>
+                        {(clinic.labTests && clinic.labTests.length > 0) && (
+                            <button
+                                type="button"
+                                onClick={() => openDiagBooking()}
+                                className="btn px-3 py-2 d-flex align-items-center justify-content-center text-white"
+                                style={{ borderRadius: '8px', minHeight: '44px', fontSize: '14px', fontWeight: 500, background: "linear-gradient(135deg, #059669, #10b981)", border: "none" }}
+                            >
+                                Book Diagnostic
+                            </button>
+                        )}
                     </div>
                 </div>
             </nav>
@@ -771,6 +989,16 @@ export default function ClinicLandingPage() {
                                         >
                                             <i className="ti ti-calendar-event" /> Book Appointment
                                         </button>
+                                        {(clinic.labTests && clinic.labTests.length > 0) && (
+                                            <button
+                                                type="button"
+                                                onClick={() => openDiagBooking()}
+                                                className="btn px-4 py-2 fw-semibold d-flex align-items-center gap-2 rounded-3 text-white shadow"
+                                                style={{ background: "linear-gradient(135deg, #059669, #10b981)", border: "none" }}
+                                            >
+                                                <i className="ti ti-microscope" /> Book Diagnostic
+                                            </button>
+                                        )}
                                         <a
                                             href={`tel:${clinic.phone}`}
                                             className="btn bg-white px-4 py-2 fw-semibold d-flex align-items-center gap-2 rounded-3 shadow-sm"
@@ -1234,6 +1462,328 @@ export default function ClinicLandingPage() {
             >
                 <i className="ti ti-brand-whatsapp" style={{ fontSize: "36px" }} />
             </a>
+
+            {/* ══════ DIAGNOSTIC BOOKING MODAL ══════ */}
+            {showDiagModal && (
+                <div
+                    className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+                    style={{ zIndex: 99999, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
+                    onClick={(e) => { if (e.target === e.currentTarget) setShowDiagModal(false); }}
+                >
+                    <div className="bg-white rounded-4 shadow-lg d-flex flex-column" style={{ width: "100%", maxWidth: diagSuccess ? "650px" : "720px", margin: "20px", maxHeight: "90vh", overflow: "hidden", transition: "max-width 0.3s ease" }}>
+                        {/* Header */}
+                        <div className="d-flex align-items-center justify-content-between p-3 border-bottom flex-shrink-0" style={{ background: "linear-gradient(135deg, #059669, #10b981)", borderRadius: "16px 16px 0 0" }}>
+                            <div className="d-flex align-items-center gap-3">
+                                <div>
+                                    <h5 className="fw-bold text-white mb-0" style={{ fontSize: "16px" }}>Book Diagnostic Test</h5>
+                                    <small className="text-white opacity-75" style={{ fontSize: "13px" }}>{clinic.name}</small>
+                                </div>
+                            </div>
+                            <button
+                                className="btn p-0 d-flex align-items-center justify-content-center text-white opacity-75"
+                                style={{ width: 30, height: 30, background: "rgba(255,255,255,0.15)", borderRadius: "50%" }}
+                                onClick={() => setShowDiagModal(false)}
+                            >
+                                <i className="ti ti-x fs-6" />
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-3 flex-grow-1" style={{ overflowY: "auto", minHeight: 0 }}>
+                            {diagSuccess ? (
+                                /* ── Success State ── */
+                                <div className="text-center py-3">
+                                    <div className="d-flex align-items-center justify-content-center mb-3">
+                                        <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 64, height: 64, background: "#ecfdf5", border: "2px solid #059669" }}>
+                                            <i className="ti ti-circle-check-filled" style={{ fontSize: 36, color: "#059669" }} />
+                                        </div>
+                                    </div>
+                                    <h4 className="fw-bold text-dark mb-1" style={{ fontSize: "24px" }}>Diagnostic Test Scheduled!</h4>
+                                    <p className="text-secondary fw-semibold mb-3" style={{ fontSize: "15px" }}>{diagSuccess}</p>
+
+                                    {/* Booking Details */}
+                                    <div className="mb-3 p-4 bg-light rounded-3 text-start border" style={{ borderColor: "#e2e8f0" }}>
+                                        <div className="d-flex justify-content-between mb-2">
+                                            <span className="text-secondary fw-semibold" style={{ fontSize: "15px" }}>Booking Code:</span>
+                                            <span className="text-dark fw-bold" style={{ fontSize: "16px" }}>{diagGeneratedCreds?.bookingCode || "LB..."}</span>
+                                        </div>
+                                        <div className={`d-flex justify-content-between ${diagGeneratedCreds?.isNewUserCreated ? 'mb-3 pb-3 border-bottom' : ''}`} style={{ borderColor: "#cbd5e1" }}>
+                                            <span className="text-secondary fw-semibold" style={{ fontSize: "15px" }}>Test:</span>
+                                            <span className="text-dark fw-bold" style={{ fontSize: "15px" }}>{diagGeneratedCreds?.testName || "—"}</span>
+                                        </div>
+
+                                        {diagGeneratedCreds?.isNewUserCreated && (
+                                            <div className="mt-3">
+                                                <div className="alert alert-success py-2 px-3 rounded-2 mb-3 d-flex align-items-start gap-2" style={{ backgroundColor: "#ecfdf5", borderColor: "#86efac", color: "#065f46", fontSize: "14px" }}>
+                                                    <i className="ti ti-info-circle-filled mt-1 flex-shrink-0" />
+                                                    <span>Your login account has been created! Credentials have been sent to your email.</span>
+                                                </div>
+                                                <div className="d-flex justify-content-between mb-2">
+                                                    <span className="text-secondary" style={{ fontSize: "14px" }}>Login Email:</span>
+                                                    <span className="text-dark fw-bold" style={{ fontSize: "14px" }}>{diagGeneratedCreds?.email}</span>
+                                                </div>
+                                                <div className="d-flex justify-content-between">
+                                                    <span className="text-secondary" style={{ fontSize: "14px" }}>Temporary Password:</span>
+                                                    <span className="fw-bold" style={{ fontSize: "14px", letterSpacing: "0.5px", color: "#059669" }}>{diagGeneratedCreds?.password}</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Important Notes */}
+                                    <div className="p-4 mb-4 rounded-3 text-start" style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                                        <h6 className="fw-bold text-dark mb-3" style={{ fontSize: "13px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Important Notes</h6>
+                                        <div className="d-flex align-items-start gap-3 mb-3 pb-3 border-bottom" style={{ borderColor: "#e2e8f0" }}>
+                                            <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: "28px", height: "28px", background: "#059669", color: "white" }}>
+                                                <span className="fw-bold" style={{ fontSize: "14px" }}>1</span>
+                                            </div>
+                                            <div>
+                                                <p className="mb-0 text-dark fw-bold" style={{ fontSize: "15px", lineHeight: "1.5" }}>
+                                                    Your appointment is only <strong>Scheduled</strong>. Credentials for logging into the portal have been sent to your email.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="d-flex align-items-start gap-3">
+                                            <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: "28px", height: "28px", background: "#0f172a", color: "white" }}>
+                                                <span className="fw-bold" style={{ fontSize: "14px" }}>2</span>
+                                            </div>
+                                            <div>
+                                                <p className="mb-0 text-dark fw-bold" style={{ fontSize: "15px", lineHeight: "1.5" }}>
+                                                    To confirm your booking, please contact the clinic owner at <strong style={{ color: "#059669", fontSize: "16px" }}>{clinic.phone || clinic.whatsapp}</strong>.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="d-flex gap-2">
+                                        <a
+                                            href={`tel:${clinic.phone}`}
+                                            className="btn fw-bold py-2 px-2 rounded-3 text-white flex-grow-1 d-flex align-items-center justify-content-center gap-1"
+                                            style={{ background: "#059669", fontSize: "12px", border: "none" }}
+                                        >
+                                            <i className="ti ti-phone-call" /> Call Now
+                                        </a>
+                                        <button
+                                            className="btn fw-bold py-2 px-2 rounded-3 text-white flex-grow-1"
+                                            style={{ background: "#0f172a", fontSize: "12px", border: "none" }}
+                                            onClick={() => setShowDiagModal(false)}
+                                        >
+                                            Done
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* ── Booking Form ── */
+                                <form onSubmit={handleDiagSubmit} noValidate>
+                                    <div className="row g-2">
+                                        {/* First Name & Last Name */}
+                                        <div className="col-6">
+                                            <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>First Name <span className="text-danger">*</span></label>
+                                            <input type="text" className={`form-control rounded-3 ${diagFormErrors.firstName ? 'is-invalid' : ''}`} placeholder="First name" value={diagForm.firstName} onChange={e => setDiagForm(f => ({ ...f, firstName: e.target.value }))} style={{ fontSize: "14px" }} />
+                                            {diagFormErrors.firstName && <div className="invalid-feedback">{diagFormErrors.firstName}</div>}
+                                        </div>
+                                        <div className="col-6">
+                                            <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Last Name <span className="text-danger">*</span></label>
+                                            <input type="text" className={`form-control rounded-3 ${diagFormErrors.lastName ? 'is-invalid' : ''}`} placeholder="Last name" value={diagForm.lastName} onChange={e => setDiagForm(f => ({ ...f, lastName: e.target.value }))} style={{ fontSize: "14px" }} />
+                                            {diagFormErrors.lastName && <div className="invalid-feedback">{diagFormErrors.lastName}</div>}
+                                        </div>
+
+                                        {/* Email */}
+                                        <div className="col-12">
+                                            <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Email Address <span className="text-danger">*</span></label>
+                                            <input type="email" className={`form-control rounded-3 ${diagFormErrors.email ? 'is-invalid' : ''}`} placeholder="username@example.com" value={diagForm.email} onChange={e => setDiagForm(f => ({ ...f, email: e.target.value }))} style={{ fontSize: "14px" }} />
+                                            {diagFormErrors.email && <div className="invalid-feedback">{diagFormErrors.email}</div>}
+                                        </div>
+
+                                        {/* Phone & Gender */}
+                                        <div className="col-6">
+                                            <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Phone Number <span className="text-danger">*</span></label>
+                                            <input type="tel" className={`form-control rounded-3 ${diagFormErrors.phone ? 'is-invalid' : ''}`} placeholder="+91 XXXXX XXXXX" value={diagForm.phone} onChange={e => setDiagForm(f => ({ ...f, phone: e.target.value }))} style={{ fontSize: "14px" }} />
+                                            {diagFormErrors.phone && <div className="invalid-feedback">{diagFormErrors.phone}</div>}
+                                        </div>
+                                        <div className="col-6">
+                                            <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Gender <span className="text-danger">*</span></label>
+                                            <select className={`form-select rounded-3 text-secondary ${diagFormErrors.gender ? 'is-invalid' : ''}`} value={diagForm.gender} onChange={e => setDiagForm(f => ({ ...f, gender: e.target.value }))} style={{ fontSize: "14px" }}>
+                                                <option value="">Select Gender</option>
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                            {diagFormErrors.gender && <div className="invalid-feedback">{diagFormErrors.gender}</div>}
+                                        </div>
+
+                                        {/* Address */}
+                                        <div className="col-12">
+                                            <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Address (Optional)</label>
+                                            <input type="text" className="form-control rounded-3" placeholder="House no., Street, City, Pincode" value={diagForm.address} onChange={e => setDiagForm(f => ({ ...f, address: e.target.value }))} style={{ fontSize: "14px" }} />
+                                        </div>
+
+                                        {/* Test Selection */}
+                                        <div className="col-12">
+                                            <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Select Diagnostic Test <span className="text-danger">*</span></label>
+                                            <select
+                                                className={`form-select rounded-3 text-secondary ${diagFormErrors.testId ? 'is-invalid' : ''}`}
+                                                value={diagForm.testId}
+                                                onChange={e => setDiagForm(f => ({ ...f, testId: e.target.value }))}
+                                                style={{ fontSize: "14px" }}
+                                            >
+                                                <option value="">Select a test</option>
+                                                {clinic.labTests?.map((t) => (
+                                                    <option key={t.id} value={t.id}>
+                                                        {t.name}{t.categoryName ? ` — ${t.categoryName}` : ""}{t.price ? ` (₹${t.price})` : ""}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {diagFormErrors.testId && <div className="invalid-feedback">{diagFormErrors.testId}</div>}
+                                            {/* Selected test info */}
+                                            {diagForm.testId && (() => {
+                                                const selTest = clinic.labTests?.find(t => t.id === diagForm.testId);
+                                                if (!selTest) return null;
+                                                return (
+                                                    <div className="mt-2 p-2 rounded-3 d-flex align-items-center gap-2" style={{ background: "#ecfdf5", border: "1px solid #86efac" }}>
+                                                        <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 36, height: 36, background: "#059669", flexShrink: 0 }}>
+                                                            <i className="ti ti-microscope text-white" style={{ fontSize: 18 }} />
+                                                        </div>
+                                                        <div>
+                                                            <div className="fw-bold text-dark" style={{ fontSize: 13 }}>{selTest.name}</div>
+                                                            <div className="text-muted" style={{ fontSize: 11 }}>
+                                                                {[selTest.categoryName, selTest.testCode, selTest.price ? `₹${selTest.price}` : ""].filter(Boolean).join(" · ")}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+
+                                        {/* Doctor/Staff Assignment Selection */}
+                                        {diagForm.testId && (() => {
+                                            const selTest = clinic.labTests?.find(t => t.id === diagForm.testId);
+                                            if (!selTest) return null;
+
+                                            let docs: any[] = [];
+                                            let staffs: any[] = [];
+
+                                            try {
+                                                docs = typeof selTest.assignedDoctors === "string"
+                                                    ? JSON.parse(selTest.assignedDoctors)
+                                                    : (selTest.assignedDoctors || []);
+                                                staffs = typeof selTest.assignedStaff === "string"
+                                                    ? JSON.parse(selTest.assignedStaff)
+                                                    : (selTest.assignedStaff || []);
+                                            } catch (e) {
+                                                console.error("Error parsing assigned doc/staff:", e);
+                                            }
+
+                                            if (!Array.isArray(docs)) docs = [];
+                                            if (!Array.isArray(staffs)) staffs = [];
+
+                                            // If both lists are empty, no need to show dropdown
+                                            if (docs.length === 0 && staffs.length === 0) return null;
+
+                                            return (
+                                                <div className="col-12">
+                                                    <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Assign Doctor / Staff (Optional)</label>
+                                                    <select
+                                                        className="form-select rounded-3 text-secondary"
+                                                        value={diagForm.assignedUserId}
+                                                        onChange={e => setDiagForm(f => ({ ...f, assignedUserId: e.target.value }))}
+                                                        style={{ fontSize: "14px" }}
+                                                    >
+                                                        <option value="">Auto / Any Available</option>
+                                                        {docs.map((d: any) => (
+                                                            <option key={d.value || d.id} value={d.value || d.id}>
+                                                                Dr. {d.label || d.name} (Doctor)
+                                                            </option>
+                                                        ))}
+                                                        {staffs.map((s: any) => (
+                                                            <option key={s.value || s.id} value={s.value || s.id}>
+                                                                {s.label || s.name} (Staff / Technician)
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            );
+                                        })()}
+
+                                        {/* Date & Preferred Time */}
+                                        <div className="col-6">
+                                            <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Preferred Date <span className="text-danger">*</span></label>
+                                            <DatePicker
+                                                className={`form-control rounded-3 w-100 ${diagFormErrors.date ? 'is-invalid' : ''}`}
+                                                format="DD-MM-YYYY"
+                                                placeholder="DD-MM-YYYY"
+                                                suffixIcon={null}
+                                                disabled={!diagForm.testId}
+                                                disabledDate={diagDisabledDate}
+                                                cellRender={diagCellRender}
+                                                value={diagForm.date}
+                                                onChange={(d: Dayjs | null) => setDiagForm(f => ({ ...f, date: d, time: "" }))}
+                                                style={{ fontSize: "14px", height: "38px" }}
+                                            />
+                                            {diagFormErrors.date && <div className="invalid-feedback d-block">{diagFormErrors.date}</div>}
+                                        </div>
+                                        <div className="col-6">
+                                            <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Preferred Time</label>
+                                            <select
+                                                className="form-select rounded-3 text-secondary"
+                                                value={diagForm.time}
+                                                disabled={!diagForm.date || diagTimeSlots.length === 0}
+                                                onChange={e => setDiagForm(f => ({ ...f, time: e.target.value }))}
+                                                style={{ fontSize: "14px" }}
+                                            >
+                                                <option value="">
+                                                    {!diagForm.date
+                                                        ? "Select date first"
+                                                        : (diagTimeSlots.length > 0 ? "Select slot" : "No slots available")
+                                                    }
+                                                </option>
+                                                {diagTimeSlots.map((opt: any) => (
+                                                    <option key={opt.value} value={opt.value}>
+                                                        {opt.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Reason */}
+                                        <div className="col-12">
+                                            <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Reason / Notes (Optional)</label>
+                                            <textarea className="form-control rounded-3" rows={2} placeholder="Any specific reason or notes for the test..." value={diagForm.reason} onChange={e => setDiagForm(f => ({ ...f, reason: e.target.value }))} style={{ fontSize: "14px", resize: "none" }} />
+                                        </div>
+
+                                        {/* Error */}
+                                        {diagError && (
+                                            <div className="col-12">
+                                                <div className="alert alert-danger py-2 px-3 rounded-3 d-flex align-items-center gap-2 mb-0" style={{ fontSize: "13px" }}>
+                                                    <i className="ti ti-alert-circle text-danger fs-5" />
+                                                    {diagError}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Submit */}
+                                        <div className="col-12 mt-1">
+                                            <button
+                                                type="submit"
+                                                className="btn w-100 fw-bold py-2 rounded-3 text-white d-flex align-items-center justify-content-center gap-2"
+                                                style={{ fontSize: "15px", border: "none", background: "linear-gradient(135deg, #059669, #10b981)" }}
+                                                disabled={diagLoading}
+                                            >
+                                                {diagLoading ? (
+                                                    <><span className="spinner-border spinner-border-sm" /> Booking...</>
+                                                ) : (
+                                                    <><i className="ti ti-microscope" /> Schedule Diagnostic Test</>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ══════ BOOKING MODAL ══════ */}
             {

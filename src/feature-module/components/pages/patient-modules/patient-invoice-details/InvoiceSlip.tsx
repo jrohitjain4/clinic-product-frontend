@@ -9,7 +9,13 @@ interface InvoiceSlipProps {
 const InvoiceSlip: React.FC<InvoiceSlipProps> = ({ invoice }) => {
   if (!invoice) return null;
 
-  const clinic = invoice.clinic || {};
+  let loginClinic: any = {};
+  try {
+    const userObj = JSON.parse(localStorage.getItem("user") || "{}");
+    loginClinic = userObj.clinic || {};
+  } catch (e) {}
+
+  const clinic = invoice.clinic || loginClinic || {};
   const patient = invoice.patient || {};
   const doctor = invoice.doctor || invoice.appointment?.doctor || {};
   const items = invoice.items || [];
@@ -17,11 +23,21 @@ const InvoiceSlip: React.FC<InvoiceSlipProps> = ({ invoice }) => {
   const clinicName = clinic.name || invoice.clinicName || "City Care Clinic";
   const clinicTagline = clinic.landingPage?.tagline || "Compassionate Care, Better Health";
   const clinicLogo = clinic.landingPage?.logo || null;
-  const clinicAddress = clinic.addressLine1
-    ? `${clinic.addressLine1}${clinic.addressLine2 ? ", " + clinic.addressLine2 : ""}, ${clinic.city || ""}, ${clinic.state || ""}`
+
+  const addressParts = [
+    clinic.addressLine1,
+    clinic.addressLine2,
+    clinic.city,
+    clinic.state,
+    clinic.country,
+    clinic.pincode ? `PIN - ${clinic.pincode}` : ""
+  ].filter(Boolean);
+  const clinicAddress = addressParts.length > 0 
+    ? addressParts.join(", ") 
     : "Green Valley Road, Near City Mall, Civil Lines";
+
   const clinicPhone = clinic.phone || "+91 98765 43210";
-  const clinicEmail = clinic.email || "info@citycareclinic.com";
+  const clinicEmail = clinic.ownerEmail || clinic.email || "info@citycareclinic.com";
 
   const invoiceNo = invoice.invoiceCode || `INV-${invoice.id?.slice(0, 8).toUpperCase()}`;
   const invoiceDate = invoice.invoiceDate || invoice.createdAt;

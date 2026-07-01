@@ -5,10 +5,43 @@ import dayjs from "dayjs";
 import { useMedicines } from "../../../../../core/hooks/useMedicines";
 import { usePharmacyCategories } from "../../../../../core/hooks/usePharmacyCategories";
 import EmptyState from "../../../../../core/common/emptyState";
+import { toast } from "react-toastify";
 
 const InventoryManagement = () => {
-  const { medicines, loading } = useMedicines();
+  const { medicines, loading, refetch: refetchMedicines, addStock } = useMedicines();
   const { categories } = usePharmacyCategories();
+
+  const [showAddStockModal, setShowAddStockModal] = useState(false);
+  const [selectedMedicineId, setSelectedMedicineId] = useState("");
+  const [quantityToAdd, setQuantityToAdd] = useState<number | "">("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleAddStockSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedMedicineId) {
+      toast.error("Please select a medicine");
+      return;
+    }
+    const qty = Number(quantityToAdd);
+    if (isNaN(qty) || qty <= 0) {
+      toast.error("Please enter a valid quantity greater than 0");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await addStock(selectedMedicineId, qty);
+      toast.success("Stock added successfully!");
+      setShowAddStockModal(false);
+      setSelectedMedicineId("");
+      setQuantityToAdd("");
+      refetchMedicines();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to add stock");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const [filterCategory, setFilterCategory] = useState<string>("All");
   const [filterStockStatus, setFilterStockStatus] = useState<string>("All");
@@ -39,7 +72,7 @@ const InventoryManagement = () => {
   // Filter and Search logic
   const filteredData = useMemo(() => {
     return medicines.filter((med) => {
-      const currentStock = (med.openingStock || 0) + (med.stockIn || 0) - (med.stockOut || 0);
+      const currentStock = (med.stockIn || 0) - (med.stockOut || 0);
       const stockAlert = med.minimumStockAlert;
       
       // Stock status check
@@ -75,7 +108,7 @@ const InventoryManagement = () => {
   }, [medicines, filterStockStatus, filterExpiryStatus, filterCategory, searchText]);
 
   const data = filteredData.map((med, index) => {
-    const currentStock = (med.openingStock || 0) + (med.stockIn || 0) - (med.stockOut || 0);
+    const currentStock = (med.stockIn || 0) - (med.stockOut || 0);
     const stockStatus = getStockStatus(currentStock, med.minimumStockAlert);
     const expiryStatus = getExpiryStatus(med.expiryDate);
 
@@ -148,7 +181,7 @@ const InventoryManagement = () => {
       title: "Current Stock",
       dataIndex: "CurrentStock",
       render: (text: string, record: any) => {
-        const currentStock = (record.raw.openingStock || 0) + (record.raw.stockIn || 0) - (record.raw.stockOut || 0);
+        const currentStock = (record.raw.stockIn || 0) - (record.raw.stockOut || 0);
         const isLow = currentStock <= record.raw.minimumStockAlert;
         return (
           <span className={`fw-bold fs-14 ${isLow ? "text-danger" : "text-success"}`}>
@@ -157,8 +190,8 @@ const InventoryManagement = () => {
         );
       },
       sorter: (a: any, b: any) => {
-        const stockA = (a.raw.openingStock || 0) + (a.raw.stockIn || 0) - (a.raw.stockOut || 0);
-        const stockB = (b.raw.openingStock || 0) + (b.raw.stockIn || 0) - (b.raw.stockOut || 0);
+        const stockA = (a.raw.stockIn || 0) - (a.raw.stockOut || 0);
+        const stockB = (b.raw.stockIn || 0) - (b.raw.stockOut || 0);
         return stockA - stockB;
       },
     },
@@ -247,6 +280,14 @@ const InventoryManagement = () => {
                   <li><Link to="#" className="dropdown-item rounded-1 fs-13" onClick={(e) => { e.preventDefault(); setFilterExpiryStatus("Expired"); }}>Expired</Link></li>
                 </ul>
               </div>
+
+              <button 
+                className="btn btn-primary d-flex align-items-center justify-content-center" 
+                style={{ minHeight: "38px", whiteSpace: "nowrap" }}
+                onClick={() => setShowAddStockModal(true)}
+              >
+                Add Stock <i className="fa fa-plus ms-2" />
+              </button>
             </div>
           </div>
 
@@ -271,6 +312,61 @@ const InventoryManagement = () => {
           <p className="text-dark mb-0">2025 <Link to="#" className="link-primary">Docyari</Link>, All Rights Reserved</p>
         </div>
       </div>
+
+      {/* ADD STOCK MODAL */}
+      {showAddStockModal && (
+        <div className="modal fade show d-block" style={{ zIndex: 1050 }}>
+          <div className="modal-backdrop fade show" style={{ zIndex: 1040 }} onClick={() => setShowAddStockModal(false)} />
+          <div className="modal-dialog modal-dialog-centered" style={{ zIndex: 1050 }}>
+            <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title text-white d-flex align-items-center gap-2">
+                  <i className="ti ti-package"></i> Add Medicine Stock
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowAddStockModal(false)}></button>
+              </div>
+              <form onSubmit={handleAddStockSubmit}>
+                <div className="modal-body p-4">
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold">Select Medicine <span className="text-danger">*</span></label>
+                    <select 
+                      className="form-select animate-fade-in" 
+                      value={selectedMedicineId} 
+                      onChange={(e) => setSelectedMedicineId(e.target.value)}
+                      required
+                    >
+                      <option value="">Choose a medicine...</option>
+                      {medicines.map((med) => (
+                        <option key={med.id} value={med.id}>
+                          {med.medicineName} ({med.medicineCode || ""}) - Current: {(med.stockIn || 0) - (med.stockOut || 0)} {med.unit || "Tablet"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold">Quantity to Add <span className="text-danger">*</span></label>
+                    <input 
+                      type="number" 
+                      className="form-control" 
+                      placeholder="e.g. 50" 
+                      min={1}
+                      value={quantityToAdd} 
+                      onChange={(e) => setQuantityToAdd(e.target.value === "" ? "" : parseInt(e.target.value))}
+                      required 
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer bg-light">
+                  <button type="button" className="btn btn-light" onClick={() => setShowAddStockModal(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary px-4 fw-bold" disabled={submitting || !selectedMedicineId || !quantityToAdd}>
+                    {submitting ? "Adding..." : "Add Stock"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import Datatable from "../../../../../core/common/dataTable";
 import { Link } from "react-router";
 import { ViewModal } from "../../../../../core/common/modal/ViewModal";
+import DeleteModal from "../../../../../core/common/modal/DeleteModal";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { useLabTests } from "../../../../../core/hooks/useLabTests";
@@ -51,6 +52,7 @@ const TestManagement = () => {
   const [formCategoryId, setFormCategoryId] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Slot Booking State
@@ -201,7 +203,7 @@ const TestManagement = () => {
     }
   };
 
-  const handleOpenDelete = (t: any) => { setSelectedTest(t); triggerModal("delete_test"); };
+  const handleOpenDelete = (t: any) => { setSelectedTest(t); setShowDeleteModal(true); };
 
   const handleDeleteConfirm = async () => {
     if (selectedTest) {
@@ -210,7 +212,7 @@ const TestManagement = () => {
         await deleteTest(selectedTest.id);
         setSelectedIds(selectedIds.filter((id) => id !== selectedTest.id));
         toast.success("Test deleted successfully!");
-        document.getElementById("btn-close-delete-test")?.click();
+        setShowDeleteModal(false);
         setSelectedTest(null);
       } catch (err: any) { /* handled */ } finally { setSubmitting(false); }
     }
@@ -591,24 +593,14 @@ const TestManagement = () => {
         </div>
       )}
 
-      {/* DELETE MODAL (HRM STYLE) */}
-      <div className="modal fade" id="delete_test">
-        <div className="modal-dialog modal-dialog-centered modal-sm">
-          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "12px", overflow: "hidden" }}>
-            <div className="modal-body text-center position-relative z-1 pt-5 pb-5">
-              <img src="assets/img/bg/delete-modal-bg-01.png" alt="" className="img-fluid position-absolute top-0 start-0 z-n1" />
-              <img src="assets/img/bg/delete-modal-bg-02.png" alt="" className="img-fluid position-absolute bottom-0 end-0 z-n1" />
-              <div className="mb-3"><span className="avatar avatar-lg bg-danger text-white"><i className="ti ti-trash fs-24"></i></span></div>
-              <h5 className="fw-bold mb-2">Delete Confirmation</h5>
-              <p className="text-muted mb-4">Are you sure you want to delete <strong>{selectedTest?.name}</strong>?</p>
-              <div className="d-flex justify-content-center gap-2">
-                <button id="btn-close-delete-test" type="button" className="btn btn-light position-relative z-1 px-4" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" className="btn btn-danger position-relative z-1 px-4" onClick={handleDeleteConfirm} disabled={submitting}>{submitting ? <><span className="spinner-border spinner-border-sm me-2" />Deleting...</> : <><i className="ti ti-trash me-2" />Yes, Delete</>}</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DeleteModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Test?"
+        message={<>Are you sure you want to delete <strong>{selectedTest?.name}</strong>?</>}
+        submitting={submitting}
+      />
 
       {/* BULK DELETE MODAL (HRM STYLE) */}
       <div className="modal fade" id="bulk_delete_test">

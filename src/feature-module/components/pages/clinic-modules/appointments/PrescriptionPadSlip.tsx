@@ -14,17 +14,31 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
     ? Math.floor((Date.now() - new Date(patient.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
     : null;
 
-  const clinic = appointment?.clinic || prescription?.clinic || {};
+  let loginClinic: any = {};
+  try {
+    const userObj = JSON.parse(localStorage.getItem("user") || "{}");
+    loginClinic = userObj.clinic || {};
+  } catch (e) {}
+
+  const clinic = appointment?.clinic || prescription?.clinic || loginClinic || {};
 
   const clinicName = clinic?.name || appointment?.clinicName || prescription?.clinicName || "City Care Clinic";
   const clinicTagline = clinic?.landingPage?.tagline || "Compassionate Care, Better Health";
 
-  const clinicAddress = clinic?.addressLine1
-    ? `${clinic.addressLine1}${clinic.addressLine2 ? ", " + clinic.addressLine2 : ""}, ${clinic.city || ""}, ${clinic.state || ""} ${clinic.pincode || ""}`
+  const addressParts = [
+    clinic.addressLine1,
+    clinic.addressLine2,
+    clinic.city,
+    clinic.state,
+    clinic.country,
+    clinic.pincode ? `PIN - ${clinic.pincode}` : ""
+  ].filter(Boolean);
+  const clinicAddress = addressParts.length > 0 
+    ? addressParts.join(", ") 
     : "123, Green Valley Road, Near City Mall, Civil Lines, Lucknow - 226001";
 
   const clinicPhone = clinic?.phone || "+91 98765 43210";
-  const clinicEmail = clinic?.email || "info@citycareclinic.com";
+  const clinicEmail = clinic?.ownerEmail || clinic?.email || "info@citycareclinic.com";
   const clinicWebsite = clinic?.website || "www.citycareclinic.com";
   const clinicRegNo = clinic?.gstNumber || "CCC/2023/00125";
   const clinicLogo = clinic?.landingPage?.logo || null;

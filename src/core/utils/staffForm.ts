@@ -62,15 +62,7 @@ export const formatStaffDate = (iso?: string | null) => {
 };
 
 export const staffToTableRow = (s: ClinicStaff, index: number) => {
-  const placeholders = [
-    "user-08.jpg",
-    "user-03.jpg",
-    "user-04.jpg",
-    "user-05.jpg",
-    "user-06.jpg",
-  ];
-  const img =
-    s.profileImage || `assets/img/users/${placeholders[index % placeholders.length]}`;
+  const img = s.profileImage || "assets/img/patient-placeholder.png";
   return {
     key: s.id,
     S_No: index + 1,

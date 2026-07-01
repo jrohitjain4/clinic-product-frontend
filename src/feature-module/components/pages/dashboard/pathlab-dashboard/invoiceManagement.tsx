@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import Datatable from "../../../../../core/common/dataTable";
 import { Link } from "react-router";
 import { ViewModal } from "../../../../../core/common/modal/ViewModal";
+import DeleteModal from "../../../../../core/common/modal/DeleteModal";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { useLabBookings } from "../../../../../core/hooks/useLabBookings";
@@ -300,24 +301,14 @@ const InvoiceManagement = () => {
       )}
 
       {/* DELETE MODAL */}
-      {showDeleteModal && (
-        <div className="modal fade show d-block" style={{ zIndex: 1050 }}>
-          <div className="modal-backdrop fade show" style={{ zIndex: 1040 }} onClick={() => setShowDeleteModal(false)} />
-          <div className="modal-dialog modal-dialog-centered" style={{ zIndex: 1050 }}>
-            <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "12px" }}>
-              <div className="modal-body p-4 text-center">
-                <i className="ti ti-alert-triangle text-danger fs-56 mb-3 d-inline-block"></i>
-                <h5 className="fw-bold mb-2">Delete Invoice?</h5>
-                <p className="text-muted mb-4">Are you sure you want to delete <strong>{selectedInvoice?.invoiceNo}</strong>?</p>
-                <div className="d-flex justify-content-center gap-3">
-                  <button type="button" className="btn btn-light px-4" onClick={() => setShowDeleteModal(false)}>Cancel</button>
-                  <button type="button" className="btn btn-danger px-4" onClick={handleDeleteConfirm} disabled={submitting}>{submitting ? "Deleting..." : "Delete"}</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Invoice?"
+        message={<>Are you sure you want to delete <strong>{selectedInvoice?.invoiceNo}</strong>?</>}
+        submitting={submitting}
+      />
 
       {/* VIEW MODAL */}
       {/* VIEW MODAL - always in DOM, triggered via Bootstrap */}

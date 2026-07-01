@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import Datatable from "../../../../../core/common/dataTable";
 import { Link } from "react-router";
+import { DatePicker } from "antd";
 import { ViewModal } from "../../../../../core/common/modal/ViewModal";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
@@ -16,6 +17,9 @@ const MedicineManagement = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterCategory, setFilterCategory] = useState<string>("All");
   const [filterStatus, setFilterStatus] = useState<string>("All");
+  const [filterExpiryPreset, setFilterExpiryPreset] = useState<string>("All");
+  const [filterExpiryStartDate, setFilterExpiryStartDate] = useState<dayjs.Dayjs | null>(null);
+  const [filterExpiryEndDate, setFilterExpiryEndDate] = useState<dayjs.Dayjs | null>(null);
   const [searchText, setSearchText] = useState<string>("");
 
   // Modal states
@@ -232,14 +236,55 @@ const MedicineManagement = () => {
     return medicines.filter((med) => {
       const matchStatus = filterStatus === "All" || med.status === filterStatus;
       const matchCategory = filterCategory === "All" || med.categoryId === filterCategory;
+      
+      let matchExpiry = true;
+      if (filterExpiryPreset !== "All") {
+        if (med.expiryDate) {
+          const exp = dayjs(med.expiryDate);
+          const today = dayjs().startOf('day');
+          const endOfToday = dayjs().endOf('day');
+
+          if (filterExpiryPreset === "Today") {
+            matchExpiry = exp.isSame(dayjs(), 'day');
+          } else if (filterExpiryPreset === "Expired") {
+            matchExpiry = exp.isBefore(today);
+          } else if (filterExpiryPreset === "Last 7 Days") {
+            matchExpiry = exp.isAfter(dayjs().subtract(7, 'day').startOf('day')) && exp.isBefore(endOfToday);
+          } else if (filterExpiryPreset === "Upcoming 7 Days") {
+            matchExpiry = exp.isAfter(today.subtract(1, 'second')) && exp.isBefore(dayjs().add(7, 'day').endOf('day'));
+          } else if (filterExpiryPreset === "Custom") {
+            const expDate = exp.startOf('day');
+            if (filterExpiryStartDate && filterExpiryEndDate) {
+              const start = filterExpiryStartDate.startOf('day');
+              const end = filterExpiryEndDate.startOf('day');
+              matchExpiry = (expDate.isAfter(start) || expDate.isSame(start, 'day')) && 
+                            (expDate.isBefore(end) || expDate.isSame(end, 'day'));
+            } else if (filterExpiryStartDate) {
+              const start = filterExpiryStartDate.startOf('day');
+              matchExpiry = expDate.isAfter(start) || expDate.isSame(start, 'day');
+            } else if (filterExpiryEndDate) {
+              const end = filterExpiryEndDate.startOf('day');
+              matchExpiry = expDate.isBefore(end) || expDate.isSame(end, 'day');
+            } else {
+              matchExpiry = true;
+            }
+          } else {
+            matchExpiry = false;
+          }
+        } else {
+          // If a preset is requested but the medicine has no expiry date, it doesn't match.
+          matchExpiry = false;
+        }
+      }
+
       const matchSearch =
         med.medicineName.toLowerCase().includes(searchText.toLowerCase()) ||
         (med.genericName || "").toLowerCase().includes(searchText.toLowerCase()) ||
         (med.brandName || "").toLowerCase().includes(searchText.toLowerCase()) ||
         (med.medicineCode || "").toLowerCase().includes(searchText.toLowerCase());
-      return matchStatus && matchCategory && matchSearch;
+      return matchStatus && matchCategory && matchExpiry && matchSearch;
     });
-  }, [medicines, filterStatus, filterCategory, searchText]);
+  }, [medicines, filterStatus, filterCategory, filterExpiryPreset, filterExpiryStartDate, filterExpiryEndDate, searchText]);
 
   const data = filteredData.map((med, index) => ({
     key: med.id,
@@ -249,7 +294,8 @@ const MedicineManagement = () => {
     GenericName: med.genericName || "—",
     BrandName: med.brandName || "—",
     Category: med.category?.name || "—",
-    Stock: `${med.openingStock} ${med.unit || "Tablet"}`,
+    Stock: `${(med.stockIn || 0) - (med.stockOut || 0)} ${med.unit || "Tablet"}`,
+    ExpiryDate: med.expiryDate ? dayjs(med.expiryDate).format("DD MMM YYYY") : "—",
     Price: `₹${med.sellingPrice}`,
     MRP: `₹${med.mrp}`,
     Batch: med.batchNumber || "—",
@@ -298,14 +344,36 @@ const MedicineManagement = () => {
       title: "Stock",
       dataIndex: "Stock",
       render: (text: string, record: any) => {
-        const isLow = record.raw.openingStock <= record.raw.minimumStockAlert;
+        const currentStock = (record.raw.stockIn || 0) - (record.raw.stockOut || 0);
+        const isLow = currentStock <= record.raw.minimumStockAlert;
         return (
           <span className={`fw-semibold ${isLow ? "text-danger" : "text-success"}`}>
             {text} {isLow && <i className="ti ti-alert-triangle ms-1" title="Low Stock!" />}
           </span>
         );
       },
-      sorter: (a: any, b: any) => a.raw.openingStock - b.raw.openingStock,
+      sorter: (a: any, b: any) => {
+        const stockA = (a.raw.stockIn || 0) - (a.raw.stockOut || 0);
+        const stockB = (b.raw.stockIn || 0) - (b.raw.stockOut || 0);
+        return stockA - stockB;
+      },
+    },
+    {
+      title: "Expiry Date",
+      dataIndex: "ExpiryDate",
+      render: (text: string, record: any) => {
+        const isExpired = record.raw.expiryDate && new Date(record.raw.expiryDate) < new Date();
+        return (
+          <span className={`fw-semibold ${isExpired ? "text-danger" : "text-dark"}`}>
+            {text} {isExpired && <span className="badge bg-danger ms-1" style={{ fontSize: '9px' }}>Expired</span>}
+          </span>
+        );
+      },
+      sorter: (a: any, b: any) => {
+        const dateA = a.raw.expiryDate ? new Date(a.raw.expiryDate).getTime() : 0;
+        const dateB = b.raw.expiryDate ? new Date(b.raw.expiryDate).getTime() : 0;
+        return dateA - dateB;
+      }
     },
     {
       title: "Selling Price",
@@ -395,6 +463,90 @@ const MedicineManagement = () => {
                   <li><Link to="#" className="dropdown-item rounded-1 fs-13" onClick={(e) => { e.preventDefault(); setFilterStatus("All"); }}>All</Link></li>
                   <li><Link to="#" className="dropdown-item rounded-1 fs-13" onClick={(e) => { e.preventDefault(); setFilterStatus("Active"); }}>Active</Link></li>
                   <li><Link to="#" className="dropdown-item rounded-1 fs-13" onClick={(e) => { e.preventDefault(); setFilterStatus("Inactive"); }}>Inactive</Link></li>
+                </ul>
+              </div>
+
+              {/* Expiry Date Filter */}
+              <div className="dropdown">
+                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap fs-13" style={{ minWidth: "165px", minHeight: "38px" }} data-bs-toggle="dropdown">
+                  <span className="text-truncate">
+                    <span className="text-muted">Expiry:</span> {
+                      filterExpiryPreset === "Custom" 
+                        ? (filterExpiryStartDate || filterExpiryEndDate 
+                          ? `${filterExpiryStartDate ? filterExpiryStartDate.format("DD/MM") : "From"} - ${filterExpiryEndDate ? filterExpiryEndDate.format("DD/MM") : "To"}` 
+                          : "Custom")
+                        : filterExpiryPreset
+                    }
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-3" style={{ minWidth: "260px" }}>
+                  {["All", "Today", "Expired", "Last 7 Days", "Upcoming 7 Days"].map(preset => (
+                    <li key={preset}>
+                      <Link to="#" className="dropdown-item rounded-1 fs-13" onClick={(e) => { 
+                        e.preventDefault(); 
+                        setFilterExpiryPreset(preset); 
+                        setFilterExpiryStartDate(null);
+                        setFilterExpiryEndDate(null);
+                      }}>
+                        {preset}
+                      </Link>
+                    </li>
+                  ))}
+                  <li><hr className="dropdown-divider" /></li>
+                  <li>
+                    <div className="px-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="form-check mb-2">
+                        <input 
+                          className="form-check-input" 
+                          type="radio" 
+                          name="expiryPreset" 
+                          id="presetCustom" 
+                          checked={filterExpiryPreset === "Custom"} 
+                          onChange={() => setFilterExpiryPreset("Custom")} 
+                        />
+                        <label className="form-check-label fs-13 fw-semibold text-dark mb-0 ms-1" style={{ cursor: "pointer" }} htmlFor="presetCustom">
+                          Custom Range
+                        </label>
+                      </div>
+                      
+                      <div className="d-flex flex-column gap-2 mt-2">
+                        <div>
+                          <small className="text-muted d-block mb-1">From:</small>
+                          <DatePicker
+                            placeholder="Select Date"
+                            className="form-control text-dark text-nowrap fs-13 w-100"
+                            style={{ minHeight: "34px", paddingTop: "5px" }}
+                            format="DD-MM-YYYY"
+                            allowClear={true}
+                            suffixIcon={<i className="ti ti-calendar" />}
+                            onChange={(date) => {
+                              setFilterExpiryPreset("Custom");
+                              setFilterExpiryStartDate(date);
+                            }}
+                            value={filterExpiryStartDate}
+                            getPopupContainer={(trigger) => trigger.parentElement}
+                          />
+                        </div>
+                        <div>
+                          <small className="text-muted d-block mb-1">To:</small>
+                          <DatePicker
+                            placeholder="Select Date"
+                            className="form-control text-dark text-nowrap fs-13 w-100"
+                            style={{ minHeight: "34px", paddingTop: "5px" }}
+                            format="DD-MM-YYYY"
+                            allowClear={true}
+                            suffixIcon={<i className="ti ti-calendar" />}
+                            onChange={(date) => {
+                              setFilterExpiryPreset("Custom");
+                              setFilterExpiryEndDate(date);
+                            }}
+                            value={filterExpiryEndDate}
+                            getPopupContainer={(trigger) => trigger.parentElement}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </li>
                 </ul>
               </div>
 

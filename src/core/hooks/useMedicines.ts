@@ -77,5 +77,11 @@ export const useMedicines = () => {
         setMedicines((prev) => prev.filter((m) => !ids.includes(m.id)));
     };
 
-    return { medicines, loading, error, refetch: fetchMedicines, createMedicine, updateMedicine, deleteMedicine, bulkDeleteMedicines };
+    const addStock = async (id: string, quantity: number) => {
+        const updated = await apiPost<Medicine>(`/api/medicines/${id}/add-stock`, { quantity });
+        setMedicines((prev) => prev.map((m) => (m.id === id ? { ...m, ...updated } : m)));
+        return updated;
+    };
+
+    return { medicines, loading, error, refetch: fetchMedicines, createMedicine, updateMedicine, deleteMedicine, bulkDeleteMedicines, addStock };
 };

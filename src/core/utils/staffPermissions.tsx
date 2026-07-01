@@ -26,6 +26,12 @@ const LABEL_TO_MODULE: Record<string, string> = {
     "Diagnostic Test": "Diagnostic Test",
     "Diagnostic Booking": "Diagnostic Booking",
     "Invoice (Diagnostic)": "Invoice (Diagnostic)",
+    "Pharmacy Dashboard": "Pharmacy Dashboard",
+    "Pharmacy Category": "Pharmacy Category",
+    Medicine: "Medicine",
+    Inventory: "Inventory",
+    "Pharmacy Billing": "Pharmacy Billing",
+    "Sales History": "Sales History",
     Staffs: "Staffs",
     Departments: "Departments",
     Designation: "Designation",
@@ -80,6 +86,12 @@ const PATH_TO_MODULE: Record<string, string> = {
     "/pathlab/tests": "Diagnostic Test",
     "/pathlab/bookings": "Diagnostic Booking",
     "/pathlab/invoices": "Invoice (Diagnostic)",
+    "/pharmacy/dashboard": "Pharmacy Dashboard",
+    "/pharmacy/categories": "Pharmacy Category",
+    "/pharmacy/medicines": "Medicine",
+    "/pharmacy/inventory": "Inventory",
+    "/pharmacy/billing": "Pharmacy Billing",
+    "/pharmacy/sales-history": "Sales History",
     "/roles-permissions": "Roles & Permissions",
     "/roles-and-permissions": "Roles & Permissions"
 };
@@ -120,6 +132,10 @@ export const canSeeMenuItem = (label: string, sectionTitle?: string): boolean =>
     let lookupLabel = label;
     if (label === "Dashboard" && sectionTitle === "Diagnostic") {
         lookupLabel = "Diagnostic Dashboard";
+    } else if (label === "Dashboard" && sectionTitle === "Pharmacy") {
+        lookupLabel = "Pharmacy Dashboard";
+    } else if (label === "Category" && sectionTitle === "Pharmacy") {
+        lookupLabel = "Pharmacy Category";
     } else if (label === "Invoice" && sectionTitle === "Diagnostic") {
         lookupLabel = "Invoice (Diagnostic)";
     }
@@ -160,6 +176,7 @@ export const canSeeSection = (sectionTitle: string): boolean => {
         "HRM": ["Staffs", "Departments", "Designation", "Attendance", "Leaves", "Holidays", "Payroll", "Specializations"],
         "Finance & Accounts": ["Expenses", "Invoices", "Transactions"],
         "Diagnostic": ["Diagnostic Dashboard", "Category", "Diagnostic Test", "Diagnostic Booking", "Invoice (Diagnostic)"],
+        "Pharmacy": ["Pharmacy Dashboard", "Pharmacy Category", "Medicine", "Inventory", "Pharmacy Billing", "Sales History"],
     };
 
     const modules = sectionModules[sectionTitle];

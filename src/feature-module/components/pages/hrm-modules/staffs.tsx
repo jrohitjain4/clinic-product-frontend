@@ -131,36 +131,46 @@ const StaffsList = () => {
     {
       title: "Staff",
       dataIndex: "Staff",
-      render: (text: string, record: (typeof tableData)[0]) => (
-        <div className="d-flex align-items-center">
-          <button
-            type="button"
-            className="avatar me-2 border-0 bg-transparent p-0"
-            data-bs-toggle="modal"
-            data-bs-target="#view_staff"
-            onClick={() => { openStaff(record._raw); setViewStaff(record._raw); }}
-          >
-            <ImageWithBasePath
-              src={record.Image}
-              alt="Staff"
-              className="rounded-circle"
-            />
-          </button>
-          <div>
-            <h6 className="mb-1 fs-14 fw-semibold">
-              <button
-                type="button"
-                className="btn btn-link p-0 text-dark fw-semibold fs-14"
-                data-bs-toggle="modal"
-                data-bs-target="#view_staff"
-                onClick={() => { openStaff(record._raw); setViewStaff(record._raw); }}
-              >
-                {text}
-              </button>
-            </h6>
+      render: (text: string, record: (typeof tableData)[0]) => {
+        const hasImage = record.Image &&
+                         record.Image.trim() !== "" &&
+                         !record.Image.includes("300x300") &&
+                         !record.Image.includes("ui-avatars.com") &&
+                         !record.Image.includes("via.placeholder.com");
+        const staffImg = hasImage ? record.Image : "assets/img/patient-placeholder.png";
+
+        return (
+          <div className="d-flex align-items-center">
+            <button
+              type="button"
+              className="avatar me-2 border-0 bg-transparent p-0"
+              data-bs-toggle="modal"
+              data-bs-target="#view_staff"
+              onClick={() => { openStaff(record._raw); setViewStaff(record._raw); }}
+            >
+              <ImageWithBasePath
+                src={staffImg}
+                alt="Staff"
+                className="rounded-circle"
+                style={{ width: 38, height: 38, objectFit: "cover" }}
+              />
+            </button>
+            <div>
+              <h6 className="mb-1 fs-14 fw-semibold">
+                <button
+                  type="button"
+                  className="btn btn-link p-0 text-dark fw-semibold fs-14 text-decoration-none"
+                  data-bs-toggle="modal"
+                  data-bs-target="#view_staff"
+                  onClick={() => { openStaff(record._raw); setViewStaff(record._raw); }}
+                >
+                  {text}
+                </button>
+              </h6>
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
       sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
         a.Staff.localeCompare(b.Staff),
     },

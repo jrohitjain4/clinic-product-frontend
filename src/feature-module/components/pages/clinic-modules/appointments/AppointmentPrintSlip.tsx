@@ -33,8 +33,16 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
     ? sessionStartDate.add(totalSessionDays - 1, "day") 
     : sessionStartDate;
 
-  const clinicName = appointment?.clinic?.name || appointment?.clinicName || "CITY CARE CLINIC";
-  const clinicTagline = appointment?.clinic?.landingPage?.tagline || "Compassionate Care, Better Health";
+  let loginClinic: any = {};
+  try {
+    const userObj = JSON.parse(localStorage.getItem("user") || "{}");
+    loginClinic = userObj.clinic || {};
+  } catch (e) {}
+
+  const clinic = appointment?.clinic || loginClinic || {};
+
+  const clinicName = clinic.name || appointment?.clinicName || "CITY CARE CLINIC";
+  const clinicTagline = clinic.landingPage?.tagline || "Compassionate Care, Better Health";
   
   const defaultAddress = "123, Green Valley Road, Near City Mall, Civil Lines, Lucknow - 226001, Uttar Pradesh";
   const defaultPhone = "+91 98765 43210";
@@ -43,16 +51,22 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
   const defaultWebsite = "www.citycareclinic.com";
   const defaultLicense = "CCC/2023/00125";
 
-  const hasRealAddress = appointment?.clinic?.landingPage?.address && appointment?.clinic?.landingPage?.address !== defaultAddress 
-    ? appointment.clinic.landingPage.address 
-    : (appointment?.location && appointment?.location !== "OPD" && appointment?.location !== defaultAddress ? appointment.location : null);
+  const addressParts = [
+    clinic.addressLine1,
+    clinic.addressLine2,
+    clinic.city,
+    clinic.state,
+    clinic.country,
+    clinic.pincode ? `PIN - ${clinic.pincode}` : ""
+  ].filter(Boolean);
+  const clinicAddress = addressParts.length > 0 ? addressParts.join(", ") : null;
 
-  const hasRealPhone = appointment?.clinic?.phone && appointment?.clinic?.phone !== defaultPhone ? appointment.clinic.phone : null;
-  const hasRealAltPhone = appointment?.clinic?.landingPage?.phone && appointment?.clinic?.landingPage?.phone !== defaultAltPhone ? appointment.clinic.landingPage.phone : null;
-  const hasRealEmail = appointment?.clinic?.email && appointment?.clinic?.email !== defaultEmail ? appointment.clinic.email : null;
-  const hasRealLicense = appointment?.clinic?.license && appointment?.clinic?.license !== defaultLicense 
-    ? appointment.clinic.license 
-    : (appointment?.clinic?.landingPage?.license && appointment?.clinic?.landingPage?.license !== defaultLicense ? appointment.clinic.landingPage.license : null);
+  const hasRealAddress = clinicAddress || (appointment?.location && appointment?.location !== "OPD" && appointment?.location !== defaultAddress ? appointment.location : null);
+
+  const hasRealPhone = clinic.phone && clinic.phone !== defaultPhone ? clinic.phone : null;
+  const hasRealAltPhone = clinic.landingPage?.whatsapp && clinic.landingPage?.whatsapp !== defaultAltPhone ? clinic.landingPage.whatsapp : null;
+  const hasRealEmail = (clinic.ownerEmail || clinic.email) && (clinic.ownerEmail || clinic.email) !== defaultEmail ? (clinic.ownerEmail || clinic.email) : null;
+  const hasRealLicense = clinic.gstNumber && clinic.gstNumber !== defaultLicense ? clinic.gstNumber : null;
   
   // Format dates
   const apptDate = appointment?.scheduledAt 
@@ -92,10 +106,10 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
     <>
       <div className="appointment-slip-card border shadow-sm mx-auto mb-4 bg-white">
         {/* Watermark logo in center background */}
-        {appointment?.clinic?.landingPage?.logo && (
+        {clinic?.landingPage?.logo && (
           <div className="slip-watermark">
             <img 
-              src={resolveMediaUrl(appointment.clinic.landingPage.logo)} 
+              src={resolveMediaUrl(clinic.landingPage.logo)} 
               alt="Watermark" 
               onError={(e) => {
                 e.currentTarget.style.display = "none";

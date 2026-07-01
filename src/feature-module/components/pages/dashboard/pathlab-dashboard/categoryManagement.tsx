@@ -169,7 +169,21 @@ const CategoryManagement = () => {
     {
       title: "Description",
       dataIndex: "Description",
-      render: (text: string) => <span className="text-muted text-truncate d-inline-block" style={{ maxWidth: '300px' }}>{text}</span>,
+      render: (text: string) => (
+        <span
+          className="text-muted d-inline-block"
+          style={{
+            maxWidth: "300px",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            whiteSpace: "normal",
+          }}
+        >
+          {text}
+        </span>
+      ),
       sorter: (a: any, b: any) => a.Description.localeCompare(b.Description),
     },
     {

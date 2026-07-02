@@ -130,6 +130,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
     phone: form.phone || null,
     email: form.email || null,
     dob: form.dob ? form.dob.toISOString() : null,
+    age: form.dob ? dayjs().diff(form.dob, "year") : null,
     gender: form.gender || null,
     bloodGroup: form.bloodGroup || null,
     status: form.status || "Active",
@@ -208,6 +209,15 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
 
   return (
     <div className="page-wrapper">
+      <style>{`
+        .input-icon-end .ant-picker-dropdown {
+          position: absolute !important;
+          top: 100% !important;
+          bottom: auto !important;
+          transform: none !important;
+          z-index: 10000 !important;
+        }
+      `}</style>
       <div className="content">
         <div className="row justify-content-center">
           <div className="col-lg-12">
@@ -262,7 +272,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <input type="text" className="form-control" placeholder="Enter Last Name" value={form.lastName} onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))} />
                       </div>
                     </div>
-                    <div className="col-md-4">
+                    <div className="col-md-2">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
                           DOB<span className="text-danger ms-1">*</span>
@@ -271,18 +281,43 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                           <DatePicker
                             className="form-control datetimepicker w-100"
                             format={{ format: "DD-MM-YYYY", type: "mask" }}
-                            getPopupContainer={getModalContainer}
+                            getPopupContainer={(triggerNode) => triggerNode.parentElement || document.body}
                             placeholder="DD-MM-YYYY"
                             suffixIcon={null}
                             value={form.dob}
                             onChange={(d: Dayjs | null) =>
                               setForm((f) => ({ ...f, dob: d }))
                             }
+                            placement="bottomLeft"
                           />
                           <span className="input-icon-addon">
                             <i className="ti ti-calendar" />
                           </span>
                         </div>
+                      </div>
+                    </div>
+                    <div className="col-md-2">
+                      <div className="mb-3">
+                        <label className="form-label mb-1 fw-medium">
+                          Age (Years)
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          placeholder="Age"
+                          value={form.dob ? dayjs().diff(form.dob, "year") : ""}
+                          onChange={(e) => {
+                            const ageVal = parseInt(e.target.value, 10);
+                            if (!isNaN(ageVal) && ageVal >= 0) {
+                              setForm((f) => ({
+                                ...f,
+                                dob: dayjs().subtract(ageVal, "year").startOf("year")
+                              }));
+                            } else {
+                              setForm((f) => ({ ...f, dob: null }));
+                            }
+                          }}
+                        />
                       </div>
                     </div>
                     <div className="col-md-4">

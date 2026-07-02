@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { Link } from "react-router"
 import { toast } from "react-toastify"
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar"
+import { resolveMediaUrl } from "../../../../../../core/config/api"
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000"
 const GALLERY_CATEGORIES = ["Reception", "Waiting Area", "Consultation Room", "Equipment", "Other"]
@@ -31,20 +32,43 @@ const MaintenanceModeSettings = () => {
       .catch(() => { })
   }, [clinicId])
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length === 0) return;
-    
-    files.forEach(file => {
-      const reader = new FileReader()
-      reader.onload = ev => {
-        setGallery(prev => [...prev, { url: ev.target?.result as string, category: "Reception", caption: "" }])
+
+    setSaving(true);
+    let uploadedCount = 0;
+
+    for (const file of files) {
+      try {
+        const token = localStorage.getItem("token")
+        const formData = new FormData();
+        formData.append("image", file);
+
+        const res = await fetch(`${API}/api/uploads/landing-image`, {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.message || "Upload failed");
+        }
+
+        const data = await res.json();
+        setGallery(prev => [...prev, { url: data.url, category: "Reception", caption: "" }]);
+        uploadedCount++;
+      } catch (err: any) {
+        toast.error(`Failed to upload ${file.name}: ${err.message || "Server error"}`);
       }
-      reader.readAsDataURL(file)
-    })
-    
+    }
+
+    setSaving(false);
     if (fileInputRef.current) fileInputRef.current.value = ""
-    toast.success(`${files.length} photo(s) added to gallery preview!`);
+    if (uploadedCount > 0) {
+      toast.success(`${uploadedCount} photo(s) uploaded successfully to gallery preview!`);
+    }
   }
 
   const updateItem = (i: number, key: keyof GalleryItem, value: string) =>
@@ -120,7 +144,7 @@ const MaintenanceModeSettings = () => {
                             <div key={i} className="col-lg-4 col-md-6">
                               <div className="card border shadow-none">
                                 <div className="position-relative" style={{ height: 160, overflow: "hidden", borderRadius: "0.375rem 0.375rem 0 0" }}>
-                                  <img src={item.url} alt={item.caption || "gallery"} className="w-100 h-100 object-fit-cover" />
+                                  <img src={resolveMediaUrl(item.url)} alt={item.caption || "gallery"} className="w-100 h-100 object-fit-cover" />
                                   <button type="button" className="btn btn-sm btn-danger position-absolute top-0 end-0 m-1"
                                     onClick={() => removeItem(i)}><i className="ti ti-x" /></button>
                                 </div>

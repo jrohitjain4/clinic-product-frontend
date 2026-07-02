@@ -386,9 +386,19 @@ export default function ClinicLandingPage() {
             const fromFormatted = dayjs(session.from, "HH:mm").format("hh:mm A");
             const toFormatted = dayjs(session.to, "HH:mm").format("hh:mm A");
 
+            const isTwentyFourSeven = 
+                session.session === "24 Hours Available" || 
+                session.label === "24 Hours Available" ||
+                (session.from === "00:00:00" && session.to === "23:59:00") ||
+                (session.from === "00:00" && session.to === "23:59") ||
+                (session.from === "00:00:00" && session.to === "23:59:59") ||
+                (session.from === "00:00" && session.to === "23:59:59");
+
             return {
                 value: session.from,
-                label: `${sessionLabel}: ${fromFormatted} – ${toFormatted}`,
+                label: isTwentyFourSeven 
+                    ? "24 Hours Available" 
+                    : `${sessionLabel}: ${fromFormatted} – ${toFormatted}`,
             };
         });
     }, [availability, bookForm.date]);
@@ -1418,7 +1428,7 @@ export default function ClinicLandingPage() {
                                                 >
                                                     <div className="position-relative overflow-hidden" style={{ aspectRatio: "1 / 1" }}>
                                                         <img 
-                                                            src={img.url} 
+                                                            src={resolveMediaUrl(img.url)} 
                                                             alt={img.category} 
                                                             className="w-100 h-100 dy-gallery-img" 
                                                             style={{ transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)", objectFit: "cover" }} 
@@ -2275,7 +2285,7 @@ export default function ClinicLandingPage() {
                         onClick={() => setActivePhoto(null)}
                     />
                     <img 
-                        src={activePhoto} 
+                        src={resolveMediaUrl(activePhoto)} 
                         alt="Gallery Preview" 
                         className="img-fluid rounded-3 shadow-lg" 
                         style={{ maxHeight: "85vh", maxWidth: "95vw", objectFit: "contain" }} 

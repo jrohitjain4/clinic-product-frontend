@@ -86,9 +86,11 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
   const patientCode = appointment?.patient?.patientCode || appointment?.patientId?.slice(-6).toUpperCase() || "—";
   const patientPhone = appointment?.patient?.phone || "—";
   const patientGender = appointment?.patient?.gender || "—";
-  const patientAge = appointment?.patient?.dob 
-    ? `${dayjs().diff(appointment.patient.dob, "year")} Years` 
-    : "—";
+  const patientAge = appointment?.patient?.age !== null && appointment?.patient?.age !== undefined
+    ? `${appointment.patient.age} Years`
+    : appointment?.patient?.dob 
+      ? `${dayjs().diff(appointment.patient.dob, "year")} Years` 
+      : "—";
   const patientBloodGroup = appointment?.patient?.bloodGroup || "—";
   
   const patientAddress = [appointment?.patient?.address1, appointment?.patient?.address2]

@@ -133,7 +133,30 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
     Sunday: [],
   });
   const [lockedDays, setLockedDays] = useState<Record<string, boolean>>({});
+  const [twentyFourSeven, setTwentyFourSeven] = useState<Record<string, boolean>>({});
   const [activeScheduleDay, setActiveScheduleDay] = useState<string>("Monday");
+
+  const handleTwentyFourSevenChange = (day: string, checked: boolean) => {
+    setTwentyFourSeven((prev) => ({ ...prev, [day]: checked }));
+    if (checked) {
+      setSchedules((prev) => ({
+        ...prev,
+        [day]: [
+          {
+            id: Date.now() + Math.random(),
+            session: "24 Hours Available",
+            from: dayjs("00:00:00", "HH:mm:ss"),
+            to: dayjs("23:59:00", "HH:mm:ss"),
+          },
+        ],
+      }));
+    } else {
+      setSchedules((prev) => ({
+        ...prev,
+        [day]: [],
+      }));
+    }
+  };
 
   const [educations, setEducations] = useState<EducationEntry[]>([]);
   const [awards, setAwards] = useState<AwardEntry[]>([]);
@@ -349,12 +372,21 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
 
         // Auto-lock days that have schedules
         const loadedLockedDays: Record<string, boolean> = {};
+        const loadedTwentyFourSeven: Record<string, boolean> = {};
         Object.keys(parsedSchedules).forEach(day => {
           if (parsedSchedules[day] && parsedSchedules[day].length > 0) {
             loadedLockedDays[day] = true;
+            const firstRow = parsedSchedules[day][0];
+            if (
+              firstRow.session === "24 Hours Available" ||
+              (firstRow.from?.format("HH:mm") === "00:00" && firstRow.to?.format("HH:mm") === "23:59")
+            ) {
+              loadedTwentyFourSeven[day] = true;
+            }
           }
         });
         setLockedDays(loadedLockedDays);
+        setTwentyFourSeven(loadedTwentyFourSeven);
         const edu = toEducationEntries(d.educations);
         const aw = toAwardEntries(d.awards);
         const cert = toAwardEntries(d.certifications);
@@ -1289,22 +1321,44 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                             role="tabpanel"
                           >
                             <div className="add-schedule-list border rounded p-4 bg-light border-dashed mb-2 position-relative">
-                              <div className="d-flex align-items-center justify-content-between mb-4">
+                              <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
                                 <div>
                                   <h6 className="fw-bold mb-1 text-primary">{day} Working Hours</h6>
                                   <p className="text-muted fs-12 mb-0">Define session timings for this specific day</p>
                                 </div>
+                                <div className="form-check form-switch mb-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    role="switch"
+                                    id={`twentyFourSeven-${day}`}
+                                    checked={twentyFourSeven[day] || false}
+                                    onChange={(e) => handleTwentyFourSevenChange(day, e.target.checked)}
+                                    disabled={lockedDays[day]}
+                                    style={{ cursor: lockedDays[day] ? "not-allowed" : "pointer" }}
+                                  />
+                                  <label className="form-check-label fw-bold text-dark fs-13" htmlFor={`twentyFourSeven-${day}`} style={{ cursor: lockedDays[day] ? "not-allowed" : "pointer" }}>
+                                    24/7 Available (24 Hours)
+                                  </label>
+                                </div>
                               </div>
 
                               <div className={`${lockedDays[day] ? "opacity-75" : ""}`}>
-                                <DuplicateForms
-                                  key={`${day}-${lockedDays[day]}`}
-                                  initialRows={schedules[day]}
-                                  onChange={(rows) =>
-                                    setSchedules((prev) => ({ ...prev, [day]: rows }))
-                                  }
-                                  disabled={lockedDays[day]}
-                                />
+                                {twentyFourSeven[day] ? (
+                                  <div className="alert alert-info py-2 px-3 fs-13 mb-3 d-flex align-items-center gap-2">
+                                    <i className="ti ti-clock-filled text-info fs-16" />
+                                    <span>This day is set as <strong>24/7 Available (24 Hours)</strong>. Timings are fixed from 12:00 am to 11:59 pm.</span>
+                                  </div>
+                                ) : (
+                                  <DuplicateForms
+                                    key={`${day}-${lockedDays[day]}`}
+                                    initialRows={schedules[day]}
+                                    onChange={(rows) =>
+                                      setSchedules((prev) => ({ ...prev, [day]: rows }))
+                                    }
+                                    disabled={lockedDays[day]}
+                                  />
+                                )}
                                 <div className="mt-3 d-flex justify-content-end">
                                   <button
                                     type="button"

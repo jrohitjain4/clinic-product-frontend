@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Modal, DatePicker } from "antd";
+import dayjs from "dayjs";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import {
@@ -96,6 +97,7 @@ const AddPatientModal = ({ show, onHide, onSuccess, hideBackdrop = false }: AddP
                     phone: form.phone || null,
                     email: form.email || null,
                     dob: form.dob ? form.dob.toISOString() : null,
+                    age: form.dob ? dayjs().diff(form.dob, "year") : null,
                     gender: form.gender || null,
                     bloodGroup: form.bloodGroup || null,
                     status: form.status || "Active",
@@ -125,6 +127,15 @@ const AddPatientModal = ({ show, onHide, onSuccess, hideBackdrop = false }: AddP
 
     return (
         <>
+            <style>{`
+                .dob-picker-wrapper .ant-picker-dropdown {
+                    position: absolute !important;
+                    top: 100% !important;
+                    bottom: auto !important;
+                    transform: none !important;
+                    z-index: 10000 !important;
+                }
+            `}</style>
             <div className={`modal custom-modal fade ${show ? "show d-block" : "d-none"}`} role="dialog" style={{ zIndex: 1055 }}>
                 <div className="modal-dialog modal-dialog-centered modal-lg">
                     <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
@@ -191,14 +202,38 @@ const AddPatientModal = ({ show, onHide, onSuccess, hideBackdrop = false }: AddP
                                         onChange={(e) => setForm({ ...form, email: e.target.value })}
                                     />
                                 </div>
-                                <div className="col-md-6 mb-3">
+                                <div className="col-md-3 mb-3">
                                     <label className="form-label mb-1 fw-medium">DOB (Optional)</label>
-                                    <DatePicker
-                                        className="form-control w-100 datetimepicker"
-                                        format="DD-MM-YYYY"
-                                        placeholder="Select date"
-                                        value={form.dob}
-                                        onChange={(d) => setForm({ ...form, dob: d })}
+                                    <div className="position-relative dob-picker-wrapper">
+                                        <DatePicker
+                                            className="form-control w-100 datetimepicker"
+                                            format="DD-MM-YYYY"
+                                            placeholder="Select date"
+                                            value={form.dob}
+                                            onChange={(d) => setForm({ ...form, dob: d })}
+                                            placement="bottomLeft"
+                                            getPopupContainer={(triggerNode) => triggerNode.parentElement || document.body}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="col-md-3 mb-3">
+                                    <label className="form-label mb-1 fw-medium">Age</label>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        placeholder="Age (Years)"
+                                        value={form.dob ? dayjs().diff(form.dob, "year") : ""}
+                                        onChange={(e) => {
+                                            const ageVal = parseInt(e.target.value, 10);
+                                            if (!isNaN(ageVal) && ageVal >= 0) {
+                                                setForm({
+                                                    ...form,
+                                                    dob: dayjs().subtract(ageVal, "year").startOf("year")
+                                                });
+                                            } else {
+                                                setForm({ ...form, dob: null });
+                                            }
+                                        }}
                                     />
                                 </div>
                                 <div className="col-md-6 mb-3">

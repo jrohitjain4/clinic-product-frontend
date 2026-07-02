@@ -56,6 +56,34 @@ const DoctorSchedules = () => {
   const [saving, setSaving] = useState(false);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
 
+  // New Availability states
+  const [twentyFourSeven, setTwentyFourSeven] = useState<Record<string, boolean>>({});
+  const [slotBookingEnabled, setSlotBookingEnabled] = useState(false);
+  const [appointmentDuration, setAppointmentDuration] = useState("");
+  const [maxBookingsPerSlot, setMaxBookingsPerSlot] = useState("");
+
+  const handleTwentyFourSevenChange = (day: string, checked: boolean) => {
+    setTwentyFourSeven((prev) => ({ ...prev, [day]: checked }));
+    if (checked) {
+      setSchedules((prev) => ({
+        ...prev,
+        [day]: [
+          {
+            id: Date.now() + Math.random(),
+            session: "24 Hours Available",
+            from: "00:00",
+            to: "23:59",
+          },
+        ],
+      }));
+    } else {
+      setSchedules((prev) => ({
+        ...prev,
+        [day]: [],
+      }));
+    }
+  };
+
   const doctorOptions = useMemo(
     () => doctors.map((d: any) => ({ value: d.id, label: d.fullName })),
     [doctors]
@@ -70,6 +98,10 @@ const DoctorSchedules = () => {
   const loadSchedule = useCallback(async () => {
     if (!selectedDoctorId) {
       setSchedules(emptySchedule());
+      setTwentyFourSeven({});
+      setSlotBookingEnabled(false);
+      setAppointmentDuration("");
+      setMaxBookingsPerSlot("");
       return;
     }
     setLoadingSchedule(true);
@@ -88,6 +120,7 @@ const DoctorSchedules = () => {
       if (!parsed || typeof parsed !== "object") parsed = {};
 
       const newSchedule: ScheduleMap = {};
+      const newTwentyFourSeven: Record<string, boolean> = {};
       for (const day of WEEKDAYS) {
         const slots = parsed[day];
         if (Array.isArray(slots) && slots.length > 0) {
@@ -97,11 +130,27 @@ const DoctorSchedules = () => {
             from: s.from || s.startTime || "",
             to: s.to || s.endTime || "",
           }));
+          const firstRow = newSchedule[day][0];
+          if (
+            firstRow.session === "24 Hours Available" ||
+            (firstRow.from === "00:00" && firstRow.to === "23:59") ||
+            (firstRow.from === "00:00:00" && firstRow.to === "23:59:00")
+          ) {
+            newTwentyFourSeven[day] = true;
+          }
         } else {
           newSchedule[day] = [];
         }
       }
       setSchedules(newSchedule);
+      setTwentyFourSeven(newTwentyFourSeven);
+
+      const duration = data.appointmentDuration;
+      const maxBookings = data.maxBookingsPerSlot;
+      setAppointmentDuration(duration != null ? String(duration) : "");
+      setMaxBookingsPerSlot(maxBookings != null ? String(maxBookings) : "");
+      setSlotBookingEnabled(!!duration && maxBookings != null);
+
       setEditing(false);
     } catch (err: any) {
       toast.error(err.message || "Failed to load schedule");
@@ -151,13 +200,26 @@ const DoctorSchedules = () => {
             .map((s) => ({ session: s.session, from: s.from, to: s.to }));
         }
       }
+
+      const updatePayload: any = {
+        schedules: payload,
+      };
+
+      if (slotBookingEnabled) {
+        updatePayload.appointmentDuration = appointmentDuration ? parseInt(appointmentDuration) : 30;
+        updatePayload.maxBookingsPerSlot = maxBookingsPerSlot ? parseInt(maxBookingsPerSlot) : 1;
+      } else {
+        updatePayload.appointmentDuration = ""; // sets to null in backend
+        updatePayload.maxBookingsPerSlot = ""; // sets to null in backend
+      }
+
       const res = await fetch(apiUrl(`/api/doctors/${selectedDoctorId}`), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ schedules: payload }),
+        body: JSON.stringify(updatePayload),
       });
       if (!res.ok) throw new Error("Failed to save schedule");
       toast.success("Schedule saved successfully!");
@@ -331,9 +393,34 @@ const DoctorSchedules = () => {
                     })}
                   </ul>
 
+                  {/* Day Content Header */}
+                  <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                    <h6 className="fw-bold mb-0 text-primary">{activeDay} Timings</h6>
+                    <div className="form-check form-switch mb-0">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        role="switch"
+                        id={`twentyFourSeven-${activeDay}`}
+                        checked={twentyFourSeven[activeDay] || false}
+                        onChange={(e) => handleTwentyFourSevenChange(activeDay, e.target.checked)}
+                        disabled={!editing}
+                        style={{ cursor: editing ? "pointer" : "not-allowed" }}
+                      />
+                      <label className="form-check-label fw-bold text-dark fs-13" htmlFor={`twentyFourSeven-${activeDay}`} style={{ cursor: editing ? "pointer" : "not-allowed" }}>
+                        24/7 Available (24 Hours)
+                      </label>
+                    </div>
+                  </div>
+
                   {/* Day Content */}
                   <div className="add-schedule-list">
-                    {(schedules[activeDay] || []).length === 0 ? (
+                    {twentyFourSeven[activeDay] ? (
+                      <div className="alert alert-info py-3 px-4 fs-13 mb-3 d-flex align-items-center gap-2">
+                        <i className="ti ti-clock-filled text-info fs-18" />
+                        <span>This day is set as <strong>24/7 Available (24 Hours)</strong>. Timings are fixed from 12:00 AM to 11:59 PM.</span>
+                      </div>
+                    ) : (schedules[activeDay] || []).length === 0 ? (
                       <div className="text-center py-4 border rounded bg-light mb-3">
                         <p className="text-muted mb-2">No schedule set for {activeDay}</p>
                         {editing && (
@@ -425,7 +512,7 @@ const DoctorSchedules = () => {
                       ))
                     )}
 
-                    {editing && (schedules[activeDay] || []).length > 0 && (
+                    {editing && !twentyFourSeven[activeDay] && (schedules[activeDay] || []).length > 0 && (
                       <button
                         className="btn btn-sm btn-outline-primary mt-1"
                         onClick={() => addSlot(activeDay)}
@@ -434,6 +521,68 @@ const DoctorSchedules = () => {
                         <i className="ti ti-plus me-1" /> Add Another Session
                       </button>
                     )}
+                  </div>
+
+                  <hr className="my-4" />
+
+                  {/* Slot Booking Settings Card Section */}
+                  <div className="border rounded bg-white shadow-sm overflow-hidden">
+                    <div className="bg-light px-3 py-2 d-flex align-items-center justify-content-between">
+                      <h6 className="fw-bold mb-0 d-flex align-items-center gap-2 text-dark">
+                        <i className="ti ti-calendar-time text-primary fs-18" />
+                        Slot Booking Settings
+                        {slotBookingEnabled && (
+                          <span className="badge bg-soft-success text-success fw-normal fs-11 ms-2">Enabled</span>
+                        )}
+                      </h6>
+                      <div className="form-check form-switch mb-0">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          role="switch"
+                          id="slotBookingEnabled"
+                          checked={slotBookingEnabled}
+                          onChange={(e) => {
+                            if (!editing) return;
+                            setSlotBookingEnabled(e.target.checked);
+                          }}
+                          disabled={!editing}
+                          style={{ cursor: editing ? "pointer" : "not-allowed" }}
+                        />
+                        <label className="form-check-label fw-bold text-dark fs-13 ms-1" htmlFor="slotBookingEnabled" style={{ cursor: editing ? "pointer" : "not-allowed" }}>
+                          Enable Slot Booking
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className={`p-3 transition-all ${!slotBookingEnabled ? "opacity-50 pointer-events-none" : ""}`}>
+                      <div className="row g-3">
+                        <div className="col-md-6 col-12">
+                          <label className="form-label fw-semibold mb-1">Slot Duration (Minutes) <span className="text-danger">*</span></label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={appointmentDuration}
+                            onChange={(e) => setAppointmentDuration(e.target.value)}
+                            disabled={!editing || !slotBookingEnabled}
+                            placeholder="e.g. 30"
+                            min={1}
+                          />
+                        </div>
+                        <div className="col-md-6 col-12">
+                          <label className="form-label fw-semibold mb-1">Max Bookings per Slot <span className="text-danger">*</span></label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={maxBookingsPerSlot}
+                            onChange={(e) => setMaxBookingsPerSlot(e.target.value)}
+                            disabled={!editing || !slotBookingEnabled}
+                            placeholder="e.g. 1"
+                            min={1}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

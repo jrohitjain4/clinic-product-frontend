@@ -256,15 +256,26 @@ const AppointmentDetails = () => {
         if (!doctorAvailability || !followUpDate) return [];
         const dayName = followUpDate.format("dddd"); // Match main form logic
         const daySchedule = doctorAvailability.schedules?.[dayName] || [];
+        if (!Array.isArray(daySchedule) || daySchedule.length === 0) return [];
 
         return daySchedule.map((session: any, idx: number) => {
             const sessionLabel = session.label || (idx === 0 ? "Morning Session" : idx === 1 ? "Evening Session" : `Session ${idx + 1}`);
             const fromFormatted = dayjs(session.from, "HH:mm").format("hh:mm A");
             const toFormatted = dayjs(session.to, "HH:mm").format("hh:mm A");
 
+            const isTwentyFourSeven = 
+                session.session === "24 Hours Available" || 
+                session.label === "24 Hours Available" ||
+                (session.from === "00:00:00" && session.to === "23:59:00") ||
+                (session.from === "00:00" && session.to === "23:59") ||
+                (session.from === "00:00:00" && session.to === "23:59:59") ||
+                (session.from === "00:00" && session.to === "23:59:59");
+
             return {
                 value: session.from,
-                label: `${sessionLabel}: ${fromFormatted} – ${toFormatted}`,
+                label: isTwentyFourSeven 
+                    ? "24 Hours Available" 
+                    : `${sessionLabel}: ${fromFormatted} – ${toFormatted}`,
             };
         });
     }, [doctorAvailability, followUpDate]);

@@ -20,7 +20,7 @@ const SIDEBAR_SECTIONS = [
       { key: "Doctors", label: "Doctors" },
       { key: "Patients", label: "Patients" },
       { key: "Appointments", label: "Appointments" },
-      { key: "Services", label: "Services and Medicines" }
+      { key: "Services", label: "Services" }
     ]
   },
   {

@@ -1,4 +1,4 @@
-﻿import { Link, useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
 import { useState, useEffect } from "react";
@@ -49,9 +49,11 @@ const DoctorsPrescriptionDetails = () => {
   const doctor = prescription.doctor || {};
   const medicines = prescription.medicines || [];
 
-  const patientAge = patient.dob
-    ? Math.floor((Date.now() - new Date(patient.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
-    : null;
+  const patientAge = patient.age !== null && patient.age !== undefined
+    ? patient.age
+    : patient.dob
+      ? Math.floor((Date.now() - new Date(patient.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+      : null;
 
   return (
     <>

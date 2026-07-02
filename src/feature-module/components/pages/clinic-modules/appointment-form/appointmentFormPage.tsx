@@ -219,9 +219,19 @@ const AppointmentFormPage = ({ mode = "create", isModal = false, onSuccess, onCa
       const fromFormatted = dayjs(session.from, "HH:mm").format("hh:mm A");
       const toFormatted = dayjs(session.to, "HH:mm").format("hh:mm A");
 
+      const isTwentyFourSeven = 
+        session.session === "24 Hours Available" || 
+        session.label === "24 Hours Available" ||
+        (session.from === "00:00:00" && session.to === "23:59:00") ||
+        (session.from === "00:00" && session.to === "23:59") ||
+        (session.from === "00:00:00" && session.to === "23:59:59") ||
+        (session.from === "00:00" && session.to === "23:59:59");
+
       return {
         value: session.from,
-        label: `${sessionLabel}: ${fromFormatted} – ${toFormatted}`,
+        label: isTwentyFourSeven 
+          ? "24 Hours Available" 
+          : `${sessionLabel}: ${fromFormatted} – ${toFormatted}`,
       };
     });
   }, [availability, form.appointmentDate]);

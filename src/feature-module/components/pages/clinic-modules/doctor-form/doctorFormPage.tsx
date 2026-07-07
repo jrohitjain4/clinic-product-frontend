@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { Link, useNavigate } from "react-router";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import TagInput from "../../../../../core/common/Taginput";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import DuplicateForms, {
   cloneScheduleRows,
 } from "../../../../../core/common/duplicate-forms/duplicateForms";
@@ -133,6 +133,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
     Sunday: [],
   });
   const [lockedDays, setLockedDays] = useState<Record<string, boolean>>({});
+  const [dayEnabled, setDayEnabled] = useState<Record<string, boolean>>({});
   const [twentyFourSeven, setTwentyFourSeven] = useState<Record<string, boolean>>({});
   const [activeScheduleDay, setActiveScheduleDay] = useState<string>("Monday");
 
@@ -180,6 +181,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   const [showAwards, setShowAwards] = useState(false);
   const [showCertifications, setShowCertifications] = useState(false);
   const [showDocuments, setShowDocuments] = useState(false);
+  const [showAddress, setShowAddress] = useState(false);
   const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [showSlotBooking, setShowSlotBooking] = useState(false);
   const [slotBookingEnabled, setSlotBookingEnabled] = useState(false);
@@ -196,6 +198,46 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
     }
     return Object.keys(out).length ? out : null;
   };
+
+  const previewSlots = useMemo(() => {
+    if (!slotBookingEnabled) return [];
+    const duration = parseInt(appointmentDuration, 10);
+    if (isNaN(duration) || duration <= 0) return [];
+
+    const day = activeScheduleDay;
+    if (!dayEnabled[day]) return [];
+
+    const rows = schedules[day] || [];
+    const slotsList: string[] = [];
+
+    let timeRanges = rows;
+    if (twentyFourSeven[day]) {
+      timeRanges = [
+        {
+          id: 1,
+          session: "24 Hours Available",
+          from: dayjs("00:00:00", "HH:mm:ss"),
+          to: dayjs("23:59:00", "HH:mm:ss"),
+        }
+      ];
+    }
+
+    timeRanges.forEach((range) => {
+      if (!range.from || !range.to) return;
+      let current = dayjs(range.from);
+      const end = dayjs(range.to);
+
+      let count = 0;
+      while (current.isBefore(end) || current.isSame(end, 'minute')) {
+        if (count >= 100) break;
+        slotsList.push(current.format("hh:mm A"));
+        current = current.add(duration, "minute");
+        count++;
+      }
+    });
+
+    return slotsList;
+  }, [slotBookingEnabled, appointmentDuration, activeScheduleDay, dayEnabled, schedules, twentyFourSeven]);
 
 
 
@@ -335,6 +377,9 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         setCity(d.city || "");
         setStateVal(d.state || "");
         setPincode(d.pincode || "");
+        if (d.address1 || d.city || d.state || d.pincode) {
+          setShowAddress(true);
+        }
         setAcceptingAppointments(!!d.appointmentType || !!d.consultationCharge);
         setAppointmentType(d.appointmentType || "");
         setAcceptBookingsInAdvance(
@@ -387,6 +432,14 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         });
         setLockedDays(loadedLockedDays);
         setTwentyFourSeven(loadedTwentyFourSeven);
+        // Auto-enable days that have schedule data
+        const loadedDayEnabled: Record<string, boolean> = {};
+        Object.keys(parsedSchedules).forEach(day => {
+          if (parsedSchedules[day] && parsedSchedules[day].length > 0) {
+            loadedDayEnabled[day] = true;
+          }
+        });
+        setDayEnabled(loadedDayEnabled);
         const edu = toEducationEntries(d.educations);
         const aw = toAwardEntries(d.awards);
         const cert = toAwardEntries(d.certifications);
@@ -581,22 +634,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
       }
     }
 
-    if (!address1.trim()) {
-      toast.error("Address 1 involves house/street details and is required.");
-      return;
-    }
-    if (!city || city === "Select") {
-      toast.error("Please select a city.");
-      return;
-    }
-    if (!stateVal || stateVal === "Select") {
-      toast.error("Please select a state.");
-      return;
-    }
-    if (!pincode.trim()) {
-      toast.error("Pincode is required.");
-      return;
-    }
+    // Address fields are optional — no validation needed
 
     // Filter schedules: only send locked days
     const activeSchedules: Record<string, RowType[]> = {};
@@ -1036,242 +1074,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       </div>
                     </div>
 
-                    {/* -- Address Information ----------------- */}
-                    <div className="bg-light px-3 py-2 mb-2">
-                      <h6 className="fw-bold mb-0">Address Information</h6>
-                    </div>
-                    <div className="pb-0">
-                      <div className="row">
-                        <div className="col-lg-6">
-                          <div style={{ marginBottom: "10px" }}>
-                            <label className="form-label mb-0">Address 1 <span className="text-danger ms-1">*</span></label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={address1}
-                              onChange={(e) => setAddress1(e.target.value)}
-                              placeholder="House No, Building, Street Name"
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6">
-                          <div style={{ marginBottom: "10px" }}>
-                            <label className="form-label mb-0">Address 2 (Optional)</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={address2}
-                              onChange={(e) => setAddress2(e.target.value)}
-                              placeholder="Landmark, Area, Colony"
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6">
-                          <div style={{ marginBottom: "10px" }}>
-                            <label className="form-label mb-0">Country</label>
-                            <CommonSelect
-                              options={Country}
-                              className="select"
-                              value={findSelectOption(Country, country) || { value: "India", label: "India" }}
-                              onChange={(opt: any) => setCountry(opt?.value || "")}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6">
-                          <div style={{ marginBottom: "10px" }}>
-                            <label className="form-label mb-0">State <span className="text-danger ms-1">*</span></label>
-                            <CommonSelect
-                              options={State}
-                              className="select"
-                              value={findSelectOption(State, stateVal) || State[0]}
-                              onChange={(opt: any) => setStateVal(opt?.value || "")}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6">
-                          <div style={{ marginBottom: "10px" }}>
-                            <label className="form-label mb-0">City <span className="text-danger ms-1">*</span></label>
-                            <CommonSelect
-                              options={City}
-                              className="select"
-                              value={findSelectOption(City, city) || City[0]}
-                              onChange={(opt: any) => setCity(opt?.value || "")}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6">
-                          <div style={{ marginBottom: "10px" }}>
-                            <label className="form-label mb-0">Pincode <span className="text-danger ms-1">*</span></label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={pincode}
-                              onChange={(e) => setPincode(e.target.value)}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* -- Additional Details (Optional, Collapsible) -- */}
-                    <div className="border rounded mb-2 mx-0 bg-white">
-                      <div
-                        className="bg-light px-3 py-2 d-flex align-items-center justify-content-between"
-                        onClick={() => setShowOptionalFields(!showOptionalFields)}
-                        style={{ cursor: "pointer", userSelect: "none", borderRadius: showOptionalFields ? "0.375rem 0.375rem 0 0" : "0.375rem" }}
-                      >
-                        <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                          <i className="ti ti-list-details text-primary fs-18" />
-                          Additional Details
-                          <span className="badge bg-soft-secondary text-muted fw-normal fs-11 ms-1">Optional</span>
-                        </h6>
-                        <i className={`ti ${showOptionalFields ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-dark`} />
-                      </div>
-                      {showOptionalFields && (
-                        <div className="p-3">
-                          <div className="row">
-                            {/* Specialization + Qualification */}
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">Specializations</label>
-                                {specOptions.length > 0 ? (
-                                  <CommonSelect
-                                    options={specOptions}
-                                    className="select"
-                                    value={specOptions.filter((o: any) => selectedSpecializations.includes(o.value)) as any}
-                                    placeholder="Select specializations"
-                                    isMulti={true}
-                                    onChange={(opt: any) =>
-                                      setSelectedSpecializations(
-                                        Array.isArray(opt) ? opt.map((o: any) => o.value) : []
-                                      )
-                                    }
-                                  />
-                                ) : (
-                                  <div className="form-control text-muted py-2">
-                                    No specializations available
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">Qualification</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  value={qualification}
-                                  onChange={(e) => setQualification(e.target.value)}
-                                  placeholder="e.g. MBBS, MD"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Marital Status + License */}
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">Marital Status</label>
-                                <CommonSelect
-                                  options={[
-                                    { value: "Single", label: "Single" },
-                                    { value: "Married", label: "Married" },
-                                    { value: "Divorced", label: "Divorced" },
-                                    { value: "Widowed", label: "Widowed" },
-                                  ]}
-                                  className="select"
-                                  value={
-                                    maritalStatus
-                                      ? { value: maritalStatus, label: maritalStatus }
-                                      : null
-                                  }
-                                  onChange={(opt: any) => setMaritalStatus(opt?.value || "")}
-                                />
-                              </div>
-                            </div>
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">Medical License Number</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  value={medicalLicenseNumber}
-                                  onChange={(e) => setMedicalLicenseNumber(e.target.value)}
-                                  placeholder="ML-123456"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Languages + Alt Contact */}
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">Language Spoken</label>
-                                <TagInput
-                                  key={`tags-${educationKey}`}
-                                  initialTags={tags}
-                                  onTagsChange={setTags}
-                                />
-                              </div>
-                            </div>
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">Alternative Contact No</label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  value={alternateMobile}
-                                  onChange={(e) => setAlternateMobile(e.target.value)}
-                                  placeholder="e.g. 9876543210"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Blood Group + Gender */}
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">
-                                  Blood Group <span className="text-danger ms-1">*</span>
-                                </label>
-                                <CommonSelect
-                                  options={Blood_Group}
-                                  className="select"
-                                  value={
-                                    findSelectOption(Blood_Group, bloodGroup) ||
-                                    Blood_Group[0]
-                                  }
-                                  onChange={(opt: any) => setBloodGroup(opt?.value || "")}
-                                />
-                              </div>
-                            </div>
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">
-                                  Gender <span className="text-danger ms-1">*</span>
-                                </label>
-                                <CommonSelect
-                                  options={Gender}
-                                  className="select"
-                                  value={findSelectOption(Gender, gender) || Gender[0]}
-                                  onChange={(opt: any) => setGender(opt?.value || "")}
-                                />
-                              </div>
-                            </div>
-
-                            {/* Bio */}
-                            <div className="col-lg-12">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">Bio</label>
-                                <textarea
-                                  className="form-control"
-                                  rows={3}
-                                  value={bio}
-                                  onChange={(e) => setBio(e.target.value)}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
 
                     {/* -- Schedule --------------------------- */}
                     <div className="bg-light px-3 py-2 mb-2">
@@ -1283,7 +1086,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                           <i className="ti ti-calendar-event me-2 text-primary fs-18" /> Weekly Schedule Setup
                         </h6>
                         <span className="badge badge-soft-info border border-info px-3 py-2 rounded-pill">
-                          {WEEKDAYS.length} Days Available
+                          {Object.values(dayEnabled).filter(Boolean).length} / {WEEKDAYS.length} Days Available
                         </span>
                       </div>
 
@@ -1305,6 +1108,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                             >
                               {day}
                               {lockedDays[day] && <i className="ti ti-circle-check-filled fs-14 text-white shadow-sm" />}
+                              {!lockedDays[day] && dayEnabled[day] && <i className="ti ti-circle-filled fs-10 text-warning" />}
                             </button>
                           </li>
                         )
@@ -1321,63 +1125,121 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                             role="tabpanel"
                           >
                             <div className="add-schedule-list border rounded p-4 bg-light border-dashed mb-2 position-relative">
-                              <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+                              {/* Day Available toggle row */}
+                              <div className="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom flex-wrap gap-2">
                                 <div>
                                   <h6 className="fw-bold mb-1 text-primary">{day} Working Hours</h6>
                                   <p className="text-muted fs-12 mb-0">Define session timings for this specific day</p>
                                 </div>
-                                <div className="form-check form-switch mb-0">
-                                  <input
-                                    className="form-check-input"
-                                    type="checkbox"
-                                    role="switch"
-                                    id={`twentyFourSeven-${day}`}
-                                    checked={twentyFourSeven[day] || false}
-                                    onChange={(e) => handleTwentyFourSevenChange(day, e.target.checked)}
-                                    disabled={lockedDays[day]}
-                                    style={{ cursor: lockedDays[day] ? "not-allowed" : "pointer" }}
-                                  />
-                                  <label className="form-check-label fw-bold text-dark fs-13" htmlFor={`twentyFourSeven-${day}`} style={{ cursor: lockedDays[day] ? "not-allowed" : "pointer" }}>
-                                    24/7 Available (24 Hours)
-                                  </label>
+                                <div className="d-flex align-items-center gap-3">
+                                  {/* Day Available ON/OFF */}
+                                  <div className="d-flex align-items-center gap-2 border rounded px-3 py-2 bg-white shadow-sm">
+                                    <span className="fw-bold fs-13 text-dark">Day Available</span>
+                                    <div className="form-check form-switch mb-0">
+                                      <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        role="switch"
+                                        id={`dayEnabled-${day}`}
+                                        checked={dayEnabled[day] || false}
+                                        disabled={lockedDays[day]}
+                                        style={{ cursor: lockedDays[day] ? "not-allowed" : "pointer", width: "44px", height: "22px" }}
+                                        onChange={(e) => {
+                                          const enabled = e.target.checked;
+                                          setDayEnabled(prev => ({ ...prev, [day]: enabled }));
+                                          if (!enabled) {
+                                            // Reset 24/7 and schedules if disabled
+                                            setTwentyFourSeven(prev => ({ ...prev, [day]: false }));
+                                            setSchedules(prev => ({ ...prev, [day]: [] }));
+                                          }
+                                        }}
+                                      />
+                                    </div>
+                                    <span className={`badge fw-bold fs-11 ${dayEnabled[day] ? 'bg-success' : 'bg-secondary'}`}>
+                                      {dayEnabled[day] ? 'ON' : 'OFF'}
+                                    </span>
+                                  </div>
+                                  {/* 24/7 toggle — only show when day is enabled */}
+                                  {dayEnabled[day] && (
+                                    <div className="form-check form-switch mb-0">
+                                      <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        role="switch"
+                                        id={`twentyFourSeven-${day}`}
+                                        checked={twentyFourSeven[day] || false}
+                                        onChange={(e) => handleTwentyFourSevenChange(day, e.target.checked)}
+                                        disabled={lockedDays[day]}
+                                        style={{ cursor: lockedDays[day] ? "not-allowed" : "pointer" }}
+                                      />
+                                      <label className="form-check-label fw-bold text-dark fs-13" htmlFor={`twentyFourSeven-${day}`} style={{ cursor: lockedDays[day] ? "not-allowed" : "pointer" }}>
+                                        24/7 Available (24 Hours)
+                                      </label>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
-                              <div className={`${lockedDays[day] ? "opacity-75" : ""}`}>
-                                {twentyFourSeven[day] ? (
-                                  <div className="alert alert-info py-2 px-3 fs-13 mb-3 d-flex align-items-center gap-2">
-                                    <i className="ti ti-clock-filled text-info fs-16" />
-                                    <span>This day is set as <strong>24/7 Available (24 Hours)</strong>. Timings are fixed from 12:00 am to 11:59 pm.</span>
-                                  </div>
-                                ) : (
-                                  <DuplicateForms
-                                    key={`${day}-${lockedDays[day]}`}
-                                    initialRows={schedules[day]}
-                                    onChange={(rows) =>
-                                      setSchedules((prev) => ({ ...prev, [day]: rows }))
-                                    }
-                                    disabled={lockedDays[day]}
-                                  />
-                                )}
-                                <div className="mt-3 d-flex justify-content-end">
-                                  <button
-                                    type="button"
-                                    className={`btn ${lockedDays[day] ? "btn-outline-primary" : "btn-primary"} d-flex align-items-center gap-2 px-4 shadow-sm`}
-                                    style={{ minHeight: '40px', fontWeight: 'bold', borderRadius: '8px' }}
-                                    onClick={() => setLockedDays(prev => ({ ...prev, [day]: !prev[day] }))}
-                                  >
-                                    {lockedDays[day] ? (
-                                      <>
-                                        <i className="ti ti-edit fs-18" /> Edit Schedule
-                                      </>
-                                    ) : (
-                                      <>
-                                        <i className="ti ti-circle-check fs-18" /> Save & Lock Day
-                                      </>
-                                    )}
-                                  </button>
+                              {/* Schedule content — only show when day is enabled */}
+                              {!dayEnabled[day] ? (
+                                <div className="text-center py-4 text-muted">
+                                  <i className="ti ti-moon-off fs-36 mb-2 d-block text-secondary opacity-50" />
+                                  <p className="mb-0 fs-13">This day is marked as <strong>unavailable</strong>. Toggle ON to set working hours.</p>
                                 </div>
-                              </div>
+                              ) : (
+                                <div className={`${lockedDays[day] ? "opacity-75" : ""}`}>
+                                  {twentyFourSeven[day] ? (
+                                    <div className="alert alert-info py-2 px-3 fs-13 mb-3 d-flex align-items-center gap-2">
+                                      <i className="ti ti-clock-filled text-info fs-16" />
+                                      <span>This day is set as <strong>24/7 Available (24 Hours)</strong>. Timings are fixed from 12:00 am to 11:59 pm.</span>
+                                    </div>
+                                  ) : (
+                                    <DuplicateForms
+                                      key={`${day}-${lockedDays[day]}`}
+                                      initialRows={schedules[day]}
+                                      onChange={(rows) =>
+                                        setSchedules((prev) => ({ ...prev, [day]: rows }))
+                                      }
+                                      disabled={lockedDays[day]}
+                                    />
+                                  )}
+                                  <div className="mt-3 d-flex justify-content-end">
+                                    <button
+                                      type="button"
+                                      className={`btn ${lockedDays[day] ? "btn-outline-primary" : "btn-primary"} d-flex align-items-center gap-2 px-4 shadow-sm`}
+                                      style={{ minHeight: '40px', fontWeight: 'bold', borderRadius: '8px' }}
+                                      onClick={() => {
+                                        if (!lockedDays[day]) {
+                                          // Validate: if not 24/7, check all rows have a session selected
+                                          if (!twentyFourSeven[day]) {
+                                            const rows = schedules[day] || [];
+                                            const hasEmptySession = rows.some(r => !r.session || r.session === "Select" || r.session === "");
+                                            if (hasEmptySession) {
+                                              toast.error("Please select a Session for all time slots before saving.");
+                                              return;
+                                            }
+                                            if (rows.length === 0) {
+                                              toast.error("Please add at least one time slot before saving.");
+                                              return;
+                                            }
+                                          }
+                                        }
+                                        setLockedDays(prev => ({ ...prev, [day]: !prev[day] }));
+                                      }}
+                                    >
+                                      {lockedDays[day] ? (
+                                        <>
+                                          <i className="ti ti-edit fs-18" /> Edit Schedule
+                                        </>
+                                      ) : (
+                                        <>
+                                          <i className="ti ti-circle-check fs-18" /> Save &amp; Lock Day
+                                        </>
+                                      )}
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         )
@@ -1391,79 +1253,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       </div>
                     </div>
 
-                    {/* -- Optional Information Toggles ----------------- */}
-                    <div className="pb-0">
-                      <div className="row">
-                        {/* Educational Information */}
-                        <div className="col-lg-12 mb-4 px-3">
-                          <div className="border rounded bg-white">
-                            <div 
-                              className="px-3 py-2 border-bottom d-flex align-items-center justify-content-between"
-                              onClick={() => setShowEducation(!showEducation)}
-                              style={{ cursor: "pointer", userSelect: "none" }}
-                            >
-                              <h6 className="fw-bold mb-0 text-primary">Educational Information</h6>
-                              <i className={`ti ${showEducation ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-primary`} />
-                            </div>
-                            {showEducation && (
-                              <div className="p-4">
-                                <EducationForms
-                                  key={`edu-${educationKey}`}
-                                  initialRows={educations.length ? educations : undefined}
-                                  onChange={setEducations}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
 
-                        {/* Awards & Recognition */}
-                        <div className="col-lg-12 mb-4 px-3">
-                          <div className="border rounded bg-white">
-                            <div 
-                              className="px-3 py-2 border-bottom d-flex align-items-center justify-content-between"
-                              onClick={() => setShowAwards(!showAwards)}
-                              style={{ cursor: "pointer", userSelect: "none" }}
-                            >
-                              <h6 className="fw-bold mb-0 text-success">Awards &amp; Recognition</h6>
-                              <i className={`ti ${showAwards ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-success`} />
-                            </div>
-                            {showAwards && (
-                              <div className="p-4">
-                                <RewardsForms
-                                  key={`aw-${awardsKey}`}
-                                  initialRows={awards.length ? awards : undefined}
-                                  onChange={setAwards}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Certifications */}
-                        <div className="col-lg-12 mb-4 px-3">
-                          <div className="border rounded bg-white">
-                            <div 
-                              className="px-3 py-2 border-bottom d-flex align-items-center justify-content-between"
-                              onClick={() => setShowCertifications(!showCertifications)}
-                              style={{ cursor: "pointer", userSelect: "none" }}
-                            >
-                              <h6 className="fw-bold mb-0 text-warning">Certifications</h6>
-                              <i className={`ti ${showCertifications ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-warning`} />
-                            </div>
-                            {showCertifications && (
-                              <div className="p-4">
-                                <RewardsForms
-                                  key={`cert-${certsKey}`}
-                                  initialRows={certifications.length ? certifications : undefined}
-                                  onChange={setCertifications}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
                     {/* -- Document Information ----------------- */}
                     <div 
@@ -1731,7 +1521,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               </div>
                             </div>
 
-                            {slotBookingEnabled && (
+                             {slotBookingEnabled && (
                               <>
                                 <div className="col-lg-4">
                                   <div style={{ marginBottom: "15px" }}>
@@ -1760,11 +1550,300 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                                     />
                                   </div>
                                 </div>
+
+                                {previewSlots.length > 0 && (
+                                  <div className="col-lg-12 mt-2">
+                                    <div className="border rounded p-3 bg-white shadow-xs">
+                                      <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                                        <h6 className="fw-bold mb-0 text-dark d-flex align-items-center gap-2" style={{ fontSize: "14px" }}>
+                                          <i className="ti ti-clock text-primary fs-16" />
+                                          Live Slot Preview ({activeScheduleDay})
+                                        </h6>
+                                        <span className="badge bg-soft-primary text-primary fw-bold fs-11 px-2 py-1 rounded-pill">
+                                          {previewSlots.length} Slots
+                                        </span>
+                                      </div>
+                                      <div className="d-flex flex-wrap gap-2" style={{ maxHeight: "180px", overflowY: "auto" }}>
+                                        {previewSlots.map((slotTime, idx) => (
+                                          <div
+                                            key={idx}
+                                            className="border rounded px-3 py-2 text-center transition-all"
+                                            style={{
+                                              backgroundColor: "rgba(115, 103, 240, 0.08)",
+                                              borderColor: "rgba(115, 103, 240, 0.25)",
+                                              minWidth: "110px",
+                                              borderRadius: "8px"
+                                            }}
+                                          >
+                                            <div style={{ color: "#7367f0", fontWeight: "700", fontSize: "12px" }}>
+                                              {slotTime}
+                                            </div>
+                                            <div className="text-muted fw-bold" style={{ fontSize: "10px", marginTop: "2px" }}>
+                                              {maxBookingsPerSlot || "1"} Left
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
                               </>
                             )}
                           </div>
 
 
+                        </div>
+                      )}
+                    </div>
+
+                    {/* -- Actions ---------------------------- */}
+
+                    {/* -- Address Information (Optional, Collapsible) -- */}
+                    <div className="border rounded mb-2 mx-0 bg-white">
+                      <div
+                        className="bg-light px-3 py-2 d-flex align-items-center justify-content-between"
+                        onClick={() => setShowAddress(!showAddress)}
+                        style={{ cursor: "pointer", userSelect: "none", borderRadius: showAddress ? "0.375rem 0.375rem 0 0" : "0.375rem" }}
+                      >
+                        <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                          <i className="ti ti-map-pin text-primary fs-18" />
+                          Address Information
+                          <span className="badge bg-soft-secondary text-muted fw-normal fs-11 ms-1">Optional</span>
+                        </h6>
+                        <i className={`ti ${showAddress ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-dark`} />
+                      </div>
+                      {showAddress && (
+                        <div className="p-3">
+                          <div className="row">
+                            <div className="col-lg-6">
+                              <div style={{ marginBottom: "10px" }}>
+                                <label className="form-label mb-0">Address 1</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  value={address1}
+                                  onChange={(e) => setAddress1(e.target.value)}
+                                  placeholder="House No, Building, Street Name"
+                                />
+                              </div>
+                            </div>
+                            <div className="col-lg-6">
+                              <div style={{ marginBottom: "10px" }}>
+                                <label className="form-label mb-0">Address 2 (Optional)</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  value={address2}
+                                  onChange={(e) => setAddress2(e.target.value)}
+                                  placeholder="Landmark, Area, Colony"
+                                />
+                              </div>
+                            </div>
+                            <div className="col-lg-6">
+                              <div style={{ marginBottom: "10px" }}>
+                                <label className="form-label mb-0">Country</label>
+                                <CommonSelect
+                                  options={Country}
+                                  className="select"
+                                  value={findSelectOption(Country, country) || { value: "India", label: "India" }}
+                                  onChange={(opt: any) => setCountry(opt?.value || "")}
+                                />
+                              </div>
+                            </div>
+                            <div className="col-lg-6">
+                              <div style={{ marginBottom: "10px" }}>
+                                <label className="form-label mb-0">State</label>
+                                <CommonSelect
+                                  options={State}
+                                  className="select"
+                                  value={findSelectOption(State, stateVal) || State[0]}
+                                  onChange={(opt: any) => setStateVal(opt?.value || "")}
+                                />
+                              </div>
+                            </div>
+                            <div className="col-lg-6">
+                              <div style={{ marginBottom: "10px" }}>
+                                <label className="form-label mb-0">City</label>
+                                <CommonSelect
+                                  options={City}
+                                  className="select"
+                                  value={findSelectOption(City, city) || City[0]}
+                                  onChange={(opt: any) => setCity(opt?.value || "")}
+                                />
+                              </div>
+                            </div>
+                            <div className="col-lg-6">
+                              <div style={{ marginBottom: "10px" }}>
+                                <label className="form-label mb-0">Pincode</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  value={pincode}
+                                  onChange={(e) => setPincode(e.target.value)}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* -- Additional Details (Optional, Collapsible) -- */}
+                    <div className="border rounded mb-2 mx-0 bg-white">
+                      <div
+                        className="bg-light px-3 py-2 d-flex align-items-center justify-content-between"
+                        onClick={() => setShowOptionalFields(!showOptionalFields)}
+                        style={{ cursor: "pointer", userSelect: "none", borderRadius: showOptionalFields ? "0.375rem 0.375rem 0 0" : "0.375rem" }}
+                      >
+                        <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                          <i className="ti ti-list-details text-primary fs-18" />
+                          Additional Details
+                          <span className="badge bg-soft-secondary text-muted fw-normal fs-11 ms-1">Optional</span>
+                        </h6>
+                        <i className={`ti ${showOptionalFields ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-dark`} />
+                      </div>
+                      {showOptionalFields && (
+                        <div className="p-3">
+                          <div className="row">
+                            {/* Specialization + Qualification */}
+                            <div className="col-lg-6">
+                              <div style={{ marginBottom: "10px" }}>
+                                <label className="form-label mb-0">Specializations</label>
+                                {specOptions.length > 0 ? (
+                                  <CommonSelect
+                                    options={specOptions}
+                                    className="select"
+                                    value={specOptions.filter((o: any) => selectedSpecializations.includes(o.value)) as any}
+                                    placeholder="Select specializations"
+                                    isMulti={true}
+                                    onChange={(opt: any) =>
+                                      setSelectedSpecializations(
+                                        Array.isArray(opt) ? opt.map((o: any) => o.value) : []
+                                      )
+                                    }
+                                  />
+                                ) : (
+                                  <div className="form-control text-muted py-2">
+                                    No specializations available
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="col-lg-6">
+                              <div style={{ marginBottom: "10px" }}>
+                                <label className="form-label mb-0">Qualification</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  value={qualification}
+                                  onChange={(e) => setQualification(e.target.value)}
+                                  placeholder="e.g. MBBS, MD"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Marital Status + License */}
+                            <div className="col-lg-6">
+                              <div style={{ marginBottom: "10px" }}>
+                                <label className="form-label mb-0">Marital Status</label>
+                                <CommonSelect
+                                  options={[
+                                    { value: "Single", label: "Single" },
+                                    { value: "Married", label: "Married" },
+                                    { value: "Divorced", label: "Divorced" },
+                                    { value: "Widowed", label: "Widowed" },
+                                  ]}
+                                  className="select"
+                                  value={
+                                    maritalStatus
+                                      ? { value: maritalStatus, label: maritalStatus }
+                                      : null
+                                  }
+                                  onChange={(opt: any) => setMaritalStatus(opt?.value || "")}
+                                />
+                              </div>
+                            </div>
+                            <div className="col-lg-6">
+                              <div style={{ marginBottom: "10px" }}>
+                                <label className="form-label mb-0">Medical License Number</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  value={medicalLicenseNumber}
+                                  onChange={(e) => setMedicalLicenseNumber(e.target.value)}
+                                  placeholder="ML-123456"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Languages + Alt Contact */}
+                            <div className="col-lg-6">
+                              <div style={{ marginBottom: "10px" }}>
+                                <label className="form-label mb-0">Language Spoken</label>
+                                <TagInput
+                                  key={`tags-${educationKey}`}
+                                  initialTags={tags}
+                                  onTagsChange={setTags}
+                                />
+                              </div>
+                            </div>
+                            <div className="col-lg-6">
+                              <div style={{ marginBottom: "10px" }}>
+                                <label className="form-label mb-0">Alternative Contact No</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  value={alternateMobile}
+                                  onChange={(e) => setAlternateMobile(e.target.value)}
+                                  placeholder="e.g. 9876543210"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Blood Group + Gender */}
+                            <div className="col-lg-6">
+                              <div style={{ marginBottom: "10px" }}>
+                                <label className="form-label mb-0">
+                                  Blood Group <span className="text-danger ms-1">*</span>
+                                </label>
+                                <CommonSelect
+                                  options={Blood_Group}
+                                  className="select"
+                                  value={
+                                    findSelectOption(Blood_Group, bloodGroup) ||
+                                    Blood_Group[0]
+                                  }
+                                  onChange={(opt: any) => setBloodGroup(opt?.value || "")}
+                                />
+                              </div>
+                            </div>
+                            <div className="col-lg-6">
+                              <div style={{ marginBottom: "10px" }}>
+                                <label className="form-label mb-0">
+                                  Gender <span className="text-danger ms-1">*</span>
+                                </label>
+                                <CommonSelect
+                                  options={Gender}
+                                  className="select"
+                                  value={findSelectOption(Gender, gender) || Gender[0]}
+                                  onChange={(opt: any) => setGender(opt?.value || "")}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Bio */}
+                            <div className="col-lg-12">
+                              <div style={{ marginBottom: "10px" }}>
+                                <label className="form-label mb-0">Bio</label>
+                                <textarea
+                                  className="form-control"
+                                  rows={3}
+                                  value={bio}
+                                  onChange={(e) => setBio(e.target.value)}
+                                />
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>

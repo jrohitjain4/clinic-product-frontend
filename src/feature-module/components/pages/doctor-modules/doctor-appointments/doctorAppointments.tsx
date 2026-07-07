@@ -204,6 +204,18 @@ const DoctorAppointments = () => {
           _raw: app
         };
       });
+
+    const isDateFilterActive = datePreset !== "All" || filterStartDate !== "" || filterEndDate !== "";
+    if (isDateFilterActive) {
+      return [...list].sort((a, b) => {
+        const timeA = dayjs(a._raw.scheduledAt).valueOf();
+        const timeB = dayjs(b._raw.scheduledAt).valueOf();
+        if (timeA !== timeB) return timeA - timeB;
+        return (a.queueNo || 1) - (b.queueNo || 1);
+      });
+    }
+
+    return list;
   }, [appointments, filterStatus, filterPatient, datePreset, filterStartDate, filterEndDate, searchText, filterType, filterFollowUp]);
 
   const isAnyFilterActive = useMemo(() => {

@@ -1138,27 +1138,28 @@ const AppointmentDetails = () => {
                                     </div>
                                     <div className="col-6">
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
-                                            <i className="ti ti-map-pin fs-14 text-muted" />
-                                            <span className="text-black fw-bold">Location:</span>
-                                            <span className="text-black fw-bold text-truncate">{appointment.location || "OPD"}</span>
-                                        </div>
-                                    </div>
-                                    <div className="col-6">
-                                        <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-cash fs-14 text-success" />
                                             <span className="text-black fw-bold">Payment:</span>
-                                            <span className={`badge ${appointment.paymentStatus === 'Paid' ? 'bg-soft-success text-success' : appointment.paymentStatus === 'Free' ? 'bg-soft-info text-info' : 'bg-soft-warning text-warning'} fs-11 px-2 py-1 rounded-pill`}>{appointment.paymentStatus || "Unpaid"}</span>
+                                            <span className={`badge ${
+                                                appointment.status && ["confirmed", "checked in", "checked out"].includes(appointment.status.toLowerCase())
+                                                    ? 'bg-soft-success text-success'
+                                                    : 'bg-soft-warning text-warning'
+                                            } fs-11 px-2 py-1 rounded-pill`}>
+                                                {appointment.status && ["confirmed", "checked in", "checked out"].includes(appointment.status.toLowerCase()) ? "Paid" : "Unpaid"}
+                                            </span>
                                         </div>
                                     </div>
-                                    <div className="col-12">
-                                        <div className="d-flex align-items-start gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
-                                            <i className="ti ti-notes fs-14 text-muted mt-0.5" />
-                                            <div className="flex-grow-1 lh-sm">
-                                                <span className="text-black fw-bold d-block fs-10 text-uppercase letter-spacing-1 mb-1">Reason</span>
-                                                <span className="text-black fw-bold">{appointment.reason || "General Consultation"}</span>
+                                    {appointment.reason && (
+                                        <div className="col-12">
+                                            <div className="d-flex align-items-start gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
+                                                <i className="ti ti-notes fs-14 text-muted mt-0.5" />
+                                                <div className="flex-grow-1 lh-sm">
+                                                    <span className="text-black fw-bold d-block fs-10 text-uppercase letter-spacing-1 mb-1">Reason</span>
+                                                    <span className="text-black fw-bold">{appointment.reason}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                             <div className="card-decoration-circle bg-primary-light-large" />
@@ -1323,15 +1324,11 @@ const AppointmentDetails = () => {
                                                 </div>
                                             </div>
 
-                                            {appointment.doctor?.followUpEnabled ? (
+                                            {appointment.doctor?.followUpEnabled && (
                                                 <div className="mt-3 pt-2 text-center border-top border-primary border-opacity-10">
                                                     <div className="d-inline-flex align-items-center gap-1 text-primary fw-bold fs-10 text-uppercase tracking-wider">
                                                         <span className="pulse-dot-primary" /> System Active
                                                     </div>
-                                                </div>
-                                            ) : (
-                                                <div className="mt-3 pt-2 text-center border-top border-primary border-opacity-10">
-                                                    <span className="text-muted fw-bold fs-10 text-uppercase tracking-wider opacity-75">System Disabled</span>
                                                 </div>
                                             )}
                                         </div>

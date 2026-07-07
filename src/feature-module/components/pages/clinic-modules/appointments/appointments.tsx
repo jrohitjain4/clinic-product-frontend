@@ -464,13 +464,25 @@ const Appointments = () => {
   }, [tableData, filterFollowUp, filterStartDate, filterEndDate, datePreset, filterDepartment, filterType, filterDoctor, filterSession, sessionOptions]);
 
   const filteredData = useMemo(() => {
-    return filteredSubData.filter((row) => {
+    const list = filteredSubData.filter((row) => {
       const matchStatus = filterStatus === "All" || !filterStatus
         ? true
         : row.Status.toLowerCase() === filterStatus.toLowerCase();
       return matchStatus;
     });
-  }, [filteredSubData, filterStatus]);
+
+    const isDateFilterActive = datePreset !== "All" || filterStartDate !== "" || filterEndDate !== "";
+    if (isDateFilterActive) {
+      return [...list].sort((a, b) => {
+        const timeA = dayjs(a._raw.scheduledAt).valueOf();
+        const timeB = dayjs(b._raw.scheduledAt).valueOf();
+        if (timeA !== timeB) return timeA - timeB;
+        return (a.queueNo || 1) - (b.queueNo || 1);
+      });
+    }
+
+    return list;
+  }, [filteredSubData, filterStatus, datePreset, filterStartDate, filterEndDate]);
 
   const counts = useMemo(() => {
     return {

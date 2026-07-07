@@ -124,7 +124,7 @@ const DoctorAppointments = () => {
       groups[key].push(a);
     });
 
-    return appointments
+    const list = appointments
       .filter((a) => {
         const matchStatus = filterStatus === "All" || a.status === filterStatus;
         const matchPatient = filterPatient

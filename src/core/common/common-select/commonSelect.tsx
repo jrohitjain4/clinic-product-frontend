@@ -71,12 +71,20 @@ const CommonSelect: React.FC<SelectProps> = ({
     }),
     option: (base: any, state: any) => ({
       ...base,
-      color: state.isSelected || state.isFocused ? "#fff" : "#6C7688",
-      backgroundColor: state.isSelected || state.isFocused ? "#2e37a4" : "white",
-      cursor: "pointer",
+      color: state.isDisabled 
+        ? "#cbd5e1" 
+        : state.isSelected || state.isFocused 
+          ? "#fff" 
+          : "#6C7688",
+      backgroundColor: state.isDisabled
+        ? "#f8fafc"
+        : state.isSelected || state.isFocused 
+          ? "#2e37a4" 
+          : "white",
+      cursor: state.isDisabled ? "not-allowed" : "pointer",
       "&:hover": {
-        backgroundColor: "#2e37a4",
-        color: "#fff",
+        backgroundColor: state.isDisabled ? "#f8fafc" : "#2e37a4",
+        color: state.isDisabled ? "#cbd5e1" : "#fff",
       },
     }),
   };

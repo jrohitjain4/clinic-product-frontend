@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
 import Datatable from "../../../../../core/common/dataTable";
@@ -64,6 +64,21 @@ const AppointmentDetails = () => {
     const [followUpReason, setFollowUpReason] = useState("");
     const [isSubmittingFollowUp, setIsSubmittingFollowUp] = useState(false);
     const [doctorAvailability, setDoctorAvailability] = useState<any>(null);
+    const [showFollowUpSlotsDropdown, setShowFollowUpSlotsDropdown] = useState(false);
+    const [isFollowUpSlotsDropdownFocused, setIsFollowUpSlotsDropdownFocused] = useState(false);
+    const followUpDropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (followUpDropdownRef.current && !followUpDropdownRef.current.contains(event.target as Node)) {
+                setShowFollowUpSlotsDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     const { notes, addNote, deleteNote, updateNote, loading: loadingNotes } = useNotes({ appointmentId: id });
 
@@ -328,6 +343,86 @@ const AppointmentDetails = () => {
 
         return slots;
     }, [isSlotBookingActive, doctorAvailability, followUpDate]);
+
+    const formatSlotLabel = (option: any, { context }: { context: 'menu' | 'value' }) => {
+        if (option.bookingsAvailable === undefined) return option.label;
+
+        const slotTimeFormatted = dayjs(option.value, "HH:mm").format("hh:mm A");
+        const { bookingsAvailable } = option;
+
+        if (context === "value") {
+            let badgeColor = "success";
+            let bgLightColor = "#ecfdf5";
+            let textColor = "#10b981";
+            if (bookingsAvailable === 0) {
+                badgeColor = "danger";
+                bgLightColor = "#fef2f2";
+                textColor = "#ef4444";
+            } else if (bookingsAvailable === 1) {
+                badgeColor = "warning";
+                bgLightColor = "#fff7ed";
+                textColor = "#f97316";
+            }
+            return (
+                <div className="d-flex align-items-center gap-2">
+                    <span className="fw-semibold">{slotTimeFormatted}</span>
+                    <span 
+                        className={`badge bg-soft-${badgeColor} text-${badgeColor} px-2 py-0.5 fs-11`}
+                        style={{ borderRadius: "4px", backgroundColor: bgLightColor, color: textColor }}
+                    >
+                        {bookingsAvailable === 0 
+                            ? "Filled" 
+                            : bookingsAvailable === 1 
+                                ? "Last Slot Left" 
+                                : `${bookingsAvailable} slots remaining`}
+                    </span>
+                </div>
+            );
+        }
+
+        let dotColor = "#10b981"; // green dot
+        let badgeColor = "success";
+        let bgLightColor = "#ecfdf5";
+        let textColor = "#10b981";
+        let statusText = `${bookingsAvailable} slots remaining`;
+
+        if (bookingsAvailable === 0) {
+            dotColor = "#ef4444"; // red dot
+            badgeColor = "danger";
+            bgLightColor = "#fef2f2";
+            textColor = "#ef4444";
+            statusText = "Filled";
+        } else if (bookingsAvailable === 1) {
+            dotColor = "#f97316"; // orange dot
+            badgeColor = "warning";
+            bgLightColor = "#fff7ed";
+            textColor = "#f97316";
+            statusText = "Last Slot Left";
+        }
+
+        return (
+            <div className="d-flex align-items-center justify-content-between py-1 w-100" style={{ color: 'inherit' }}>
+                <div className="d-flex align-items-center gap-2">
+                    <span 
+                        style={{
+                            display: "inline-block",
+                            width: "8px",
+                            height: "8px",
+                            borderRadius: "50%",
+                            backgroundColor: dotColor,
+                        }}
+                    />
+                    <span className="fw-semibold fs-14">{slotTimeFormatted}</span>
+                </div>
+                <span 
+                    className={`badge bg-soft-${badgeColor} text-${badgeColor} px-2 py-1 fs-11 fw-semibold`}
+                    style={{ borderRadius: "6px", backgroundColor: bgLightColor, color: textColor }}
+                >
+                    {statusText}
+                </span>
+            </div>
+        );
+    };
 
     const handleFollowUpSubmit = async () => {
         if (!id || !followUpDate || !followUpTimeSlot) {
@@ -1788,31 +1883,156 @@ const AppointmentDetails = () => {
                                     </div>
                                     <div className="col-md-6">
                                         <div className="form-group mb-0">
-                                            <label className="form-label fw-bold text-dark small text-uppercase mb-2 letter-spacing-1">
-                                                <i className="ti ti-clock-hour-4 me-1 text-primary" /> Select Shift
-                                            </label>
-                                            <CommonSelect
-                                                key={isSlotBookingActive ? `slot-${slotOptions.length}-${followUpDate?.toString()}` : `session-${sessionOptions.length}-${followUpDate?.toString()}`}
-                                                options={isSlotBookingActive ? slotOptions : sessionOptions}
-                                                value={isSlotBookingActive 
-                                                    ? slotOptions.find((o: any) => o.value === followUpTimeSlot)
-                                                    : sessionOptions.find((o: any) => o.value === followUpTimeSlot)}
-                                                onChange={(opt: any) => setFollowUpTimeSlot(opt?.value)}
-                                                placeholder={followUpDate 
-                                                    ? (isSlotBookingActive ? "Choose slot" : "Choose session") 
-                                                    : "Select date first"}
-                                                isDisabled={!followUpDate || (isSlotBookingActive ? slotOptions.length === 0 : sessionOptions.length === 0)}
-                                            />
-                                            {followUpTimeSlot && isSlotBookingActive && (
-                                                (() => {
-                                                    const selectedSlotInfo = slotOptions.find(o => o.value === followUpTimeSlot);
-                                                    return selectedSlotInfo ? (
-                                                        <div className="text-info fs-13 mt-1 fw-medium">
-                                                            <i className="ti ti-info-circle me-1" />
-                                                            {selectedSlotInfo.bookingsAvailable} {selectedSlotInfo.bookingsAvailable === 1 ? 'booking' : 'bookings'} available at that slot
+                                            {isSlotBookingActive ? (
+                                                <div className="position-relative" ref={followUpDropdownRef}>
+                                                    <label className="form-label fw-bold text-dark small text-uppercase mb-2 letter-spacing-1">
+                                                        <i className="ti ti-clock-hour-4 me-1 text-primary" /> Select Slot
+                                                    </label>
+                                                    <div
+                                                        onClick={() => {
+                                                            if (followUpDate && slotOptions.length > 0) {
+                                                                setShowFollowUpSlotsDropdown(!showFollowUpSlotsDropdown);
+                                                            }
+                                                        }}
+                                                        onFocus={() => setIsFollowUpSlotsDropdownFocused(true)}
+                                                        onBlur={() => setIsFollowUpSlotsDropdownFocused(false)}
+                                                        tabIndex={0}
+                                                        className="form-control d-flex align-items-center justify-content-between"
+                                                        style={{
+                                                            minHeight: "46px",
+                                                            borderRadius: "12px",
+                                                            border: isFollowUpSlotsDropdownFocused || showFollowUpSlotsDropdown ? "1.5px solid #2e37a4" : "1.5px solid #cbd5e1",
+                                                            boxShadow: isFollowUpSlotsDropdownFocused || showFollowUpSlotsDropdown ? "0 0 0 1px #2e37a4" : "none",
+                                                            fontSize: "15px",
+                                                            fontWeight: "500",
+                                                            padding: "8px 16px",
+                                                            cursor: !followUpDate || slotOptions.length === 0 ? "not-allowed" : "pointer",
+                                                            backgroundColor: !followUpDate || slotOptions.length === 0 ? "#f8fafc" : "white",
+                                                            transition: "all 0.2s ease-in-out",
+                                                            outline: "none",
+                                                        }}
+                                                    >
+                                                        <span className={followUpTimeSlot ? "text-dark fw-semibold" : "text-muted"}>
+                                                            {!followUpDate
+                                                                ? "Select date first"
+                                                                : slotOptions.length === 0
+                                                                    ? "No slots available"
+                                                                    : followUpTimeSlot
+                                                                        ? dayjs(followUpTimeSlot, "HH:mm").format("hh:mm A")
+                                                                        : "Select slot"}
+                                                        </span>
+                                                        <i className={`ti ti-chevron-${showFollowUpSlotsDropdown ? 'up' : 'down'} text-secondary`} style={{ fontSize: "12px" }} />
+                                                    </div>
+
+                                                    {showFollowUpSlotsDropdown && followUpDate && slotOptions.length > 0 && (
+                                                        <div
+                                                            className="position-absolute w-100 mt-1 p-3 border rounded shadow bg-white"
+                                                            style={{
+                                                                zIndex: 1050,
+                                                                borderRadius: "12px",
+                                                                borderColor: "#cbd5e1",
+                                                                maxHeight: "300px",
+                                                                overflowY: "auto",
+                                                            }}
+                                                        >
+                                                            <div className="d-flex align-items-center justify-content-between mb-2 pb-1 border-bottom">
+                                                                <span className="small text-muted fw-bold">AVAILABLE SLOTS</span>
+                                                                <span className="badge bg-soft-primary text-primary px-2 py-0.5 rounded-pill fs-11" style={{ textTransform: "none", backgroundColor: "#eef2ff", color: "#6366f1" }}>
+                                                                    {slotOptions.length} Options
+                                                                </span>
+                                                            </div>
+                                                            <div 
+                                                                style={{
+                                                                    display: "grid",
+                                                                    gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))",
+                                                                    gap: "8px",
+                                                                }}
+                                                            >
+                                                                <style>{`
+                                                                    .select-slot-block {
+                                                                        transition: all 0.2s ease-in-out;
+                                                                    }
+                                                                    .select-slot-block:hover:not(.filled) {
+                                                                        transform: translateY(-2px);
+                                                                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                                                                    }
+                                                                `}</style>
+                                                                {slotOptions.map((opt: any, idx: number) => {
+                                                                    const isSelected = followUpTimeSlot === opt.value;
+                                                                    const isFilled = opt.bookingsAvailable === 0;
+                                                                    const isLastSlot = opt.bookingsAvailable === 1;
+
+                                                                    let bg = "#ecfdf5"; // available
+                                                                    let border = "#a7f3d0";
+                                                                    let text = "#047857";
+                                                                    let badgeText = `${opt.bookingsAvailable} Left`;
+
+                                                                    if (isFilled) {
+                                                                        bg = "#fef2f2";
+                                                                        border = "#fca5a5";
+                                                                        text = "#ef4444";
+                                                                        badgeText = "Filled";
+                                                                    } else if (isLastSlot) {
+                                                                        bg = "#fff7ed";
+                                                                        border = "#fdba74";
+                                                                        text = "#f97316";
+                                                                        badgeText = "Last Slot";
+                                                                    }
+
+                                                                    if (isSelected) {
+                                                                        bg = "#2e37a4";
+                                                                        border = "#2e37a4";
+                                                                        text = "#ffffff";
+                                                                    }
+
+                                                                    return (
+                                                                        <div
+                                                                            key={opt.value || idx}
+                                                                            onClick={() => {
+                                                                                if (isFilled) {
+                                                                                    toast.warning("This slot is already filled.");
+                                                                                    return;
+                                                                                }
+                                                                                setFollowUpTimeSlot(opt.value);
+                                                                                setShowFollowUpSlotsDropdown(false);
+                                                                            }}
+                                                                            className={`text-center px-2 py-2 select-slot-block ${isFilled ? 'filled' : ''}`}
+                                                                            style={{
+                                                                                borderRadius: "8px",
+                                                                                border: `1px solid ${border}`,
+                                                                                backgroundColor: bg,
+                                                                                color: text,
+                                                                                cursor: isFilled ? "not-allowed" : "pointer",
+                                                                                opacity: isFilled && !isSelected ? 0.6 : 1,
+                                                                            }}
+                                                                        >
+                                                                            <div className="fw-bold" style={{ fontSize: "13px" }}>
+                                                                                {dayjs(opt.value, "HH:mm").format("hh:mm A")}
+                                                                            </div>
+                                                                            <div className="fw-semibold mt-1" style={{ fontSize: "10px", opacity: 0.9 }}>
+                                                                                {badgeText}
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
                                                         </div>
-                                                    ) : null;
-                                                })()
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    <label className="form-label fw-bold text-dark small text-uppercase mb-2 letter-spacing-1">
+                                                        <i className="ti ti-clock-hour-4 me-1 text-primary" /> Select Shift
+                                                    </label>
+                                                    <CommonSelect
+                                                        key={`session-${sessionOptions.length}-${followUpDate?.toString()}`}
+                                                        options={sessionOptions}
+                                                        value={sessionOptions.find((o: any) => o.value === followUpTimeSlot)}
+                                                        onChange={(opt: any) => setFollowUpTimeSlot(opt?.value)}
+                                                        placeholder={followUpDate ? "Choose session" : "Select date first"}
+                                                        isDisabled={!followUpDate || sessionOptions.length === 0}
+                                                    />
+                                                </div>
                                             )}
                                         </div>
                                     </div>

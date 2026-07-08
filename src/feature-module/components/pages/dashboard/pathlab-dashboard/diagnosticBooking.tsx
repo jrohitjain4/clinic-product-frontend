@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Datatable from "../../../../../core/common/dataTable";
 import { Link } from "react-router";
 import { ViewModal } from "../../../../../core/common/modal/ViewModal";
@@ -146,6 +146,21 @@ const DiagnosticBooking = () => {
   const [formRemarks, setFormRemarks] = useState("");
   const [formReferredBy, setFormReferredBy] = useState("");
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
+  const [showDiagSlotsDropdown, setShowDiagSlotsDropdown] = useState(false);
+  const [isDiagSlotsDropdownFocused, setIsDiagSlotsDropdownFocused] = useState(false);
+  const diagDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (diagDropdownRef.current && !diagDropdownRef.current.contains(event.target as Node)) {
+        setShowDiagSlotsDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const [showFormModal, setShowFormModal] = useState(false);
   const [formMode, setFormMode] = useState<"add" | "edit">("add");
@@ -687,8 +702,8 @@ const DiagnosticBooking = () => {
         <div className="modal fade show d-block" style={{ zIndex: 1050 }}>
           <div className="modal-backdrop fade show" style={{ zIndex: 1040 }} onClick={() => setShowFormModal(false)} />
           <div className="modal-dialog modal-dialog-centered modal-lg" style={{ zIndex: 1050 }}>
-            <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
-              <div className="modal-header bg-primary text-white"><h5 className="modal-title text-white">{formMode === "add" ? "New Diagnostic Booking" : "Edit Diagnostic Booking"}</h5><button type="button" className="btn-close btn-close-white" onClick={() => setShowFormModal(false)}></button></div>
+            <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'visible' }}>
+              <div className="modal-header bg-primary text-white" style={{ borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}><h5 className="modal-title text-white">{formMode === "add" ? "New Diagnostic Booking" : "Edit Diagnostic Booking"}</h5><button type="button" className="btn-close btn-close-white" onClick={() => setShowFormModal(false)}></button></div>
               <form onSubmit={handleFormSubmit}>
                 <div className="modal-body p-4">
                   <div className="row">
@@ -805,18 +820,156 @@ const DiagnosticBooking = () => {
                       />
                     </div>
                     <div className="col-md-6 mb-3">
-                      <label className="form-label fw-semibold">{selectedTestObj?.isSlotBookingEnabled ? "Booking Slot" : "Booking Session"} <span className="text-danger">*</span></label>
-                      <select className="form-select" value={formSessionSlot} onChange={(e) => setFormSessionSlot(e.target.value)} disabled={!formDate || dateOptions.length === 0} required>
-                        <option value="">Select {selectedTestObj?.isSlotBookingEnabled ? "Slot" : "Session"}</option>
-                        {dateOptions.map((opt) => {
-                          const avail = slotAvailabilities[opt.value];
-                          return (
-                            <option key={opt.value} value={opt.value} disabled={avail?.isFull}>
-                              {opt.label} {avail ? `(${avail.booked}/${avail.limit} Booked)` : ""}
-                            </option>
-                          );
-                        })}
-                      </select>
+                      {selectedTestObj?.isSlotBookingEnabled ? (
+                        <div className="position-relative" ref={diagDropdownRef}>
+                          <label className="form-label fw-semibold mb-1">
+                            Booking Slot <span className="text-danger">*</span>
+                          </label>
+                          <div
+                            onClick={() => {
+                              if (formDate && dateOptions.length > 0) {
+                                setShowDiagSlotsDropdown(!showDiagSlotsDropdown);
+                              }
+                            }}
+                            onFocus={() => setIsDiagSlotsDropdownFocused(true)}
+                            onBlur={() => setIsDiagSlotsDropdownFocused(false)}
+                            tabIndex={0}
+                            className="form-control d-flex align-items-center justify-content-between"
+                            style={{
+                              minHeight: "38px",
+                              borderRadius: "6px",
+                              border: isDiagSlotsDropdownFocused || showDiagSlotsDropdown ? "1px solid #2e37a4" : "1px solid #dee2e6",
+                              boxShadow: isDiagSlotsDropdownFocused || showDiagSlotsDropdown ? "0 0 0 1px #2e37a4" : "none",
+                              fontSize: "14px",
+                              padding: "6px 12px",
+                              cursor: !formDate || dateOptions.length === 0 ? "not-allowed" : "pointer",
+                              backgroundColor: !formDate || dateOptions.length === 0 ? "#f8fafc" : "white",
+                              transition: "all 0.2s ease-in-out",
+                              outline: "none",
+                            }}
+                          >
+                            <span className={formSessionSlot ? "text-dark fw-semibold" : "text-muted"}>
+                              {!formDate
+                                ? "Select date first"
+                                : dateOptions.length === 0
+                                  ? "No slots available on this day"
+                                  : formSessionSlot
+                                    ? formSessionSlot
+                                    : "Select slot"}
+                            </span>
+                            <i className={`ti ti-chevron-${showDiagSlotsDropdown ? 'up' : 'down'} text-secondary`} style={{ fontSize: "11px" }} />
+                          </div>
+
+                          {showDiagSlotsDropdown && formDate && dateOptions.length > 0 && (
+                            <div
+                              className="position-absolute w-100 mt-1 p-3 border rounded shadow bg-white"
+                              style={{
+                                zIndex: 1050,
+                                borderRadius: "10px",
+                                borderColor: "#cbd5e1",
+                                maxHeight: "250px",
+                                overflowY: "auto",
+                              }}
+                            >
+                              <div className="d-flex align-items-center justify-content-between mb-2 pb-1 border-bottom">
+                                <span className="small text-muted fw-bold">AVAILABLE SLOTS</span>
+                                <span className="badge bg-soft-primary text-primary px-2 py-0.5 rounded-pill fs-11" style={{ backgroundColor: "#eef2ff", color: "#6366f1" }}>
+                                  {dateOptions.length} Options
+                                </span>
+                              </div>
+                              <div 
+                                style={{
+                                  display: "grid",
+                                  gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))",
+                                  gap: "8px",
+                                }}
+                              >
+                                <style>{`
+                                  .select-slot-block {
+                                    transition: all 0.2s ease-in-out;
+                                  }
+                                  .select-slot-block:hover:not(.filled) {
+                                    transform: translateY(-2px);
+                                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                                  }
+                                `}</style>
+                                {dateOptions.map((opt: any, idx: number) => {
+                                  const isSelected = formSessionSlot === opt.value;
+                                  const avail = slotAvailabilities[opt.value];
+                                  const bookingsAvailable = avail ? Math.max(0, avail.limit - avail.booked) : 0;
+                                  const isFilled = avail ? avail.isFull : true;
+                                  const isLastSlot = bookingsAvailable === 1;
+
+                                  let bg = "#ecfdf5"; // available
+                                  let border = "#a7f3d0";
+                                  let text = "#047857";
+                                  let badgeText = `${bookingsAvailable} Left`;
+
+                                  if (isFilled) {
+                                    bg = "#fef2f2";
+                                    border = "#fca5a5";
+                                    text = "#ef4444";
+                                    badgeText = "Filled";
+                                  } else if (isLastSlot) {
+                                    bg = "#fff7ed";
+                                    border = "#fdba74";
+                                    text = "#f97316";
+                                    badgeText = "Last Slot";
+                                  }
+
+                                  if (isSelected) {
+                                    bg = "#2e37a4";
+                                    border = "#2e37a4";
+                                    text = "#ffffff";
+                                  }
+
+                                  return (
+                                    <div
+                                      key={opt.value || idx}
+                                      onClick={() => {
+                                        if (isFilled) {
+                                          toast.warning("This slot is already filled.");
+                                          return;
+                                        }
+                                        setFormSessionSlot(opt.value);
+                                        setShowDiagSlotsDropdown(false);
+                                      }}
+                                      className={`text-center px-2 py-2 select-slot-block ${isFilled ? 'filled' : ''}`}
+                                      style={{
+                                        borderRadius: "8px",
+                                        border: `1px solid ${border}`,
+                                        backgroundColor: bg,
+                                        color: text,
+                                        cursor: isFilled ? "not-allowed" : "pointer",
+                                        opacity: isFilled && !isSelected ? 0.6 : 1,
+                                      }}
+                                    >
+                                      <div className="fw-bold" style={{ fontSize: "13px" }}>
+                                        {opt.value}
+                                      </div>
+                                      <div className="fw-semibold mt-1" style={{ fontSize: "10px", opacity: 0.9 }}>
+                                        {badgeText}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="form-label fw-semibold">Booking Session <span className="text-danger">*</span></label>
+                          <select className="form-select" value={formSessionSlot} onChange={(e) => setFormSessionSlot(e.target.value)} disabled={!formDate || dateOptions.length === 0} required>
+                            <option value="">Select Session</option>
+                            {dateOptions.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                     </div>
                   </div>
                   {user?.role !== "PATIENT" && (
@@ -834,7 +987,7 @@ const DiagnosticBooking = () => {
                     </div>
                   )}
                 </div>
-                <div className="modal-footer bg-light">
+                <div className="modal-footer bg-light" style={{ borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
                   <button type="button" className="btn btn-light" onClick={() => setShowFormModal(false)}>Cancel</button>
                   <button type="submit" className="btn btn-primary px-4" disabled={submitting}>{submitting ? (formMode === "add" ? "Creating..." : "Updating...") : (formMode === "add" ? "Create Booking" : "Update Booking")}</button>
                 </div>

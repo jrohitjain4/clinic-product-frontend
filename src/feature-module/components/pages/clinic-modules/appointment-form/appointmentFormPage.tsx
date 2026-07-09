@@ -113,6 +113,11 @@ const AppointmentFormPage = ({ mode = "create", isModal = false, onSuccess, onCa
     }));
   }, [services]);
 
+  const selectedDoctor = useMemo(() => {
+    if (!form.doctorId || !doctors) return null;
+    return doctors.find((d: any) => d.id === form.doctorId);
+  }, [form.doctorId, doctors]);
+
   const nextCode =
     mode === "edit" && appointment?.appointmentCode
       ? appointment.appointmentCode
@@ -1189,13 +1194,28 @@ const AppointmentFormPage = ({ mode = "create", isModal = false, onSuccess, onCa
           )}
         </div>
       </div>
-      <div className="d-flex justify-content-end mt-3">
+      <div className="d-flex justify-content-end mt-3 align-items-center gap-2">
+        {selectedDoctor && (
+          <div className="d-flex align-items-center gap-2 me-2">
+            <button
+              type="button"
+              className="btn btn-outline-info d-flex align-items-center gap-1.5 fw-bold cursor-default"
+              style={{ pointerEvents: 'none', borderRadius: '8px' }}
+            >
+              <i className="ti ti-coin text-info fs-15" />
+              <span>Fees: ₹{form.isFollowUp ? (selectedDoctor.followUpFee || 0) : (selectedDoctor.consultationCharge || 0)}</span>
+              <span className="badge bg-info text-white ms-1 font-semibold fs-10" style={{ textTransform: 'capitalize' }}>
+                {form.isFollowUp ? 'Follow-up' : 'Consultation'}
+              </span>
+            </button>
+          </div>
+        )}
         {isModal ? (
-          <button type="button" className="btn btn-light me-2" onClick={onCancel}>
+          <button type="button" className="btn btn-light" onClick={onCancel}>
             Cancel
           </button>
         ) : (
-          <Link to={all_routes.appointments} className="btn btn-light me-2">
+          <Link to={all_routes.appointments} className="btn btn-light">
             Cancel
           </Link>
         )}

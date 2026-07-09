@@ -5,6 +5,8 @@ export interface ClinicDoctor {
   phone?: string | null;
   status: string;
   consultationCharge?: number | null;
+  followUpFee?: number | null;
+  followUpEnabled?: boolean | null;
   profileImage?: string | null;
   department?: { id: string; name: string } | null;
   designation?: { id: string; name: string } | null;

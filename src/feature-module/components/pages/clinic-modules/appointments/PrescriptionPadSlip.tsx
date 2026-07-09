@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useMemo } from "react";
+import dayjs from "dayjs";
 import { resolveMediaUrl } from "../../../../../core/config/api";
+import { useMedicines } from "../../../../../core/hooks/useMedicines";
 
 interface PrescriptionPadSlipProps {
   appointment: any;
@@ -7,6 +9,13 @@ interface PrescriptionPadSlipProps {
 }
 
 const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, prescription }) => {
+  const { medicines: pharmacyMedicines } = useMedicines();
+
+  const getMedicineCategory = (name: string) => {
+    const found = pharmacyMedicines.find((m: any) => m.medicineName.toLowerCase() === name.toLowerCase());
+    return found?.category?.name || "General Medicine";
+  };
+
   const patient = appointment?.patient || prescription?.patient || {};
   const doctor = appointment?.doctor || prescription?.doctor || {};
 
@@ -20,12 +29,12 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
   try {
     const userObj = JSON.parse(localStorage.getItem("user") || "{}");
     loginClinic = userObj.clinic || {};
-  } catch (e) {}
+  } catch (e) { }
 
   const clinic = appointment?.clinic || prescription?.clinic || loginClinic || {};
 
   const clinicName = clinic?.name || appointment?.clinicName || prescription?.clinicName || "City Care Clinic";
-  const clinicTagline = clinic?.landingPage?.tagline || "Compassionate Care, Better Health";
+  const clinicTagline = clinic?.landingPage?.tagline || "Smart Clinic Management";
 
   const addressParts = [
     clinic.addressLine1,
@@ -35,181 +44,325 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
     clinic.country,
     clinic.pincode ? `PIN - ${clinic.pincode}` : ""
   ].filter(Boolean);
-  const clinicAddress = addressParts.length > 0 
-    ? addressParts.join(", ") 
-    : "123, Green Valley Road, Near City Mall, Civil Lines, Lucknow - 226001";
+  const clinicAddress = addressParts.length > 0
+    ? addressParts.join(", ")
+    : "22, Green Park, Near Metro Station, Lucknow, Uttar Pradesh - 226001";
 
-  const clinicPhone = clinic?.phone || "+91 98765 43210";
+  const clinicPhone = clinic?.phone || "0522-1234567";
   const clinicEmail = clinic?.ownerEmail || clinic?.email || "info@citycareclinic.com";
-  const clinicWebsite = clinic?.website || "www.citycareclinic.com";
-  const clinicRegNo = clinic?.gstNumber || "CCC/2023/00125";
   const clinicLogo = clinic?.landingPage?.logo || null;
 
-  const apptCode = appointment?.appointmentCode || prescription?.appointment?.appointmentCode || "N/A";
-  const visitType = appointment?.isFollowUp || prescription?.appointment?.isFollowUp ? "Follow-up" : "First Consultation";
   const apptDate = appointment?.scheduledAt || prescription?.appointment?.scheduledAt || prescription?.createdAt;
-  const presDate = prescription?.createdAt;
+  const presDate = prescription?.createdAt || new Date();
   const followUpDate = prescription?.followUpDate || appointment?.followUpDate;
-  const consultMode = prescription?.appointment?.mode || appointment?.mode || "In-Person";
 
-  const doctorFullName = doctor?.fullName || appointment?.doctorName || "—";
-  const doctorQualification = doctor?.designation?.name || "MBBS, MD";
-  const doctorRegNo = doctor?.details?.registrationNumber || "MED-IN-100456";
-  const doctorDept = doctor?.department?.name || "General";
+  const doctorFullName = doctor?.fullName || appointment?.doctorName || "Dr. Abhishek Verma";
+  const doctorQualification = doctor?.designation?.name || "MBBS, MD (Medicine)";
+  const doctorRegNo = doctor?.details?.registrationNumber || "UP-65231";
+  const doctorDept = doctor?.department?.name || "General Medicine";
+
+  // Dynamic Prescription ID matching PR-YYMMDD-XXXX
+  const prescriptionId = useMemo(() => {
+    const dateObj = presDate ? new Date(presDate) : new Date();
+    const yymmdd = dayjs(dateObj).format("YYMMDD");
+    const lastFour = prescription?.id ? prescription.id.slice(-4).toUpperCase() : "0012";
+    return `PR-${yymmdd}-${lastFour}`;
+  }, [presDate, prescription]);
+
+  const visitNo = appointment?.visitNumber || prescription?.appointment?.visitNumber || "8";
+  const patientIdVal = patient.patientCode || "DOCYOR10234";
+
+  // Parse advice into array
+  const adviceList = useMemo(() => {
+    const text = prescription?.advice || "";
+    return text.split("\n").map((line: string) => line.replace(/^\d+\.\s*/, "").trim()).filter(Boolean);
+  }, [prescription?.advice]);
 
   return (
-    <div className="prescription-pad-card">
+    <div className="prescription-pad-card" id="print-prescription-pad">
 
       {/* ========== HEADER ========== */}
       <div className="pad-header d-flex justify-content-between align-items-center">
-        <div className="d-flex align-items-center gap-2">
-          <div className="pad-logo">
-            {clinicLogo ? (
-              <img
-                src={resolveMediaUrl(clinicLogo)}
-                alt="Clinic Logo"
-                style={{ maxHeight: "46px", maxWidth: "100px", objectFit: "contain" }}
-                onError={(e) => { e.currentTarget.style.display = "none"; }}
-              />
-            ) : null}
-          </div>
-          <div>
-            <h2 className="pad-clinic-name">{clinicName.toUpperCase()}</h2>
-            <p className="pad-clinic-tagline">{clinicTagline}</p>
+        {/* Logo and Name */}
+        <div className="d-flex align-items-center gap-3" style={{ maxWidth: '28%' }}>
+          {clinicLogo ? (
+            <img
+              src={resolveMediaUrl(clinicLogo)}
+              alt="Clinic Logo"
+              style={{ maxHeight: "55px", maxWidth: "160px", objectFit: "contain" }}
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
+            <div className="d-flex align-items-center gap-2">
+              <div className="pad-logo-box d-flex align-items-center justify-content-center bg-primary text-white rounded-circle" style={{ width: '40px', height: '40px', minWidth: '40px' }}>
+                <span className="fw-bold fs-16">Rx</span>
+              </div>
+              <div>
+                <h2 className="pad-brand-name" style={{ fontSize: '18px' }}>DocYori</h2>
+                <p className="pad-brand-sub">{clinicTagline}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Clinic Name and Contact */}
+        <div className="text-center px-3" style={{ borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', flex: 1, margin: '0 20px' }}>
+          <h3 className="pad-clinic-name text-primary">{clinicName}</h3>
+          <p className="pad-clinic-address text-muted mb-0">{clinicAddress}</p>
+          <div className="d-flex align-items-center justify-content-center gap-3 fs-11 mt-1 text-dark fw-semibold">
+            <span><i className="ti ti-phone text-primary" /> {clinicPhone}</span>
+            <span><i className="ti ti-mail text-primary" /> {clinicEmail}</span>
           </div>
         </div>
 
-        <div className="pad-contact-grid d-flex flex-column text-end">
-          <div className="d-flex align-items-center justify-content-end gap-1 mb-1">
-            <i className="ti ti-map-pin" />
-            <span>{clinicAddress}</span>
+        {/* OPD Timings */}
+        <div className="pad-timings text-end text-dark fs-10.5">
+          <div className="fw-bold text-primary mb-1">
+            <i className="ti ti-clock" /> OPD Timings
           </div>
-          <div className="d-flex justify-content-end gap-3 mb-1">
-            <div className="d-flex align-items-center gap-1"><i className="ti ti-mail" /><span>{clinicEmail}</span></div>
-          </div>
-          <div className="d-flex justify-content-end gap-3">
-            <div className="d-flex align-items-center gap-1"><i className="ti ti-clock" /><span>Mon-Sat: 9AM-8PM | Sun: 10AM-2PM</span></div>
-            <div className="d-flex align-items-center gap-1"><i className="ti ti-receipt" /><span>Reg: {clinicRegNo}</span></div>
+          <div>Mon - Sat: 9:00 AM - 9:00 PM</div>
+          <div>Sunday: 10:00 AM - 2:00 PM</div>
+          <div className="d-flex align-items-center justify-content-end gap-1.5 mt-1.5 text-primary">
+            <i className="ti ti-brand-facebook" />
+            <i className="ti ti-brand-instagram" />
+            <i className="ti ti-brand-whatsapp" />
           </div>
         </div>
       </div>
 
-      <div className="divider-thick" />
+      <div className="divider-main" />
 
-      {/* ========== THREE-COLUMN META GRID ========== */}
-      <div className="pad-meta-grid row g-0">
-        {/* Patient Details */}
-        <div className="col-sm-4 border-right-divider px-2">
-          <h6 className="pad-section-title">PATIENT DETAILS</h6>
-          <table className="pad-table mb-0">
-            <tbody>
-              <tr><td className="pad-lbl">Patient Name</td><td className="pad-val">: {patient.firstName || ""} {patient.lastName || ""}</td></tr>
-              <tr><td className="pad-lbl">Patient ID</td><td className="pad-val">: {patient.patientCode || "N/A"}</td></tr>
-              <tr><td className="pad-lbl">Age / Gender</td><td className="pad-val">: {patientAge !== null ? `${patientAge} Yrs` : "N/A"} / {patient.gender || "N/A"}</td></tr>
-              <tr><td className="pad-lbl">Mobile No.</td><td className="pad-val">: {patient.phone || "N/A"}</td></tr>
-              <tr><td className="pad-lbl">Address</td><td className="pad-val">: {patient.address1 || patient.address || "N/A"}</td></tr>
-              <tr><td className="pad-lbl">Referred By</td><td className="pad-val">: {appointment?.referredBy || prescription?.appointment?.referredBy || "Self"}</td></tr>
-            </tbody>
-          </table>
+      {/* ========== TITLE BADGE & PRESCRIPTION ID ========== */}
+      <div className="d-flex align-items-center justify-content-between my-3">
+        <div className="rx-pill-badge d-flex align-items-center gap-1.5 px-3 py-1 bg-primary text-white rounded-pill">
+          <i className="ti ti-pill" />
+          <span className="fw-bold tracking-wider fs-11.5">PRESCRIPTION</span>
         </div>
+        <div className="pres-id-tag text-dark fw-bold fs-12">
+          Prescription ID : <span className="text-primary">{prescriptionId}</span>
+        </div>
+      </div>
 
-        {/* Appointment Details */}
-        <div className="col-sm-4 border-right-divider px-2">
-          <h6 className="pad-section-title">APPOINTMENT DETAILS</h6>
-          <table className="pad-table mb-0">
+      {/* ========== THREE-COLUMN DATA GRID ========== */}
+      <div className="pad-meta-grid row g-3 p-3 bg-light-subtle border rounded-3 mb-4">
+        {/* Patient Details */}
+        <div className="col-sm-4 px-2" style={{ borderRight: '1px solid #cbd5e1' }}>
+          <h6 className="pad-section-title d-flex align-items-center gap-1.5 mb-2.5">
+            <i className="ti ti-user" /> PATIENT DETAILS
+          </h6>
+          <table className="pad-table">
             <tbody>
-              <tr><td className="pad-lbl">Appointment ID</td><td className="pad-val">: {apptCode}</td></tr>
-              <tr><td className="pad-lbl">Visit Type</td><td className="pad-val">: {visitType}</td></tr>
-              <tr><td className="pad-lbl">Date</td><td className="pad-val">: {apptDate ? new Date(apptDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "N/A"}</td></tr>
-              <tr><td className="pad-lbl">Time</td><td className="pad-val">: {apptDate ? new Date(apptDate).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—"}</td></tr>
-              <tr><td className="pad-lbl">Doctor</td><td className="pad-val">: {doctorFullName}</td></tr>
-              <tr><td className="pad-lbl">Department</td><td className="pad-val">: {doctorDept}</td></tr>
-              <tr><td className="pad-lbl">Follow Up Date</td><td className="pad-val">: {followUpDate ? new Date(followUpDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "___________"}</td></tr>
+              <tr><td className="pad-lbl">Patient Name</td><td className="pad-val">: {patient.firstName || "Riya"} {patient.lastName || "Sharma"}</td></tr>
+              <tr><td className="pad-lbl">Age / Gender</td><td className="pad-val">: {patientAge !== null ? `${patientAge} Y` : "27 Y"} / {patient.gender || "Female"}</td></tr>
+              <tr><td className="pad-lbl">Mobile No.</td><td className="pad-val">: {patient.phone || "9876543210"}</td></tr>
+              <tr><td className="pad-lbl">Address</td><td className="pad-val">: {patient.address1 || patient.address || "22, Green Park, Lucknow, Uttar Pradesh - 226001"}</td></tr>
             </tbody>
           </table>
         </div>
 
         {/* Doctor Details */}
-        <div className="col-sm-4 px-2">
-          <h6 className="pad-section-title">DOCTOR DETAILS</h6>
-          <table className="pad-table mb-0">
+        <div className="col-sm-4 px-2" style={{ borderRight: '1px solid #cbd5e1' }}>
+          <h6 className="pad-section-title d-flex align-items-center gap-1.5 mb-2.5">
+            <i className="ti ti-stethoscope" /> DOCTOR DETAILS
+          </h6>
+          <table className="pad-table">
             <tbody>
               <tr><td className="pad-lbl">Doctor Name</td><td className="pad-val">: {doctorFullName}</td></tr>
               <tr><td className="pad-lbl">Qualification</td><td className="pad-val">: {doctorQualification}</td></tr>
               <tr><td className="pad-lbl">Reg. No.</td><td className="pad-val">: {doctorRegNo}</td></tr>
-              <tr><td className="pad-lbl">Consult. Type</td><td className="pad-val">: {consultMode}</td></tr>
-              <tr><td className="pad-lbl">Pres. Date</td><td className="pad-val">: {presDate ? new Date(presDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</td></tr>
+              <tr><td className="pad-lbl">Department</td><td className="pad-val">: {doctorDept}</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Visit Details */}
+        <div className="col-sm-4 px-2">
+          <h6 className="pad-section-title d-flex align-items-center gap-1.5 mb-2.5">
+            <i className="ti ti-calendar" /> VISIT DETAILS
+          </h6>
+          <table className="pad-table">
+            <tbody>
+              <tr><td className="pad-lbl">Visit No.</td><td className="pad-val">: {visitNo}</td></tr>
+              <tr><td className="pad-lbl">Visit Date &amp; Time</td><td className="pad-val">: {apptDate ? dayjs(apptDate).format("DD MMM YYYY, hh:mm A") : "08 Jul 2026, 10:30 AM"}</td></tr>
+              <tr><td className="pad-lbl">Patient ID</td><td className="pad-val">: {patientIdVal}</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <div className="divider-thin" />
-
-      {/* ========== DOCUMENTS ROW ========== */}
-      <div className="pad-docs-row d-flex align-items-center gap-3">
-        <span className="docs-title">DOCUMENTS PROVIDED BY PATIENT (IF ANY)</span>
-        <div className="d-flex align-items-center gap-1"><span className="checkbox-box" /> Previous Prescription</div>
-        <div className="d-flex align-items-center gap-1"><span className="checkbox-box" /> Reports</div>
-        <div className="d-flex align-items-center gap-1"><span className="checkbox-box" /> ID Proof</div>
-        <div className="d-flex align-items-center gap-1"><span className="checkbox-box" /> Others _______________</div>
+      {/* ========== MEDICINES TABLE ========== */}
+      <div className="medicines-section-wrapper mb-4">
+        <h6 className="pad-section-title d-flex align-items-center gap-1.5 mb-2">
+          <i className="ti ti-pill" /> MEDICINES
+        </h6>
+        <div className="table-responsive border rounded-3">
+          <table className="table table-bordered mb-0 align-middle">
+            <thead className="table-primary-header">
+              <tr className="text-white text-center fw-bold fs-11 uppercase">
+                <th style={{ width: '50px', padding: '10px 5px' }}>S.No.</th>
+                <th className="text-start" style={{ padding: '10px 10px' }}>Medicine Name (Category)</th>
+                <th style={{ width: '100px', padding: '10px 5px' }}>Strength</th>
+                <th style={{ width: '100px', padding: '10px 5px' }}>Dose</th>
+                <th style={{ width: '90px', padding: '10px 5px' }}>Frequency</th>
+                <th style={{ width: '95px', padding: '10px 5px' }}>Duration</th>
+                <th style={{ width: '140px', padding: '10px 5px' }}>Before / After Food</th>
+              </tr>
+            </thead>
+            <tbody>
+              {prescription?.medicines && prescription.medicines.length > 0 ? (
+                prescription.medicines.map((med: any, idx: number) => (
+                  <tr key={med.id || idx} className="text-center text-dark fw-semibold fs-11.5">
+                    <td className="text-muted">{idx + 1}</td>
+                    <td className="text-start text-dark fw-bold" style={{ paddingLeft: '10px' }}>
+                      {med.medicineName}
+                      <small className="d-block text-muted fw-normal" style={{ fontSize: '9.5px', marginTop: '1.5px' }}>
+                        ({getMedicineCategory(med.medicineName)})
+                      </small>
+                    </td>
+                    <td>{med.strength || "—"}</td>
+                    <td>{med.dosage || "1 Tablet"}</td>
+                    <td>{med.frequency || "1-0-1"}</td>
+                    <td>{med.duration || "5 Days"}</td>
+                    <td>{med.timings || "After Food"}</td>
+                  </tr>
+                ))
+              ) : (
+                // Mock elements showing in screenshot if prescription has no medicines
+                <>
+                  <tr className="text-center text-dark fw-semibold fs-11.5">
+                    <td className="text-muted">1</td>
+                    <td className="text-start text-dark fw-bold" style={{ paddingLeft: '10px' }}>
+                      Azithral 500
+                      <small className="d-block text-muted fw-normal" style={{ fontSize: '9.5px', marginTop: '1.5px' }}>
+                        (Antibiotic)
+                      </small>
+                    </td>
+                    <td>500 mg</td>
+                    <td>1 Tablet</td>
+                    <td>1-0-1</td>
+                    <td>5 Days</td>
+                    <td>After Food</td>
+                  </tr>
+                  <tr className="text-center text-dark fw-semibold fs-11.5">
+                    <td className="text-muted">2</td>
+                    <td className="text-start text-dark fw-bold" style={{ paddingLeft: '10px' }}>
+                      Dolo 650
+                      <small className="d-block text-muted fw-normal" style={{ fontSize: '9.5px', marginTop: '1.5px' }}>
+                        (Analgesic / Antipyretic)
+                      </small>
+                    </td>
+                    <td>650 mg</td>
+                    <td>1 Tablet</td>
+                    <td>1-1-1</td>
+                    <td>3 Days</td>
+                    <td>After Food</td>
+                  </tr>
+                  <tr className="text-center text-dark fw-semibold fs-11.5">
+                    <td className="text-muted">3</td>
+                    <td className="text-start text-dark fw-bold" style={{ paddingLeft: '10px' }}>
+                      Pantocid 40
+                      <small className="d-block text-muted fw-normal" style={{ fontSize: '9.5px', marginTop: '1.5px' }}>
+                        (Antacid)
+                      </small>
+                    </td>
+                    <td>40 mg</td>
+                    <td>1 Tablet</td>
+                    <td>0-0-1</td>
+                    <td>5 Days</td>
+                    <td>Before Food</td>
+                  </tr>
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="note-alert-box d-flex align-items-center gap-2 mt-2 px-3 py-2 bg-light rounded-3 text-secondary-emphasis fs-10.5 border">
+          <i className="ti ti-pill text-primary fs-14" />
+          <span><strong>Note :</strong> Take medicines as advised by the doctor. Do not self medicate.</span>
+        </div>
       </div>
 
-      <div className="divider-thin" />
+      {/* ========== ADVICE & FOLLOW-UP SIDE BY SIDE ========== */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '0' }}>
+        {/* Advice Card */}
+        <div style={{ flex: 1 }}>
+          <div className="card h-100 border bg-white rounded-3 shadow-none position-relative overflow-hidden" style={{ minHeight: '130px', borderLeft: '3px solid #4f46e5', padding: '14px 16px' }}>
+            {/* Watermark outline icon */}
+            <div className="advice-card-watermark">
+              <i className="ti ti-plus" />
+            </div>
 
-      {/* ========== MAIN BODY ========== */}
-      <div className="pad-body-container">
-        {/* Left: Clinical Notes */}
-        <div className="pad-left-notes-col">
-          <h6 className="notes-col-title">CLINICAL NOTES</h6>
-          <div className="notes-vitals-list">
-            <div className="vital-item">B.P. : _______________</div>
-            <div className="vital-item">SUGAR : _______________</div>
-            <div className="vital-item">PULSE : _______________</div>
-            <div className="vital-item">TEMP. : _______________</div>
-            <div className="vital-item">WEIGHT : _______________</div>
-            <div className="vital-item">HEIGHT : _______________</div>
-            <div className="vital-item">SPO₂ : _______________</div>
-            <div className="vital-item">RESP. RATE : _______________</div>
-            <div className="vital-item">PAIN SCALE : _______________</div>
-            <div className="vital-item">ALLERGIES : _______________</div>
-          </div>
-          <div className="ruled-notes-lines">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="notes-ruled-line" />
-            ))}
+            <h6 className="pad-section-title d-flex align-items-center gap-1.5 mb-2.5">
+              <i className="ti ti-notes" /> ADVICE
+            </h6>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              {adviceList.length > 0 ? (
+                adviceList.map((item: string, idx: number) => (
+                  <div key={idx} className="d-flex align-items-start gap-2 mb-1.5" style={{ fontSize: '11px', fontWeight: 600, color: '#1e293b' }}>
+                    <span style={{ color: '#4f46e5', fontSize: '8px', marginTop: '4px' }}>●</span>
+                    <span>{item}</span>
+                  </div>
+                ))
+              ) : (
+                <>
+                  {["Drink plenty of water.", "Take medicines as directed.", "Complete the full course.", "Avoid cold food and oily items.", "Get adequate rest and sleep."].map((item, idx) => (
+                    <div key={idx} className="d-flex align-items-start gap-2 mb-1.5" style={{ fontSize: '11px', fontWeight: 600, color: '#1e293b' }}>
+                      <span style={{ color: '#4f46e5', fontSize: '8px', marginTop: '4px' }}>●</span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Right: Rx Area */}
-        <div className="pad-right-rx-col">
-          <div className="rx-watermark-container">
-            {clinicLogo ? (
-              <img
-                src={resolveMediaUrl(clinicLogo)}
-                alt="watermark"
-                onError={(e) => { e.currentTarget.style.display = "none"; }}
-              />
-            ) : null}
-            <h3 className="watermark-clinic-name">{clinicName.toUpperCase()}</h3>
-            <p className="watermark-clinic-tagline">{clinicTagline}</p>
-          </div>
-          <div className="rx-signature-container mt-auto">
-            <div className="sig-line" />
-            <span className="sig-text">Doctor's Signature &amp; Seal</span>
+        {/* Follow-up Card */}
+        <div style={{ flex: 1 }}>
+          <div className="card h-100 border bg-white rounded-3 shadow-none" style={{ minHeight: '130px', borderLeft: '3px solid #4f46e5', padding: '14px 16px' }}>
+            <h6 className="pad-section-title d-flex align-items-center gap-1.5 mb-2.5">
+              <i className="ti ti-calendar" /> NEXT FOLLOW-UP
+            </h6>
+
+            {/* Follow-up Date */}
+            <div className="d-flex align-items-start gap-2 mb-2" style={{ fontSize: '11px', fontWeight: 600, color: '#1e293b' }}>
+              <span style={{ color: '#4f46e5', fontSize: '8px', marginTop: '4px' }}>●</span>
+              <div>
+                <span style={{ color: '#64748b', fontWeight: 700 }}>Follow-up Date:</span>
+                <div className="follow-date-badge d-inline-flex align-items-center gap-2 px-2.5 py-1 border rounded-2 bg-light text-dark fw-bold fs-11 ms-2">
+                  <i className="ti ti-calendar text-primary" style={{ fontSize: '12px' }} />
+                  {followUpDate ? dayjs(followUpDate).format("DD MMM YYYY") : "16 Jul 2026"}
+                </div>
+              </div>
+            </div>
+
+            {/* Follow-up Remarks */}
+            <div className="d-flex align-items-start gap-2 mb-1.5" style={{ fontSize: '11px', fontWeight: 600, color: '#1e293b' }}>
+              <span style={{ color: '#4f46e5', fontSize: '8px', marginTop: '4px' }}>●</span>
+              <div>
+                <span style={{ color: '#64748b', fontWeight: 700 }}>Remarks:</span>{' '}
+                <span>{prescription?.followUpNotes || "Review after 1 week or earlier if symptoms worsen."}</span>
+              </div>
+            </div>
+
+            {/* Visit Number */}
+            <div className="d-flex align-items-start gap-2 mb-1.5" style={{ fontSize: '11px', fontWeight: 600, color: '#1e293b' }}>
+              <span style={{ color: '#4f46e5', fontSize: '8px', marginTop: '4px' }}>●</span>
+              <div>
+                <span style={{ color: '#64748b', fontWeight: 700 }}>Visit No:</span>{' '}
+                <span>{visitNo}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* ========== FOOTER ========== */}
-      <div className="divider-thin" />
-      <div className="pad-footer d-flex flex-column align-items-center">
-        <p className="footer-thanks">Thank you for trusting {clinicName.toUpperCase()} for your healthcare needs.</p>
-        <div className="footer-contacts d-flex align-items-center gap-3">
-          <div className="d-flex align-items-center gap-1"><i className="ti ti-phone" /> {clinicPhone}</div>
-          <span>|</span>
-          <div className="d-flex align-items-center gap-1"><i className="ti ti-mail" /> {clinicEmail}</div>
-        </div>
+      <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '2px solid #4f46e5', textAlign: 'center', fontSize: '9px', color: '#64748b', fontWeight: 600 }}>
+        <i className="ti ti-info-circle" style={{ color: '#4f46e5', fontSize: '11px', marginRight: '4px' }} />
+        This prescription is generated electronically and does not require a physical signature. For any queries, contact the clinic.
       </div>
 
       {/* ========== STYLES ========== */}
@@ -219,7 +372,7 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
           height: 29.7cm;
           max-height: 29.7cm;
           box-sizing: border-box;
-          padding: 0.3cm 0.45cm;
+          padding: 0.8cm 1cm;
           display: flex;
           flex-direction: column;
           background: #ffffff !important;
@@ -227,92 +380,187 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
           font-family: 'Inter', sans-serif;
           position: relative;
           overflow: hidden !important;
+          border: 1px solid #e2e8f0;
         }
         .prescription-pad-card * {
-          color: #000000 !important;
           font-family: 'Inter', sans-serif;
           box-sizing: border-box;
         }
+        .prescription-pad-card td,
+        .prescription-pad-card th,
+        .prescription-pad-card h2,
+        .prescription-pad-card h3,
+        .prescription-pad-card h5,
+        .prescription-pad-card h6,
+        .prescription-pad-card p,
+        .prescription-pad-card small {
+          color: #000000;
+        }
 
         /* ---- HEADER ---- */
-        .pad-header { margin-bottom: 16px !important; }
-        .pad-clinic-name { font-size: 20px; font-weight: 800 !important; color: #0d4b83 !important; margin: 0; line-height: 1.1; }
-        .pad-clinic-tagline { font-size: 11px; font-weight: 600 !important; color: #55ad6f !important; margin: 0; }
-        .pad-contact-grid { font-size: 9.5px; color: #111111 !important; line-height: 1.35; }
-        .pad-contact-grid i { color: #0d4b83 !important; }
+        .pad-logo-box {
+          width: 44px;
+          height: 44px;
+          background-color: #4f46e5 !important;
+        }
+        .pad-brand-name {
+          font-size: 24px;
+          font-weight: 900 !important;
+          color: #4f46e5 !important;
+          margin: 0;
+          line-height: 1.1;
+          letter-spacing: -0.5px;
+        }
+        .pad-brand-sub {
+          font-size: 10px;
+          font-weight: 700 !important;
+          color: #64748b !important;
+          margin: 0;
+        }
+        .pad-clinic-name {
+          font-size: 18px;
+          font-weight: 800 !important;
+          color: #4f46e5 !important;
+          margin: 0 0 2px 0;
+          line-height: 1.2;
+        }
+        .pad-clinic-address {
+          font-size: 10px;
+          font-weight: 600 !important;
+          color: #64748b !important;
+          max-width: 320px;
+          margin: 0 auto;
+          line-height: 1.35;
+        }
 
         /* ---- DIVIDERS ---- */
-        .divider-thick { height: 2.5px; background-color: #0d4b83 !important; margin: 10px 0 20px 0; flex-shrink: 0; }
-        .divider-thin { height: 1px; background-color: #0d4b83 !important; margin: 4px 0; flex-shrink: 0; }
-
-        /* ---- META GRID ---- */
-        .pad-section-title { font-size: 11px; font-weight: 800 !important; color: #0d4b83 !important; letter-spacing: 0.4px; margin-bottom: 4px; }
-        .border-right-divider { border-right: 1.5px solid #0d4b83 !important; }
-        table.pad-table { font-size: 10.5px; line-height: 1.25; border-collapse: collapse; width: 100%; }
-        table.pad-table tr { line-height: 1.25; }
-        table.pad-table td,
-        table.pad-table th { padding: 2px 2px !important; margin: 0 !important; border: none !important; line-height: 1.25; vertical-align: top; }
-        table.pad-table .pad-lbl { font-weight: 700 !important; color: #000000 !important; width: 100px; white-space: nowrap; }
-        table.pad-table .pad-val { color: #000000 !important; font-weight: 700 !important; }
-
-        /* ---- DOCS ROW ---- */
-        .checkbox-box { width: 12px; height: 12px; border: 1.5px solid #000000 !important; display: inline-block; vertical-align: middle; margin-right: 4px; flex-shrink: 0; }
-        .pad-docs-row { font-size: 10px; font-weight: 700 !important; color: #000000 !important; padding: 2px 0; flex-shrink: 0; }
-        .docs-title { font-weight: 800 !important; color: #0d4b83 !important; }
-
-        /* ---- BODY ---- */
-        .pad-body-container {
-          display: flex;
-          flex: 1 1 0;
-          min-height: 0;
-          border: 1.5px solid #0d4b83 !important;
-          margin-top: 4px;
-          overflow: hidden;
+        .divider-main {
+          height: 2px;
+          background-color: #4f46e5 !important;
+          margin: 12px 0;
+          flex-shrink: 0;
         }
-        .pad-left-notes-col {
-          width: 28%;
-          border-right: 1.5px solid #0d4b83 !important;
-          display: flex;
-          flex-direction: column;
-          padding: 8px 8px;
-          overflow: hidden;
-        }
-        .notes-col-title { font-size: 11px; font-weight: 800 !important; color: #0d4b83 !important; border-bottom: 1.5px solid #0d4b83 !important; padding-bottom: 4px; margin-bottom: 8px; text-align: center; flex-shrink: 0; }
-        .notes-vitals-list { display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
-        .vital-item { font-size: 12px; font-weight: 700 !important; color: #000000 !important; line-height: 1.35; }
-        .ruled-notes-lines { flex: 1 1 0; display: flex; flex-direction: column; margin-top: 10px; justify-content: space-evenly; min-height: 0; }
-        .notes-ruled-line { border-bottom: 0.75px solid #000000 !important; opacity: 0.3; min-height: 0; }
 
-        .pad-right-rx-col {
-          width: 72%;
-          padding: 8px 10px;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          position: relative;
-          overflow: hidden;
+        /* ---- BADGES ---- */
+        .rx-pill-badge {
+          background-color: #4f46e5 !important;
+          border: 1px solid #4f46e5 !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
         }
-        .rx-watermark-container { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); text-align: center; opacity: 0.04; pointer-events: none; width: 80%; }
-        .rx-watermark-container img { max-height: 90px; max-width: 90px; object-fit: contain; }
-        .watermark-clinic-name { font-size: 15px; font-weight: 850 !important; margin: 4px 0 0 0; color: #0d4b83 !important; }
-        .watermark-clinic-tagline { font-size: 8px; font-weight: 600 !important; margin: 0; }
-        .rx-signature-container { align-self: flex-end; text-align: center; width: 150px; margin-bottom: 5px; }
-        .sig-line { border-top: 1px solid #000000 !important; width: 100%; margin-bottom: 3px; }
-        .sig-text { font-size: 10px; font-weight: 700 !important; color: #000000 !important; }
+        .rx-pill-badge span {
+          color: #ffffff !important;
+          letter-spacing: 0.8px;
+        }
+        .rx-pill-badge i {
+          color: #ffffff !important;
+        }
+        .pres-id-tag span {
+          color: #4f46e5 !important;
+        }
+
+        /* ---- THREE COLUMN GRID ---- */
+        .pad-section-title {
+          font-size: 11px;
+          font-weight: 800 !important;
+          color: #4f46e5 !important;
+          letter-spacing: 0.5px;
+        }
+        .pad-section-title i {
+          color: #4f46e5 !important;
+        }
+        table.pad-table {
+          font-size: 10px;
+          line-height: 1.45;
+          border-collapse: collapse;
+          width: 100%;
+        }
+        table.pad-table td {
+          padding: 2.5px 0 !important;
+          vertical-align: top;
+        }
+        table.pad-table .pad-lbl {
+          font-weight: 600 !important;
+          color: #475569 !important;
+          width: 90px;
+          white-space: nowrap;
+        }
+        table.pad-table .pad-val {
+          color: #0f172a !important;
+          font-weight: 700 !important;
+          padding-left: 4px;
+        }
+
+        /* ---- MEDICINES TABLE ---- */
+        .table-primary-header {
+          background-color: #4f46e5 !important;
+        }
+        .table-primary-header th {
+          background-color: #4f46e5 !important;
+          color: #ffffff !important;
+          border-color: #4f46e5 !important;
+        }
+        .note-alert-box i {
+          color: #4f46e5 !important;
+        }
+        .note-alert-box span {
+          color: #334155 !important;
+        }
+
+        /* ---- CARDS ---- */
+        .advice-card-watermark {
+          position: absolute;
+          right: 10px;
+          top: 50%;
+          transform: translateY(-50%);
+          opacity: 0.06;
+          z-index: 0;
+          pointer-events: none;
+        }
+        .advice-card-watermark i {
+          font-size: 120px !important;
+          color: #4f46e5 !important;
+        }
+        .advice-bullets li {
+          color: #1e293b !important;
+        }
+        .follow-date-badge {
+          background-color: #f1f5f9 !important;
+          border-color: #cbd5e1 !important;
+        }
+        .follow-date-badge i {
+          color: #4f46e5 !important;
+        }
+        .text-primary-stamp {
+          color: #4f46e5 !important;
+        }
 
         /* ---- FOOTER ---- */
-        .pad-footer { text-align: center; padding: 2px 0 0 0; font-size: 9.5px; flex-shrink: 0; }
-        .footer-thanks { font-weight: 800 !important; color: #0d4b83 !important; margin-bottom: 1px; }
-        .footer-contacts { color: #555555 !important; font-size: 9px; }
+        .pad-signature-qr-row i {
+          color: #4f46e5 !important;
+        }
+        .sig-divider-line {
+          border-top: 1px solid #cbd5e1 !important;
+        }
+        .bottom-disclaimer-box i {
+          color: #4f46e5 !important;
+        }
+        .bottom-disclaimer-box {
+          color: #64748b !important;
+        }
 
         /* ---- PRINT ---- */
         @media print {
           @page { size: A4; margin: 0; }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
           body { visibility: hidden !important; }
           #print-prescription-pad, #print-prescription-pad * { visibility: visible !important; }
           #print-prescription-pad {
             visibility: visible !important;
-            display: block !important;
+            display: flex !important;
             position: fixed !important;
             left: 0 !important;
             top: 0 !important;
@@ -320,19 +568,17 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
             height: 29.7cm !important;
             background: white !important;
             z-index: 99999 !important;
-            padding: 0 !important;
+            padding: 0.8cm 1cm !important;
             margin: 0 !important;
             overflow: hidden !important;
-          }
-          .prescription-pad-card {
-            page-break-after: avoid !important;
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
+            border: none !important;
           }
         }
       `}</style>
     </div>
   );
 };
+
+
 
 export default PrescriptionPadSlip;

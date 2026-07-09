@@ -83,7 +83,7 @@ const AppointmentDetails = () => {
     const { notes, addNote, deleteNote, updateNote, loading: loadingNotes } = useNotes({ appointmentId: id });
 
     // Fetch patient's full history
-    const { appointments: history, updateAppointmentStatus } = useClinicAppointments(
+    const { appointments: history, updateAppointmentStatus, refetch: refetchHistory } = useClinicAppointments(
         appointment?.patientId ? { patientId: appointment.patientId } : undefined
     );
 
@@ -149,10 +149,22 @@ const AppointmentDetails = () => {
         });
     };
 
-    // Calculate fully linked chain (Root Parent + all its Follow-ups)
-    const rootId = appointment?.parentAppointmentId || appointment?.id;
-    const chainAppointments = history.filter(a => a.id === rootId || a.parentAppointmentId === rootId);
-    const chainIds = chainAppointments.map(a => a.id);
+    // Calculate fully linked chain (all non-cancelled appointments for this specific patient with this doctor)
+    const chainAppointments = useMemo(() => {
+        if (!appointment || !history) return [];
+        return history.filter(
+            (a: any) =>
+                a.patientId === appointment.patientId &&
+                a.doctorId === appointment.doctorId &&
+                a.status !== "Cancelled"
+        );
+    }, [history, appointment?.patientId, appointment?.doctorId]);
+    const rootId = useMemo(() => {
+        if (chainAppointments.length === 0) return appointment?.id || "";
+        const sorted = [...chainAppointments].sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+        return sorted[0].id;
+    }, [chainAppointments, appointment?.id]);
+    const chainIds = useMemo(() => chainAppointments.map(a => a.id), [chainAppointments]);
 
     const sortedChain = [...chainAppointments].sort((a, b) => dayjs(a.scheduledAt).isBefore(dayjs(b.scheduledAt)) ? -1 : 1);
 
@@ -206,6 +218,8 @@ const AppointmentDetails = () => {
             setShowPresModal(false);
             setEditingPrescription(null);
             refetchPres();
+            refetch(); // Refetch active appointment details
+            refetchHistory(); // Refetch patient history to load follow-up changes
         } catch (e) {
             console.error(e);
             toast.error(editingPrescription ? "Failed to update prescription" : "Failed to create prescription");
@@ -278,8 +292,8 @@ const AppointmentDetails = () => {
             const fromFormatted = dayjs(session.from, "HH:mm").format("hh:mm A");
             const toFormatted = dayjs(session.to, "HH:mm").format("hh:mm A");
 
-            const isTwentyFourSeven = 
-                session.session === "24 Hours Available" || 
+            const isTwentyFourSeven =
+                session.session === "24 Hours Available" ||
                 session.label === "24 Hours Available" ||
                 (session.from === "00:00:00" && session.to === "23:59:00") ||
                 (session.from === "00:00" && session.to === "23:59") ||
@@ -288,8 +302,8 @@ const AppointmentDetails = () => {
 
             return {
                 value: session.from,
-                label: isTwentyFourSeven 
-                    ? "24 Hours Available" 
+                label: isTwentyFourSeven
+                    ? "24 Hours Available"
                     : `${sessionLabel}: ${fromFormatted} – ${toFormatted}`,
             };
         });
@@ -366,14 +380,14 @@ const AppointmentDetails = () => {
             return (
                 <div className="d-flex align-items-center gap-2">
                     <span className="fw-semibold">{slotTimeFormatted}</span>
-                    <span 
+                    <span
                         className={`badge bg-soft-${badgeColor} text-${badgeColor} px-2 py-0.5 fs-11`}
                         style={{ borderRadius: "4px", backgroundColor: bgLightColor, color: textColor }}
                     >
-                        {bookingsAvailable === 0 
-                            ? "Filled" 
-                            : bookingsAvailable === 1 
-                                ? "Last Slot Left" 
+                        {bookingsAvailable === 0
+                            ? "Filled"
+                            : bookingsAvailable === 1
+                                ? "Last Slot Left"
                                 : `${bookingsAvailable} slots remaining`}
                     </span>
                 </div>
@@ -403,7 +417,7 @@ const AppointmentDetails = () => {
         return (
             <div className="d-flex align-items-center justify-content-between py-1 w-100" style={{ color: 'inherit' }}>
                 <div className="d-flex align-items-center gap-2">
-                    <span 
+                    <span
                         style={{
                             display: "inline-block",
                             width: "8px",
@@ -414,7 +428,7 @@ const AppointmentDetails = () => {
                     />
                     <span className="fw-semibold fs-14">{slotTimeFormatted}</span>
                 </div>
-                <span 
+                <span
                     className={`badge bg-soft-${badgeColor} text-${badgeColor} px-2 py-1 fs-11 fw-semibold`}
                     style={{ borderRadius: "6px", backgroundColor: bgLightColor, color: textColor }}
                 >
@@ -460,6 +474,7 @@ const AppointmentDetails = () => {
             setFollowUpTimeSlot(null);
             setFollowUpReason("");
             refetch(); // Reload appointment to show new follow-ups
+            refetchHistory(); // Reload history to include the new follow-up!
         } catch (err: any) {
             toast.error(err.message);
         } finally {
@@ -689,7 +704,7 @@ const AppointmentDetails = () => {
             title: "Prescription ID",
             dataIndex: "prescriptionCode",
             render: (text: any, record: any) => (
-                <span className="fw-semibold text-primary cursor-pointer" onClick={() => setSelectedPres(record)} style={{ cursor: "pointer" }}>
+                <span className="fw-semibold text-primary cursor-pointer" onClick={() => { setEditingPrescription(record); setShowPresModal(true); }} style={{ cursor: "pointer" }}>
                     {text || record.id?.substring(0, 8)}
                 </span>
             ),
@@ -758,7 +773,7 @@ const AppointmentDetails = () => {
             width: 130,
             render: (_: any, record: any) => (
                 <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
-                    <button className="bg-transparent border-0 text-info p-1" onClick={() => { setSelectedPres(record); toast.info("Viewing prescription details"); }} title="View Detail"><i className="ti ti-eye fs-18" /></button>
+                    <button className="bg-transparent border-0 text-info p-1" onClick={() => { setEditingPrescription(record); setShowPresModal(true); }} title="View Detail"><i className="ti ti-eye fs-18" /></button>
                     <button className="bg-transparent border-0 text-primary p-1" title="Edit" onClick={() => { setEditingPrescription(record); setShowPresModal(true); }}><i className="ti ti-edit fs-18" /></button>
                     <button className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={() => handleDelete(record.id)}><i className="ti ti-trash fs-18" /></button>
                 </div>
@@ -866,11 +881,11 @@ const AppointmentDetails = () => {
                         <h3 className="fw-bold mb-0">Visit # {appointment.appointmentCode || id?.slice(-6).toUpperCase()}</h3>
                     </div>
                     <div className="d-flex align-items-center gap-2 mt-3 mt-md-0 action-buttons-row">
-                         {/* Print / Download Dropdown - Appointment Slip */}
+                        {/* Print / Download Dropdown - Appointment Slip */}
                         <div className="dropdown">
-                            <button 
-                                className="btn btn-sm btn-outline-light border bg-white text-dark dropdown-toggle d-flex align-items-center gap-2 fw-bold shadow-sm fs-14" 
-                                type="button" 
+                            <button
+                                className="btn btn-sm btn-outline-light border bg-white text-dark dropdown-toggle d-flex align-items-center gap-2 fw-bold shadow-sm fs-14"
+                                type="button"
                                 onClick={(e) => { e.stopPropagation(); setPrintDropdownOpen(!printDropdownOpen); setPresDropdownOpen(false); }}
                                 aria-expanded={printDropdownOpen}
                             >
@@ -1235,11 +1250,10 @@ const AppointmentDetails = () => {
                                         <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                                             <i className="ti ti-cash fs-14 text-success" />
                                             <span className="text-black fw-bold">Payment:</span>
-                                            <span className={`badge ${
-                                                appointment.status && ["confirmed", "checked in", "checked out"].includes(appointment.status.toLowerCase())
-                                                    ? 'bg-soft-success text-success'
-                                                    : 'bg-soft-warning text-warning'
-                                            } fs-11 px-2 py-1 rounded-pill`}>
+                                            <span className={`badge ${appointment.status && ["confirmed", "checked in", "checked out"].includes(appointment.status.toLowerCase())
+                                                ? 'bg-soft-success text-success'
+                                                : 'bg-soft-warning text-warning'
+                                                } fs-11 px-2 py-1 rounded-pill`}>
                                                 {appointment.status && ["confirmed", "checked in", "checked out"].includes(appointment.status.toLowerCase()) ? "Paid" : "Unpaid"}
                                             </span>
                                         </div>
@@ -1274,7 +1288,7 @@ const AppointmentDetails = () => {
 
                             <li className="nav-item border-0">
                                 <button className="nav-link fw-bold py-2 px-3 fs-13 border-0" data-bs-toggle="pill" data-bs-target="#followup" type="button" role="tab">
-                                    Follow-ups {(appointment as any)?.followUpChain?.length > 1 ? `(${(appointment as any).followUpChain.length - 1})` : ""}
+                                    Follow-ups {sortedChain.length > 1 ? `(${sortedChain.length - 1})` : ""}
                                 </button>
                             </li>
                             {isSessionAppointment && (
@@ -1568,6 +1582,7 @@ const AppointmentDetails = () => {
                                                                 <tr>
                                                                     <th className="text-center text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>S.NO</th>
                                                                     <th className="text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>Medicine Name</th>
+                                                                    <th className="text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>Strength</th>
                                                                     <th className="text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>Dosage</th>
                                                                     <th className="text-center text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>Frequency</th>
                                                                     <th className="text-center text-white" style={{ backgroundColor: "#0f172a", color: "#ffffff", fontWeight: 700, fontSize: "12px", padding: "12px 10px" }}>Duration</th>
@@ -1579,6 +1594,7 @@ const AppointmentDetails = () => {
                                                                     <tr key={med.id || i}>
                                                                         <td className="text-center text-muted" style={{ padding: "12px 10px" }}>{String(i + 1).padStart(2, "0")}</td>
                                                                         <td className="text-primary" style={{ fontWeight: 700, color: "#1e3a8a", padding: "12px 10px" }}>{med.medicineName}</td>
+                                                                        <td style={{ padding: "12px 10px" }}>{med.strength || "—"}</td>
                                                                         <td style={{ padding: "12px 10px" }}>{med.dosage || "—"}</td>
                                                                         <td className="text-center" style={{ padding: "12px 10px" }}>{med.frequency || "—"}</td>
                                                                         <td className="text-center" style={{ padding: "12px 10px" }}>{med.duration || "—"}</td>
@@ -1586,7 +1602,7 @@ const AppointmentDetails = () => {
                                                                     </tr>
                                                                 )) : (
                                                                     <tr>
-                                                                        <td colSpan={6} className="text-center text-muted py-3">No medicines added</td>
+                                                                        <td colSpan={7} className="text-center text-muted py-3">No medicines added</td>
                                                                     </tr>
                                                                 )}
                                                             </tbody>
@@ -1633,9 +1649,9 @@ const AppointmentDetails = () => {
                                                     >
                                                         <i className="ti ti-download" /> Download
                                                     </button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
                                     </>
                                 )}
                             </div>
@@ -1676,7 +1692,7 @@ const AppointmentDetails = () => {
                                 <div className="p-0 border-0 bg-transparent">
                                     <Datatable
                                         columns={followUpColumns}
-                                        dataSource={(appointment as any)?.followUpChain || (appointment ? [appointment, ...(appointment.followUps || [])] : [])}
+                                        dataSource={sortedChain}
                                         Selection={true}
                                         onSelectionChange={(keys) => setSelectedFollowUpKeys(keys)}
                                         searchText=""
@@ -1824,6 +1840,7 @@ const AppointmentDetails = () => {
                     initialAppointmentId={appointment.id}
                     linkedAppointments={chainAppointments}
                     initialPrescription={editingPrescription}
+                    appointment={appointment}
                 />
             )}
 
@@ -1941,7 +1958,7 @@ const AppointmentDetails = () => {
                                                                     {slotOptions.length} Options
                                                                 </span>
                                                             </div>
-                                                            <div 
+                                                            <div
                                                                 style={{
                                                                     display: "grid",
                                                                     gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))",

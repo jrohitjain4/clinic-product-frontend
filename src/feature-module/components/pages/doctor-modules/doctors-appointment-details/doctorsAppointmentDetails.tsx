@@ -29,6 +29,7 @@ const DoctorsAppointmentDetails = () => {
 
   const [showPresModal, setShowPresModal] = useState(false);
   const [selectedPres, setSelectedPres] = useState<any>(null);
+  const [editingPrescription, setEditingPrescription] = useState<any>(null);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [clinicalNote, setClinicalNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
@@ -41,7 +42,7 @@ const DoctorsAppointmentDetails = () => {
   const { notes, addNote, deleteNote, updateNote } = useNotes({ appointmentId: id });
 
   // Fetch patient's full history
-  const { appointments: history } = useClinicAppointments(
+  const { appointments: history, refetch: refetchHistory } = useClinicAppointments(
     appointment?.patientId ? { patientId: appointment.patientId } : undefined
   );
 
@@ -49,45 +50,57 @@ const DoctorsAppointmentDetails = () => {
   const { appointments: allAppointments } = useClinicAppointments();
 
   const slotDetails = useMemo(() => {
-      if (!appointment || !allAppointments || allAppointments.length === 0) return { expectedTime: "—", checkinHisNo: "—" };
+    if (!appointment || !allAppointments || allAppointments.length === 0) return { expectedTime: "—", checkinHisNo: "—" };
 
-      const dateStr = dayjs(appointment.scheduledAt).format("YYYY-MM-DD");
-      const timeStr = dayjs(appointment.scheduledAt).format("HH:mm");
-      const doctorId = appointment.doctorId;
+    const dateStr = dayjs(appointment.scheduledAt).format("YYYY-MM-DD");
+    const timeStr = dayjs(appointment.scheduledAt).format("HH:mm");
+    const doctorId = appointment.doctorId;
 
-      // Group appointments by doctor, date, and slot time
-      const group = allAppointments.filter((a) => {
-          const aDate = dayjs(a.scheduledAt).format("YYYY-MM-DD");
-          const aTime = dayjs(a.scheduledAt).format("HH:mm");
-          return a.doctorId === doctorId && aDate === dateStr && aTime === timeStr;
-      }).sort((a, b) => {
-          const createA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const createB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          if (createA !== createB) return createA - createB;
-          return (a.id || "").localeCompare(b.id || "");
-      });
+    // Group appointments by doctor, date, and slot time
+    const group = allAppointments.filter((a) => {
+      const aDate = dayjs(a.scheduledAt).format("YYYY-MM-DD");
+      const aTime = dayjs(a.scheduledAt).format("HH:mm");
+      return a.doctorId === doctorId && aDate === dateStr && aTime === timeStr;
+    }).sort((a, b) => {
+      const createA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const createB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (createA !== createB) return createA - createB;
+      return (a.id || "").localeCompare(b.id || "");
+    });
 
-      const indexInGroup = group.findIndex((item) => item.id === appointment.id);
-      const queueNo = indexInGroup !== -1 ? indexInGroup + 1 : 1;
+    const indexInGroup = group.findIndex((item) => item.id === appointment.id);
+    const queueNo = indexInGroup !== -1 ? indexInGroup + 1 : 1;
 
-      const slotStartTime = dayjs(appointment.scheduledAt);
-      const expectedTime = indexInGroup !== -1
-          ? slotStartTime.add(indexInGroup * 15, "minute").format("hh:mm A")
-          : slotStartTime.format("hh:mm A");
+    const slotStartTime = dayjs(appointment.scheduledAt);
+    const expectedTime = indexInGroup !== -1
+      ? slotStartTime.add(indexInGroup * 15, "minute").format("hh:mm A")
+      : slotStartTime.format("hh:mm A");
 
-      const checkinsBefore = indexInGroup !== -1
-          ? group.slice(0, indexInGroup).filter((item) => ["Checked In", "Checked Out"].includes(item.status)).length
-          : 0;
+    const checkinsBefore = indexInGroup !== -1
+      ? group.slice(0, indexInGroup).filter((item) => ["Checked In", "Checked Out"].includes(item.status)).length
+      : 0;
 
-      const checkinHisNo = `${checkinsBefore} / ${queueNo}`;
+    const checkinHisNo = `${checkinsBefore} / ${queueNo}`;
 
-      return { expectedTime, checkinHisNo };
+    return { expectedTime, checkinHisNo };
   }, [appointment, allAppointments]);
 
-  // Calculate fully linked chain (Root Parent + all its Follow-ups)
-  const rootId = (appointment as any)?.rootParentId || appointment?.id;
-  const chainAppointments = history.filter(a => a.id === rootId || (a as any).rootParentId === rootId);
-  const chainIds = chainAppointments.map(a => a.id);
+  // Calculate fully linked chain (all non-cancelled appointments for this specific patient with this doctor)
+  const chainAppointments = useMemo(() => {
+    if (!appointment || !history) return [];
+    return history.filter(
+      (a: any) =>
+        a.patientId === appointment.patientId &&
+        a.doctorId === appointment.doctorId &&
+        a.status !== "Cancelled"
+    );
+  }, [history, appointment?.patientId, appointment?.doctorId]);
+  const rootId = useMemo(() => {
+    if (chainAppointments.length === 0) return appointment?.id || "";
+    const sorted = [...chainAppointments].sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+    return sorted[0].id;
+  }, [chainAppointments, appointment?.id]);
+  const chainIds = useMemo(() => chainAppointments.map(a => a.id), [chainAppointments]);
 
   const sortedChain = [...chainAppointments].sort((a, b) => dayjs(a.scheduledAt).isBefore(dayjs(b.scheduledAt)) ? -1 : 1);
 
@@ -106,6 +119,8 @@ const DoctorsAppointmentDetails = () => {
       });
       setShowPresModal(false);
       refetchPres();
+      refetch(); // Refetch active appointment details
+      refetchHistory(); // Refetch patient history to load newly created follow-up appointments
       toast.success("Prescription created successfully");
     } catch (e) {
       console.error(e);
@@ -278,7 +293,7 @@ const DoctorsAppointmentDetails = () => {
       title: "Prescription ID",
       dataIndex: "prescriptionCode",
       render: (text: any, record: any) => (
-        <span className="fw-semibold text-primary cursor-pointer" onClick={() => setSelectedPres(record)} style={{ cursor: "pointer" }}>
+        <span className="fw-semibold text-primary cursor-pointer" onClick={() => { setEditingPrescription(record); setShowPresModal(true); }} style={{ cursor: "pointer" }}>
           {text || record.id?.substring(0, 8)}
         </span>
       ),
@@ -328,7 +343,7 @@ const DoctorsAppointmentDetails = () => {
       align: 'center' as const,
       render: (_: any, record: any) => (
         <div className="d-flex align-items-center justify-content-center gap-1">
-          <button className="btn btn-icon btn-sm btn-soft-primary" onClick={() => { setSelectedPres(record); toast.info("Viewing prescription details"); }} title="View Detail">
+          <button className="btn btn-icon btn-sm btn-soft-primary" onClick={() => { setEditingPrescription(record); setShowPresModal(true); }} title="View Detail">
             <i className="ti ti-eye" />
           </button>
           <button className="btn btn-icon btn-sm btn-soft-info" title="More" onClick={() => toast.info("More options coming soon")}>
@@ -420,9 +435,9 @@ const DoctorsAppointmentDetails = () => {
           </div>
           <div className="d-flex align-items-center gap-2 mt-3 mt-md-0 action-buttons-row">
             <div className="dropdown">
-              <button 
-                className="btn btn-sm btn-outline-light border bg-white text-dark dropdown-toggle d-flex align-items-center gap-2 fw-bold shadow-sm fs-14" 
-                type="button" 
+              <button
+                className="btn btn-sm btn-outline-light border bg-white text-dark dropdown-toggle d-flex align-items-center gap-2 fw-bold shadow-sm fs-14"
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   setPrintDropdownOpen(!printDropdownOpen);
@@ -745,12 +760,11 @@ const DoctorsAppointmentDetails = () => {
                     <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                       <i className="ti ti-cash fs-14 text-success" />
                       <span className="text-black fw-bold">Payment:</span>
-                      <span className={`badge ${
-                          appointment.status && ["confirmed", "checked in", "checked out"].includes(appointment.status.toLowerCase())
-                              ? 'bg-soft-success text-success'
-                              : 'bg-soft-warning text-warning'
-                      } fs-11 px-2 py-1 rounded-pill`}>
-                          {appointment.status && ["confirmed", "checked in", "checked out"].includes(appointment.status.toLowerCase()) ? "Paid" : "Unpaid"}
+                      <span className={`badge ${appointment.status && ["confirmed", "checked in", "checked out"].includes(appointment.status.toLowerCase())
+                          ? 'bg-soft-success text-success'
+                          : 'bg-soft-warning text-warning'
+                        } fs-11 px-2 py-1 rounded-pill`}>
+                        {appointment.status && ["confirmed", "checked in", "checked out"].includes(appointment.status.toLowerCase()) ? "Paid" : "Unpaid"}
                       </span>
                     </div>
                   </div>
@@ -820,18 +834,18 @@ const DoctorsAppointmentDetails = () => {
                                   </span>
                                   <div className="d-flex align-items-center gap-2">
                                     <span className="text-muted fs-11 fw-medium text-uppercase me-1">Assessment</span>
-                                    <button 
-                                      className="btn btn-icon btn-xs btn-soft-primary border-0 p-0" 
-                                      style={{ width: '20px', height: '20px' }} 
-                                      title="Edit Note" 
+                                    <button
+                                      className="btn btn-icon btn-xs btn-soft-primary border-0 p-0"
+                                      style={{ width: '20px', height: '20px' }}
+                                      title="Edit Note"
                                       onClick={() => { setClinicalNote(note.content); setEditingNote(note); setShowNoteModal(true); }}
                                     >
                                       <i className="ti ti-edit fs-12" />
                                     </button>
-                                    <button 
-                                      className="btn btn-icon btn-xs btn-soft-danger border-0 p-0" 
-                                      style={{ width: '20px', height: '20px' }} 
-                                      title="Delete Note" 
+                                    <button
+                                      className="btn btn-icon btn-xs btn-soft-danger border-0 p-0"
+                                      style={{ width: '20px', height: '20px' }}
+                                      title="Delete Note"
                                       onClick={() => { if (window.confirm("Are you sure you want to delete this note?")) deleteNote(note.id); }}
                                     >
                                       <i className="ti ti-trash fs-12" />
@@ -1008,12 +1022,14 @@ const DoctorsAppointmentDetails = () => {
       {/* Modals */}
       {showPresModal && (
         <AddPrescriptionModal
-          onClose={() => setShowPresModal(false)}
+          onClose={() => { setShowPresModal(false); setEditingPrescription(null); }}
           onSubmit={handlePresSubmit}
           initialPatientId={appointment.patientId}
           initialDoctorId={appointment.doctorId}
           initialAppointmentId={appointment.id}
           linkedAppointments={chainAppointments}
+          initialPrescription={editingPrescription}
+          appointment={appointment}
         />
       )}
 

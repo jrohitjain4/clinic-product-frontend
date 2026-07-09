@@ -1,15 +1,20 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
 import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppointments";
-import { useClinicProducts } from "../../../../../core/hooks/useClinicProducts";
+import { useMedicines } from "../../../../../core/hooks/useMedicines";
+import { usePrescriptions } from "../../../../../core/hooks/usePrescriptions";
+import html2pdf from "html2pdf.js";
+import PrescriptionPadSlip from "../../clinic-modules/appointments/PrescriptionPadSlip";
 
 interface Medicine {
     medicineName: string;
+    strength?: string;
     dosage: string;
     frequency: string;
     duration: string;
     timings: string;
+    category?: string;
 }
 
 interface Props {
@@ -20,43 +25,62 @@ interface Props {
     initialAppointmentId?: string;
     linkedAppointments?: any[];
     initialPrescription?: any;
+    appointment?: any;
 }
 
-const FREQUENCY_OPTIONS = ["1-0-1", "1-1-1", "0-0-1", "1-0-0", "0-1-0", "1-1-0", "SOS"];
-const TIMING_OPTIONS = ["Before meal", "After meal", "With meal", "Empty stomach", "At bedtime", "Any time"];
-const DURATION_OPTIONS = ["3 days", "5 days", "1 week", "10 days", "2 weeks", "1 month", "2 months", "3 months", "As needed"];
+const FREQUENCY_OPTIONS = ["1-0-1", "1-1-1", "0-0-1", "1-0-0", "0-1-0", "1-1-0", "SOS", "As Directed"];
+const TIMING_OPTIONS = ["After Food", "Before Food", "With Food", "Empty Stomach"];
+const DURATION_OPTIONS = ["3 Days", "5 Days", "7 Days", "10 Days", "2 Weeks", "1 Month", "2 Months", "3 Months", "As needed"];
+const DOSE_OPTIONS = ["1 Tablet", "2 Tablets", "1 Spoon", "0.5 Tablet", "1 Capsule", "2 Capsules", "As Directed"];
 
 const emptyMedicine = (): Medicine => ({
     medicineName: "",
-    dosage: "",
+    strength: "",
+    dosage: "1 Tablet",
     frequency: "1-0-1",
-    duration: "1 month",
-    timings: "After meal",
+    duration: "5 Days",
+    timings: "After Food",
+    category: "General Medicine",
 });
 
-const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoctorId, initialAppointmentId, linkedAppointments, initialPrescription }: Props) => {
+const AddPrescriptionModal = ({
+    onClose,
+    onSubmit,
+    initialPatientId,
+    initialDoctorId,
+    initialAppointmentId,
+    linkedAppointments = [],
+    initialPrescription,
+    appointment,
+}: Props) => {
     const { appointments } = useClinicAppointments();
-    const { products } = useClinicProducts();
+    const { medicines: pharmacyMedicines } = useMedicines();
+    const { prescriptions: allPrescriptions } = usePrescriptions();
 
+    // Map pharmacy medicines for search options
     const medicineOptions = useMemo(() => {
-        return products
-            .filter((p: any) => p.key === "Medicine")
-            .map((p: any) => p.name);
-    }, [products]);
+        return pharmacyMedicines.map((m: any) => ({
+            name: m.medicineName,
+            category: m.category?.name || "General Medicine",
+            strength: m.unit || "", // default unit or strength if present
+        }));
+    }, [pharmacyMedicines]);
 
-    // Get logged-in user from localStorage
+    // Derived user and role details
     const loggedUser = useMemo(() => {
-        try { return JSON.parse(localStorage.getItem("user") || "{}"); } catch { return {}; }
+        try {
+            return JSON.parse(localStorage.getItem("user") || "{}");
+        } catch {
+            return {};
+        }
     }, []);
     const isDoctor = loggedUser?.role === "DOCTOR";
 
-    // Only show patients from "Schedule" appointments
     const scheduledAppointments = useMemo(
         () => appointments.filter((a) => a.status === "Schedule"),
         [appointments]
     );
 
-    // Unique patients from scheduled appointments
     const scheduledPatients = useMemo(() => {
         const seen = new Set<string>();
         return scheduledAppointments
@@ -64,25 +88,160 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
             .map((a) => a.patient);
     }, [scheduledAppointments]);
 
-    // If logged in as DOCTOR, derive their record from scheduled appointments
     const loggedDoctorFromAppointment = useMemo(() => {
         if (!isDoctor) return null;
-        // Backend already scopes appointments to this doctor — grab first one
         const match = scheduledAppointments.find((a) => a.doctor);
         return match?.doctor || null;
     }, [scheduledAppointments, isDoctor]);
 
+    // Modal state values
     const [patientId, setPatientId] = useState(initialPrescription?.patientId || initialPatientId || "");
-    const [doctorId, setDoctorId] = useState(initialPrescription?.doctorId || initialDoctorId || loggedDoctorFromAppointment?.id || "");
+    const [doctorId, setDoctorId] = useState(
+        initialPrescription?.doctorId || initialDoctorId || loggedDoctorFromAppointment?.id || ""
+    );
     const [appointmentId, setAppointmentId] = useState(initialPrescription?.appointmentId || initialAppointmentId || "");
-    const [advice, setAdvice] = useState(initialPrescription?.advice || "");
-    const [followUpDate, setFollowUpDate] = useState<any>(initialPrescription?.followUpDate ? dayjs(initialPrescription.followUpDate) : null);
-    const [followUpNotes, setFollowUpNotes] = useState(initialPrescription?.followUpNotes || "");
-    const [medicines, setMedicines] = useState<Medicine[]>(initialPrescription?.medicines || [emptyMedicine()]);
     const [submitting, setSubmitting] = useState(false);
     const [activeSearchIndex, setActiveSearchIndex] = useState<number | null>(null);
 
-    // When patient is selected, auto-fill doctor from their latest scheduled appointment
+    // Selected visit tab state inside horizontal scroll
+    const [selectedVisitTab, setSelectedVisitTab] = useState<string>(initialAppointmentId || "");
+
+    // State to hold the current visit's draft
+    const [currentDraft, setCurrentDraft] = useState<{
+        medicines: Medicine[];
+        advice: string;
+        followUpDate: any;
+        followUpNotes: string;
+    }>({
+        medicines: initialPrescription?.medicines || [emptyMedicine()],
+        advice: initialPrescription?.advice || "1. Drink plenty of water.\n2. Take medicines as directed.\n3. Complete the full course.\n4. Avoid cold food and oily items.",
+        followUpDate: initialPrescription?.followUpDate ? dayjs(initialPrescription.followUpDate) : null,
+        followUpNotes: initialPrescription?.followUpNotes || "Review after 1 week"
+    });
+
+    // Sync draft if initialPrescription changes
+    useEffect(() => {
+        if (initialPrescription) {
+            setCurrentDraft({
+                medicines: initialPrescription.medicines || [emptyMedicine()],
+                advice: initialPrescription.advice || "",
+                followUpDate: initialPrescription.followUpDate ? dayjs(initialPrescription.followUpDate) : null,
+                followUpNotes: initialPrescription.followUpNotes || ""
+            });
+        }
+    }, [initialPrescription]);
+
+    // Fetch patient previous prescriptions
+    const patientPrescriptions = useMemo(() => {
+        if (!patientId || !allPrescriptions) return [];
+        return allPrescriptions.filter(
+            (p: any) => p.patientId === patientId && p.id !== initialPrescription?.id
+        );
+    }, [allPrescriptions, patientId, initialPrescription]);
+
+    // Find prescription for the selected visit tab
+    const selectedVisitPrescription = useMemo(() => {
+        if (!selectedVisitTab || selectedVisitTab === initialAppointmentId) return null;
+        return allPrescriptions.find((p: any) => p.appointmentId === selectedVisitTab);
+    }, [selectedVisitTab, allPrescriptions, initialAppointmentId]);
+
+    const isCurrentVisit = selectedVisitTab === initialAppointmentId;
+
+    // Active form values depend on whether we are viewing current draft or a past prescription
+    const activeMedicines = useMemo(() => {
+        if (isCurrentVisit) return currentDraft.medicines;
+        return selectedVisitPrescription?.medicines?.map((m: any) => ({
+            medicineName: m.medicineName,
+            strength: m.strength || "",
+            dosage: m.dosage || "1 Tablet",
+            frequency: m.frequency || "1-0-1",
+            duration: m.duration || "5 Days",
+            timings: m.timings || "After Food",
+            category: m.category || "General Medicine",
+        })) || [emptyMedicine()];
+    }, [isCurrentVisit, currentDraft.medicines, selectedVisitPrescription]);
+
+    const activeAdvice = useMemo(() => {
+        if (isCurrentVisit) return currentDraft.advice;
+        return selectedVisitPrescription?.advice || "";
+    }, [isCurrentVisit, currentDraft.advice, selectedVisitPrescription]);
+
+    const activeFollowUpDate = useMemo(() => {
+        if (isCurrentVisit) return currentDraft.followUpDate;
+        return selectedVisitPrescription?.followUpDate ? dayjs(selectedVisitPrescription.followUpDate) : null;
+    }, [isCurrentVisit, currentDraft.followUpDate, selectedVisitPrescription]);
+
+    const activeFollowUpNotes = useMemo(() => {
+        if (isCurrentVisit) return currentDraft.followUpNotes;
+        return selectedVisitPrescription?.followUpNotes || "";
+    }, [isCurrentVisit, currentDraft.followUpNotes, selectedVisitPrescription]);
+
+    const handlePrint = () => {
+        const pad = document.getElementById('modal-print-prescription-pad');
+        if (!pad) return;
+        const originalDisplay = pad.style.display;
+        pad.style.display = 'block';
+        window.print();
+        setTimeout(() => {
+            pad.style.display = originalDisplay;
+        }, 1500);
+    };
+
+    const handleDownload = () => {
+        const element = document.getElementById('modal-print-prescription-pad');
+        if (!element) return;
+        const originalDisplay = element.style.display;
+        element.style.display = 'block';
+        const opt = {
+            margin: 0,
+            filename: `Prescription-${initialPrescription?.prescriptionCode || 'Record'}.pdf`,
+            image: { type: 'jpeg' as const, quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+        };
+        html2pdf()
+            .from(element)
+            .set(opt)
+            .save()
+            .then(() => { element.style.display = originalDisplay; })
+            .catch((err: any) => {
+                console.error("Prescription PDF failed:", err);
+                element.style.display = originalDisplay;
+            });
+    };
+
+    // Copy prescription data from a previous visit
+    const handleCopyPrescription = (prevPres: any) => {
+        if (prevPres?.medicines && prevPres.medicines.length > 0) {
+            const mapped = prevPres.medicines.map((m: any) => ({
+                medicineName: m.medicineName,
+                strength: m.strength || "",
+                dosage: m.dosage || "1 Tablet",
+                frequency: m.frequency || "1-0-1",
+                duration: m.duration || "5 Days",
+                timings: m.timings || "After Food",
+                category: m.category || "General Medicine",
+            }));
+
+            setCurrentDraft({
+                medicines: mapped,
+                advice: prevPres.advice || "",
+                followUpDate: prevPres.followUpDate ? dayjs(prevPres.followUpDate) : null,
+                followUpNotes: prevPres.followUpNotes || ""
+            });
+        } else {
+            setCurrentDraft(prev => ({
+                ...prev,
+                advice: prevPres?.advice || prev.advice,
+                followUpDate: prevPres?.followUpDate ? dayjs(prevPres.followUpDate) : prev.followUpDate,
+                followUpNotes: prevPres?.followUpNotes || prev.followUpNotes,
+            }));
+        }
+
+        // Switch tab back to Current Visit
+        setSelectedVisitTab(initialAppointmentId || "");
+    };
+
     const handlePatientChange = (pid: string) => {
         setPatientId(pid);
         const apt = scheduledAppointments.find((a) => a.patient?.id === pid);
@@ -95,7 +254,6 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
         }
     };
 
-    // Get doctors from scheduled appointments for selected patient
     const availableDoctors = useMemo(() => {
         if (!patientId) return [];
         const seen = new Set<string>();
@@ -105,34 +263,127 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
     }, [patientId, scheduledAppointments]);
 
     const updateMedicine = (index: number, field: keyof Medicine, value: string) => {
-        setMedicines((prev) =>
-            prev.map((m, i) => (i === index ? { ...m, [field]: value } : m))
-        );
+        if (!isCurrentVisit) return;
+        setCurrentDraft((prev) => ({
+            ...prev,
+            medicines: prev.medicines.map((m, i) => (i === index ? { ...m, [field]: value } : m))
+        }));
     };
 
-    const addMedicine = () => setMedicines((prev) => [emptyMedicine(), ...prev]);
-    const removeMedicine = (index: number) =>
-        setMedicines((prev) => prev.filter((_, i) => i !== index));
+    const handleSelectMedicine = (index: number, opt: any) => {
+        if (!isCurrentVisit) return;
+        setCurrentDraft((prev) => ({
+            ...prev,
+            medicines: prev.medicines.map((m, i) =>
+                i === index
+                    ? {
+                        ...m,
+                        medicineName: opt.name,
+                        category: opt.category,
+                        strength: opt.strength || m.strength || "",
+                    }
+                    : m
+            )
+        }));
+        setActiveSearchIndex(null);
+    };
+
+    const addMedicine = () => {
+        if (!isCurrentVisit) return;
+        setCurrentDraft((prev) => ({
+            ...prev,
+            medicines: [...prev.medicines, emptyMedicine()]
+        }));
+    };
+
+    const removeMedicine = (index: number) => {
+        if (!isCurrentVisit) return;
+        setCurrentDraft((prev) => ({
+            ...prev,
+            medicines: prev.medicines.filter((_, i) => i !== index)
+        }));
+    };
+
+    const handleClearPrescription = () => {
+        if (!isCurrentVisit) return;
+        setCurrentDraft({
+            medicines: [emptyMedicine()],
+            advice: "",
+            followUpDate: null,
+            followUpNotes: "",
+        });
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!isCurrentVisit) return; // only allow generating current visit
         if (!patientId || !doctorId) return alert("Please select a patient and doctor.");
-        if (medicines.some((m) => !m.medicineName)) return alert("Please fill in all medicine names.");
+        if (currentDraft.medicines.some((m) => !m.medicineName)) return alert("Please fill in all medicine names.");
 
         setSubmitting(true);
         try {
             await onSubmit({
                 patientId,
                 doctorId,
-                appointmentId: appointmentId || undefined,
-                advice,
-                followUpDate: followUpDate ? followUpDate.toISOString() : null,
-                followUpNotes,
-                medicines,
+                appointmentId: initialAppointmentId || undefined,
+                advice: currentDraft.advice,
+                followUpDate: currentDraft.followUpDate ? currentDraft.followUpDate.toISOString() : null,
+                followUpNotes: currentDraft.followUpNotes,
+                medicines: currentDraft.medicines.map((m) => ({
+                    medicineName: m.medicineName,
+                    strength: m.strength || null,
+                    dosage: m.dosage,
+                    frequency: m.frequency,
+                    duration: m.duration,
+                    timings: m.timings,
+                })),
             });
         } finally {
             setSubmitting(false);
         }
+    };
+
+    // Calculate visits list sorted by date (newest first)
+    const sortedVisits = useMemo(() => {
+        return [...linkedAppointments].sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+    }, [linkedAppointments]);
+
+    const copyablePrescriptionsForSelectedTab = useMemo(() => {
+        if (!patientId || !allPrescriptions || !selectedVisitTab) return [];
+        const selectedApt = sortedVisits.find((v: any) => v.id === selectedVisitTab);
+        if (!selectedApt) return [];
+        
+        const selectedDate = new Date(selectedApt.scheduledAt).getTime();
+        
+        return allPrescriptions.filter((p: any) => {
+            if (p.patientId !== patientId) return false;
+            if (p.id === initialPrescription?.id) return false;
+            
+            const pDate = p.appointment?.scheduledAt 
+                ? new Date(p.appointment.scheduledAt).getTime()
+                : new Date(p.createdAt).getTime();
+                
+            return pDate < selectedDate;
+        });
+    }, [allPrescriptions, patientId, selectedVisitTab, sortedVisits, initialPrescription]);
+
+    const getPrescriptionTitle = (pres: any) => {
+        if (!pres) return "";
+        const aptId = pres.appointmentId || pres.appointment?.id;
+        if (aptId) {
+            if (aptId === initialAppointmentId) {
+                return "Current Visit";
+            }
+            const idx = sortedVisits.findIndex((v: any) => v.id === aptId);
+            if (idx !== -1) {
+                return `Visit #${sortedVisits.length - idx}`;
+            }
+        }
+        const sortedHistory = [...allPrescriptions]
+            .filter((p: any) => p.patientId === patientId)
+            .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        const histIdx = sortedHistory.findIndex((p: any) => p.id === pres.id);
+        return `Visit #${histIdx !== -1 ? histIdx + 1 : 1}`;
     };
 
     return (
@@ -143,353 +394,782 @@ const AddPrescriptionModal = ({ onClose, onSubmit, initialPatientId, initialDoct
                 style={{ zIndex: 1040 }}
                 onClick={onClose}
             />
-            {/* Modal */}
-            <div className="modal fade show d-block" style={{ zIndex: 1050 }} tabIndex={-1}>
-                <div className="modal-dialog modal-xl modal-dialog-centered">
-                    <div className="modal-content" style={{ maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
-                        <div className="modal-header bg-primary border-bottom p-3 px-4 d-flex align-items-center justify-content-between" style={{ flexShrink: 0 }}>
-                            <h5 className="modal-title fw-bold text-white">
-                                {initialPrescription ? "Edit Prescription" : "Add New Prescription"}
-                            </h5>
+            {/* Modal Container */}
+            <div className="modal fade show d-block prescription-modal-wrapper" style={{ zIndex: 1050 }} tabIndex={-1}>
+                <div className="modal-dialog modal-xxl modal-dialog-centered">
+                    <div className="modal-content text-dark border-0 rounded-4 shadow-2xl overflow-hidden" style={{ maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
+
+                        {/* Header */}
+                        <div className="modal-header border-bottom bg-white p-3 px-4 d-flex align-items-center justify-content-between" style={{ flexShrink: 0 }}>
+                            <div className="d-flex align-items-center gap-2.5">
+                                <div className="rx-badge-icon d-flex align-items-center justify-content-center bg-primary text-white rounded-circle">
+                                    <span className="fw-bold fs-14">Rx</span>
+                                </div>
+                                <div>
+                                    <h5 className="modal-title fw-bold text-dark mb-0 fs-16">Generate Prescription</h5>
+                                    <p className="text-muted mb-0 fs-12">Create prescription for this visit</p>
+                                </div>
+                            </div>
                             <button
                                 type="button"
-                                className="btn-close btn-close-white opacity-100"
+                                className="btn-close text-dark opacity-75"
                                 onClick={onClose}
                             />
                         </div>
 
-                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-                            <div className="modal-body" style={{ overflowY: 'auto', flex: 1 }}>
-                                {/* Patient & Doctor (Hidden if pre-decided) */}
-                                {(!initialPatientId || !initialDoctorId) && (
-                                    <div className="row g-3 mb-4">
-                                        <div className="col-md-6">
-                                            <label className="form-label fw-medium">
-                                                Patient (Scheduled Only) <span className="text-danger">*</span>
-                                            </label>
-                                            <select
-                                                className="form-select text-dark"
-                                                value={patientId}
-                                                onChange={(e) => handlePatientChange(e.target.value)}
-                                                required
-                                                disabled={!!initialPatientId}
-                                            >
-                                                <option value="">-- Select Patient --</option>
-                                                {scheduledPatients.map((p: any) => (
-                                                    <option key={p.id} value={p.id}>
-                                                        {p.firstName} {p.lastName} {p.patientCode ? `(${p.patientCode})` : ""}
-                                                    </option>
-                                                ))}
-                                                {/* Fallback if initial patient is not in scheduled list */}
-                                                {initialPatientId && !scheduledPatients.find(p => p.id === initialPatientId) && (
-                                                    <option value={initialPatientId}>Current Patient</option>
-                                                )}
-                                            </select>
-                                            {scheduledPatients.length === 0 && (
-                                                <small className="text-muted mt-1 d-block">
-                                                    <i className="ti ti-info-circle me-1" />
-                                                    No patients with scheduled appointments found.
-                                                </small>
-                                            )}
-                                        </div>
+                        {/* Top Visits horizontal bar selector */}
+                        {sortedVisits.length > 0 && (
+                            <div className="visits-bar bg-light border-bottom p-2 px-4 overflow-auto d-flex align-items-center gap-3.5" style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                <div className="visits-bar-inner d-flex align-items-center gap-2">
+                                    {sortedVisits.map((apt, index) => {
+                                        const isCurrent = apt.id === initialAppointmentId;
+                                        const isSelected = selectedVisitTab === apt.id;
+                                        const dateStr = dayjs(apt.scheduledAt).format("DD MMM YYYY");
+                                        let title = `Visit #${sortedVisits.length - index}`;
+                                        if (isCurrent) {
+                                            title = "Current Visit";
+                                        }
 
-                                        <div className="col-md-6">
-                                            <label className="form-label fw-medium">
-                                                Doctor <span className="text-danger">*</span>
-                                            </label>
-                                            <select
-                                                className="form-select text-dark"
-                                                value={doctorId}
-                                                onChange={(e) => setDoctorId(e.target.value)}
-                                                required
-                                                disabled={isDoctor || !!initialDoctorId || availableDoctors.length === 0}
+                                        return (
+                                            <div
+                                                key={apt.id}
+                                                className={`visit-tab-card p-2 px-3 rounded border transition-all cursor-pointer ${isSelected
+                                                    ? 'active bg-white border-primary shadow-sm'
+                                                    : 'bg-light border-secondary-subtle text-muted'
+                                                    }`}
+                                                onClick={() => {
+                                                    setSelectedVisitTab(apt.id);
+                                                }}
                                             >
-                                                <option value="">-- Select Doctor --</option>
-                                                {// If it's a doctor, we make sure they appear even if availableDoctors is somehow missing them 
-                                                    // But they should already be in availableDoctors.
-                                                    availableDoctors.map((d: any) => (
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <i className={`ti ti-calendar fs-14 ${isSelected ? 'text-primary' : 'text-muted'}`} />
+                                                    <div className="lh-1">
+                                                        <span className={`d-block fw-bold fs-12 ${isSelected ? 'text-primary' : 'text-dark'}`}>{title}</span>
+                                                        <small className="fs-10 text-muted">{dateStr}</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Form */}
+                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                            <div className="modal-body bg-light-subtle p-0 d-flex overflow-hidden" style={{ flex: 1 }}>
+
+                                {/* Left main scrollable content area */}
+                                <div className="prescription-main-content p-4" style={{ flex: 1, overflowY: 'auto' }}>
+
+                                    {/* Past Visit Warning and Copy Action Banner */}
+                                    {!isCurrentVisit && (
+                                        <div className="alert bg-warning-subtle border border-warning rounded-3 mb-4 p-3 d-flex align-items-center justify-content-between">
+                                            <div className="d-flex align-items-center gap-2 text-warning-emphasis fw-medium fs-13">
+                                                <i className="ti ti-history fs-16 text-warning" />
+                                                {selectedVisitPrescription ? (
+                                                    <span>You are viewing the previous prescription from <strong>{dayjs(selectedVisitPrescription.createdAt).format("DD MMM YYYY")}</strong>.</span>
+                                                ) : (
+                                                    <span>No prescription was generated for this past visit.</span>
+                                                )}
+                                            </div>
+                                            <div className="d-flex align-items-center gap-2">
+                                                {selectedVisitPrescription ? (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-warning fw-bold text-dark d-flex align-items-center gap-1.5"
+                                                        onClick={() => handleCopyPrescription(selectedVisitPrescription)}
+                                                    >
+                                                        <i className="ti ti-copy" /> Copy to Current Visit
+                                                    </button>
+                                                ) : (
+                                                    <>
+                                                        {copyablePrescriptionsForSelectedTab.length > 0 ? (
+                                                            <div className="d-flex align-items-center gap-2 flex-wrap">
+                                                                {copyablePrescriptionsForSelectedTab.map((pres: any) => {
+                                                                    const title = getPrescriptionTitle(pres);
+                                                                    return (
+                                                                        <button
+                                                                            key={pres.id}
+                                                                            type="button"
+                                                                            className="btn btn-sm btn-warning fw-bold text-dark d-flex align-items-center gap-1.5"
+                                                                            onClick={() => handleCopyPrescription(pres)}
+                                                                        >
+                                                                            <i className="ti ti-copy" /> Copy {title}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-sm btn-outline-dark fw-bold"
+                                                                    onClick={() => setSelectedVisitTab(initialAppointmentId || "")}
+                                                                >
+                                                                    Back to Current Visit
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-sm btn-outline-dark fw-bold"
+                                                                onClick={() => setSelectedVisitTab(initialAppointmentId || "")}
+                                                            >
+                                                                Back to Current Visit
+                                                            </button>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Patient & Doctor (Hidden if pre-decided) */}
+                                    {(!initialPatientId || !initialDoctorId) && (
+                                        <div className="row g-3 mb-4">
+                                            <div className="col-md-6">
+                                                <label className="form-label fw-bold text-dark fs-12">
+                                                    PATIENT (SCHEDULED ONLY) <span className="text-danger">*</span>
+                                                </label>
+                                                <select
+                                                    className="form-select text-dark border-secondary-subtle"
+                                                    value={patientId}
+                                                    onChange={(e) => handlePatientChange(e.target.value)}
+                                                    required
+                                                    disabled={!!initialPatientId || !isCurrentVisit}
+                                                >
+                                                    <option value="">-- Select Patient --</option>
+                                                    {scheduledPatients.map((p: any) => (
+                                                        <option key={p.id} value={p.id}>
+                                                            {p.firstName} {p.lastName} {p.patientCode ? `(${p.patientCode})` : ""}
+                                                        </option>
+                                                    ))}
+                                                    {initialPatientId && !scheduledPatients.find(p => p.id === initialPatientId) && (
+                                                        <option value={initialPatientId}>Current Patient</option>
+                                                    )}
+                                                </select>
+                                            </div>
+
+                                            <div className="col-md-6">
+                                                <label className="form-label fw-bold text-dark fs-12">
+                                                    DOCTOR <span className="text-danger">*</span>
+                                                </label>
+                                                <select
+                                                    className="form-select text-dark border-secondary-subtle"
+                                                    value={doctorId}
+                                                    onChange={(e) => setDoctorId(e.target.value)}
+                                                    required
+                                                    disabled={isDoctor || !!initialDoctorId || availableDoctors.length === 0 || !isCurrentVisit}
+                                                >
+                                                    <option value="">-- Select Doctor --</option>
+                                                    {availableDoctors.map((d: any) => (
                                                         <option key={d.id} value={d.id}>
                                                             {d.fullName}
                                                         </option>
                                                     ))}
-                                                {/* Fallback if initial doctor is not in filtered list */}
-                                                {initialDoctorId && !availableDoctors.find(d => d.id === initialDoctorId) && (
-                                                    <option value={initialDoctorId}>Selected Doctor</option>
-                                                )}
-                                            </select>
+                                                    {initialDoctorId && !availableDoctors.find(d => d.id === initialDoctorId) && (
+                                                        <option value={initialDoctorId}>Selected Doctor</option>
+                                                    )}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Medicines table */}
+                                    <div className="bg-white border rounded-4 shadow-sm p-4 mb-4" style={{ overflow: 'visible' }}>
+                                        <div className="d-flex align-items-center justify-content-between mb-3">
+                                            <div className="d-flex align-items-center gap-2">
+                                                <i className="ti ti-pill text-primary fs-18" />
+                                                <h6 className="fw-bold text-dark mb-0 fs-14">Medicines</h6>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-outline-primary rounded-pill d-flex align-items-center gap-1"
+                                                onClick={addMedicine}
+                                                disabled={!isCurrentVisit}
+                                            >
+                                                <i className="ti ti-plus fs-12" /> Add Medicine
+                                            </button>
+                                        </div>
+
+                                        <div className="table-responsive border rounded-3" style={{ overflow: 'visible' }}>
+                                            <table className="table mb-0 align-middle" style={{ overflow: 'visible', borderCollapse: 'collapse', width: '100%' }}>
+                                                <thead className="table-light border-bottom">
+                                                    <tr className="text-dark fw-bold text-nowrap" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                        <th style={{ padding: '12px 10px', color: '#475569', whiteSpace: 'nowrap' }}>Medicine</th>
+                                                        <th style={{ padding: '12px 10px', color: '#475569', whiteSpace: 'nowrap' }}>Category</th>
+                                                        <th style={{ padding: '12px 10px', color: '#475569', width: '110px', whiteSpace: 'nowrap' }}>Strength</th>
+                                                        <th style={{ padding: '12px 10px', color: '#475569', width: '130px', whiteSpace: 'nowrap' }}>Dose</th>
+                                                        <th style={{ padding: '12px 10px', color: '#475569', width: '110px', whiteSpace: 'nowrap' }}>Frequency</th>
+                                                        <th style={{ padding: '12px 10px', color: '#475569', width: '120px', whiteSpace: 'nowrap' }}>Duration</th>
+                                                        <th style={{ padding: '12px 10px', color: '#475569', width: '180px', whiteSpace: 'nowrap' }}>Before / After Food</th>
+                                                        <th style={{ padding: '12px 10px', width: '50px' }}></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {activeMedicines.map((med: Medicine, index: number) => (
+                                                        <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                                            {/* Medicine search */}
+                                                            <td style={{ position: 'relative', zIndex: activeSearchIndex === index ? 10 : 1, padding: '8px 10px' }}>
+                                                                <div className="input-group input-group-sm border rounded-3 bg-white px-2 align-items-center">
+                                                                    <i className="ti ti-search text-muted fs-14 me-1.5" />
+                                                                    <input
+                                                                        type="text"
+                                                                        className="form-control form-control-sm text-dark fw-semibold border-0 p-1"
+                                                                        placeholder="Search Medicine..."
+                                                                        value={med.medicineName}
+                                                                        onChange={(e) => {
+                                                                            updateMedicine(index, "medicineName", e.target.value);
+                                                                            setActiveSearchIndex(index);
+                                                                        }}
+                                                                        onFocus={() => isCurrentVisit && setActiveSearchIndex(index)}
+                                                                        onBlur={() => {
+                                                                            setTimeout(() => setActiveSearchIndex(null), 250);
+                                                                        }}
+                                                                        required
+                                                                        autoComplete="off"
+                                                                        disabled={!isCurrentVisit}
+                                                                    />
+                                                                    {med.medicineName && isCurrentVisit && (
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn btn-link btn-sm text-muted p-0 border-0"
+                                                                            onClick={() => updateMedicine(index, "medicineName", "")}
+                                                                        >
+                                                                            <i className="ti ti-x fs-13" />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+
+                                                                {activeSearchIndex === index && isCurrentVisit && (
+                                                                    <div
+                                                                        className="position-absolute w-100 bg-white border rounded shadow-lg mt-1"
+                                                                        style={{
+                                                                            zIndex: 1000,
+                                                                            maxHeight: '200px',
+                                                                            overflowY: 'auto',
+                                                                            top: '100%',
+                                                                            left: 0
+                                                                        }}
+                                                                    >
+                                                                        {medicineOptions
+                                                                            .filter((opt: any) =>
+                                                                                opt.name.toLowerCase().includes((med.medicineName || "").toLowerCase())
+                                                                            )
+                                                                            .map((opt: any) => (
+                                                                                <div
+                                                                                    key={opt.name}
+                                                                                    className="medicine-dropdown-item d-flex flex-column align-items-start text-dark"
+                                                                                    onMouseDown={() => handleSelectMedicine(index, opt)}
+                                                                                >
+                                                                                    <span className="fw-bold text-dark">{opt.name}</span>
+                                                                                    <span className="text-muted fs-11" style={{ marginTop: '1px' }}>
+                                                                                        {opt.category} {opt.strength ? `· ${opt.strength}` : ''}
+                                                                                    </span>
+                                                                                </div>
+                                                                            ))}
+                                                                        {medicineOptions.filter((opt: any) =>
+                                                                            opt.name.toLowerCase().includes((med.medicineName || "").toLowerCase())
+                                                                        ).length === 0 && (
+                                                                                <div className="px-3 py-2 text-muted fs-12">
+                                                                                    No matching medicines found
+                                                                                </div>
+                                                                            )}
+                                                                    </div>
+                                                                )}
+                                                            </td>
+
+                                                            {/* Category */}
+                                                            <td style={{ padding: '8px 10px' }}>
+                                                                <span className="text-secondary fs-13 fw-semibold">
+                                                                    {med.category || "General Medicine"}
+                                                                </span>
+                                                            </td>
+
+                                                            {/* Strength */}
+                                                            <td style={{ padding: '8px 10px' }}>
+                                                                <input
+                                                                    type="text"
+                                                                    className="form-control form-control-sm text-dark fw-semibold border-secondary-subtle"
+                                                                    placeholder="e.g. 500 mg"
+                                                                    value={med.strength || ""}
+                                                                    onChange={(e) => updateMedicine(index, "strength", e.target.value)}
+                                                                    disabled={!isCurrentVisit}
+                                                                />
+                                                            </td>
+
+                                                            {/* Dose */}
+                                                            <td style={{ padding: '8px 10px' }}>
+                                                                <select
+                                                                    className="form-select form-select-sm text-dark fw-semibold border-secondary-subtle"
+                                                                    value={med.dosage}
+                                                                    onChange={(e) => updateMedicine(index, "dosage", e.target.value)}
+                                                                    disabled={!isCurrentVisit}
+                                                                >
+                                                                    {DOSE_OPTIONS.map((d) => (
+                                                                        <option key={d} value={d}>{d}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </td>
+
+                                                            {/* Frequency */}
+                                                            <td style={{ padding: '8px 10px' }}>
+                                                                <select
+                                                                    className="form-select form-select-sm text-dark fw-semibold border-secondary-subtle"
+                                                                    value={med.frequency}
+                                                                    onChange={(e) => updateMedicine(index, "frequency", e.target.value)}
+                                                                    disabled={!isCurrentVisit}
+                                                                >
+                                                                    {FREQUENCY_OPTIONS.map((f) => (
+                                                                        <option key={f} value={f}>{f}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </td>
+
+                                                            {/* Duration */}
+                                                            <td style={{ padding: '8px 10px' }}>
+                                                                <select
+                                                                    className="form-select form-select-sm text-dark fw-semibold border-secondary-subtle"
+                                                                    value={med.duration}
+                                                                    onChange={(e) => updateMedicine(index, "duration", e.target.value)}
+                                                                    disabled={!isCurrentVisit}
+                                                                >
+                                                                    {DURATION_OPTIONS.map((d) => (
+                                                                        <option key={d} value={d}>{d}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </td>
+
+                                                            {/* Timings */}
+                                                            <td style={{ padding: '8px 10px' }}>
+                                                                <select
+                                                                    className="form-select form-select-sm text-dark fw-semibold border-secondary-subtle"
+                                                                    value={med.timings}
+                                                                    onChange={(e) => updateMedicine(index, "timings", e.target.value)}
+                                                                    disabled={!isCurrentVisit}
+                                                                >
+                                                                    {TIMING_OPTIONS.map((t) => (
+                                                                        <option key={t} value={t}>{t}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </td>
+
+                                                            {/* Action Delete */}
+                                                            <td className="text-center" style={{ padding: '8px 10px' }}>
+                                                                {activeMedicines.length > 1 && isCurrentVisit && (
+                                                                    <button
+                                                                        type="button"
+                                                                        className="btn btn-sm btn-icon btn-outline-danger border-0 rounded-circle"
+                                                                        onClick={() => removeMedicine(index)}
+                                                                        style={{ width: '28px', height: '28px' }}
+                                                                    >
+                                                                        <i className="ti ti-trash fs-14" />
+                                                                    </button>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
-                                )}
 
-                                {/* Appointment Link (Styled Premium) */}
-                                {(linkedAppointments && linkedAppointments.length > 0) && (
-                                    <div className="mb-4 p-4 border-0 rounded-4 shadow-sm" style={{ backgroundColor: '#f8fafc' }}>
-                                        <label className="form-label fw-bold text-dark fs-13 d-flex align-items-center mb-3 letter-spacing-1 text-uppercase tracking-wider">
-                                            <i className="ti ti-link me-2 text-primary fs-18" />
-                                            Select Visit for this Prescription
-                                        </label>
-                                        <div className="row g-3">
-                                            {linkedAppointments.sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()).map((apt) => {
-                                                const isSelected = appointmentId === apt.id;
+                                    {/* Advice and Follow-up container */}
+                                    <div className="row g-4">
+
+                                        {/* Advice */}
+                                        <div className="col-md-6">
+                                            <div className="bg-white border rounded-4 shadow-sm p-4 h-100">
+                                                <div className="d-flex align-items-center gap-2 mb-3">
+                                                    <i className="ti ti-message-dots text-primary fs-18" />
+                                                    <h6 className="fw-bold text-dark mb-0 fs-14">Advice</h6>
+                                                </div>
+                                                <div className="position-relative">
+                                                    <textarea
+                                                        className="form-control text-dark border-secondary-subtle p-3"
+                                                        rows={6}
+                                                        placeholder="Enter doctor's instructions, recommendations, or advices..."
+                                                        value={activeAdvice}
+                                                        onChange={(e) => {
+                                                            if (isCurrentVisit && e.target.value.length <= 500) {
+                                                                setCurrentDraft(prev => ({ ...prev, advice: e.target.value }));
+                                                            }
+                                                        }}
+                                                        maxLength={500}
+                                                        style={{ borderRadius: '8px', fontSize: '13px', lineHeight: '1.6' }}
+                                                        disabled={!isCurrentVisit}
+                                                    />
+                                                    <span className="position-absolute text-muted fs-11" style={{ bottom: '8px', right: '12px' }}>
+                                                        {activeAdvice.length}/500
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Next Follow Up */}
+                                        <div className="col-md-6">
+                                            <div className="bg-white border rounded-4 shadow-sm p-4 h-100">
+                                                <div className="d-flex align-items-center gap-2 mb-3">
+                                                    <i className="ti ti-calendar-stats text-primary fs-18" />
+                                                    <h6 className="fw-bold text-dark mb-0 fs-14">Next Follow-up</h6>
+                                                </div>
+                                                <div className="row g-3">
+                                                    <div className="col-12">
+                                                        <label className="form-label text-secondary fw-semibold fs-12 mb-1.5">
+                                                            Follow-up Date <span className="text-danger">*</span>
+                                                        </label>
+                                                        <div className="position-relative input-group-sm">
+                                                            <DatePicker
+                                                                className="form-control py-2 fs-13 text-dark border-secondary-subtle rounded-3"
+                                                                format="DD MMM YYYY"
+                                                                value={activeFollowUpDate}
+                                                                onChange={(date) => {
+                                                                    if (isCurrentVisit) {
+                                                                        setCurrentDraft(prev => ({ ...prev, followUpDate: date }));
+                                                                    }
+                                                                }}
+                                                                placeholder="Select date"
+                                                                suffixIcon={<i className="ti ti-calendar text-muted" />}
+                                                                disabledDate={(d) => d && d < dayjs().startOf("day")}
+                                                                disabled={!isCurrentVisit}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-12">
+                                                        <label className="form-label text-secondary fw-semibold fs-12 mb-1.5">
+                                                            Remarks (Optional)
+                                                        </label>
+                                                        <div className="position-relative">
+                                                            <input
+                                                                type="text"
+                                                                className="form-control form-control-sm text-dark border-secondary-subtle p-2 px-3 rounded-3"
+                                                                placeholder="e.g. Review after 1 week"
+                                                                value={activeFollowUpNotes}
+                                                                onChange={(e) => {
+                                                                    if (isCurrentVisit && e.target.value.length <= 200) {
+                                                                        setCurrentDraft(prev => ({ ...prev, followUpNotes: e.target.value }));
+                                                                    }
+                                                                }}
+                                                                maxLength={200}
+                                                                style={{ fontSize: '13px' }}
+                                                                disabled={!isCurrentVisit}
+                                                            />
+                                                            <span className="position-absolute text-muted fs-10" style={{ bottom: '-18px', right: '4px' }}>
+                                                                {activeFollowUpNotes.length}/200
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Right sidebar: Previous Prescriptions */}
+                                <div className="prescription-sidebar bg-white border-start p-4" style={{ width: '310px', flexShrink: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                                    <div className="d-flex align-items-center justify-content-between mb-3">
+                                        <div className="d-flex align-items-center gap-2">
+                                            <i className="ti ti-history text-primary fs-18" />
+                                            <h6 className="fw-bold text-dark mb-0 fs-14">Previous Prescriptions</h6>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="btn-close btn-sm text-muted"
+                                            style={{ width: '8px', height: '8px' }}
+                                            onClick={() => { }}
+                                        />
+                                    </div>
+
+                                    {/* Sidebar Info alert box */}
+                                    <div className="alert bg-warning-subtle border-0 rounded-3 mb-4 p-2.5 d-flex align-items-start gap-2 text-warning-emphasis fs-12" style={{ lineHeight: '1.45' }}>
+                                        <i className="ti ti-bulb fs-15 text-warning mt-0.5" />
+                                        <span>Click on any visit to copy its prescription and continue.</span>
+                                    </div>
+
+                                    {/* Prescription list */}
+                                    <div className="previous-prescriptions-list d-flex flex-column gap-3.5" style={{ flex: 1 }}>
+                                        {patientPrescriptions.length > 0 ? (
+                                            patientPrescriptions.map((pres: any, idx: number) => {
+                                                const dateStr = dayjs(pres.createdAt).format("DD MMM YYYY");
+                                                const medicineCount = pres.medicines?.length || 0;
+                                                const followUpStr = pres.followUpDate
+                                                    ? dayjs(pres.followUpDate).format("DD MMM YYYY")
+                                                    : "None";
+
                                                 return (
-                                                    <div className="col-md-4" key={apt.id}>
-                                                        <div
-                                                            className="card h-100 border-0 rounded-3 position-relative overflow-hidden"
-                                                            onClick={() => setAppointmentId(apt.id)}
-                                                            style={{
-                                                                cursor: 'pointer',
-                                                                border: isSelected ? '2px solid #2563eb' : '1px solid #bfdbfe',
-                                                                backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
-                                                                transition: 'all 0.2s ease-in-out',
-                                                                boxShadow: isSelected ? '0 4px 12px rgba(37, 99, 235, 0.15)' : '0 2px 4px rgba(0,0,0,0.02)'
-                                                            }}
-                                                        >
-                                                            <div className="card-body p-3.5 d-flex align-items-center gap-3">
-                                                                <div 
-                                                                    className={`rounded-circle d-flex align-items-center justify-content-center ${isSelected ? 'bg-primary text-white' : 'bg-light text-muted'}`}
-                                                                    style={{ width: '36px', height: '36px', flexShrink: 0 }}
-                                                                >
-                                                                    <i className={`ti ${isSelected ? 'ti-check' : 'ti-calendar-event'}`} style={{ fontSize: '18px' }} />
-                                                                </div>
-                                                                <div className="lh-base flex-grow-1">
-                                                                    <span className={`d-block fw-bold fs-15 ${isSelected ? 'text-primary' : 'text-dark'}`}>
-                                                                        {apt.status === 'Follow-up' ? 'Follow-up Visit' : 'Main Consultation'}
-                                                                    </span>
-                                                                    <small className="text-muted d-block fs-13 mt-1 fw-medium">
-                                                                        <i className="ti ti-calendar me-1 text-primary" />
-                                                                        {dayjs(apt.scheduledAt).format('DD MMM, YYYY')}
-                                                                    </small>
-                                                                    <small className="text-primary d-block fs-12 mt-1 fw-bold bg-primary-subtle px-2 py-0.5 rounded" style={{ width: 'fit-content' }}>
-                                                                        <i className="ti ti-hash me-1" />
-                                                                        ID: {apt.appointmentCode || apt.id?.substring(0, 8).toUpperCase()}
-                                                                    </small>
-                                                                </div>
-                                                            </div>
+                                                    <div
+                                                        key={pres.id || idx}
+                                                        className="card border rounded-3 p-3 position-relative hover-shadow transition-all bg-light-subtle cursor-pointer"
+                                                        onClick={() => handleCopyPrescription(pres)}
+                                                        style={{ borderStyle: 'solid', borderWidth: '1px' }}
+                                                    >
+                                                        <div className="d-flex align-items-center justify-content-between mb-2">
+                                                            <span className="fw-bold fs-13 text-dark">Visit #{patientPrescriptions.length - idx}</span>
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-link btn-xs p-0 text-primary border-0"
+                                                                title="Copy Prescription"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleCopyPrescription(pres);
+                                                                }}
+                                                            >
+                                                                <i className="ti ti-copy fs-14" />
+                                                            </button>
+                                                        </div>
+                                                        <small className="d-block text-muted fs-11.5 mb-2">
+                                                            <i className="ti ti-calendar me-1" />
+                                                            {dateStr}
+                                                        </small>
+                                                        <div className="d-flex flex-wrap gap-2 mt-1">
+                                                            <span className="badge bg-soft-primary text-primary px-2 py-0.5 rounded fs-10 fw-bold">
+                                                                {medicineCount} {medicineCount === 1 ? 'Medicine' : 'Medicines'}
+                                                            </span>
+                                                            {pres.followUpDate && (
+                                                                <span className="badge bg-soft-success text-success px-2 py-0.5 rounded fs-10 fw-bold">
+                                                                    Follow-up: {followUpStr}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 );
-                                            })}
-                                        </div>
+                                            })
+                                        ) : (
+                                            <div className="text-center py-5 text-muted">
+                                                <i className="ti ti-folder-off fs-30 opacity-50 mb-2" /><br />
+                                                No previous prescriptions recorded.
+                                            </div>
+                                        )}
                                     </div>
-                                )}
 
-                                {/* Medicines Table */}
-                                <div className="mb-4">
-                                    <div className="d-flex align-items-center justify-content-between mb-2">
-                                        <h6 className="fw-semibold mb-0">
-                                            <i className="ti ti-pill me-1 text-primary" /> Medicines
-                                        </h6>
+                                    {/* Clear Prescription */}
+                                    <div className="mt-4 pt-3 border-top" style={{ flexShrink: 0 }}>
                                         <button
                                             type="button"
-                                            className="btn btn-sm btn-outline-primary"
-                                            onClick={addMedicine}
+                                            className="btn btn-outline-danger w-100 rounded-3 fw-bold d-flex align-items-center justify-content-center gap-1.5 fs-13"
+                                            onClick={handleClearPrescription}
+                                            disabled={!isCurrentVisit}
                                         >
-                                            Add Medicine <i className="ti ti-plus ms-2" /></button>
-                                    </div>
-
-                                    <div className="table-responsive border rounded" style={{ overflow: 'visible' }}>
-                                        <table className="table mb-0" style={{ overflow: 'visible', borderCollapse: 'collapse', width: '100%' }}>
-                                            <thead style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #475569' }}>
-                                                <tr className="text-dark fw-bold">
-                                                    <th style={{ width: 50, color: '#1e293b', fontWeight: 'bold', border: '1.5px solid #475569', textAlign: 'center' }}>#</th>
-                                                    <th style={{ color: '#1e293b', fontWeight: 'bold', border: '1.5px solid #475569' }}>Medicine Name <span className="text-danger">*</span></th>
-                                                    <th style={{ color: '#1e293b', fontWeight: 'bold', border: '1.5px solid #475569' }}>Dosage</th>
-                                                    <th style={{ color: '#1e293b', fontWeight: 'bold', border: '1.5px solid #475569' }}>Frequency</th>
-                                                    <th style={{ color: '#1e293b', fontWeight: 'bold', border: '1.5px solid #475569' }}>Duration</th>
-                                                    <th style={{ color: '#1e293b', fontWeight: 'bold', border: '1.5px solid #475569' }}>Timings</th>
-                                                    <th style={{ width: 50, border: '1.5px solid #475569' }}></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {medicines.map((med, index) => (
-                                                    <tr key={index} style={{ borderBottom: '1px solid #475569' }}>
-                                                        <td className="text-dark fw-bold text-center" style={{ border: '1px solid #475569', verticalAlign: 'middle', color: '#0f172a' }}>
-                                                            {String(index + 1).padStart(2, "0")}
-                                                        </td>
-                                                        <td style={{ position: 'relative', zIndex: activeSearchIndex === index ? 10 : 1, border: '1px solid #475569' }}>
-                                                            <input
-                                                                type="text"
-                                                                className="form-control form-control-sm text-dark fw-medium border-secondary"
-                                                                placeholder="e.g. Paracetamol 500mg"
-                                                                value={med.medicineName}
-                                                                onChange={(e) => {
-                                                                    updateMedicine(index, "medicineName", e.target.value);
-                                                                    setActiveSearchIndex(index);
-                                                                }}
-                                                                onFocus={() => setActiveSearchIndex(index)}
-                                                                onBlur={() => {
-                                                                    setTimeout(() => setActiveSearchIndex(null), 250);
-                                                                }}
-                                                                required
-                                                                autoComplete="off"
-                                                            />
-                                                            {activeSearchIndex === index && (
-                                                                <div 
-                                                                    className="position-absolute w-100 bg-white border rounded shadow-lg mt-1" 
-                                                                    style={{ 
-                                                                        zIndex: 1000, 
-                                                                        maxHeight: '200px', 
-                                                                        overflowY: 'auto',
-                                                                        top: '100%',
-                                                                        left: 0
-                                                                    }}
-                                                                >
-                                                                    {medicineOptions
-                                                                        .filter((opt: string) => 
-                                                                            opt.toLowerCase().includes((med.medicineName || "").toLowerCase())
-                                                                        )
-                                                                        .map((opt: string) => (
-                                                                            <div
-                                                                                key={opt}
-                                                                                className="medicine-dropdown-item text-dark fw-medium"
-                                                                                onMouseDown={() => {
-                                                                                    updateMedicine(index, "medicineName", opt);
-                                                                                    setActiveSearchIndex(null);
-                                                                                }}
-                                                                            >
-                                                                                {opt}
-                                                                            </div>
-                                                                        ))}
-                                                                    {medicineOptions.filter((opt: string) => 
-                                                                        opt.toLowerCase().includes((med.medicineName || "").toLowerCase())
-                                                                    ).length === 0 && (
-                                                                        <div className="px-3 py-2 text-muted fs-12">
-                                                                            No matching medicines
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                        <td style={{ border: '1px solid #475569' }}>
-                                                            <input
-                                                                type="text"
-                                                                className="form-control form-control-sm text-dark fw-medium border-secondary"
-                                                                placeholder="e.g. 1 tablet"
-                                                                value={med.dosage}
-                                                                onChange={(e) => updateMedicine(index, "dosage", e.target.value)}
-                                                            />
-                                                        </td>
-                                                        <td style={{ border: '1px solid #475569' }}>
-                                                            <select
-                                                                className="form-select form-select-sm text-dark fw-medium border-secondary"
-                                                                value={med.frequency}
-                                                                onChange={(e) => updateMedicine(index, "frequency", e.target.value)}
-                                                            >
-                                                                {FREQUENCY_OPTIONS.map((f) => (
-                                                                    <option key={f} value={f}>{f}</option>
-                                                                ))}
-                                                            </select>
-                                                        </td>
-                                                        <td style={{ border: '1px solid #475569' }}>
-                                                            <select
-                                                                className="form-select form-select-sm text-dark fw-medium border-secondary"
-                                                                value={med.duration}
-                                                                onChange={(e) => updateMedicine(index, "duration", e.target.value)}
-                                                            >
-                                                                {DURATION_OPTIONS.map((d) => (
-                                                                    <option key={d} value={d}>{d}</option>
-                                                                ))}
-                                                            </select>
-                                                        </td>
-                                                        <td style={{ border: '1px solid #475569' }}>
-                                                            <select
-                                                                className="form-select form-select-sm text-dark fw-medium border-secondary"
-                                                                value={med.timings}
-                                                                onChange={(e) => updateMedicine(index, "timings", e.target.value)}
-                                                            >
-                                                                {TIMING_OPTIONS.map((t) => (
-                                                                    <option key={t} value={t}>{t}</option>
-                                                                ))}
-                                                            </select>
-                                                        </td>
-                                                        <td className="text-center" style={{ border: '1px solid #475569', verticalAlign: 'middle' }}>
-                                                            {medicines.length > 1 && (
-                                                                <button
-                                                                    type="button"
-                                                                    className="btn btn-sm btn-outline-danger"
-                                                                    onClick={() => removeMedicine(index)}
-                                                                >
-                                                                    <i className="ti ti-trash" />
-                                                                </button>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-
-                                {/* Advice */}
-                                <div className="mb-3">
-                                    <label className="form-label fw-medium">Advice / Notes</label>
-                                    <textarea
-                                        className="form-control"
-                                        rows={3}
-                                        placeholder="Doctor's advice and instructions..."
-                                        value={advice}
-                                        onChange={(e) => setAdvice(e.target.value)}
-                                    />
-                                </div>
-
-                                {/* Follow Up */}
-                                <div className="row g-3">
-                                    <div className="col-md-4">
-                                        <label className="form-label fw-medium">Follow Up Date</label>
-                                        <DatePicker
-                                            className="form-control"
-                                            format="DD-MM-YYYY"
-                                            value={followUpDate}
-                                            onChange={(date) => setFollowUpDate(date)}
-                                            placeholder="Select date"
-                                            suffixIcon={null}
-                                            disabledDate={(d) => d && d < dayjs().startOf("day")}
-                                        />
-                                    </div>
-                                    <div className="col-md-8">
-                                        <label className="form-label fw-medium">Follow Up Notes</label>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            placeholder="e.g. Come fasting, bring reports"
-                                            value={followUpNotes}
-                                            onChange={(e) => setFollowUpNotes(e.target.value)}
-                                        />
+                                            <i className="ti ti-refresh fs-14" /> Clear Prescription
+                                        </button>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="modal-footer bg-light border-top py-3 px-4" style={{ flexShrink: 0 }}>
-                                <button type="button" className="btn btn-outline-secondary fw-bold px-4 me-2" onClick={onClose} disabled={submitting}>
-                                    Cancel
-                                </button>
-                                <button type="submit" className="btn btn-primary fw-bold px-4 shadow-sm" disabled={submitting}>
-                                    {submitting ? (
-                                        <><span className="spinner-border spinner-border-sm me-2" />Processing...</>
+                            {/* Footer */}
+                            <div className="modal-footer bg-light border-top py-3 px-4 d-flex align-items-center justify-content-between" style={{ flexShrink: 0 }}>
+                                <div className="d-flex align-items-center gap-2">
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-info rounded-3 fw-bold px-3 fs-13 d-flex align-items-center gap-1.5"
+                                        onClick={handlePrint}
+                                    >
+                                        <i className="ti ti-printer" /> Print
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-success rounded-3 fw-bold px-3 fs-13 d-flex align-items-center gap-1.5"
+                                        onClick={handleDownload}
+                                    >
+                                        <i className="ti ti-download" /> Download PDF
+                                    </button>
+                                </div>
+                                <div className="d-flex align-items-center gap-3">
+                                    <button type="button" className="btn btn-white border rounded-3 fw-bold px-4 fs-13" onClick={onClose} disabled={submitting}>
+                                        Cancel
+                                    </button>
+
+                                    {isCurrentVisit ? (
+                                        <button type="submit" className="btn btn-primary rounded-3 fw-bold px-4 shadow-sm fs-13 d-flex align-items-center gap-1.5" disabled={submitting}>
+                                            {submitting ? (
+                                                <><span className="spinner-border spinner-border-sm me-1" />Processing...</>
+                                            ) : (
+                                                <><i className="ti ti-printer fs-15" /> Generate Prescription</>
+                                            )}
+                                        </button>
                                     ) : (
-                                        initialPrescription ? <><i className="ti ti-check me-1" /> Save Changes</> : <><i className="ti ti-plus me-1" /> Add Prescription</>
+                                        selectedVisitPrescription && (
+                                            <button
+                                                type="button"
+                                                className="btn btn-primary rounded-3 fw-bold px-4 shadow-sm fs-13 d-flex align-items-center gap-1.5"
+                                                onClick={() => handleCopyPrescription(selectedVisitPrescription)}
+                                            >
+                                                <i className="ti ti-copy" /> Copy to Current Visit
+                                            </button>
+                                        )
                                     )}
-                                </button>
+                                </div>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
+
+            {/* Custom Premium Styles overriding default bootstrap variables locally */}
             <style>{`
-                .medicine-dropdown-item {
-                    padding: 8px 12px;
+                .prescription-modal-wrapper .modal-xxl {
+                    max-width: 1400px;
+                    width: 95%;
+                }
+                .prescription-modal-wrapper .rx-badge-icon {
+                    width: 32px;
+                    height: 32px;
+                    background-color: #4f46e5 !important;
+                }
+                .prescription-modal-wrapper .visit-tab-card {
+                    min-width: 140px;
+                    display: flex;
+                    align-items: center;
+                    background-color: #f8fafc !important;
+                    border: 1px solid #cbd5e1 !important;
+                    padding: 8px 16px !important;
+                    border-radius: 8px !important;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+                .prescription-modal-wrapper .visit-tab-card.active {
+                    background-color: #ffffff !important;
+                    border: 2px solid #4f46e5 !important;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+                }
+                .prescription-modal-wrapper .visit-tab-card span {
+                    color: #475569 !important;
+                    font-weight: 600 !important;
+                }
+                .prescription-modal-wrapper .visit-tab-card.active span {
+                    color: #4f46e5 !important;
+                    font-weight: 700 !important;
+                }
+                .prescription-modal-wrapper .visit-tab-card small {
+                    color: #64748b !important;
+                    font-weight: 500 !important;
+                }
+                .prescription-modal-wrapper .visit-tab-card.active small {
+                    color: #6366f1 !important;
+                }
+                .prescription-modal-wrapper .visit-tab-card i {
+                    color: #64748b !important;
+                }
+                .prescription-modal-wrapper .visit-tab-card.active i {
+                    color: #4f46e5 !important;
+                }
+                .prescription-modal-wrapper .bg-blue-light {
+                    background-color: #eff6ff !important;
+                }
+                .prescription-modal-wrapper .fs-11.5 {
+                    font-size: 11.5px;
+                }
+                .prescription-modal-wrapper .bg-soft-primary {
+                    background-color: rgba(79, 70, 229, 0.1) !important;
+                    color: #4f46e5 !important;
+                }
+                .prescription-modal-wrapper .bg-soft-success {
+                    background-color: rgba(39, 174, 96, 0.1) !important;
+                    color: #27ae60 !important;
+                }
+                .prescription-modal-wrapper .hover-shadow:hover {
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                    transform: translateY(-1px);
+                }
+                .prescription-modal-wrapper .medicine-dropdown-item {
+                    padding: 8px 14px;
                     font-size: 13px;
-                    color: #1e293b;
                     cursor: pointer;
                     transition: background 0.15s ease;
                     text-align: left;
+                    border-bottom: 1px solid #f8fafc;
                 }
-                .medicine-dropdown-item:hover {
+                .prescription-modal-wrapper .medicine-dropdown-item:hover {
                     background-color: #f1f5f9;
-                    color: #4f46e5;
-                    font-weight: 500;
+                }
+                .prescription-modal-wrapper .medicine-dropdown-item:hover .text-dark {
+                    color: #4f46e5 !important;
+                }
+                .prescription-modal-wrapper .form-check-input:checked {
+                    background-color: #4f46e5;
+                    border-color: #4f46e5;
+                }
+                .prescription-modal-wrapper .btn-outline-primary {
+                    color: #4f46e5 !important;
+                    border-color: #4f46e5 !important;
+                }
+                .prescription-modal-wrapper .btn-outline-primary:hover {
+                    background-color: #4f46e5 !important;
+                    color: #fff !important;
+                }
+                .prescription-modal-wrapper .input-group {
+                    border: 1px solid #cbd5e1 !important;
+                    background-color: #ffffff !important;
+                    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+                    padding: 2px 8px !important;
+                    border-radius: 6px !important;
+                }
+                .prescription-modal-wrapper .input-group:focus-within {
+                    border-color: #4f46e5 !important;
+                    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15) !important;
+                }
+                .prescription-modal-wrapper .input-group input.form-control {
+                    border: none !important;
+                    box-shadow: none !important;
+                    outline: none !important;
+                    background: transparent !important;
+                    padding: 4px 6px !important;
+                    height: auto !important;
+                }
+                .prescription-modal-wrapper input,
+                .prescription-modal-wrapper select,
+                .prescription-modal-wrapper textarea,
+                .prescription-modal-wrapper label,
+                .prescription-modal-wrapper span:not(.badge):not(.btn *):not(.visit-tab-card *),
+                .prescription-modal-wrapper td,
+                .prescription-modal-wrapper th,
+                .prescription-modal-wrapper h5,
+                .prescription-modal-wrapper h6,
+                .prescription-modal-wrapper p:not(.text-white):not(.btn *) {
+                    color: #000000 !important;
+                    font-weight: 700 !important;
+                }
+                .prescription-modal-wrapper input::placeholder,
+                .prescription-modal-wrapper textarea::placeholder {
+                    color: #94a3b8 !important;
+                    font-weight: 500 !important;
+                }
+
+                @media print {
+                    @page { size: A4; margin: 0; }
+                    body * { visibility: hidden !important; }
+                    #modal-print-prescription-pad, #modal-print-prescription-pad * { visibility: visible !important; }
+                    #modal-print-prescription-pad {
+                        visibility: visible !important;
+                        display: block !important;
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: 21cm !important;
+                        height: 29.7cm !important;
+                        background: white !important;
+                        z-index: 99999 !important;
+                        padding: 0.8cm 1cm !important;
+                        margin: 0 !important;
+                        overflow: hidden !important;
+                        border: none !important;
+                    }
                 }
             `}</style>
+
+            {/* Printable Prescription Pad */}
+            <div id="modal-print-prescription-pad" style={{ display: 'none' }}>
+                <PrescriptionPadSlip
+                    appointment={appointment || (scheduledAppointments.find((a: any) => a.id === appointmentId))}
+                    prescription={{
+                        createdAt: initialPrescription?.createdAt || new Date(),
+                        id: initialPrescription?.id || "draft",
+                        prescriptionCode: initialPrescription?.prescriptionCode || "",
+                        medicines: activeMedicines,
+                        advice: activeAdvice,
+                        followUpDate: activeFollowUpDate?.toDate ? activeFollowUpDate.toDate() : activeFollowUpDate,
+                        followUpNotes: activeFollowUpNotes
+                    }}
+                />
+            </div>
         </>
     );
 };

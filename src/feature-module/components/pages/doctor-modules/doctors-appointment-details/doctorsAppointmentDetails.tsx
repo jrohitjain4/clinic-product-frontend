@@ -21,6 +21,7 @@ import { useNotes } from "../../../../../core/hooks/useNotes";
 import Footer from "../../../../../core/common/footer/footer";
 import AppointmentPrintSlip from "../../clinic-modules/appointments/AppointmentPrintSlip";
 import PrescriptionPadSlip from "../../clinic-modules/appointments/PrescriptionPadSlip";
+import PrescriptionPad from "../../clinic-modules/appointments/PrescriptionPad";
 
 const DoctorsAppointmentDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -192,13 +193,16 @@ const DoctorsAppointmentDetails = () => {
   const handlePrescriptionPadPrint = () => {
     const pad = document.getElementById('print-prescription-pad');
     const slip = document.getElementById('print-appointment');
+    const presSlip = document.getElementById('print-prescription-slip');
     if (!pad) return;
     pad.style.display = 'block';
     if (slip) slip.setAttribute('data-hidden-for-print', 'true');
+    if (presSlip) presSlip.setAttribute('data-hidden-for-print', 'true');
     window.print();
     setTimeout(() => {
       pad.style.display = 'none';
       if (slip) slip.removeAttribute('data-hidden-for-print');
+      if (presSlip) presSlip.removeAttribute('data-hidden-for-print');
     }, 1500);
   };
 
@@ -223,6 +227,47 @@ const DoctorsAppointmentDetails = () => {
       })
       .catch((err: any) => {
         console.error("Prescription Pad PDF failed:", err);
+        element.style.display = originalDisplay;
+      });
+  };
+
+  const handlePrescriptionSlipPrint = () => {
+    const slip = document.getElementById('print-prescription-slip');
+    const pad = document.getElementById('print-prescription-pad');
+    const apptSlip = document.getElementById('print-appointment');
+    if (!slip) return;
+    slip.style.display = 'block';
+    if (pad) pad.setAttribute('data-hidden-for-print', 'true');
+    if (apptSlip) apptSlip.setAttribute('data-hidden-for-print', 'true');
+    window.print();
+    setTimeout(() => {
+      slip.style.display = 'none';
+      if (pad) pad.removeAttribute('data-hidden-for-print');
+      if (apptSlip) apptSlip.removeAttribute('data-hidden-for-print');
+    }, 1500);
+  };
+
+  const handlePrescriptionSlipDownload = () => {
+    const element = document.getElementById('print-prescription-slip');
+    if (!element || !appointment || !selectedPres) return;
+    const originalDisplay = element.style.display;
+    element.style.display = 'block';
+    const opt = {
+      margin: 0,
+      filename: `Prescription-Slip-${selectedPres.prescriptionCode || 'Record'}.pdf`,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+    };
+    html2pdf()
+      .from(element)
+      .set(opt)
+      .save()
+      .then(() => {
+        element.style.display = originalDisplay;
+      })
+      .catch((err: any) => {
+        console.error("Prescription Slip PDF failed:", err);
         element.style.display = originalDisplay;
       });
   };
@@ -761,8 +806,8 @@ const DoctorsAppointmentDetails = () => {
                       <i className="ti ti-cash fs-14 text-success" />
                       <span className="text-black fw-bold">Payment:</span>
                       <span className={`badge ${appointment.status && ["confirmed", "checked in", "checked out"].includes(appointment.status.toLowerCase())
-                          ? 'bg-soft-success text-success'
-                          : 'bg-soft-warning text-warning'
+                        ? 'bg-soft-success text-success'
+                        : 'bg-soft-warning text-warning'
                         } fs-11 px-2 py-1 rounded-pill`}>
                         {appointment.status && ["confirmed", "checked in", "checked out"].includes(appointment.status.toLowerCase()) ? "Paid" : "Unpaid"}
                       </span>
@@ -991,9 +1036,12 @@ const DoctorsAppointmentDetails = () => {
                             </tbody>
                           </table>
                         </div>
-                        <div className="text-center">
-                          <button onClick={() => window.print()} className="btn btn-dark btn-md">
-                            <i className="ti ti-printer me-1" /> Print Prescription
+                        <div className="text-center d-flex align-items-center justify-content-center gap-3">
+                          <button onClick={handlePrescriptionSlipPrint} className="btn btn-dark btn-md d-flex align-items-center gap-2">
+                            <i className="ti ti-printer" /> Print
+                          </button>
+                          <button onClick={handlePrescriptionSlipDownload} className="btn btn-primary btn-md d-flex align-items-center gap-2">
+                            <i className="ti ti-download" /> Download
                           </button>
                         </div>
                       </div>
@@ -1071,6 +1119,11 @@ const DoctorsAppointmentDetails = () => {
 
       {/* Prescription Pad (pre-printed blank pad) */}
       <div id="print-prescription-pad" style={{ display: 'none' }}>
+        <PrescriptionPad appointment={appointment} prescription={selectedPres || linkedPrescriptions?.[0] || null} />
+      </div>
+
+      {/* Prescription Slip (detailed slip with medicines) */}
+      <div id="print-prescription-slip" style={{ display: 'none' }}>
         <PrescriptionPadSlip appointment={appointment} prescription={selectedPres || linkedPrescriptions?.[0] || null} />
       </div>
 
@@ -1109,6 +1162,23 @@ const DoctorsAppointmentDetails = () => {
                         z-index: 99999 !important;
                         padding: 1.5cm !important;
                         margin: 0 !important;
+                    }
+                    #print-prescription-slip:not([data-hidden-for-print]), #print-prescription-slip:not([data-hidden-for-print]) * {
+                        visibility: visible !important;
+                    }
+                    #print-prescription-slip:not([data-hidden-for-print]) {
+                        visibility: visible !important;
+                        display: block !important;
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: 100% !important;
+                        background: white !important;
+                        z-index: 99999 !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        overflow: hidden !important;
+                        border: none !important;
                     }
                     .bg-light { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
                 }

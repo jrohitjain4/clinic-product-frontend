@@ -211,8 +211,8 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
               </tr>
             </thead>
             <tbody>
-              {prescription?.medicines && prescription.medicines.length > 0 ? (
-                prescription.medicines.map((med: any, idx: number) => (
+              {prescription?.medicines && prescription.medicines.filter((m: any) => m.medicineName && m.medicineName.trim() !== '').length > 0 ? (
+                prescription.medicines.filter((m: any) => m.medicineName && m.medicineName.trim() !== '').map((med: any, idx: number) => (
                   <tr key={med.id || idx} className="text-center text-dark fw-semibold fs-11.5">
                     <td className="text-muted">{idx + 1}</td>
                     <td className="text-start text-dark fw-bold" style={{ paddingLeft: '10px' }}>
@@ -229,51 +229,9 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
                   </tr>
                 ))
               ) : (
-                // Mock elements showing in screenshot if prescription has no medicines
-                <>
-                  <tr className="text-center text-dark fw-semibold fs-11.5">
-                    <td className="text-muted">1</td>
-                    <td className="text-start text-dark fw-bold" style={{ paddingLeft: '10px' }}>
-                      Azithral 500
-                      <small className="d-block text-muted fw-normal" style={{ fontSize: '9.5px', marginTop: '1.5px' }}>
-                        (Antibiotic)
-                      </small>
-                    </td>
-                    <td>500 mg</td>
-                    <td>1 Tablet</td>
-                    <td>1-0-1</td>
-                    <td>5 Days</td>
-                    <td>After Food</td>
-                  </tr>
-                  <tr className="text-center text-dark fw-semibold fs-11.5">
-                    <td className="text-muted">2</td>
-                    <td className="text-start text-dark fw-bold" style={{ paddingLeft: '10px' }}>
-                      Dolo 650
-                      <small className="d-block text-muted fw-normal" style={{ fontSize: '9.5px', marginTop: '1.5px' }}>
-                        (Analgesic / Antipyretic)
-                      </small>
-                    </td>
-                    <td>650 mg</td>
-                    <td>1 Tablet</td>
-                    <td>1-1-1</td>
-                    <td>3 Days</td>
-                    <td>After Food</td>
-                  </tr>
-                  <tr className="text-center text-dark fw-semibold fs-11.5">
-                    <td className="text-muted">3</td>
-                    <td className="text-start text-dark fw-bold" style={{ paddingLeft: '10px' }}>
-                      Pantocid 40
-                      <small className="d-block text-muted fw-normal" style={{ fontSize: '9.5px', marginTop: '1.5px' }}>
-                        (Antacid)
-                      </small>
-                    </td>
-                    <td>40 mg</td>
-                    <td>1 Tablet</td>
-                    <td>0-0-1</td>
-                    <td>5 Days</td>
-                    <td>Before Food</td>
-                  </tr>
-                </>
+                <tr>
+                  <td colSpan={7} className="text-center text-muted py-3">No medicines prescribed</td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -306,14 +264,7 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
                   </div>
                 ))
               ) : (
-                <>
-                  {["Drink plenty of water.", "Take medicines as directed.", "Complete the full course.", "Avoid cold food and oily items.", "Get adequate rest and sleep."].map((item, idx) => (
-                    <div key={idx} className="d-flex align-items-start gap-2 mb-1.5" style={{ fontSize: '11px', fontWeight: 600, color: '#1e293b' }}>
-                      <span style={{ color: '#4f46e5', fontSize: '8px', marginTop: '4px' }}>●</span>
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </>
+                <div className="text-muted fs-11" style={{ fontStyle: 'italic' }}>—</div>
               )}
             </div>
           </div>
@@ -333,7 +284,7 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
                 <span style={{ color: '#64748b', fontWeight: 700 }}>Follow-up Date:</span>
                 <div className="follow-date-badge d-inline-flex align-items-center gap-2 px-2.5 py-1 border rounded-2 bg-light text-dark fw-bold fs-11 ms-2">
                   <i className="ti ti-calendar text-primary" style={{ fontSize: '12px' }} />
-                  {followUpDate ? dayjs(followUpDate).format("DD MMM YYYY") : "16 Jul 2026"}
+                  {followUpDate ? dayjs(followUpDate).format("DD MMM YYYY") : "—"}
                 </div>
               </div>
             </div>
@@ -343,7 +294,7 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
               <span style={{ color: '#4f46e5', fontSize: '8px', marginTop: '4px' }}>●</span>
               <div>
                 <span style={{ color: '#64748b', fontWeight: 700 }}>Remarks:</span>{' '}
-                <span>{prescription?.followUpNotes || "Review after 1 week or earlier if symptoms worsen."}</span>
+                <span>{prescription?.followUpNotes || "—"}</span>
               </div>
             </div>
 

@@ -25,6 +25,7 @@ import { authHeaders } from "../../../../../core/utils/apiClient";
 import { useClinicServices } from "../../../../../core/hooks/useClinicServices";
 import AppointmentPrintSlip from "./AppointmentPrintSlip";
 import PrescriptionPadSlip from "./PrescriptionPadSlip";
+import PrescriptionPad from "./PrescriptionPad";
 
 const AppointmentDetails = () => {
     const { id } = useParams<{ id: string }>();
@@ -514,14 +515,17 @@ const AppointmentDetails = () => {
     const handlePrescriptionPadPrint = () => {
         const pad = document.getElementById('print-prescription-pad');
         const slip = document.getElementById('print-appointment');
+        const presSlip = document.getElementById('print-prescription-slip');
         if (!pad) return;
-        // Show pad, hide appointment slip temporarily
+        // Show pad, hide other elements temporarily
         pad.style.display = 'block';
         if (slip) slip.setAttribute('data-hidden-for-print', 'true');
+        if (presSlip) presSlip.setAttribute('data-hidden-for-print', 'true');
         window.print();
         setTimeout(() => {
             pad.style.display = 'none';
             if (slip) slip.removeAttribute('data-hidden-for-print');
+            if (presSlip) presSlip.removeAttribute('data-hidden-for-print');
         }, 1500);
     };
 
@@ -544,6 +548,45 @@ const AppointmentDetails = () => {
             .then(() => { element.style.display = originalDisplay; })
             .catch((err: any) => {
                 console.error("Prescription Pad PDF failed:", err);
+                element.style.display = originalDisplay;
+            });
+    };
+
+    const handlePrescriptionSlipPrint = () => {
+        const slip = document.getElementById('print-prescription-slip');
+        const pad = document.getElementById('print-prescription-pad');
+        const apptSlip = document.getElementById('print-appointment');
+        if (!slip) return;
+        slip.style.display = 'block';
+        if (pad) pad.setAttribute('data-hidden-for-print', 'true');
+        if (apptSlip) apptSlip.setAttribute('data-hidden-for-print', 'true');
+        window.print();
+        setTimeout(() => {
+            slip.style.display = 'none';
+            if (pad) pad.removeAttribute('data-hidden-for-print');
+            if (apptSlip) apptSlip.removeAttribute('data-hidden-for-print');
+        }, 1500);
+    };
+
+    const handlePrescriptionSlipDownload = () => {
+        const element = document.getElementById('print-prescription-slip');
+        if (!element || !appointment || !selectedPres) return;
+        const originalDisplay = element.style.display;
+        element.style.display = 'block';
+        const opt = {
+            margin: 0,
+            filename: `Prescription-Slip-${selectedPres.prescriptionCode || 'Record'}.pdf`,
+            image: { type: 'jpeg' as const, quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+        };
+        html2pdf()
+            .from(element)
+            .set(opt)
+            .save()
+            .then(() => { element.style.display = originalDisplay; })
+            .catch((err: any) => {
+                console.error("Prescription Slip PDF failed:", err);
                 element.style.display = originalDisplay;
             });
     };
@@ -1638,13 +1681,13 @@ const AppointmentDetails = () => {
                                                 {/* Actions */}
                                                 <div className="text-center d-flex align-items-center justify-content-center gap-3 mt-4">
                                                     <button
-                                                        onClick={handlePrescriptionPadPrint}
+                                                        onClick={handlePrescriptionSlipPrint}
                                                         className="btn btn-md btn-dark d-flex align-items-center gap-2"
                                                     >
                                                         <i className="ti ti-printer" /> Print
                                                     </button>
                                                     <button
-                                                        onClick={handlePrescriptionPadDownload}
+                                                        onClick={handlePrescriptionSlipDownload}
                                                         className="btn btn-md btn-primary d-flex align-items-center gap-2"
                                                     >
                                                         <i className="ti ti-download" /> Download
@@ -2156,6 +2199,11 @@ const AppointmentDetails = () => {
 
             {/* Prescription Pad (pre-printed blank pad) */}
             <div id="print-prescription-pad" style={{ display: 'none' }}>
+                <PrescriptionPad appointment={appointment} prescription={selectedPres || linkedPrescriptions?.[0] || null} />
+            </div>
+
+            {/* Prescription Slip (detailed slip with medicines) */}
+            <div id="print-prescription-slip" style={{ display: 'none' }}>
                 <PrescriptionPadSlip appointment={appointment} prescription={selectedPres || linkedPrescriptions?.[0] || null} />
             </div>
 
@@ -2182,6 +2230,21 @@ const AppointmentDetails = () => {
                         visibility: visible !important;
                     }
                     #print-prescription-pad {
+                        visibility: visible !important;
+                        display: block !important;
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: 100% !important;
+                        background: white !important;
+                        z-index: 99999 !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                    }
+                    #print-prescription-slip:not([data-hidden-for-print]), #print-prescription-slip:not([data-hidden-for-print]) * {
+                        visibility: visible !important;
+                    }
+                    #print-prescription-slip:not([data-hidden-for-print]) {
                         visibility: visible !important;
                         display: block !important;
                         position: absolute !important;

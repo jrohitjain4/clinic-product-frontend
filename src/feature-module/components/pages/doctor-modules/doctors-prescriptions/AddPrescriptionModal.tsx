@@ -114,9 +114,9 @@ const AddPrescriptionModal = ({
         followUpNotes: string;
     }>({
         medicines: initialPrescription?.medicines || [emptyMedicine()],
-        advice: initialPrescription?.advice || "1. Drink plenty of water.\n2. Take medicines as directed.\n3. Complete the full course.\n4. Avoid cold food and oily items.",
+        advice: initialPrescription?.advice || "",
         followUpDate: initialPrescription?.followUpDate ? dayjs(initialPrescription.followUpDate) : null,
-        followUpNotes: initialPrescription?.followUpNotes || "Review after 1 week"
+        followUpNotes: initialPrescription?.followUpNotes || ""
     });
 
     // Sync draft if initialPrescription changes
@@ -391,7 +391,7 @@ const AddPrescriptionModal = ({
             {/* Backdrop */}
             <div
                 className="modal-backdrop fade show"
-                style={{ zIndex: 1040 }}
+                style={{ zIndex: 1040, backgroundColor: '#004fc4', opacity: 0.45 }}
                 onClick={onClose}
             />
             {/* Modal Container */}

@@ -150,10 +150,16 @@ const DiagnosticBooking = () => {
   const [isDiagSlotsDropdownFocused, setIsDiagSlotsDropdownFocused] = useState(false);
   const diagDropdownRef = useRef<HTMLDivElement>(null);
 
+  const [showTestListDropdown, setShowTestListDropdown] = useState(false);
+  const testDropdownRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (diagDropdownRef.current && !diagDropdownRef.current.contains(event.target as Node)) {
         setShowDiagSlotsDropdown(false);
+      }
+      if (testDropdownRef.current && !testDropdownRef.current.contains(event.target as Node)) {
+        setShowTestListDropdown(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -207,15 +213,49 @@ const DiagnosticBooking = () => {
     return list;
   }, [allTests, formCategoryId, user]);
 
-  // Auto price
-  const selectedTestObj = useMemo(() => allTests.find(t => t.id === formTestId), [allTests, formTestId]);
-  const mappedPrice = selectedTestObj?.price || 0;
+  const [formTestsList, setFormTestsList] = useState<{testId: string, name: string, categoryName: string, price: number, status: string, assignedUserId?: string}[]>([]);
+
+  const totalAmount = useMemo(() => {
+    return formTestsList.reduce((acc, t) => acc + (t.price || 0), 0);
+  }, [formTestsList]);
+
+  const activeSchedulingTest = useMemo(() => {
+    if (formTestsList.length === 0) return null;
+    return allTests.find(t => t.id === formTestsList[0].testId) || null;
+  }, [allTests, formTestsList]);
+
+  const selectedTestObj = activeSchedulingTest;
+  const mappedPrice = totalAmount;
+
+  const handleAddTest = (testId: string) => {
+    if (!testId) return;
+    const test = allTests.find(t => t.id === testId);
+    if (!test) return;
+
+    if (formTestsList.some(t => t.testId === testId)) {
+      toast.warning("Test already added to booking.");
+      return;
+    }
+
+    const category = allCategories.find(c => c.id === test.categoryId);
+    setFormTestsList(prev => [
+      ...prev,
+      {
+        testId: test.id,
+        name: test.name,
+        categoryName: category?.name || "General",
+        price: test.price || 0,
+        status: "Pending"
+      }
+    ]);
+  };
 
   const handleOpenAdd = () => {
     setFormMode("add");
     setFormPatientId(user?.role === "PATIENT" ? (user?.patientId || user?.details?.id || "") : "");
     setFormCategoryId("");
     setFormTestId("");
+    setFormTestsList([]);
     setFormDate(null);
     setFormSessionSlot("");
     setFormAssignedUserId(user?.role === "DOCTOR" && user?.doctorId ? user.doctorId : "");
@@ -231,6 +271,19 @@ const DiagnosticBooking = () => {
     setFormPatientId(bk.patientId || "");
     setFormCategoryId(bk.test?.category?.id || "");
     setFormTestId(bk.testId || "");
+    if (bk.testsList && Array.isArray(bk.testsList)) {
+      setFormTestsList(bk.testsList);
+    } else if (bk.test) {
+      setFormTestsList([{
+        testId: bk.testId,
+        name: bk.test.name,
+        categoryName: bk.test.category?.name || "General",
+        price: bk.test.price || 0,
+        status: bk.status === "Completed" || bk.status === "Checked Out" ? "Completed" : "Pending"
+      }]);
+    } else {
+      setFormTestsList([]);
+    }
     setFormDate(dayjs(bk.scheduledAt));
     setFormSessionSlot(bk.sessionSlot || "");
     setFormAssignedUserId(bk.assignedUserId || "");
@@ -340,7 +393,7 @@ const DiagnosticBooking = () => {
     e.preventDefault();
 
     if (!formPatientId) { toast.error("Patient is required"); return; }
-    if (!formTestId) { toast.error("Test is required"); return; }
+    if (formTestsList.length === 0) { toast.error("Please add at least one diagnostic test"); return; }
     if (!formDate) { toast.error("Date is required"); return; }
     if (!formSessionSlot) { toast.error("Please select a valid time slot or session."); return; }
 
@@ -358,7 +411,8 @@ const DiagnosticBooking = () => {
       if (formMode === "add") {
         await createBooking({
           patientId: formPatientId,
-          testId: formTestId,
+          testId: formTestsList[0].testId,
+          testsList: formTestsList,
           scheduledAt,
           status: user?.role === "PATIENT" ? "Schedule" : formStatus,
           paymentStatus: "Unpaid",
@@ -374,7 +428,8 @@ const DiagnosticBooking = () => {
       } else if (formMode === "edit" && selectedBooking) {
         await updateBooking(selectedBooking.id, {
           patientId: formPatientId,
-          testId: formTestId,
+          testId: formTestsList[0].testId,
+          testsList: formTestsList,
           scheduledAt,
           status: formStatus,
           tax,
@@ -526,20 +581,85 @@ const DiagnosticBooking = () => {
     printWindow.document.close();
   };
 
-  const data = filteredData.map((bk, index) => ({
-    key: bk.id,
-    id: bk.id,
-    S_No: index + 1,
-    BookingCode: bk.bookingCode || "—",
-    Patient: bk.patient ? `${bk.patient.firstName} ${bk.patient.lastName}` : "—",
-    PatientCode: bk.patient?.patientCode || "",
-    Test: bk.test?.name || "—",
-    Category: bk.test?.category?.name || "—",
-    Date_Time: dayjs(bk.scheduledAt).format("DD MMM YYYY, hh:mm A"),
-    Price: `₹${(bk.test?.price || 0).toLocaleString("en-IN")}`,
-    Status: bk.status === "Pending" ? "Schedule" : bk.status === "Completed" ? "Checked Out" : bk.status,
-    raw: bk,
-  }));
+  const handleTestStatusToggle = async (bookingId: string, testId: string) => {
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking) return;
+
+    let updatedTestsList = [];
+    if (Array.isArray(booking.testsList)) {
+      updatedTestsList = booking.testsList.map((t: any) => {
+        if (t.testId === testId) {
+          return { ...t, status: t.status === "Completed" ? "Pending" : "Completed" };
+        }
+        return t;
+      });
+    } else {
+      updatedTestsList = [{
+        testId: booking.test?.id || testId,
+        name: booking.test?.name || "Test",
+        price: booking.test?.price || 0,
+        status: booking.status === "Completed" || booking.status === "Checked Out" ? "Pending" : "Completed"
+      }];
+    }
+
+    const totalCount = updatedTestsList.length;
+    const completedCount = updatedTestsList.filter((t: any) => t.status === "Completed").length;
+
+    let nextStatus = booking.status;
+    if (completedCount === totalCount && totalCount > 0) {
+      nextStatus = "Checked Out";
+    } else if (booking.status === "Checked Out" || booking.status === "Completed") {
+      nextStatus = "Checked In";
+    }
+
+    try {
+      await updateBooking(bookingId, {
+        testsList: updatedTestsList,
+        status: nextStatus
+      });
+      setViewBooking((prev: any) => {
+        if (prev && prev.id === bookingId) {
+          return {
+            ...prev,
+            testsList: updatedTestsList,
+            status: nextStatus
+          };
+        }
+        return prev;
+      });
+      toast.success("Test completion status updated!");
+    } catch (err: any) {
+      toast.error("Failed to update test status.");
+    }
+  };
+
+  const data = filteredData.map((bk, index) => {
+    const isMultiple = Array.isArray(bk.testsList) && bk.testsList.length > 0;
+    const testNames = isMultiple 
+      ? bk.testsList.map((t: any) => t.name).join(", ") 
+      : (bk.test?.name || "—");
+    const categoryNames = isMultiple 
+      ? Array.from(new Set(bk.testsList.map((t: any) => t.categoryName))).join(", ") 
+      : (bk.test?.category?.name || "—");
+    const priceAmount = isMultiple 
+      ? bk.testsList.reduce((acc: number, t: any) => acc + (t.price || 0), 0)
+      : (bk.test?.price || 0);
+
+    return {
+      key: bk.id,
+      id: bk.id,
+      S_No: index + 1,
+      BookingCode: bk.bookingCode || "—",
+      Patient: bk.patient ? `${bk.patient.firstName} ${bk.patient.lastName}` : "—",
+      PatientCode: bk.patient?.patientCode || "",
+      Test: testNames,
+      Category: categoryNames,
+      Date_Time: dayjs(bk.scheduledAt).format("DD MMM YYYY, hh:mm A"),
+      Price: `₹${priceAmount.toLocaleString("en-IN")}`,
+      Status: bk.status === "Pending" ? "Schedule" : bk.status === "Completed" ? "Checked Out" : bk.status,
+      raw: bk,
+    };
+  });
 
   const columns = [
     { title: "S.No", dataIndex: "S_No", render: (text: number) => <span className="text-dark fw-semibold">{text}</span>, sorter: (a: any, b: any) => a.S_No - b.S_No, width: 70 },
@@ -558,7 +678,7 @@ const DiagnosticBooking = () => {
       title: "Diagnostic Test", dataIndex: "Test",
       render: (text: string, record: any) => (
         <div className="d-flex flex-column">
-          <span className="text-dark fw-medium">{text}</span>
+          <span className="text-dark fw-medium text-wrap" style={{ maxWidth: '240px' }}>{text}</span>
           <span className="text-muted fs-11" style={{ opacity: 0.85 }}>Category: {record.Category}</span>
         </div>
       ),
@@ -570,12 +690,24 @@ const DiagnosticBooking = () => {
       title: "Status", dataIndex: "Status",
       render: (text: string, record: any) => {
         const raw = record.raw;
+        const isMultiple = Array.isArray(raw.testsList) && raw.testsList.length > 0;
+        const isSchedule = text === "Schedule";
+        const totalTests = isMultiple ? raw.testsList.length : 1;
+        const completedTests = isMultiple 
+          ? raw.testsList.filter((t: any) => t.status === "Completed").length 
+          : (text === "Checked Out" || text === "Completed" ? 1 : 0);
+
         return (
           <div className="d-flex flex-column align-items-start gap-1">
             <span className={`badge ${statusBadgeClass(text)} px-2 py-1 text-uppercase`} style={{ fontSize: '10px' }}>
               {text}
             </span>
-            {user?.role !== "PATIENT" && ["Schedule", "Confirmed", "Checked In"].includes(text) && (
+            {isMultiple && !isSchedule && (
+              <span className="fw-bold text-muted small ms-1" style={{ fontSize: '11px' }}>
+                {completedTests}/{totalTests}
+              </span>
+            )}
+            {!isMultiple && user?.role !== "PATIENT" && ["Schedule", "Confirmed", "Checked In"].includes(text) && (
               <div className="form-check form-switch p-0 ms-1 mt-1" style={{ minHeight: 'auto' }}>
                 <input
                   className="form-check-input ms-0"
@@ -753,7 +885,7 @@ const DiagnosticBooking = () => {
                       />
                     </div>
                     <div className="col-md-6 mb-3">
-                      <label className="form-label fw-semibold">Category</label>
+                      <label className="form-label fw-semibold">Category Filter</label>
                       <select className="form-select" value={formCategoryId} onChange={(e) => handleCategoryChange(e.target.value)}>
                         <option value="">All Categories</option>
                         {allCategories.filter(c => c.status === "Active").map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
@@ -762,36 +894,138 @@ const DiagnosticBooking = () => {
                   </div>
                   <div className="row">
                     <div className="col-md-6 mb-3">
-                      <label className="form-label fw-semibold">Diagnostic Test <span className="text-danger">*</span></label>
-                      <select className="form-select" value={formTestId} onChange={(e) => setFormTestId(e.target.value)} required>
-                        <option value="">Select Test</option>
-                        {filteredTests.map((t) => (<option key={t.id} value={t.id}>{t.name} — ₹{t.price}</option>))}
-                      </select>
+                      <label className="form-label fw-semibold">Select Diagnostic Tests <span className="text-danger">*</span></label>
+                      <div className="position-relative" ref={testDropdownRef}>
+                        <button 
+                          type="button"
+                          className="form-select text-start d-flex align-items-center justify-content-between text-truncate bg-white"
+                          onClick={() => setShowTestListDropdown(!showTestListDropdown)}
+                          style={{ minHeight: '38px' }}
+                        >
+                          <span className="text-muted fw-semibold">
+                            {formTestsList.length > 0 ? `${formTestsList.length} Test(s) Added` : "Select Tests..."}
+                          </span>
+                        </button>
+                        
+                        {showTestListDropdown && (
+                          <div className="dropdown-menu show w-100 shadow border-0 py-2 px-1 mt-1 bg-white" style={{ maxHeight: '260px', overflowY: 'auto', zIndex: 1060 }}>
+                            {filteredTests.length === 0 ? (
+                              <div className="text-center text-muted py-2 small">No tests found in this category</div>
+                            ) : (
+                              filteredTests.map((t) => {
+                                const isAdded = formTestsList.some(item => item.testId === t.id);
+                                return (
+                                  <div 
+                                    key={t.id}
+                                    className="dropdown-item py-2 px-2.5 rounded d-flex align-items-center justify-content-between cursor-pointer mb-0.5"
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Prevents the dropdown from closing on select!
+                                      if (isAdded) {
+                                        setFormTestsList(prev => prev.filter(item => item.testId !== t.id));
+                                      } else {
+                                        handleAddTest(t.id);
+                                      }
+                                    }}
+                                    style={{ 
+                                      backgroundColor: isAdded ? '#eef2ff' : 'transparent',
+                                      color: isAdded ? '#4f46e5' : '#1e293b'
+                                    }}
+                                  >
+                                    <div className="d-flex align-items-center gap-2">
+                                      <input 
+                                        type="checkbox" 
+                                        checked={isAdded}
+                                        onChange={() => {}} // toggled via parent div onClick
+                                        className="form-check-input mt-0 border-secondary"
+                                        style={{ cursor: 'pointer' }}
+                                      />
+                                      <span className="fw-semibold fs-12.5">{t.name}</span>
+                                    </div>
+                                    <span className={`badge ${isAdded ? 'bg-primary text-white' : 'bg-light text-dark'} fw-bold`}>₹{t.price}</span>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="col-md-6 mb-3">
-                      <label className="form-label fw-semibold">Test Price (₹)</label>
-                      <input type="text" className="form-control bg-light fw-bold text-dark" value={`₹${mappedPrice.toLocaleString("en-IN")}`} disabled />
+                      <label className="form-label fw-semibold">Total Price (₹)</label>
+                      <input type="text" className="form-control bg-light fw-bold text-dark" value={`₹${totalAmount.toLocaleString("en-IN")}`} disabled />
                     </div>
                   </div>
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label fw-semibold">Assign Doctor / Staff</label>
-                      <select className="form-select" value={formAssignedUserId} onChange={(e) => setFormAssignedUserId(e.target.value)} disabled={user?.role === "DOCTOR"}>
-                        {user?.role === "DOCTOR" ? (
-                          <option value={user.doctorId}>Dr. {doctors.find((d: any) => d.id === user.doctorId)?.fullName || "Me"} (Doctor)</option>
-                        ) : (
-                          <>
-                            <option value="">Auto / Any Available</option>
-                            {selectedTestObj?.assignedDoctors?.map((d: any) => (
-                              <option key={d.value} value={d.value}>Dr. {d.label} (Doctor)</option>
-                            ))}
-                            {selectedTestObj?.assignedStaff?.map((s: any) => (
-                              <option key={s.value} value={s.value}>{s.label} (Staff)</option>
-                            ))}
-                          </>
-                        )}
-                      </select>
+
+                  {/* Selected Tests Ledger with individual doctor/staff assignment dropdowns */}
+                  {formTestsList.length > 0 && (
+                    <div className="row">
+                      <div className="col-md-12 mb-3">
+                        <label className="form-label fw-bold text-dark fs-12 mb-2">SELECTED TESTS & ASSIGNED PRACTITIONERS ({formTestsList.length})</label>
+                        <div className="table-responsive border rounded bg-white">
+                          <table className="table table-sm align-middle mb-0" style={{ fontSize: '12px' }}>
+                            <thead className="bg-light">
+                              <tr>
+                                <th className="px-3 py-2 text-start">Test Name</th>
+                                <th className="px-3 py-2 text-start" style={{ width: '280px' }}>Assign Doctor / Staff</th>
+                                <th className="px-3 py-2 text-center" style={{ width: '90px' }}>Price</th>
+                                <th className="px-3 py-2 text-center" style={{ width: '45px' }}>Remove</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {formTestsList.map((t, idx) => {
+                                const testObj = allTests.find(item => item.id === t.testId);
+                                return (
+                                  <tr key={t.testId || idx}>
+                                    <td className="px-3 py-2 fw-semibold text-dark text-start">{t.name}</td>
+                                    <td className="px-3 py-2 text-start">
+                                      {user?.role === "DOCTOR" && user?.doctorId ? (
+                                        <span className="small fw-semibold text-dark">
+                                          Dr. {doctors.find((d: any) => d.id === user.doctorId)?.fullName || "Me"}
+                                        </span>
+                                      ) : (
+                                        <select 
+                                          className="form-select form-select-sm"
+                                          value={t.assignedUserId || ""}
+                                          onChange={(e) => {
+                                            const val = e.target.value;
+                                            setFormTestsList(prev => prev.map(item => {
+                                              if (item.testId === t.testId) {
+                                                return { ...item, assignedUserId: val };
+                                              }
+                                              return item;
+                                            }));
+                                          }}
+                                        >
+                                          <option value="">Auto / Any Available</option>
+                                          {testObj?.assignedDoctors?.map((d: any) => (
+                                            <option key={d.value} value={d.value}>Dr. {d.label} (Doctor)</option>
+                                          ))}
+                                          {testObj?.assignedStaff?.map((s: any) => (
+                                            <option key={s.value} value={s.value}>{s.label} (Staff)</option>
+                                          ))}
+                                        </select>
+                                      )}
+                                    </td>
+                                    <td className="px-3 py-2 fw-bold text-dark text-center">₹{(t.price || 0).toLocaleString("en-IN")}</td>
+                                    <td className="px-3 py-2 text-center">
+                                      <button 
+                                        type="button" 
+                                        className="btn btn-sm btn-link text-danger p-0 border-0"
+                                        onClick={() => setFormTestsList(prev => prev.filter(item => item.testId !== t.testId))}
+                                      >
+                                        <i className="ti ti-trash fs-14" />
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
                     </div>
+                  )}
+                  <div className="row">
                     <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold">Referred By</label>
                       <input type="text" className="form-control" value={formReferredBy} onChange={(e) => setFormReferredBy(e.target.value)} placeholder="e.g. Dr. Amit Sharma, Self" />
@@ -815,8 +1049,8 @@ const DiagnosticBooking = () => {
                         onChange={(d) => { setFormDate(d); setFormSessionSlot(""); }}
                         disabledDate={disabledDate}
                         cellRender={cellRender}
-                        disabled={!formTestId}
-                        placeholder={!formTestId ? "Select test first" : "Select Date"}
+                        disabled={formTestsList.length === 0}
+                        placeholder={formTestsList.length === 0 ? "Select test first" : "Select Date"}
                       />
                     </div>
                     <div className="col-md-6 mb-3">
@@ -1020,17 +1254,105 @@ const DiagnosticBooking = () => {
           { icon: <i className="ti ti-hash" />, label: "Booking Code", value: viewBooking?.bookingCode || "--" },
           { icon: <i className="ti ti-user" />, label: "Patient", value: viewBooking?.patient ? `${viewBooking.patient.firstName} ${viewBooking.patient.lastName} (${viewBooking.patient.patientCode})` : "--", fullWidth: true },
           { icon: <i className="ti ti-phone" />, label: "Phone", value: viewBooking?.patient?.phone || "--" },
-          { icon: <i className="ti ti-microscope" />, label: "Test", value: viewBooking?.test?.name || "--" },
-          { icon: <i className="ti ti-tags" />, label: "Category", value: viewBooking?.test?.category?.name || "--" },
+          {
+            icon: <i className="ti ti-microscope" />,
+            label: "Test(s)",
+            value: Array.isArray(viewBooking?.testsList) && viewBooking.testsList.length > 0
+              ? viewBooking.testsList.map((t: any) => t.name).join(", ")
+              : (viewBooking?.test?.name || "--")
+          },
+          {
+            icon: <i className="ti ti-tags" />,
+            label: "Category",
+            value: Array.isArray(viewBooking?.testsList) && viewBooking.testsList.length > 0
+              ? Array.from(new Set(viewBooking.testsList.map((t: any) => t.categoryName))).join(", ")
+              : (viewBooking?.test?.category?.name || "--")
+          },
           { icon: <i className="ti ti-calendar" />, label: "Scheduled Date", value: viewBooking?.scheduledAt ? dayjs(viewBooking.scheduledAt).format("DD MMM YYYY") : "--" },
           { icon: <i className="ti ti-clock" />, label: "Time Slot/Session", value: viewBooking?.sessionSlot || (viewBooking?.scheduledAt ? dayjs(viewBooking.scheduledAt).format("hh:mm A") : "--") },
           { icon: <i className="ti ti-user-plus" />, label: "Assigned To", value: doctors?.find((d: any) => d.id === viewBooking?.assignedUserId)?.fullName || staff?.find((s: any) => s.id === viewBooking?.assignedUserId)?.fullName || "Auto / Any" },
-          { icon: <i className="ti ti-currency-rupee" />, label: "Base Price", value: `₹${(viewBooking?.test?.price || 0).toLocaleString("en-IN")}` },
+          {
+            icon: <i className="ti ti-currency-rupee" />,
+            label: "Base Price",
+            value: `₹${(
+              Array.isArray(viewBooking?.testsList) && viewBooking.testsList.length > 0
+                ? viewBooking.testsList.reduce((acc: number, t: any) => acc + (t.price || 0), 0)
+                : (viewBooking?.test?.price || 0)
+            ).toLocaleString("en-IN")}`
+          },
           { icon: <i className="ti ti-cash" />, label: "Total Amount", value: `₹${(viewBooking?.totalAmount || 0).toLocaleString("en-IN")}` },
           { icon: <i className="ti ti-user-check" />, label: "Referred By", value: viewBooking?.referredBy || "--" },
           { icon: <i className="ti ti-file-description" />, label: "Remarks", value: viewBooking?.remarks || "--", fullWidth: true },
         ]}
         onEdit={() => { handleOpenEdit(viewBooking); }} editLabel="Edit Booking" editModalTarget=""
+        children={
+          (() => {
+            const hasTests = Array.isArray(viewBooking?.testsList) && viewBooking.testsList.length > 0;
+            if (!hasTests) return null;
+
+            const getAssignedName = (assignedUserId?: string) => {
+              if (!assignedUserId) return "Auto / Any";
+              const doc = doctors.find((d: any) => d.id === assignedUserId);
+              if (doc) return `Dr. ${doc.fullName}`;
+              const stf = staff.find((s: any) => s.id === assignedUserId);
+              if (stf) return stf.fullName;
+              return "Auto / Any";
+            };
+
+            return (
+              <div className="mt-4 border-top pt-3">
+                <h6 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                  <i className="ti ti-checklist text-primary fs-18" /> Tests Progress & Status Toggle
+                </h6>
+                <div className="table-responsive border rounded bg-light-subtle">
+                  <table className="table table-sm table-nowrap align-middle mb-0" style={{ fontSize: '13px' }}>
+                    <thead className="bg-light">
+                      <tr>
+                        <th className="px-3 py-2.5 text-start">Test Name</th>
+                        <th className="px-3 py-2.5 text-start">Category</th>
+                        <th className="px-3 py-2.5 text-start">Assigned Practitioner</th>
+                        <th className="px-3 py-2.5 text-center" style={{ width: '150px' }}>Completion Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {viewBooking.testsList.map((t: any) => {
+                        const isCompleted = t.status === "Completed";
+                        return (
+                          <tr key={t.testId}>
+                            <td className="px-3 py-2.5 fw-semibold text-dark text-start">{t.name}</td>
+                            <td className="px-3 py-2.5 text-muted text-start">{t.categoryName}</td>
+                            <td className="px-3 py-2.5 text-start fw-medium text-dark">{getAssignedName(t.assignedUserId)}</td>
+                            <td className="px-3 py-2.5 text-center">
+                              {user?.role === "PATIENT" ? (
+                                <span className={`badge bg-soft-${isCompleted ? 'success' : 'secondary'} text-${isCompleted ? 'success' : 'secondary'} px-2 py-1`}>
+                                  {isCompleted ? "Completed" : "Pending"}
+                                </span>
+                              ) : (
+                                <div className="form-check form-switch d-inline-block p-0" style={{ minHeight: 'auto' }}>
+                                  <input
+                                    className="form-check-input ms-0"
+                                    type="checkbox"
+                                    role="switch"
+                                    checked={isCompleted}
+                                    onChange={() => handleTestStatusToggle(viewBooking.id, t.testId)}
+                                    style={{ cursor: 'pointer', width: '36px', height: '18px' }}
+                                  />
+                                  <span className={`fw-bold ms-1 text-${isCompleted ? 'success' : 'secondary'}`} style={{ fontSize: '11px' }}>
+                                    {isCompleted ? "Completed" : "Pending"}
+                                  </span>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })()
+        }
       />
       <AddPatientModal
         show={showAddPatientModal}

@@ -275,7 +275,8 @@ const AddPrescriptionModal = ({
                 medicines: mapped,
                 advice: prevPres.advice || "",
                 followUpDate: prevPres.followUpDate ? dayjs(prevPres.followUpDate) : null,
-                followUpNotes: prevPres.followUpNotes || ""
+                followUpNotes: prevPres.followUpNotes || "",
+                diagnosticTests: Array.isArray(prevPres.diagnosticTests) ? prevPres.diagnosticTests : []
             });
         } else {
             setCurrentDraft(prev => ({

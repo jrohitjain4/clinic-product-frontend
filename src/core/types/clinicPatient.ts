@@ -41,6 +41,7 @@ export interface ClinicPatient {
   lastVisitedAt?: string | null;
   lastVisitLabel?: string;
   vitals?: Record<string, unknown> | null;
+  suggestIPD?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

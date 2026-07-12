@@ -25,6 +25,7 @@ export interface LabBooking {
     sessionSlot: string | null;
     assignedUserId: string | null;
     remarks: string | null;
+    testsList?: any;
     clinicId: string;
     createdAt: string;
     updatedAt: string;

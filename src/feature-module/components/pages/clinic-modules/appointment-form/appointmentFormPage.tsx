@@ -604,8 +604,56 @@ const AppointmentFormPage = ({ mode = "create", isModal = false, onSuccess, onCa
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Failed to save appointment");
       }
-
+      const data = await res.json();
       toast.success(mode === "create" ? "Appointment created successfully!" : "Appointment updated successfully!");
+
+      // Send WhatsApp notification if a new appointment is created
+      if (mode === "create" && data && data.patient && data.patient.phone) {
+        const patientName = data.patientName || `${data.patient.firstName} ${data.patient.lastName}`.trim();
+        const confirmSend = window.confirm(`Do you want to send a WhatsApp booking notification to ${patientName}?`);
+        if (confirmSend) {
+          try {
+            const clinicName = data.clinic?.name || "our clinic";
+            const apptId = data.appointmentCode || data.id;
+            const doctorName = data.doctorName || data.doctor?.fullName || "—";
+            
+            // Format Date and Time
+            const dateObj = dayjs(data.scheduledAt);
+            const apptDate = dateObj.isValid() ? dateObj.format("DD-MM-YYYY") : "—";
+            const apptTime = dateObj.isValid() ? dateObj.format("hh:mm A") : "—";
+            
+            const tokenNo = data.tokenNumber || "—";
+            const deptName = data.department?.name || "—";
+            const loginLink = `${window.location.origin}/login`;
+
+            const msg = `Dear ${patientName},
+Your appointment has been successfully booked at ${clinicName}.
+
+Appointment Details:
+🆔 Appointment ID: ${apptId}
+👨⚕️ Doctor: Dr. ${doctorName}
+📅 Date: ${apptDate}
+🕒 Time: ${apptTime}
+🎫 Token No.: ${tokenNo}
+🏥 Department: ${deptName}
+
+Please arrive 10–15 minutes before your scheduled appointment and carry any previous medical records, prescriptions, or reports (if available).
+If you need to reschedule or cancel your appointment, please contact the clinic.
+
+Thank you for choosing ${clinicName}.
+Regards,
+ ${clinicName}
+Powered by DocYori`;
+
+            const cleanPhone = data.patient.phone.replace(/\D/g, "");
+            const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
+            window.open(whatsappUrl, "_blank");
+          } catch (e) {
+            console.error("Error generating Appointment WhatsApp link", e);
+          }
+        }
+      }
+
       if (isModal && onSuccess) {
         onSuccess();
       } else {

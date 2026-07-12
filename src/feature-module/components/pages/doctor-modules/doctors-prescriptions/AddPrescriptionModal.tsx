@@ -6,6 +6,10 @@ import { useMedicines } from "../../../../../core/hooks/useMedicines";
 import { usePrescriptions } from "../../../../../core/hooks/usePrescriptions";
 import html2pdf from "html2pdf.js";
 import PrescriptionPadSlip from "../../clinic-modules/appointments/PrescriptionPadSlip";
+import { useLabTests } from "../../../../../core/hooks/useLabTests";
+import { useClinicPatient } from "../../../../../core/hooks/useClinicPatient";
+import { apiPut } from "../../../../../core/utils/apiClient";
+import { toast } from "react-toastify";
 
 interface Medicine {
     medicineName: string;
@@ -56,6 +60,8 @@ const AddPrescriptionModal = ({
     const { appointments } = useClinicAppointments();
     const { medicines: pharmacyMedicines } = useMedicines();
     const { prescriptions: allPrescriptions } = usePrescriptions();
+    const { tests: labTests } = useLabTests();
+
 
     // Map pharmacy medicines for search options
     const medicineOptions = useMemo(() => {
@@ -103,8 +109,42 @@ const AddPrescriptionModal = ({
     const [submitting, setSubmitting] = useState(false);
     const [activeSearchIndex, setActiveSearchIndex] = useState<number | null>(null);
 
+    // Diagnostic tests search states
+    const [testSearchText, setTestSearchText] = useState("");
+    const [showTestDropdown, setShowTestDropdown] = useState(false);
+
     // Selected visit tab state inside horizontal scroll
     const [selectedVisitTab, setSelectedVisitTab] = useState<string>(initialAppointmentId || "");
+
+    const { patient, refetch: refetchPatient } = useClinicPatient(patientId || undefined);
+    const [isIPDRecommended, setIsIPDRecommended] = useState(false);
+
+    useEffect(() => {
+        if (patient) {
+            setIsIPDRecommended(!!patient.suggestIPD);
+        }
+    }, [patient]);
+
+    const handleToggleIPD = async () => {
+        if (!patientId) return;
+        const targetState = !isIPDRecommended;
+        setIsIPDRecommended(targetState);
+        try {
+            await apiPut(`/api/patients/${patientId}`, {
+                suggestIPD: targetState
+            });
+            if (targetState) {
+                toast.success("Patient recommended for IPD admission successfully.");
+            } else {
+                toast.info("IPD admission recommendation removed.");
+            }
+            refetchPatient();
+        } catch (error) {
+            console.error("Failed to update IPD recommendation:", error);
+            toast.error("Failed to update IPD recommendation.");
+            setIsIPDRecommended(!targetState); // revert on error
+        }
+    };
 
     // State to hold the current visit's draft
     const [currentDraft, setCurrentDraft] = useState<{
@@ -112,11 +152,13 @@ const AddPrescriptionModal = ({
         advice: string;
         followUpDate: any;
         followUpNotes: string;
+        diagnosticTests: string[];
     }>({
         medicines: initialPrescription?.medicines || [emptyMedicine()],
         advice: initialPrescription?.advice || "",
         followUpDate: initialPrescription?.followUpDate ? dayjs(initialPrescription.followUpDate) : null,
-        followUpNotes: initialPrescription?.followUpNotes || ""
+        followUpNotes: initialPrescription?.followUpNotes || "",
+        diagnosticTests: initialPrescription?.diagnosticTests || []
     });
 
     // Sync draft if initialPrescription changes
@@ -126,7 +168,8 @@ const AddPrescriptionModal = ({
                 medicines: initialPrescription.medicines || [emptyMedicine()],
                 advice: initialPrescription.advice || "",
                 followUpDate: initialPrescription.followUpDate ? dayjs(initialPrescription.followUpDate) : null,
-                followUpNotes: initialPrescription.followUpNotes || ""
+                followUpNotes: initialPrescription.followUpNotes || "",
+                diagnosticTests: initialPrescription.diagnosticTests || []
             });
         }
     }, [initialPrescription]);
@@ -175,6 +218,11 @@ const AddPrescriptionModal = ({
         if (isCurrentVisit) return currentDraft.followUpNotes;
         return selectedVisitPrescription?.followUpNotes || "";
     }, [isCurrentVisit, currentDraft.followUpNotes, selectedVisitPrescription]);
+
+    const activeDiagnosticTests = useMemo(() => {
+        if (isCurrentVisit) return currentDraft.diagnosticTests || [];
+        return selectedVisitPrescription?.diagnosticTests || [];
+    }, [isCurrentVisit, currentDraft.diagnosticTests, selectedVisitPrescription]);
 
     const handlePrint = () => {
         const pad = document.getElementById('modal-print-prescription-pad');
@@ -311,6 +359,7 @@ const AddPrescriptionModal = ({
             advice: "",
             followUpDate: null,
             followUpNotes: "",
+            diagnosticTests: [],
         });
     };
 
@@ -329,6 +378,7 @@ const AddPrescriptionModal = ({
                 advice: currentDraft.advice,
                 followUpDate: currentDraft.followUpDate ? currentDraft.followUpDate.toISOString() : null,
                 followUpNotes: currentDraft.followUpNotes,
+                diagnosticTests: currentDraft.diagnosticTests || [],
                 medicines: currentDraft.medicines.map((m) => ({
                     medicineName: m.medicineName,
                     strength: m.strength || null,
@@ -419,8 +469,8 @@ const AddPrescriptionModal = ({
 
                         {/* Top Visits horizontal bar selector */}
                         {sortedVisits.length > 0 && (
-                            <div className="visits-bar bg-light border-bottom p-2 px-4 overflow-auto d-flex align-items-center gap-3.5" style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
-                                <div className="visits-bar-inner d-flex align-items-center gap-2">
+                            <div className="visits-bar bg-light border-bottom p-2 px-4 d-flex align-items-center justify-content-between flex-shrink-0" style={{ whiteSpace: 'nowrap' }}>
+                                <div className="visits-bar-inner d-flex align-items-center gap-2 overflow-auto" style={{ flex: 1 }}>
                                     {sortedVisits.map((apt, index) => {
                                         const isCurrent = apt.id === initialAppointmentId;
                                         const isSelected = selectedVisitTab === apt.id;
@@ -452,6 +502,33 @@ const AddPrescriptionModal = ({
                                         );
                                     })}
                                 </div>
+
+                                {patientId && (
+                                    <div className="ms-3 flex-shrink-0">
+                                        <div 
+                                            onClick={handleToggleIPD}
+                                            className="d-flex align-items-center gap-2.5 px-3 py-1.5 rounded-3 border cursor-pointer hover-shadow transition-all"
+                                            style={{ 
+                                                backgroundColor: isIPDRecommended ? '#fff7ed' : '#ffffff', 
+                                                borderColor: isIPDRecommended ? '#ea580c' : '#cbd5e1',
+                                                maxWidth: '280px',
+                                                lineHeight: '1.2'
+                                            }}
+                                            title="Click to toggle IPD Admission recommendation for patient"
+                                        >
+                                            <div className="d-flex align-items-center justify-content-center rounded-circle" style={{ width: '32px', height: '32px', backgroundColor: isIPDRecommended ? '#ffedd5' : '#f1f5f9', minWidth: '32px' }}>
+                                                <i className={`ti ti-bed fs-18 ${isIPDRecommended ? 'text-warning-emphasis' : 'text-muted'}`} style={{ color: isIPDRecommended ? '#ea580c' : undefined }} />
+                                            </div>
+                                            <div className="d-flex flex-column text-start">
+                                                <span className="fw-bold text-dark mb-0.5" style={{ fontSize: '12px' }}>Admit Recommendation</span>
+                                                <span className="fw-bold fs-10" style={{ color: isIPDRecommended ? '#ea580c' : '#64748b' }}>
+                                                    {isIPDRecommended ? 'Recommended for IPD' : 'Recommend for IPD Admission'}
+                                                </span>
+                                                <small className="text-muted" style={{ fontSize: '8.5px' }}>Click if hospitalization is required</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -776,7 +853,7 @@ const AddPrescriptionModal = ({
                                     <div className="row g-4">
 
                                         {/* Advice */}
-                                        <div className="col-md-6">
+                                        <div className="col-md-4">
                                             <div className="bg-white border rounded-4 shadow-sm p-4 h-100">
                                                 <div className="d-flex align-items-center gap-2 mb-3">
                                                     <i className="ti ti-message-dots text-primary fs-18" />
@@ -805,7 +882,7 @@ const AddPrescriptionModal = ({
                                         </div>
 
                                         {/* Next Follow Up */}
-                                        <div className="col-md-6">
+                                        <div className="col-md-4">
                                             <div className="bg-white border rounded-4 shadow-sm p-4 h-100">
                                                 <div className="d-flex align-items-center gap-2 mb-3">
                                                     <i className="ti ti-calendar-stats text-primary fs-18" />
@@ -860,6 +937,148 @@ const AddPrescriptionModal = ({
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Diagnostic Tests */}
+                                        <div className="col-md-4">
+                                            <div className="bg-white border rounded-4 shadow-sm p-4 h-100 d-flex flex-column">
+                                                <div className="d-flex align-items-center gap-2 mb-3">
+                                                    <i className="ti ti-activity text-primary fs-18" />
+                                                    <h6 className="fw-bold text-dark mb-0 fs-14">Diagnostic Tests</h6>
+                                                </div>
+                                                
+                                                {/* Search & Add Input */}
+                                                <div className="position-relative mb-3 flex-shrink-0" style={{ zIndex: 5 }}>
+                                                    <div className="input-group input-group-sm border rounded-3 bg-white px-2 align-items-center">
+                                                        <i className="ti ti-search text-muted fs-14 me-1.5" />
+                                                        <input
+                                                            type="text"
+                                                            className="form-control form-control-sm text-dark fw-semibold border-0 p-1"
+                                                            placeholder="Add Diagnostic Test..."
+                                                            value={testSearchText}
+                                                            onChange={(e) => {
+                                                                setTestSearchText(e.target.value);
+                                                                setShowTestDropdown(true);
+                                                            }}
+                                                            onFocus={() => isCurrentVisit && setShowTestDropdown(true)}
+                                                            onBlur={() => {
+                                                                setTimeout(() => setShowTestDropdown(false), 250);
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    e.preventDefault();
+                                                                    const val = testSearchText.trim();
+                                                                    if (val && !currentDraft.diagnosticTests.includes(val)) {
+                                                                        setCurrentDraft(prev => ({
+                                                                            ...prev,
+                                                                            diagnosticTests: [...prev.diagnosticTests, val]
+                                                                        }));
+                                                                        setTestSearchText("");
+                                                                        setShowTestDropdown(false);
+                                                                    }
+                                                                }
+                                                            }}
+                                                            disabled={!isCurrentVisit}
+                                                        />
+                                                        {testSearchText && isCurrentVisit && (
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-link btn-sm text-muted p-0 border-0"
+                                                                onClick={() => setTestSearchText("")}
+                                                            >
+                                                                <i className="ti ti-x fs-13" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    {showTestDropdown && isCurrentVisit && (
+                                                        <div
+                                                            className="position-absolute w-100 bg-white border rounded shadow-lg mt-1"
+                                                            style={{
+                                                                zIndex: 1000,
+                                                                maxHeight: '180px',
+                                                                overflowY: 'auto',
+                                                                top: '100%',
+                                                                left: 0
+                                                            }}
+                                                        >
+                                                            {labTests
+                                                                .filter((t: any) =>
+                                                                    t.name.toLowerCase().includes(testSearchText.toLowerCase())
+                                                                )
+                                                                .map((t: any) => (
+                                                                    <div
+                                                                        key={t.id}
+                                                                        className="medicine-dropdown-item d-flex align-items-center justify-content-between text-dark"
+                                                                        onMouseDown={() => {
+                                                                            if (!currentDraft.diagnosticTests.includes(t.name)) {
+                                                                                setCurrentDraft(prev => ({
+                                                                                    ...prev,
+                                                                                    diagnosticTests: [...prev.diagnosticTests, t.name]
+                                                                                }));
+                                                                            }
+                                                                            setTestSearchText("");
+                                                                            setShowTestDropdown(false);
+                                                                        }}
+                                                                    >
+                                                                        <span className="fw-bold text-dark">{t.name}</span>
+                                                                        {t.testCode && <span className="badge bg-light text-muted fs-10">{t.testCode}</span>}
+                                                                    </div>
+                                                                ))}
+                                                            {testSearchText.trim() && !labTests.some(t => t.name.toLowerCase() === testSearchText.toLowerCase().trim()) && (
+                                                                <div
+                                                                    className="medicine-dropdown-item text-primary fw-bold text-center border-top cursor-pointer"
+                                                                    onMouseDown={() => {
+                                                                        const val = testSearchText.trim();
+                                                                        if (val && !currentDraft.diagnosticTests.includes(val)) {
+                                                                            setCurrentDraft(prev => ({
+                                                                                ...prev,
+                                                                                diagnosticTests: [...prev.diagnosticTests, val]
+                                                                            }));
+                                                                        }
+                                                                        setTestSearchText("");
+                                                                        setShowTestDropdown(false);
+                                                                    }}
+                                                                >
+                                                                    <i className="ti ti-plus me-1" /> Add Custom: "{testSearchText.trim()}"
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Selected Tests List */}
+                                                <div className="flex-grow-1 border rounded-3 p-3 bg-light-subtle d-flex flex-wrap gap-2 align-content-start" style={{ minHeight: '120px', overflowY: 'auto' }}>
+                                                    {activeDiagnosticTests.length > 0 ? (
+                                                        activeDiagnosticTests.map((testName: string, idx: number) => (
+                                                            <span
+                                                                key={idx}
+                                                                className="badge bg-soft-primary text-primary px-2.5 py-1.5 rounded-3 fs-11.5 fw-bold d-inline-flex align-items-center gap-1.5 hover-shadow transition-all"
+                                                            >
+                                                                {testName}
+                                                                {isCurrentVisit && (
+                                                                    <button
+                                                                        type="button"
+                                                                        className="btn-close btn-xs p-0 border-0 ms-1"
+                                                                        style={{ fontSize: '9px', width: '8px', height: '8px', filter: 'brightness(0.3)' }}
+                                                                        onClick={() => {
+                                                                            setCurrentDraft(prev => ({
+                                                                                ...prev,
+                                                                                diagnosticTests: prev.diagnosticTests.filter((_, i) => i !== idx)
+                                                                            }));
+                                                                        }}
+                                                                    />
+                                                                )}
+                                                            </span>
+                                                        ))
+                                                    ) : (
+                                                        <div className="text-center w-100 my-auto text-muted fs-12">
+                                                            <i className="ti ti-folder-off fs-20 opacity-50 mb-1" /><br />
+                                                            No diagnostic tests prescribed.
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -889,6 +1108,12 @@ const AddPrescriptionModal = ({
                                         {patientPrescriptions.length > 0 ? (
                                             patientPrescriptions.map((pres: any, idx: number) => {
                                                 const dateStr = dayjs(pres.createdAt).format("DD MMM YYYY");
+                                                const apptDate = pres.appointment?.scheduledAt
+                                                    ? dayjs(pres.appointment.scheduledAt).format("DD MMM YYYY")
+                                                    : null;
+                                                const apptCode = pres.appointment?.appointmentCode
+                                                    || pres.appointmentId?.substring(0, 8)
+                                                    || null;
                                                 const medicineCount = pres.medicines?.length || 0;
                                                 const followUpStr = pres.followUpDate
                                                     ? dayjs(pres.followUpDate).format("DD MMM YYYY")
@@ -915,9 +1140,15 @@ const AddPrescriptionModal = ({
                                                                 <i className="ti ti-copy fs-14" />
                                                             </button>
                                                         </div>
+                                                        {apptCode && (
+                                                            <small className="d-block text-dark fw-semibold fs-11 mb-1">
+                                                                <i className="ti ti-id me-1 text-info" />
+                                                                {apptCode}
+                                                            </small>
+                                                        )}
                                                         <small className="d-block text-muted fs-11.5 mb-2">
                                                             <i className="ti ti-calendar me-1" />
-                                                            {dateStr}
+                                                            {apptDate || dateStr}
                                                         </small>
                                                         <div className="d-flex flex-wrap gap-2 mt-1">
                                                             <span className="badge bg-soft-primary text-primary px-2 py-0.5 rounded fs-10 fw-bold">
@@ -1168,6 +1399,7 @@ const AddPrescriptionModal = ({
                         followUpDate: activeFollowUpDate?.toDate ? activeFollowUpDate.toDate() : activeFollowUpDate,
                         followUpNotes: activeFollowUpNotes
                     }}
+                    suggestIPD={isIPDRecommended}
                 />
             </div>
         </>

@@ -186,7 +186,54 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Failed to save patient");
       }
+      const data = await res.json();
       toast.success(mode === "create" ? "Patient created successfully" : "Patient updated successfully");
+
+      // Send WhatsApp notification if a new patient is created
+      if (mode === "create" && data && data.phone) {
+        const patientName = data.fullName || `${data.firstName} ${data.lastName}`.trim();
+        const confirmSend = window.confirm(`Do you want to send a WhatsApp welcome notification to ${patientName}?`);
+        if (confirmSend) {
+          try {
+            const userStr = localStorage.getItem("user");
+            const currentUser = userStr ? JSON.parse(userStr) : {};
+            const clinicName = currentUser?.clinic?.name || "our clinic";
+            const loginLink = `${window.location.origin}/login`;
+            const regDate = data.createdAt ? dayjs(data.createdAt).format("DD-MM-YYYY") : dayjs().format("DD-MM-YYYY");
+
+            const msg = `Dear ${patientName},
+Your registration has been successfully completed at ${clinicName}.
+
+Registration Details:
+🆔 Patient ID (UHID): ${data.patientCode || "—"}
+👤 Patient Name: ${patientName}
+📱 Registered Mobile: ${data.phone}
+📅 Registration Date: ${regDate}
+
+You can access your patient account using your registered mobile number and OTP verification.
+🔗 Patient Portal:
+ ${loginLink}
+
+Login Instructions:
+1. Open the link above.
+2. Enter your registered mobile number.
+3. Verify with the OTP sent to your mobile.
+4. Access your appointments, prescriptions, lab reports, bills, and medical records anytime.
+
+Thank you for choosing ${clinicName}.
+Regards,
+ ${clinicName}
+Powered by DocYori`;
+
+            const cleanPhone = data.phone.replace(/\D/g, "");
+            const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
+            window.open(whatsappUrl, "_blank");
+          } catch (e) {
+            console.error("Error generating Patient WhatsApp link", e);
+          }
+        }
+      }
+
       navigate(all_routes.patients, { replace: true });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to save patient";

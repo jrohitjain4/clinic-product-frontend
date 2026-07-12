@@ -68,6 +68,7 @@ const Activities = lazy(() => import("../components/pages/clinic-modules/activit
 const AddDoctor = lazy(() => import("../components/pages/clinic-modules/add-doctor/addDoctor"));
 const AppointmentCalendar = lazy(() => import("../components/pages/clinic-modules/appointment-calendar/appointmentCalendar"));
 const AppointmentConsultations = lazy(() => import("../components/pages/clinic-modules/appointment-consultations/appointmentConsultations"));
+const ConsultationsList = lazy(() => import("../components/pages/clinic-modules/appointments/consultations"));
 const Appointments = lazy(() => import("../components/pages/clinic-modules/appointments/appointments"));
 const Assets = lazy(() => import("../components/pages/clinic-modules/assets/assets"));
 const CreatePatient = lazy(() => import("../components/pages/clinic-modules/create-patient/createPatient"));
@@ -1530,6 +1531,11 @@ export const publicRoutes = [
   {
     path: routes.appointmentconsultations,
     element: <AppointmentConsultations />,
+    route: Route,
+  },
+  {
+    path: routes.consultations,
+    element: <ConsultationsList />,
     route: Route,
   },
   {

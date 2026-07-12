@@ -173,6 +173,10 @@ const AppointmentDetails = () => {
         chainIds.includes(p.appointmentId) ||
         chainIds.includes(p.appointment?.id || "")
     );
+
+    // Prescription specifically linked to the current appointment (for edit-first logic)
+    const currentApptPrescription = prescriptions.find(p => p.appointmentId === id) || null;
+
     const patientHistory = history.filter(h => !chainIds.includes(h.id)); // Other visits
 
     // Session appointment support
@@ -973,8 +977,8 @@ const AppointmentDetails = () => {
                         </div>
 
                         {/* Add Prescription Button */}
-                        <button className="btn btn-sm btn-soft-info d-flex align-items-center gap-2 fw-bold shadow-sm fs-12" onClick={() => { setSelectedPres(null); setEditingPrescription(null); setShowPresModal(true); }}>
-                            <i className="ti ti-file-plus" /> Prescription
+                        <button className="btn btn-sm btn-soft-info d-flex align-items-center gap-2 fw-bold shadow-sm fs-12" onClick={() => { setSelectedPres(null); setEditingPrescription(currentApptPrescription); setShowPresModal(true); }}>
+                            <i className="ti ti-file-plus" /> {currentApptPrescription ? "Edit Prescription" : "Prescription"}
                         </button>
 
                         {/* Schedule Follow-up Button */}
@@ -1502,8 +1506,8 @@ const AppointmentDetails = () => {
                                                     </button>
                                                 )}
                                             </div>
-                                            <button className="btn btn-primary btn-sm fw-bold shadow-sm" onClick={() => { setShowPresModal(true); toast.info("Opening prescription form"); }}>
-                                                <i className="ti ti-plus me-1" /> Add Prescription
+                                            <button className="btn btn-primary btn-sm fw-bold shadow-sm" onClick={() => { setEditingPrescription(currentApptPrescription); setShowPresModal(true); if (!currentApptPrescription) toast.info("Opening prescription form"); }}>
+                                                <i className="ti ti-plus me-1" /> {currentApptPrescription ? "Edit Prescription" : "Add Prescription"}
                                             </button>
                                         </div>
 
@@ -1521,7 +1525,7 @@ const AppointmentDetails = () => {
                                             <div className="text-center py-5 border rounded bg-light">
                                                 <i className="ti ti-prescription fs-36 text-muted opacity-50 mb-2" /><br />
                                                 <span className="text-muted fs-14">No prescriptions linked to this visit.</span><br />
-                                                <button className="btn btn-primary btn-sm fw-bold mt-3 shadow-sm" onClick={() => setShowPresModal(true)}>
+                                                <button className="btn btn-primary btn-sm fw-bold mt-3 shadow-sm" onClick={() => { setEditingPrescription(currentApptPrescription); setShowPresModal(true); }}>
                                                     <i className="ti ti-plus me-1" /> Create First Prescription
                                                 </button>
                                             </div>
@@ -1536,8 +1540,8 @@ const AppointmentDetails = () => {
                                                 </button>
                                                 <h5 className="fw-bold mb-0 text-dark">Visit Prescriptions</h5>
                                             </div>
-                                            <button className="btn btn-primary btn-sm fw-bold shadow-sm" onClick={() => setShowPresModal(true)}>
-                                                <i className="ti ti-plus me-1" /> Add Prescription
+                                            <button className="btn btn-primary btn-sm fw-bold shadow-sm" onClick={() => { setEditingPrescription(currentApptPrescription); setShowPresModal(true); }}>
+                                                <i className="ti ti-plus me-1" /> {currentApptPrescription ? "Edit Prescription" : "Add Prescription"}
                                             </button>
                                         </div>
 

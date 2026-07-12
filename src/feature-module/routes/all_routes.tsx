@@ -163,6 +163,7 @@ export const all_routes = {
   activities: "/activities",
   messages: "/messages",
   appointmentconsultations: "/appointment-consultations",
+  consultations: "/appointments/consultations",
 
   //HRM Pages
   staffs: "/staffs",

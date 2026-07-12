@@ -214,6 +214,17 @@ export const SidebarData = [
         ],
       },
       {
+        label: "Consultations",
+        link: routes.consultations,
+        submenu: false,
+        showSubRoute: false,
+        icon: "clipboard-list",
+        base: "Consultations",
+        materialicons: "start",
+        dot: true,
+        submenuItems: [],
+      },
+      {
         label: "Services",
         link: routes.services,
         submenu: false,

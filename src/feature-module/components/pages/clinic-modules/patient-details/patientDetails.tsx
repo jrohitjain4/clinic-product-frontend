@@ -941,7 +941,7 @@ const PatientDetails = () => {
                             </td>
                             <td className="text-end py-1">
                               <div className="d-flex align-items-center justify-content-end gap-2">
-                                <Link to="#" className="btn btn-icon btn-sm bg-primary-subtle text-primary rounded-circle">
+                                <Link to={all_routes.appointmentDetails.replace(":id", appt.id)} className="btn btn-icon btn-sm bg-primary-subtle text-primary rounded-circle">
                                   <i className="ti ti-eye fs-13" />
                                 </Link>
                                 <div className="dropdown">

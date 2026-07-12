@@ -6,9 +6,10 @@ import { useMedicines } from "../../../../../core/hooks/useMedicines";
 interface PrescriptionPadSlipProps {
   appointment: any;
   prescription: any;
+  suggestIPD?: boolean;
 }
 
-const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, prescription }) => {
+const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, prescription, suggestIPD }) => {
   const { medicines: pharmacyMedicines } = useMedicines();
 
   const getMedicineCategory = (name: string) => {
@@ -77,6 +78,21 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
     const text = prescription?.advice || "";
     return text.split("\n").map((line: string) => line.replace(/^\d+\.\s*/, "").trim()).filter(Boolean);
   }, [prescription?.advice]);
+
+  // Parse diagnostic tests into array
+  const diagnosticTestsList = useMemo(() => {
+    const list = prescription?.diagnosticTests;
+    if (Array.isArray(list)) return list;
+    if (typeof list === 'string') {
+      try {
+        const parsed = JSON.parse(list);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {
+        return [list];
+      }
+    }
+    return [];
+  }, [prescription?.diagnosticTests]);
 
   return (
     <div className="prescription-pad-card" id="print-prescription-pad">
@@ -242,7 +258,7 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
         </div>
       </div>
 
-      {/* ========== ADVICE & FOLLOW-UP SIDE BY SIDE ========== */}
+      {/* ========== ADVICE, DIAGNOSTIC TESTS & FOLLOW-UP SIDE BY SIDE ========== */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '0' }}>
         {/* Advice Card */}
         <div style={{ flex: 1 }}>
@@ -258,6 +274,27 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
             <div style={{ position: 'relative', zIndex: 1 }}>
               {adviceList.length > 0 ? (
                 adviceList.map((item: string, idx: number) => (
+                  <div key={idx} className="d-flex align-items-start gap-2 mb-1.5" style={{ fontSize: '11px', fontWeight: 600, color: '#1e293b' }}>
+                    <span style={{ color: '#4f46e5', fontSize: '8px', marginTop: '4px' }}>●</span>
+                    <span>{item}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-muted fs-11" style={{ fontStyle: 'italic' }}>—</div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Diagnostic Tests Card */}
+        <div style={{ flex: 1 }}>
+          <div className="card h-100 border bg-white rounded-3 shadow-none position-relative overflow-hidden" style={{ minHeight: '130px', borderLeft: '3px solid #4f46e5', padding: '14px 16px' }}>
+            <h6 className="pad-section-title d-flex align-items-center gap-1.5 mb-2.5">
+              <i className="ti ti-activity" /> DIAGNOSTIC TESTS
+            </h6>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              {diagnosticTestsList.length > 0 ? (
+                diagnosticTestsList.map((item: string, idx: number) => (
                   <div key={idx} className="d-flex align-items-start gap-2 mb-1.5" style={{ fontSize: '11px', fontWeight: 600, color: '#1e293b' }}>
                     <span style={{ color: '#4f46e5', fontSize: '8px', marginTop: '4px' }}>●</span>
                     <span>{item}</span>
@@ -309,6 +346,16 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({ appointment, 
           </div>
         </div>
       </div>
+
+      {/* IPD Admission Recommendation Alert */}
+      {(suggestIPD || patient.suggestIPD) && (
+        <div className="note-alert-box d-flex align-items-center gap-2 mt-4 px-3 py-2.5 rounded-3 border" style={{ backgroundColor: '#fff7ed', borderColor: '#ea580c', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+          <i className="ti ti-bed fs-16" style={{ color: '#ea580c' }} />
+          <span style={{ color: '#ea580c', fontWeight: 800, fontSize: '11px' }}>
+            ADMIT RECOMMENDATION: Recommended for IPD Admission (Hospitalization Required)
+          </span>
+        </div>
+      )}
 
       {/* ========== FOOTER ========== */}
       <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '2px solid #4f46e5', textAlign: 'center', fontSize: '9px', color: '#64748b', fontWeight: 600 }}>

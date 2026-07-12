@@ -116,6 +116,52 @@ const AddPatientModal = ({ show, onHide, onSuccess, hideBackdrop = false }: AddP
             }
 
             const createdPatient = await res.json();
+
+            // Send WhatsApp notification if a new patient is created
+            if (createdPatient && createdPatient.phone) {
+                const patientName = createdPatient.fullName || `${createdPatient.firstName} ${createdPatient.lastName}`.trim();
+                const confirmSend = window.confirm(`Do you want to send a WhatsApp welcome notification to ${patientName}?`);
+                if (confirmSend) {
+                    try {
+                        const userStr = localStorage.getItem("user");
+                        const currentUser = userStr ? JSON.parse(userStr) : {};
+                        const clinicName = currentUser?.clinic?.name || "our clinic";
+                        const loginLink = `${window.location.origin}/login`;
+                        const regDate = createdPatient.createdAt ? dayjs(createdPatient.createdAt).format("DD-MM-YYYY") : dayjs().format("DD-MM-YYYY");
+
+                        const msg = `Dear ${patientName},
+Your registration has been successfully completed at ${clinicName}.
+
+Registration Details:
+🆔 Patient ID (UHID): ${createdPatient.patientCode || "—"}
+👤 Patient Name: ${patientName}
+📱 Registered Mobile: ${createdPatient.phone}
+📅 Registration Date: ${regDate}
+
+You can access your patient account using your registered mobile number and OTP verification.
+🔗 Patient Portal:
+ ${loginLink}
+
+Login Instructions:
+1. Open the link above.
+2. Enter your registered mobile number.
+3. Verify with the OTP sent to your mobile.
+4. Access your appointments, prescriptions, lab reports, bills, and medical records anytime.
+
+Thank you for choosing ${clinicName}.
+Regards,
+ ${clinicName}
+Powered by DocYori`;
+
+                        const cleanPhone = createdPatient.phone.replace(/\D/g, "");
+                        const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
+                        window.open(whatsappUrl, "_blank");
+                    } catch (e) {
+                        console.error("Error generating Patient WhatsApp link", e);
+                    }
+                }
+            }
+
             onSuccess(createdPatient);
             onHide();
         } catch (err: any) {

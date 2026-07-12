@@ -185,6 +185,9 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [showSlotBooking, setShowSlotBooking] = useState(false);
   const [slotBookingEnabled, setSlotBookingEnabled] = useState(false);
+  const [showAppointmentInfo, setShowAppointmentInfo] = useState(false);
+  const [showFollowUp, setShowFollowUp] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
 
   const serializeSchedules = (raw: Record<string, RowType[]>) => {
     const out: Record<string, { session: string; from: string; to: string }[]> = {};
@@ -590,6 +593,78 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
     setDesignationId("");
   };
 
+  const validateStep1 = () => {
+    if (!fullName.trim()) {
+      toast.error("Doctor name is required.");
+      return false;
+    }
+    if (!username.trim()) {
+      toast.error("Username is required.");
+      return false;
+    }
+    if (usernameStatus === "taken") {
+      toast.error("Username is already taken. Please choose another.");
+      return false;
+    }
+    if (usernameStatus === "checking") {
+      toast.error("Checking username availability. Please wait...");
+      return false;
+    }
+    if (!phone) {
+      toast.error("Phone number is required.");
+      return false;
+    }
+    if (!email.trim()) {
+      toast.error("Email address is required.");
+      return false;
+    }
+    if (!dob) {
+      toast.error("Date of birth is required.");
+      return false;
+    }
+    const age = dayjs().diff(dob, "year");
+    if (age < 18) {
+      toast.error("Doctor must be at least 18 years old.");
+      return false;
+    }
+    if (!yearOfExperience.trim()) {
+      toast.error("Year of experience is required.");
+      return false;
+    }
+    if (departments.length === 0 || allDesignations.length === 0) {
+      toast.error("To add a doctor, you need to first add at least one Department and one Designation in the system.");
+      return false;
+    }
+    if (!departmentId) {
+      toast.error("Please select a Department.");
+      return false;
+    }
+    if (!designationId) {
+      toast.error("Please select a Designation.");
+      return false;
+    }
+    return true;
+  };
+
+  const handleStepClick = (step: number) => {
+    if (step === 1) {
+      setCurrentStep(1);
+    } else if (step === 2) {
+      if (validateStep1()) {
+        setCurrentStep(2);
+      }
+    } else if (step === 3) {
+      if (validateStep1()) {
+        const activeSchedulesCount = Object.keys(lockedDays).filter((day) => lockedDays[day] && schedules[day]?.length > 0).length;
+        if (activeSchedulesCount === 0) {
+          toast.error("Please save and lock at least one day in the schedule before proceeding.");
+          return;
+        }
+        setCurrentStep(3);
+      }
+    }
+  };
+
   // -- Submit -----------------------------------------------------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -737,6 +812,44 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
 
       toast.success(isEdit ? "Doctor updated successfully!" : "Doctor added successfully!");
       setSuccess(true);
+
+      // Send WhatsApp notification if it's a new doctor creation
+      if (!isEdit && phone) {
+        const confirmSend = window.confirm(`Do you want to send a WhatsApp welcome notification to Dr. ${fullName}?`);
+        if (confirmSend) {
+          try {
+            const userStr = localStorage.getItem("user");
+            const currentUser = userStr ? JSON.parse(userStr) : {};
+            const clinicName = currentUser?.clinic?.name || "our clinic";
+            const loginLink = `${window.location.origin}/login`;
+
+            const msg = `Dear Dr. ${fullName},
+Welcome to ${clinicName}. Your doctor account has been successfully created on the DocYori Clinic Management System.
+You can now securely access your account using your registered mobile number and OTP verification.
+🔗 Login Here:
+ ${loginLink}
+
+Login Instructions:
+Click the login link above.
+Enter your registered mobile number.
+Verify using the OTP sent to your mobile.
+Access your dashboard and start managing your appointments, patients, prescriptions, and medical records.
+
+If you face any issues while logging in, please contact the clinic administrator.
+
+Thank you,
+ ${clinicName}
+Powered by DocYori`;
+
+            const cleanPhone = phone.replace(/\D/g, "");
+            const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
+            window.open(whatsappUrl, "_blank");
+          } catch (e) {
+            console.error("Error generating WhatsApp notification link", e);
+          }
+        }
+      }
+
       setTimeout(() => navigate(all_routes.doctors), 1500);
     } catch (err: any) {
       toast.error(err.message);
@@ -796,10 +909,127 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                   </div>
 
                   <form onSubmit={handleSubmit}>
-                    {/* -- Contact Information ----------------- */}
-                    <div className="bg-light px-3 py-2 mb-2">
-                      <h6 className="fw-bold mb-0">Contact Information</h6>
+                    {/* Stepper Progress Header UI */}
+                    <div className="d-flex align-items-center justify-content-between mb-4 border rounded p-3 flex-wrap gap-3 bg-white shadow-sm" style={{ borderLeft: "4px solid #7367f0" }}>
+                      
+                      {/* Step 1 */}
+                      <div
+                        className="d-flex align-items-center gap-3 transition-all"
+                        style={{ cursor: "pointer", opacity: currentStep === 1 ? 1 : 0.8 }}
+                        onClick={() => handleStepClick(1)}
+                      >
+                        <span
+                          className={`rounded-circle d-flex align-items-center justify-content-center transition-all`}
+                          style={{
+                            width: "36px",
+                            height: "36px",
+                            fontSize: "14px",
+                            fontWeight: "bold",
+                            backgroundColor: currentStep === 1 ? "#7367f0" : currentStep > 1 ? "#e8f7ee" : "#f1f1f5",
+                            color: currentStep === 1 ? "#fff" : currentStep > 1 ? "#0fa942" : "#888",
+                            boxShadow: currentStep === 1 ? "0 4px 10px rgba(115, 103, 240, 0.3)" : "none",
+                            border: currentStep > 1 ? "1px solid #c3edd2" : "none"
+                          }}
+                        >
+                          {currentStep > 1 ? <i className="ti ti-check fs-14" /> : "1"}
+                        </span>
+                        <div>
+                          <h6 className={`mb-0 fw-bold fs-13 transition-all ${currentStep === 1 ? "text-primary" : "text-dark"}`}>Doctor Details</h6>
+                          <p className="text-muted fs-11 mb-0" style={{ fontSize: "10px" }}>Contact & job info</p>
+                        </div>
+                      </div>
+
+                      {/* Connector 1 */}
+                      <div
+                        className="flex-grow-1 d-none d-md-block transition-all"
+                        style={{
+                          height: "3px",
+                          borderRadius: "2px",
+                          background: currentStep >= 2 
+                            ? "linear-gradient(90deg, #7367f0, #28c76f)" 
+                            : "linear-gradient(90deg, #7367f0, #dee2e6)",
+                          opacity: 0.6
+                        }}
+                      />
+
+                      {/* Step 2 */}
+                      <div
+                        className="d-flex align-items-center gap-3 transition-all"
+                        style={{ cursor: "pointer", opacity: currentStep === 2 ? 1 : 0.8 }}
+                        onClick={() => handleStepClick(2)}
+                      >
+                        <span
+                          className={`rounded-circle d-flex align-items-center justify-content-center transition-all`}
+                          style={{
+                            width: "36px",
+                            height: "36px",
+                            fontSize: "14px",
+                            fontWeight: "bold",
+                            backgroundColor: currentStep === 2 ? "#7367f0" : currentStep > 2 ? "#e8f7ee" : "#f1f1f5",
+                            color: currentStep === 2 ? "#fff" : currentStep > 2 ? "#0fa942" : "#888",
+                            boxShadow: currentStep === 2 ? "0 4px 10px rgba(115, 103, 240, 0.3)" : "none",
+                            border: currentStep > 2 ? "1px solid #c3edd2" : "none"
+                          }}
+                        >
+                          {currentStep > 2 ? <i className="ti ti-check fs-14" /> : "2"}
+                        </span>
+                        <div>
+                          <h6 className={`mb-0 fw-bold fs-13 transition-all ${currentStep === 2 ? "text-primary" : "text-dark"}`}>Weekly Schedule</h6>
+                          <p className="text-muted fs-11 mb-0" style={{ fontSize: "10px" }}>Timings & sessions</p>
+                        </div>
+                      </div>
+
+                      {/* Connector 2 */}
+                      <div
+                        className="flex-grow-1 d-none d-md-block transition-all"
+                        style={{
+                          height: "3px",
+                          borderRadius: "2px",
+                          background: currentStep >= 3 
+                            ? "linear-gradient(90deg, #7367f0, #28c76f)" 
+                            : "linear-gradient(90deg, #dee2e6, #dee2e6)",
+                          opacity: 0.6
+                        }}
+                      />
+
+                      {/* Step 3 */}
+                      <div
+                        className="d-flex align-items-center gap-3 transition-all"
+                        style={{ cursor: "pointer", opacity: currentStep === 3 ? 1 : 0.8 }}
+                        onClick={() => handleStepClick(3)}
+                      >
+                        <span
+                          className={`rounded-circle d-flex align-items-center justify-content-center transition-all`}
+                          style={{
+                            width: "36px",
+                            height: "36px",
+                            fontSize: "14px",
+                            fontWeight: "bold",
+                            backgroundColor: currentStep === 3 ? "#7367f0" : "#f1f1f5",
+                            color: currentStep === 3 ? "#fff" : "#888",
+                            boxShadow: currentStep === 3 ? "0 4px 10px rgba(115, 103, 240, 0.3)" : "none",
+                            border: "none"
+                          }}
+                        >
+                          3
+                        </span>
+                        <div>
+                          <h6 className={`mb-0 fw-bold fs-13 transition-all ${currentStep === 3 ? "text-primary" : "text-dark"}`}>Settings (Optional)</h6>
+                          <p className="text-muted fs-11 mb-0" style={{ fontSize: "10px" }}>Appointments & docs</p>
+                        </div>
+                      </div>
+
                     </div>
+
+                    {currentStep === 1 && (
+                      <>
+                        {/* -- Contact Information ----------------- */}
+                        <div className="pb-2 mb-3 border-bottom mt-2 mx-1">
+                          <h6 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                            <span className="bg-primary rounded-pill" style={{ width: "4px", height: "16px" }} />
+                            Contact Information
+                          </h6>
+                        </div>
                     <div className="pb-0">
                       <div className="row">
                         {/* Profile Image */}
@@ -843,245 +1073,270 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                             </div>
                           </div>
                         </div>
+                        {/* Name */}
+                        <div className="col-lg-4">
+                          <div style={{ marginBottom: "10px" }}>
+                            <label className="form-label mb-0">
+                              Name <span className="text-danger">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={fullName}
+                              onChange={(e) => setFullName(e.target.value)}
+                              placeholder="Dr. Full Name"
+                            />
+                          </div>
+                        </div>
 
-                        {/* Name + Username */}
-                        <div className="col-lg-12">
-                          <div className="row">
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">
-                                  Name <span className="text-danger">*</span>
-                                </label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  value={fullName}
-                                  onChange={(e) => setFullName(e.target.value)}
-                                  placeholder="Dr. Full Name"
-                                />
-                              </div>
-                            </div>
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">
-                                  Username <span className="text-danger">*</span>
-                                </label>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  value={username}
-                                  onChange={(e) => setUsername(e.target.value)}
-                                  placeholder="username"
-                                />
-                                <div className="d-flex flex-column" style={{ minHeight: "0px", marginTop: "2px" }}>
-                                  {usernameWarning && (
-                                    <span className="text-danger fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
-                                      <i className="ti ti-alert-triangle me-1" /> {usernameWarning}
-                                    </span>
-                                  )}
-                                  {usernameStatus === "checking" && !usernameWarning && (
-                                    <span className="text-muted d-flex align-items-center" style={{ fontSize: "12px" }}>
-                                      <span className="spinner-border spinner-border-sm me-1" style={{ width: "12px", height: "12px" }} /> checking...
-                                    </span>
-                                  )}
-                                  {usernameStatus === "available" && !usernameWarning && (
-                                    <span className="text-success fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
-                                      <i className="ti ti-circle-check me-1" /> Username Available
-                                    </span>
-                                  )}
-                                  {usernameStatus === "taken" && !usernameWarning && (
-                                    <span className="text-danger fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
-                                      <i className="ti ti-alert-circle me-1" /> Username Taken
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Phone + Email */}
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">
-                                  Phone Number <span className="text-danger">*</span>
-                                </label>
-                                <div>
-                                  <PhoneInput
-                                    defaultCountry="IN"
-                                    value={phone}
-                                    onChange={setPhone}
-                                  />
-                                </div>
-                                {phoneWarning && (
-                                  <div className="text-warning fs-12 mt-1">
-                                    <i className="ti ti-alert-triangle me-1" />
-                                    {phoneWarning}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">
-                                  Email Address <span className="text-danger">*</span>
-                                </label>
-                                <input
-                                  type="email"
-                                  className="form-control"
-                                  value={email}
-                                  onChange={(e) => setEmail(e.target.value)}
-                                  placeholder="doctor@clinic.com"
-                                />
-                              </div>
+                        {/* Username */}
+                        <div className="col-lg-4">
+                          <div style={{ marginBottom: "10px" }}>
+                            <label className="form-label mb-0">
+                              Username <span className="text-danger">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={username}
+                              onChange={(e) => setUsername(e.target.value)}
+                              placeholder="username"
+                            />
+                            <div className="d-flex flex-column" style={{ minHeight: "0px", marginTop: "2px" }}>
+                              {usernameWarning && (
+                                <span className="text-danger fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
+                                  <i className="ti ti-alert-triangle me-1" /> {usernameWarning}
+                                </span>
+                              )}
+                              {usernameStatus === "checking" && !usernameWarning && (
+                                <span className="text-muted d-flex align-items-center" style={{ fontSize: "12px" }}>
+                                  <span className="spinner-border spinner-border-sm me-1" style={{ width: "12px", height: "12px" }} /> checking...
+                                </span>
+                              )}
+                              {usernameStatus === "available" && !usernameWarning && (
+                                <span className="text-success fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
+                                  <i className="ti ti-circle-check me-1" /> Username Available
+                                </span>
+                              )}
+                              {usernameStatus === "taken" && !usernameWarning && (
+                                <span className="text-danger fw-bold d-flex align-items-center" style={{ fontSize: "12px" }}>
+                                  <i className="ti ti-alert-circle me-1" /> Username Taken
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
 
-                        {/* DOB + Age + Experience */}
-                        <div className="col-lg-12">
-                          <div className="row">
-                            <div className="col-lg-4">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">
-                                  DOB <span className="text-danger">*</span>
-                                </label>
-                                <div className="input-icon-end position-relative">
-                                  <DatePicker
-                                    className="form-control datetimepicker"
-                                    format={{ format: "DD-MM-YYYY", type: "mask" }}
-                                    getPopupContainer={getModalContainer}
-                                    placeholder="DD-MM-YYYY"
-                                    suffixIcon={null}
-                                    value={dob}
-                                    onChange={(d) => setDob(d)}
-                                  />
-                                  <span className="input-icon-addon">
-                                    <i className="ti ti-calendar" />
-                                  </span>
-                                </div>
-                              </div>
+                        {/* Email Address */}
+                        <div className="col-lg-4">
+                          <div style={{ marginBottom: "10px" }}>
+                            <label className="form-label mb-0">
+                              Email Address <span className="text-danger">*</span>
+                            </label>
+                            <input
+                              type="email"
+                              className="form-control"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="doctor@clinic.com"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Phone Number */}
+                        <div className="col-lg-3">
+                          <div style={{ marginBottom: "10px" }}>
+                            <label className="form-label mb-0">
+                              Phone Number <span className="text-danger">*</span>
+                            </label>
+                            <div>
+                              <PhoneInput
+                                defaultCountry="IN"
+                                value={phone}
+                                onChange={setPhone}
+                              />
                             </div>
-                            <div className="col-lg-4">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">
-                                  Age
-                                </label>
-                                <input
-                                  type="text"
-                                  className="form-control bg-light"
-                                  value={dob ? `${dayjs().diff(dob, "year")} Years` : ""}
-                                  readOnly
-                                  placeholder="Auto-calculated"
-                                />
+                            {phoneWarning && (
+                              <div className="text-warning fs-12 mt-1">
+                                <i className="ti ti-alert-triangle me-1" />
+                                {phoneWarning}
                               </div>
-                            </div>
-                            <div className="col-lg-4">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">
-                                  Year Of Experience <span className="text-danger">*</span>
-                                </label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  value={yearOfExperience}
-                                  onChange={(e) => setYearOfExperience(e.target.value)}
-                                  placeholder="e.g. 5"
-                                  min={0}
-                                />
-                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* DOB */}
+                        <div className="col-lg-3">
+                          <div style={{ marginBottom: "10px" }}>
+                            <label className="form-label mb-0">
+                              DOB <span className="text-danger">*</span>
+                            </label>
+                            <div className="input-icon-end position-relative">
+                              <DatePicker
+                                className="form-control datetimepicker"
+                                format={{ format: "DD-MM-YYYY", type: "mask" }}
+                                getPopupContainer={getModalContainer}
+                                placeholder="DD-MM-YYYY"
+                                suffixIcon={null}
+                                value={dob}
+                                onChange={(d) => setDob(d)}
+                              />
+                              <span className="input-icon-addon">
+                                <i className="ti ti-calendar" />
+                              </span>
                             </div>
                           </div>
                         </div>
 
-                        {/* Department + Designation (from DB) */}
-                        <div className="col-lg-12">
-                          <div className="row">
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <div className="d-flex align-items-center justify-content-between mb-1">
-                                  <label className="form-label mb-0">
-                                    Department <span className="text-danger">*</span>
-                                  </label>
-                                  <button
-                                    type="button"
-                                    className="btn btn-link p-0 text-primary fw-bold fs-12 text-decoration-none"
-                                    onClick={() => {
-                                      setShowErrorModal(false);
-                                      setShowQuickAddDeptModal(true);
-                                    }}
-                                  >
-                                    <i className="ti ti-plus me-1" />Quick Add
-                                  </button>
-                                </div>
-                                {isLoadingDepartments ? (
-                                  <div className="form-control text-muted d-flex align-items-center gap-2">
-                                    <span className="spinner-border spinner-border-sm" role="status" />
-                                    Loading departments...
-                                  </div>
-                                ) : deptOptions.length > 0 ? (
-                                  <CommonSelect
-                                    options={deptOptions}
-                                    className="select"
-                                    value={selectedDeptOption}
-                                    placeholder="Select department"
-                                    onChange={handleDepartmentChange}
-                                  />
-                                ) : (
-                                  <div className="form-control text-muted">
-                                    No departments available
-                                  </div>
-                                )}
-                              </div>
+                        {/* Age */}
+                        <div className="col-lg-3">
+                          <div style={{ marginBottom: "10px" }}>
+                            <label className="form-label mb-0">
+                              Age
+                            </label>
+                            <input
+                              type="text"
+                              className="form-control bg-light"
+                              value={dob ? `${dayjs().diff(dob, "year")} Years` : ""}
+                              readOnly
+                              placeholder="Auto-calculated"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Year of Experience */}
+                        <div className="col-lg-3">
+                          <div style={{ marginBottom: "10px" }}>
+                            <label className="form-label mb-0">
+                              Year Of Experience <span className="text-danger">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              className="form-control"
+                              value={yearOfExperience}
+                              onChange={(e) => setYearOfExperience(e.target.value)}
+                              placeholder="e.g. 5"
+                              min={0}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Department */}
+                        <div className="col-lg-6">
+                          <div style={{ marginBottom: "10px" }}>
+                            <div className="d-flex align-items-center justify-content-between mb-1">
+                              <label className="form-label mb-0">
+                                Department <span className="text-danger">*</span>
+                              </label>
+                              <button
+                                type="button"
+                                className="btn btn-link p-0 text-primary fw-bold fs-12 text-decoration-none"
+                                onClick={() => {
+                                  setShowErrorModal(false);
+                                  setShowQuickAddDeptModal(true);
+                                }}
+                              >
+                                <i className="ti ti-plus me-1" />Quick Add
+                              </button>
                             </div>
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <div className="d-flex align-items-center justify-content-between mb-1">
-                                  <label className="form-label mb-0">
-                                    Designation <span className="text-danger">*</span>
-                                  </label>
-                                  <button
-                                    type="button"
-                                    className="btn btn-link p-0 text-primary fw-bold fs-12 text-decoration-none"
-                                    onClick={() => {
-                                      setShowErrorModal(false);
-                                      setQuickDesigDeptId(departmentId || (departments[0]?.id || ""));
-                                      setShowQuickAddDesigModal(true);
-                                    }}
-                                  >
-                                    <i className="ti ti-plus me-1" />Quick Add
-                                  </button>
-                                </div>
-                                {departmentId && desigOptions.length > 0 ? (
-                                  <CommonSelect
-                                    key={departmentId}
-                                    options={desigOptions}
-                                    className="select"
-                                    value={selectedDesigOption}
-                                    placeholder="Select designation"
-                                    onChange={(opt: any) => setDesignationId(opt?.value || "")}
-                                  />
-                                ) : (
-                                  <div className="form-control text-muted py-2">
-                                    {!departmentId
-                                      ? "Select a department first"
-                                      : "No designations for this department – add one in Designation settings"}
-                                  </div>
-                                )}
+                            {isLoadingDepartments ? (
+                              <div className="form-control text-muted d-flex align-items-center gap-2">
+                                <span className="spinner-border spinner-border-sm" role="status" />
+                                Loading departments...
                               </div>
+                            ) : deptOptions.length > 0 ? (
+                              <CommonSelect
+                                options={deptOptions}
+                                className="select"
+                                value={selectedDeptOption}
+                                placeholder="Select department"
+                                onChange={handleDepartmentChange}
+                              />
+                            ) : (
+                              <div className="form-control text-muted">
+                                No departments available
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Designation */}
+                        <div className="col-lg-6">
+                          <div style={{ marginBottom: "10px" }}>
+                            <div className="d-flex align-items-center justify-content-between mb-1">
+                              <label className="form-label mb-0">
+                                Designation <span className="text-danger">*</span>
+                              </label>
+                              <button
+                                type="button"
+                                className="btn btn-link p-0 text-primary fw-bold fs-12 text-decoration-none"
+                                onClick={() => {
+                                  setShowErrorModal(false);
+                                  setQuickDesigDeptId(departmentId || (departments[0]?.id || ""));
+                                  setShowQuickAddDesigModal(true);
+                                }}
+                              >
+                                <i className="ti ti-plus me-1" />Quick Add
+                              </button>
                             </div>
+                            {departmentId && desigOptions.length > 0 ? (
+                              <CommonSelect
+                                key={departmentId}
+                                options={desigOptions}
+                                className="select"
+                                value={selectedDesigOption}
+                                placeholder="Select designation"
+                                onChange={(opt: any) => setDesignationId(opt?.value || "")}
+                              />
+                            ) : (
+                              <div className="form-control text-muted py-2">
+                                {!departmentId
+                                  ? "Select a department first"
+                                  : "No designations for this department – add one in Designation settings"}
+                              </div>
+                            )}
                           </div>
                         </div>
 
                       </div>
                     </div>
 
+                    {/* Footer for Step 1 */}
+                    <div className="mt-2 pb-2 d-flex justify-content-end gap-3 border-top pt-3">
+                      <Link
+                        to={all_routes.doctors}
+                        className="btn btn-outline-secondary btn-lg px-5 d-flex align-items-center gap-2"
+                        style={{ borderRadius: "10px", fontWeight: "600" }}
+                      >
+                        <i className="ti ti-arrow-left fs-18" /> Cancel
+                      </Link>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-lg px-5 shadow-lg d-flex align-items-center gap-3 transition-all"
+                        style={{ borderRadius: "10px", minWidth: "150px", fontWeight: "bold" }}
+                        onClick={() => {
+                          if (validateStep1()) {
+                            setCurrentStep(2);
+                          }
+                        }}
+                      >
+                        <span>Next</span> <i className="ti ti-arrow-right fs-18" />
+                      </button>
+                    </div>
+                  </>
+                )}
 
-
+                {currentStep === 2 && (
+                  <>
                     {/* -- Schedule --------------------------- */}
-                    <div className="bg-light px-3 py-2 mb-2">
-                      <h6 className="fw-bold mb-0">Schedule</h6>
+                    <div className="pb-2 mb-3 border-bottom mt-2 mx-3">
+                      <h6 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <span className="bg-primary rounded-pill" style={{ width: "4px", height: "16px" }} />
+                        Weekly Schedule
+                      </h6>
                     </div>
                     <div className="p-3 bg-white rounded shadow-sm border mx-3 my-3" style={{ overflow: "visible" }}>
-                      <div className="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+                      <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
                         <h6 className="fw-bold mb-0 text-dark d-flex align-items-center">
                           <i className="ti ti-calendar-event me-2 text-primary fs-18" /> Weekly Schedule Setup
                         </h6>
@@ -1090,7 +1345,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         </span>
                       </div>
 
-                      <ul className="nav nav-pills schedule-tab mb-4 gap-2" id="pills-tab" role="tablist">
+                      <ul className="nav nav-pills schedule-tab mb-3 gap-2" id="pills-tab" role="tablist">
                         {WEEKDAYS.map((day, i) => (
                           <li key={day} className="nav-item flex-fill" role="presentation">
                             <button
@@ -1124,16 +1379,16 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                             id={`schedule-${i + 1}`}
                             role="tabpanel"
                           >
-                            <div className="add-schedule-list border rounded p-4 bg-light border-dashed mb-2 position-relative">
+                            <div className="add-schedule-list border rounded p-3 mb-2 position-relative" style={{ backgroundColor: "#f8f7ff", borderColor: "#e8e6f9", borderStyle: "solid" }}>
                               {/* Day Available toggle row */}
-                              <div className="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom flex-wrap gap-2">
+                              <div className="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom flex-wrap gap-2">
                                 <div>
                                   <h6 className="fw-bold mb-1 text-primary">{day} Working Hours</h6>
                                   <p className="text-muted fs-12 mb-0">Define session timings for this specific day</p>
                                 </div>
                                 <div className="d-flex align-items-center gap-3">
                                   {/* Day Available ON/OFF */}
-                                  <div className="d-flex align-items-center gap-2 border rounded px-3 py-2 bg-white shadow-sm">
+                                  <div className="d-flex align-items-center gap-2 border rounded px-3 py-1 bg-white shadow-sm">
                                     <span className="fw-bold fs-13 text-dark">Day Available</span>
                                     <div className="form-check form-switch mb-0">
                                       <input
@@ -1182,9 +1437,12 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
 
                               {/* Schedule content — only show when day is enabled */}
                               {!dayEnabled[day] ? (
-                                <div className="text-center py-4 text-muted">
-                                  <i className="ti ti-moon-off fs-36 mb-2 d-block text-secondary opacity-50" />
-                                  <p className="mb-0 fs-13">This day is marked as <strong>unavailable</strong>. Toggle ON to set working hours.</p>
+                                <div className="text-center py-4 px-3 bg-white border rounded shadow-sm my-2">
+                                  <i className="ti ti-calendar-off fs-32 mb-2 d-block text-muted opacity-60" />
+                                  <p className="mb-1 fs-13 text-dark fw-semibold">
+                                    {day} is marked as <span className="text-danger">Unavailable</span>
+                                  </p>
+                                  <span className="text-muted fs-12 d-block">Toggle "Day Available" above to define timing sessions for this day.</span>
                                 </div>
                               ) : (
                                 <div className={`${lockedDays[day] ? "opacity-75" : ""}`}>
@@ -1253,152 +1511,149 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       </div>
                     </div>
 
-
-
-                    {/* -- Document Information ----------------- */}
-                    <div 
-                      className="bg-light px-3 py-2 mb-2 d-flex align-items-center justify-content-between"
-                      onClick={() => setShowDocuments(!showDocuments)}
-                      style={{ cursor: "pointer", userSelect: "none" }}
-                    >
-                      <h6 className="fw-bold mb-0">Documents Upload</h6>
-                      <i className={`ti ${showDocuments ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-dark`} />
+                    {/* Footer for Step 2 */}
+                    <div className="mt-2 pb-2 d-flex justify-content-end gap-3 border-top pt-3">
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-lg px-5 d-flex align-items-center gap-2"
+                        style={{ borderRadius: "10px", fontWeight: "600" }}
+                        onClick={() => setCurrentStep(1)}
+                      >
+                        <i className="ti ti-arrow-left fs-18" /> Back
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-lg px-5 shadow-lg d-flex align-items-center gap-3 transition-all"
+                        style={{ borderRadius: "10px", minWidth: "150px", fontWeight: "bold" }}
+                        onClick={() => {
+                          const activeSchedulesCount = Object.keys(lockedDays).filter((day) => lockedDays[day] && schedules[day]?.length > 0).length;
+                          if (activeSchedulesCount === 0) {
+                            toast.error("Please save and lock at least one day in the schedule before proceeding.");
+                            return;
+                          }
+                          setCurrentStep(3);
+                        }}
+                      >
+                        <span>Next</span> <i className="ti ti-arrow-right fs-18" />
+                      </button>
                     </div>
-                    {showDocuments && (
-                      <div className="p-3">
-                        <div className="row">
-                          {/* Row 1 */}
-                          <div className="col-lg-6 mb-2">
-                            <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
-                              <label className="form-label mb-0 fw-bold text-dark">Doctor Signature (Optional)</label>
-                              <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
-                                <DoctorProfileUpload value={signatureImage} onChange={setSignatureImage} />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="col-lg-6 mb-2">
-                            <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
-                              <label className="form-label mb-0 fw-bold text-dark">Medical Reg. Certificate (Optional)</label>
-                              <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
-                                <DoctorProfileUpload value={medicalRegCertificate} onChange={setMedicalRegCertificate} />
-                              </div>
-                            </div>
-                          </div>
+                  </>
+                )}
 
-                          {/* Row 2 */}
-                          <div className="col-lg-6 mb-2">
-                            <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
-                              <label className="form-label mb-0 fw-bold text-dark">Qualification Certificate (Optional)</label>
-                              <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
-                                <DoctorProfileUpload value={qualificationCertificate} onChange={setQualificationCertificate} />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="col-lg-6 mb-2">
-                            <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
-                              <label className="form-label mb-0 fw-bold text-dark">Aadhaar Card Front (Optional)</label>
-                              <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
-                                <DoctorProfileUpload value={aadhaarCard} onChange={setAadhaarCard} />
-                              </div>
-                            </div>
-                          </div>
+                {currentStep === 3 && (
+                  <>
 
-                          {/* Row 3 */}
-                          <div className="col-lg-6 mb-2">
-                            <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
-                              <label className="form-label mb-0 fw-bold text-dark">PAN Card (Optional)</label>
-                              <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
-                                <DoctorProfileUpload value={panCard} onChange={setPanCard} />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="col-lg-6 mb-2">
-                            <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
-                              <label className="form-label mb-0 fw-bold text-dark">Aadhaar Card Back (Optional)</label>
-                              <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
-                                <DoctorProfileUpload value={aadhaarCardBack} onChange={setAadhaarCardBack} />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
 
-                    <div className="bg-light px-3 py-2 mb-2 d-flex align-items-center justify-content-between">
-                      <h6 className="fw-bold mb-0">Appointment Information</h6>
-                      <div className="form-check form-switch mb-0">
-                        <label className="form-check-label fs-14 fw-medium me-2" htmlFor="acceptingAppointments">
-                          Accept Appointments
-                        </label>
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          role="switch"
-                          id="acceptingAppointments"
-                          checked={acceptingAppointments}
-                          onChange={(e) => setAcceptingAppointments(e.target.checked)}
-                        />
-                      </div>
-                    </div>
-                    <div className={`pb-0 ${!acceptingAppointments ? "opacity-50 pointer-events-none" : ""}`}>
-                      <div className="row">
-                        {/* All fields on one row to reduce empty space */}
-                        <div className="col-lg-4">
-                          <div style={{ marginBottom: "10px" }}>
-                            <label className="form-label mb-0">Appointment Type</label>
-                            <CommonSelect
-                              options={Appointment_Type}
-                              className="select"
-                              isDisabled={!acceptingAppointments}
-                              value={
-                                findSelectOption(Appointment_Type, appointmentType) ||
-                                Appointment_Type[0]
-                              }
-                              onChange={(opt: any) => setAppointmentType(opt?.value || "")}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-4">
-                          <div style={{ marginBottom: "10px" }}>
-                            <label className="form-label mb-0">Accept bookings (in Advance)</label>
+
+                    {/* -- Appointment Information (Collapsible) -- */}
+                    <div className="border rounded mb-3 mx-0 bg-white">
+                      <div
+                        className="bg-light px-3 py-2 d-flex align-items-center justify-content-between"
+                        onClick={() => setShowAppointmentInfo(!showAppointmentInfo)}
+                        style={{ cursor: "pointer", userSelect: "none", borderRadius: showAppointmentInfo ? "0.375rem 0.375rem 0 0" : "0.375rem" }}
+                      >
+                        <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                          <i className="ti ti-calendar text-primary fs-18" />
+                          Appointment Information
+                          <span className="badge bg-soft-secondary text-muted fw-normal fs-11 ms-1">Optional</span>
+                          {acceptingAppointments && (
+                            <span className="badge bg-soft-success text-success fw-normal fs-11 ms-2">
+                              Enabled
+                            </span>
+                          )}
+                        </h6>
+                        <div className="d-flex align-items-center gap-3">
+                          <div className="form-check form-switch mb-0" onClick={(e) => e.stopPropagation()}>
+                            <label className="form-check-label fs-14 fw-medium me-2" htmlFor="acceptingAppointments" style={{ cursor: "pointer" }}>
+                              Accept Appointments
+                            </label>
                             <input
-                              type="number"
-                              className="form-control"
-                              min={0}
-                              disabled={!acceptingAppointments}
-                              value={acceptBookingsInAdvance}
-                              onChange={(e) => setAcceptBookingsInAdvance(e.target.value)}
-                              placeholder="Enter days (e.g. 15)"
+                              className="form-check-input"
+                              type="checkbox"
+                              role="switch"
+                              id="acceptingAppointments"
+                              checked={acceptingAppointments}
+                              onChange={(e) => setAcceptingAppointments(e.target.checked)}
                             />
                           </div>
-                        </div>
-                        <div className="col-lg-4">
-                          <div style={{ marginBottom: "10px" }}>
-                            <label className="form-label mb-0">Consultation Charge</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              min={0}
-                              step="0.01"
-                              disabled={!acceptingAppointments}
-                              value={consultationCharge}
-                              onChange={(e) => setConsultationCharge(e.target.value)}
-                              placeholder="Enter amount (e.g. 500.00)"
-                            />
-                          </div>
+                          <i className={`ti ${showAppointmentInfo ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-dark`} />
                         </div>
                       </div>
+                      {showAppointmentInfo && (
+                        <div className="p-3">
+                          <div className={`pb-0 ${!acceptingAppointments ? "opacity-50 pointer-events-none" : ""}`}>
+                            <div className="row">
+                              {/* All fields on one row to reduce empty space */}
+                              <div className="col-lg-4">
+                                <div style={{ marginBottom: "10px" }}>
+                                  <label className="form-label mb-0">Appointment Type</label>
+                                  <CommonSelect
+                                    options={Appointment_Type}
+                                    className="select"
+                                    isDisabled={!acceptingAppointments}
+                                    value={
+                                      findSelectOption(Appointment_Type, appointmentType) ||
+                                      Appointment_Type[0]
+                                    }
+                                    onChange={(opt: any) => setAppointmentType(opt?.value || "")}
+                                  />
+                                </div>
+                              </div>
+                              <div className="col-lg-4">
+                                <div style={{ marginBottom: "10px" }}>
+                                  <label className="form-label mb-0">Accept bookings (in Advance)</label>
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    min={0}
+                                    disabled={!acceptingAppointments}
+                                    value={acceptBookingsInAdvance}
+                                    onChange={(e) => setAcceptBookingsInAdvance(e.target.value)}
+                                    placeholder="Enter days (e.g. 15)"
+                                  />
+                                </div>
+                              </div>
+                              <div className="col-lg-4">
+                                <div style={{ marginBottom: "10px" }}>
+                                  <label className="form-label mb-0">Consultation Charge</label>
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    min={0}
+                                    step="0.01"
+                                    disabled={!acceptingAppointments}
+                                    value={consultationCharge}
+                                    onChange={(e) => setConsultationCharge(e.target.value)}
+                                    placeholder="Enter amount (e.g. 500.00)"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    {/* -- Follow-up Information ------------- */}
-                    <div className="bg-light px-3 py-2 mb-2">
-                      <h6 className="fw-bold mb-0">Follow-up Settings</h6>
-                    </div>
-                    <div className="pb-0">
-                      <div className="row">
-                        <div className="col-lg-12">
-                          <div className="form-check form-switch mb-2">
-                            <label className="form-check-label" htmlFor="followUpEnabled">
+                    {/* -- Follow-up Settings (Collapsible) -- */}
+                    <div className="border rounded mb-3 mx-0 bg-white">
+                      <div
+                        className="bg-light px-3 py-2 d-flex align-items-center justify-content-between"
+                        onClick={() => setShowFollowUp(!showFollowUp)}
+                        style={{ cursor: "pointer", userSelect: "none", borderRadius: showFollowUp ? "0.375rem 0.375rem 0 0" : "0.375rem" }}
+                      >
+                        <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                          <i className="ti ti-notes text-primary fs-18" />
+                          Follow-up Settings
+                          <span className="badge bg-soft-secondary text-muted fw-normal fs-11 ms-1">Optional</span>
+                          {followUpEnabled && (
+                            <span className="badge bg-soft-success text-success fw-normal fs-11 ms-2">
+                              Enabled
+                            </span>
+                          )}
+                        </h6>
+                        <div className="d-flex align-items-center gap-3">
+                          <div className="form-check form-switch mb-0" onClick={(e) => e.stopPropagation()}>
+                            <label className="form-check-label fs-14 fw-medium me-2" htmlFor="followUpEnabled" style={{ cursor: "pointer" }}>
                               Follow-up Enabled
                             </label>
                             <input
@@ -1410,60 +1665,68 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                               onChange={(e) => setFollowUpEnabled(e.target.checked)}
                             />
                           </div>
+                          <i className={`ti ${showFollowUp ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-dark`} />
                         </div>
-                        {followUpEnabled && (
-                          <>
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-1 d-flex align-items-center" style={{ minHeight: "22px" }}>
-                                  Follow-up Validity
-                                </label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  value={followUpValidityDays}
-                                  onChange={(e) => setFollowUpValidityDays(e.target.value)}
-                                  placeholder="Enter validity in days (e.g. 15)"
-                                  min={0}
-                                />
-                              </div>
-                            </div>
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-1 d-flex align-items-center gap-2" style={{ minHeight: "22px" }}>
-                                  Free Follow-up Limit
-                                  <span className="badge bg-soft-info text-info fw-normal fs-12">
-                                    <i className="ti ti-info-circle me-1" />0 = Unlimited
-                                  </span>
-                                </label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  value={freeFollowUpLimit}
-                                  onChange={(e) => setFreeFollowUpLimit(e.target.value)}
-                                  placeholder="Enter visit limit (e.g. 4)"
-                                  min={0}
-                                />
-                              </div>
-                            </div>
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">Follow-up Fee (₹)</label>
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  value={followUpFee}
-                                  onChange={(e) => setFollowUpFee(e.target.value)}
-                                  placeholder="Enter amount (e.g. 500.00)"
-                                  min={0}
-                                  step="0.01"
-                                />
-                                <small className="text-muted">Charged after free follow-up limit is exhausted</small>
-                              </div>
-                            </div>
-                          </>
-                        )}
                       </div>
+                      {showFollowUp && (
+                        <div className="p-3">
+                          <div className={`pb-0 ${!followUpEnabled ? "opacity-50 pointer-events-none" : ""}`}>
+                            <div className="row">
+                              <div className="col-lg-6">
+                                <div style={{ marginBottom: "10px" }}>
+                                  <label className="form-label mb-1 d-flex align-items-center" style={{ minHeight: "22px" }}>
+                                    Follow-up Validity
+                                  </label>
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    disabled={!followUpEnabled}
+                                    value={followUpValidityDays}
+                                    onChange={(e) => setFollowUpValidityDays(e.target.value)}
+                                    placeholder="Enter validity in days (e.g. 15)"
+                                    min={0}
+                                  />
+                                </div>
+                              </div>
+                              <div className="col-lg-6">
+                                <div style={{ marginBottom: "10px" }}>
+                                  <label className="form-label mb-1 d-flex align-items-center gap-2" style={{ minHeight: "22px" }}>
+                                    Free Follow-up Limit
+                                    <span className="badge bg-soft-info text-info fw-normal fs-12">
+                                      <i className="ti ti-info-circle me-1" />0 = Unlimited
+                                    </span>
+                                  </label>
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    disabled={!followUpEnabled}
+                                    value={freeFollowUpLimit}
+                                    onChange={(e) => setFreeFollowUpLimit(e.target.value)}
+                                    placeholder="Enter visit limit (e.g. 4)"
+                                    min={0}
+                                  />
+                                </div>
+                              </div>
+                              <div className="col-lg-6">
+                                <div style={{ marginBottom: "10px" }}>
+                                  <label className="form-label mb-0">Follow-up Fee (₹)</label>
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    disabled={!followUpEnabled}
+                                    value={followUpFee}
+                                    onChange={(e) => setFollowUpFee(e.target.value)}
+                                    placeholder="Enter amount (e.g. 500.00)"
+                                    min={0}
+                                    step="0.01"
+                                  />
+                                  <small className="text-muted">Charged after free follow-up limit is exhausted</small>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* -- Slot Booking Settings (Collapsible) -- */}
@@ -1476,6 +1739,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
                           <i className="ti ti-calendar-time text-primary fs-18" />
                           Slot Booking Settings
+                          <span className="badge bg-soft-secondary text-muted fw-normal fs-11 ms-1">Optional</span>
                           {slotBookingEnabled && (
                             <span className="badge bg-soft-success text-success fw-normal fs-11 ms-2">
                               Enabled
@@ -1848,15 +2112,91 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                       )}
                     </div>
 
-                    {/* -- Actions ---------------------------- */}
-                    <div className="mt-2 pb-2 d-flex justify-content-end gap-3 border-top pt-3">
-                      <Link
-                        to={all_routes.doctors}
+                    {/* -- Documents Upload (Collapsible) -- */}
+                    <div className="border rounded mb-3 mx-0 bg-white">
+                      <div
+                        className="bg-light px-3 py-2 d-flex align-items-center justify-content-between"
+                        onClick={() => setShowDocuments(!showDocuments)}
+                        style={{ cursor: "pointer", userSelect: "none", borderRadius: showDocuments ? "0.375rem 0.375rem 0 0" : "0.375rem" }}
+                      >
+                        <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                          <i className="ti ti-upload text-primary fs-18" />
+                          Documents Upload
+                          <span className="badge bg-soft-secondary text-muted fw-normal fs-11 ms-1">Optional</span>
+                        </h6>
+                        <i className={`ti ${showDocuments ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-dark`} />
+                      </div>
+                      {showDocuments && (
+                        <div className="p-3">
+                          <div className="row">
+                            {/* Row 1 */}
+                            <div className="col-lg-6 mb-2">
+                              <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                                <label className="form-label mb-0 fw-bold text-dark">Doctor Signature (Optional)</label>
+                                <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                                  <DoctorProfileUpload value={signatureImage} onChange={setSignatureImage} />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="col-lg-6 mb-2">
+                              <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                                <label className="form-label mb-0 fw-bold text-dark">Medical Reg. Certificate (Optional)</label>
+                                <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                                  <DoctorProfileUpload value={medicalRegCertificate} onChange={setMedicalRegCertificate} />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Row 2 */}
+                            <div className="col-lg-6 mb-2">
+                              <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                                <label className="form-label mb-0 fw-bold text-dark">Qualification Certificate (Optional)</label>
+                                <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                                  <DoctorProfileUpload value={qualificationCertificate} onChange={setQualificationCertificate} />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="col-lg-6 mb-2">
+                              <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                                <label className="form-label mb-0 fw-bold text-dark">Aadhaar Card Front (Optional)</label>
+                                <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                                  <DoctorProfileUpload value={aadhaarCard} onChange={setAadhaarCard} />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Row 3 */}
+                            <div className="col-lg-6 mb-2">
+                              <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                                <label className="form-label mb-0 fw-bold text-dark">PAN Card (Optional)</label>
+                                <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                                  <DoctorProfileUpload value={panCard} onChange={setPanCard} />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="col-lg-6 mb-2">
+                              <div className="d-flex align-items-center justify-content-between border rounded p-3 bg-white shadow-sm">
+                                <label className="form-label mb-0 fw-bold text-dark">Aadhaar Card Back (Optional)</label>
+                                <div style={{ transform: 'scale(0.8)', transformOrigin: 'right' }}>
+                                  <DoctorProfileUpload value={aadhaarCardBack} onChange={setAadhaarCardBack} />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer for Step 3 */}
+                    <div className="mt-4 pb-2 d-flex justify-content-end gap-3 border-top pt-3">
+                      <button
+                        type="button"
                         className="btn btn-outline-secondary btn-lg px-5 d-flex align-items-center gap-2"
                         style={{ borderRadius: "10px", fontWeight: "600" }}
+                        onClick={() => setCurrentStep(2)}
                       >
-                        <i className="ti ti-arrow-left fs-18" /> Cancel
-                      </Link>
+                        <i className="ti ti-arrow-left fs-18" /> Back
+                      </button>
                       <button
                         type="submit"
                         className="btn btn-primary btn-lg px-5 shadow-lg d-flex align-items-center gap-3 transition-all"
@@ -1876,7 +2216,9 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
                         )}
                       </button>
                     </div>
-                  </form>
+                  </>
+                )}
+              </form>
                 </div>
               </div>
             </div>

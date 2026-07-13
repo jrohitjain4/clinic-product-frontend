@@ -11,7 +11,7 @@ import { usePharmacyCategories } from "../../../../../core/hooks/usePharmacyCate
 import EmptyState from "../../../../../core/common/emptyState";
 
 const MedicineManagement = () => {
-  const { medicines, loading, createMedicine, updateMedicine, deleteMedicine, bulkDeleteMedicines } = useMedicines();
+  const { medicines, loading, createMedicine, updateMedicine, deleteMedicine, bulkDeleteMedicines, bulkCreateMedicines } = useMedicines();
   const { categories } = usePharmacyCategories();
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -28,6 +28,144 @@ const MedicineManagement = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Bulk Upload states
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [bulkFile, setBulkFile] = useState<File | null>(null);
+  const [bulkUploading, setBulkUploading] = useState(false);
+
+  const parseCSV = (text: string) => {
+    const lines = text.split(/\r?\n/);
+    if (lines.length === 0) return { items: [], skipped: [] };
+    
+    const parsedItems = [];
+    const skippedItems = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      const cells: string[] = [];
+      let currentCell = "";
+      let insideQuotes = false;
+      for (let j = 0; j < line.length; j++) {
+        const char = line[j];
+        if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (char === ',' && !insideQuotes) {
+          cells.push(currentCell.trim());
+          currentCell = "";
+        } else {
+          currentCell += char;
+        }
+      }
+      cells.push(currentCell.trim());
+      
+      if (cells.length === 0 || !cells[0]) continue;
+      
+      const medName = cells[0];
+      const csvCategoryName = cells[1] || "";
+      
+      const matchedCategory = categories.find(
+        (cat) => cat.name.toLowerCase() === csvCategoryName.toLowerCase()
+      );
+      
+      if (!matchedCategory) {
+        skippedItems.push(`"${medName}" (Category "${csvCategoryName}" not found in DB)`);
+        continue;
+      }
+      
+      if (!selectedCategories.includes(matchedCategory.id)) {
+        skippedItems.push(`"${medName}" (Category "${matchedCategory.name}" not selected for upload)`);
+        continue;
+      }
+      
+      const item: any = {
+        medicineName: medName,
+        categoryId: matchedCategory.id,
+        genericName: cells[2] || "",
+        brandName: cells[3] || "",
+        manufacturer: cells[4] || "",
+        medicineCode: cells[5] || "",
+        hsnCode: cells[6] || "",
+        description: cells[7] || "",
+        purchasePrice: parseFloat(cells[8]) || 0,
+        sellingPrice: parseFloat(cells[9]) || 0,
+        gst: parseFloat(cells[10]) || 0,
+        mrp: parseFloat(cells[11]) || 0,
+        openingStock: parseInt(cells[12]) || 0,
+        minimumStockAlert: parseInt(cells[13]) || 0,
+        unit: cells[14] || "Tablet",
+        batchNumber: cells[15] || "",
+        manufacturingDate: cells[16] ? new Date(cells[16]).toISOString() : undefined,
+        expiryDate: cells[17] ? new Date(cells[17]).toISOString() : undefined,
+        prescriptionRequired: (cells[18] || "").toLowerCase() === "true",
+        status: "Active",
+      };
+      
+      parsedItems.push(item);
+    }
+    return { items: parsedItems, skipped: skippedItems };
+  };
+
+  const handleBulkUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedCategories.length === 0) {
+      toast.error("Please select at least one Category");
+      return;
+    }
+    if (!bulkFile) {
+      toast.error("Please select a CSV file to upload");
+      return;
+    }
+    
+    setBulkUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const text = event.target?.result as string;
+        if (!text) {
+          toast.error("Empty CSV file");
+          setBulkUploading(false);
+          return;
+        }
+        
+        const { items, skipped } = parseCSV(text);
+        if (items.length === 0) {
+          let errorMsg = "No valid medicine rows found matching the selected categories.";
+          if (skipped.length > 0) {
+            errorMsg += " Skipped details: " + skipped.slice(0, 3).join(", ") + (skipped.length > 3 ? "..." : "");
+          }
+          toast.error(errorMsg, { autoClose: 6000 });
+          setBulkUploading(false);
+          return;
+        }
+        
+        try {
+          await bulkCreateMedicines("", items);
+          let successMsg = `Successfully uploaded ${items.length} medicines!`;
+          if (skipped.length > 0) {
+            successMsg += ` (${skipped.length} row(s) skipped)`;
+            toast.warning(`Skipped ${skipped.length} rows: ${skipped.join(" | ")}`, { autoClose: 8000 });
+          }
+          toast.success(successMsg);
+          
+          setShowBulkModal(false);
+          setBulkFile(null);
+          setSelectedCategories([]);
+        } catch (err: any) {
+          toast.error(err?.message || "Failed to upload medicines bulk list.");
+        } finally {
+          setBulkUploading(false);
+        }
+      };
+      reader.readAsText(bulkFile);
+    } catch (err: any) {
+      toast.error("Failed to read CSV file.");
+      setBulkUploading(false);
+    }
+  };
 
   // Form states
   const [formName, setFormName] = useState("");
@@ -455,16 +593,6 @@ const MedicineManagement = () => {
                 </ul>
               </div>
 
-              <div className="dropdown">
-                <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap fs-13" style={{ minWidth: "130px", minHeight: "38px" }} data-bs-toggle="dropdown">
-                  <span className="text-truncate"><span className="text-muted">Status:</span> {filterStatus}</span>
-                </Link>
-                <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item rounded-1 fs-13" onClick={(e) => { e.preventDefault(); setFilterStatus("All"); }}>All</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1 fs-13" onClick={(e) => { e.preventDefault(); setFilterStatus("Active"); }}>Active</Link></li>
-                  <li><Link to="#" className="dropdown-item rounded-1 fs-13" onClick={(e) => { e.preventDefault(); setFilterStatus("Inactive"); }}>Inactive</Link></li>
-                </ul>
-              </div>
 
               {/* Expiry Date Filter */}
               <div className="dropdown">
@@ -550,6 +678,9 @@ const MedicineManagement = () => {
                 </ul>
               </div>
 
+              <button className="btn btn-outline-primary d-flex align-items-center justify-content-center me-2" style={{ minHeight: "38px", whiteSpace: "nowrap" }} onClick={() => setShowBulkModal(true)}>
+                Bulk Upload <i className="ti ti-upload ms-2" />
+              </button>
               <button className="btn btn-primary d-flex align-items-center justify-content-center" style={{ minHeight: "38px", whiteSpace: "nowrap" }} onClick={handleOpenAdd}>
                 Add Medicine <i className="fa fa-plus ms-2" />
               </button>
@@ -850,6 +981,91 @@ const MedicineManagement = () => {
         ]}
         onEdit={() => { document.getElementById("btn-close-view-medicine")?.click(); handleOpenEdit(viewMedicine!); }} editLabel="Edit Medicine" editModalTarget=""
       />
+
+      {/* BULK UPLOAD MODAL */}
+      {showBulkModal && (
+        <div className="modal fade show d-block" style={{ zIndex: 1050 }}>
+          <div className="modal-backdrop fade show" style={{ zIndex: 1040 }} onClick={() => setShowBulkModal(false)} />
+          <div className="modal-dialog modal-dialog-centered" style={{ zIndex: 1050 }}>
+            <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title text-white d-flex align-items-center gap-2">
+                  <i className="ti ti-upload"></i> Bulk Upload Medicines
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowBulkModal(false)}></button>
+              </div>
+              <form onSubmit={handleBulkUploadSubmit}>
+                <div className="modal-body p-4">
+                  <div className="mb-3">
+                    <label className="form-label fw-bold text-dark mb-2">Select Categories for Bulk Upload <span className="text-danger">*</span></label>
+                    <div className="border rounded bg-light p-3" style={{ maxHeight: '180px', overflowY: 'auto' }}>
+                      <div className="row g-2">
+                        {categories.map((cat) => {
+                          const isChecked = selectedCategories.includes(cat.id);
+                          return (
+                            <div key={cat.id} className="col-md-6 col-12">
+                              <div className="form-check">
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  id={`cat-check-${cat.id}`}
+                                  checked={isChecked}
+                                  onChange={() => {
+                                    if (isChecked) {
+                                      setSelectedCategories(prev => prev.filter(id => id !== cat.id));
+                                    } else {
+                                      setSelectedCategories(prev => [...prev, cat.id]);
+                                    }
+                                  }}
+                                />
+                                <label className="form-check-label text-dark fw-medium fs-13 cursor-pointer" htmlFor={`cat-check-${cat.id}`}>
+                                  {cat.name}
+                                </label>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <small className="text-muted mt-1.5 d-block">Only medicines in the CSV matching these checked categories will be imported.</small>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="form-label fw-semibold">Select CSV File <span className="text-danger">*</span></label>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      className="form-control form-control-sm border-secondary-subtle"
+                      onChange={(e) => setBulkFile(e.target.files?.[0] || null)}
+                      required
+                    />
+                    <div className="mt-2.5 d-flex align-items-center justify-content-between">
+                      <span className="text-muted fs-11">Accepts only .csv format files.</span>
+                      <a
+                        href="/sample_medicines.csv"
+                        download="sample_medicines.csv"
+                        className="text-primary fw-semibold fs-11 text-decoration-none"
+                      >
+                        <i className="ti ti-download me-1"></i> Download Sample CSV Template
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer bg-light">
+                  <button type="button" className="btn btn-light" onClick={() => setShowBulkModal(false)}>Cancel</button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary px-4 fw-bold"
+                    disabled={bulkUploading}
+                  >
+                    {bulkUploading ? "Uploading..." : "Upload & Save"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

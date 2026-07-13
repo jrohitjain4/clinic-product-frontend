@@ -16,6 +16,7 @@ import CommonSelect from "../../../../../core/common/common-select/commonSelect"
 import { apiUrl } from "../../../../../core/config/api";
 import EmptyState from "../../../../../core/common/emptyState";
 import AddPatientModal from "../../clinic-modules/appointments/modals/addPatientModal";
+import { usePrescriptions } from "../../../../../core/hooks/usePrescriptions";
 
 interface BillingItem {
   medicineId: string;
@@ -31,6 +32,7 @@ const PharmacyBilling = () => {
   const { invoices, loading, refetch: refetchInvoices, createInvoice, deleteInvoice } = usePharmacyBilling();
   const { patients, refetch: refetchPatients } = useClinicPatients();
   const { medicines, refetch: refetchMedicines } = useMedicines();
+  const { prescriptions } = usePrescriptions();
 
   // Search and status filter for table
   const [searchText, setSearchText] = useState("");
@@ -54,6 +56,74 @@ const PharmacyBilling = () => {
 
   // Quick Add Patient modal within billing modal
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
+
+  const patientPrescriptions = useMemo(() => {
+    if (!selectedPatientId) return [];
+    return prescriptions.filter((p: any) => p.patientId === selectedPatientId);
+  }, [prescriptions, selectedPatientId]);
+
+  const handleApplyPrescription = (pres: any) => {
+    if (!pres.medicines || !Array.isArray(pres.medicines)) return;
+    
+    let addedItems: BillingItem[] = [];
+    let warnings: string[] = [];
+    
+    pres.medicines.forEach((m: any) => {
+      let searchName = m.medicineName;
+      const dashIndex = searchName.indexOf(" - ");
+      if (dashIndex !== -1) {
+        searchName = searchName.substring(0, dashIndex);
+      }
+
+      const matchedMed = medicines.find(item => item.medicineName.toLowerCase() === searchName.toLowerCase());
+      if (!matchedMed) {
+        warnings.push(`"${searchName}" not found in inventory.`);
+        return;
+      }
+      
+      const currentStock = (matchedMed.stockIn || 0) - (matchedMed.stockOut || 0);
+      if (currentStock <= 0) {
+        warnings.push(`"${matchedMed.medicineName}" is out of stock.`);
+        return;
+      }
+      
+      const isExpired = matchedMed.expiryDate && new Date(matchedMed.expiryDate) < new Date();
+      if (isExpired) {
+        warnings.push(`"${matchedMed.medicineName}" is expired.`);
+        return;
+      }
+      
+      const costBeforeGst = 1 * matchedMed.sellingPrice;
+      const gstAmount = costBeforeGst * (matchedMed.gst / 100);
+      addedItems.push({
+        medicineId: matchedMed.id,
+        medicineName: matchedMed.medicineName,
+        quantity: 1,
+        unitCost: matchedMed.sellingPrice,
+        gst: matchedMed.gst,
+        amount: costBeforeGst + gstAmount,
+        currentStock
+      });
+    });
+    
+    if (addedItems.length > 0) {
+      setBillingItems(prev => {
+        const updated = [...prev];
+        addedItems.forEach(newItem => {
+          const exists = updated.find(item => item.medicineId === newItem.medicineId);
+          if (!exists) {
+            updated.push(newItem);
+          }
+        });
+        return updated;
+      });
+      toast.success(`Added ${addedItems.length} medicine(s) from prescription!`);
+    }
+    
+    if (warnings.length > 0) {
+      toast.warning(`Some medicines could not be loaded: ${warnings.join(", ")}`, { autoClose: 5000 });
+    }
+  };
 
   const patientOptions = useMemo(() => {
     return patients.map(p => ({
@@ -620,6 +690,34 @@ const PharmacyBilling = () => {
                       onChange={(opt) => handleSelectMedicine(opt?.value || "")}
                     />
                   </div>
+
+                  {selectedPatientId && patientPrescriptions.length > 0 && (
+                    <div className="col-12 mt-2 border-top pt-2">
+                      <label className="form-label fw-bold text-primary mb-1.5 fs-12"><i className="ti ti-clipboard-list me-1"></i>Select from Patient's Previous Prescriptions</label>
+                      <div className="d-flex flex-wrap gap-2">
+                        {patientPrescriptions.map((pres: any) => {
+                          const dateStr = dayjs(pres.appointment?.scheduledAt || pres.createdAt).format("DD MMM YYYY, hh:mm A");
+                          const apptCode = pres.appointment?.appointmentCode || pres.prescriptionCode || "Direct Visit";
+                          const medicineCount = pres.medicines?.length || 0;
+                          return (
+                            <button
+                              key={pres.id}
+                              type="button"
+                              className="btn btn-sm btn-outline-info text-start d-flex flex-column p-2 rounded-3 border-secondary-subtle"
+                              style={{ minWidth: '180px', flex: '1 1 180px', background: '#fafcff' }}
+                              onClick={() => handleApplyPrescription(pres)}
+                            >
+                              <div className="d-flex align-items-center justify-content-between w-100 mb-1">
+                                <span className="fw-bold text-dark fs-12">{apptCode}</span>
+                                <span className="badge bg-soft-info text-info border border-info-subtle fs-10">{medicineCount} meds</span>
+                              </div>
+                              <span className="text-muted fs-11" style={{ fontSize: '10.5px' }}><i className="ti ti-calendar me-1"></i>{dateStr}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Items Table */}
                   <div className="col-12 mt-4">

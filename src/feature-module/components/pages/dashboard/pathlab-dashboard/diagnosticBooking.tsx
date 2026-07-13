@@ -145,6 +145,7 @@ const DiagnosticBooking = () => {
   const [formAssignedUserId, setFormAssignedUserId] = useState("");
   const [formRemarks, setFormRemarks] = useState("");
   const [formReferredBy, setFormReferredBy] = useState("");
+  const [formDiscountPercent, setFormDiscountPercent] = useState<number>(0);
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
   const [showDiagSlotsDropdown, setShowDiagSlotsDropdown] = useState(false);
   const [isDiagSlotsDropdownFocused, setIsDiagSlotsDropdownFocused] = useState(false);
@@ -226,6 +227,10 @@ const DiagnosticBooking = () => {
 
   const selectedTestObj = activeSchedulingTest;
   const mappedPrice = totalAmount;
+  const finalAmount = useMemo(() => {
+    const discAmount = totalAmount * (formDiscountPercent / 100);
+    return Math.max(0, totalAmount - discAmount);
+  }, [totalAmount, formDiscountPercent]);
 
   const handleAddTest = (testId: string) => {
     if (!testId) return;
@@ -262,6 +267,7 @@ const DiagnosticBooking = () => {
     setFormRemarks("");
     setFormReferredBy("");
     setFormStatus("Schedule");
+    setFormDiscountPercent(0);
     setShowFormModal(true);
   };
 
@@ -290,6 +296,11 @@ const DiagnosticBooking = () => {
     setFormRemarks(bk.remarks || "");
     setFormReferredBy(bk.referredBy || "");
     setFormStatus(bk.status || "Schedule");
+    const subTotal = bk.testsList && Array.isArray(bk.testsList)
+      ? bk.testsList.reduce((acc: number, t: any) => acc + (t.price || 0), 0)
+      : (bk.test?.price || 0);
+    const discPercent = subTotal > 0 ? Math.round((bk.discount / subTotal) * 100) : 0;
+    setFormDiscountPercent(discPercent);
     setShowFormModal(true);
   };
 
@@ -406,7 +417,8 @@ const DiagnosticBooking = () => {
       }
       const scheduledAt = formDate.format("YYYY-MM-DD") + "T" + startTime + ":00";
       const tax = 0;
-      const totalAmount = mappedPrice;
+      const discountAmount = totalAmount * (formDiscountPercent / 100);
+      const finalTotalAmount = Math.max(0, totalAmount - discountAmount);
 
       if (formMode === "add") {
         await createBooking({
@@ -416,9 +428,9 @@ const DiagnosticBooking = () => {
           scheduledAt,
           status: user?.role === "PATIENT" ? "Schedule" : formStatus,
           paymentStatus: "Unpaid",
-          discount: 0,
+          discount: discountAmount,
           tax,
-          totalAmount,
+          totalAmount: finalTotalAmount,
           sessionSlot: formSessionSlot,
           assignedUserId: formAssignedUserId,
           remarks: formRemarks,
@@ -432,8 +444,9 @@ const DiagnosticBooking = () => {
           testsList: formTestsList,
           scheduledAt,
           status: formStatus,
+          discount: discountAmount,
           tax,
-          totalAmount,
+          totalAmount: finalTotalAmount,
           sessionSlot: formSessionSlot,
           assignedUserId: formAssignedUserId,
           remarks: formRemarks,
@@ -1221,9 +1234,41 @@ const DiagnosticBooking = () => {
                     </div>
                   )}
                 </div>
-                <div className="modal-footer bg-light" style={{ borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
-                  <button type="button" className="btn btn-light" onClick={() => setShowFormModal(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary px-4" disabled={submitting}>{submitting ? (formMode === "add" ? "Creating..." : "Updating...") : (formMode === "add" ? "Create Booking" : "Update Booking")}</button>
+                <div className="modal-footer bg-light d-flex align-items-center justify-content-between" style={{ borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px', padding: '15px 24px' }}>
+                  <div className="d-flex align-items-center gap-3 flex-wrap">
+                    <div className="d-flex flex-column text-start">
+                      <span className="text-muted small fw-bold">TEST AMOUNT</span>
+                      <span className="text-dark fw-bold" style={{ fontSize: '15px' }}>₹{totalAmount.toLocaleString("en-IN")}</span>
+                    </div>
+                    
+                    <div className="d-flex align-items-center gap-1" style={{ maxWidth: '140px' }}>
+                      <div className="d-flex flex-column text-start">
+                        <span className="text-muted small fw-bold">DISCOUNT (%)</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          className="form-control form-control-sm text-center fw-bold border-secondary"
+                          style={{ width: '70px', height: '30px', padding: '2px 5px' }}
+                          value={formDiscountPercent}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            setFormDiscountPercent(isNaN(val) ? 0 : Math.min(100, Math.max(0, val)));
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="d-flex flex-column text-start">
+                      <span className="text-muted small fw-bold">FINAL AMOUNT</span>
+                      <span className="text-success fw-bold" style={{ fontSize: '15px' }}>₹{finalAmount.toLocaleString("en-IN")}</span>
+                    </div>
+                  </div>
+
+                  <div className="d-flex gap-2">
+                    <button type="button" className="btn btn-light" onClick={() => setShowFormModal(false)}>Cancel</button>
+                    <button type="submit" className="btn btn-primary px-4" disabled={submitting}>{submitting ? (formMode === "add" ? "Creating..." : "Updating...") : (formMode === "add" ? "Create Booking" : "Update Booking")}</button>
+                  </div>
                 </div>
               </form>
             </div>
@@ -1280,6 +1325,7 @@ const DiagnosticBooking = () => {
                 : (viewBooking?.test?.price || 0)
             ).toLocaleString("en-IN")}`
           },
+          { icon: <i className="ti ti-tag" />, label: "Discount", value: `₹${(viewBooking?.discount || 0).toLocaleString("en-IN")}` },
           { icon: <i className="ti ti-cash" />, label: "Total Amount", value: `₹${(viewBooking?.totalAmount || 0).toLocaleString("en-IN")}` },
           { icon: <i className="ti ti-user-check" />, label: "Referred By", value: viewBooking?.referredBy || "--" },
           { icon: <i className="ti ti-file-description" />, label: "Remarks", value: viewBooking?.remarks || "--", fullWidth: true },

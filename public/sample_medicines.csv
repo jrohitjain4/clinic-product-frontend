@@ -1,0 +1,8 @@
+Medicine Name,Category,Generic Name,Brand Name,Manufacturer,Medicine Code,HSN Code,Description,Purchase Price,Selling Price,GST (%),MRP,Opening Stock,Minimum Stock Alert,Unit,Batch Number,Manufacturing Date (YYYY-MM-DD),Expiry Date (YYYY-MM-DD),Prescription Required (True/False)
+Paracetamol 650mg,Tablet,Paracetamol,Crocin,GlaxoSmithKline,GSK-PC-650,3004,For pain relief and fever,1.20,2.50,12,3.00,1000,100,Tablet,BATCH001,2026-01-01,2029-01-01,False
+Amoxicillin 500mg,Capsule,Amoxicillin,Mox,Sun Pharma,SUN-AM-500,3004,Antibiotic medicine,4.50,8.00,12,10.00,500,50,Capsule,BATCH002,2026-02-15,2028-02-15,True
+Cough Syrup 100ml,Syrup,Guaifenesin,Benadryl,Kenvue,BEN-CS-100,3004,Cough expectorant,25.00,45.00,18,50.00,200,20,Bottle,BATCH003,2026-03-01,2027-09-01,False
+Insulin Glargine,Injection,Insulin,Lantus,Sanofi,SAN-INS-100,3004,Insulin injection,150.00,280.00,5,300.00,50,5,Vial,BATCH004,2026-04-01,2027-04-01,True
+Ointment Tube 15g,Ointment,Mupirocin,T-Bact,GSK,GSK-TB-15,3004,Antibacterial ointment,65.00,98.00,12,110.00,300,30,Tube,BATCH005,2026-05-01,2028-05-01,False
+Eye Drops 10ml,Drops,Carboxymethylcellulose,Refresh Tears,Allergan,ALL-RT-10,3004,Lubricant eye drops,80.00,125.00,18,140.00,150,15,Bottle,BATCH006,2026-06-01,2028-06-01,False
+Beta Cream 20g,Cream,Betamethasone,Betnovate-C,GSK,GSK-BC-20,3004,Skin cream,22.00,38.00,12,42.00,400,40,Tube,BATCH007,2026-07-01,2027-07-01,False

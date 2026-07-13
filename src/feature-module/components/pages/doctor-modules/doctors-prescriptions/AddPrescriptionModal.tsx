@@ -327,7 +327,7 @@ const AddPrescriptionModal = ({
                 i === index
                     ? {
                         ...m,
-                        medicineName: opt.name,
+                        medicineName: `${opt.name} - ${opt.category}`,
                         category: opt.category,
                         strength: opt.strength || m.strength || "",
                     }
@@ -370,6 +370,17 @@ const AddPrescriptionModal = ({
         if (!patientId || !doctorId) return alert("Please select a patient and doctor.");
         if (currentDraft.medicines.some((m) => !m.medicineName)) return alert("Please fill in all medicine names.");
 
+        const invalidMed = currentDraft.medicines.find(m => {
+            const enteredText = m.medicineName.trim().toLowerCase();
+            return !medicineOptions.some(opt =>
+                opt.name.toLowerCase() === enteredText ||
+                `${opt.name} - ${opt.category}`.toLowerCase() === enteredText
+            );
+        });
+        if (invalidMed) {
+            return alert(`"${invalidMed.medicineName}" is not a valid medicine. Please select a medicine from the dropdown list.`);
+        }
+
         setSubmitting(true);
         try {
             await onSubmit({
@@ -380,14 +391,21 @@ const AddPrescriptionModal = ({
                 followUpDate: currentDraft.followUpDate ? currentDraft.followUpDate.toISOString() : null,
                 followUpNotes: currentDraft.followUpNotes,
                 diagnosticTests: currentDraft.diagnosticTests || [],
-                medicines: currentDraft.medicines.map((m) => ({
-                    medicineName: m.medicineName,
-                    strength: m.strength || null,
-                    dosage: m.dosage,
-                    frequency: m.frequency,
-                    duration: m.duration,
-                    timings: m.timings,
-                })),
+                medicines: currentDraft.medicines.map((m) => {
+                    let name = m.medicineName;
+                    const dashIndex = name.indexOf(" - ");
+                    if (dashIndex !== -1) {
+                        name = name.substring(0, dashIndex);
+                    }
+                    return {
+                        medicineName: name,
+                        strength: m.strength || null,
+                        dosage: m.dosage,
+                        frequency: m.frequency,
+                        duration: m.duration,
+                        timings: m.timings,
+                    };
+                }),
             });
         } finally {
             setSubmitting(false);
@@ -673,8 +691,6 @@ const AddPrescriptionModal = ({
                                                 <thead className="table-light border-bottom">
                                                     <tr className="text-dark fw-bold text-nowrap" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                                         <th style={{ padding: '12px 10px', color: '#475569', whiteSpace: 'nowrap' }}>Medicine</th>
-                                                        <th style={{ padding: '12px 10px', color: '#475569', whiteSpace: 'nowrap' }}>Category</th>
-                                                        <th style={{ padding: '12px 10px', color: '#475569', width: '110px', whiteSpace: 'nowrap' }}>Strength</th>
                                                         <th style={{ padding: '12px 10px', color: '#475569', width: '130px', whiteSpace: 'nowrap' }}>Dose</th>
                                                         <th style={{ padding: '12px 10px', color: '#475569', width: '110px', whiteSpace: 'nowrap' }}>Frequency</th>
                                                         <th style={{ padding: '12px 10px', color: '#475569', width: '120px', whiteSpace: 'nowrap' }}>Duration</th>
@@ -700,7 +716,23 @@ const AddPrescriptionModal = ({
                                                                         }}
                                                                         onFocus={() => isCurrentVisit && setActiveSearchIndex(index)}
                                                                         onBlur={() => {
-                                                                            setTimeout(() => setActiveSearchIndex(null), 250);
+                                                                            setTimeout(() => {
+                                                                                const enteredText = med.medicineName.trim().toLowerCase();
+                                                                                const exactMatch = medicineOptions.find((opt: any) => 
+                                                                                    opt.name.toLowerCase() === enteredText ||
+                                                                                    `${opt.name} - ${opt.category}`.toLowerCase() === enteredText
+                                                                                );
+                                                                                if (exactMatch) {
+                                                                                    updateMedicine(index, "medicineName", `${exactMatch.name} - ${exactMatch.category}`);
+                                                                                    updateMedicine(index, "category", exactMatch.category);
+                                                                                    updateMedicine(index, "strength", exactMatch.strength || "");
+                                                                                } else {
+                                                                                    updateMedicine(index, "medicineName", "");
+                                                                                    updateMedicine(index, "category", "");
+                                                                                    updateMedicine(index, "strength", "");
+                                                                                }
+                                                                                setActiveSearchIndex(null);
+                                                                            }, 250);
                                                                         }}
                                                                         required
                                                                         autoComplete="off"
@@ -729,24 +761,25 @@ const AddPrescriptionModal = ({
                                                                         }}
                                                                     >
                                                                         {medicineOptions
-                                                                            .filter((opt: any) =>
-                                                                                opt.name.toLowerCase().includes((med.medicineName || "").toLowerCase())
-                                                                            )
+                                                                            .filter((opt: any) => {
+                                                                                const search = (med.medicineName || "").toLowerCase();
+                                                                                return opt.name.toLowerCase().includes(search) ||
+                                                                                       `${opt.name} - ${opt.category}`.toLowerCase().includes(search);
+                                                                            })
                                                                             .map((opt: any) => (
                                                                                 <div
                                                                                     key={opt.name}
                                                                                     className="medicine-dropdown-item d-flex flex-column align-items-start text-dark"
                                                                                     onMouseDown={() => handleSelectMedicine(index, opt)}
                                                                                 >
-                                                                                    <span className="fw-bold text-dark">{opt.name}</span>
-                                                                                    <span className="text-muted fs-11" style={{ marginTop: '1px' }}>
-                                                                                        {opt.category} {opt.strength ? `· ${opt.strength}` : ''}
-                                                                                    </span>
+                                                                                    <span className="fw-bold text-dark">{opt.name} - {opt.category}</span>
                                                                                 </div>
                                                                             ))}
-                                                                        {medicineOptions.filter((opt: any) =>
-                                                                            opt.name.toLowerCase().includes((med.medicineName || "").toLowerCase())
-                                                                        ).length === 0 && (
+                                                                        {medicineOptions.filter((opt: any) => {
+                                                                            const search = (med.medicineName || "").toLowerCase();
+                                                                            return opt.name.toLowerCase().includes(search) ||
+                                                                                   `${opt.name} - ${opt.category}`.toLowerCase().includes(search);
+                                                                        }).length === 0 && (
                                                                                 <div className="px-3 py-2 text-muted fs-12">
                                                                                     No matching medicines found
                                                                                 </div>
@@ -755,24 +788,6 @@ const AddPrescriptionModal = ({
                                                                 )}
                                                             </td>
 
-                                                            {/* Category */}
-                                                            <td style={{ padding: '8px 10px' }}>
-                                                                <span className="text-secondary fs-13 fw-semibold">
-                                                                    {med.category || "General Medicine"}
-                                                                </span>
-                                                            </td>
-
-                                                            {/* Strength */}
-                                                            <td style={{ padding: '8px 10px' }}>
-                                                                <input
-                                                                    type="text"
-                                                                    className="form-control form-control-sm text-dark fw-semibold border-secondary-subtle"
-                                                                    placeholder="e.g. 500 mg"
-                                                                    value={med.strength || ""}
-                                                                    onChange={(e) => updateMedicine(index, "strength", e.target.value)}
-                                                                    disabled={!isCurrentVisit}
-                                                                />
-                                                            </td>
 
                                                             {/* Dose */}
                                                             <td style={{ padding: '8px 10px' }}>

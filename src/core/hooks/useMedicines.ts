@@ -83,5 +83,11 @@ export const useMedicines = () => {
         return updated;
     };
 
-    return { medicines, loading, error, refetch: fetchMedicines, createMedicine, updateMedicine, deleteMedicine, bulkDeleteMedicines, addStock };
+    const bulkCreateMedicines = async (categoryId: string, items: MedicineInput[]) => {
+        const createdList = await apiPost<Medicine[]>("/api/medicines/bulk-create", { categoryId, items });
+        setMedicines((prev) => [...createdList, ...prev]);
+        return createdList;
+    };
+
+    return { medicines, loading, error, refetch: fetchMedicines, createMedicine, updateMedicine, deleteMedicine, bulkDeleteMedicines, addStock, bulkCreateMedicines };
 };

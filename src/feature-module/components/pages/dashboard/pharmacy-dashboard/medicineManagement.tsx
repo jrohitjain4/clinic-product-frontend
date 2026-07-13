@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import Datatable from "../../../../../core/common/dataTable";
 import { Link } from "react-router";
 import { DatePicker } from "antd";
@@ -34,6 +34,20 @@ const MedicineManagement = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [bulkFile, setBulkFile] = useState<File | null>(null);
   const [bulkUploading, setBulkUploading] = useState(false);
+  const [bulkErrors, setBulkErrors] = useState<string[]>([]);
+  const [bulkSuccess, setBulkSuccess] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleOpenBulkModal = () => {
+    setBulkErrors([]);
+    setBulkSuccess(null);
+    setBulkFile(null);
+    setSelectedCategories([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    setShowBulkModal(true);
+  };
 
   const parseCSV = (text: string) => {
     const lines = text.split(/\r?\n/);
@@ -111,6 +125,9 @@ const MedicineManagement = () => {
 
   const handleBulkUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setBulkErrors([]);
+    setBulkSuccess(null);
+
     if (selectedCategories.length === 0) {
       toast.error("Please select at least one Category");
       return;
@@ -132,37 +149,50 @@ const MedicineManagement = () => {
         }
         
         const { items, skipped } = parseCSV(text);
+        
+        if (skipped.length > 0) {
+          setBulkErrors(skipped);
+        }
+
         if (items.length === 0) {
-          let errorMsg = "No valid medicine rows found matching the selected categories.";
-          if (skipped.length > 0) {
-            errorMsg += " Skipped details: " + skipped.slice(0, 3).join(", ") + (skipped.length > 3 ? "..." : "");
-          }
-          toast.error(errorMsg, { autoClose: 6000 });
+          const errorMsg = "No valid medicine rows found matching the selected categories.";
+          setBulkErrors(prev => [errorMsg, ...prev]);
           setBulkUploading(false);
           return;
         }
         
         try {
           await bulkCreateMedicines("", items);
-          let successMsg = `Successfully uploaded ${items.length} medicines!`;
-          if (skipped.length > 0) {
-            successMsg += ` (${skipped.length} row(s) skipped)`;
-            toast.warning(`Skipped ${skipped.length} rows: ${skipped.join(" | ")}`, { autoClose: 8000 });
-          }
-          toast.success(successMsg);
+          const successMsg = `Successfully uploaded ${items.length} medicines!`;
+          setBulkSuccess(successMsg);
           
-          setShowBulkModal(false);
-          setBulkFile(null);
-          setSelectedCategories([]);
+          if (skipped.length > 0) {
+            setBulkFile(null);
+            if (fileInputRef.current) {
+              fileInputRef.current.value = "";
+            }
+            toast.warning(`Uploaded ${items.length} medicines, but some rows were skipped. See details below.`, { autoClose: 10000 });
+          } else {
+            toast.success(successMsg);
+            setShowBulkModal(false);
+            setBulkFile(null);
+            setSelectedCategories([]);
+            if (fileInputRef.current) {
+              fileInputRef.current.value = "";
+            }
+          }
         } catch (err: any) {
-          toast.error(err?.message || "Failed to upload medicines bulk list.");
+          const errMsg = err?.message || "Failed to upload medicines bulk list.";
+          setBulkErrors(prev => [errMsg, ...prev]);
+          toast.error(errMsg, { autoClose: 10000 });
         } finally {
           setBulkUploading(false);
         }
       };
       reader.readAsText(bulkFile);
     } catch (err: any) {
-      toast.error("Failed to read CSV file.");
+      setBulkErrors(["Failed to read CSV file."]);
+      toast.error("Failed to read CSV file.", { autoClose: 10000 });
       setBulkUploading(false);
     }
   };
@@ -678,7 +708,7 @@ const MedicineManagement = () => {
                 </ul>
               </div>
 
-              <button className="btn btn-outline-primary d-flex align-items-center justify-content-center me-2" style={{ minHeight: "38px", whiteSpace: "nowrap" }} onClick={() => setShowBulkModal(true)}>
+              <button className="btn btn-outline-primary d-flex align-items-center justify-content-center me-2" style={{ minHeight: "38px", whiteSpace: "nowrap" }} onClick={handleOpenBulkModal}>
                 Bulk Upload <i className="ti ti-upload ms-2" />
               </button>
               <button className="btn btn-primary d-flex align-items-center justify-content-center" style={{ minHeight: "38px", whiteSpace: "nowrap" }} onClick={handleOpenAdd}>
@@ -996,6 +1026,35 @@ const MedicineManagement = () => {
               </div>
               <form onSubmit={handleBulkUploadSubmit}>
                 <div className="modal-body p-4">
+                  {bulkSuccess && (
+                    <div className="alert alert-success border-0 d-flex align-items-center justify-content-between mb-4 shadow-sm" style={{ borderRadius: '8px', backgroundColor: '#f0fdf4', color: '#15803d' }}>
+                      <div className="d-flex align-items-center gap-2 fw-semibold fs-13">
+                        <i className="ti ti-circle-check fs-18"></i>
+                        <span>{bulkSuccess}</span>
+                      </div>
+                      <button type="button" className="btn-close" style={{ fontSize: '10px' }} onClick={() => setBulkSuccess(null)}></button>
+                    </div>
+                  )}
+
+                  {bulkErrors.length > 0 && (
+                    <div className="alert alert-danger border-0 d-flex flex-column gap-2 mb-4 shadow-sm animate__animated animate__fadeIn" style={{ borderRadius: '8px', borderLeft: '4px solid #dc3545', backgroundColor: '#fdf2f2' }}>
+                      <div className="d-flex align-items-center justify-content-between text-danger">
+                        <div className="d-flex align-items-center gap-2 fw-bold fs-14">
+                          <i className="ti ti-alert-triangle fs-18"></i>
+                          <span>Validation Errors / Skipped Rows ({bulkErrors.length})</span>
+                        </div>
+                        <button type="button" className="btn-close" style={{ fontSize: '10px' }} onClick={() => setBulkErrors([])}></button>
+                      </div>
+                      <div style={{ maxHeight: '160px', overflowY: 'auto' }} className="pe-2">
+                        <ul className="mb-0 ps-3 fs-12 text-danger fw-semibold">
+                          {bulkErrors.map((err, idx) => (
+                            <li key={idx} className="mb-1">{err}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mb-3">
                     <label className="form-label fw-bold text-dark mb-2">Select Categories for Bulk Upload <span className="text-danger">*</span></label>
                     <div className="border rounded bg-light p-3" style={{ maxHeight: '180px', overflowY: 'auto' }}>
@@ -1037,7 +1096,8 @@ const MedicineManagement = () => {
                       accept=".csv"
                       className="form-control form-control-sm border-secondary-subtle"
                       onChange={(e) => setBulkFile(e.target.files?.[0] || null)}
-                      required
+                      ref={fileInputRef}
+                      required={!bulkSuccess}
                     />
                     <div className="mt-2.5 d-flex align-items-center justify-content-between">
                       <span className="text-muted fs-11">Accepts only .csv format files.</span>

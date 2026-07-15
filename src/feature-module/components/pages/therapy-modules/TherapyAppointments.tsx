@@ -13,6 +13,7 @@ const TherapyAppointments = () => {
   const [activeSearchIndex, setActiveSearchIndex] = useState<number | null>(null);
 
   const medicineOptions = useMemo(() => {
+    console.log("THERAPY MEDICINES DEBUG:", pharmacyMedicines);
     return (pharmacyMedicines || []).map((m: any) => ({
       name: m.medicineName,
       category: m.category?.name || "General Medicine",
@@ -1039,7 +1040,7 @@ const TherapyAppointments = () => {
                   <span className="fw-bold" style={{ fontSize: 14 }}>Rx</span>
                 </div>
                 <div>
-                  <h5 className="modal-title fw-bold mb-0">Generate Prescription</h5>
+                  <h5 className="modal-title fw-bold mb-0">Generate Prescription (Meds: {medicineOptions.length})</h5>
                   <span className="text-muted fs-12">Create prescription for this visit</span>
                 </div>
               </div>

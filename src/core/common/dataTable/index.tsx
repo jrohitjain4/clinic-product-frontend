@@ -6,7 +6,7 @@ import EmptyState from "../emptyState";
 
 const { Option } = Select;
 
-const Datatable: React.FC<DatatableProps> = ({
+const Datatable: React.FC<DatatableProps & { expandable?: any }> = ({
   columns,
   dataSource,
   Selection,
@@ -15,6 +15,7 @@ const Datatable: React.FC<DatatableProps> = ({
   onSelectionChange,
   emptyTitle,
   emptyMessage,
+  expandable,
 }) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
   const [Selections, setSelections] = useState<any>(true);
@@ -57,6 +58,7 @@ const Datatable: React.FC<DatatableProps> = ({
         rowHoverable={false}
         dataSource={filteredDataSource}
         loading={loading}
+        expandable={expandable}
         locale={{
           emptyText: (
             <EmptyState

@@ -40,6 +40,13 @@ const TherapyAppointments = () => {
   const [viewAppt, setViewAppt] = useState<any>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+  const handleToggleExpand = (id: string) => {
+    setExpandedRowKeys((prev) =>
+      prev.includes(id) ? prev.filter((k) => k !== id) : [...prev, id]
+    );
+  };
+
   const [selectedConsultation, setSelectedConsultation] = useState<any>(null);
   const [viewConsultation, setViewConsultation] = useState<any>(null);
   const [previousConsultations, setPreviousConsultations] = useState<any[]>([]);
@@ -335,8 +342,164 @@ const TherapyAppointments = () => {
     return "badge-soft-secondary text-secondary border-secondary";
   };
 
+  // Auto-expand parents if they have a child appointment scheduled for today
+  useEffect(() => {
+    if (appointments.length > 0) {
+      const todayStr = new Date().toDateString();
+      const todayParentIds = appointments
+        .filter((a: any) => {
+          if (!a.parentAppointmentId || !a.scheduledAt) return false;
+          return new Date(a.scheduledAt).toDateString() === todayStr;
+        })
+        .map((a: any) => a.parentAppointmentId);
+      
+      if (todayParentIds.length > 0) {
+        setExpandedRowKeys((prev) => {
+          const merged = [...prev, ...todayParentIds];
+          return Array.from(new Set(merged)) as string[];
+        });
+      }
+    }
+  }, [appointments]);
+
+  const expandedRowRender = (record: any) => {
+    const children = appointments.filter((a: any) => a.parentAppointmentId === record.id);
+    const sortedChildren = [...children].sort((a: any, b: any) => {
+      if (a.sessionNumber && b.sessionNumber) return a.sessionNumber - b.sessionNumber;
+      return new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime();
+    });
+
+    if (sortedChildren.length === 0) {
+      return <div className="p-3 text-muted text-center fs-12">No connected sessions found.</div>;
+    }
+
+    return (
+      <div className="p-3 bg-light rounded-3" style={{ border: "1px solid #e2e8f0" }}>
+        <h6 className="fw-bold mb-2 text-dark fs-13 d-flex align-items-center gap-1">
+          <i className="ti ti-link text-primary"></i> Connected Sessions / Slots
+        </h6>
+        <div className="table-responsive bg-white rounded-2 border">
+          <table className="table table-sm table-hover align-middle mb-0" style={{ fontSize: "11px" }}>
+            <thead className="bg-light text-muted">
+              <tr>
+                <th className="py-2 px-3 border-0" style={{ width: 80 }}>Session No</th>
+                <th className="py-2 px-3 border-0">Appointment ID</th>
+                <th className="py-2 px-3 border-0">Date & Time</th>
+                <th className="py-2 px-3 border-0">Therapist</th>
+                <th className="py-2 px-3 border-0">Mode</th>
+                <th className="py-2 px-3 border-0">Fee</th>
+                <th className="py-2 px-3 border-0">Status</th>
+                <th className="py-2 px-3 border-0 text-end" style={{ width: 120 }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedChildren.map((child: any) => {
+                const isPaid = child.paymentStatus === "Paid";
+                const isPartial = child.paymentStatus === "Partial Paid";
+                return (
+                  <tr key={child.id}>
+                    <td className="py-2 px-3 border-0 fw-semibold text-dark">
+                      Session {child.sessionNumber || "—"}
+                    </td>
+                    <td className="py-2 px-3 border-0 fw-semibold text-primary">
+                      {child.appointmentCode}
+                    </td>
+                    <td className="py-2 px-3 border-0 text-dark">
+                      {child.dateTimeLabel || new Date(child.scheduledAt).toLocaleString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      })}
+                    </td>
+                    <td className="py-2 px-3 border-0 text-secondary">
+                      {child.doctorName || child.doctor?.fullName || "—"}
+                    </td>
+                    <td className="py-2 px-3 border-0">
+                      <span className="badge bg-light text-dark border px-2 py-0.5">
+                        {child.mode}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 border-0">
+                      <span className="text-dark fw-semibold">₹{child.finalFee || child.consultationFee || 0}</span>
+                      <span className={`badge border ms-2 ${
+                        isPaid 
+                          ? "badge-soft-success border-success text-success" 
+                          : isPartial 
+                          ? "badge-soft-warning border-warning text-warning" 
+                          : "badge-soft-danger border-danger text-danger"
+                      } px-1 py-0.2 fs-10`}>
+                        {child.paymentStatus || "Unpaid"}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 border-0">
+                      <div className="d-flex align-items-center gap-1">
+                        <span className={`badge border ${statusBadgeClass(child.status)} px-2 py-0.5 fs-11`}>
+                          {child.status}
+                        </span>
+                        {["Schedule", "Confirmed", "Checked In"].includes(child.status) && (
+                          <div className="form-check form-switch p-0 ms-2" style={{ minHeight: 'auto', display: 'inline-block' }}>
+                            <input
+                              className="form-check-input ms-0"
+                              type="checkbox"
+                              role="switch"
+                              checked={togglingId === child.id}
+                              onChange={() => handleStatusToggle(child.id, child.status)}
+                              style={{ cursor: 'pointer', width: '25px', height: '14px' }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-2 px-3 border-0 text-end">
+                      <div className="d-flex align-items-center justify-content-end gap-1">
+                        <button
+                          className="bg-transparent border-0 text-info p-1"
+                          title="View Details"
+                          data-bs-toggle="modal"
+                          data-bs-target="#view_therapy_appt"
+                          onClick={async () => {
+                            setViewAppt(child);
+                            setViewConsultation(null);
+                            if (child.consultation) {
+                              try {
+                                const consult = await apiGet<any>(`/api/consultations/${child.consultation.id}`);
+                                setViewConsultation(consult);
+                              } catch (err) {
+                                console.error("Failed to load consultation details for view:", err);
+                              }
+                            }
+                          }}
+                        >
+                          <i className="ti ti-eye fs-14"></i>
+                        </button>
+                        <button
+                          className="bg-transparent border-0 text-danger p-1"
+                          data-bs-toggle="modal"
+                          data-bs-target="#delete_therapy_appt"
+                          onClick={() => setSelectedAppt(child)}
+                          title="Cancel Appointment"
+                        >
+                          <i className="ti ti-trash fs-14"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
   const data = useMemo(() => {
-    return appointments.map((a, index) => ({
+    // Only show top-level (parent) appointments in the main list
+    const parents = appointments.filter((a: any) => !a.parentAppointmentId);
+    return parents.map((a, index) => ({
       key: a.id,
       id: a.id,
       sr_no: index + 1,
@@ -468,10 +631,25 @@ const TherapyAppointments = () => {
       align: "center" as const,
       render: (_text: string, record: any) => {
         const raw = record.raw;
-        const isChildAppt = !!raw.therapyPlanId;
+        const isChildAppt = !!raw.parentAppointmentId;
         const hasConsult = !!raw.consultation;
+        const children = appointments.filter((a: any) => a.parentAppointmentId === raw.id);
+        const hasChildren = children.length > 0;
+        const isExpanded = expandedRowKeys.includes(raw.id);
+
         return (
           <div className="d-flex align-items-center justify-content-center gap-2">
+            {hasChildren && (
+              <button
+                type="button"
+                className={`bg-transparent border-0 p-1 ${isExpanded ? "text-primary" : "text-muted"}`}
+                title={isExpanded ? "Hide Connected Sessions" : "Show Connected Sessions"}
+                onClick={() => handleToggleExpand(raw.id)}
+              >
+                <i className={`ti ${isExpanded ? "ti-chevron-up" : "ti-chevron-down"} fs-18`}></i>
+              </button>
+            )}
+
             {!isChildAppt && (
               <button
                 type="button"
@@ -517,7 +695,7 @@ const TherapyAppointments = () => {
           </div>
         );
       },
-      width: 100,
+      width: 120,
     },
   ];
 
@@ -584,6 +762,18 @@ const TherapyAppointments = () => {
                 columns={columns}
                 dataSource={data}
                 Selection={false}
+                expandable={{
+                  expandedRowRender,
+                  rowExpandable: (record: any) => {
+                    const children = appointments.filter((a: any) => a.parentAppointmentId === record.id);
+                    return children.length > 0;
+                  },
+                  expandedRowKeys,
+                  onExpandedRowsChange: (keys: any[]) => {
+                    setExpandedRowKeys(keys as string[]);
+                  },
+                  showExpandColumn: false,
+                }}
               />
             </div>
           )}

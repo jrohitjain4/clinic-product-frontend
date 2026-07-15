@@ -26,7 +26,7 @@ const TherapyAppointments = () => {
       const updatedMeds = [...(prev.medicines || [])];
       updatedMeds[index] = {
         ...updatedMeds[index],
-        name: opt.name,
+        name: `${opt.name} - ${opt.category}`,
       };
       return { ...prev, medicines: updatedMeds };
     });
@@ -1144,16 +1144,15 @@ const TherapyAppointments = () => {
                                               .slice(0, 50)
                                               .map((opt: any, itemIdx: number) => (
                                                 <div
-                                                  key={itemIdx}
-                                                  className="px-3 py-2 text-dark border-bottom text-start"
-                                                  onMouseDown={() => handleSelectMedicine(idx, opt)}
-                                                  style={{ cursor: "pointer", transition: "background 0.1s" }}
-                                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f8fafc"}
-                                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
-                                                >
-                                                  <span className="fw-bold d-block text-dark" style={{ fontSize: 12 }}>{opt.name}</span>
-                                                  <span className="text-muted" style={{ fontSize: 10 }}>{opt.category} {opt.strength ? `(${opt.strength})` : ""}</span>
-                                                </div>
+                                                   key={itemIdx}
+                                                   className="px-3 py-2 text-dark border-bottom text-start"
+                                                   onMouseDown={() => handleSelectMedicine(idx, opt)}
+                                                   style={{ cursor: "pointer", transition: "background 0.1s" }}
+                                                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f8fafc"}
+                                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                                                 >
+                                                   <span className="fw-semibold text-dark" style={{ fontSize: 13 }}>{opt.name} - {opt.category}</span>
+                                                 </div>
                                               ))}
                                             {medicineOptions.filter((opt: any) => {
                                               const search = (m.name || "").toLowerCase();

@@ -456,6 +456,16 @@ const TherapyAppointments = () => {
                     <td className="py-2 px-3 border-0 text-end">
                       <div className="d-flex align-items-center justify-content-end gap-1">
                         <button
+                          type="button"
+                          className={`bg-transparent border-0 p-1 ${child.consultation ? "text-success" : "text-primary"}`}
+                          title={child.consultation ? "View / Upload Prescription Scan" : "Create Prescription Upload"}
+                          data-bs-toggle="modal"
+                          data-bs-target="#prescription_modal"
+                          onClick={() => handleOpenPrescriptionModal(child)}
+                        >
+                          <i className="ti ti-pill fs-14"></i>
+                        </button>
+                        <button
                           className="bg-transparent border-0 text-info p-1"
                           title="View Details"
                           data-bs-toggle="modal"

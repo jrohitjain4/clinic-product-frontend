@@ -170,38 +170,45 @@ const TherapyAppointments = () => {
   };
 
   const handleModalUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !selectedConsultation) return;
+    const files = e.target.files;
+    if (!files || files.length === 0 || !selectedConsultation) return;
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("image", file);
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const formData = new FormData();
+        formData.append("image", file);
 
-      const token = localStorage.getItem("token");
-      const res = await fetch(apiUrl("/api/uploads/therapy-image"), {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
+        const token = localStorage.getItem("token");
+        const res = await fetch(apiUrl("/api/uploads/therapy-image"), {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || "Failed to upload file");
+        }
+
+        const resData = await res.json();
+        return { url: resData.url, remark: "" };
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || "Failed to upload file");
-      }
-
-      const resData = await res.json();
+      const newAttachments = await Promise.all(uploadPromises);
       const currentAttachments = selectedConsultation.attachments || [];
-      const updatedAttachments = [...currentAttachments, { url: resData.url, remark: "" }];
+      const updatedAttachments = [...currentAttachments, ...newAttachments];
 
       const updatedConsult = await apiPut<any>(`/api/consultations/${selectedConsultation.id}`, {
         attachments: updatedAttachments,
+        medicines: selectedConsultation.medicines || [],
+        advice: selectedConsultation.advice || "",
       });
       setSelectedConsultation(updatedConsult);
-      toast.success("Prescription file uploaded successfully!");
+      toast.success("Prescription file(s) uploaded successfully!");
     } catch (err: any) {
-      toast.error(err.message || "Failed to upload file");
+      toast.error(err.message || "Failed to upload file(s)");
     } finally {
       setUploading(false);
       if (e.target) e.target.value = "";
@@ -223,6 +230,8 @@ const TherapyAppointments = () => {
     try {
       const updated = await apiPut<any>(`/api/consultations/${selectedConsultation.id}`, {
         attachments: selectedConsultation.attachments,
+        medicines: selectedConsultation.medicines || [],
+        advice: selectedConsultation.advice || "",
       });
       setSelectedConsultation(updated);
     } catch (err: any) {
@@ -236,6 +245,8 @@ const TherapyAppointments = () => {
       const currentAttachments = (selectedConsultation.attachments || []).filter((_: any, i: number) => i !== idx);
       const updatedConsult = await apiPut<any>(`/api/consultations/${selectedConsultation.id}`, {
         attachments: currentAttachments,
+        medicines: selectedConsultation.medicines || [],
+        advice: selectedConsultation.advice || "",
       });
       setSelectedConsultation(updatedConsult);
       toast.success("Attachment removed successfully");
@@ -1289,6 +1300,7 @@ const TherapyAppointments = () => {
                             id="modal-scan-upload"
                             className="d-none"
                             accept="image/*"
+                            multiple
                             onChange={handleModalUpload}
                           />
                           <button

@@ -40,6 +40,7 @@ import {
 interface DoctorFormPageProps {
   mode: "add" | "edit";
   doctorId?: string;
+  defaultDoctorType?: string;
 }
 
 interface Dept {
@@ -53,9 +54,14 @@ interface Desig {
   status?: string;
 }
 
+const Doctor_Types = [
+  { value: "regular", label: "Regular" },
+  { value: "therapist", label: "Therapist" },
+];
+
 const isValidDoctorId = (id?: string) => !!id && id !== ":id" && !id.includes(":");
 
-const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
+const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disableDoctorTypeChange = false }: DoctorFormPageProps) => {
   const navigate = useNavigate();
   const isEdit = mode === "edit" && isValidDoctorId(doctorId);
 
@@ -89,6 +95,8 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
   const [tags, setTags] = useState<string[]>(["English"]);
   const [bloodGroup, setBloodGroup] = useState("");
   const [gender, setGender] = useState("");
+  const [doctorType, setDoctorType] = useState(defaultDoctorType);
+  const backRoute = doctorType === "therapist" ? all_routes.therapistList : all_routes.doctors;
   const [bio, setBio] = useState("About Doctor");
   const [featureOnWebsite, setFeatureOnWebsite] = useState(false);
 
@@ -374,6 +382,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         setAadhaarCardBack(d.aadhaarCardBack || null);
         setPanCard(d.panCard || null);
         setStatus(d.status || "Active");
+        setDoctorType(d.doctorType || "regular");
         setAddress1(d.address1 || "");
         setAddress2(d.address2 || "");
         setCountry(d.country || "");
@@ -789,6 +798,7 @@ const DoctorFormPage = ({ mode, doctorId }: DoctorFormPageProps) => {
         educations: showEducation ? serializeEducations(educations) : null,
         awards: showAwards ? serializeAwards(awards) : null,
         certifications: showCertifications ? serializeAwards(certifications) : null,
+        doctorType,
       };
 
       const res = await fetch(
@@ -850,7 +860,7 @@ Powered by DocYori`;
         }
       }
 
-      setTimeout(() => navigate(all_routes.doctors), 1500);
+      setTimeout(() => navigate(backRoute), 1500);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -873,8 +883,8 @@ Powered by DocYori`;
     return (
       <div className="page-wrapper">
         <div className="content">
-          <Link to={all_routes.doctors} className="btn btn-light mb-2">
-            Back to Doctors
+          <Link to={backRoute} className="btn btn-light mb-2">
+            Back to {doctorType === "therapist" ? "Therapists" : "Doctors"}
           </Link>
           <div className="alert alert-danger">{error}</div>
         </div>
@@ -892,9 +902,9 @@ Powered by DocYori`;
               <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-2 pb-3 border-bottom">
                 <div className="flex-grow-1">
                   <h6 className="fw-bold mb-0 d-flex align-items-center">
-                    <Link to={all_routes.doctors}>
+                    <Link to={backRoute}>
                       <i className="ti ti-chevron-left me-1 fs-14" />
-                      Doctor
+                      {doctorType === "therapist" ? "Therapist" : "Doctor"}
                     </Link>
                   </h6>
                 </div>
@@ -904,7 +914,7 @@ Powered by DocYori`;
                 <div className="card-body">
                   <div className="border-bottom d-flex align-items-center justify-content-between pb-3 mb-2">
                     <h5 className="offcanvas-title fs-18 fw-bold">
-                      {isEdit ? "Edit Doctor" : "New Doctor"}
+                      {isEdit ? (doctorType === "therapist" ? "Edit Therapist" : "Edit Doctor") : (doctorType === "therapist" ? "New Therapist" : "New Doctor")}
                     </h5>
                   </div>
 
@@ -1298,13 +1308,32 @@ Powered by DocYori`;
                           </div>
                         </div>
 
+                        {/* Doctor Type */}
+                        <div className="col-lg-6">
+                          <div style={{ marginBottom: "10px" }}>
+                            <label className="form-label mb-0">
+                              Doctor Type <span className="text-danger ms-1">*</span>
+                            </label>
+                            <CommonSelect
+                              options={Doctor_Types}
+                              className="select"
+                              value={
+                                findSelectOption(Doctor_Types, doctorType) ||
+                                Doctor_Types[0]
+                              }
+                              onChange={(opt: any) => setDoctorType(opt?.value || "")}
+                              isDisabled={disableDoctorTypeChange}
+                            />
+                          </div>
+                        </div>
+
                       </div>
                     </div>
 
                     {/* Footer for Step 1 */}
                     <div className="mt-2 pb-2 d-flex justify-content-end gap-3 border-top pt-3">
                       <Link
-                        to={all_routes.doctors}
+                        to={backRoute}
                         className="btn btn-outline-secondary btn-lg px-5 d-flex align-items-center gap-2"
                         style={{ borderRadius: "10px", fontWeight: "600" }}
                       >
@@ -2276,7 +2305,7 @@ Powered by DocYori`;
                   className="btn btn-light px-4 border"
                   onClick={() => {
                     setShowErrorModal(false);
-                    navigate(all_routes.doctors);
+                    navigate(backRoute);
                   }}
                   style={{ borderRadius: '8px' }}
                 >

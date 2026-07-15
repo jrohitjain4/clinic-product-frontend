@@ -10,7 +10,7 @@ import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { toast } from "react-toastify";
 
 const Services = () => {
-  const { services, refetch: refetchServices } = useClinicServices();
+  const { services, refetch: refetchServices } = useClinicServices("regular");
   const { products, refetch: refetchProducts } = useClinicProducts();
   const { departments } = useClinicDepartments();
   const [selectedService, setSelectedService] = useState<any>(null);

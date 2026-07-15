@@ -86,6 +86,21 @@ const PatientsGrid = lazy(() => import("../components/pages/clinic-modules/patie
 const Patients = lazy(() => import("../components/pages/clinic-modules/patients/patients"));
 const Services = lazy(() => import("../components/pages/clinic-modules/services/services"));
 const Specializations = lazy(() => import("../components/pages/clinic-modules/specializations/specializations"));
+
+// Therapy Imports
+const TherapistsList = lazy(() => import("../components/pages/therapy-modules/TherapistsList"));
+const TherapyCategories = lazy(() => import("../components/pages/therapy-modules/TherapyCategories"));
+const TherapyServices = lazy(() => import("../components/pages/therapy-modules/TherapyServices"));
+const TherapyAppointments = lazy(() => import("../components/pages/therapy-modules/TherapyAppointments"));
+const BookTherapyAppointment = lazy(() => import("../components/pages/therapy-modules/BookTherapyAppointment"));
+const ConsultationList = lazy(() => import("../components/pages/therapy-modules/ConsultationList"));
+const ConsultationForm = lazy(() => import("../components/pages/therapy-modules/ConsultationForm"));
+const AddTherapist = lazy(() => import("../components/pages/therapy-modules/AddTherapist"));
+const AddService = lazy(() => import("../components/pages/therapy-modules/AddService"));
+const SessionsList = lazy(() => import("../components/pages/therapy-modules/SessionsList"));
+const SessionCalendar = lazy(() => import("../components/pages/therapy-modules/SessionCalendar"));
+const BillingList = lazy(() => import("../components/pages/therapy-modules/BillingList"));
+const ReportsView = lazy(() => import("../components/pages/therapy-modules/ReportsView"));
 const AddBlog = lazy(() => import("../components/pages/content-modules/add-blog/addBlog"));
 const AddPages = lazy(() => import("../components/pages/content-modules/add-page/addPages"));
 const BlogCategories = lazy(() => import("../components/pages/content-modules/blog-categories/blogCategories"));
@@ -1285,6 +1300,111 @@ export const publicRoutes = [
   {
     path: routes.starter,
     element: <Starter />,
+    route: Route,
+  },
+  {
+    path: routes.therapistList,
+    element: <TherapistsList />,
+    route: Route,
+  },
+  {
+    path: routes.therapyCategories,
+    element: <TherapyCategories />,
+    route: Route,
+  },
+  {
+    path: routes.therapyServices,
+    element: <TherapyServices />,
+    route: Route,
+  },
+  {
+    path: routes.therapyAppointments,
+    element: <TherapyAppointments />,
+    route: Route,
+  },
+  {
+    path: routes.bookTherapyAppointment,
+    element: <BookTherapyAppointment />,
+    route: Route,
+  },
+  {
+    path: routes.therapyConsultations,
+    element: <ConsultationList />,
+    route: Route,
+  },
+  {
+    path: routes.createConsultation,
+    element: <ConsultationForm />,
+    route: Route,
+  },
+  {
+    path: routes.consultationDetails,
+    element: <ConsultationForm />,
+    route: Route,
+  },
+  {
+    path: routes.addTherapist,
+    element: <AddTherapist />,
+    route: Route,
+  },
+  {
+    path: routes.addService,
+    element: <AddService />,
+    route: Route,
+  },
+  {
+    path: routes.todaysSessions,
+    element: <SessionsList />,
+    route: Route,
+  },
+  {
+    path: routes.allSessions,
+    element: <SessionsList />,
+    route: Route,
+  },
+  {
+    path: routes.sessionCalendar,
+    element: <SessionCalendar />,
+    route: Route,
+  },
+  {
+    path: routes.sessionHistory,
+    element: <SessionsList />,
+    route: Route,
+  },
+  {
+    path: routes.therapyBills,
+    element: <BillingList />,
+    route: Route,
+  },
+  {
+    path: routes.therapyPayments,
+    element: <BillingList />,
+    route: Route,
+  },
+  {
+    path: routes.therapyAppointmentReport,
+    element: <ReportsView />,
+    route: Route,
+  },
+  {
+    path: routes.therapySessionReport,
+    element: <ReportsView />,
+    route: Route,
+  },
+  {
+    path: routes.therapyTherapistReport,
+    element: <ReportsView />,
+    route: Route,
+  },
+  {
+    path: routes.therapyRevenueReport,
+    element: <ReportsView />,
+    route: Route,
+  },
+  {
+    path: routes.patientProgressReport,
+    element: <ReportsView />,
     route: Route,
   },
   {

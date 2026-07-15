@@ -12,7 +12,7 @@ export interface ClinicService {
     department?: ClinicDepartment;
 }
 
-export const useClinicServices = () => {
+export const useClinicServices = (type?: string) => {
     const [services, setServices] = useState<ClinicService[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -21,7 +21,8 @@ export const useClinicServices = () => {
         if (!opts?.silent) setLoading(true);
         setError(null);
         try {
-            const data = await apiGet<ClinicService[]>("/api/services");
+            const url = type ? `/api/services?type=${type}` : "/api/services";
+            const data = await apiGet<ClinicService[]>(url);
             setServices(Array.isArray(data) ? data : []);
         } catch (e: unknown) {
             setError(e instanceof Error ? e.message : "Failed to load services");
@@ -29,7 +30,7 @@ export const useClinicServices = () => {
         } finally {
             if (!opts?.silent) setLoading(false);
         }
-    }, []);
+    }, [type]);
 
     useEffect(() => {
         fetchServices();

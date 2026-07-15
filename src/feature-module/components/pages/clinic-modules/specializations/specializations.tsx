@@ -10,7 +10,7 @@ import { Specialization, StatusActive } from "../../../../../core/common/selectO
 import { ViewModal } from "../../../../../core/common/modal/ViewModal";
 
 const Specializations = () => {
-  const { specializations, refetch, loading, error } = useClinicSpecializations();
+  const { specializations, refetch, loading, error } = useClinicSpecializations("regular");
   const [selectedSpecialization, setSelectedSpecialization] = useState<any>(null);
   const [viewSpec, setViewSpec] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -338,7 +338,7 @@ const Specializations = () => {
         </div>
       </div>
 
-      <Modals selectedSpecialization={selectedSpecialization} refetch={refetch} />
+      <Modals selectedSpecialization={selectedSpecialization} refetch={refetch} specializationType="regular" />
 
       {/* ===== VIEW SPECIALIZATION MODAL ===== */}
       <ViewModal

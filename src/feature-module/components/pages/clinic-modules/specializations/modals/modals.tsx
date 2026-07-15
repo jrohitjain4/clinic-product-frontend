@@ -8,9 +8,13 @@ import { toast } from "react-toastify";
 interface ModalsProps {
   selectedSpecialization?: any;
   refetch?: () => void;
+  specializationType?: string;
 }
 
-const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
+const Modals = ({ selectedSpecialization, refetch, specializationType = "regular" }: ModalsProps) => {
+  const isTherapy = specializationType === "therapy";
+  const entityName = isTherapy ? "Category" : "Specialization";
+
   // Add Specialization
   const [addName, setAddName] = useState("");
   const [addDesc, setAddDesc] = useState("");
@@ -22,15 +26,16 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
       await apiPost("/api/specializations", {
         name: addName,
         description: addDesc,
-        status: "Active"
+        status: "Active",
+        specializationType
       });
-      toast.success("Specialization added successfully!");
+      toast.success(`${entityName} added successfully!`);
       refetch?.();
       setAddName("");
       setAddDesc("");
       document.getElementById("close-add-modal")?.click();
     } catch (err: any) {
-      toast.error(err.message || "Failed to add specialization");
+      toast.error(err.message || `Failed to add ${entityName.toLowerCase()}`);
     }
   };
 
@@ -62,12 +67,13 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
         name: editName,
         description: editDesc,
         status: editStatus?.value || "Active",
+        specializationType
       });
-      toast.success("Specialization updated successfully!");
+      toast.success(`${entityName} updated successfully!`);
       refetch?.();
       document.getElementById("close-edit-modal")?.click();
     } catch (err: any) {
-      toast.error(err.message || "Failed to update specialization");
+      toast.error(err.message || `Failed to update ${entityName.toLowerCase()}`);
     }
   };
 
@@ -77,11 +83,11 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
     if (!selectedSpecialization) return;
     try {
       await apiDelete(`/api/specializations/${selectedSpecialization.id}`);
-      toast.success("Specialization deleted successfully!");
+      toast.success(`${entityName} deleted successfully!`);
       refetch?.();
       document.getElementById("close-delete-modal")?.click();
     } catch (err: any) {
-      toast.error(err.message || "Failed to delete specialization");
+      toast.error(err.message || `Failed to delete ${entityName.toLowerCase()}`);
     }
   };
 
@@ -92,7 +98,7 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
             <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title">Add New Specialization</h5>
+              <h5 className="modal-title">Add New {entityName}</h5>
               <button
                 type="button"
                 className="btn-close btn-close-white"
@@ -105,12 +111,12 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label">
-                    Specialization<span className="text-danger ms-1">*</span>
+                    {entityName}<span className="text-danger ms-1">*</span>
                   </label>
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Enter Specialization"
+                    placeholder={`Enter ${entityName}`}
                     value={addName}
                     onChange={(e) => setAddName(e.target.value)}
                     required
@@ -136,7 +142,7 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
                     Cancel
                   </button>
                   <button type="submit" className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center" style={{ borderRadius: '6px' }}>
-                    Add Specialization
+                    Add {entityName}
                   </button>
                 </div>
               </div>
@@ -151,7 +157,7 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
             <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title">Edit Specialization</h5>
+              <h5 className="modal-title">Edit {entityName}</h5>
               <button
                 type="button"
                 className="btn-close btn-close-white"
@@ -164,12 +170,12 @@ const Modals = ({ selectedSpecialization, refetch }: ModalsProps) => {
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label">
-                    Specialization<span className="text-danger ms-1">*</span>
+                    {entityName}<span className="text-danger ms-1">*</span>
                   </label>
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Enter Specialization"
+                    placeholder={`Enter ${entityName}`}
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     required

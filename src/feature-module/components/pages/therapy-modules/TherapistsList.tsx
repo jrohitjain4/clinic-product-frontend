@@ -1,24 +1,24 @@
 import { Link } from "react-router";
-import EmptyState from "../../../../../core/common/emptyState";
-import ImageWithBasePath from "../../../../../core/imageWithBasePath";
-import { all_routes, doctorDetailsPath, editDoctorPath } from "../../../../routes/all_routes";
+import EmptyState from "../../../../core/common/emptyState";
+import ImageWithBasePath from "../../../../core/imageWithBasePath";
+import { all_routes, doctorDetailsPath, editDoctorPath } from "../../../routes/all_routes";
 import { useMemo, useState, useEffect, useCallback } from "react";
-import Datatable from "../../../../../core/common/dataTable";
-import Modals from "../doctors/modals/modals";
-import { useClinicDoctors } from "../../../../../core/hooks/useClinicDoctors";
-import { apiUrl } from "../../../../../core/config/api";
+import Datatable from "../../../../core/common/dataTable";
+import Modals from "../clinic-modules/doctors/modals/modals";
+import { useClinicDoctors } from "../../../../core/hooks/useClinicDoctors";
+import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 
 interface DeptItem { id: string; name: string; status?: string; }
 interface DesigItem { id: string; name: string; type?: string; }
 
-const DoctorsList = () => {
+const TherapistsList = () => {
   const { doctors, loading, error, refetch } = useClinicDoctors();
   const [searchText, setSearchText] = useState<string>("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [doctorToDelete, setDoctorToDelete] = useState<string | null>(null);
 
-  // HRM-style filters
+  // Filters
   const [filterDept, setFilterDept] = useState("All");
   const [filterDesig, setFilterDesig] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
@@ -51,7 +51,7 @@ const DoctorsList = () => {
   const handleDelete = async () => {
     const idsToDelete = doctorToDelete ? [doctorToDelete] : selectedIds;
     if (idsToDelete.length === 0) {
-      toast.warning("Please select at least one doctor to delete");
+      toast.warning("Please select at least one therapist to delete");
       return;
     }
 
@@ -64,19 +64,19 @@ const DoctorsList = () => {
         });
         if (!res.ok) throw new Error("Failed to delete");
       }
-      toast.success(idsToDelete.length > 1 ? "Doctors deleted successfully" : "Doctor deleted successfully");
+      toast.success(idsToDelete.length > 1 ? "Therapists deleted successfully" : "Therapist deleted successfully");
       setSelectedIds([]);
       setDoctorToDelete(null);
       refetch();
     } catch (err) {
-      toast.error("Error deleting doctor(s)");
+      toast.error("Error deleting therapist(s)");
     }
   };
 
-  // Filtered data
-  const filteredDoctors = useMemo(() => {
+  // Filtered data (ONLY therapists)
+  const filteredTherapists = useMemo(() => {
     return doctors.filter((d) => {
-      if (d.doctorType === "therapist") return false;
+      if (d.doctorType !== "therapist") return false; // ONLY show therapists!
       const matchDept = filterDept === "All" || d.department?.name === filterDept;
       const matchDesig = filterDesig === "All" || d.designation?.name === filterDesig;
       const matchStatus = filterStatus === "All" || d.status === filterStatus;
@@ -86,7 +86,7 @@ const DoctorsList = () => {
 
   const tableData = useMemo(
     () =>
-      filteredDoctors.map((d, i) => ({
+      filteredTherapists.map((d, i) => ({
         key: d.id,
         SrNo: i + 1,
         Name_Designation: d.fullName,
@@ -98,7 +98,7 @@ const DoctorsList = () => {
         Status: d.status === "Active" ? "Available" : (d.status === "Inactive" ? "Unable" : d.status),
         img: d.profileImage || "assets/img/doctor-placeholder.png",
       })),
-    [filteredDoctors]
+    [filteredTherapists]
   );
 
   const columns = [
@@ -117,7 +117,7 @@ const DoctorsList = () => {
           <Link to={doctorDetailsPath(record.key)} className="avatar me-2">
             <ImageWithBasePath
               src={record.img}
-              alt="Doctor"
+              alt="Therapist"
               className="rounded-circle"
             />
           </Link>
@@ -180,14 +180,14 @@ const DoctorsList = () => {
         <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
           <Link to={doctorDetailsPath(record.key)} className="text-info p-1" title="View"><i className="ti ti-eye fs-18" /></Link>
           <Link to={editDoctorPath(record.key)} className="text-primary p-1" title="Edit"><i className="ti ti-edit fs-18" /></Link>
-          <button className="bg-transparent border-0 text-secondary p-1" title="Print" onClick={() => { /* print doctor */ }}><i className="ti ti-printer fs-18" /></button>
+          <button className="bg-transparent border-0 text-secondary p-1" title="Print" onClick={() => { /* print */ }}><i className="ti ti-printer fs-18" /></button>
           <button className="bg-transparent border-0 text-danger p-1" title="Delete" data-bs-toggle="modal" data-bs-target="#delete_modal" onClick={() => setDoctorToDelete(record.key)}><i className="ti ti-trash fs-18" /></button>
         </div>
       ),
     },
   ];
 
-  // Unique values for filter dropdowns from actual data
+  // Unique values for filter dropdowns
   const uniqueDepts = useMemo(
     () => [...new Set(departments.map((d) => d.name))].filter(Boolean).sort(),
     [departments]
@@ -205,9 +205,9 @@ const DoctorsList = () => {
           <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom">
             <div className="flex-grow-1">
               <h4 className="page-title fw-bold mb-0">
-                Doctor List
+                Therapist List
                 <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                  Total Doctors : {loading ? "" : filteredDoctors.length}
+                  Total Therapists : {loading ? "" : filteredTherapists.length}
                 </span>
               </h4>
             </div>
@@ -301,30 +301,12 @@ const DoctorsList = () => {
                 </ul>
               </div>
 
-              {/* View Toggle */}
-              <div className="d-flex align-items-center gap-2">
-                <Link
-                  to={all_routes.doctorsList}
-                  className="btn btn-icon btn-sm bg-primary-subtle text-primary border border-primary d-flex align-items-center justify-content-center"
-                  style={{ width: '38px', height: '38px', borderRadius: '8px' }}
-                >
-                  <i className="ti ti-list-tree fs-16" />
-                </Link>
-                <Link
-                  to={all_routes.doctors}
-                  className="btn btn-icon btn-sm bg-white text-dark border d-flex align-items-center justify-content-center"
-                  style={{ width: '38px', height: '38px', borderRadius: '8px' }}
-                >
-                  <i className="ti ti-layout-grid fs-16" />
-                </Link>
-              </div>
-
               <Link
-                to={all_routes.addDoctors}
+                to={all_routes.addTherapist}
                 className="btn btn-primary d-flex align-items-center justify-content-center ms-1"
                 style={{ minHeight: '38px', whiteSpace: 'nowrap' }}
               >
-                New Doctor <i className="fa fa-plus ms-2" />
+                New Therapist <i className="fa fa-plus ms-2" />
               </Link>
             </div>
           </div>
@@ -345,15 +327,15 @@ const DoctorsList = () => {
           ) : tableData.length === 0 && !error ? (
             <div className="border rounded bg-white">
               <EmptyState
-                title="No doctors yet"
-                message="Grow your clinic's team by onboarding experienced healthcare professionals."
+                title="No therapists yet"
+                message="Grow your therapy team by onboarding experienced therapists."
                 action={
                   <Link
-                    to={all_routes.addDoctors}
+                    to={all_routes.addTherapist}
                     className="btn btn-primary d-flex align-items-center justify-content-center"
                     style={{ whiteSpace: 'nowrap' }}
                   >
-                    New Doctor <i className="fa fa-plus ms-2" />
+                    New Therapist <i className="fa fa-plus ms-2" />
                   </Link>
                 }
               />
@@ -400,4 +382,4 @@ const DoctorsList = () => {
   );
 };
 
-export default DoctorsList;
+export default TherapistsList;

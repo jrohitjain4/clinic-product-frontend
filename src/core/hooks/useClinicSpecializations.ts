@@ -12,7 +12,7 @@ export interface ClinicSpecialization {
     updatedAt: string;
 }
 
-export const useClinicSpecializations = () => {
+export const useClinicSpecializations = (type?: string) => {
     const [specializations, setSpecializations] = useState<ClinicSpecialization[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -21,7 +21,8 @@ export const useClinicSpecializations = () => {
         if (!opts?.silent) setLoading(true);
         setError(null);
         try {
-            const data = await apiGet<ClinicSpecialization[]>("/api/specializations");
+            const url = type ? `/api/specializations?type=${type}` : "/api/specializations";
+            const data = await apiGet<ClinicSpecialization[]>(url);
             setSpecializations(Array.isArray(data) ? data : []);
         } catch (e: unknown) {
             setError(e instanceof Error ? e.message : "Failed to load specializations");
@@ -29,7 +30,7 @@ export const useClinicSpecializations = () => {
         } finally {
             if (!opts?.silent) setLoading(false);
         }
-    }, []);
+    }, [type]);
 
     useEffect(() => {
         fetchSpecializations();

@@ -13,7 +13,6 @@ const TherapyAppointments = () => {
   const [activeSearchIndex, setActiveSearchIndex] = useState<number | null>(null);
 
   const medicineOptions = useMemo(() => {
-    console.log("THERAPY MEDICINES DEBUG:", pharmacyMedicines);
     return (pharmacyMedicines || []).map((m: any) => ({
       name: m.medicineName,
       category: m.category?.name || "General Medicine",
@@ -1040,7 +1039,7 @@ const TherapyAppointments = () => {
                   <span className="fw-bold" style={{ fontSize: 14 }}>Rx</span>
                 </div>
                 <div>
-                  <h5 className="modal-title fw-bold mb-0">Generate Prescription (Meds: {medicineOptions.length})</h5>
+                  <h5 className="modal-title fw-bold mb-0">Generate Prescription</h5>
                   <span className="text-muted fs-12">Create prescription for this visit</span>
                 </div>
               </div>
@@ -1091,7 +1090,7 @@ const TherapyAppointments = () => {
                               <span className="text-muted small">No medicines prescribed yet. Click "+ Add Medicine" to prescribe.</span>
                             </div>
                           ) : (
-                            <div className="table-responsive" style={{ overflow: "visible" }}>
+                            <div style={{ overflow: "visible" }}>
                               <table className="table table-hover align-middle mb-0" style={{ fontSize: 12 }}>
                                 <thead>
                                   <tr className="bg-light">
@@ -1127,13 +1126,14 @@ const TherapyAppointments = () => {
                                         />
                                         {activeSearchIndex === idx && (
                                           <div
-                                            className="position-absolute bg-white border rounded shadow-lg mt-1 w-100"
+                                            className="position-absolute bg-white border rounded shadow-lg mb-1"
                                             style={{
                                               zIndex: 1000,
                                               maxHeight: '180px',
                                               overflowY: 'auto',
-                                              top: '100%',
-                                              left: 0
+                                              bottom: '100%',
+                                              left: 0,
+                                              minWidth: '280px'
                                             }}
                                           >
                                             {medicineOptions

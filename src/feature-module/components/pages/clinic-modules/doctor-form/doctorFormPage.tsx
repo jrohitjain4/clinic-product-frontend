@@ -41,6 +41,7 @@ interface DoctorFormPageProps {
   mode: "add" | "edit";
   doctorId?: string;
   defaultDoctorType?: string;
+  disableDoctorTypeChange?: boolean;
 }
 
 interface Dept {

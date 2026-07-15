@@ -10,4 +10,5 @@ export interface ClinicDoctor {
   profileImage?: string | null;
   department?: { id: string; name: string } | null;
   designation?: { id: string; name: string } | null;
+  doctorType?: string | null;
 }

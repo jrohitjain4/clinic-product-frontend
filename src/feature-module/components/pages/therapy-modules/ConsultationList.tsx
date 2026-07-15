@@ -175,7 +175,7 @@ const ConsultationList = () => {
             ) : filtered.length === 0 ? (
               <EmptyState
                 title="No consultations found"
-                description="Start by creating a new consultation from an existing therapy appointment."
+                message="Start by creating a new consultation from an existing therapy appointment."
               />
             ) : (
               <div className="table-responsive">

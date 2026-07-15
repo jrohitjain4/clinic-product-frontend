@@ -1704,10 +1704,10 @@ const ConsultationForm = () => {
                         >
                           <span className="text-muted">Sessions: <strong>{plan.totalSessions}</strong></span>
                           <span className="text-muted">
-                            Fee/Session: <strong>₹{plan.sessionFee.toLocaleString()}</strong>
+                            Fee/Session: <strong>₹{Number(plan.sessionFee).toLocaleString()}</strong>
                           </span>
                           <span className="fw-semibold" style={{ color: "#6366f1" }}>
-                            Subtotal: ₹{(plan.totalSessions * plan.sessionFee).toLocaleString()}
+                            Subtotal: ₹{(Number(plan.totalSessions) * Number(plan.sessionFee)).toLocaleString()}
                           </span>
                         </div>
                       </div>
@@ -1746,7 +1746,7 @@ const ConsultationForm = () => {
                           {p.therapyName || `Therapy #${i + 1}`} ({p.totalSessions} × ₹{p.sessionFee})
                         </span>
                         <span className="fw-semibold">
-                          ₹{(p.totalSessions * p.sessionFee).toLocaleString()}
+                          ₹{(Number(p.totalSessions) * Number(p.sessionFee)).toLocaleString()}
                         </span>
                       </div>
                     ))}
@@ -1838,9 +1838,9 @@ const ConsultationForm = () => {
                   <div className="d-flex justify-content-between" style={{ fontSize: 13 }}>
                     <span className="text-muted">Balance Due</span>
                     <span
-                      className={`fw-bold ${finalTotal - amountPaid > 0 ? "text-danger" : "text-success"}`}
+                      className={`fw-bold ${Number(finalTotal) - Number(amountPaid) > 0 ? "text-danger" : "text-success"}`}
                     >
-                      ₹{Math.max(0, finalTotal - amountPaid).toLocaleString()}
+                      ₹{Math.max(0, Number(finalTotal) - Number(amountPaid)).toLocaleString()}
                     </span>
                   </div>
 
@@ -2019,9 +2019,9 @@ const ConsultationForm = () => {
                                   : "—"}
                               </td>
                               <td style={{ textTransform: "capitalize" }}>{p.scheduleType}</td>
-                              <td>₹{p.sessionFee.toLocaleString()}</td>
+                              <td>₹{Number(p.sessionFee).toLocaleString()}</td>
                               <td className="fw-semibold" style={{ color: "#6366f1" }}>
-                                ₹{(p.totalSessions * p.sessionFee).toLocaleString()}
+                                ₹{(Number(p.totalSessions) * Number(p.sessionFee)).toLocaleString()}
                               </td>
                             </tr>
                           ))}
@@ -2129,25 +2129,25 @@ const ConsultationForm = () => {
                           <div className="d-flex justify-content-between">
                             <span className="text-muted">Balance Due</span>
                             <span
-                              className={`fw-bold ${finalTotal - amountPaid > 0 ? "text-danger" : "text-success"}`}
+                              className={`fw-bold ${Number(finalTotal) - Number(amountPaid) > 0 ? "text-danger" : "text-success"}`}
                             >
-                              ₹{Math.max(0, finalTotal - amountPaid).toLocaleString()}
+                              ₹{Math.max(0, Number(finalTotal) - Number(amountPaid)).toLocaleString()}
                             </span>
                           </div>
                           <div className="mt-1">
                             <span
                               className={`badge ${
-                                amountPaid >= finalTotal && finalTotal > 0
+                                Number(amountPaid) >= Number(finalTotal) && Number(finalTotal) > 0
                                   ? "bg-success-subtle text-success"
-                                  : amountPaid > 0
+                                  : Number(amountPaid) > 0
                                   ? "bg-warning-subtle text-warning"
                                   : "bg-danger-subtle text-danger"
                               }`}
                               style={{ borderRadius: 6, padding: "4px 10px" }}
                             >
-                              {amountPaid >= finalTotal && finalTotal > 0
+                              {Number(amountPaid) >= Number(finalTotal) && Number(finalTotal) > 0
                                 ? "Paid"
-                                : amountPaid > 0
+                                : Number(amountPaid) > 0
                                 ? "Partial Paid"
                                 : "Unpaid"}
                             </span>
@@ -2162,7 +2162,7 @@ const ConsultationForm = () => {
                     <div className="d-flex align-items-center gap-2">
                       <i className="ti ti-calendar-check text-success" />
                       <strong className="text-success" style={{ fontSize: 14 }}>
-                        {therapyPlans.reduce((s, p) => s + p.totalSessions, 0)} Appointment Sessions
+                        {therapyPlans.reduce((s, p) => s + Number(p.totalSessions), 0)} Appointment Sessions
                       </strong>
                       <span className="text-muted" style={{ fontSize: 13 }}>
                         will be created and linked to parent appointment{" "}

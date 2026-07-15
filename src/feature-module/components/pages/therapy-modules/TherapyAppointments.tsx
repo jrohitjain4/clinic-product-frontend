@@ -1105,7 +1105,10 @@ const TherapyAppointments = () => {
                                 <tbody>
                                   {selectedConsultation.medicines.map((m: any, idx: number) => (
                                     <tr key={idx}>
-                                      <td className="border-0 py-1 position-relative">
+                                      <td 
+                                        className="border-0 py-1 position-relative"
+                                        style={{ zIndex: activeSearchIndex === idx ? 1000 : 1 }}
+                                      >
                                         <input
                                           type="text"
                                           className="form-control form-control-sm"

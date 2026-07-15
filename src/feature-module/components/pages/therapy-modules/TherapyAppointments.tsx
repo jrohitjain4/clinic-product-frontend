@@ -32,7 +32,23 @@ const TherapyAppointments = () => {
     });
     setActiveSearchIndex(null);
   };
-
+  const handleCopyPrescriptionText = (consult: any) => {
+    if (!consult) return;
+    
+    let text = `Prescription Details:\n`;
+    if (consult.medicines && consult.medicines.length > 0) {
+      text += `\nMedicines:\n`;
+      consult.medicines.forEach((med: any, idx: number) => {
+        text += `${idx + 1}. ${med.name} - Dose: ${med.dosage}, Freq: ${med.frequency}, Dur: ${med.duration}, Timing: ${med.instructions}\n`;
+      });
+    }
+    if (consult.advice) {
+      text += `\nAdvice:\n${consult.advice}\n`;
+    }
+    
+    navigator.clipboard.writeText(text);
+    toast.success("Prescription text copied to clipboard!");
+  };
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -873,9 +889,19 @@ const TherapyAppointments = () => {
 
         {viewConsultation && (
           <div className="px-4 pb-3 border-top pt-3">
-            <h5 className="fw-bold mb-3 text-dark d-flex align-items-center gap-2" style={{ fontSize: 14 }}>
-              <i className="ti ti-report-medical text-primary fs-18"></i> Examination & Consultation Report
-            </h5>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5 className="fw-bold mb-0 text-dark d-flex align-items-center gap-2" style={{ fontSize: 14 }}>
+                <i className="ti ti-report-medical text-primary fs-18"></i> Examination & Consultation Report
+              </h5>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 py-1 px-2"
+                style={{ borderRadius: 6, fontSize: 11 }}
+                onClick={() => handleCopyPrescriptionText(viewConsultation)}
+              >
+                <i className="ti ti-copy"></i> Copy Text
+              </button>
+            </div>
 
             {/* Examination Notes */}
             {viewConsultation.examinationNotes && (
@@ -1530,16 +1556,30 @@ const TherapyAppointments = () => {
             />
           </div>
           
-          {/* Download Button */}
-          <a
-            href={previewImage}
-            download
-            className="btn btn-primary btn-sm mt-3 px-4 py-2 d-flex align-items-center gap-2"
-            style={{ borderRadius: 20 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <i className="ti ti-download"></i> Download Image
-          </a>
+          {/* Action buttons */}
+          <div className="d-flex gap-2 mt-3">
+            <a
+              href={previewImage}
+              download
+              className="btn btn-primary btn-sm px-4 py-2 d-flex align-items-center gap-2"
+              style={{ borderRadius: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <i className="ti ti-download"></i> Download Image
+            </a>
+            <button
+              type="button"
+              className="btn btn-light btn-sm px-4 py-2 d-flex align-items-center gap-2"
+              style={{ borderRadius: 20 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(window.location.origin + previewImage);
+                toast.success("Image URL copied to clipboard!");
+              }}
+            >
+              <i className="ti ti-copy"></i> Copy Link
+            </button>
+          </div>
         </div>
       )}
     </>

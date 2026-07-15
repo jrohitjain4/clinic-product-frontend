@@ -1423,7 +1423,11 @@ const TherapyAppointments = () => {
                               >
                                 <div className="fw-bold text-primary small d-flex justify-content-between mb-1">
                                   <span>{pc.consultationCode || "Therapy Plan"}</span>
-                                  <span className="text-muted">{new Date(pc.createdAt).toLocaleDateString()}</span>
+                                  <span className="text-muted">{pc.appointment?.scheduledAt ? new Date(pc.appointment.scheduledAt).toLocaleDateString() : new Date(pc.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                <div className="text-muted fs-11 mb-2 pb-1" style={{ borderBottom: "1px dashed #e2e8f0" }}>
+                                  <div><i className="ti ti-calendar me-1"></i>Appt: <strong>{pc.appointment?.appointmentCode || "N/A"}</strong></div>
+                                  <div><i className="ti ti-user me-1"></i>Therapist: <strong>{pc.doctor?.fullName || "N/A"}</strong></div>
                                 </div>
                                 {pc.medicines && pc.medicines.length > 0 && (
                                   <div className="text-secondary small mt-1 fs-11" style={{ lineHeight: "1.4" }}>
@@ -1454,7 +1458,11 @@ const TherapyAppointments = () => {
                               >
                                 <div className="fw-bold text-success small d-flex justify-content-between mb-1">
                                   <span>{cp.prescriptionCode || "Prescription"}</span>
-                                  <span className="text-muted">{new Date(cp.createdAt).toLocaleDateString()}</span>
+                                  <span className="text-muted">{cp.appointment?.scheduledAt ? new Date(cp.appointment.scheduledAt).toLocaleDateString() : new Date(cp.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                <div className="text-muted fs-11 mb-2 pb-1" style={{ borderBottom: "1px dashed #e2e8f0" }}>
+                                  <div><i className="ti ti-calendar me-1"></i>Appt: <strong>{cp.appointment?.appointmentCode || "N/A"}</strong></div>
+                                  <div><i className="ti ti-user me-1"></i>Doctor: <strong>{cp.doctor?.fullName || "N/A"}</strong></div>
                                 </div>
                                 {cp.medicines && cp.medicines.length > 0 && (
                                   <div className="text-secondary small mt-1 fs-11" style={{ lineHeight: "1.4" }}>

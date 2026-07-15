@@ -41,6 +41,7 @@ const TherapyAppointments = () => {
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const handleToggleExpand = (id: string) => {
     setExpandedRowKeys((prev) =>
       prev.includes(id) ? prev.filter((k) => k !== id) : [...prev, id]
@@ -987,12 +988,18 @@ const TherapyAppointments = () => {
                   {viewConsultation.attachments.map((att: any, idx: number) => (
                     <div key={idx} className="col-4">
                       <div className="p-1 border rounded bg-white">
-                        <a href={att.url.startsWith("/") ? apiUrl(att.url) : att.url} target="_blank" rel="noreferrer">
+                        <a 
+                          href={att.url.startsWith("/") ? apiUrl(att.url) : att.url}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setPreviewImage(att.url.startsWith("/") ? apiUrl(att.url) : att.url);
+                          }}
+                        >
                           <img
                             src={att.url.startsWith("/") ? apiUrl(att.url) : att.url}
                             alt="Scan"
                             className="rounded"
-                            style={{ width: "100%", height: 75, objectFit: "cover" }}
+                            style={{ width: "100%", height: 75, objectFit: "cover", cursor: "zoom-in" }}
                           />
                         </a>
                         {att.remark && <div className="text-muted fs-10 text-center mt-1 truncate">{att.remark}</div>}
@@ -1336,12 +1343,18 @@ const TherapyAppointments = () => {
                                   >
                                     <i className="ti ti-x" style={{ fontSize: 10 }}></i>
                                   </button>
-                                  <a href={att.url.startsWith("/") ? apiUrl(att.url) : att.url} target="_blank" rel="noreferrer">
+                                  <a 
+                                    href={att.url.startsWith("/") ? apiUrl(att.url) : att.url}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setPreviewImage(att.url.startsWith("/") ? apiUrl(att.url) : att.url);
+                                    }}
+                                  >
                                     <img
                                       src={att.url.startsWith("/") ? apiUrl(att.url) : att.url}
                                       alt="Prescription Scan"
                                       className="rounded-2"
-                                      style={{ width: "100%", height: 90, objectFit: "cover" }}
+                                      style={{ width: "100%", height: 90, objectFit: "cover", cursor: "zoom-in" }}
                                     />
                                   </a>
                                   <input
@@ -1477,6 +1490,58 @@ const TherapyAppointments = () => {
           </div>
         </div>
       </div>
+      {/* ===== GORGEOUS LIGHTBOX PREVIEW MODAL ===== */}
+      {previewImage && (
+        <div 
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center"
+          style={{
+            zIndex: 9999,
+            backgroundColor: "rgba(15, 23, 42, 0.9)", // slate-900 with high opacity
+            backdropFilter: "blur(8px)",
+            transition: "all 0.3s ease"
+          }}
+          onClick={() => setPreviewImage(null)}
+        >
+          {/* Close button */}
+          <button
+            type="button"
+            className="btn btn-link text-white position-absolute border-0"
+            style={{ top: 20, right: 20, fontSize: 30, textDecoration: "none" }}
+            onClick={() => setPreviewImage(null)}
+          >
+            <i className="ti ti-x"></i>
+          </button>
+          
+          {/* Image Container */}
+          <div 
+            className="position-relative d-flex align-items-center justify-content-center p-3"
+            style={{ maxWidth: "90%", maxHeight: "80%" }}
+            onClick={(e) => e.stopPropagation()} // prevent closing when clicking the image
+          >
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="img-fluid rounded shadow-2xl animate__animated animate__zoomIn"
+              style={{ 
+                maxHeight: "80vh", 
+                objectFit: "contain", 
+                border: "4px solid rgba(255,255,255,0.1)"
+              }}
+            />
+          </div>
+          
+          {/* Download Button */}
+          <a
+            href={previewImage}
+            download
+            className="btn btn-primary btn-sm mt-3 px-4 py-2 d-flex align-items-center gap-2"
+            style={{ borderRadius: 20 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <i className="ti ti-download"></i> Download Image
+          </a>
+        </div>
+      )}
     </>
   );
 };

@@ -825,7 +825,7 @@ const ConsultationForm = () => {
     );
   }
 
-  if (isViewMode && consultationData && !isEditing) {
+  if (isViewMode && consultationData && !isEditing && consultationData.status !== "Draft") {
     const allChildAppts = (consultationData.therapyPlans || []).flatMap((p: any) =>
       (p.childAppointments || []).map((a: any) => ({
         ...a,
@@ -2119,7 +2119,24 @@ const ConsultationForm = () => {
                 type="button"
                 className="btn btn-primary"
                 style={{ borderRadius: 10, padding: "10px 28px" }}
-                onClick={() => setStep(3)}
+                onClick={async () => {
+                  // Auto-save Draft data before preview
+                  if (id && consultationData?.status === "Draft") {
+                    try {
+                      await apiPut<any>(`/api/consultations/${id}`, {
+                        examinationNotes: generalNotes,
+                        bodyPoints,
+                        medicines,
+                        advice,
+                        attachments,
+                        status: "Draft",
+                      });
+                    } catch (err) {
+                      // Silently continue to preview
+                    }
+                  }
+                  setStep(3);
+                }}
               >
                 Preview <i className="ti ti-arrow-right ms-1" />
               </button>

@@ -13,6 +13,10 @@ export const doctorsListPath = () => {
   if (user?.role === 'PATIENT') {
     return "/patient/patient-doctors";
   }
+  const mode = localStorage.getItem("activeModuleMode");
+  if (mode === "therapy") {
+    return "/therapist-list";
+  }
   return "/doctors";
 };
 

@@ -109,12 +109,16 @@ const DoctorDetails = () => {
   const { appointments, loading: appointmentsLoading, refetch: refetchAppointments } = useClinicAppointments({ doctorId: id });
   const [selectedAppointment, setSelectedAppointment] = useState<ClinicAppointment | null>(null);
 
+  const isTherapy = localStorage.getItem("activeModuleMode") === "therapy";
+  const listLabel = isTherapy ? "Therapists" : "Doctors";
+  const backLabel = isTherapy ? "Back to Therapists" : "Back to Doctors";
+
   const patientPath = (patientId: string) =>
     all_routes.patientDetails.replace(":id", patientId);
 
   useEffect(() => {
     if (!id || id === ":id") {
-      setError("Please open a doctor from the Doctors list.");
+      setError(`Please open a doctor from the ${listLabel} list.`);
       setLoading(false);
       return;
     }
@@ -266,7 +270,7 @@ const DoctorDetails = () => {
         <div className="content">
           <Link to={doctorsListPath()} className="btn btn-light mb-3">
             <i className="ti ti-chevron-left me-1" />
-            Back to Doctors
+            {backLabel}
           </Link>
           <div className="alert alert-danger">{error || "Doctor not found"}</div>
         </div>
@@ -281,7 +285,7 @@ const DoctorDetails = () => {
           <h6 className="fw-semibold fs-14 mb-0">
             <Link to={doctorsListPath()}>
               <i className="ti ti-chevron-left me-1" />
-              Doctors
+              {listLabel}
             </Link>
           </h6>
         </div>

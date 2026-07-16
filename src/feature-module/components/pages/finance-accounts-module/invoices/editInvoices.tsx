@@ -193,8 +193,8 @@ const EditInvoices = () => {
           paymentStatus: status?.value || "Pending",
           amountPaid: previouslyPaid + addonPayment,
           otherInfo: otherInfo,
-          items: invoices.filter(inv => inv.serviceId || inv.description).map(inv => ({
-            serviceId: inv.serviceId?.type === "service" ? inv.serviceId?.value : null,
+          items: invoices.filter(inv => inv.description.trim() !== "").map(inv => ({
+            serviceId: null,
             description: inv.description,
             quantity: inv.quantity,
             price: inv.price,
@@ -393,11 +393,10 @@ const EditInvoices = () => {
                       <table className="table invoice-table border">
                         <thead>
                           <tr>
-                            <th style={{ minWidth: "300px" }}>Item (Service / Product)</th>
-                            <th style={{ minWidth: "200px" }}>Description</th>
-                            <th style={{ width: "150px" }}>Unit Cost</th>
+                            <th style={{ minWidth: "400px" }}>Item Description</th>
+                            <th style={{ width: "180px" }}>Unit Cost</th>
                             <th style={{ width: "120px" }}>Qty</th>
-                            <th style={{ width: "150px" }}>Amount</th>
+                            <th style={{ width: "180px" }}>Amount</th>
                             <th />
                           </tr>
                         </thead>
@@ -405,46 +404,39 @@ const EditInvoices = () => {
                           {invoices.map((invoice, _idx) => (
                             <tr key={invoice.id} className="invoices-list-item">
                               <td>
-                                <div className="d-flex align-items-center gap-2">
-                                  <div style={{ flex: 1, minWidth: "200px" }}>
-                                    <CommonSelect
-                                      options={allItemOptions}
-                                      value={invoice.serviceId}
-                                      onChange={(val) => handleItemUpdate(invoice.id, "serviceId", val)}
-                                      className="select"
-                                    />
-                                  </div>
-                                  <Link
-                                    to="#"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#add_service"
-                                    className="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
-                                    title="Add Service"
-                                  >
-                                    <i className="ti ti-briefcase" />
-                                  </Link>
-                                  <Link
-                                    to="#"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#add_product"
-                                    className="btn btn-info btn-sm d-flex align-items-center justify-content-center"
-                                    title="Add Product"
-                                  >
-                                    <i className="ti ti-box" />
-                                  </Link>
-                                </div>
+                                <input 
+                                  type="text" 
+                                  className="form-control" 
+                                  placeholder="Enter item name or description (e.g. Consultation Fee, Therapy, Medicine...)"
+                                  value={invoice.description} 
+                                  onChange={(e) => handleItemUpdate(invoice.id, "description", e.target.value)} 
+                                />
                               </td>
                               <td>
-                                <input type="text" className="form-control" value={invoice.description} onChange={(e) => handleItemUpdate(invoice.id, "description", e.target.value)} />
+                                <input 
+                                  type="number" 
+                                  className="form-control" 
+                                  placeholder="0"
+                                  value={invoice.price} 
+                                  onChange={(e) => handleItemUpdate(invoice.id, "price", e.target.value)} 
+                                />
                               </td>
                               <td>
-                                <input type="number" className="form-control" value={invoice.price} onChange={(e) => handleItemUpdate(invoice.id, "price", e.target.value)} />
+                                <input 
+                                  type="number" 
+                                  className="form-control" 
+                                  placeholder="1"
+                                  value={invoice.quantity} 
+                                  onChange={(e) => handleItemUpdate(invoice.id, "quantity", e.target.value)} 
+                                />
                               </td>
                               <td>
-                                <input type="number" className="form-control" value={invoice.quantity} onChange={(e) => handleItemUpdate(invoice.id, "quantity", e.target.value)} />
-                              </td>
-                              <td>
-                                <input type="text" className="form-control" readOnly value={`₹${invoice.amount.toFixed(2)}`} />
+                                <input 
+                                  type="text" 
+                                  className="form-control bg-light" 
+                                  readOnly 
+                                  value={`₹${invoice.amount.toFixed(2)}`} 
+                                />
                               </td>
                               <td>
                                 <button type="button" className="btn remove-invoices btn-sm border shadow-sm p-2 d-flex align-items-center justify-content-center rounded fs-14" onClick={() => handleRemoveInvoice(invoice.id)}>

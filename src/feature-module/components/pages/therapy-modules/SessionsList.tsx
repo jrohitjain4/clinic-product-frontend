@@ -28,9 +28,9 @@ interface SessionAppointment {
   sessionNumber: number | null;
   patient: Patient | null;
   doctor: Doctor | null;
-  therapy: Therapy | null;
   therapyPlan: {
     id: string;
+    therapyId: string | null;
     therapyName: string | null;
     totalSessions: number;
   } | null;
@@ -141,7 +141,7 @@ const SessionsList = () => {
       const patientName = `${session.patient?.firstName || ""} ${session.patient?.lastName || ""}`.toLowerCase();
       const docName = (session.doctor?.fullName || "").toLowerCase();
       const code = (session.appointmentCode || "").toLowerCase();
-      const thName = (session.therapy?.serviceName || session.therapyPlan?.therapyName || "").toLowerCase();
+      const thName = (session.therapyPlan?.therapyName || "").toLowerCase();
       if (!patientName.includes(term) && !docName.includes(term) && !code.includes(term) && !thName.includes(term)) {
         return false;
       }
@@ -162,7 +162,7 @@ const SessionsList = () => {
     // 3. Dropdowns
     if (selectedPatientId && session.patient?.id !== selectedPatientId) return false;
     if (selectedDoctorId && session.doctor?.id !== selectedDoctorId) return false;
-    if (selectedTherapyId && session.therapy?.id !== selectedTherapyId) return false;
+    if (selectedTherapyId && session.therapyPlan?.therapyId !== selectedTherapyId) return false;
 
     return true;
   });
@@ -341,7 +341,7 @@ const SessionsList = () => {
                         ? `${session.patient.firstName} ${session.patient.lastName}`.trim()
                         : "—";
                       const therapistName = session.doctor?.fullName || "—";
-                      const therapyName = session.therapy?.serviceName || session.therapyPlan?.therapyName || "—";
+                      const therapyName = session.therapyPlan?.therapyName || "—";
                       const sessionText = session.sessionNumber
                         ? `Session ${session.sessionNumber} of ${session.therapyPlan?.totalSessions || "—"}`
                         : "—";

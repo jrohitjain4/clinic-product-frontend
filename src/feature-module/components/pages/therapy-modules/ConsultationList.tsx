@@ -325,18 +325,40 @@ const ConsultationList = () => {
       },
     },
     {
-      title: "Mode",
-      dataIndex: "mode",
-      sorter: (a: any, b: any) => (a.appointment?.mode || "").localeCompare(b.appointment?.mode || ""),
+      title: "Invoice Details",
+      dataIndex: "invoiceDetails",
       render: (_: any, record: any) => {
-        const mode = record.appointment?.mode || "Offline";
-        let badgeColor = "bg-light-purple text-purple border-purple";
-        if (mode.toLowerCase() === "online") badgeColor = "bg-soft-info text-info border-info";
-        if (mode.toLowerCase().includes("home")) badgeColor = "bg-soft-warning text-warning border-warning";
+        const c = record.consultation;
+        const inv = c?.invoice;
+        if (!c || !inv) {
+          return <span className="text-muted fs-12">—</span>;
+        }
+        
+        const total = inv.totalAmount || 0;
+        const paid = inv.amountPaid || 0;
+        const remaining = Math.max(0, total - paid);
+        const status = inv.paymentStatus || "Unpaid";
+        
+        const isPaid = status === "Paid";
+        const isPartial = status === "Partial Paid";
+        
         return (
-          <span className={`badge border px-2 py-1 fs-12 ${badgeColor}`}>
-            {mode}
-          </span>
+          <div className="d-flex flex-column align-items-start gap-1">
+            <span className="fw-semibold text-dark fs-13">{inv.invoiceCode || "—"}</span>
+            <div className="text-muted fs-11" style={{ lineHeight: '1.2' }}>
+              <div>Total: ₹{total.toLocaleString()}</div>
+              <div className="fw-medium text-danger">Due: ₹{remaining.toLocaleString()}</div>
+            </div>
+            <span className={`badge border ${
+              isPaid 
+                ? "badge-soft-success border-success text-success" 
+                : isPartial 
+                ? "badge-soft-warning border-warning text-warning" 
+                : "badge-soft-danger border-danger text-danger"
+            } px-1.5 py-0.2 fs-10 mt-1`}>
+              {status}
+            </span>
+          </div>
         );
       },
     },

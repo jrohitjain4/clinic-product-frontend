@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { apiGet } from "../../../../core/utils/apiClient";
+import { apiGet, apiPut } from "../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
 
 interface Patient {
@@ -40,6 +40,27 @@ const SessionsList = () => {
   const [sessions, setSessions] = useState<SessionAppointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const handleStatusToggle = async (appointmentId: string, currentStatus: string) => {
+    let nextStatus = "";
+    if (currentStatus === "Schedule" || currentStatus === "Scheduled") nextStatus = "Confirmed";
+    else if (currentStatus === "Confirmed") nextStatus = "Checked In";
+    else if (currentStatus === "Checked In") nextStatus = "Checked Out";
+
+    if (nextStatus) {
+      setTogglingId(appointmentId);
+      try {
+        await apiPut(`/api/appointments/${appointmentId}`, { status: nextStatus });
+        toast.success(`Session marked as ${nextStatus}`);
+        fetchSessions();
+      } catch (err: any) {
+        toast.error(err.message || "Failed to update session status");
+      } finally {
+        setTogglingId(null);
+      }
+    }
+  };
 
   // Filters state
   const [startDate, setStartDate] = useState("");
@@ -377,9 +398,36 @@ const SessionsList = () => {
                             <span className="text-slate-600">{sessionText}</span>
                           </td>
                           <td className="text-center">
-                            <span className={`badge border ${getStatusBadge(session.status)} px-2.5 py-1 fs-12`} style={{ borderRadius: 6 }}>
-                              {session.status}
-                            </span>
+                            <div className="d-flex flex-column align-items-center gap-1">
+                              <span className={`badge border ${getStatusBadge(session.status)} px-2.5 py-1 fs-12`} style={{ borderRadius: 6 }}>
+                                {session.status}
+                              </span>
+                              {["Schedule", "Scheduled", "Confirmed", "Checked In"].includes(session.status) && (
+                                <button
+                                  type="button"
+                                  className="btn btn-link p-0 text-decoration-none d-flex align-items-center gap-1 fs-11 text-primary fw-medium"
+                                  onClick={() => handleStatusToggle(session.id, session.status)}
+                                  disabled={togglingId === session.id}
+                                >
+                                  {togglingId === session.id ? (
+                                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" style={{ width: 10, height: 10 }} />
+                                  ) : (
+                                    <>
+                                      <i className="ti ti-rotate-clockwise fs-11" />
+                                      <span>
+                                        Mark {
+                                          (session.status === "Schedule" || session.status === "Scheduled") 
+                                            ? "Confirmed" 
+                                            : session.status === "Confirmed" 
+                                            ? "Checked In" 
+                                            : "Checked Out"
+                                        }
+                                      </span>
+                                    </>
+                                  )}
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );

@@ -177,12 +177,26 @@ const ConsultationList = () => {
     });
   }, [items, filterStatus, searchTerm]);
 
+  const finalFiltered = useMemo(() => {
+    return filtered.map((item, index) => ({
+      ...item,
+      sr_no: index + 1,
+    }));
+  }, [filtered]);
+
   const formatDate = (d: string) =>
     d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
   const columns = [
     {
-      title: "Code",
+      title: "Sr No.",
+      dataIndex: "sr_no",
+      render: (text: number) => <span className="fs-13 fw-medium text-dark">{text}</span>,
+      sorter: (a: any, b: any) => a.sr_no - b.sr_no,
+      width: 70,
+    },
+    {
+      title: "Consultation Code",
       dataIndex: "code",
       sorter: (a: any, b: any) => {
         const valA = a.consultation?.consultationCode || a.appointment?.appointmentCode || "";
@@ -193,15 +207,12 @@ const ConsultationList = () => {
         const app = record.appointment;
         const c = record.consultation;
         return (
-          <div>
-            <span
-              className="fw-semibold"
-              style={{ color: "#6366f1", fontFamily: "monospace", fontSize: 13 }}
-            >
+          <div className="d-flex flex-column align-items-start">
+            <span className="text-primary fw-semibold">
               {c ? c.consultationCode : (app?.appointmentCode || "—")}
             </span>
             {!c && (
-              <span className="badge bg-secondary-subtle text-secondary ms-2 small" style={{ fontSize: 9, borderRadius: 4 }}>
+              <span className="badge bg-secondary-subtle text-secondary mt-1 small" style={{ fontSize: 9, borderRadius: 4 }}>
                 Not Started
               </span>
             )}
@@ -210,7 +221,7 @@ const ConsultationList = () => {
       },
     },
     {
-      title: "Patient",
+      title: "Patient Name",
       dataIndex: "patient",
       sorter: (a: any, b: any) => {
         const nameA = `${a.appointment?.patient?.firstName || ""} ${a.appointment?.patient?.lastName || ""}`;
@@ -220,30 +231,13 @@ const ConsultationList = () => {
       render: (_: any, record: any) => {
         const app = record.appointment;
         return (
-          <div className="d-flex align-items-center gap-2">
-            {app?.patient?.profileImage ? (
-              <img
-                src={app.patient.profileImage}
-                alt=""
-                className="rounded-circle"
-                style={{ width: 34, height: 34, objectFit: "cover" }}
-              />
-            ) : (
-              <div
-                className="rounded-circle d-flex align-items-center justify-content-center fw-bold"
-                style={{ width: 34, height: 34, background: "#6366f120", color: "#6366f1", fontSize: 13 }}
-              >
-                {(app?.patient?.firstName?.[0] || "P").toUpperCase()}
-              </div>
+          <div className="d-flex flex-column lh-1">
+            <span className="fw-semibold text-dark fs-14">
+              {app?.patient?.firstName} {app?.patient?.lastName}
+            </span>
+            {app?.patient?.phone && (
+              <span className="text-muted fs-11 mt-1">{app.patient.phone}</span>
             )}
-            <div>
-              <div className="fw-semibold" style={{ fontSize: 14 }}>
-                {app?.patient?.firstName} {app?.patient?.lastName}
-              </div>
-              <div className="text-muted" style={{ fontSize: 12 }}>
-                {app?.patient?.phone || "—"}
-              </div>
-            </div>
           </div>
         );
       },
@@ -258,7 +252,7 @@ const ConsultationList = () => {
       },
       render: (_: any, record: any) => {
         const app = record.appointment;
-        return <div style={{ fontSize: 14 }}>{app?.doctor?.fullName || "—"}</div>;
+        return <span className="text-secondary">{app?.doctor?.fullName || "—"}</span>;
       },
     },
     {
@@ -297,13 +291,22 @@ const ConsultationList = () => {
       sorter: (a: any, b: any) => (a.consultation?.finalTotalAmount || 0) - (b.consultation?.finalTotalAmount || 0),
       render: (_: any, record: any) => {
         const c = record.consultation;
+        const status = c?.invoice ? c.invoice.paymentStatus : "Unpaid";
+        const isPaid = status === "Paid";
+        const isPartial = status === "Partial Paid";
         return (
-          <div>
-            <div className="fw-semibold">₹{(c?.finalTotalAmount || 0).toLocaleString()}</div>
-            {c && c.amountPaid > 0 && (
-              <div className="text-muted" style={{ fontSize: 11 }}>
-                Paid: ₹{(c.amountPaid || 0).toLocaleString()}
-              </div>
+          <div className="d-flex flex-column align-items-start gap-1">
+            <span className="text-dark fw-bold">₹{(c?.finalTotalAmount || 0).toLocaleString()}</span>
+            {c && (
+              <span className={`badge border ${
+                isPaid 
+                  ? "badge-soft-success border-success text-success" 
+                  : isPartial 
+                  ? "badge-soft-warning border-warning text-warning" 
+                  : "badge-soft-danger border-danger text-danger"
+              } px-1 py-0.5 fs-11`}>
+                {status}
+              </span>
             )}
           </div>
         );
@@ -337,11 +340,11 @@ const ConsultationList = () => {
       render: (_: any, record: any) => {
         const c = record.consultation;
         const status = c ? c.status : "Not Started";
+        let badgeColor = "badge-soft-secondary border-secondary text-secondary";
+        if (status === "Confirmed") badgeColor = "badge-soft-success border-success text-success";
+        if (status === "Draft") badgeColor = "badge-soft-warning border-warning text-warning";
         return (
-          <span
-            className={`badge bg-${statusColors[status] || "secondary"}-subtle text-${statusColors[status] || "secondary"}`}
-            style={{ borderRadius: 6, padding: "4px 10px" }}
-          >
+          <span className={`badge border ${badgeColor} px-2 py-1 fs-12`}>
             {status}
           </span>
         );
@@ -357,21 +360,20 @@ const ConsultationList = () => {
       },
       render: (_: any, record: any) => {
         const app = record.appointment;
-        return <div style={{ fontSize: 13 }}>{formatDate(app?.scheduledAt)}</div>;
+        return <span className="text-dark fs-13">{formatDate(app?.scheduledAt)}</span>;
       },
     },
     {
-      title: "Actions",
+      title: "Action",
       align: "center" as const,
       render: (_: any, record: any) => {
         const app = record.appointment;
         const c = record.consultation;
         return (
-          <div className="d-flex align-items-center justify-content-center gap-2">
+          <div className="d-flex align-items-center justify-content-center gap-1">
             {!c ? (
               <button
-                className="btn btn-sm btn-success text-white d-flex align-items-center justify-content-center"
-                style={{ borderRadius: 8, width: 34, height: 34 }}
+                className="bg-transparent border-0 text-success p-1"
                 title="Start Consultation"
                 disabled={startingId === app?.id}
                 onClick={() => handleStartConsultation(app.id)}
@@ -379,32 +381,29 @@ const ConsultationList = () => {
                 {startingId === app?.id ? (
                   <span className="spinner-border spinner-border-sm" />
                 ) : (
-                  <i className="ti ti-player-play-filled" />
+                  <i className="ti ti-player-play-filled fs-14" />
                 )}
               </button>
             ) : c.status === "Draft" ? (
               <button
-                className="btn btn-sm btn-success text-white d-flex align-items-center justify-content-center"
-                style={{ borderRadius: 8, width: 34, height: 34 }}
+                className="bg-transparent border-0 text-success p-1"
                 title="Resume Consultation"
                 onClick={() => navigate(`/therapy-consultations/${c.id}`)}
               >
-                <i className="ti ti-player-play-filled" />
+                <i className="ti ti-player-play-filled fs-14" />
               </button>
             ) : (
               <button
-                className="btn btn-sm btn-primary d-flex align-items-center justify-content-center"
-                style={{ borderRadius: 8, width: 34, height: 34 }}
+                className="bg-transparent border-0 text-info p-1"
                 title="View Details"
                 onClick={() => navigate(`/therapy-consultations/${c.id}`)}
               >
-                <i className="ti ti-eye" />
+                <i className="ti ti-eye fs-14" />
               </button>
             )}
             {c && (
               <button
-                className="btn btn-sm btn-danger d-flex align-items-center justify-content-center"
-                style={{ borderRadius: 8, width: 34, height: 34 }}
+                className="bg-transparent border-0 text-danger p-1"
                 title="Delete"
                 disabled={deletingId === c.id}
                 onClick={() => handleDelete(c.id)}
@@ -412,14 +411,14 @@ const ConsultationList = () => {
                 {deletingId === c.id ? (
                   <span className="spinner-border spinner-border-sm" />
                 ) : (
-                  <i className="ti ti-trash" />
+                  <i className="ti ti-trash fs-14" />
                 )}
               </button>
             )}
           </div>
         );
       },
-      width: 110,
+      width: 100,
     },
   ];
 
@@ -491,7 +490,7 @@ const ConsultationList = () => {
               <div className="table-responsive">
                 <Datatable
                   columns={columns}
-                  dataSource={filtered}
+                  dataSource={finalFiltered}
                   Selection={false}
                   searchText=""
                 />

@@ -433,20 +433,6 @@ const ConsultationList = () => {
           <div className="appointments-filter-line pb-3 mb-3 border-bottom">
             <h4 className="fw-bold mb-0 text-dark flex-shrink-0">Therapy Consultations</h4>
             
-            <div className="input-group ms-3" style={{ maxWidth: 220, height: 32 }}>
-              <span className="input-group-text border bg-light py-0" style={{ height: 32 }}>
-                <i className="ti ti-search text-muted" />
-              </span>
-              <input
-                type="text"
-                className="form-control border bg-light py-0"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ borderRadius: "0 6px 6px 0", height: 32, fontSize: 12 }}
-              />
-            </div>
-            
             {/* Tab Filters: All, Checked Out, Checked In, Confirmed, Not Started */}
             <div className="status-buttons-group ms-auto">
               {[

@@ -190,7 +190,7 @@ const Sidebar = () => {
             <ul>
               {SidebarData?.filter(section => {
                 if (activeMode === "therapy") {
-                  return section.tittle === "Main Menu" || section.tittle === "Therapy";
+                  return section.tittle === "Therapy";
                 } else {
                   if (section.tittle === "Therapy") {
                     return false;

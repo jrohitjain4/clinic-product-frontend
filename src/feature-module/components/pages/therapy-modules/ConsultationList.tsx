@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { apiGet, apiDelete } from "../../../../core/utils/apiClient";
+import { apiGet, apiDelete, apiPost } from "../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
 import EmptyState from "../../../../core/common/emptyState";
 import { all_routes } from "../../../routes/all_routes";
@@ -8,8 +8,9 @@ import { all_routes } from "../../../routes/all_routes";
 const routes = all_routes;
 
 const statusColors: Record<string, string> = {
-  Draft: "secondary",
+  Draft: "warning",
   Confirmed: "success",
+  "Not Started": "secondary",
 };
 
 const payStatusColors: Record<string, string> = {
@@ -20,25 +21,45 @@ const payStatusColors: Record<string, string> = {
 
 const ConsultationList = () => {
   const navigate = useNavigate();
-  const [consultations, setConsultations] = useState<any[]>([]);
+  const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [startingId, setStartingId] = useState<string | null>(null);
 
-  const fetchConsultations = async () => {
+  const fetchConsultancyData = async () => {
     setLoading(true);
     try {
-      const data = await apiGet<any[]>("/api/consultations");
-      setConsultations(Array.isArray(data) ? data : []);
+      const apptsData = await apiGet<any[]>("/api/appointments?appointmentType=therapy");
+      const consultsData = await apiGet<any[]>("/api/consultations");
+      
+      const appts = Array.isArray(apptsData) ? apptsData : [];
+      const consults = Array.isArray(consultsData) ? consultsData : [];
+      
+      const targetAppts = appts.filter(app => 
+        !app.parentAppointmentId && 
+        ["Confirmed", "Check In", "Check Out"].includes(app.status)
+      );
+      
+      const combined = targetAppts.map(app => {
+        const match = consults.find(c => c.appointmentId === app.id);
+        return {
+          id: app.id,
+          appointment: app,
+          consultation: match || null,
+        };
+      });
+      
+      setItems(combined);
     } catch (err: any) {
-      toast.error(err.message || "Failed to load consultations");
+      toast.error(err.message || "Failed to load consultancy list data");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchConsultations();
+    fetchConsultancyData();
   }, []);
 
   const handleDelete = async (id: string) => {
@@ -47,7 +68,7 @@ const ConsultationList = () => {
     try {
       await apiDelete(`/api/consultations/${id}`);
       toast.success("Consultation deleted");
-      setConsultations((prev) => prev.filter((c) => c.id !== id));
+      fetchConsultancyData();
     } catch (err: any) {
       toast.error(err.message || "Failed to delete");
     } finally {
@@ -55,12 +76,27 @@ const ConsultationList = () => {
     }
   };
 
-  const filtered = consultations.filter((c) => {
-    if (c.appointment?.status !== "Confirmed") return false;
+  const handleStartConsultation = async (apptId: string) => {
+    setStartingId(apptId);
+    try {
+      const consult = await apiPost<any>("/api/consultations", {
+        appointmentId: apptId,
+        status: "Draft",
+      });
+      navigate(`/therapy-consultations/${consult.id}`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to start consultation");
+    } finally {
+      setStartingId(null);
+    }
+  };
 
-    const pat = `${c.patient?.firstName || ""} ${c.patient?.lastName || ""}`.toLowerCase();
-    const doc = (c.doctor?.fullName || "").toLowerCase();
-    const code = (c.consultationCode || "").toLowerCase();
+  const filtered = items.filter((item) => {
+    const app = item.appointment;
+    const c = item.consultation;
+    const pat = `${app?.patient?.firstName || ""} ${app?.patient?.lastName || ""}`.toLowerCase();
+    const doc = (app?.doctor?.fullName || "").toLowerCase();
+    const code = (c?.consultationCode || app?.appointmentCode || "").toLowerCase();
     const term = searchTerm.toLowerCase();
     return pat.includes(term) || doc.includes(term) || code.includes(term);
   });
@@ -99,22 +135,22 @@ const ConsultationList = () => {
         {/* Stats Row */}
         <div className="row g-3 mb-4">
           {[
-            { label: "Total Consultations", value: consultations.length, icon: "ti-stethoscope", color: "#6366f1" },
+            { label: "Total Consultations", value: items.filter(item => item.consultation).length, icon: "ti-stethoscope", color: "#6366f1" },
             {
               label: "Confirmed",
-              value: consultations.filter((c) => c.status === "Confirmed").length,
+              value: items.filter((item) => item.consultation?.status === "Confirmed").length,
               icon: "ti-circle-check",
               color: "#10b981",
             },
             {
               label: "Pending Payment",
-              value: consultations.filter((c) => c.paymentStatus !== "Paid").length,
+              value: items.filter((item) => item.consultation && item.consultation.paymentStatus !== "Paid").length,
               icon: "ti-currency-rupee",
               color: "#f59e0b",
             },
             {
               label: "Sessions Created",
-              value: consultations.reduce((s: number, c: any) => s + (c.therapyPlans?.reduce((a: number, p: any) => a + (p.totalSessions || 0), 0) || 0), 0),
+              value: items.reduce((s: number, item: any) => s + (item.consultation?.therapyPlans?.reduce((a: number, p: any) => a + (p.totalSessions || 0), 0) || 0), 0),
               icon: "ti-calendar",
               color: "#3b82f6",
             },
@@ -176,8 +212,8 @@ const ConsultationList = () => {
               </div>
             ) : filtered.length === 0 ? (
               <EmptyState
-                title="No consultations found"
-                message="Start by creating a new consultation from an existing therapy appointment."
+                title="No consultancy appointments found"
+                message="Confirmed therapy appointments will show up here to start or view consultations."
               />
             ) : (
               <div className="table-responsive">
@@ -196,134 +232,167 @@ const ConsultationList = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((c) => (
-                      <tr key={c.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td className="px-4">
-                          <span
-                            className="fw-semibold"
-                            style={{ color: "#6366f1", fontFamily: "monospace", fontSize: 13 }}
-                          >
-                            {c.consultationCode || "—"}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="d-flex align-items-center gap-2">
-                            {c.patient?.profileImage ? (
-                              <img
-                                src={c.patient.profileImage}
-                                alt=""
-                                className="rounded-circle"
-                                style={{ width: 34, height: 34, objectFit: "cover" }}
-                              />
-                            ) : (
-                              <div
-                                className="rounded-circle d-flex align-items-center justify-content-center fw-bold"
-                                style={{ width: 34, height: 34, background: "#6366f120", color: "#6366f1", fontSize: 13 }}
-                              >
-                                {(c.patient?.firstName?.[0] || "P").toUpperCase()}
-                              </div>
-                            )}
-                            <div>
-                              <div className="fw-semibold" style={{ fontSize: 14 }}>
-                                {c.patient?.firstName} {c.patient?.lastName}
-                              </div>
-                              <div className="text-muted" style={{ fontSize: 12 }}>
-                                {c.patient?.phone || "—"}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div style={{ fontSize: 14 }}>{c.doctor?.fullName || "—"}</div>
-                        </td>
-                        <td>
-                          <div className="d-flex flex-column gap-1">
-                            {c.therapyPlans?.map((p: any, i: number) => (
-                              <span
-                                key={i}
-                                className="badge bg-indigo bg-opacity-10 text-primary"
-                                style={{
-                                  background: "#6366f118",
-                                  color: "#4f46e5",
-                                  borderRadius: 6,
-                                  fontSize: 11,
-                                  padding: "3px 8px",
-                                }}
-                              >
-                                {p.therapyName || "Therapy"} × {p.totalSessions}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="fw-semibold">₹{(c.finalTotalAmount || 0).toLocaleString()}</div>
-                          {c.amountPaid > 0 && (
-                            <div className="text-muted" style={{ fontSize: 11 }}>
-                              Paid: ₹{(c.amountPaid || 0).toLocaleString()}
-                            </div>
-                          )}
-                        </td>
-                        <td>
-                          {c.invoice ? (
+                    {filtered.map((item) => {
+                      const app = item.appointment;
+                      const c = item.consultation;
+                      return (
+                        <tr key={item.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td className="px-4">
                             <span
-                              className={`badge bg-${payStatusColors[c.invoice.paymentStatus] || "secondary"}-subtle text-${payStatusColors[c.invoice.paymentStatus] || "secondary"}`}
-                              style={{ borderRadius: 6, fontSize: 11 }}
+                              className="fw-semibold"
+                              style={{ color: "#6366f1", fontFamily: "monospace", fontSize: 13 }}
                             >
-                              {c.invoice.paymentStatus}
+                              {c ? c.consultationCode : (app?.appointmentCode || "—")}
                             </span>
-                          ) : (
-                            <span className="text-muted" style={{ fontSize: 12 }}>No invoice</span>
-                          )}
-                        </td>
-                        <td>
-                          <span
-                            className={`badge bg-${statusColors[c.status] || "secondary"}-subtle text-${statusColors[c.status] || "secondary"}`}
-                            style={{ borderRadius: 6, padding: "4px 10px" }}
-                          >
-                            {c.status}
-                          </span>
-                        </td>
-                        <td>
-                          <div style={{ fontSize: 13 }}>{formatDate(c.createdAt)}</div>
-                        </td>
-                        <td className="pe-4">
-                          <div className="d-flex gap-2">
-                            {c.status === "Draft" ? (
-                              <button
-                                className="btn btn-sm btn-success text-white d-flex align-items-center gap-1"
-                                style={{ borderRadius: 8, padding: "5px 10px" }}
-                                title="Start Consultation"
-                                onClick={() => navigate(`/therapy-consultations/${c.id}`)}
-                              >
-                                <i className="ti ti-player-play-filled" /> Start
-                              </button>
-                            ) : (
-                              <button
-                                className="btn btn-sm btn-primary d-flex align-items-center gap-1"
-                                style={{ borderRadius: 8, padding: "5px 10px" }}
-                                title="View Details"
-                                onClick={() => navigate(`/therapy-consultations/${c.id}`)}
-                              >
-                                <i className="ti ti-eye" /> View
-                              </button>
+                            {!c && (
+                              <span className="badge bg-secondary-subtle text-secondary ms-2 small" style={{ fontSize: 9, borderRadius: 4 }}>
+                                Not Started
+                              </span>
                             )}
-                            <button
-                              className="btn btn-sm btn-danger"
-                              style={{ borderRadius: 8 }}
-                              title="Delete"
-                              disabled={deletingId === c.id}
-                              onClick={() => handleDelete(c.id)}
-                            >
-                              {deletingId === c.id ? (
-                                <span className="spinner-border spinner-border-sm" />
+                          </td>
+                          <td>
+                            <div className="d-flex align-items-center gap-2">
+                              {app?.patient?.profileImage ? (
+                                <img
+                                  src={app.patient.profileImage}
+                                  alt=""
+                                  className="rounded-circle"
+                                  style={{ width: 34, height: 34, objectFit: "cover" }}
+                                />
                               ) : (
-                                <i className="ti ti-trash" />
+                                <div
+                                  className="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                  style={{ width: 34, height: 34, background: "#6366f120", color: "#6366f1", fontSize: 13 }}
+                                >
+                                  {(app?.patient?.firstName?.[0] || "P").toUpperCase()}
+                                </div>
                               )}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                              <div>
+                                <div className="fw-semibold" style={{ fontSize: 14 }}>
+                                  {app?.patient?.firstName} {app?.patient?.lastName}
+                                </div>
+                                <div className="text-muted" style={{ fontSize: 12 }}>
+                                  {app?.patient?.phone || "—"}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ fontSize: 14 }}>{app?.doctor?.fullName || "—"}</div>
+                          </td>
+                          <td>
+                            <div className="d-flex flex-column gap-1">
+                              {c ? (
+                                c.therapyPlans?.map((p: any, i: number) => (
+                                  <span
+                                    key={i}
+                                    className="badge bg-indigo bg-opacity-10 text-primary"
+                                    style={{
+                                      background: "#6366f118",
+                                      color: "#4f46e5",
+                                      borderRadius: 6,
+                                      fontSize: 11,
+                                      padding: "3px 8px",
+                                    }}
+                                  >
+                                    {p.therapyName || "Therapy"} × {p.totalSessions}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-muted small">No prescription prescribed</span>
+                              )}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="fw-semibold">₹{(c?.finalTotalAmount || 0).toLocaleString()}</div>
+                            {c && c.amountPaid > 0 && (
+                              <div className="text-muted" style={{ fontSize: 11 }}>
+                                Paid: ₹{(c.amountPaid || 0).toLocaleString()}
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            {c?.invoice ? (
+                              <span
+                                className={`badge bg-${payStatusColors[c.invoice.paymentStatus] || "secondary"}-subtle text-${payStatusColors[c.invoice.paymentStatus] || "secondary"}`}
+                                style={{ borderRadius: 6, fontSize: 11 }}
+                              >
+                                {c.invoice.paymentStatus}
+                              </span>
+                            ) : (
+                              <span className="text-muted" style={{ fontSize: 12 }}>—</span>
+                            )}
+                          </td>
+                          <td>
+                            <span
+                              className={`badge bg-${statusColors[c ? c.status : "Not Started"] || "secondary"}-subtle text-${statusColors[c ? c.status : "Not Started"] || "secondary"}`}
+                              style={{ borderRadius: 6, padding: "4px 10px" }}
+                            >
+                              {c ? c.status : "Not Started"}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ fontSize: 13 }}>{formatDate(app?.scheduledAt)}</div>
+                          </td>
+                          <td className="pe-4">
+                            <div className="d-flex gap-2">
+                              {!c ? (
+                                <button
+                                  className="btn btn-sm btn-success text-white d-flex align-items-center gap-1"
+                                  style={{ borderRadius: 8, padding: "5px 10px" }}
+                                  title="Start Consultation"
+                                  disabled={startingId === app?.id}
+                                  onClick={() => handleStartConsultation(app.id)}
+                                >
+                                  {startingId === app?.id ? (
+                                    <>
+                                      <span className="spinner-border spinner-border-sm" /> Starting
+                                    </>
+                                  ) : (
+                                    <>
+                                      <i className="ti ti-player-play-filled" /> Start
+                                    </>
+                                  )}
+                                </button>
+                              ) : c.status === "Draft" ? (
+                                <button
+                                  className="btn btn-sm btn-success text-white d-flex align-items-center gap-1"
+                                  style={{ borderRadius: 8, padding: "5px 10px" }}
+                                  title="Resume Consultation"
+                                  onClick={() => navigate(`/therapy-consultations/${c.id}`)}
+                                >
+                                  <i className="ti ti-player-play-filled" /> Start
+                                </button>
+                              ) : (
+                                <button
+                                  className="btn btn-sm btn-primary d-flex align-items-center gap-1"
+                                  style={{ borderRadius: 8, padding: "5px 10px" }}
+                                  title="View Details"
+                                  onClick={() => navigate(`/therapy-consultations/${c.id}`)}
+                                >
+                                  <i className="ti ti-eye" /> View
+                                </button>
+                              )}
+                              {c && (
+                                <button
+                                  className="btn btn-sm btn-danger"
+                                  style={{ borderRadius: 8 }}
+                                  title="Delete"
+                                  disabled={deletingId === c.id}
+                                  onClick={() => handleDelete(c.id)}
+                                >
+                                  {deletingId === c.id ? (
+                                    <span className="spinner-border spinner-border-sm" />
+                                  ) : (
+                                    <i className="ti ti-trash" />
+                                  )}
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

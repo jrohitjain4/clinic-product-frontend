@@ -825,7 +825,7 @@ const ConsultationForm = () => {
     );
   }
 
-  if (isViewMode && consultationData && !isEditing && consultationData.status !== "Draft") {
+  if (isViewMode && consultationData && consultationData.status !== "Draft") {
     const allChildAppts = (consultationData.therapyPlans || []).flatMap((p: any) =>
       (p.childAppointments || []).map((a: any) => ({
         ...a,
@@ -2130,6 +2130,17 @@ const ConsultationForm = () => {
                         advice,
                         attachments,
                         status: "Draft",
+                        therapyPlans: therapyPlans.map((p) => ({
+                          ...p,
+                          totalSessions: parseInt(String(p.totalSessions)) || 1,
+                          sessionFee: parseFloat(String(p.sessionFee)) || 0,
+                        })),
+                        consultationFee,
+                        discountType,
+                        discountValue: Number(discountValue) || 0,
+                        amountPaid: Number(amountPaid) || 0,
+                        paymentMethod,
+                        whatsappNotification,
                       });
                     } catch (err) {
                       // Silently continue to preview

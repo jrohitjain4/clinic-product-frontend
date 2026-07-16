@@ -825,7 +825,7 @@ const ConsultationForm = () => {
     );
   }
 
-  if (isViewMode && consultationData && consultationData.status !== "Draft") {
+  if (isViewMode && consultationData && !isEditing && consultationData.status !== "Draft") {
     const allChildAppts = (consultationData.therapyPlans || []).flatMap((p: any) =>
       (p.childAppointments || []).map((a: any) => ({
         ...a,
@@ -855,23 +855,20 @@ const ConsultationForm = () => {
                 {consultationData.status === "Confirmed" && (
                   <button
                     type="button"
-                    className={`btn d-flex align-items-center gap-2 border shadow-sm ${isEditing ? "btn-success" : "btn-warning text-white"}`}
+                    className="btn btn-warning text-white d-flex align-items-center gap-2 border shadow-sm"
                     onClick={() => {
-                      if (isEditing) {
-                        handleSaveExam();
-                      } else {
-                        setGeneralNotes(consultationData.examinationNotes || "");
-                        setAdvice(consultationData.advice || "");
-                        setMedicines(consultationData.medicines || []);
-                        setBodyPoints(consultationData.bodyPoints || []);
-                        setAttachments(consultationData.attachments || []);
-                        setIsEditing(true);
-                      }
+                      setGeneralNotes(consultationData.examinationNotes || "");
+                      setAdvice(consultationData.advice || "");
+                      setMedicines(consultationData.medicines || []);
+                      setBodyPoints(consultationData.bodyPoints || []);
+                      setAttachments(consultationData.attachments || []);
+                      setIsEditing(true);
+                      setStep(1);
                     }}
                     style={{ borderRadius: "10px", fontWeight: 600 }}
                   >
-                    <i className={`ti ${isEditing ? "ti-device-floppy" : "ti-edit"}`} />
-                    {isEditing ? "Save Details" : "Edit Details"}
+                    <i className="ti ti-edit" />
+                    Edit Details
                   </button>
                 )}
                 <button
@@ -1313,14 +1310,30 @@ const ConsultationForm = () => {
         <div className="page-header">
           <div className="row align-items-center">
             <div className="col">
-              <h3 className="page-title">New Consultation</h3>
+              <h3 className="page-title">
+                {isEditing 
+                  ? `Edit Consultation - ${consultationData?.consultationCode}` 
+                  : "New Consultation"}
+              </h3>
               <ul className="breadcrumb">
                 <li className="breadcrumb-item">
                   <a href={routes.therapyConsultations}>Consultations</a>
                 </li>
-                <li className="breadcrumb-item active">Create</li>
+                <li className="breadcrumb-item active">{isEditing ? "Edit" : "Create"}</li>
               </ul>
             </div>
+            {isEditing && (
+              <div className="col-auto">
+                <button
+                  type="button"
+                  className="btn btn-light d-flex align-items-center gap-2 border shadow-sm"
+                  onClick={() => setIsEditing(false)}
+                  style={{ borderRadius: 10, fontWeight: 600 }}
+                >
+                  <i className="ti ti-x" /> Cancel Edit
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -2488,12 +2501,12 @@ const ConsultationForm = () => {
                 {submitting ? (
                   <>
                     <span className="spinner-border spinner-border-sm me-2" />
-                    Creating...
+                    Saving...
                   </>
                 ) : (
                   <>
                     <i className="ti ti-check me-2" />
-                    Confirm & Create Sessions
+                    {isEditing ? "Save Changes" : "Confirm & Create Sessions"}
                   </>
                 )}
               </button>

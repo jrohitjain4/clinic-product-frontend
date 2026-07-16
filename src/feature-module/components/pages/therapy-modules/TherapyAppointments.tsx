@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import Datatable from "../../../../core/common/dataTable";
 import { apiGet, apiDelete, apiPost, apiPut } from "../../../../core/utils/apiClient";
@@ -9,6 +9,8 @@ import { apiUrl } from "../../../../core/config/api";
 import { useMedicines } from "../../../../core/hooks/useMedicines";
 
 const TherapyAppointments = () => {
+  const location = useLocation();
+  const isConsultancy = location.pathname.includes("consultations");
   const { medicines: pharmacyMedicines } = useMedicines();
   const [activeSearchIndex, setActiveSearchIndex] = useState<number | null>(null);
 
@@ -772,9 +774,9 @@ const TherapyAppointments = () => {
           <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
             <div className="flex-grow-1">
               <h4 className="page-title fw-bold mb-0">
-                Therapy Appointments
+                {isConsultancy ? "Therapy Consultancy" : "Therapy Appointments"}
                 <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                  Total Bookings: {loading ? "" : data.length}
+                  {isConsultancy ? "Total Consultations" : "Total Bookings"}: {loading ? "" : data.length}
                 </span>
               </h4>
             </div>

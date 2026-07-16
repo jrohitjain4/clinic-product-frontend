@@ -80,7 +80,7 @@ const EditInvoices = () => {
   const [paymentMethod, setPaymentMethod] = useState<any>(null);
   const [status, setStatus] = useState<any>(null);
   const [previouslyPaid, setPreviouslyPaid] = useState<number>(0);
-  const [addonPayment, setAddonPayment] = useState<number>(0);
+  const [addonPayment, setAddonPayment] = useState<number | "">(0);
   const [otherInfo, setOtherInfo] = useState<string>("");
 
   const [saving, setSaving] = useState(false);
@@ -191,7 +191,7 @@ const EditInvoices = () => {
           totalAmount: totals.total,
           paymentMethod: paymentMethod?.value || "Cash",
           paymentStatus: status?.value || "Pending",
-          amountPaid: previouslyPaid + addonPayment,
+          amountPaid: previouslyPaid + (Number(addonPayment) || 0),
           otherInfo: otherInfo,
           items: invoices.filter(inv => inv.description.trim() !== "").map(inv => ({
             serviceId: null,
@@ -309,9 +309,32 @@ const EditInvoices = () => {
                         type="number"
                         className="form-control"
                         placeholder="Enter amount to pay now"
-                        value={addonPayment}
+                        value={addonPayment === 0 ? "" : addonPayment}
+                        onFocus={(e) => {
+                          if (addonPayment === 0) {
+                            setAddonPayment("");
+                          }
+                        }}
+                        onBlur={(e) => {
+                          if (addonPayment === "") {
+                            setAddonPayment(0);
+                          }
+                        }}
                         onChange={(e) => {
-                          const val = Number(e.target.value) || 0;
+                          const rawVal = e.target.value;
+                          if (rawVal === "") {
+                            setAddonPayment("");
+                            const newPaidTotal = previouslyPaid;
+                            if (newPaidTotal >= totals.total && totals.total > 0) {
+                              setStatus({ value: "Paid", label: "Paid" });
+                            } else if (newPaidTotal > 0) {
+                              setStatus({ value: "Partially Paid", label: "Partially Paid" });
+                            } else {
+                              setStatus({ value: "Pending", label: "Pending" });
+                            }
+                            return;
+                          }
+                          const val = Number(rawVal) || 0;
                           const maxPayable = Math.max(0, totals.total - previouslyPaid);
                           const cleanVal = val > maxPayable ? maxPayable : val;
                           setAddonPayment(cleanVal);
@@ -327,8 +350,8 @@ const EditInvoices = () => {
                         }}
                       />
                       <div className="d-flex justify-content-between mt-1 small">
-                        <span className="text-muted">Total Paid: <strong>₹{(previouslyPaid + addonPayment).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong></span>
-                        <span className="text-danger fw-bold">Remaining Due: <strong>₹{Math.max(0, totals.total - (previouslyPaid + addonPayment)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong></span>
+                        <span className="text-muted">Total Paid: <strong>₹{(previouslyPaid + (Number(addonPayment) || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong></span>
+                        <span className="text-danger fw-bold">Remaining Due: <strong>₹{Math.max(0, totals.total - (previouslyPaid + (Number(addonPayment) || 0))).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong></span>
                       </div>
                     </div>
                   </div>

@@ -220,7 +220,10 @@ const InvoicesList = () => {
                   <td class="fw-heavy text-dark" style="font-size: 13px;">${r.Patient}</td>
                   <td>${r.CreatedDate}</td>
                   <td>${r.DueDate}</td>
-                  <td class="text-center fw-bold text-success" style="font-size: 13px;">${r.Amount}</td>
+                  <td class="text-center fw-bold text-success" style="font-size: 13px;">
+                    ${r.Amount}
+                    ${r.raw.paymentStatus === 'Partially Paid' ? `<div class="text-danger small fw-bold" style="font-size: 10px;">Due: ₹${Math.max(0, r.raw.totalAmount - (r.raw.amountPaid || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>` : ''}
+                  </td>
                   <td class="text-center"><span class="badge-custom text-uppercase">${r.Status}</span></td>
                 </tr>
               `).join('')}

@@ -1329,7 +1329,7 @@ export const publicRoutes = [
   },
   {
     path: routes.therapyConsultations,
-    element: <TherapyAppointments />,
+    element: <ConsultationList />,
     route: Route,
   },
   {

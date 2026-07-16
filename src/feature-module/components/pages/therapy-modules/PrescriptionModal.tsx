@@ -141,6 +141,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         attachments: updatedAttachments,
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
+        painLevel: selectedConsultation.painLevel,
       });
       setSelectedConsultation(updatedConsult);
       toast.success("Prescription file(s) uploaded successfully!");
@@ -169,6 +170,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         attachments: selectedConsultation.attachments,
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
+        painLevel: selectedConsultation.painLevel,
       });
       setSelectedConsultation(updated);
     } catch (err: any) {
@@ -184,6 +186,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         attachments: currentAttachments,
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
+        painLevel: selectedConsultation.painLevel,
       });
       setSelectedConsultation(updatedConsult);
       toast.success("Attachment removed successfully");
@@ -229,6 +232,14 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
     });
   };
 
+  const updateModalPainLevel = (value: number | null) => {
+    if (!selectedConsultation) return;
+    setSelectedConsultation({
+      ...selectedConsultation,
+      painLevel: value,
+    });
+  };
+
   const handleSaveModalConsultation = async () => {
     if (!selectedConsultation) return;
     try {
@@ -236,6 +247,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
         attachments: selectedConsultation.attachments || [],
+        painLevel: selectedConsultation.painLevel,
       });
       setSelectedConsultation(updated);
       onSaveSuccess();
@@ -267,8 +279,9 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
       ...selectedConsultation,
       medicines: medicinesToCopy,
       advice: adviceToCopy,
+      painLevel: prevConsult.painLevel || null,
     });
-    toast.info("Copied medicines & advice from past prescription.");
+    toast.info("Copied medicines, advice & pain level from past prescription.");
   };
 
   const handleClearPrescription = () => {
@@ -277,6 +290,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
       ...selectedConsultation,
       medicines: [],
       advice: "",
+      painLevel: null,
     });
     toast.info("Cleared prescription inputs.");
   };
@@ -504,6 +518,65 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                         </div>
                       </div>
 
+                      {/* Pain Level Scale (1 to 10) */}
+                      <div className="card border-0 mb-4" style={{ borderRadius: 12, backgroundColor: "#fdf8f8", border: "1px solid #fce8e8 !important" }}>
+                        <div className="card-body p-3">
+                          <div className="d-flex align-items-center justify-content-between mb-2">
+                            <h6 className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: "#d946ef" }}>
+                              <i className="ti ti-activity text-danger fs-5"></i> How much pain left? (Pain Scale: 1 to 10)
+                            </h6>
+                            {selectedConsultation.painLevel ? (
+                              <span className={`badge px-3 py-2 fs-13 ${
+                                selectedConsultation.painLevel <= 3 ? "bg-success" :
+                                selectedConsultation.painLevel <= 7 ? "bg-warning text-dark" : "bg-danger"
+                              }`}>
+                                Current Pain: <strong>{selectedConsultation.painLevel} / 10</strong>
+                              </span>
+                            ) : (
+                              <span className="badge bg-secondary px-3 py-2 fs-13">Not Rated</span>
+                            )}
+                          </div>
+                          
+                          <div className="d-flex justify-content-between gap-1 mt-2 flex-wrap flex-md-nowrap">
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
+                              const isSelected = selectedConsultation.painLevel === num;
+                              let btnClass = "btn btn-outline-secondary";
+                              if (isSelected) {
+                                if (num <= 3) {
+                                  btnClass = "btn btn-success text-white border-success";
+                                } else if (num <= 7) {
+                                  btnClass = "btn btn-warning text-dark border-warning fw-bold";
+                                } else {
+                                  btnClass = "btn btn-danger text-white border-danger";
+                                }
+                              }
+                              return (
+                                <button
+                                  key={num}
+                                  type="button"
+                                  className={`flex-fill py-2 text-center fw-bold ${btnClass}`}
+                                  onClick={() => updateModalPainLevel(num)}
+                                  style={{
+                                    borderRadius: 8,
+                                    fontSize: 14,
+                                    minWidth: "35px",
+                                    transition: "all 0.2s",
+                                    ...(isSelected ? { transform: "scale(1.05)", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" } : {})
+                                  }}
+                                >
+                                  {num}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <div className="d-flex justify-content-between mt-2 text-muted small px-1" style={{ fontSize: 11 }}>
+                            <span className="text-success"><i className="ti ti-circle-check"></i> 1-3 Mild / Recovering</span>
+                            <span className="text-warning"><i className="ti ti-alert-triangle"></i> 4-7 Moderate</span>
+                            <span className="text-danger"><i className="ti ti-bolt"></i> 8-10 Severe Pain</span>
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Advice and Diagnostic Tests Row */}
                       <div className="row g-3 mb-4">
                         <div className="col-md-6">
@@ -646,6 +719,11 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                                 {pc.medicines && pc.medicines.length > 0 && (
                                   <div className="text-secondary small mt-1 fs-11" style={{ lineHeight: "1.4" }}>
                                     <strong>Meds:</strong> {pc.medicines.map((m: any) => `${m.name} (${m.dosage})`).join(", ")}
+                                  </div>
+                                )}
+                                {pc.painLevel !== undefined && pc.painLevel !== null && (
+                                  <div className="text-danger small mt-1 fs-11">
+                                    <i className="ti ti-activity me-1"></i>Pain Scale: <span className="badge bg-danger-light text-danger">{pc.painLevel} / 10</span>
                                   </div>
                                 )}
                                 {pc.advice && (

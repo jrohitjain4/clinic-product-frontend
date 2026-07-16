@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import Datatable from "../../../../core/common/dataTable";
 import { apiGet, apiDelete, apiPost, apiPut } from "../../../../core/utils/apiClient";
@@ -10,6 +10,7 @@ import { useMedicines } from "../../../../core/hooks/useMedicines";
 
 const TherapyAppointments = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isConsultancy = location.pathname.includes("consultations");
   const { medicines: pharmacyMedicines } = useMedicines();
   const [activeSearchIndex, setActiveSearchIndex] = useState<number | null>(null);
@@ -733,17 +734,31 @@ const TherapyAppointments = () => {
             <button
               className="bg-transparent border-0 text-info p-1"
               title="View Details"
-              data-bs-toggle="modal"
-              data-bs-target="#view_therapy_appt"
               onClick={async () => {
-                setViewAppt(record.raw);
-                setViewConsultation(null);
-                if (record.raw.consultation) {
-                  try {
-                    const consult = await apiGet<any>(`/api/consultations/${record.raw.consultation.id}`);
-                    setViewConsultation(consult);
-                  } catch (err) {
-                    console.error("Failed to load consultation details for view:", err);
+                if (isConsultancy) {
+                  // In consultancy mode: navigate directly to consultation form
+                  if (record.raw.consultation?.id) {
+                    navigate(`/therapy-consultations/${record.raw.consultation.id}`);
+                  } else {
+                    navigate(`/therapy-consultations/create?appointmentId=${record.raw.id}`);
+                  }
+                } else {
+                  // In appointments mode: open the view modal
+                  setViewAppt(record.raw);
+                  setViewConsultation(null);
+                  if (record.raw.consultation) {
+                    try {
+                      const consult = await apiGet<any>(`/api/consultations/${record.raw.consultation.id}`);
+                      setViewConsultation(consult);
+                    } catch (err) {
+                      console.error("Failed to load consultation details for view:", err);
+                    }
+                  }
+                  // open modal
+                  const modalEl = document.getElementById("view_therapy_appt");
+                  if (modalEl) {
+                    const { Modal } = await import("bootstrap");
+                    new Modal(modalEl).show();
                   }
                 }
               }}

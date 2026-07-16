@@ -6,7 +6,7 @@ import EmptyState from "../../../../core/common/emptyState";
 import { all_routes } from "../../../routes/all_routes";
 import Datatable from "../../../../core/common/dataTable";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
-import { resolveMediaUrl } from "../../../../core/config/api";
+import { resolveMediaUrl, apiUrl } from "../../../../core/config/api";
 
 const routes = all_routes;
 
@@ -158,6 +158,29 @@ const ConsultationList = () => {
       toast.error(err.message || "Failed to start consultation");
     } finally {
       setStartingId(null);
+    }
+  };
+
+  const handleMarkPaymentPaid = async (appointmentId: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(apiUrl(`/api/appointments/${appointmentId}`), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ paymentStatus: "Paid" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to update payment status");
+      }
+      toast.success("Payment marked as Paid");
+      fetchConsultancyData();
+    } catch (err: any) {
+      console.error("Error updating payment status:", err);
+      toast.error(err.message || "Failed to update payment status");
     }
   };
 
@@ -320,25 +343,41 @@ const ConsultationList = () => {
     {
       title: "Total Amt",
       dataIndex: "totalAmount",
-      sorter: (a: any, b: any) => (a.consultation?.finalTotalAmount || 0) - (b.consultation?.finalTotalAmount || 0),
+      sorter: (a: any, b: any) => {
+        const amtA = a.consultation ? (a.consultation.finalTotalAmount || 0) : (a.appointment?.finalFee || a.appointment?.consultationFee || 0);
+        const amtB = b.consultation ? (b.consultation.finalTotalAmount || 0) : (b.appointment?.finalFee || b.appointment?.consultationFee || 0);
+        return amtA - amtB;
+      },
       render: (_: any, record: any) => {
+        const app = record.appointment;
         const c = record.consultation;
-        const status = c?.invoice ? c.invoice.paymentStatus : "Unpaid";
+        
+        const amount = c ? (c.finalTotalAmount || 0) : (app?.finalFee || app?.consultationFee || 0);
+        const status = c?.invoice ? c.invoice.paymentStatus : (app?.paymentStatus || "Unpaid");
+        
         const isPaid = status === "Paid";
         const isPartial = status === "Partial Paid";
+        
         return (
           <div className="d-flex flex-column align-items-start gap-1">
-            <span className="text-dark fw-bold">₹{(c?.finalTotalAmount || 0).toLocaleString()}</span>
-            {c && (
-              <span className={`badge border ${
-                isPaid 
-                  ? "badge-soft-success border-success text-success" 
-                  : isPartial 
-                  ? "badge-soft-warning border-warning text-warning" 
-                  : "badge-soft-danger border-danger text-danger"
-              } px-1 py-0.5 fs-11`}>
-                {status}
-              </span>
+            <span className="text-dark fw-bold">₹{amount.toLocaleString()}</span>
+            <span className={`badge border ${
+              isPaid 
+                ? "badge-soft-success border-success text-success" 
+                : isPartial 
+                ? "badge-soft-warning border-warning text-warning" 
+                : "badge-soft-danger border-danger text-danger"
+            } px-1 py-0.5 fs-11`}>
+              {status}
+            </span>
+            {!isPaid && !c && app && (
+              <button
+                className="btn btn-xs btn-outline-success py-0 px-1 fs-10 fw-bold mt-1 text-uppercase"
+                onClick={() => handleMarkPaymentPaid(app.id)}
+                style={{ borderRadius: "4px" }}
+              >
+                Mark Paid
+              </button>
             )}
           </div>
         );

@@ -687,7 +687,7 @@ const ConsultationForm = () => {
     );
   }
 
-  if (isViewMode && consultationData) {
+  if (isViewMode && consultationData && !isEditing) {
     const allChildAppts = (consultationData.therapyPlans || []).flatMap((p: any) =>
       (p.childAppointments || []).map((a: any) => ({
         ...a,

@@ -112,75 +112,8 @@ const ConsultationList = () => {
           <div className="row align-items-center">
             <div className="col">
               <h3 className="page-title">Therapy Consultations</h3>
-              <ul className="breadcrumb">
-                <li className="breadcrumb-item">
-                  <Link to="/dashboard">Dashboard</Link>
-                </li>
-                <li className="breadcrumb-item active">Consultations</li>
-              </ul>
-            </div>
-            <div className="col-auto">
-              <Link
-                to={routes.createConsultation}
-                className="btn btn-primary d-flex align-items-center gap-2"
-                style={{ borderRadius: "10px", fontWeight: 600 }}
-              >
-                <i className="ti ti-plus" />
-                New Consultation
-              </Link>
             </div>
           </div>
-        </div>
-
-        {/* Stats Row */}
-        <div className="row g-3 mb-4">
-          {[
-            { label: "Total Consultations", value: items.filter(item => item.consultation).length, icon: "ti-stethoscope", color: "#6366f1" },
-            {
-              label: "Confirmed",
-              value: items.filter((item) => item.consultation?.status === "Confirmed").length,
-              icon: "ti-circle-check",
-              color: "#10b981",
-            },
-            {
-              label: "Pending Payment",
-              value: items.filter((item) => item.consultation && item.consultation.paymentStatus !== "Paid").length,
-              icon: "ti-currency-rupee",
-              color: "#f59e0b",
-            },
-            {
-              label: "Sessions Created",
-              value: items.reduce((s: number, item: any) => s + (item.consultation?.therapyPlans?.reduce((a: number, p: any) => a + (p.totalSessions || 0), 0) || 0), 0),
-              icon: "ti-calendar",
-              color: "#3b82f6",
-            },
-          ].map((stat, i) => (
-            <div key={i} className="col-6 col-md-3">
-              <div
-                className="card border-0 h-100"
-                style={{
-                  background: "linear-gradient(135deg, #fff 0%, #f8fafc 100%)",
-                  borderRadius: "16px",
-                  boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
-                }}
-              >
-                <div className="card-body d-flex align-items-center gap-3">
-                  <div
-                    className="rounded-3 d-flex align-items-center justify-content-center"
-                    style={{ width: 52, height: 52, background: `${stat.color}18`, flexShrink: 0 }}
-                  >
-                    <i className={`ti ${stat.icon} fs-4`} style={{ color: stat.color }} />
-                  </div>
-                  <div>
-                    <div className="fw-bold fs-4" style={{ lineHeight: 1.2 }}>
-                      {stat.value}
-                    </div>
-                    <div className="text-muted small">{stat.label}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
 
         {/* Table Card */}
@@ -338,45 +271,41 @@ const ConsultationList = () => {
                             <div className="d-flex gap-2">
                               {!c ? (
                                 <button
-                                  className="btn btn-sm btn-success text-white d-flex align-items-center gap-1"
-                                  style={{ borderRadius: 8, padding: "5px 10px" }}
+                                  className="btn btn-sm btn-success text-white d-flex align-items-center justify-content-center"
+                                  style={{ borderRadius: 8, width: 34, height: 34 }}
                                   title="Start Consultation"
                                   disabled={startingId === app?.id}
                                   onClick={() => handleStartConsultation(app.id)}
                                 >
                                   {startingId === app?.id ? (
-                                    <>
-                                      <span className="spinner-border spinner-border-sm" /> Starting
-                                    </>
+                                    <span className="spinner-border spinner-border-sm" />
                                   ) : (
-                                    <>
-                                      <i className="ti ti-player-play-filled" /> Start
-                                    </>
+                                    <i className="ti ti-player-play-filled" />
                                   )}
                                 </button>
                               ) : c.status === "Draft" ? (
                                 <button
-                                  className="btn btn-sm btn-success text-white d-flex align-items-center gap-1"
-                                  style={{ borderRadius: 8, padding: "5px 10px" }}
+                                  className="btn btn-sm btn-success text-white d-flex align-items-center justify-content-center"
+                                  style={{ borderRadius: 8, width: 34, height: 34 }}
                                   title="Resume Consultation"
                                   onClick={() => navigate(`/therapy-consultations/${c.id}`)}
                                 >
-                                  <i className="ti ti-player-play-filled" /> Start
+                                  <i className="ti ti-player-play-filled" />
                                 </button>
                               ) : (
                                 <button
-                                  className="btn btn-sm btn-primary d-flex align-items-center gap-1"
-                                  style={{ borderRadius: 8, padding: "5px 10px" }}
+                                  className="btn btn-sm btn-primary d-flex align-items-center justify-content-center"
+                                  style={{ borderRadius: 8, width: 34, height: 34 }}
                                   title="View Details"
                                   onClick={() => navigate(`/therapy-consultations/${c.id}`)}
                                 >
-                                  <i className="ti ti-eye" /> View
+                                  <i className="ti ti-eye" />
                                 </button>
                               )}
                               {c && (
                                 <button
-                                  className="btn btn-sm btn-danger"
-                                  style={{ borderRadius: 8 }}
+                                  className="btn btn-sm btn-danger d-flex align-items-center justify-content-center"
+                                  style={{ borderRadius: 8, width: 34, height: 34 }}
                                   title="Delete"
                                   disabled={deletingId === c.id}
                                   onClick={() => handleDelete(c.id)}

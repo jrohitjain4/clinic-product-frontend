@@ -450,6 +450,17 @@ export const SidebarData = [
         ],
       },
       {
+        label: "Sessions",
+        link: routes.allSessions,
+        submenu: false,
+        showSubRoute: false,
+        icon: "calendar-check",
+        base: "all-sessions",
+        materialicons: "start",
+        dot: true,
+        submenuItems: [],
+      },
+      {
         label: "Consultancy",
         link: routes.therapyConsultations,
         submenu: false,

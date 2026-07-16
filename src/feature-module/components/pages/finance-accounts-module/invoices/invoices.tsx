@@ -323,11 +323,23 @@ const InvoicesList = () => {
     {
       title: "Amount",
       dataIndex: "Amount",
-      render: (text: string, record: any) => (
-        <span className={`fw-semibold ${record.Status === 'Paid' ? 'text-success' : 'text-dark'}`}>
-          ₹{record.raw.totalAmount.toLocaleString()}
-        </span>
-      ),
+      render: (text: string, record: any) => {
+        const total = record.raw.totalAmount || 0;
+        const paid = record.raw.amountPaid || 0;
+        const due = Math.max(0, total - paid);
+        return (
+          <div className="d-flex flex-column">
+            <span className={`fw-semibold ${record.Status === 'Paid' ? 'text-success' : 'text-dark'}`}>
+              ₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+            {record.Status === 'Partially Paid' && due > 0 && (
+              <span className="text-danger fw-bold" style={{ fontSize: 10 }}>
+                Due: ₹{due.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            )}
+          </div>
+        );
+      },
       sorter: (a: any, b: any) =>
         a.raw.totalAmount - b.raw.totalAmount,
     },

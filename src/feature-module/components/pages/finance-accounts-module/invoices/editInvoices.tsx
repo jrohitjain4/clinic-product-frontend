@@ -67,6 +67,7 @@ const EditInvoices = () => {
   const statusOptions = [
     { value: "Draft", label: "Draft" },
     { value: "Pending", label: "Pending" },
+    { value: "Partially Paid", label: "Partially Paid" },
     { value: "Paid", label: "Paid" },
     { value: "Cancelled", label: "Cancelled" },
   ];
@@ -78,6 +79,7 @@ const EditInvoices = () => {
   const [dueDate, setDueDate] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState<any>(null);
   const [status, setStatus] = useState<any>(null);
+  const [amountPaid, setAmountPaid] = useState<number>(0);
   const [otherInfo, setOtherInfo] = useState<string>("");
 
   const [saving, setSaving] = useState(false);
@@ -101,6 +103,7 @@ const EditInvoices = () => {
           setSelectedTax(taxOptions.find(t => t.value === String(data.tax)) || null);
           setPaymentMethod({ value: data.paymentMethod, label: data.paymentMethod });
           setStatus({ value: data.paymentStatus || "Pending", label: data.paymentStatus || "Pending" });
+          setAmountPaid(data.amountPaid || 0);
           setOtherInfo(data.otherInfo || "");
 
           if (data.items && data.items.length > 0) {
@@ -186,6 +189,7 @@ const EditInvoices = () => {
           totalAmount: totals.total,
           paymentMethod: paymentMethod?.value || "Cash",
           paymentStatus: status?.value || "Pending",
+          amountPaid: status?.value === "Paid" ? totals.total : (status?.value === "Pending" ? 0 : Number(amountPaid)),
           otherInfo: otherInfo,
           items: invoices.filter(inv => inv.serviceId || inv.description).map(inv => ({
             serviceId: inv.serviceId?.type === "service" ? inv.serviceId?.value : null,
@@ -254,6 +258,34 @@ const EditInvoices = () => {
                         Status <span className="text-danger">*</span>
                       </label>
                       <CommonSelect options={statusOptions} value={status} onChange={setStatus} className="select" />
+                    </div>
+                  </div>
+
+                  <div className="col-lg-6 col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label mb-1 text-dark fs-14 fw-medium">
+                        Amount Paid (₹) <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        placeholder="Enter amount paid"
+                        value={status?.value === "Paid" ? totals.total : (status?.value === "Pending" ? 0 : amountPaid)}
+                        onChange={(e) => {
+                          const val = Number(e.target.value) || 0;
+                          if (val > totals.total) {
+                            setAmountPaid(totals.total);
+                          } else {
+                            setAmountPaid(val);
+                          }
+                        }}
+                        disabled={status?.value !== "Partially Paid"}
+                      />
+                      {status?.value === "Partially Paid" && (
+                        <div className="text-danger small mt-1 fw-bold">
+                          Remaining Due: ₹{Math.max(0, totals.total - amountPaid).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </div>
+                      )}
                     </div>
                   </div>
 

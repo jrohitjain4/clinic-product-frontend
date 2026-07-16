@@ -345,27 +345,6 @@ const ConsultationList = () => {
       },
     },
     {
-      title: "Status",
-      dataIndex: "status",
-      sorter: (a: any, b: any) => {
-        const statusA = a.consultation ? a.consultation.status : "Not Started";
-        const statusB = b.consultation ? b.consultation.status : "Not Started";
-        return statusA.localeCompare(statusB);
-      },
-      render: (_: any, record: any) => {
-        const c = record.consultation;
-        const status = c ? c.status : "Not Started";
-        let badgeColor = "badge-soft-secondary border-secondary text-secondary";
-        if (status === "Confirmed") badgeColor = "badge-soft-success border-success text-success";
-        if (status === "Draft") badgeColor = "badge-soft-warning border-warning text-warning";
-        return (
-          <span className={`badge border ${badgeColor} px-2 py-1 fs-12`}>
-            {status}
-          </span>
-        );
-      },
-    },
-    {
       title: "Action",
       align: "center" as const,
       render: (_: any, record: any) => {

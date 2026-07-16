@@ -74,6 +74,7 @@ const SessionsList = () => {
   const [previousClinicPrescriptions, setPreviousClinicPrescriptions] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const [selectedAppt, setSelectedAppt] = useState<any>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const medicineOptions = useMemo(() => {
     return (pharmacyMedicines || []).map((m: any) => ({
@@ -986,69 +987,107 @@ const SessionsList = () => {
                         </div>
                       </div>
 
-                      {/* Doctor Advice / Notes */}
-                      <div className="mb-4">
-                        <h6 className="fw-bold mb-2 d-flex align-items-center gap-2">
-                          <i className="ti ti-file-description text-primary"></i> Doctor's Advice & Notes
-                        </h6>
-                        <textarea
-                          className="form-control"
-                          rows={4}
-                          placeholder="Provide dietary guidelines, lifestyle tips, or exercise restrictions..."
-                          value={selectedConsultation.advice || ""}
-                          onChange={(e) => updateModalAdvice(e.target.value)}
-                          style={{ borderRadius: 10, fontSize: 13 }}
-                        />
+                      {/* Advice and Diagnostic Tests Row */}
+                      <div className="row g-3 mb-4">
+                        <div className="col-md-6">
+                          <h6 className="fw-bold mb-2 d-flex align-items-center gap-2">
+                            <i className="ti ti-message-report text-primary"></i> Advice
+                          </h6>
+                          <textarea
+                            className="form-control"
+                            rows={4}
+                            value={selectedConsultation.advice || ""}
+                            onChange={(e) => updateModalAdvice(e.target.value)}
+                            placeholder="Enter doctor's instructions, recommendations, or advices..."
+                            style={{ borderRadius: 10, fontSize: 13 }}
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <h6 className="fw-bold mb-2 d-flex align-items-center gap-2">
+                            <i className="ti ti-stethoscope text-primary"></i> Diagnostic Tests
+                          </h6>
+                          <input
+                            type="text"
+                            className="form-control form-control-sm mb-2"
+                            placeholder="Search/Add Diagnostic Test..."
+                            disabled
+                            style={{ borderRadius: 8 }}
+                          />
+                          <div className="text-center py-4 border rounded-3 bg-light text-muted small" style={{ borderStyle: "dashed" }}>
+                            No diagnostic tests prescribed.
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Prescription Scans / Reports */}
-                      <div>
+                      {/* Photo / Scan Upload Area */}
+                      <div className="mb-2">
                         <h6 className="fw-bold mb-2 d-flex align-items-center gap-2">
-                          <i className="ti ti-photo text-primary"></i> Prescription Scans & Attachments
+                          <i className="ti ti-photo-plus text-primary"></i> Prescription Scans & Attachments
                         </h6>
-                        <div className="p-3 border rounded-3 bg-light text-center mb-3" style={{ borderStyle: "dashed", borderRadius: 10 }}>
+                        <div className="p-3 border rounded-3 bg-light text-center mb-3" style={{ borderStyle: "dashed" }}>
                           <input
                             type="file"
-                            id="modal-attachments-upload"
-                            multiple
-                            accept="image/*"
-                            onChange={handleModalUpload}
+                            id="modal-scan-upload"
                             className="d-none"
-                            disabled={uploading}
+                            accept="image/*"
+                            multiple
+                            onChange={handleModalUpload}
                           />
-                          <label htmlFor="modal-attachments-upload" className="btn btn-sm btn-primary mb-2 px-3 fw-semibold" style={{ borderRadius: 6, cursor: "pointer" }}>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-primary d-flex align-items-center gap-2 mx-auto"
+                            onClick={() => document.getElementById("modal-scan-upload")?.click()}
+                            disabled={uploading}
+                            style={{ borderRadius: 8 }}
+                          >
                             {uploading ? (
-                              <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" />
+                              <>
+                                <span className="spinner-border spinner-border-sm"></span> Uploading...
+                              </>
                             ) : (
-                              <i className="ti ti-upload me-1" />
+                              <>
+                                <i className="ti ti-upload"></i> Upload Prescription/Scan Image
+                              </>
                             )}
-                            Upload Prescription/Scan Image
-                          </label>
-                          <div className="text-muted small" style={{ fontSize: 11 }}>Upload scan, diagnostic report, or printed prescription photo.</div>
+                          </button>
+                          <div className="text-muted small mt-1" style={{ fontSize: 11 }}>Upload scan, diagnostic report, or printed prescription photo.</div>
                         </div>
 
                         {selectedConsultation.attachments && selectedConsultation.attachments.length > 0 && (
-                          <div className="row g-2">
-                            {selectedConsultation.attachments.map((img: any, idx: number) => (
-                              <div className="col-sm-6 col-md-4" key={idx}>
-                                <div className="border rounded p-2 bg-white text-center position-relative shadow-none">
+                          <div className="row g-2 mb-2">
+                            {selectedConsultation.attachments.map((att: any, idx: number) => (
+                              <div key={idx} className="col-md-4">
+                                <div className="p-2 border rounded-3 bg-white h-100 shadow-sm d-flex flex-column gap-2" style={{ position: "relative" }}>
                                   <button
                                     type="button"
-                                    className="btn btn-sm btn-danger rounded-circle position-absolute top-0 end-0 m-1 d-flex align-items-center justify-content-center"
-                                    style={{ width: 20, height: 20, padding: 0 }}
+                                    className="btn btn-sm btn-danger rounded-circle p-1 d-flex align-items-center justify-content-center"
                                     onClick={() => handleRemoveModalAttachment(idx)}
+                                    style={{ position: "absolute", top: 6, right: 6, width: 22, height: 22, zIndex: 10 }}
                                   >
-                                    <i className="ti ti-x fs-10" />
+                                    <i className="ti ti-x" style={{ fontSize: 10 }}></i>
                                   </button>
-                                  <ImageWithBasePath src={img.url} className="img-fluid rounded" alt="Prescription Scan" style={{ maxHeight: 60 }} />
+                                  <a 
+                                    href={att.url.startsWith("/") ? apiUrl(att.url) : att.url}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setPreviewImage(att.url.startsWith("/") ? apiUrl(att.url) : att.url);
+                                    }}
+                                  >
+                                    <img
+                                      src={att.url.startsWith("/") ? apiUrl(att.url) : att.url}
+                                      alt="Prescription Scan"
+                                      className="rounded-2"
+                                      style={{ width: "100%", height: 90, objectFit: "cover", cursor: "zoom-in" }}
+                                    />
+                                  </a>
                                   <input
                                     type="text"
-                                    className="form-control form-control-sm mt-1"
-                                    placeholder="Add title/note..."
-                                    value={img.remark || ""}
+                                    className="form-control form-control-sm"
+                                    placeholder="Add remark..."
+                                    value={att.remark || ""}
                                     onChange={(e) => handleUpdateModalRemark(idx, e.target.value)}
                                     onBlur={handleSaveModalAttachments}
-                                    style={{ fontSize: 10, height: 22, padding: "2px 5px", borderRadius: 4 }}
+                                    style={{ borderRadius: 6, fontSize: 11 }}
                                   />
                                 </div>
                               </div>
@@ -1138,25 +1177,90 @@ const SessionsList = () => {
               )}
             </div>
 
-            <div className="modal-footer border-0 pt-0 justify-content-between">
-              {selectedConsultation && (
-                <button
-                  type="button"
-                  className="btn btn-outline-danger btn-sm d-flex align-items-center gap-1 px-3 py-1.5"
-                  onClick={handleClearPrescription}
-                  style={{ borderRadius: 8 }}
-                >
-                  <i className="ti ti-reload" /> Clear Prescription
+            <div className="modal-footer border-top bg-light justify-content-between" style={{ borderBottomLeftRadius: 16, borderBottomRightRadius: 16 }}>
+              <div>
+                <button type="button" className="btn btn-outline-secondary me-2" disabled style={{ borderRadius: 8 }}>
+                  <i className="ti ti-printer me-1"></i> Print
                 </button>
-              )}
-              <div className="d-flex align-items-center gap-2">
+                <button type="button" className="btn btn-outline-secondary" disabled style={{ borderRadius: 8 }}>
+                  <i className="ti ti-download me-1"></i> PDF
+                </button>
+              </div>
+              <div>
                 <button type="button" className="btn btn-light btn-sm px-3 py-1.5" data-bs-dismiss="modal" style={{ borderRadius: 8 }}>Cancel</button>
-                <button type="button" className="btn btn-primary btn-sm px-4 py-1.5" onClick={handleSaveModalConsultation} style={{ borderRadius: 8 }}>Save Prescription</button>
+                <button type="button" className="btn btn-primary btn-sm px-4 py-1.5" onClick={handleSaveModalConsultation} style={{ borderRadius: 8 }}>Generate Prescription</button>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* ===== GORGEOUS LIGHTBOX PREVIEW MODAL ===== */}
+      {previewImage && (
+        <div 
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center"
+          style={{
+            zIndex: 9999,
+            backgroundColor: "rgba(15, 23, 42, 0.9)", // slate-900 with high opacity
+            backdropFilter: "blur(8px)",
+            transition: "all 0.3s ease"
+          }}
+          onClick={() => setPreviewImage(null)}
+        >
+          {/* Close button */}
+          <button
+            type="button"
+            className="btn btn-link text-white position-absolute border-0"
+            style={{ top: 20, right: 20, fontSize: 30, textDecoration: "none" }}
+            onClick={() => setPreviewImage(null)}
+          >
+            <i className="ti ti-x"></i>
+          </button>
+          
+          {/* Image Container */}
+          <div 
+            className="position-relative d-flex align-items-center justify-content-center p-3"
+            style={{ maxWidth: "90%", maxHeight: "80%" }}
+            onClick={(e) => e.stopPropagation()} // prevent closing when clicking the image
+          >
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="img-fluid rounded shadow-2xl animate__animated animate__zoomIn"
+              style={{ 
+                maxHeight: "80vh", 
+                objectFit: "contain", 
+                border: "4px solid rgba(255,255,255,0.1)"
+              }}
+            />
+          </div>
+          
+          {/* Action buttons */}
+          <div className="d-flex gap-2 mt-3">
+            <a
+              href={previewImage}
+              download
+              className="btn btn-primary btn-sm px-4 py-2 d-flex align-items-center gap-2"
+              style={{ borderRadius: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <i className="ti ti-download"></i> Download Image
+            </a>
+            <button
+              type="button"
+              className="btn btn-light btn-sm px-4 py-2 d-flex align-items-center gap-2"
+              style={{ borderRadius: 20 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(window.location.origin + previewImage);
+                toast.success("Image URL copied to clipboard!");
+              }}
+            >
+              <i className="ti ti-copy"></i> Copy Link
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

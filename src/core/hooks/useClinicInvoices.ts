@@ -12,6 +12,7 @@ export interface ClinicInvoice {
     discount: number;
     subTotal: number;
     totalAmount: number;
+    amountPaid?: number;
     paymentMethod: string;
     paymentStatus: string;
     otherInfo: string;

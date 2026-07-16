@@ -757,8 +757,10 @@ const TherapyAppointments = () => {
                   // open modal
                   const modalEl = document.getElementById("view_therapy_appt");
                   if (modalEl) {
-                    const { Modal } = await import("bootstrap");
-                    new Modal(modalEl).show();
+                    const bootstrap = (window as any).bootstrap;
+                    if (bootstrap && bootstrap.Modal) {
+                      new bootstrap.Modal(modalEl).show();
+                    }
                   }
                 }
               }}

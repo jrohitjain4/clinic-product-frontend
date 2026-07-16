@@ -946,7 +946,7 @@ const ConsultationForm = () => {
                             {consultationData.examinationNotes || "No examination notes recorded."}
                           </div>
                         )}
-                      </button>
+                      </div>
                     </div>
                   </div>
 

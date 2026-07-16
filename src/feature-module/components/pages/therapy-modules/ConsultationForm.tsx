@@ -440,8 +440,15 @@ const ConsultationForm = () => {
         whatsappNotification,
         status: "Confirmed",
       };
-      await apiPost<any>("/api/consultations", payload);
-      toast.success("Consultation created! Sessions booked successfully.");
+      if (id) {
+        // Update existing Draft consultation
+        await apiPut<any>(`/api/consultations/${id}`, payload);
+        toast.success("Consultation confirmed! Sessions booked successfully.");
+      } else {
+        // Create new consultation
+        await apiPost<any>("/api/consultations", payload);
+        toast.success("Consultation created! Sessions booked successfully.");
+      }
       navigate(routes.therapyConsultations);
     } catch (err: any) {
       toast.error(err.message || "Failed to create consultation");

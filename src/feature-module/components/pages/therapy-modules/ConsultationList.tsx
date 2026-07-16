@@ -426,14 +426,6 @@ const ConsultationList = () => {
                   <i className="ti ti-player-play-filled fs-14" />
                 )}
               </button>
-            ) : c.status === "Draft" ? (
-              <button
-                className="bg-transparent border-0 text-success p-1"
-                title="Resume Consultation"
-                onClick={() => navigate(`/therapy-consultations/${c.id}`)}
-              >
-                <i className="ti ti-player-play-filled fs-14" />
-              </button>
             ) : (
               <button
                 className="bg-transparent border-0 text-info p-1"

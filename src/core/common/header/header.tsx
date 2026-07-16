@@ -81,6 +81,31 @@ const Header = () => {
     localStorage.removeItem("user");
     window.location.href = all_routes.login;
   };
+
+  const [activeMode, setActiveMode] = useState(localStorage.getItem("activeModuleMode") || "clinic");
+
+  const toggleModuleMode = () => {
+    const newMode = activeMode === "clinic" ? "therapy" : "clinic";
+    localStorage.setItem("activeModuleMode", newMode);
+    setActiveMode(newMode);
+    window.dispatchEvent(new Event("activeModuleModeChange"));
+    
+    if (newMode === "therapy") {
+      navigate(all_routes.therapyAppointments);
+    } else {
+      navigate(all_routes.dashboard);
+    }
+  };
+
+  useEffect(() => {
+    const handleModeChange = () => {
+      setActiveMode(localStorage.getItem("activeModuleMode") || "clinic");
+    };
+    window.addEventListener("activeModuleModeChange", handleModeChange);
+    return () => {
+      window.removeEventListener("activeModuleModeChange", handleModeChange);
+    };
+  }, []);
   const [isHiddenLayoutActive, setIsHiddenLayoutActive] = useState(() => {
     const saved = localStorage.getItem("hiddenLayoutActive");
     return saved ? JSON.parse(saved) : false;
@@ -287,6 +312,26 @@ const Header = () => {
                   </button>
                 </div>
               )}
+
+              {/* Module Switcher */}
+              <button
+                type="button"
+                className={`btn d-flex align-items-center gap-2 border px-3 shadow-sm text-nowrap ms-2`}
+                onClick={toggleModuleMode}
+                style={{
+                  height: '38px',
+                  borderRadius: '6px',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  background: activeMode === "therapy" ? '#e8eafd' : '#e6f7ff',
+                  borderColor: activeMode === "therapy" ? '#6366f1' : '#1890ff',
+                  color: activeMode === "therapy" ? '#6366f1' : '#1890ff',
+                  transition: 'all 0.2s ease-in-out',
+                }}
+              >
+                <i className={`ti ${activeMode === "therapy" ? "ti-building-hospital" : "ti-activity"}`} style={{ fontSize: '16px' }} />
+                <span>{activeMode === "therapy" ? "Switch to Clinic" : "Switch to Therapy"}</span>
+              </button>
             </div>
           </div>
           <div className="d-flex align-items-center">

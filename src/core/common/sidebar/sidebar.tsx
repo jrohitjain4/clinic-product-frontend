@@ -17,6 +17,17 @@ const Sidebar = () => {
   const [subsidebar, setSubsidebar] = useState("");
   const dispatch = useDispatch();
   const [user, setUser] = useState<any>(null);
+  const [activeMode, setActiveMode] = useState(localStorage.getItem("activeModuleMode") || "clinic");
+
+  useEffect(() => {
+    const handleModeChange = () => {
+      setActiveMode(localStorage.getItem("activeModuleMode") || "clinic");
+    };
+    window.addEventListener("activeModuleModeChange", handleModeChange);
+    return () => {
+      window.removeEventListener("activeModuleModeChange", handleModeChange);
+    };
+  }, []);
 
   useEffect(() => {
     const updateUser = () => {
@@ -178,6 +189,14 @@ const Sidebar = () => {
           <div id="sidebar-menu" className="sidebar-menu">
             <ul>
               {SidebarData?.filter(section => {
+                if (activeMode === "therapy") {
+                  return section.tittle === "Main Menu" || section.tittle === "Therapy";
+                } else {
+                  if (section.tittle === "Therapy") {
+                    return false;
+                  }
+                }
+
                 // Only show Super Admin section to SUPER_ADMIN role, and hide EVERYTHING else
                 if (user?.role === "SUPER_ADMIN") {
                   return section.tittle === "Super Admin";

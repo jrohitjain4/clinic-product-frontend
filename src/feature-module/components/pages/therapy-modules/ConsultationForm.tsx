@@ -270,6 +270,35 @@ const ConsultationForm = () => {
           setMedicines(consult.medicines || []);
           setAttachments(consult.attachments || []);
           setPaymentAmount(Math.max(0, (consult.finalTotalAmount || 0) - (consult.amountPaid || 0)));
+          
+          // Populate therapy plans from saved data
+          if (consult.therapyPlans && consult.therapyPlans.length > 0) {
+            setTherapyPlans(consult.therapyPlans.map((p: any) => ({
+              therapyCategoryId: p.therapyCategoryId || "",
+              therapyCategoryName: p.therapyCategoryName || "",
+              therapyId: p.therapyId || "",
+              therapyName: p.therapyName || "",
+              totalSessions: p.totalSessions || 1,
+              sessionFee: p.sessionFee || 0,
+              startDate: p.startDate ? new Date(p.startDate).toISOString().split("T")[0] : "",
+              sessionTime: p.sessionTime || "",
+              scheduleType: p.scheduleType || "daily",
+              notes: p.notes || "",
+            })));
+          }
+          
+          // Populate pricing fields
+          setDiscountType(consult.discountType || "none");
+          setDiscountValue(consult.discountValue || "");
+          setAmountPaid(consult.amountPaid || "");
+          setPaymentMethod(consult.paymentMethod || "Cash");
+          setWhatsappNotification(consult.whatsappNotification || false);
+          
+          // If Draft, start at step 2 so user can continue
+          if (consult.status === "Draft") {
+            setStep(2);
+          }
+          
           setIsEditing(false);
         }
       } catch (err: any) {

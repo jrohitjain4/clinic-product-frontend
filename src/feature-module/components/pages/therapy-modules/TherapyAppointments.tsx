@@ -591,21 +591,24 @@ const TherapyAppointments = () => {
         const appt = record.raw;
         const c = appt.consultation;
         const inv = c?.invoice;
-        if (!c || !inv) {
+        if (!c) {
           return <span className="text-muted fs-12">—</span>;
         }
         
-        const total = inv.totalAmount || 0;
-        const paid = inv.amountPaid || 0;
+        // Use consultation-level amounts as primary (they're always up to date)
+        // Fall back to invoice amounts only if consultation amounts are missing
+        const total = c.finalTotalAmount || inv?.totalAmount || 0;
+        const paid = c.amountPaid || inv?.amountPaid || 0;
         const remaining = Math.max(0, total - paid);
-        const status = inv.paymentStatus || "Unpaid";
+        const status = c.paymentStatus || inv?.paymentStatus || "Unpaid";
+        const invoiceCode = inv?.invoiceCode || "";
         
         const isPaid = status === "Paid";
-        const isPartial = status === "Partial Paid";
+        const isPartial = status === "Partial Paid" || status === "Partially Paid";
         
         return (
           <div className="d-flex flex-column align-items-start gap-1">
-            <span className="fw-semibold text-dark fs-13">{inv.invoiceCode || "—"}</span>
+            {invoiceCode && <span className="fw-semibold text-dark fs-13">{invoiceCode}</span>}
             <div className="text-muted fs-11" style={{ lineHeight: '1.2' }}>
               <div>Total: ₹{total.toLocaleString()}</div>
               <div className="fw-medium text-danger">Due: ₹{remaining.toLocaleString()}</div>

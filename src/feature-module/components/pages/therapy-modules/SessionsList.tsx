@@ -63,6 +63,7 @@ const SessionsList = () => {
   };
 
   // Filters state
+  const [datePreset, setDatePreset] = useState("All"); // All, Today, Tomorrow, 7Days, Custom
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedPatientId, setSelectedPatientId] = useState("");
@@ -146,6 +147,7 @@ const SessionsList = () => {
   };
 
   const handleClearFilters = () => {
+    setDatePreset("All");
     setStartDate("");
     setEndDate("");
     setSelectedPatientId("");
@@ -169,16 +171,41 @@ const SessionsList = () => {
     }
 
     // 2. Date match
-    if (startDate) {
-      const start = new Date(startDate).setHours(0, 0, 0, 0);
-      const sessionDate = new Date(session.scheduledAt).getTime();
-      if (sessionDate < start) return false;
+    let matchDate = true;
+    const sessionTime = new Date(session.scheduledAt).getTime();
+    
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    if (datePreset === "Today") {
+      matchDate = sessionTime >= todayStart.getTime() && sessionTime <= todayEnd.getTime();
+    } else if (datePreset === "Tomorrow") {
+      const tomorrowStart = new Date();
+      tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+      tomorrowStart.setHours(0, 0, 0, 0);
+      const tomorrowEnd = new Date();
+      tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
+      tomorrowEnd.setHours(23, 59, 59, 999);
+      matchDate = sessionTime >= tomorrowStart.getTime() && sessionTime <= tomorrowEnd.getTime();
+    } else if (datePreset === "7Days") {
+      // 7 days from today (inclusive)
+      const sevenDaysLaterEnd = new Date();
+      sevenDaysLaterEnd.setDate(sevenDaysLaterEnd.getDate() + 7);
+      sevenDaysLaterEnd.setHours(23, 59, 59, 999);
+      matchDate = sessionTime >= todayStart.getTime() && sessionTime <= sevenDaysLaterEnd.getTime();
+    } else if (datePreset === "Custom") {
+      if (startDate) {
+        const start = new Date(startDate).setHours(0, 0, 0, 0);
+        if (sessionTime < start) matchDate = false;
+      }
+      if (endDate) {
+        const end = new Date(endDate).setHours(23, 59, 59, 999);
+        if (sessionTime > end) matchDate = false;
+      }
     }
-    if (endDate) {
-      const end = new Date(endDate).setHours(23, 59, 59, 999);
-      const sessionDate = new Date(session.scheduledAt).getTime();
-      if (sessionDate > end) return false;
-    }
+    if (!matchDate) return false;
 
     // 3. Dropdowns
     if (selectedPatientId && session.patient?.id !== selectedPatientId) return false;
@@ -208,30 +235,58 @@ const SessionsList = () => {
         <div className="card border shadow-sm mb-4" style={{ borderRadius: 12 }}>
           <div className="card-body py-3">
             <div className="row g-3 align-items-end">
-              {/* Date Filters */}
-              <div className="col-lg-3 col-md-6 col-sm-6">
-                <label className="form-label mb-1 fw-semibold small text-muted">From Date</label>
-                <input
-                  type="date"
-                  className="form-control form-control-sm"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+              {/* Date Preset Selector */}
+              <div className={datePreset === "Custom" ? "col-lg-2 col-md-4 col-sm-6" : "col-lg-3 col-md-6 col-sm-6"}>
+                <label className="form-label mb-1 fw-semibold small text-muted">Date Filter</label>
+                <select
+                  className="form-select form-select-sm"
+                  value={datePreset}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setDatePreset(val);
+                    if (val !== "Custom") {
+                      setStartDate("");
+                      setEndDate("");
+                    }
+                  }}
                   style={{ borderRadius: 8 }}
-                />
-              </div>
-              <div className="col-lg-3 col-md-6 col-sm-6">
-                <label className="form-label mb-1 fw-semibold small text-muted">To Date</label>
-                <input
-                  type="date"
-                  className="form-control form-control-sm"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  style={{ borderRadius: 8 }}
-                />
+                >
+                  <option value="All">All Dates</option>
+                  <option value="Today">Today</option>
+                  <option value="Tomorrow">Tomorrow</option>
+                  <option value="7Days">7 Days</option>
+                  <option value="Custom">Custom Range</option>
+                </select>
               </div>
 
+              {/* Custom Date Inputs */}
+              {datePreset === "Custom" && (
+                <>
+                  <div className="col-lg-2 col-md-4 col-sm-6">
+                    <label className="form-label mb-1 fw-semibold small text-muted">From Date</label>
+                    <input
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      style={{ borderRadius: 8 }}
+                    />
+                  </div>
+                  <div className="col-lg-2 col-md-4 col-sm-6">
+                    <label className="form-label mb-1 fw-semibold small text-muted">To Date</label>
+                    <input
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      style={{ borderRadius: 8 }}
+                    />
+                  </div>
+                </>
+              )}
+
               {/* Patient Selector */}
-              <div className="col-lg-2 col-md-6 col-sm-6">
+              <div className={datePreset === "Custom" ? "col-lg-2 col-md-4 col-sm-6" : "col-lg-3 col-md-6 col-sm-6"}>
                 <label className="form-label mb-1 fw-semibold small text-muted">Patient</label>
                 <select
                   className="form-select form-select-sm"
@@ -249,7 +304,7 @@ const SessionsList = () => {
               </div>
 
               {/* Therapist Selector */}
-              <div className="col-lg-2 col-md-6 col-sm-6">
+              <div className={datePreset === "Custom" ? "col-lg-2 col-md-4 col-sm-6" : "col-lg-3 col-md-6 col-sm-6"}>
                 <label className="form-label mb-1 fw-semibold small text-muted">Therapist</label>
                 <select
                   className="form-select form-select-sm"
@@ -267,7 +322,7 @@ const SessionsList = () => {
               </div>
 
               {/* Therapy Selector */}
-              <div className="col-lg-2 col-md-6 col-sm-6">
+              <div className={datePreset === "Custom" ? "col-lg-2 col-md-4 col-sm-6" : "col-lg-3 col-md-6 col-sm-6"}>
                 <label className="form-label mb-1 fw-semibold small text-muted">Therapy Service</label>
                 <select
                   className="form-select form-select-sm"
@@ -304,7 +359,7 @@ const SessionsList = () => {
                 <span className="fs-13 text-muted">
                   Showing <strong>{filteredSessions.length}</strong> of <strong>{sessions.length}</strong> Sessions
                 </span>
-                {(startDate || endDate || selectedPatientId || selectedDoctorId || selectedTherapyId || searchTerm) && (
+                {(datePreset !== "All" || startDate || endDate || selectedPatientId || selectedDoctorId || selectedTherapyId || searchTerm) && (
                   <button
                     type="button"
                     className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"

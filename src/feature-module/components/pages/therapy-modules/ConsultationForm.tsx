@@ -4,6 +4,8 @@ import { apiGet, apiPost, apiPut, authHeaders } from "../../../../core/utils/api
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 import { all_routes } from "../../../routes/all_routes";
+import { DatePicker } from "antd";
+import dayjs, { Dayjs } from "dayjs";
 
 const routes = all_routes;
 
@@ -109,6 +111,106 @@ const ConsultationForm = () => {
   // Step 1 – Appointment & Examination
   const [appointmentId, setAppointmentId] = useState("");
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [availability, setAvailability] = useState<any>(null);
+
+  useEffect(() => {
+    const doctorId = selectedAppointment?.doctorId || consultationData?.doctor?.id;
+    if (!doctorId) {
+      setAvailability(null);
+      return;
+    }
+    const today = new Date();
+    const start = today.toISOString().split("T")[0];
+    const end = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate()).toISOString().split("T")[0];
+    
+    fetch(apiUrl(`/api/doctors/${doctorId}/availability?startDate=${start}&endDate=${end}`), {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && !data.message) {
+          setAvailability(data);
+        } else {
+          setAvailability(null);
+        }
+      })
+      .catch(() => {
+        setAvailability(null);
+      });
+  }, [selectedAppointment?.doctorId, consultationData?.doctor?.id]);
+
+  const cellRender = (current: Dayjs | any, info: any) => {
+    if (info.type !== 'date' || !availability || !dayjs.isDayjs(current)) return info.originNode;
+
+    const dateStr = current.format("YYYY-MM-DD");
+    const dayName = current.format("dddd");
+
+    // 1. Holiday (Blueish)
+    const isHoliday = availability.holidays?.some((h: any) => {
+      const start = dayjs(h.date).startOf("day");
+      const end = h.endDate ? dayjs(h.endDate).endOf("day") : start.endOf("day");
+      return (current.isAfter(start) || current.isSame(start)) && (current.isBefore(end) || current.isSame(end));
+    });
+
+    if (isHoliday) {
+      return (
+        <div className="ant-picker-cell-inner" style={{ backgroundColor: '#e6f7ff', border: '1px solid #91d5ff', borderRadius: '4px', color: '#0050b3' }}>
+          {current.date()}
+        </div>
+      );
+    }
+
+    // 2. Clinic Off Day (Orange/Red)
+    const clinicOffDays = availability.clinicWorkingDays || [0];
+    const dayOfWeek = current.day();
+    if (clinicOffDays.includes(dayOfWeek)) {
+      return (
+        <div className="ant-picker-cell-inner" style={{ backgroundColor: '#fff7e6', border: '1px solid #ffd591', borderRadius: '4px', color: '#d46b08' }}>
+          {current.date()}
+        </div>
+      );
+    }
+
+    const daySchedule = availability.schedules?.[dayName];
+    const isWorking = Array.isArray(daySchedule) && daySchedule.length > 0;
+
+    // 3. Doctor Weekly Off (Red)
+    if (!isWorking) {
+      return (
+        <div className="ant-picker-cell-inner" style={{ backgroundColor: '#fff1f0', border: '1px solid #ffa39e', borderRadius: '4px', color: '#a8071a' }}>
+          {current.date()}
+        </div>
+      );
+    }
+
+    // 3. Leave (Yellow)
+    const isLeave = availability.leaves?.some((l: any) => {
+      const s = dayjs(l.start).startOf("day");
+      const e = dayjs(l.end).endOf("day");
+      return (current.isAfter(s) || current.isSame(s)) && (current.isBefore(e) || current.isSame(e));
+    });
+
+    if (isLeave) {
+      return (
+        <div className="ant-picker-cell-inner" style={{ backgroundColor: '#fffbe6', border: '1px solid #ffe58f', borderRadius: '4px', color: '#874d00' }}>
+          {current.date()}
+        </div>
+      );
+    }
+
+    // 4. Working Day (Green)
+    if (isWorking) {
+      return (
+        <div className="ant-picker-cell-inner" style={{ backgroundColor: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: '4px', color: '#237804' }}>
+          {current.date()}
+        </div>
+      );
+    }
+
+    return info.originNode;
+  };
   const [bodyView, setBodyView] = useState<"front" | "back">("front");
   const [bodyPoints, setBodyPoints] = useState<BodyPoint[]>([]);
   const [pendingPart, setPendingPart] = useState<(typeof BODY_PARTS)[0] | null>(null);
@@ -1749,13 +1851,23 @@ const ConsultationForm = () => {
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                               Start Date *
                             </label>
-                            <input
-                              type="date"
-                              className="form-control"
-                              value={plan.startDate}
-                              onChange={(e) => updatePlan(idx, "startDate", e.target.value)}
-                              style={{ borderRadius: 8, fontSize: 13 }}
-                            />
+                            <div className="input-icon-end position-relative">
+                              <DatePicker
+                                className="form-control datetimepicker w-100"
+                                format={{ format: "DD-MM-YYYY", type: "mask" }}
+                                placeholder="DD-MM-YYYY"
+                                suffixIcon={null}
+                                cellRender={cellRender}
+                                value={plan.startDate ? dayjs(plan.startDate) : null}
+                                onChange={(d: Dayjs | null) =>
+                                  updatePlan(idx, "startDate", d ? d.format("YYYY-MM-DD") : "")
+                                }
+                                style={{ borderRadius: 8, fontSize: 13, height: 38 }}
+                              />
+                              <span className="input-icon-addon">
+                                <i className="ti ti-calendar" />
+                              </span>
+                            </div>
                           </div>
                           <div className="col-md-3">
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>

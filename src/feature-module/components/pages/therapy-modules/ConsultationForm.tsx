@@ -270,7 +270,7 @@ const ConsultationForm = () => {
           setMedicines(consult.medicines || []);
           setAttachments(consult.attachments || []);
           setPaymentAmount(Math.max(0, (consult.finalTotalAmount || 0) - (consult.amountPaid || 0)));
-          setIsEditing(consult.status === "Draft");
+          setIsEditing(false);
         }
       } catch (err: any) {
         toast.error(err.message || "Failed to load details");
@@ -1121,9 +1121,6 @@ const ConsultationForm = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Prescription & Advice */}
-              {renderPrescriptionEditor()}
             </div>
 
             {/* Right Column: Invoicing, Payment Capture, and Child Appointments */}
@@ -1931,10 +1928,6 @@ const ConsultationForm = () => {
               </div>
             </div>
 
-            {/* Prescription & Advice */}
-            <div className="col-12">
-              {renderPrescriptionEditor()}
-            </div>
 
             {/* Pricing */}
             <div className="col-lg-5 offset-lg-7">
@@ -2244,67 +2237,80 @@ const ConsultationForm = () => {
                     </div>
                   </div>
 
-                  {/* Prescription & Advice (Step 3 Preview) */}
-                  {(medicines.length > 0 || advice || attachments.length > 0) && (
+                  {/* Session Schedule Details */}
+                  {therapyPlans.length > 0 && (
                     <div className="mb-5">
                       <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
-                        <i className="ti ti-pill text-primary" />
-                        Prescription & Advice
+                        <i className="ti ti-calendar-event text-primary" />
+                        Daily Session Schedule
                       </h6>
-                      
-                      {advice && (
-                        <div className="p-3 mb-3" style={{ background: "#f8fafc", borderRadius: 10, fontSize: 13 }}>
-                          <strong>Doctor's Advice:</strong> {advice}
-                        </div>
-                      )}
-
-                      {medicines.length > 0 && (
-                        <div className="table-responsive mb-3">
-                          <table className="table align-middle" style={{ fontSize: 13 }}>
-                            <thead style={{ background: "#f8fafc" }}>
-                              <tr>
-                                <th className="fw-semibold border-0 py-2">Medicine</th>
-                                <th className="fw-semibold border-0 py-2">Dosage</th>
-                                <th className="fw-semibold border-0 py-2">Duration</th>
-                                <th className="fw-semibold border-0 py-2">Instructions</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {medicines.map((m: any, i: number) => (
-                                <tr key={i}>
-                                  <td className="fw-semibold">{m.name}</td>
-                                  <td>{m.dosage}</td>
-                                  <td>{m.duration}</td>
-                                  <td>{m.instructions}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-
-                      {attachments.length > 0 && (
-                        <div>
-                          <span className="fw-bold small d-block mb-2">Attachments & Scans</span>
-                          <div className="row g-3">
-                            {attachments.map((att: any, idx: number) => (
-                              <div key={idx} className="col-md-4">
-                                <div className="p-2 border rounded-3 bg-white h-100 shadow-sm d-flex flex-column gap-2">
-                                  <img
-                                    src={att.url.startsWith("/") ? apiUrl(att.url) : att.url}
-                                    alt="Scan"
-                                    className="rounded-2"
-                                    style={{ width: "100%", height: 120, objectFit: "cover" }}
-                                  />
-                                  {att.remark && (
-                                    <div className="small text-muted text-center">{att.remark}</div>
-                                  )}
-                                </div>
+                      {therapyPlans.map((plan, pIdx) => {
+                        const sessions = Number(plan.totalSessions) || 0;
+                        const startDt = plan.startDate ? new Date(plan.startDate) : null;
+                        const scheduleEntries: { day: number; date: Date }[] = [];
+                        if (startDt && sessions > 0) {
+                          let current = new Date(startDt);
+                          for (let s = 0; s < sessions; s++) {
+                            scheduleEntries.push({ day: s + 1, date: new Date(current) });
+                            if (plan.scheduleType === "daily") {
+                              current.setDate(current.getDate() + 1);
+                            } else if (plan.scheduleType === "alternate") {
+                              current.setDate(current.getDate() + 2);
+                            } else if (plan.scheduleType === "weekly") {
+                              current.setDate(current.getDate() + 7);
+                            } else {
+                              current.setDate(current.getDate() + 1);
+                            }
+                          }
+                        }
+                        const totalDays = scheduleEntries.length >= 2
+                          ? Math.ceil((scheduleEntries[scheduleEntries.length - 1].date.getTime() - scheduleEntries[0].date.getTime()) / (1000 * 60 * 60 * 24)) + 1
+                          : sessions;
+                        return (
+                          <div key={pIdx} className="mb-3">
+                            <div className="d-flex align-items-center gap-2 mb-2">
+                              <span className="badge" style={{ background: '#6366f120', color: '#6366f1', borderRadius: 6, fontSize: 12, padding: '4px 10px' }}>
+                                {plan.therapyName || `Plan ${pIdx + 1}`}
+                              </span>
+                              <span className="text-muted" style={{ fontSize: 12 }}>
+                                {sessions} sessions over {totalDays} days ({plan.scheduleType})
+                              </span>
+                            </div>
+                            {scheduleEntries.length > 0 ? (
+                              <div className="table-responsive">
+                                <table className="table table-sm align-middle mb-0" style={{ fontSize: 12 }}>
+                                  <thead style={{ background: '#f8fafc' }}>
+                                    <tr>
+                                      <th className="fw-semibold border-0 py-2" style={{ width: 60 }}>Day</th>
+                                      <th className="fw-semibold border-0 py-2">Date</th>
+                                      <th className="fw-semibold border-0 py-2">Day of Week</th>
+                                      <th className="fw-semibold border-0 py-2">Time</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {scheduleEntries.map((entry) => (
+                                      <tr key={entry.day}>
+                                        <td>
+                                          <span className="badge bg-light text-dark" style={{ borderRadius: 6, fontSize: 11 }}>Day {entry.day}</span>
+                                        </td>
+                                        <td className="fw-semibold">
+                                          {entry.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                        </td>
+                                        <td className="text-muted">
+                                          {entry.date.toLocaleDateString('en-US', { weekday: 'long' })}
+                                        </td>
+                                        <td>{plan.sessionTime || 'Any available'}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
                               </div>
-                            ))}
+                            ) : (
+                              <div className="text-muted" style={{ fontSize: 12 }}>Start date not set — schedule will be generated upon confirmation.</div>
+                            )}
                           </div>
-                        </div>
-                      )}
+                        );
+                      })}
                     </div>
                   )}
 

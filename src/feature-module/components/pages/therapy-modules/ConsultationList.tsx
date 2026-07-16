@@ -4,6 +4,7 @@ import { apiGet, apiDelete, apiPost } from "../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
 import EmptyState from "../../../../core/common/emptyState";
 import { all_routes } from "../../../routes/all_routes";
+import Datatable from "../../../../core/common/dataTable";
 
 const routes = all_routes;
 
@@ -104,6 +105,249 @@ const ConsultationList = () => {
   const formatDate = (d: string) =>
     d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
+  const columns = [
+    {
+      title: "Code",
+      dataIndex: "code",
+      sorter: (a: any, b: any) => {
+        const valA = a.consultation?.consultationCode || a.appointment?.appointmentCode || "";
+        const valB = b.consultation?.consultationCode || b.appointment?.appointmentCode || "";
+        return valA.localeCompare(valB);
+      },
+      render: (_: any, record: any) => {
+        const app = record.appointment;
+        const c = record.consultation;
+        return (
+          <div>
+            <span
+              className="fw-semibold"
+              style={{ color: "#6366f1", fontFamily: "monospace", fontSize: 13 }}
+            >
+              {c ? c.consultationCode : (app?.appointmentCode || "—")}
+            </span>
+            {!c && (
+              <span className="badge bg-secondary-subtle text-secondary ms-2 small" style={{ fontSize: 9, borderRadius: 4 }}>
+                Not Started
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      title: "Patient",
+      dataIndex: "patient",
+      sorter: (a: any, b: any) => {
+        const nameA = `${a.appointment?.patient?.firstName || ""} ${a.appointment?.patient?.lastName || ""}`;
+        const nameB = `${b.appointment?.patient?.firstName || ""} ${b.appointment?.patient?.lastName || ""}`;
+        return nameA.localeCompare(nameB);
+      },
+      render: (_: any, record: any) => {
+        const app = record.appointment;
+        return (
+          <div className="d-flex align-items-center gap-2">
+            {app?.patient?.profileImage ? (
+              <img
+                src={app.patient.profileImage}
+                alt=""
+                className="rounded-circle"
+                style={{ width: 34, height: 34, objectFit: "cover" }}
+              />
+            ) : (
+              <div
+                className="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                style={{ width: 34, height: 34, background: "#6366f120", color: "#6366f1", fontSize: 13 }}
+              >
+                {(app?.patient?.firstName?.[0] || "P").toUpperCase()}
+              </div>
+            )}
+            <div>
+              <div className="fw-semibold" style={{ fontSize: 14 }}>
+                {app?.patient?.firstName} {app?.patient?.lastName}
+              </div>
+              <div className="text-muted" style={{ fontSize: 12 }}>
+                {app?.patient?.phone || "—"}
+              </div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Therapist",
+      dataIndex: "therapist",
+      sorter: (a: any, b: any) => {
+        const nameA = a.appointment?.doctor?.fullName || "";
+        const nameB = b.appointment?.doctor?.fullName || "";
+        return nameA.localeCompare(nameB);
+      },
+      render: (_: any, record: any) => {
+        const app = record.appointment;
+        return <div style={{ fontSize: 14 }}>{app?.doctor?.fullName || "—"}</div>;
+      },
+    },
+    {
+      title: "Therapies",
+      dataIndex: "therapies",
+      render: (_: any, record: any) => {
+        const c = record.consultation;
+        return (
+          <div className="d-flex flex-column gap-1">
+            {c ? (
+              c.therapyPlans?.map((p: any, i: number) => (
+                <span
+                  key={i}
+                  className="badge bg-indigo bg-opacity-10 text-primary"
+                  style={{
+                    background: "#6366f118",
+                    color: "#4f46e5",
+                    borderRadius: 6,
+                    fontSize: 11,
+                    padding: "3px 8px",
+                  }}
+                >
+                  {p.therapyName || "Therapy"} × {p.totalSessions}
+                </span>
+              ))
+            ) : (
+              <span className="text-muted small">No prescription prescribed</span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      title: "Total Amt",
+      dataIndex: "totalAmount",
+      sorter: (a: any, b: any) => (a.consultation?.finalTotalAmount || 0) - (b.consultation?.finalTotalAmount || 0),
+      render: (_: any, record: any) => {
+        const c = record.consultation;
+        return (
+          <div>
+            <div className="fw-semibold">₹{(c?.finalTotalAmount || 0).toLocaleString()}</div>
+            {c && c.amountPaid > 0 && (
+              <div className="text-muted" style={{ fontSize: 11 }}>
+                Paid: ₹{(c.amountPaid || 0).toLocaleString()}
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      title: "Invoice",
+      dataIndex: "invoice",
+      render: (_: any, record: any) => {
+        const c = record.consultation;
+        return c?.invoice ? (
+          <span
+            className={`badge bg-${payStatusColors[c.invoice.paymentStatus] || "secondary"}-subtle text-${payStatusColors[c.invoice.paymentStatus] || "secondary"}`}
+            style={{ borderRadius: 6, fontSize: 11 }}
+          >
+            {c.invoice.paymentStatus}
+          </span>
+        ) : (
+          <span className="text-muted" style={{ fontSize: 12 }}>—</span>
+        );
+      },
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      sorter: (a: any, b: any) => {
+        const statusA = a.consultation ? a.consultation.status : "Not Started";
+        const statusB = b.consultation ? b.consultation.status : "Not Started";
+        return statusA.localeCompare(statusB);
+      },
+      render: (_: any, record: any) => {
+        const c = record.consultation;
+        const status = c ? c.status : "Not Started";
+        return (
+          <span
+            className={`badge bg-${statusColors[status] || "secondary"}-subtle text-${statusColors[status] || "secondary"}`}
+            style={{ borderRadius: 6, padding: "4px 10px" }}
+          >
+            {status}
+          </span>
+        );
+      },
+    },
+    {
+      title: "Date",
+      dataIndex: "date",
+      sorter: (a: any, b: any) => {
+        const timeA = a.appointment?.scheduledAt ? new Date(a.appointment.scheduledAt).getTime() : 0;
+        const timeB = b.appointment?.scheduledAt ? new Date(b.appointment.scheduledAt).getTime() : 0;
+        return timeA - timeB;
+      },
+      render: (_: any, record: any) => {
+        const app = record.appointment;
+        return <div style={{ fontSize: 13 }}>{formatDate(app?.scheduledAt)}</div>;
+      },
+    },
+    {
+      title: "Actions",
+      align: "center" as const,
+      render: (_: any, record: any) => {
+        const app = record.appointment;
+        const c = record.consultation;
+        return (
+          <div className="d-flex align-items-center justify-content-center gap-2">
+            {!c ? (
+              <button
+                className="btn btn-sm btn-success text-white d-flex align-items-center justify-content-center"
+                style={{ borderRadius: 8, width: 34, height: 34 }}
+                title="Start Consultation"
+                disabled={startingId === app?.id}
+                onClick={() => handleStartConsultation(app.id)}
+              >
+                {startingId === app?.id ? (
+                  <span className="spinner-border spinner-border-sm" />
+                ) : (
+                  <i className="ti ti-player-play-filled" />
+                )}
+              </button>
+            ) : c.status === "Draft" ? (
+              <button
+                className="btn btn-sm btn-success text-white d-flex align-items-center justify-content-center"
+                style={{ borderRadius: 8, width: 34, height: 34 }}
+                title="Resume Consultation"
+                onClick={() => navigate(`/therapy-consultations/${c.id}`)}
+              >
+                <i className="ti ti-player-play-filled" />
+              </button>
+            ) : (
+              <button
+                className="btn btn-sm btn-primary d-flex align-items-center justify-content-center"
+                style={{ borderRadius: 8, width: 34, height: 34 }}
+                title="View Details"
+                onClick={() => navigate(`/therapy-consultations/${c.id}`)}
+              >
+                <i className="ti ti-eye" />
+              </button>
+            )}
+            {c && (
+              <button
+                className="btn btn-sm btn-danger d-flex align-items-center justify-content-center"
+                style={{ borderRadius: 8, width: 34, height: 34 }}
+                title="Delete"
+                disabled={deletingId === c.id}
+                onClick={() => handleDelete(c.id)}
+              >
+                {deletingId === c.id ? (
+                  <span className="spinner-border spinner-border-sm" />
+                ) : (
+                  <i className="ti ti-trash" />
+                )}
+              </button>
+            )}
+          </div>
+        );
+      },
+      width: 110,
+    },
+  ];
+
   return (
     <div className="page-wrapper">
       <div className="content">
@@ -150,180 +394,12 @@ const ConsultationList = () => {
               />
             ) : (
               <div className="table-responsive">
-                <table className="table table-hover align-middle mb-0">
-                  <thead style={{ background: "#f8fafc" }}>
-                    <tr>
-                      <th className="px-4 py-3 text-muted fw-medium border-0" style={{ fontSize: 13 }}>Code</th>
-                      <th className="py-3 text-muted fw-medium border-0" style={{ fontSize: 13 }}>Patient</th>
-                      <th className="py-3 text-muted fw-medium border-0" style={{ fontSize: 13 }}>Therapist</th>
-                      <th className="py-3 text-muted fw-medium border-0" style={{ fontSize: 13 }}>Therapies</th>
-                      <th className="py-3 text-muted fw-medium border-0" style={{ fontSize: 13 }}>Total Amt</th>
-                      <th className="py-3 text-muted fw-medium border-0" style={{ fontSize: 13 }}>Invoice</th>
-                      <th className="py-3 text-muted fw-medium border-0" style={{ fontSize: 13 }}>Status</th>
-                      <th className="py-3 text-muted fw-medium border-0" style={{ fontSize: 13 }}>Date</th>
-                      <th className="pe-4 py-3 text-muted fw-medium border-0" style={{ fontSize: 13 }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((item) => {
-                      const app = item.appointment;
-                      const c = item.consultation;
-                      return (
-                        <tr key={item.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                          <td className="px-4">
-                            <span
-                              className="fw-semibold"
-                              style={{ color: "#6366f1", fontFamily: "monospace", fontSize: 13 }}
-                            >
-                              {c ? c.consultationCode : (app?.appointmentCode || "—")}
-                            </span>
-                            {!c && (
-                              <span className="badge bg-secondary-subtle text-secondary ms-2 small" style={{ fontSize: 9, borderRadius: 4 }}>
-                                Not Started
-                              </span>
-                            )}
-                          </td>
-                          <td>
-                            <div className="d-flex align-items-center gap-2">
-                              {app?.patient?.profileImage ? (
-                                <img
-                                  src={app.patient.profileImage}
-                                  alt=""
-                                  className="rounded-circle"
-                                  style={{ width: 34, height: 34, objectFit: "cover" }}
-                                />
-                              ) : (
-                                <div
-                                  className="rounded-circle d-flex align-items-center justify-content-center fw-bold"
-                                  style={{ width: 34, height: 34, background: "#6366f120", color: "#6366f1", fontSize: 13 }}
-                                >
-                                  {(app?.patient?.firstName?.[0] || "P").toUpperCase()}
-                                </div>
-                              )}
-                              <div>
-                                <div className="fw-semibold" style={{ fontSize: 14 }}>
-                                  {app?.patient?.firstName} {app?.patient?.lastName}
-                                </div>
-                                <div className="text-muted" style={{ fontSize: 12 }}>
-                                  {app?.patient?.phone || "—"}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div style={{ fontSize: 14 }}>{app?.doctor?.fullName || "—"}</div>
-                          </td>
-                          <td>
-                            <div className="d-flex flex-column gap-1">
-                              {c ? (
-                                c.therapyPlans?.map((p: any, i: number) => (
-                                  <span
-                                    key={i}
-                                    className="badge bg-indigo bg-opacity-10 text-primary"
-                                    style={{
-                                      background: "#6366f118",
-                                      color: "#4f46e5",
-                                      borderRadius: 6,
-                                      fontSize: 11,
-                                      padding: "3px 8px",
-                                    }}
-                                  >
-                                    {p.therapyName || "Therapy"} × {p.totalSessions}
-                                  </span>
-                                ))
-                              ) : (
-                                <span className="text-muted small">No prescription prescribed</span>
-                              )}
-                            </div>
-                          </td>
-                          <td>
-                            <div className="fw-semibold">₹{(c?.finalTotalAmount || 0).toLocaleString()}</div>
-                            {c && c.amountPaid > 0 && (
-                              <div className="text-muted" style={{ fontSize: 11 }}>
-                                Paid: ₹{(c.amountPaid || 0).toLocaleString()}
-                              </div>
-                            )}
-                          </td>
-                          <td>
-                            {c?.invoice ? (
-                              <span
-                                className={`badge bg-${payStatusColors[c.invoice.paymentStatus] || "secondary"}-subtle text-${payStatusColors[c.invoice.paymentStatus] || "secondary"}`}
-                                style={{ borderRadius: 6, fontSize: 11 }}
-                              >
-                                {c.invoice.paymentStatus}
-                              </span>
-                            ) : (
-                              <span className="text-muted" style={{ fontSize: 12 }}>—</span>
-                            )}
-                          </td>
-                          <td>
-                            <span
-                              className={`badge bg-${statusColors[c ? c.status : "Not Started"] || "secondary"}-subtle text-${statusColors[c ? c.status : "Not Started"] || "secondary"}`}
-                              style={{ borderRadius: 6, padding: "4px 10px" }}
-                            >
-                              {c ? c.status : "Not Started"}
-                            </span>
-                          </td>
-                          <td>
-                            <div style={{ fontSize: 13 }}>{formatDate(app?.scheduledAt)}</div>
-                          </td>
-                          <td className="pe-4">
-                            <div className="d-flex gap-2">
-                              {!c ? (
-                                <button
-                                  className="btn btn-sm btn-success text-white d-flex align-items-center justify-content-center"
-                                  style={{ borderRadius: 8, width: 34, height: 34 }}
-                                  title="Start Consultation"
-                                  disabled={startingId === app?.id}
-                                  onClick={() => handleStartConsultation(app.id)}
-                                >
-                                  {startingId === app?.id ? (
-                                    <span className="spinner-border spinner-border-sm" />
-                                  ) : (
-                                    <i className="ti ti-player-play-filled" />
-                                  )}
-                                </button>
-                              ) : c.status === "Draft" ? (
-                                <button
-                                  className="btn btn-sm btn-success text-white d-flex align-items-center justify-content-center"
-                                  style={{ borderRadius: 8, width: 34, height: 34 }}
-                                  title="Resume Consultation"
-                                  onClick={() => navigate(`/therapy-consultations/${c.id}`)}
-                                >
-                                  <i className="ti ti-player-play-filled" />
-                                </button>
-                              ) : (
-                                <button
-                                  className="btn btn-sm btn-primary d-flex align-items-center justify-content-center"
-                                  style={{ borderRadius: 8, width: 34, height: 34 }}
-                                  title="View Details"
-                                  onClick={() => navigate(`/therapy-consultations/${c.id}`)}
-                                >
-                                  <i className="ti ti-eye" />
-                                </button>
-                              )}
-                              {c && (
-                                <button
-                                  className="btn btn-sm btn-danger d-flex align-items-center justify-content-center"
-                                  style={{ borderRadius: 8, width: 34, height: 34 }}
-                                  title="Delete"
-                                  disabled={deletingId === c.id}
-                                  onClick={() => handleDelete(c.id)}
-                                >
-                                  {deletingId === c.id ? (
-                                    <span className="spinner-border spinner-border-sm" />
-                                  ) : (
-                                    <i className="ti ti-trash" />
-                                  )}
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <Datatable
+                  columns={columns}
+                  dataSource={filtered}
+                  Selection={false}
+                  searchText=""
+                />
               </div>
             )}
           </div>

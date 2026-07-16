@@ -472,7 +472,7 @@ export const SidebarData = [
         submenuItems: [
           { label: "Bills", link: routes.therapyBills },
           { label: "Payments", link: routes.therapyPayments },
-          { label: "Invoices", link: routes.invoices },
+          { label: "Invoices", link: routes.invoices + "?type=therapy" },
         ],
       },
       {
@@ -617,7 +617,7 @@ export const SidebarData = [
       },
       {
         label: "Invoices",
-        link: routes.invoices,
+        link: routes.invoices + "?type=clinic",
         submenu: false,
         showSubRoute: false,
         icon: "file-invoice",

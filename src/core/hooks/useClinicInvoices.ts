@@ -27,17 +27,20 @@ export interface ClinicInvoice {
     };
 }
 
-export const useClinicInvoices = () => {
+export const useClinicInvoices = (params?: { type?: string }) => {
     const [invoices, setInvoices] = useState<ClinicInvoice[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const typeStr = params?.type;
 
     const fetchInvoices = useCallback(async (opts?: { silent?: boolean }) => {
         if (!opts?.silent) setLoading(true);
         setError(null);
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch(apiUrl("/api/invoices"), {
+            const query = typeStr ? `?type=${typeStr}` : "";
+            const res = await fetch(apiUrl(`/api/invoices${query}`), {
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
             });
             if (!res.ok) {
@@ -52,7 +55,7 @@ export const useClinicInvoices = () => {
         } finally {
             if (!opts?.silent) setLoading(false);
         }
-    }, []);
+    }, [typeStr]);
 
     useEffect(() => {
         fetchInvoices();

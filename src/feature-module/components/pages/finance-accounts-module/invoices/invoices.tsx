@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { toast } from "react-toastify";
 import EmptyState from "../../../../../core/common/emptyState";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { all_routes } from "../../../../routes/all_routes";
 import { useClinicInvoices } from "../../../../../core/hooks/useClinicInvoices";
 import Datatable from "../../../../../core/common/dataTable";
@@ -36,7 +36,9 @@ const PendingToggle = ({ onToggle }: { onToggle: () => void }) => {
 };
 
 const InvoicesList = () => {
-  const { invoices, loading, error, refetch } = useClinicInvoices();
+  const [searchParams] = useSearchParams();
+  const typeFilter = searchParams.get("type") || undefined;
+  const { invoices, loading, error, refetch } = useClinicInvoices({ type: typeFilter });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [deleteInvoiceId, setDeleteInvoiceId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);

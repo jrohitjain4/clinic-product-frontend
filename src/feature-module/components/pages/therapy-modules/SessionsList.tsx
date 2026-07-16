@@ -397,35 +397,26 @@ const SessionsList = () => {
                           <td>
                             <span className="text-slate-600">{sessionText}</span>
                           </td>
-                          <td className="text-center">
+                           <td className="text-center">
                             <div className="d-flex flex-column align-items-center gap-1">
                               <span className={`badge border ${getStatusBadge(session.status)} px-2.5 py-1 fs-12`} style={{ borderRadius: 6 }}>
                                 {session.status}
                               </span>
                               {["Schedule", "Scheduled", "Confirmed", "Checked In"].includes(session.status) && (
-                                <button
-                                  type="button"
-                                  className="btn btn-link p-0 text-decoration-none d-flex align-items-center gap-1 fs-11 text-primary fw-medium"
-                                  onClick={() => handleStatusToggle(session.id, session.status)}
-                                  disabled={togglingId === session.id}
-                                >
-                                  {togglingId === session.id ? (
-                                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" style={{ width: 10, height: 10 }} />
-                                  ) : (
-                                    <>
-                                      <i className="ti ti-rotate-clockwise fs-11" />
-                                      <span>
-                                        Mark {
-                                          (session.status === "Schedule" || session.status === "Scheduled") 
-                                            ? "Confirmed" 
-                                            : session.status === "Confirmed" 
-                                            ? "Checked In" 
-                                            : "Checked Out"
-                                        }
-                                      </span>
-                                    </>
-                                  )}
-                                </button>
+                                <div className="form-check form-switch p-0 d-flex align-items-center justify-content-center gap-1 mt-1" style={{ minHeight: 'auto' }}>
+                                  <input
+                                    className="form-check-input ms-0"
+                                    type="checkbox"
+                                    role="switch"
+                                    checked={togglingId === session.id}
+                                    onChange={() => handleStatusToggle(session.id, session.status)}
+                                    style={{ cursor: 'pointer', width: '30px', height: '16px' }}
+                                    disabled={togglingId === session.id}
+                                  />
+                                  <span className="text-dark fw-bold small ms-1" style={{ fontSize: '10px' }}>
+                                    {(session.status === "Schedule" || session.status === "Scheduled") ? "Confirm" : session.status === "Confirmed" ? "Checkin" : "Checkout"}
+                                  </span>
+                                </div>
                               )}
                             </div>
                           </td>

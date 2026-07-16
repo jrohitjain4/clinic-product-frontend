@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { apiGet, apiDelete, apiPost } from "../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
 import EmptyState from "../../../../core/common/emptyState";
@@ -27,6 +27,59 @@ const ConsultationList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [startingId, setStartingId] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState("All");
+
+  const customSelectStyles = `
+    .compact-table .ant-table-tbody > tr > td {
+      padding: 8px 12px !important;
+    }
+    .compact-table .avatar-md {
+      width: 38px !important;
+      height: 38px !important;
+    }
+    .compact-table .avatar-xs {
+      width: 24px !important;
+      height: 24px !important;
+    }
+    .compact-table .card {
+      margin-bottom: 0 !important;
+      border-radius: 8px !important;
+    }
+
+    .appointments-filter-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: nowrap;
+      width: 100%;
+    }
+    .appointments-filter-line h4 {
+      font-size: 16px !important;
+    }
+    .status-buttons-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+      gap: 4px;
+      margin-left: auto !important;
+    }
+    .status-btn {
+      padding: 0 8px !important;
+      font-weight: 700 !important;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 1px;
+      text-wrap: nowrap;
+      border-radius: 6px !important;
+      height: 32px !important;
+      font-size: 11px !important;
+    }
+    .count-badge {
+      font-size: 10px !important;
+      padding: 2px 4px !important;
+    }
+  `;
 
   const fetchConsultancyData = async () => {
     setLoading(true);
@@ -92,15 +145,37 @@ const ConsultationList = () => {
     }
   };
 
-  const filtered = items.filter((item) => {
-    const app = item.appointment;
-    const c = item.consultation;
-    const pat = `${app?.patient?.firstName || ""} ${app?.patient?.lastName || ""}`.toLowerCase();
-    const doc = (app?.doctor?.fullName || "").toLowerCase();
-    const code = (c?.consultationCode || app?.appointmentCode || "").toLowerCase();
-    const term = searchTerm.toLowerCase();
-    return pat.includes(term) || doc.includes(term) || code.includes(term);
-  });
+  const counts = useMemo(() => {
+    return {
+      all: items.length,
+      checkedOut: items.filter(item => item.appointment?.status === "Check Out").length,
+      checkedIn: items.filter(item => item.appointment?.status === "Check In").length,
+      confirmed: items.filter(item => item.appointment?.status === "Confirmed").length,
+      notStarted: items.filter(item => !item.consultation).length,
+    };
+  }, [items]);
+
+  const filtered = useMemo(() => {
+    return items.filter((item) => {
+      // 1. Status Filter
+      if (filterStatus !== "All") {
+        if (filterStatus === "Not Started") {
+          if (item.consultation) return false;
+        } else {
+          if (item.appointment?.status !== filterStatus) return false;
+        }
+      }
+
+      // 2. Search Term Filter
+      const app = item.appointment;
+      const c = item.consultation;
+      const pat = `${app?.patient?.firstName || ""} ${app?.patient?.lastName || ""}`.toLowerCase();
+      const doc = (app?.doctor?.fullName || "").toLowerCase();
+      const code = (c?.consultationCode || app?.appointmentCode || "").toLowerCase();
+      const term = searchTerm.toLowerCase();
+      return pat.includes(term) || doc.includes(term) || code.includes(term);
+    });
+  }, [items, filterStatus, searchTerm]);
 
   const formatDate = (d: string) =>
     d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
@@ -349,16 +424,36 @@ const ConsultationList = () => {
   ];
 
   return (
-    <div className="page-wrapper">
-      <div className="content">
-        {/* Page Header */}
-        <div className="page-header">
-          <div className="row align-items-center">
-            <div className="col">
-              <h3 className="page-title">Therapy Consultations</h3>
+    <>
+      <style>{customSelectStyles}</style>
+      <div className="page-wrapper">
+        <div className="content">
+          {/* Page Header */}
+          <div className="appointments-filter-line pb-3 mb-3 border-bottom">
+            <h4 className="fw-bold mb-0 text-dark flex-shrink-0">Therapy Consultations</h4>
+            
+            {/* Tab Filters: All, Checked Out, Checked In, Confirmed, Not Started */}
+            <div className="status-buttons-group ms-auto">
+              {[
+                { key: "All", label: "All", count: counts.all },
+                { key: "Check Out", label: "Checked Out", count: counts.checkedOut },
+                { key: "Check In", label: "Check In", count: counts.checkedIn },
+                { key: "Confirmed", label: "Confirmed", count: counts.confirmed },
+                { key: "Not Started", label: "Not Started", count: counts.notStarted }
+              ].map((s) => (
+                <button
+                  key={s.key}
+                  className={`btn btn-sm ${filterStatus === s.key ? "btn-primary shadow-sm" : "btn-light border bg-white"} status-btn`}
+                  onClick={() => setFilterStatus(s.key)}
+                >
+                  {s.label}
+                  <span className={`badge ${filterStatus === s.key ? "bg-white text-primary" : "bg-light text-dark"} ms-1 count-badge`}>
+                    {s.count}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
-        </div>
 
         {/* Table Card */}
         <div
@@ -406,6 +501,7 @@ const ConsultationList = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

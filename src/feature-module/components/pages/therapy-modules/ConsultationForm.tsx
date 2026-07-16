@@ -87,6 +87,7 @@ const ConsultationForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const isViewMode = !!id;
+  const [isEditing, setIsEditing] = useState(false);
   const [searchParams] = useSearchParams();
   const queryApptId = searchParams.get("appointmentId");
 
@@ -167,6 +168,7 @@ const ConsultationForm = () => {
           setMedicines(consult.medicines || []);
           setAttachments(consult.attachments || []);
           setPaymentAmount(Math.max(0, (consult.finalTotalAmount || 0) - (consult.amountPaid || 0)));
+          setIsEditing(consult.status === "Draft");
         }
       } catch (err: any) {
         toast.error(err.message || "Failed to load details");
@@ -190,6 +192,7 @@ const ConsultationForm = () => {
       });
       setConsultationData(res);
       toast.success("Consultation changes saved successfully!");
+      setIsEditing(false);
     } catch (err: any) {
       toast.error(err.message || "Failed to update consultation details");
     } finally {
@@ -403,6 +406,83 @@ const ConsultationForm = () => {
   };
 
   const renderPrescriptionEditor = () => {
+    if (isViewMode && !isEditing) {
+      return (
+        <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+          <div className="card-header border-0 bg-white px-4 py-3" style={{ borderRadius: "16px 16px 0 0" }}>
+            <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
+              <span className="rounded-2 d-flex align-items-center justify-content-center"
+                style={{ width: 28, height: 28, background: "#6366f118" }}>
+                <i className="ti ti-pill" style={{ color: "#6366f1", fontSize: 14 }} />
+              </span>
+              Prescription & Advice
+            </h6>
+          </div>
+          <div className="card-body px-4 py-3">
+            <div className="mb-4">
+              <label className="form-label fw-bold small text-muted">Doctor Advice / Instruction</label>
+              <div className="p-3 bg-light rounded text-slate-700 fs-13" style={{ whiteSpace: "pre-wrap", borderLeft: "4px solid #6366f1" }}>
+                {advice || "No advice recorded."}
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="form-label fw-bold small text-muted mb-2 d-block">Prescribed Medicines</label>
+              {medicines.length === 0 ? (
+                <div className="text-center py-4 border rounded-3 bg-light" style={{ borderStyle: "dashed" }}>
+                  <span className="text-muted small">No medicines prescribed.</span>
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-hover align-middle mb-0" style={{ fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: "#f8fafc" }}>
+                        <th className="border-0 py-2">Medicine Name</th>
+                        <th className="border-0 py-2" style={{ width: 140 }}>Dosage</th>
+                        <th className="border-0 py-2" style={{ width: 120 }}>Duration</th>
+                        <th className="border-0 py-2" style={{ width: 160 }}>Instructions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {medicines.map((m, idx) => (
+                        <tr key={idx}>
+                          <td className="border-0 py-2 fw-semibold text-dark">{m.name || m.medicineName}</td>
+                          <td className="border-0 py-2">{m.dosage || m.frequency}</td>
+                          <td className="border-0 py-2">{m.duration}</td>
+                          <td className="border-0 py-2">{m.instructions || m.timings}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {attachments.length > 0 && (
+              <div>
+                <label className="form-label fw-bold small text-muted mb-2 d-block">Diagnostic Scans & Attachments</label>
+                <div className="row g-3">
+                  {attachments.map((att, idx) => (
+                    <div key={idx} className="col-md-6 col-lg-4">
+                      <div className="p-2 border rounded-3 bg-white h-100 shadow-sm d-flex flex-column gap-2">
+                        <img
+                          src={att.url.startsWith("/") ? apiUrl(att.url) : att.url}
+                          alt="Scan"
+                          className="rounded-2"
+                          style={{ width: "100%", height: 120, objectFit: "cover" }}
+                        />
+                        <div className="small text-dark fw-medium mt-1 px-1">{att.remark || "No remark"}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
         <div className="card-header border-0 bg-white px-4 py-3 d-flex align-items-center justify-content-between"
@@ -634,6 +714,28 @@ const ConsultationForm = () => {
                 </ul>
               </div>
               <div className="col-auto d-flex gap-2">
+                {consultationData.status === "Confirmed" && (
+                  <button
+                    type="button"
+                    className={`btn d-flex align-items-center gap-2 border shadow-sm ${isEditing ? "btn-success" : "btn-warning text-white"}`}
+                    onClick={() => {
+                      if (isEditing) {
+                        handleSaveExam();
+                      } else {
+                        setGeneralNotes(consultationData.examinationNotes || "");
+                        setAdvice(consultationData.advice || "");
+                        setMedicines(consultationData.medicines || []);
+                        setBodyPoints(consultationData.bodyPoints || []);
+                        setAttachments(consultationData.attachments || []);
+                        setIsEditing(true);
+                      }
+                    }}
+                    style={{ borderRadius: "10px", fontWeight: 600 }}
+                  >
+                    <i className={`ti ${isEditing ? "ti-device-floppy" : "ti-edit"}`} />
+                    {isEditing ? "Save Details" : "Edit Details"}
+                  </button>
+                )}
                 <button
                   type="button"
                   className="btn btn-light d-flex align-items-center gap-2 border shadow-sm"
@@ -710,7 +812,7 @@ const ConsultationForm = () => {
                       style={{ width: 28, height: 28, background: "#6366f118" }}>
                       <i className="ti ti-body-scan" style={{ color: "#6366f1", fontSize: 14 }} />
                     </span>
-                    Body Diagram Findings (Click to Edit Points)
+                    Body Diagram Findings {isEditing && "(Click to Edit Points)"}
                   </h6>
                   <div className="btn-group btn-group-sm">
                     <button
@@ -750,7 +852,7 @@ const ConsultationForm = () => {
                         {visibleParts.map((part) => {
                           const marked = bodyPoints.find((bp) => bp.part === part.id);
                           return (
-                            <g key={part.id} onClick={() => handleBodyClick(part)} style={{ cursor: "pointer" }}>
+                            <g key={part.id} onClick={() => isEditing && handleBodyClick(part)} style={{ cursor: isEditing ? "pointer" : "default" }}>
                               <circle
                                 cx={part.x}
                                 cy={part.y}
@@ -787,7 +889,7 @@ const ConsultationForm = () => {
                     </div>
 
                     <div className="col-md-6 d-flex flex-column gap-3">
-                      {pendingPart && (
+                      {isEditing && pendingPart && (
                         <div className="p-3 border rounded-3 bg-light shadow-sm">
                           <div className="fw-bold mb-2 text-primary">{pendingPart.label}</div>
                           <div className="mb-2">
@@ -830,31 +932,19 @@ const ConsultationForm = () => {
 
                       <div>
                         <label className="form-label fw-bold small">General Examination Notes</label>
-                        <textarea
-                          className="form-control"
-                          rows={4}
-                          value={generalNotes}
-                          onChange={(e) => setGeneralNotes(e.target.value)}
-                          placeholder="General examination notes..."
-                          style={{ borderRadius: 10, fontSize: 13 }}
-                        />
-                      </div>
-
-                      <button
-                        type="button"
-                        className="btn btn-primary d-flex align-items-center justify-content-center gap-2"
-                        style={{ borderRadius: 10, padding: "10px 0" }}
-                        disabled={isSavingExam}
-                        onClick={handleSaveExam}
-                      >
-                        {isSavingExam ? (
-                          <>
-                            <span className="spinner-border spinner-border-sm" /> Saving...
-                          </>
+                        {isEditing ? (
+                          <textarea
+                            className="form-control"
+                            rows={4}
+                            value={generalNotes}
+                            onChange={(e) => setGeneralNotes(e.target.value)}
+                            placeholder="General examination notes..."
+                            style={{ borderRadius: 10, fontSize: 13 }}
+                          />
                         ) : (
-                          <>
-                            <i className="ti ti-check" /> Save Examination Notes
-                          </>
+                          <div className="p-3 bg-light rounded text-slate-700 fs-13" style={{ whiteSpace: "pre-wrap", borderLeft: "4px solid #6366f1" }}>
+                            {consultationData.examinationNotes || "No examination notes recorded."}
+                          </div>
                         )}
                       </button>
                     </div>
@@ -872,7 +962,19 @@ const ConsultationForm = () => {
                                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: severityColor(bp.severity) }} />
                                   {bp.label}
                                 </span>
-                                <span className="badge bg-light text-secondary">{bp.severity}/10</span>
+                                <div className="d-flex align-items-center gap-2">
+                                  <span className="badge bg-light text-secondary">{bp.severity}/10</span>
+                                  {isEditing && (
+                                    <button
+                                      type="button"
+                                      className="btn btn-sm btn-link text-danger p-0"
+                                      onClick={() => setBodyPoints(bodyPoints.filter(p => p.part !== bp.part))}
+                                      title="Remove"
+                                    >
+                                      <i className="ti ti-trash" style={{ fontSize: 11 }} />
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                               <div className="text-muted small mt-1">Since {bp.daysSince} days</div>
                               {bp.remark && <div className="small mt-2 text-dark">{bp.remark}</div>}

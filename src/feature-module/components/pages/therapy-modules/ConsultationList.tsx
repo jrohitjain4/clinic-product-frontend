@@ -56,6 +56,8 @@ const ConsultationList = () => {
   };
 
   const filtered = consultations.filter((c) => {
+    if (c.appointment?.status !== "Confirmed") return false;
+
     const pat = `${c.patient?.firstName || ""} ${c.patient?.lastName || ""}`.toLowerCase();
     const doc = (c.doctor?.fullName || "").toLowerCase();
     const code = (c.consultationCode || "").toLowerCase();
@@ -286,14 +288,25 @@ const ConsultationList = () => {
                         </td>
                         <td className="pe-4">
                           <div className="d-flex gap-2">
-                            <button
-                              className="btn btn-sm btn-light"
-                              style={{ borderRadius: 8 }}
-                              title="View"
-                              onClick={() => navigate(`/therapy-consultations/${c.id}`)}
-                            >
-                              <i className="ti ti-eye" />
-                            </button>
+                            {c.status === "Draft" ? (
+                              <button
+                                className="btn btn-sm btn-success text-white d-flex align-items-center gap-1"
+                                style={{ borderRadius: 8, padding: "5px 10px" }}
+                                title="Start Consultation"
+                                onClick={() => navigate(`/therapy-consultations/${c.id}`)}
+                              >
+                                <i className="ti ti-player-play-filled" /> Start
+                              </button>
+                            ) : (
+                              <button
+                                className="btn btn-sm btn-primary d-flex align-items-center gap-1"
+                                style={{ borderRadius: 8, padding: "5px 10px" }}
+                                title="View Details"
+                                onClick={() => navigate(`/therapy-consultations/${c.id}`)}
+                              >
+                                <i className="ti ti-eye" /> View
+                              </button>
+                            )}
                             <button
                               className="btn btn-sm btn-danger"
                               style={{ borderRadius: 8 }}

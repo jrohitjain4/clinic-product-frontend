@@ -5,6 +5,8 @@ import { toast } from "react-toastify";
 import EmptyState from "../../../../core/common/emptyState";
 import { all_routes } from "../../../routes/all_routes";
 import Datatable from "../../../../core/common/dataTable";
+import ImageWithBasePath from "../../../../core/imageWithBasePath";
+import { resolveMediaUrl } from "../../../../core/config/api";
 
 const routes = all_routes;
 
@@ -28,6 +30,20 @@ const ConsultationList = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [startingId, setStartingId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState("All");
+
+  const getPatientImg = (patient: any) => {
+    if (!patient?.profileImage || patient.profileImage.trim() === "" || patient.profileImage.includes("placeholder")) {
+      return "assets/img/patient-placeholder.png";
+    }
+    return resolveMediaUrl(patient.profileImage);
+  };
+
+  const getDoctorImg = (doctor: any) => {
+    if (!doctor?.profileImage || doctor.profileImage.trim() === "" || doctor.profileImage.includes("placeholder")) {
+      return "assets/img/doctor-placeholder.png";
+    }
+    return resolveMediaUrl(doctor.profileImage);
+  };
 
   const customSelectStyles = `
     .compact-table .ant-table-tbody > tr > td {
@@ -230,14 +246,20 @@ const ConsultationList = () => {
       },
       render: (_: any, record: any) => {
         const app = record.appointment;
+        if (!app?.patient) return <span className="text-muted">—</span>;
+        const fullName = `${app.patient.firstName || ""} ${app.patient.lastName || ""}`;
+        const img = getPatientImg(app.patient);
         return (
-          <div className="d-flex flex-column lh-1">
-            <span className="fw-semibold text-dark fs-14">
-              {app?.patient?.firstName} {app?.patient?.lastName}
-            </span>
-            {app?.patient?.phone && (
-              <span className="text-muted fs-11 mt-1">{app.patient.phone}</span>
-            )}
+          <div className="d-flex align-items-center">
+            <Link to={all_routes.patientDetails.replace(":id", app.patient.id)} className="avatar avatar-md me-2">
+              <ImageWithBasePath src={img} alt="Patient" className="rounded-circle" />
+            </Link>
+            <div className="lh-1">
+              <Link to={all_routes.patientDetails.replace(":id", app.patient.id)} className="text-dark fw-bold d-block mb-1 fs-13 text-nowrap">
+                {fullName}
+              </Link>
+              <span className="text-muted fs-11">{app.patient.phone || "—"}</span>
+            </div>
           </div>
         );
       },
@@ -252,36 +274,46 @@ const ConsultationList = () => {
       },
       render: (_: any, record: any) => {
         const app = record.appointment;
-        return <span className="text-secondary">{app?.doctor?.fullName || "—"}</span>;
+        if (!app?.doctor) return <span className="text-muted">—</span>;
+        const img = getDoctorImg(app.doctor);
+        return (
+          <div className="d-flex align-items-center">
+            <Link to={all_routes.doctorsDetails.replace(":id", app.doctor.id)} className="avatar avatar-xs me-2">
+              <ImageWithBasePath src={img} alt="Doctor" className="rounded-circle" />
+            </Link>
+            <Link to={all_routes.doctorsDetails.replace(":id", app.doctor.id)} className="text-dark fw-medium fs-13 text-nowrap">
+              {app.doctor.fullName || "—"}
+            </Link>
+          </div>
+        );
       },
     },
     {
-      title: "Therapies",
-      dataIndex: "therapies",
+      title: "Date & Time",
+      dataIndex: "date",
+      sorter: (a: any, b: any) => {
+        const timeA = a.appointment?.scheduledAt ? new Date(a.appointment.scheduledAt).getTime() : 0;
+        const timeB = b.appointment?.scheduledAt ? new Date(b.appointment.scheduledAt).getTime() : 0;
+        return timeA - timeB;
+      },
       render: (_: any, record: any) => {
-        const c = record.consultation;
+        const app = record.appointment;
+        return <span className="text-dark fs-13">{formatDate(app?.scheduledAt)}</span>;
+      },
+    },
+    {
+      title: "Mode",
+      dataIndex: "mode",
+      sorter: (a: any, b: any) => (a.appointment?.mode || "").localeCompare(b.appointment?.mode || ""),
+      render: (_: any, record: any) => {
+        const mode = record.appointment?.mode || "Offline";
+        let badgeColor = "bg-light-purple text-purple border-purple";
+        if (mode.toLowerCase() === "online") badgeColor = "bg-soft-info text-info border-info";
+        if (mode.toLowerCase().includes("home")) badgeColor = "bg-soft-warning text-warning border-warning";
         return (
-          <div className="d-flex flex-column gap-1">
-            {c ? (
-              c.therapyPlans?.map((p: any, i: number) => (
-                <span
-                  key={i}
-                  className="badge bg-indigo bg-opacity-10 text-primary"
-                  style={{
-                    background: "#6366f118",
-                    color: "#4f46e5",
-                    borderRadius: 6,
-                    fontSize: 11,
-                    padding: "3px 8px",
-                  }}
-                >
-                  {p.therapyName || "Therapy"} × {p.totalSessions}
-                </span>
-              ))
-            ) : (
-              <span className="text-muted small">No prescription prescribed</span>
-            )}
-          </div>
+          <span className={`badge border px-2 py-1 fs-12 ${badgeColor}`}>
+            {mode}
+          </span>
         );
       },
     },
@@ -313,23 +345,6 @@ const ConsultationList = () => {
       },
     },
     {
-      title: "Invoice",
-      dataIndex: "invoice",
-      render: (_: any, record: any) => {
-        const c = record.consultation;
-        return c?.invoice ? (
-          <span
-            className={`badge bg-${payStatusColors[c.invoice.paymentStatus] || "secondary"}-subtle text-${payStatusColors[c.invoice.paymentStatus] || "secondary"}`}
-            style={{ borderRadius: 6, fontSize: 11 }}
-          >
-            {c.invoice.paymentStatus}
-          </span>
-        ) : (
-          <span className="text-muted" style={{ fontSize: 12 }}>—</span>
-        );
-      },
-    },
-    {
       title: "Status",
       dataIndex: "status",
       sorter: (a: any, b: any) => {
@@ -348,19 +363,6 @@ const ConsultationList = () => {
             {status}
           </span>
         );
-      },
-    },
-    {
-      title: "Date",
-      dataIndex: "date",
-      sorter: (a: any, b: any) => {
-        const timeA = a.appointment?.scheduledAt ? new Date(a.appointment.scheduledAt).getTime() : 0;
-        const timeB = b.appointment?.scheduledAt ? new Date(b.appointment.scheduledAt).getTime() : 0;
-        return timeA - timeB;
-      },
-      render: (_: any, record: any) => {
-        const app = record.appointment;
-        return <span className="text-dark fs-13">{formatDate(app?.scheduledAt)}</span>;
       },
     },
     {
@@ -431,12 +433,26 @@ const ConsultationList = () => {
           <div className="appointments-filter-line pb-3 mb-3 border-bottom">
             <h4 className="fw-bold mb-0 text-dark flex-shrink-0">Therapy Consultations</h4>
             
+            <div className="input-group ms-3" style={{ maxWidth: 220, height: 32 }}>
+              <span className="input-group-text border bg-light py-0" style={{ height: 32 }}>
+                <i className="ti ti-search text-muted" />
+              </span>
+              <input
+                type="text"
+                className="form-control border bg-light py-0"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ borderRadius: "0 6px 6px 0", height: 32, fontSize: 12 }}
+              />
+            </div>
+            
             {/* Tab Filters: All, Checked Out, Checked In, Confirmed, Not Started */}
             <div className="status-buttons-group ms-auto">
               {[
                 { key: "All", label: "All", count: counts.all },
                 { key: "Check Out", label: "Checked Out", count: counts.checkedOut },
-                { key: "Check In", label: "Check In", count: counts.checkedIn },
+                { key: "Check In", label: "Checked In", count: counts.checkedIn },
                 { key: "Confirmed", label: "Confirmed", count: counts.confirmed },
                 { key: "Not Started", label: "Not Started", count: counts.notStarted }
               ].map((s) => (
@@ -454,52 +470,29 @@ const ConsultationList = () => {
             </div>
           </div>
 
-        {/* Table Card */}
-        <div
-          className="card border-0"
-          style={{ borderRadius: "16px", boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}
-        >
-          <div className="card-header border-0 bg-white d-flex align-items-center justify-content-between flex-wrap gap-2"
-            style={{ borderRadius: "16px 16px 0 0", padding: "20px 24px" }}>
-            <h5 className="mb-0 fw-semibold">All Consultations</h5>
-            <div className="input-group" style={{ maxWidth: 280 }}>
-              <span className="input-group-text border-0 bg-light">
-                <i className="ti ti-search text-muted" />
-              </span>
-              <input
-                type="text"
-                className="form-control border-0 bg-light"
-                placeholder="Search patient, therapist..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ borderRadius: "0 8px 8px 0" }}
-              />
+          {loading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" />
             </div>
-          </div>
-          <div className="card-body p-0">
-            {loading ? (
-              <div className="text-center py-5">
-                <div className="spinner-border text-primary" />
-              </div>
-            ) : filtered.length === 0 ? (
+          ) : finalFiltered.length === 0 ? (
+            <div className="border rounded bg-white p-4">
               <EmptyState
                 title="No consultancy appointments found"
                 message="Confirmed therapy appointments will show up here to start or view consultations."
               />
-            ) : (
-              <div className="table-responsive">
-                <Datatable
-                  columns={columns}
-                  dataSource={finalFiltered}
-                  Selection={false}
-                  searchText=""
-                />
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="table-responsive border rounded bg-white compact-table">
+              <Datatable
+                columns={columns}
+                dataSource={finalFiltered}
+                Selection={false}
+                searchText=""
+              />
+            </div>
+          )}
         </div>
       </div>
-    </div>
     </>
   );
 };

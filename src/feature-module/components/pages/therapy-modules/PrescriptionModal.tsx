@@ -263,9 +263,11 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
 
     let medicinesToCopy: any[] = [];
     let adviceToCopy = prevConsult.advice || "";
+    let attachmentsToCopy: any[] = [];
 
     if (type === "therapy") {
       medicinesToCopy = prevConsult.medicines ? [...prevConsult.medicines] : [];
+      attachmentsToCopy = prevConsult.attachments ? [...prevConsult.attachments] : [];
     } else if (type === "clinic") {
       medicinesToCopy = (prevConsult.medicines || []).map((m: any) => ({
         name: m.medicineName || "",
@@ -280,8 +282,9 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
       medicines: medicinesToCopy,
       advice: adviceToCopy,
       painLevel: prevConsult.painLevel || null,
+      attachments: attachmentsToCopy,
     });
-    toast.info("Copied medicines, advice & pain level from past prescription.");
+    toast.info("Copied medicines, advice, pain level & images from past prescription.");
   };
 
   const handleClearPrescription = () => {
@@ -291,6 +294,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
       medicines: [],
       advice: "",
       painLevel: null,
+      attachments: [],
     });
     toast.info("Cleared prescription inputs.");
   };

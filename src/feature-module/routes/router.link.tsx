@@ -141,6 +141,7 @@ const DoctorSchedules = lazy(() => import("../components/pages/doctor-modules/do
 const OnlineConsultations = lazy(() => import("../components/pages/doctor-modules/online-consultations/onlineConsultations"));
 const MyPatients = lazy(() => import("../components/pages/doctor-modules/my-patients/MyPatients"));
 const MyAttendance = lazy(() => import("../components/pages/doctor-modules/my-attendance/MyAttendance"));
+const DoctorTherapy = lazy(() => import("../components/pages/doctor-modules/DoctorTherapy"));
 const ExpenseCategory = lazy(() => import("../components/pages/finance-accounts-module/expenses/expenseCategory"));
 const ExpensesList = lazy(() => import("../components/pages/finance-accounts-module/expenses/expenses"));
 const IncomeList = lazy(() => import("../components/pages/finance-accounts-module/income"));
@@ -473,6 +474,26 @@ export const publicRoutes = [
   {
     path: routes.doctorAttendance,
     element: <MyAttendance />,
+    route: Route,
+  },
+  {
+    path: routes.doctorTherapyAppointments,
+    element: <DoctorTherapy tab="appointments" />,
+    route: Route,
+  },
+  {
+    path: routes.doctorTherapyConsultations,
+    element: <DoctorTherapy tab="consultations" />,
+    route: Route,
+  },
+  {
+    path: routes.doctorTherapySessions,
+    element: <DoctorTherapy tab="sessions" />,
+    route: Route,
+  },
+  {
+    path: routes.doctorTherapy,
+    element: <DoctorTherapy tab="appointments" />,
     route: Route,
   },
   {

@@ -314,24 +314,28 @@ const Header = () => {
               )}
 
               {/* Module Switcher */}
-              <button
-                type="button"
-                className={`btn d-flex align-items-center gap-2 border px-3 shadow-sm text-nowrap ms-2`}
-                onClick={toggleModuleMode}
-                style={{
-                  height: '38px',
-                  borderRadius: '6px',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  background: activeMode === "therapy" ? '#e8eafd' : '#e6f7ff',
-                  borderColor: activeMode === "therapy" ? '#6366f1' : '#1890ff',
-                  color: activeMode === "therapy" ? '#6366f1' : '#1890ff',
-                  transition: 'all 0.2s ease-in-out',
-                }}
-              >
-                <i className={`ti ${activeMode === "therapy" ? "ti-building-hospital" : "ti-activity"}`} style={{ fontSize: '16px' }} />
-                <span>{activeMode === "therapy" ? "Switch to Clinic" : "Switch to Therapy"}</span>
-              </button>
+              {user?.role !== "SUPER_ADMIN" &&
+                user?.role !== "DOCTOR" &&
+                user?.role !== "PATIENT" && (
+                <button
+                  type="button"
+                  className={`btn d-flex align-items-center gap-2 border px-3 shadow-sm text-nowrap ms-2`}
+                  onClick={toggleModuleMode}
+                  style={{
+                    height: '38px',
+                    borderRadius: '6px',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    background: activeMode === "therapy" ? '#e8eafd' : '#e6f7ff',
+                    borderColor: activeMode === "therapy" ? '#6366f1' : '#1890ff',
+                    color: activeMode === "therapy" ? '#6366f1' : '#1890ff',
+                    transition: 'all 0.2s ease-in-out',
+                  }}
+                >
+                  <i className={`ti ${activeMode === "therapy" ? "ti-building-hospital" : "ti-activity"}`} style={{ fontSize: '16px' }} />
+                  <span>{activeMode === "therapy" ? "Switch to Clinic" : "Switch to Therapy"}</span>
+                </button>
+              )}
             </div>
           </div>
           <div className="d-flex align-items-center">

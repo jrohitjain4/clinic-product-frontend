@@ -92,6 +92,10 @@ export const all_routes = {
   doctorsprescriptiondetails: "/doctor/doctors-prescription-details",
   doctorPatients: "/doctor/my-patients",
   doctorAttendance: "/doctor/my-attendance",
+  doctorTherapy: "/doctor/therapy",
+  doctorTherapyAppointments: "/doctor/therapy/appointments",
+  doctorTherapyConsultations: "/doctor/therapy/consultations",
+  doctorTherapySessions: "/doctor/therapy/sessions",
 
   //Super Admin routes
   superAdminDashboard: "/super-admin/super-admin-dashboard",

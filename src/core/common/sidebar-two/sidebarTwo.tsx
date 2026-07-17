@@ -40,6 +40,12 @@ const SidebarTwo = () => {
         all_routes.doctorsappointments,
         all_routes.onlineconsultations,
       ]),
+      therapy: isAnyActive([
+        all_routes.doctorTherapyAppointments,
+        all_routes.doctorTherapyConsultations,
+        all_routes.doctorTherapySessions,
+        all_routes.doctorTherapy,
+      ]),
       settings: isAnyActive([
         all_routes.doctorsprofilesettings,
         all_routes.doctorspasswordsettings,
@@ -170,6 +176,73 @@ const SidebarTwo = () => {
                       <i className="ti ti-calendar-check" />
                       <span>My Attendance</span>
                     </Link>
+                  </li>
+                  {/* Therapy Submenu */}
+                  <li
+                    className={`submenu${openSubmenus.therapy ? " active" : ""}`}
+                  >
+                    <Link
+                      to="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleToggle("therapy");
+                      }}
+                    >
+                      <i className="ti ti-activity" />
+                      <span>Therapy</span>
+                      <span className="menu-arrow">
+                        <i
+                          className={
+                            openSubmenus.therapy
+                              ? "ti ti-chevron-down"
+                              : "ti ti-chevron-right"
+                          }
+                        />
+                      </span>
+                    </Link>
+                    <ul
+                      style={{
+                        display: openSubmenus.therapy ? "block" : "none",
+                      }}
+                    >
+                      <li>
+                        <Link
+                          to={all_routes.doctorTherapyAppointments}
+                          className={
+                            isActive(all_routes.doctorTherapyAppointments) ||
+                            isActive(all_routes.doctorTherapy)
+                              ? "active"
+                              : ""
+                          }
+                        >
+                          Appointments
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to={all_routes.doctorTherapyConsultations}
+                          className={
+                            isActive(all_routes.doctorTherapyConsultations)
+                              ? "active"
+                              : ""
+                          }
+                        >
+                          Consultations
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to={all_routes.doctorTherapySessions}
+                          className={
+                            isActive(all_routes.doctorTherapySessions)
+                              ? "active"
+                              : ""
+                          }
+                        >
+                          Sessions
+                        </Link>
+                      </li>
+                    </ul>
                   </li>
                   <li
                     className={

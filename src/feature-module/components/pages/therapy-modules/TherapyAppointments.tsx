@@ -334,9 +334,11 @@ const TherapyAppointments = () => {
 
     let medicinesToCopy: any[] = [];
     let adviceToCopy = prevConsult.advice || "";
+    let attachmentsToCopy: any[] = [];
 
     if (type === "therapy") {
       medicinesToCopy = prevConsult.medicines ? [...prevConsult.medicines] : [];
+      attachmentsToCopy = prevConsult.attachments ? [...prevConsult.attachments] : [];
     } else if (type === "clinic") {
       medicinesToCopy = (prevConsult.medicines || []).map((m: any) => ({
         name: m.medicineName || "",
@@ -350,8 +352,9 @@ const TherapyAppointments = () => {
       ...selectedConsultation,
       medicines: medicinesToCopy,
       advice: adviceToCopy,
+      attachments: attachmentsToCopy,
     });
-    toast.info("Copied medicines & advice from past prescription.");
+    toast.info("Copied medicines, advice & images from past prescription.");
   };
 
   const handleClearPrescription = () => {
@@ -360,6 +363,7 @@ const TherapyAppointments = () => {
       ...selectedConsultation,
       medicines: [],
       advice: "",
+      attachments: [],
     });
     toast.info("Cleared prescription inputs.");
   };

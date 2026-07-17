@@ -49,6 +49,66 @@ const severityColor = (s: number) => {
   return "#ef4444";
 };
 
+// ─── Availability Helpers ─────────────────────────────────────
+const isDateAvailable = (date: Date, availability: any): boolean => {
+  if (!availability) return true;
+
+  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ...
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const dayName = dayNames[dayOfWeek];
+
+  // 1. Clinic Off Day
+  const clinicOffDays = availability.clinicWorkingDays || [0];
+  if (clinicOffDays.includes(dayOfWeek)) {
+    return false;
+  }
+
+  // 2. Doctor Weekly Off (Active Schedule check)
+  const daySchedule = availability.schedules?.[dayName];
+  const isWorking = Array.isArray(daySchedule) && daySchedule.length > 0;
+  if (!isWorking) {
+    return false;
+  }
+
+  // 3. Holiday
+  const time = date.getTime();
+  const isHoliday = availability.holidays?.some((h: any) => {
+    const start = new Date(h.date);
+    start.setHours(0, 0, 0, 0);
+    const end = h.endDate ? new Date(h.endDate) : new Date(h.date);
+    end.setHours(23, 59, 59, 999);
+    return time >= start.getTime() && time <= end.getTime();
+  });
+  if (isHoliday) {
+    return false;
+  }
+
+  // 4. Leave
+  const isLeave = availability.leaves?.some((l: any) => {
+    const s = new Date(l.start);
+    s.setHours(0, 0, 0, 0);
+    const e = new Date(l.end);
+    e.setHours(23, 59, 59, 999);
+    return time >= s.getTime() && time <= e.getTime();
+  });
+  if (isLeave) {
+    return false;
+  }
+
+  return true;
+};
+
+const getNextAvailableDate = (startDate: Date, availability: any): Date => {
+  const date = new Date(startDate);
+  for (let i = 0; i < 365; i++) {
+    if (isDateAvailable(date, availability)) {
+      return date;
+    }
+    date.setDate(date.getDate() + 1);
+  }
+  return date;
+};
+
 // ─── Types ────────────────────────────────────────────────────
 interface BodyPoint {
   part: string;
@@ -293,11 +353,6 @@ const ConsultationForm = () => {
           setAmountPaid(consult.amountPaid || "");
           setPaymentMethod(consult.paymentMethod || "Cash");
           setWhatsappNotification(consult.whatsappNotification || false);
-          
-          // If Draft, start at step 2 so user can continue
-          if (consult.status === "Draft") {
-            setStep(2);
-          }
           
           setIsEditing(false);
         }
@@ -2328,11 +2383,15 @@ const ConsultationForm = () => {
                         if (startDt && sessions > 0) {
                           let current = new Date(startDt);
                           for (let s = 0; s < sessions; s++) {
+                            current = getNextAvailableDate(current, availability);
                             scheduleEntries.push({ day: s + 1, date: new Date(current) });
                             if (plan.scheduleType === "daily") {
                               current.setDate(current.getDate() + 1);
                             } else if (plan.scheduleType === "alternate") {
-                              current.setDate(current.getDate() + 2);
+                              current.setDate(current.getDate() + 1);
+                              const skipped = getNextAvailableDate(current, availability);
+                              current = new Date(skipped);
+                              current.setDate(current.getDate() + 1);
                             } else if (plan.scheduleType === "weekly") {
                               current.setDate(current.getDate() + 7);
                             } else {

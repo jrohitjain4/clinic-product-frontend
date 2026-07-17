@@ -21,7 +21,10 @@ import { toast } from "react-toastify";
 import AppointmentFormPage from "../../clinic-modules/appointment-form/appointmentFormPage";
 
 const DoctorAppointments = () => {
-  const { appointments, loading, updateAppointmentStatus, refetch } = useClinicAppointments();
+  const { appointments: allAppts, loading, updateAppointmentStatus, refetch } = useClinicAppointments();
+  const appointments = useMemo(() => {
+    return allAppts.filter(a => a.appointmentType !== "therapy" && a.parentAppointmentId === null);
+  }, [allAppts]);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const handleStatusToggle = async (appointmentId: string, currentStatus: string) => {

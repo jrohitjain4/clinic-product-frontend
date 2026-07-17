@@ -177,7 +177,7 @@ const Feature = () => {
     const isPublicPath = path === "/" || path === "/login" || path === "/register" || path.startsWith("/@") || path.startsWith("/clinic/");
     const isDoctorPath = path.startsWith("/doctor/");
     const isLabPath = path === "/pathlab/tests" || path === "/pathlab/bookings";
-    if (!isPublicPath && !isDoctorPath && !isLabPath && path !== "/doctor/doctor-dashboard" && !path.startsWith("/new-appointment")) {
+    if (!isPublicPath && !isDoctorPath && !isLabPath && !path.startsWith("/therapy-consultations") && path !== "/doctor/doctor-dashboard" && !path.startsWith("/new-appointment")) {
       return <Navigate to="/doctor/doctor-dashboard" replace />;
     }
   }

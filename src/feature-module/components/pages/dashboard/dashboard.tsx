@@ -24,10 +24,39 @@ dayjs.extend(isBetween);
 
 const Dashboard = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const [activeMode, setActiveMode] = useState(localStorage.getItem("activeModuleMode") || "clinic");
+
+  useEffect(() => {
+    const handleModeChange = () => {
+      setActiveMode(localStorage.getItem("activeModuleMode") || "clinic");
+    };
+    window.addEventListener("activeModuleModeChange", handleModeChange);
+    return () => {
+      window.removeEventListener("activeModuleModeChange", handleModeChange);
+    };
+  }, []);
+
   const { stats } = useDashboardStats();
   const { holidays } = useHolidays();
-  const { appointments } = useClinicAppointments();
-  const { patients } = useClinicPatients();
+  const { appointments: allAppts } = useClinicAppointments();
+  const { patients: allPatients } = useClinicPatients();
+
+  const appointments = useMemo(() => {
+    if (activeMode === "therapy") {
+      return allAppts.filter(a => a.appointmentType === "therapy" || a.parentAppointmentId !== null);
+    }
+    return allAppts.filter(a => a.appointmentType !== "therapy" && a.parentAppointmentId === null);
+  }, [allAppts, activeMode]);
+
+  const patients = useMemo(() => {
+    if (activeMode === "therapy") {
+      return allPatients.filter(p => 
+        appointments.some(appt => appt.patientId === p.id)
+      );
+    }
+    return allPatients;
+  }, [allPatients, appointments, activeMode]);
+
   const [showAddAppointment, setShowAddAppointment] = useState(false);
 
   const todayAppointmentsCount = useMemo(() => {
@@ -283,8 +312,8 @@ const Dashboard = () => {
         <div className="content pb-0">
           <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
             <div>
-              <h4 className="fw-bold mb-1 fs-20">Welcome back, Admin! 👋</h4>
-              <p className="text-muted mb-0 fs-13">Here's what's happening in your clinic today.</p>
+              <h4 className="fw-bold mb-1 fs-20">Welcome back, Admin! 👋{activeMode === "therapy" ? " (Therapy)" : ""}</h4>
+              <p className="text-muted mb-0 fs-13">Here's what's happening in your {activeMode === "therapy" ? "therapy module" : "clinic"} today.</p>
             </div>
 
             {stats.profileCompletion !== undefined && (
@@ -370,13 +399,13 @@ const Dashboard = () => {
                         <i className="ti ti-stethoscope fs-22 text-white" />
                       </div>
                       <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Total Doctors</p>
+                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>{activeMode === "therapy" ? "Total Therapists" : "Total Doctors"}</p>
                         <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{stats.doctorsCount}</h4>
                       </div>
                     </div>
                     <span className="badge fw-semibold" style={{ color: '#10b981', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Active</span>
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>All registered doctors</p>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "All registered therapists" : "All registered doctors"}</p>
                 </div>
               </div>
             </div>
@@ -397,7 +426,7 @@ const Dashboard = () => {
                     </div>
                     <span className="badge fw-semibold" style={{ color: '#3b82f6', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Register</span>
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>All registered patients</p>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "All registered therapy patients" : "All registered patients"}</p>
                 </div>
               </div>
             </div>
@@ -418,7 +447,7 @@ const Dashboard = () => {
                     </div>
                     <span className="badge fw-semibold" style={{ color: '#f97316', backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Pending</span>
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Total appointments</p>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "Total therapy appointments" : "Total appointments"}</p>
                 </div>
               </div>
             </div>
@@ -439,7 +468,7 @@ const Dashboard = () => {
                     </div>
                     <span className="badge fw-semibold" style={{ color: '#10b981', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Monthly</span>
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>This month revenue</p>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "This month therapy revenue" : "This month revenue"}</p>
                 </div>
               </div>
             </div>
@@ -462,7 +491,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Appointments for today</p>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "Therapy appointments for today" : "Appointments for today"}</p>
                 </div>
               </div>
             </div>
@@ -482,7 +511,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>This month completed</p>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "This month completed therapy" : "This month completed"}</p>
                 </div>
               </div>
             </div>
@@ -502,7 +531,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>This month new patients</p>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "This month new therapy patients" : "This month new patients"}</p>
                 </div>
               </div>
             </div>
@@ -522,7 +551,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>This month no shows</p>
+                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "This month therapy no shows" : "This month no shows"}</p>
                 </div>
               </div>
             </div>

@@ -1,7 +1,9 @@
 import { Link, useParams } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
+import { apiPost } from "../../../../../core/utils/apiClient";
 import Datatable from "../../../../../core/common/dataTable";
 import { useClinicAppointment } from "../../../../../core/hooks/useClinicAppointment";
 import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppointments";
@@ -25,8 +27,28 @@ import PrescriptionPad from "../../clinic-modules/appointments/PrescriptionPad";
 
 const DoctorsAppointmentDetails = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { appointment, loading, error, refetch } = useClinicAppointment(id!);
   const { prescriptions, createPrescription, refetch: refetchPres } = usePrescriptions();
+
+  const [startingConsultation, setStartingConsultation] = useState(false);
+
+  const handleStartConsultation = async () => {
+    if (!appointment) return;
+    setStartingConsultation(true);
+    try {
+      const res = await apiPost<any>("/api/consultations", {
+        appointmentId: appointment.id,
+        status: "Draft",
+      });
+      navigate(`/therapy-consultations/${res.id}`);
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Failed to start consultation");
+    } finally {
+      setStartingConsultation(false);
+    }
+  };
 
   const [showPresModal, setShowPresModal] = useState(false);
   const [selectedPres, setSelectedPres] = useState<any>(null);
@@ -533,6 +555,41 @@ const DoctorsAppointmentDetails = () => {
                 </li>
               </ul>
             </div>
+
+            {appointment.appointmentType === "therapy" && (
+              <>
+                {appointment.consultation ? (
+                  <Link
+                    to={`/therapy-consultations/${appointment.consultation.id}`}
+                    className="btn btn-success d-flex align-items-center gap-2 fw-bold shadow-sm fs-14 text-white"
+                  >
+                    <i className="ti ti-stethoscope" /> View Consultation
+                  </Link>
+                ) : (
+                  <button
+                    className="btn btn-success d-flex align-items-center gap-2 fw-bold shadow-sm fs-14 text-white"
+                    onClick={handleStartConsultation}
+                    disabled={startingConsultation}
+                  >
+                    {startingConsultation ? (
+                      <span className="spinner-border spinner-border-sm" />
+                    ) : (
+                      <i className="ti ti-player-play" />
+                    )}
+                    Start Consultation
+                  </button>
+                )}
+              </>
+            )}
+
+            {appointment.parentAppointmentId && appointment.consultationId && (
+              <Link
+                to={`/therapy-consultations/${appointment.consultationId}`}
+                className="btn btn-success d-flex align-items-center gap-2 fw-bold shadow-sm fs-14 text-white"
+              >
+                <i className="ti ti-stethoscope" /> View Parent Consultation
+              </Link>
+            )}
 
             <button className="btn btn-primary d-flex align-items-center gap-2 fw-bold shadow-sm" onClick={() => setShowPresModal(true)}>
               <i className="ti ti-prescription" /> Add Prescription

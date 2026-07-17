@@ -54,7 +54,8 @@ export const useDashboardStats = () => {
         setError(null);
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch(apiUrl("/api/dashboard/stats"), {
+            const activeMode = localStorage.getItem("activeModuleMode") || "clinic";
+            const res = await fetch(apiUrl(`/api/dashboard/stats?mode=${activeMode}`), {
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
             });
             if (!res.ok) {
@@ -72,6 +73,14 @@ export const useDashboardStats = () => {
 
     useEffect(() => {
         fetchStats();
+        
+        const handleModeChange = () => {
+            fetchStats();
+        };
+        window.addEventListener("activeModuleModeChange", handleModeChange);
+        return () => {
+            window.removeEventListener("activeModuleModeChange", handleModeChange);
+        };
     }, [fetchStats]);
 
     const refetch = useCallback(() => fetchStats({ silent: true }), [fetchStats]);

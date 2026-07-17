@@ -84,4 +84,9 @@ export interface ClinicAppointment {
       phone?: string | null;
     } | null;
   } | null;
+  consultationId?: string | null;
+  consultation?: any;
+  therapyPlanId?: string | null;
+  therapyPlan?: any;
+  sessionNumber?: number | null;
 }

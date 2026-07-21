@@ -89,4 +89,6 @@ export interface ClinicAppointment {
   therapyPlanId?: string | null;
   therapyPlan?: any;
   sessionNumber?: number | null;
+  discountType?: string | null;
+  discountValue?: string | null;
 }

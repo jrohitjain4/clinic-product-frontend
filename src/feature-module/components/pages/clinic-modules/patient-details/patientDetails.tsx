@@ -1599,7 +1599,7 @@ const PatientDetails = () => {
                       .map((inv) => {
                         const isPharmacy = (inv as any).otherInfo === "Pharmacy" || inv.invoiceCode?.startsWith("PH-");
                         const isPathlab = inv.invoiceCode?.startsWith("INV-AUTO-LB") || (inv as any).otherInfo === "Pathlab";
-                        const isTherapy = inv.appointment?.appointmentType === "therapy" || inv.consultationId !== null || (inv as any).otherInfo === "Therapy";
+                        const isTherapy = (inv as any).appointment?.appointmentType === "therapy" || (inv as any).consultationId !== null || (inv as any).otherInfo === "Therapy";
                         const txnType = isPharmacy ? "Pharmacy" : isPathlab ? "Pathlab" : isTherapy ? "Therapy" : "OPD / Clinic";
                         
                         const badgeClass = isPharmacy 
@@ -1674,7 +1674,7 @@ const PatientDetails = () => {
                       .map((inv) => {
                         const isPharmacy = (inv as any).otherInfo === "Pharmacy" || inv.invoiceCode?.startsWith("PH-");
                         const isPathlab = inv.invoiceCode?.startsWith("INV-AUTO-LB") || (inv as any).otherInfo === "Pathlab";
-                        const isTherapy = inv.appointment?.appointmentType === "therapy" || inv.consultationId !== null || (inv as any).otherInfo === "Therapy";
+                        const isTherapy = (inv as any).appointment?.appointmentType === "therapy" || (inv as any).consultationId !== null || (inv as any).otherInfo === "Therapy";
                         const txnType = isPharmacy ? "Pharmacy" : isPathlab ? "Pathlab" : isTherapy ? "Therapy" : "OPD / Clinic";
                         
                         const badgeClass = isPharmacy 

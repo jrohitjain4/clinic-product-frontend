@@ -86,6 +86,7 @@ const PatientsGrid = lazy(() => import("../components/pages/clinic-modules/patie
 const Patients = lazy(() => import("../components/pages/clinic-modules/patients/patients"));
 const Services = lazy(() => import("../components/pages/clinic-modules/services/services"));
 const Specializations = lazy(() => import("../components/pages/clinic-modules/specializations/specializations"));
+const RefsPage = lazy(() => import("../components/pages/clinic-modules/refers/refersPage"));
 
 // Therapy Imports
 const TherapistsList = lazy(() => import("../components/pages/therapy-modules/TherapistsList"));
@@ -1641,6 +1642,11 @@ export const publicRoutes = [
   {
     path: routes.specializations,
     element: <Specializations />,
+    route: Route,
+  },
+  {
+    path: routes.refers,
+    element: <RefsPage />,
     route: Route,
   },
 

@@ -79,6 +79,7 @@ export const emptyPatientForm = () => ({
   aadhaarNumber: "",
   passportNumber: "",
   referredBy: "",
+  referId: "",
 
   emergencyContactName: "",
   emergencyContactRelation: "",

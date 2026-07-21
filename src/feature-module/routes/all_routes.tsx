@@ -167,6 +167,7 @@ export const all_routes = {
   locations: "/locations",
   services: "/services",
   specializations: "/specializations",
+  refers: "/refers",
   assets: "/assets",
   activities: "/activities",
   messages: "/messages",

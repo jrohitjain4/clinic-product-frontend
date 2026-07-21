@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Datatable from "../../../../../core/common/dataTable";
 import { Link } from "react-router";
 import { ViewModal } from "../../../../../core/common/modal/ViewModal";
@@ -93,61 +93,97 @@ const InvoiceManagement = () => {
   };
 
   // Build an invoice-like object for InvoiceSlip from a lab booking
-  const buildInvoiceData = (inv: any) => ({
-    id: inv.id,
-    invoiceCode: inv.invoiceNo || `LINV-${inv.bookingCode}`,
-    invoiceDate: inv.createdAt,
-    createdAt: inv.createdAt,
-    dueDate: inv.createdAt,
-    paymentMethod: inv.paymentMethod || "Cash",
-    paymentStatus: inv.paymentStatus || "Unpaid",
-    subTotal: inv.test?.price || inv.totalAmount || 0,
-    discount: inv.discount || 0,
-    tax: inv.tax || 0,
-    totalAmount: inv.totalAmount || 0,
-    patient: inv.patient || {},
-    clinic: {},
-    items: [
-      {
-        id: `item-${inv.id}`,
-        description: `Lab Test: ${inv.test?.name || "Diagnostic Test"}`,
-        serviceName: inv.test?.name || "Diagnostic Test",
-        service: { serviceName: inv.test?.name || "Diagnostic Test" },
-        quantity: 1,
-        unitCost: inv.test?.price || inv.totalAmount || 0,
-        amount: inv.test?.price || inv.totalAmount || 0,
-      },
-    ],
-  });
+  const buildInvoiceData = (inv: any) => {
+    const userObj = JSON.parse(localStorage.getItem("user") || "{}");
+    const loginClinic = userObj?.clinic || {};
+    const clinic = inv.clinic || loginClinic || {};
+
+    const bookingAmount = Number(inv.totalAmount) || Number(inv.test?.price) || 0;
+    const testName = inv.test?.name || "Diagnostic Test";
+
+    return {
+      id: inv.id,
+      invoiceCode: inv.invoiceNo || `LINV-${inv.bookingCode}`,
+      invoiceDate: inv.createdAt,
+      createdAt: inv.createdAt,
+      dueDate: inv.createdAt,
+      paymentMethod: inv.paymentMethod || "Cash",
+      paymentStatus: inv.paymentStatus || "Unpaid",
+      subTotal: bookingAmount,
+      discount: Number(inv.discount) || 0,
+      tax: Number(inv.tax) || 0,
+      totalAmount: bookingAmount,
+      patient: inv.patient || {},
+      doctor: inv.doctor || null,
+      clinic,
+      items: [
+        {
+          id: `item-${inv.id}`,
+          name: testName,
+          description: inv.test?.testCode ? `Test Code: ${inv.test.testCode}` : undefined,
+          serviceName: testName,
+          service: { serviceName: testName },
+          quantity: 1,
+          unitCost: bookingAmount,
+          amount: bookingAmount,
+        },
+      ],
+    };
+  };
+
+  const [printAction, setPrintAction] = useState<"print" | "download" | null>(null);
+
+  useEffect(() => {
+    if (!printInvoice || !printAction) return;
+
+    const timer = setTimeout(() => {
+      const el = document.getElementById('print-invoice-slip');
+      if (!el) return;
+
+      el.style.display = 'block';
+
+      if (printAction === "print") {
+        window.print();
+        setTimeout(() => {
+          el.style.display = 'none';
+          setPrintInvoice(null);
+          setPrintAction(null);
+        }, 1000);
+      } else if (printAction === "download") {
+        const opt = {
+          margin: 0,
+          filename: `Invoice-${printInvoice.invoiceCode || 'diagnostic'}.pdf`,
+          image: { type: 'jpeg' as const, quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+        };
+        html2pdf().from(el).set(opt).save()
+          .then(() => {
+            el.style.display = 'none';
+            setPrintInvoice(null);
+            setPrintAction(null);
+          })
+          .catch(() => {
+            el.style.display = 'none';
+            setPrintInvoice(null);
+            setPrintAction(null);
+          });
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [printInvoice, printAction]);
 
   const handlePrint = (inv: any) => {
-    setPrintInvoice(buildInvoiceData(inv));
-    setTimeout(() => {
-      const el = document.getElementById('print-diagnostic-invoice-slip');
-      if (!el) return;
-      el.style.display = 'block';
-      window.print();
-      setTimeout(() => { el.style.display = 'none'; setPrintInvoice(null); }, 1500);
-    }, 100);
+    const invoiceData = buildInvoiceData(inv);
+    setPrintInvoice(invoiceData);
+    setPrintAction("print");
   };
 
   const handleDownload = (inv: any) => {
-    setPrintInvoice(buildInvoiceData(inv));
-    setTimeout(() => {
-      const el = document.getElementById('print-diagnostic-invoice-slip');
-      if (!el) return;
-      el.style.display = 'block';
-      const opt = {
-        margin: 0,
-        filename: `Invoice-${inv.invoiceNo || 'diagnostic'}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
-      };
-      html2pdf().from(el).set(opt).save()
-        .then(() => { el.style.display = 'none'; setPrintInvoice(null); })
-        .catch(() => { el.style.display = 'none'; setPrintInvoice(null); });
-    }, 100);
+    const invoiceData = buildInvoiceData(inv);
+    setPrintInvoice(invoiceData);
+    setPrintAction("download");
   };
 
   const filteredData = useMemo(() => {
@@ -310,55 +346,62 @@ const InvoiceManagement = () => {
         submitting={submitting}
       />
 
-      {/* VIEW MODAL */}
-      {/* VIEW MODAL - always in DOM, triggered via Bootstrap */}
-      <ViewModal id="view_invoice" title="Invoice Details" subtitle="Lab Diagnostic Invoice" headerIcon={<i className="ti ti-file-invoice" />}
-        highlightTitle={viewInvoice?.invoiceNo || "Invoice"}
-        highlightStatus={
-          <span className={`badge border ${viewInvoice?.paymentStatus === "Paid" ? "bg-success-transparent text-success border-success" : viewInvoice?.paymentStatus === "Unpaid" ? "bg-danger-transparent text-danger border-danger" : "bg-warning-transparent text-warning border-warning"} fw-bold px-2 py-1`} style={{ fontSize: "10px", borderRadius: "10px" }}>
-            <i className="ti ti-point-filled me-1"></i>{viewInvoice?.paymentStatus}
-          </span>
-        }
-        highlightColor="#e0e7ff"
-        details={viewInvoice ? [
-          { icon: <i className="ti ti-receipt" />, label: "Invoice No", value: viewInvoice.invoiceNo || "—" },
-          { icon: <i className="ti ti-hash" />, label: "Booking Code", value: viewInvoice.bookingCode || "—" },
-          { icon: <i className="ti ti-user" />, label: "Patient", value: viewInvoice.patient ? `${viewInvoice.patient.firstName} ${viewInvoice.patient.lastName} (${viewInvoice.patient.patientCode})` : "—", fullWidth: true },
-          { icon: <i className="ti ti-phone" />, label: "Phone", value: viewInvoice.patient?.phone || "—" },
-          { icon: <i className="ti ti-microscope" />, label: "Test", value: viewInvoice.test?.name || "—" },
-          { icon: <i className="ti ti-tags" />, label: "Category", value: viewInvoice.test?.category?.name || "—" },
-          { icon: <i className="ti ti-calendar" />, label: "Invoice Date", value: dayjs(viewInvoice.createdAt).format("DD MMM YYYY") },
-          { icon: <i className="ti ti-credit-card" />, label: "Payment Method", value: viewInvoice.paymentMethod || "—" },
-          { icon: <i className="ti ti-currency-rupee" />, label: "Test Price", value: `₹${(viewInvoice.test?.price || 0).toLocaleString("en-IN")}` },
-          { icon: <i className="ti ti-discount" />, label: "Discount", value: `₹${(viewInvoice.discount || 0).toLocaleString("en-IN")}` },
-          { icon: <i className="ti ti-percentage" />, label: "Tax", value: `₹${(viewInvoice.tax || 0).toLocaleString("en-IN")}` },
-          { icon: <i className="ti ti-cash" />, label: "Total Amount", value: `₹${(viewInvoice.totalAmount || 0).toLocaleString("en-IN")}`, fullWidth: true },
-        ] : []}
-        onEdit={() => { handleOpenEdit(viewInvoice); }} editLabel="Update Payment" editModalTarget=""
-      />
-
-      {/* Hidden InvoiceSlip for Print/Download - same component as main invoices */}
-      <div id="print-diagnostic-invoice-slip" style={{ display: 'none' }}>
-        {printInvoice && <InvoiceSlip invoice={printInvoice} />}
+      {/* VIEW MODAL - renders exact InvoiceSlip component inside modal */}
+      <div className="modal fade" id="view_invoice" tabIndex={-1} aria-hidden="true">
+        <div className="modal-dialog modal-dialog-centered modal-xl">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "16px", overflow: "hidden" }}>
+            <div className="modal-header bg-primary text-white py-3">
+              <h5 className="modal-title text-white d-flex align-items-center gap-2 mb-0">
+                <i className="ti ti-file-invoice fs-20" /> Diagnostic Invoice Details
+              </h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" />
+            </div>
+            <div className="modal-body p-3 bg-light d-flex justify-content-center overflow-auto" style={{ maxHeight: "calc(100vh - 160px)" }}>
+              {viewInvoice && (
+                <div className="bg-white shadow-sm rounded-3 p-2" style={{ width: "100%", maxWidth: "21cm" }}>
+                  <InvoiceSlip invoice={buildInvoiceData(viewInvoice)} />
+                </div>
+              )}
+            </div>
+            <div className="modal-footer bg-white border-top py-2 px-3 d-flex justify-content-between">
+              <div>
+                <button
+                  type="button"
+                  className="btn btn-outline-primary btn-sm me-2"
+                  onClick={() => handlePrint(viewInvoice)}
+                >
+                  <i className="ti ti-printer me-1" /> Print Slip
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline-success btn-sm me-2"
+                  onClick={() => handleDownload(viewInvoice)}
+                >
+                  <i className="ti ti-download me-1" /> Download PDF
+                </button>
+              </div>
+              <div className="d-flex gap-2">
+                <button
+                  type="button"
+                  className="btn btn-outline-warning btn-sm"
+                  onClick={() => { handleOpenEdit(viewInvoice); }}
+                  data-bs-dismiss="modal"
+                >
+                  <i className="ti ti-pencil me-1" /> Update Payment
+                </button>
+                <button type="button" className="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <style>{`
-        @media print {
-          body * { visibility: hidden !important; }
-          #print-diagnostic-invoice-slip, #print-diagnostic-invoice-slip * { visibility: visible !important; }
-          #print-diagnostic-invoice-slip {
-            position: fixed !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 21cm !important;
-            height: 29.7cm !important;
-            z-index: 99999 !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            overflow: hidden !important;
-          }
-        }
-      `}</style>
+      {/* Hidden InvoiceSlip for Print/Download - exact same component and container ID as main finance invoices */}
+      <div id="print-invoice-slip" style={{ display: 'none' }}>
+        {printInvoice && <InvoiceSlip invoice={printInvoice} />}
+      </div>
     </>
   );
 };

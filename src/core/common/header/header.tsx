@@ -91,7 +91,7 @@ const Header = () => {
     window.dispatchEvent(new Event("activeModuleModeChange"));
     
     if (newMode === "therapy") {
-      navigate(all_routes.therapyAppointments);
+      navigate(all_routes.dashboard);
     } else {
       navigate(all_routes.dashboard);
     }

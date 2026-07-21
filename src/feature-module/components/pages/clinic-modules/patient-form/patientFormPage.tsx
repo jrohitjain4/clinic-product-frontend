@@ -21,6 +21,7 @@ import {
   emptyPatientForm,
 } from "../../../../../core/utils/patientForm";
 import { findSelectOption } from "../../../../../core/utils/doctorSchedule";
+import { apiGet, apiPost } from "../../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
 
 interface PatientFormPageProps {
@@ -43,6 +44,46 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
   // Collapse states for optional details sections
   const [showOptionalDetails, setShowOptionalDetails] = useState(false);
   const [showEmergencyContact, setShowEmergencyContact] = useState(false);
+  const [refers, setRefers] = useState<{ id: string; name: string; description?: string }[]>([]);
+  const [showAddReferModal, setShowAddReferModal] = useState(false);
+  const [newReferName, setNewReferName] = useState("");
+  const [newReferDesc, setNewReferDesc] = useState("");
+  const [addingRefer, setAddingRefer] = useState(false);
+  const [referError, setReferError] = useState<string | null>(null);
+
+  const fetchRefers = async () => {
+    try {
+      const data = await apiGet<any[]>("/api/refers");
+      setRefers(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => { fetchRefers(); }, []);
+
+  const handleAddNewRefer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newReferName.trim()) return;
+    setAddingRefer(true);
+    setReferError(null);
+    try {
+      const created: any = await apiPost("/api/refers", {
+        name: newReferName.trim(),
+        description: newReferDesc.trim() || null,
+      });
+      toast.success("Refer source added successfully!");
+      await fetchRefers();
+      setForm((f: any) => ({ ...f, referId: created.id, referredBy: created.name }));
+      setShowAddReferModal(false);
+      setNewReferName("");
+      setNewReferDesc("");
+    } catch (err: any) {
+      setReferError(err.message || "Error adding refer");
+    } finally {
+      setAddingRefer(false);
+    }
+  };
 
   const getModalContainer = () =>
     document.getElementById("modal-datepicker") || document.body;
@@ -87,6 +128,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
         aadhaarNumber: patient.aadhaarNumber || "",
         passportNumber: patient.passportNumber || "",
         referredBy: patient.referredBy || "",
+        referId: (patient as any).referId || "",
         emergencyContactName: patient.emergencyContactName || "",
         emergencyContactRelation: patient.emergencyContactRelation || "",
         emergencyContactPhone: patient.emergencyContactPhone || "",
@@ -146,6 +188,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
     aadhaarNumber: form.aadhaarNumber || null,
     passportNumber: form.passportNumber || null,
     referredBy: form.referredBy || null,
+    referId: (form as any).referId || null,
     emergencyContactName: form.emergencyContactName || null,
     emergencyContactRelation: form.emergencyContactRelation || null,
     emergencyContactPhone: form.emergencyContactPhone || null,
@@ -603,8 +646,36 @@ Powered by DocYori`;
                       </div>
                       <div className="col-md-12">
                         <div className="mb-3">
-                          <label className="form-label mb-1 fw-medium">Referred By</label>
-                          <input type="text" className="form-control" placeholder="e.g. Google, Walk-in, Doctor Name" value={form.referredBy} onChange={(e) => setForm((f) => ({ ...f, referredBy: e.target.value }))} />
+                          <div className="d-flex align-items-center justify-content-between mb-1">
+                            <label className="form-label mb-0 fw-medium">Referred By</label>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-primary py-0 px-2"
+                              style={{ fontSize: "12px" }}
+                              onClick={() => { setShowAddReferModal(true); setNewReferName(""); setNewReferDesc(""); }}
+                            >
+                              <i className="ti ti-plus me-1" />Add New
+                            </button>
+                          </div>
+                          <select
+                            className="form-select"
+                            value={(form as any).referId || ""}
+                            onChange={(e) => {
+                              const selected = refers.find(r => r.id === e.target.value);
+                              setForm((f: any) => ({
+                                ...f,
+                                referId: e.target.value || "",
+                                referredBy: selected ? selected.name : "",
+                              }));
+                            }}
+                          >
+                            <option value="">-- Select Refer Source --</option>
+                            {refers.map(r => (
+                              <option key={r.id} value={r.id}>
+                                {r.name}{r.description ? ` — ${r.description}` : ""}
+                              </option>
+                            ))}
+                          </select>
                         </div>
                       </div>
                     </div>
@@ -663,12 +734,86 @@ Powered by DocYori`;
             </form>
           </div>
         </div>
+        <div className="footer text-center bg-white p-2 border-top">
+          <p className="text-dark mb-0">
+            2025 © <span className="link-primary">Docyari</span>, All Rights Reserved
+          </p>
+        </div>
       </div>
-      <div className="footer text-center bg-white p-2 border-top">
-        <p className="text-dark mb-0">
-          2025 © <span className="link-primary">Docyari</span>, All Rights Reserved
-        </p>
-      </div>
+
+      {/* ── Add New Refer Source Modal ── */}
+      {showAddReferModal && (
+        <div
+          className="modal fade show d-block"
+          tabIndex={-1}
+          role="dialog"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1055 }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAddReferModal(false); }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "12px", overflow: "hidden" }}>
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title text-white">Add New Refer Source</h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowAddReferModal(false)}
+                  aria-label="Close"
+                />
+              </div>
+              <form onSubmit={handleAddNewRefer}>
+                <div className="modal-body p-4">
+                  {referError && <div className="alert alert-danger py-2 fs-13 mb-3">{referError}</div>}
+                  <div className="mb-3">
+                    <label className="form-label fw-medium">
+                      Refer Name <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="e.g. Google, Walk-in, Doctor Referral"
+                      value={newReferName}
+                      onChange={(e) => setNewReferName(e.target.value)}
+                      autoFocus
+                      required
+                    />
+                  </div>
+                  <div className="mb-0">
+                    <label className="form-label fw-medium">
+                      Description <span className="text-muted fw-normal fs-12">(Optional)</span>
+                    </label>
+                    <textarea
+                      className="form-control"
+                      rows={3}
+                      placeholder="Enter Description"
+                      value={newReferDesc}
+                      onChange={(e) => setNewReferDesc(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="d-flex justify-content-end gap-2 p-3 border-top bg-light">
+                  <button
+                    type="button"
+                    className="btn btn-light px-4 shadow-sm"
+                    onClick={() => setShowAddReferModal(false)}
+                    style={{ borderRadius: "6px" }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center gap-2"
+                    disabled={addingRefer || !newReferName.trim()}
+                    style={{ borderRadius: "6px" }}
+                  >
+                    {addingRefer ? "Saving..." : "Add Refer"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

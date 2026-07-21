@@ -81,6 +81,9 @@ const AppointmentFormPage = ({ mode = "create", isModal = false, onSuccess, onCa
   const [isSlotsDropdownFocused, setIsSlotsDropdownFocused] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const [discountType, setDiscountType] = useState<"none" | "percentage" | "fixed">("none");
+  const [discountValue, setDiscountValue] = useState<number | string>("");
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -117,6 +120,31 @@ const AppointmentFormPage = ({ mode = "create", isModal = false, onSuccess, onCa
     if (!form.doctorId || !doctors) return null;
     return doctors.find((d: any) => d.id === form.doctorId);
   }, [form.doctorId, doctors]);
+
+  const baseFee = useMemo(() => {
+    if (isSessionMode) {
+      if (!form.serviceIds || form.serviceIds.length === 0) return 0;
+      return form.serviceIds.reduce((sum, sId) => {
+        const s = services.find((srv: any) => srv.id === sId);
+        return sum + (s?.price || 0);
+      }, 0);
+    }
+    if (!selectedDoctor) return 0;
+    return form.isFollowUp ? (selectedDoctor.followUpFee || 0) : (selectedDoctor.consultationCharge || 0);
+  }, [isSessionMode, form.serviceIds, services, selectedDoctor, form.isFollowUp]);
+
+  const { calculatedDiscount, finalFee } = useMemo(() => {
+    const numVal = typeof discountValue === "number" ? discountValue : parseFloat(discountValue) || 0;
+    let disc = 0;
+    if (discountType === "percentage") {
+      disc = (baseFee * numVal) / 100;
+    } else if (discountType === "fixed") {
+      disc = numVal;
+    }
+    disc = Math.min(baseFee, Math.max(0, disc));
+    const final = Math.max(0, baseFee - disc);
+    return { calculatedDiscount: Math.round(disc * 100) / 100, finalFee: Math.round(final * 100) / 100 };
+  }, [baseFee, discountType, discountValue]);
 
   const nextCode =
     mode === "edit" && appointment?.appointmentCode
@@ -166,6 +194,10 @@ const AppointmentFormPage = ({ mode = "create", isModal = false, onSuccess, onCa
         setIsSessionMode(true);
       } else {
         setIsSessionMode(false);
+      }
+      if (appointment.discountType) {
+        setDiscountType(appointment.discountType as any);
+        setDiscountValue(appointment.discountValue ?? "");
       }
     }
   }, [mode, appointment?.id]);
@@ -598,6 +630,11 @@ const AppointmentFormPage = ({ mode = "create", isModal = false, onSuccess, onCa
           paymentStatus: form.isFollowUp ? form.paymentStatus : null,
           parentAppointmentId: form.isFollowUp ? form.parentAppointmentId : null,
           serviceIds: isSessionMode ? form.serviceIds : [],
+          consultationFee: baseFee,
+          discountType: discountType !== "none" ? discountType : null,
+          discountValue: discountType !== "none" ? (typeof discountValue === "number" ? discountValue : parseFloat(discountValue as string) || 0) : null,
+          discountAmount: discountType !== "none" ? calculatedDiscount : 0,
+          finalFee: finalFee,
         }),
       });
       if (!res.ok) {
@@ -1240,6 +1277,86 @@ Powered by DocYori`;
               />
             </div>
           )}
+          {/* --- Discount Section --- */}
+          {selectedDoctor && (
+            <div className="mt-4 border-top pt-3">
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <label className="form-label mb-0 fw-bold text-dark fs-14 d-flex align-items-center gap-1">
+                  <i className="ti ti-discount-2 text-primary fs-18" /> Discount (Optional)
+                </label>
+                {discountType !== "none" && calculatedDiscount > 0 && (
+                  <span className="badge bg-success-subtle text-success border border-success fs-12 fw-bold px-2 py-1">
+                    Discount Applied: -₹{calculatedDiscount} {discountType === "percentage" ? `(${discountValue}%)` : ""}
+                  </span>
+                )}
+              </div>
+
+              <div className="row g-3 align-items-center">
+                {/* Discount Type Selector */}
+                <div className="col-lg-5 col-md-6">
+                  <div className="d-flex bg-light p-1 rounded-3 border" style={{ gap: "4px" }}>
+                    <button
+                      type="button"
+                      className={`btn btn-sm flex-fill py-1.5 fw-semibold ${discountType === "none" ? "btn-white shadow-sm text-primary fw-bold" : "text-muted border-0"}`}
+                      style={{ borderRadius: "6px", fontSize: "13px" }}
+                      onClick={() => { setDiscountType("none"); setDiscountValue(""); }}
+                    >
+                      No Discount
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn btn-sm flex-fill py-1.5 fw-semibold ${discountType === "percentage" ? "btn-white shadow-sm text-primary fw-bold" : "text-muted border-0"}`}
+                      style={{ borderRadius: "6px", fontSize: "13px" }}
+                      onClick={() => setDiscountType("percentage")}
+                    >
+                      % Percentage
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn btn-sm flex-fill py-1.5 fw-semibold ${discountType === "fixed" ? "btn-white shadow-sm text-primary fw-bold" : "text-muted border-0"}`}
+                      style={{ borderRadius: "6px", fontSize: "13px" }}
+                      onClick={() => setDiscountType("fixed")}
+                    >
+                      ₹ Amount
+                    </button>
+                  </div>
+                </div>
+
+                {/* Discount Value Input */}
+                {discountType !== "none" && (
+                  <div className="col-lg-4 col-md-6">
+                    <div className="d-flex align-items-center border rounded-3 bg-white overflow-hidden" style={{ height: "40px" }}>
+                      <span className="px-3 fw-bold text-primary bg-light border-end d-flex align-items-center h-100 fs-15 select-none" style={{ userSelect: "none" }}>
+                        {discountType === "percentage" ? "%" : "₹"}
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        max={discountType === "percentage" ? 100 : baseFee}
+                        className="form-control border-0 shadow-none px-3 fw-medium h-100"
+                        placeholder={discountType === "percentage" ? "Enter % (e.g. 10)" : "Enter amount (e.g. 100)"}
+                        value={discountValue}
+                        onChange={(e) => setDiscountValue(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Summary Info */}
+                <div className="col-lg-3 col-md-12 ms-auto text-lg-end text-start">
+                  <div className="d-inline-flex align-items-center gap-3 bg-light px-3 py-1.5 rounded-3 border">
+                    <span className="fs-13 text-muted">
+                      Base: <strong className="text-dark">₹{baseFee}</strong>
+                    </span>
+                    <span className="fs-13 text-muted">|</span>
+                    <span className="fs-13 text-muted">
+                      Final: <strong className="text-primary fs-15 fw-bold">₹{finalFee}</strong>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <div className="d-flex justify-content-end mt-3 align-items-center gap-2">
@@ -1251,7 +1368,12 @@ Powered by DocYori`;
               style={{ pointerEvents: 'none', borderRadius: '8px' }}
             >
               <i className="ti ti-coin text-info fs-15" />
-              <span>Fees: ₹{form.isFollowUp ? (selectedDoctor.followUpFee || 0) : (selectedDoctor.consultationCharge || 0)}</span>
+              <span>Fees: ₹{finalFee}</span>
+              {calculatedDiscount > 0 && (
+                <span className="badge bg-danger text-white ms-1 font-semibold fs-10">
+                  -₹{calculatedDiscount} Off
+                </span>
+              )}
               <span className="badge bg-info text-white ms-1 font-semibold fs-10" style={{ textTransform: 'capitalize' }}>
                 {form.isFollowUp ? 'Follow-up' : 'Consultation'}
               </span>

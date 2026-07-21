@@ -353,19 +353,33 @@ const PharmacyBilling = () => {
   const buildInvoiceData = (inv: any) => {
     if (!inv) return null;
     const userObj = JSON.parse(localStorage.getItem("user") || "{}");
-    const clinic = userObj?.clinic || {};
+    const loginClinic = userObj?.clinic || {};
+    const clinic = inv.clinic || loginClinic || {};
+
+    const clinicName = clinic.name || userObj.clinicName || userObj.name || "Clinic";
+    const clinicPhone = clinic.phone || userObj.phone || "";
+    const clinicEmail = clinic.email || clinic.ownerEmail || userObj.email || "";
+
+    const addressParts = [
+      clinic.addressLine1,
+      clinic.addressLine2,
+      clinic.city,
+      clinic.state,
+      clinic.country,
+      clinic.pincode ? `PIN - ${clinic.pincode}` : ""
+    ].filter(Boolean);
+    const clinicAddress = addressParts.length > 0 ? addressParts.join(", ") : (clinic.address || "");
+
     return {
       ...inv,
       clinic: {
-        name: clinic.name || "Apollo Multispeciality Clinic",
-        phone: clinic.phone || "9876543210",
-        email: clinic.email || userObj.email || "info@citycareclinic.com",
-        addressLine1: clinic.addressLine1 || "Bandra Kurla Complex Beside Jio World",
-        addressLine2: clinic.addressLine2 || "",
-        city: clinic.city || "",
-        state: clinic.state || "",
+        ...clinic,
+        name: clinicName,
+        phone: clinicPhone,
+        email: clinicEmail,
+        addressLine1: clinicAddress,
         landingPage: {
-          tagline: clinic.landingPage?.tagline || clinic.tagline || "Quality Healthcare for Your Family",
+          tagline: clinic.landingPage?.tagline || clinic.tagline || "",
           logo: clinic.landingPage?.logo || clinic.logo || null,
         }
       },

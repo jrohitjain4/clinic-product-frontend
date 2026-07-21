@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { apiGet } from "../../../../../core/utils/apiClient";
+import { useEffect, useMemo, useState } from "react";
 import EmptyState from "../../../../../core/common/emptyState";
 import { Link } from "react-router";
 import { DatePicker } from "antd";
@@ -31,12 +32,27 @@ const Patients = () => {
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterBloodGroup, setFilterBloodGroup] = useState("All");
   const [filterGender, setFilterGender] = useState("All");
+  const [filterRefer, setFilterRefer] = useState("All");
   const [filterDatePreset, setFilterDatePreset] = useState("All");
   const [customRange, setCustomRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
 
+  const [refers, setRefers] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    apiGet<any[]>("/api/refers")
+      .then((data) => setRefers(Array.isArray(data) ? data : []))
+      .catch((err) => console.error(err));
+  }, []);
+
   const isFilterActive = useMemo(() => {
-    return filterStatus !== "All" || filterBloodGroup !== "All" || filterGender !== "All" || filterDatePreset !== "All";
-  }, [filterStatus, filterBloodGroup, filterGender, filterDatePreset]);
+    return (
+      filterStatus !== "All" ||
+      filterBloodGroup !== "All" ||
+      filterGender !== "All" ||
+      filterRefer !== "All" ||
+      filterDatePreset !== "All"
+    );
+  }, [filterStatus, filterBloodGroup, filterGender, filterRefer, filterDatePreset]);
 
   const getModalContainer = () =>
     document.getElementById("modal-datepicker") || document.body;
@@ -45,6 +61,7 @@ const Patients = () => {
     setFilterStatus("All");
     setFilterBloodGroup("All");
     setFilterGender("All");
+    setFilterRefer("All");
     setFilterDatePreset("All");
     setCustomRange([null, null]);
   };
@@ -84,6 +101,11 @@ const Patients = () => {
       const matchStatus = filterStatus === "All" || p.status === filterStatus;
       const matchBlood = filterBloodGroup === "All" || p.bloodGroup === filterBloodGroup;
       const matchGender = filterGender === "All" || p.gender === filterGender;
+      const matchRefer =
+        filterRefer === "All" ||
+        (p as any).referId === filterRefer ||
+        p.referredBy === filterRefer ||
+        ((p as any).refer?.name && (p as any).refer.name === filterRefer);
 
       let matchDate = true;
       if (filterDatePreset !== "All" && p.createdAt) {
@@ -102,9 +124,9 @@ const Patients = () => {
           }
         }
       }
-      return matchStatus && matchBlood && matchGender && matchDate;
+      return matchStatus && matchBlood && matchGender && matchRefer && matchDate;
     });
-  }, [patients, filterStatus, filterBloodGroup, filterGender, filterDatePreset, customRange]);
+  }, [patients, filterStatus, filterBloodGroup, filterGender, filterRefer, filterDatePreset, customRange]);
 
   const tableData = useMemo(
     () => filteredPatients.map((p, i) => {
@@ -193,6 +215,16 @@ const Patients = () => {
         </span>
       ),
       sorter: (a: any, b: any) => (a._raw.bloodGroup || "").localeCompare(b._raw.bloodGroup || ""),
+    },
+    {
+      title: "Referred By",
+      dataIndex: "ReferredBy",
+      render: (_: any, record: any) => (
+        <span className="text-dark fw-medium fs-13">
+          {record._raw.referredBy || record._raw.refer?.name || "—"}
+        </span>
+      ),
+      sorter: (a: any, b: any) => (a._raw.referredBy || "").localeCompare(b._raw.referredBy || ""),
     },
     {
       title: "Status",
@@ -317,6 +349,23 @@ const Patients = () => {
                 <ul className="dropdown-menu dropdown-menu-end p-2">
                   <li><Link to="#" className="dropdown-item" onClick={() => setFilterGender("All")}>All</Link></li>
                   {GENDERS.map((g) => (<li key={g}><Link to="#" className="dropdown-item" onClick={() => setFilterGender(g)}>{g}</Link></li>))}
+                </ul>
+              </div>
+              <div className="dropdown">
+                <Link to="#" className="form-select text-dark d-flex align-items-center justify-content-between text-nowrap" style={{ minWidth: "145px", height: "38px" }} data-bs-toggle="dropdown">
+                  <span className="text-truncate">
+                    <span className="text-muted">Refer:</span> {filterRefer === "All" ? "All" : refers.find(r => r.id === filterRefer || r.name === filterRefer)?.name || filterRefer}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2" style={{ maxHeight: "250px", overflowY: "auto" }}>
+                  <li><Link to="#" className={`dropdown-item${filterRefer === "All" ? " active" : ""}`} onClick={() => setFilterRefer("All")}>All</Link></li>
+                  {refers.map((r) => (
+                    <li key={r.id}>
+                      <Link to="#" className={`dropdown-item${filterRefer === r.id || filterRefer === r.name ? " active" : ""}`} onClick={() => setFilterRefer(r.id)}>
+                        {r.name}
+                      </Link>
+                    </li>
+                  ))}
                 </ul>
               </div>
               <div className="d-flex align-items-center gap-2">

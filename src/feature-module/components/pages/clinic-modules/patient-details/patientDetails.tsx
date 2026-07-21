@@ -1,13 +1,14 @@
 import { Link, useParams } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import PredefinedDatePicker from "../../../../../core/common/datePicker";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import Modals from "./modals/modals";
 import { useClinicPatient } from "../../../../../core/hooks/useClinicPatient";
 import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppointments";
 import { useClinicInvoices } from "../../../../../core/hooks/useClinicInvoices";
+import { useLabBookings } from "../../../../../core/hooks/useLabBookings";
 import dayjs from "dayjs";
 import {
   formatPatientDateLong,
@@ -24,30 +25,104 @@ const statusBadgeClass = (status: string) => {
   }
 };
 
+const paymentStatusBadgeClass = (status: string) => {
+  const s = status ? status.toLowerCase() : "";
+  if (s.includes("paid") && !s.includes("unpaid") && !s.includes("partial")) {
+    return "badge-soft-success border-success text-success";
+  } else if (s.includes("unpaid")) {
+    return "badge-soft-danger border-danger text-danger";
+  } else if (s.includes("partial") || s.includes("part") || s.includes("pending")) {
+    return "badge-soft-warning border-warning text-warning";
+  }
+  return "badge-soft-primary border-primary text-primary";
+};
+
+const displayPaymentStatus = (status: string) => {
+  const s = status ? status.trim().toUpperCase() : "";
+  if (s === "PENDING" || s === "PARTIAL") {
+    return "PARTIAL PAYMENT";
+  }
+  return s;
+};
+
 const PatientDetails = () => {
   const { id } = useParams<{ id: string }>();
   const { patient, loading, error } = useClinicPatient(id);
   const { appointments, loading: apptLoading } = useClinicAppointments(
     id ? { patientId: id } : undefined
   );
+  const { bookings, loading: labLoading } = useLabBookings();
   const { invoices, loading: invLoading } = useClinicInvoices();
+  
   const [searchText, setSearchText] = useState<string>("");
+  const [filterType, setFilterType] = useState<string>("All");
 
   const handleSearch = (value: string) => {
     setSearchText(value);
   };
 
-  const filteredAppointments = appointments.filter((a) => {
-    if (!searchText) return true;
-    const q = searchText.toLowerCase();
-    return (
-      (a.doctorName || a.doctor?.fullName || "").toLowerCase().includes(q) ||
-      (a.doctorRole || a.doctor?.designation?.name || "").toLowerCase().includes(q) ||
-      (a.dateTimeLabel || "").toLowerCase().includes(q) ||
-      a.status.toLowerCase().includes(q) ||
-      a.mode.toLowerCase().includes(q)
-    );
-  });
+  const normalizedAppointments = useMemo(() => {
+    // 1. Normalize OPD and Therapy appointments
+    const appts = appointments.map((a) => {
+      const isTherapy = a.appointmentType === "therapy";
+      return {
+        id: a.id,
+        scheduledAt: a.scheduledAt,
+        doctorName: a.doctorName || a.doctor?.fullName || "—",
+        doctorDesignation: a.doctor?.designation?.name || "Doctor",
+        doctorImage: a.doctor?.profileImage || "assets/img/doctor-placeholder.png",
+        department: isTherapy ? "Therapy" : (a.department?.name || a.doctor?.department?.name || "General"),
+        mode: (a.mode === 'Online' || a.mode === 'Clinic Landing' || a.mode === 'Clinic Landing page' || (a as any).appointmentType === 'Online Booking') ? 'Online' : 'Walk In',
+        status: a.status,
+        type: isTherapy ? "Therapy" : "OPD / Clinic",
+        raw: a,
+        link: isTherapy ? "/therapy-appointments" : `/appointments/appointment-details/${a.id}`
+      };
+    });
+
+    // 2. Filter & Normalize Diagnostic Bookings for this patient
+    const diagBookings = (bookings || [])
+      .filter((b) => b.patientId === id)
+      .map((b) => {
+        return {
+          id: b.id,
+          scheduledAt: b.scheduledAt,
+          doctorName: b.test?.name || "Diagnostic Test",
+          doctorDesignation: b.test?.testCode ? `Test Code: ${b.test.testCode}` : "Diagnostic Test",
+          doctorImage: "assets/img/icons/lab-placeholder.png",
+          department: "Diagnostic",
+          mode: "Walk In",
+          status: b.status,
+          type: "Diagnostic",
+          raw: b,
+          link: "/pathlab/bookings"
+        };
+      });
+
+    // 3. Combine and sort by date descending
+    const combined = [...appts, ...diagBookings];
+    combined.sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+    return combined;
+  }, [appointments, bookings, id]);
+
+  const filteredAppointments = useMemo(() => {
+    return normalizedAppointments.filter((a) => {
+      const matchesSearch = !searchText || (() => {
+        const q = searchText.toLowerCase();
+        return (
+          a.doctorName.toLowerCase().includes(q) ||
+          a.doctorDesignation.toLowerCase().includes(q) ||
+          a.department.toLowerCase().includes(q) ||
+          a.status.toLowerCase().includes(q) ||
+          a.type.toLowerCase().includes(q)
+        );
+      })();
+
+      const matchesType = filterType === "All" || a.type === filterType;
+
+      return matchesSearch && matchesType;
+    });
+  }, [normalizedAppointments, searchText, filterType]);
 
   const isInvalidImage = (img?: string | null) =>
     !img || img.trim() === "" || img.includes("300x300") || img.includes("placeholder");
@@ -334,6 +409,16 @@ const PatientDetails = () => {
             </li>
             <li className="nav-item">
               <Link
+                to="#invoices"
+                data-bs-toggle="tab"
+                aria-expanded="false"
+                className="nav-link bg-transparent"
+              >
+                <span>Invoices</span>
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link
                 to="#transactions"
                 data-bs-toggle="tab"
                 aria-expanded="true"
@@ -354,6 +439,19 @@ const PatientDetails = () => {
                     <div className="d-flex align-items-center flex-wrap gap-2">
                       <SearchInput value={searchText} onChange={handleSearch} />
                     </div>
+                  </div>
+                  <div className="mb-3">
+                    <select
+                      className="form-select fs-13 py-2 fw-medium border bg-white"
+                      style={{ minWidth: "150px", height: "38px", borderRadius: "5px" }}
+                      value={filterType}
+                      onChange={(e) => setFilterType(e.target.value)}
+                    >
+                      <option value="All">All Types</option>
+                      <option value="OPD / Clinic">OPD / Clinic</option>
+                      <option value="Therapy">Therapy</option>
+                      <option value="Diagnostic">Diagnostic</option>
+                    </select>
                   </div>
                   <div className="d-flex right-content align-items-center flex-wrap mb-3">
                     <div className="input-icon-start position-relative">
@@ -877,7 +975,8 @@ const PatientDetails = () => {
                     <tr>
                       <th className="fw-bold text-dark">Sr No</th>
                       <th className="fw-bold text-dark">Date & Time</th>
-                      <th className="fw-bold text-dark">Doctor Name</th>
+                      <th className="fw-bold text-dark">Type</th>
+                      <th className="fw-bold text-dark">Doctor / Service Name</th>
                       <th className="fw-bold text-dark">Department</th>
                       <th className="fw-bold text-dark text-center">Mode</th>
                       <th className="fw-bold text-dark text-center">Status</th>
@@ -885,7 +984,7 @@ const PatientDetails = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {apptLoading ? (
+                    {apptLoading || labLoading ? (
                       <tr>
                         <td colSpan={8} className="text-center py-4">
                           <span className="spinner-border spinner-border-sm text-primary" role="status" />
@@ -899,14 +998,23 @@ const PatientDetails = () => {
                       </tr>
                     ) : (
                       filteredAppointments.map((appt, idx) => {
-                        const doctorImage = appt.doctor?.profileImage || "assets/img/doctor-placeholder.png";
-                        const doctorName = appt.doctorName || appt.doctor?.fullName || "NULL";
-                        const designation = appt.doctor?.designation?.name || "Doctor";
+                        const doctorImage = appt.doctorImage || "assets/img/doctor-placeholder.png";
+                        const doctorName = appt.doctorName;
+                        const designation = appt.doctorDesignation;
 
                         return (
                           <tr key={appt.id}>
                             <td className="fw-bold text-dark py-1">{(idx + 1).toString().padStart(2, '0')}</td>
                             <td className="text-dark fw-medium py-1 fs-13">{dayjs(appt.scheduledAt).format("DD MMM YYYY - hh:mm A")}</td>
+                            <td className="py-1">
+                              <span className={`badge border rounded-pill fs-11 ${
+                                appt.type === "OPD / Clinic" ? "badge-soft-primary border-primary" :
+                                appt.type === "Therapy" ? "badge-soft-warning border-warning" :
+                                "badge-soft-success border-success"
+                              }`}>
+                                {appt.type}
+                              </span>
+                            </td>
                             <td className="py-1">
                               <div className="d-flex align-items-center">
                                 <span className="avatar avatar-sm me-2 flex-shrink-0">
@@ -925,11 +1033,11 @@ const PatientDetails = () => {
                               </div>
                             </td>
                             <td className="text-dark fw-medium py-1 fs-13">
-                              {appt.department?.name || appt.doctor?.department?.name || "General"}
+                              {appt.department}
                             </td>
                             <td className="text-center py-1">
-                              <span className={`badge border ${(appt.mode === 'Online' || appt.mode === 'Clinic Landing' || appt.mode === 'Clinic Landing page' || (appt as any).appointmentType === 'Online Booking') ? 'badge-soft-info border-info' : 'badge-soft-secondary border-secondary'} rounded-pill fs-11`}>
-                                {(appt.mode === 'Online' || appt.mode === 'Clinic Landing' || appt.mode === 'Clinic Landing page' || (appt as any).appointmentType === 'Online Booking') ? 'Online' : 'Walk In'}
+                              <span className={`badge border ${appt.mode === 'Online' ? 'badge-soft-info border-info' : 'badge-soft-secondary border-secondary'} rounded-pill fs-11`}>
+                                {appt.mode}
                               </span>
                             </td>
                             <td className="text-center py-1">
@@ -941,18 +1049,19 @@ const PatientDetails = () => {
                             </td>
                             <td className="text-end py-1">
                               <div className="d-flex align-items-center justify-content-end gap-2">
-                                <Link to={all_routes.appointmentDetails.replace(":id", appt.id)} className="btn btn-icon btn-sm bg-primary-subtle text-primary rounded-circle">
-                                  <i className="ti ti-eye fs-13" />
-                                </Link>
-                                <div className="dropdown">
-                                  <Link to="#" className="avatar avatar-xs border text-muted rounded-circle d-inline-flex align-items-center justify-content-center bg-transparent" data-bs-toggle="dropdown">
-                                    <i className="ti ti-dots-vertical" />
+                                {appt.type === "Diagnostic" ? (
+                                  <Link to="/pathlab/bookings" className="btn btn-icon btn-sm bg-primary-subtle text-primary rounded-circle">
+                                    <i className="ti ti-eye fs-13" />
                                   </Link>
-                                  <ul className="dropdown-menu dropdown-menu-end shadow-lg border-0">
-                                    <li><Link to="#" className="dropdown-item py-1 fs-13"><i className="ti ti-file-text me-2 text-primary" />Prescription</Link></li>
-                                    <li><Link to="#" className="dropdown-item py-1 fs-13 text-danger"><i className="ti ti-x me-2" />Cancel</Link></li>
-                                  </ul>
-                                </div>
+                                ) : appt.type === "Therapy" ? (
+                                  <Link to="/therapy-appointments" className="btn btn-icon btn-sm bg-primary-subtle text-primary rounded-circle">
+                                    <i className="ti ti-eye fs-13" />
+                                  </Link>
+                                ) : (
+                                  <Link to={all_routes.appointmentDetails.replace(":id", appt.id)} className="btn btn-icon btn-sm bg-primary-subtle text-primary rounded-circle">
+                                    <i className="ti ti-eye fs-13" />
+                                  </Link>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -964,7 +1073,7 @@ const PatientDetails = () => {
               </div>
               {/*  End Table */}
             </div>
-            <div className="tab-pane" id="transactions">
+            <div className="tab-pane" id="invoices">
               {/*  Start Filter */}
               <div className=" d-flex align-items-center justify-content-between flex-wrap">
                 <div className="d-flex align-items-center gap-2">
@@ -1467,50 +1576,63 @@ const PatientDetails = () => {
                       <th className="no-sort">Transaction ID</th>
                       <th>Type</th>
                       <th>Description</th>
-                      <th>Paid Date</th>
+                      <th>Date</th>
                       <th>Payment Method</th>
                       <th>Amount</th>
                       <th>Status</th>
+                      <th className="text-end">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {invLoading ? (
                       <tr>
-                        <td colSpan={7} className="text-center py-4">
+                        <td colSpan={8} className="text-center py-4">
                           <span className="spinner-border spinner-border-sm text-primary" role="status" />
                         </td>
                       </tr>
-                    ) : invoices.filter(inv => inv.patientId === id && (inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed")).length === 0 ? (
+                    ) : invoices.filter(inv => inv.patientId === id).length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="text-center py-4 text-muted">No transactions found</td>
+                        <td colSpan={8} className="text-center py-4 text-muted">No transactions or invoices found</td>
                       </tr>
                     ) : invoices
-                      .filter(inv => inv.patientId === id && (inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed"))
+                      .filter(inv => inv.patientId === id)
                       .map((inv) => {
                         const isPharmacy = (inv as any).otherInfo === "Pharmacy" || inv.invoiceCode?.startsWith("PH-");
-                        const isPathlab = inv.invoiceCode?.startsWith("INV-AUTO-LB");
-                        const txnType = isPharmacy ? "Pharmacy" : isPathlab ? "Pathlab" : "Consultation";
-                        const badgeClass = isPharmacy ? "badge-soft-warning border-warning text-warning" : isPathlab ? "badge-soft-info border-info text-info" : "badge-soft-primary border-primary text-primary";
+                        const isPathlab = inv.invoiceCode?.startsWith("INV-AUTO-LB") || (inv as any).otherInfo === "Pathlab";
+                        const isTherapy = inv.appointment?.appointmentType === "therapy" || inv.consultationId !== null || (inv as any).otherInfo === "Therapy";
+                        const txnType = isPharmacy ? "Pharmacy" : isPathlab ? "Pathlab" : isTherapy ? "Therapy" : "OPD / Clinic";
+                        
+                        const badgeClass = isPharmacy 
+                          ? "badge-soft-warning border-warning text-warning" 
+                          : isPathlab 
+                            ? "badge-soft-info border-info text-info" 
+                            : isTherapy 
+                              ? "badge-soft-danger border-danger text-danger" 
+                              : "badge-soft-primary border-primary text-primary";
+
                         return (
                           <tr key={inv.id}>
                             <td>
-                              <Link to="#">{inv.invoiceCode}</Link>
+                              <Link to={all_routes.invoicesDetails.replace(":id", inv.id)} className="fw-bold text-dark">{inv.invoiceCode}</Link>
                             </td>
                             <td>
                               <span className={`badge border ${badgeClass} fs-11 fw-medium`}>{txnType}</span>
                             </td>
                             <td className="text-dark">
-                              {isPharmacy
-                                ? (inv.items?.[0]?.description || "Medicine Purchase")
-                                : (inv.items?.[0]?.description || "Invoice")}
+                              {inv.items?.[0]?.description || "Invoice Details"}
                             </td>
                             <td className="text-dark"> {dayjs(inv.invoiceDate).format("DD MMM YYYY")}</td>
-                            <td className="text-dark"> {inv.paymentMethod || ""}</td>
-                            <td className="text-dark"> ₹{inv.totalAmount.toFixed(2)}</td>
+                            <td className="text-dark"> {inv.paymentMethod || "—"}</td>
+                            <td className="text-dark fw-bold"> ₹{inv.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
                             <td>
-                              <span className="badge fs-13 badge-soft-success rounded text-success fw-medium border border-success">
-                                {inv.paymentStatus.toUpperCase()}
+                              <span className={`badge border fs-12 fw-bold ${paymentStatusBadgeClass(inv.paymentStatus)}`}>
+                                {displayPaymentStatus(inv.paymentStatus)}
                               </span>
+                            </td>
+                            <td className="text-end">
+                              <Link to={all_routes.invoicesDetails.replace(":id", inv.id)} className="btn btn-icon btn-sm bg-primary-subtle text-primary rounded-circle">
+                                <i className="ti ti-eye fs-13" />
+                              </Link>
                             </td>
                           </tr>
                         );
@@ -1519,6 +1641,80 @@ const PatientDetails = () => {
                 </table>
               </div>
               {/*  End Table */}
+            </div>
+
+            <div className="tab-pane" id="transactions">
+              <div className="table-responsive">
+                <table className="table table-nowrap datatable">
+                  <thead className="thead-light">
+                    <tr>
+                      <th className="no-sort">Transaction ID</th>
+                      <th>Type</th>
+                      <th>Description</th>
+                      <th>Date</th>
+                      <th>Payment Method</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th className="text-end">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invLoading ? (
+                      <tr>
+                        <td colSpan={8} className="text-center py-4">
+                          <span className="spinner-border spinner-border-sm text-primary" role="status" />
+                        </td>
+                      </tr>
+                    ) : invoices.filter(inv => inv.patientId === id && (inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed")).length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="text-center py-4 text-muted">No transactions found</td>
+                      </tr>
+                    ) : invoices
+                      .filter(inv => inv.patientId === id && (inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed"))
+                      .map((inv) => {
+                        const isPharmacy = (inv as any).otherInfo === "Pharmacy" || inv.invoiceCode?.startsWith("PH-");
+                        const isPathlab = inv.invoiceCode?.startsWith("INV-AUTO-LB") || (inv as any).otherInfo === "Pathlab";
+                        const isTherapy = inv.appointment?.appointmentType === "therapy" || inv.consultationId !== null || (inv as any).otherInfo === "Therapy";
+                        const txnType = isPharmacy ? "Pharmacy" : isPathlab ? "Pathlab" : isTherapy ? "Therapy" : "OPD / Clinic";
+                        
+                        const badgeClass = isPharmacy 
+                          ? "badge-soft-warning border-warning text-warning" 
+                          : isPathlab 
+                            ? "badge-soft-info border-info text-info" 
+                            : isTherapy 
+                              ? "badge-soft-danger border-danger text-danger" 
+                              : "badge-soft-primary border-primary text-primary";
+
+                        return (
+                          <tr key={inv.id}>
+                            <td>
+                              <Link to={all_routes.invoicesDetails.replace(":id", inv.id)} className="fw-bold text-dark">{inv.invoiceCode}</Link>
+                            </td>
+                            <td>
+                              <span className={`badge border ${badgeClass} fs-11 fw-medium`}>{txnType}</span>
+                            </td>
+                            <td className="text-dark">
+                              {inv.items?.[0]?.description || "Payment Transaction"}
+                            </td>
+                            <td className="text-dark"> {dayjs(inv.invoiceDate).format("DD MMM YYYY")}</td>
+                            <td className="text-dark"> {inv.paymentMethod || "—"}</td>
+                            <td className="text-dark fw-bold"> ₹{inv.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                            <td>
+                              <span className={`badge border fs-12 fw-bold ${paymentStatusBadgeClass(inv.paymentStatus)}`}>
+                                {displayPaymentStatus(inv.paymentStatus)}
+                              </span>
+                            </td>
+                            <td className="text-end">
+                              <Link to={all_routes.invoicesDetails.replace(":id", inv.id)} className="btn btn-icon btn-sm bg-primary-subtle text-primary rounded-circle">
+                                <i className="ti ti-eye fs-13" />
+                              </Link>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div >
           {/* tab content end */}

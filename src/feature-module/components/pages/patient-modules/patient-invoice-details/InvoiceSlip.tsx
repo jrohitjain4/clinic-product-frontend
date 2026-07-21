@@ -10,8 +10,9 @@ const InvoiceSlip: React.FC<InvoiceSlipProps> = ({ invoice }) => {
   if (!invoice) return null;
 
   let loginClinic: any = {};
+  let userObj: any = {};
   try {
-    const userObj = JSON.parse(localStorage.getItem("user") || "{}");
+    userObj = JSON.parse(localStorage.getItem("user") || "{}");
     loginClinic = userObj.clinic || {};
   } catch (e) {}
 
@@ -20,26 +21,38 @@ const InvoiceSlip: React.FC<InvoiceSlipProps> = ({ invoice }) => {
   const doctor = invoice.doctor || invoice.appointment?.doctor || {};
   const items = invoice.items || [];
 
-  const clinicName = clinic.name || invoice.clinicName || "City Care Clinic";
-  const clinicTagline = clinic.landingPage?.tagline || "Compassionate Care, Better Health";
-  const clinicLogo = clinic.landingPage?.logo || null;
+  const clinicName = clinic.name || invoice.clinicName || userObj.clinicName || userObj.name || "Clinic";
+  const clinicTagline = clinic.landingPage?.tagline || clinic.tagline || loginClinic.tagline || "";
+  const clinicLogo = clinic.landingPage?.logo || clinic.logo || loginClinic.logo || null;
 
   const addressParts = [
-    clinic.addressLine1,
-    clinic.addressLine2,
-    clinic.city,
-    clinic.state,
-    clinic.country,
-    clinic.pincode ? `PIN - ${clinic.pincode}` : ""
+    clinic.addressLine1 || loginClinic.addressLine1,
+    clinic.addressLine2 || loginClinic.addressLine2,
+    clinic.city || loginClinic.city,
+    clinic.state || loginClinic.state,
+    clinic.country || loginClinic.country,
+    (clinic.pincode || loginClinic.pincode) ? `PIN - ${clinic.pincode || loginClinic.pincode}` : ""
   ].filter(Boolean);
-  const clinicAddress = addressParts.length > 0 
-    ? addressParts.join(", ") 
-    : "Green Valley Road, Near City Mall, Civil Lines";
 
-  const clinicPhone = clinic.phone || "+91 98765 43210";
-  const clinicEmail = clinic.ownerEmail || clinic.email || "info@citycareclinic.com";
+  const uniqueAddressParts: string[] = [];
+  addressParts.forEach((part: string) => {
+    if (typeof part === "string" && part.trim()) {
+      const cleanPart = part.trim();
+      const isSubstring = uniqueAddressParts.some(p => p.toLowerCase().includes(cleanPart.toLowerCase()) || cleanPart.toLowerCase().includes(p.toLowerCase()));
+      if (!isSubstring) {
+        uniqueAddressParts.push(cleanPart);
+      }
+    }
+  });
 
-  const invoiceNo = invoice.invoiceCode || `INV-${invoice.id?.slice(0, 8).toUpperCase()}`;
+  const clinicAddress = uniqueAddressParts.length > 0
+    ? uniqueAddressParts.join(", ")
+    : (clinic.address || loginClinic.address || "—");
+
+  const clinicPhone = clinic.phone || loginClinic.phone || userObj.phone || "—";
+  const clinicEmail = clinic.ownerEmail || clinic.email || loginClinic.email || userObj.email || "—";
+
+  const invoiceNo = invoice.invoiceCode || invoice.invoiceNo || `INV-${invoice.id?.slice(0, 8).toUpperCase()}`;
   const invoiceDate = invoice.invoiceDate || invoice.createdAt;
   const generatedOn = invoice.createdAt;
   const paymentMode = invoice.paymentMethod || "UPI";
@@ -51,6 +64,25 @@ const InvoiceSlip: React.FC<InvoiceSlipProps> = ({ invoice }) => {
   const department = doctor?.department?.name || invoice.appointment?.doctor?.department?.name || "General";
 
   const isPharmacy = invoice.invoiceCode?.startsWith("PH-") || invoice.isPharmacy || invoice.invoiceNo?.startsWith("PH-") || false;
+
+  // Patient / Customer Name resolution
+  const patientName =
+    (patient && (patient.firstName || patient.lastName))
+      ? `${patient.firstName || ""} ${patient.lastName || ""}`.trim()
+      : (invoice.customerName || invoice.patientName || "Walk-in Customer");
+
+  const patientCode =
+    (patient && patient.patientCode)
+      ? patient.patientCode
+      : (patient && patient.id)
+        ? `PT-${patient.id.slice(0, 5).toUpperCase()}`
+        : "—";
+
+  const patientPhone =
+    (patient && patient.phone) ||
+    invoice.customerPhone ||
+    "—";
+
   const subTotal = invoice.subTotal || items.reduce((s: number, i: any) => s + (i.amount || 0), 0);
   const discount = invoice.discount || 0;
   const tax = invoice.tax || 0;
@@ -76,7 +108,7 @@ const InvoiceSlip: React.FC<InvoiceSlipProps> = ({ invoice }) => {
           )}
           <div className="inv-clinic-info">
             <h1 className="inv-clinic-name">{clinicName.toUpperCase()}</h1>
-            <p className="inv-clinic-tagline">— {clinicTagline} —</p>
+            {clinicTagline && <p className="inv-clinic-tagline">— {clinicTagline} —</p>}
           </div>
         </div>
         <div className="inv-header-right">
@@ -112,18 +144,18 @@ const InvoiceSlip: React.FC<InvoiceSlipProps> = ({ invoice }) => {
         <div className="inv-info-block">
           <div className="inv-info-row">
             <span className="inv-info-icon"><i className="ti ti-user" /></span>
-            <span className="inv-info-lbl">Patient Name</span>
-            <span className="inv-info-val">{patient.firstName || ""} {patient.lastName || ""}</span>
+            <span className="inv-info-lbl">{isPharmacy ? "Customer Name" : "Patient Name"}</span>
+            <span className="inv-info-val">{patientName}</span>
           </div>
           <div className="inv-info-row">
             <span className="inv-info-icon"><i className="ti ti-id-badge" /></span>
-            <span className="inv-info-lbl">Patient ID</span>
-            <span className="inv-info-val">{patient.patientCode || `PT-${patient.id?.slice(0, 5).toUpperCase() || "00001"}`}</span>
+            <span className="inv-info-lbl">{isPharmacy ? "Customer ID" : "Patient ID"}</span>
+            <span className="inv-info-val">{patientCode}</span>
           </div>
           <div className="inv-info-row">
             <span className="inv-info-icon"><i className="ti ti-phone" /></span>
             <span className="inv-info-lbl">Mobile No.</span>
-            <span className="inv-info-val">{patient.phone || "—"}</span>
+            <span className="inv-info-val">{patientPhone}</span>
           </div>
         </div>
         <div className="inv-info-divider" />
@@ -484,8 +516,10 @@ const InvoiceSlip: React.FC<InvoiceSlipProps> = ({ invoice }) => {
         @media print {
           @page { size: A4; margin: 0; }
           body * { visibility: hidden !important; }
-          #print-invoice-slip, #print-invoice-slip * { visibility: visible !important; }
-          #print-invoice-slip {
+          #print-invoice-slip, #print-invoice-slip *,
+          #print-pharmacy-invoice-slip, #print-pharmacy-invoice-slip *,
+          #print-diagnostic-invoice-slip, #print-diagnostic-invoice-slip * { visibility: visible !important; }
+          #print-invoice-slip, #print-pharmacy-invoice-slip, #print-diagnostic-invoice-slip {
             position: fixed !important;
             left: 0 !important;
             top: 0 !important;

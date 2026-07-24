@@ -146,6 +146,8 @@ const DiagnosticBooking = () => {
   const [formRemarks, setFormRemarks] = useState("");
   const [formReferredBy, setFormReferredBy] = useState("");
   const [formDiscountPercent, setFormDiscountPercent] = useState<number>(0);
+  const [formDiscountAmount, setFormDiscountAmount] = useState<number>(0);
+  const [discountType, setDiscountType] = useState<"percent" | "amount">("percent");
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
   const [showDiagSlotsDropdown, setShowDiagSlotsDropdown] = useState(false);
   const [isDiagSlotsDropdownFocused, setIsDiagSlotsDropdownFocused] = useState(false);
@@ -228,9 +230,20 @@ const DiagnosticBooking = () => {
   const selectedTestObj = activeSchedulingTest;
   const mappedPrice = totalAmount;
   const finalAmount = useMemo(() => {
-    const discAmount = totalAmount * (formDiscountPercent / 100);
-    return Math.max(0, totalAmount - discAmount);
-  }, [totalAmount, formDiscountPercent]);
+    let discAmt = 0;
+    if (discountType === "percent") {
+      discAmt = totalAmount * (formDiscountPercent / 100);
+    } else {
+      discAmt = formDiscountAmount;
+    }
+    return Math.max(0, totalAmount - discAmt);
+  }, [totalAmount, formDiscountPercent, formDiscountAmount, discountType]);
+
+  // Derived discount amount for display/submit
+  const resolvedDiscountAmount = useMemo(() => {
+    if (discountType === "percent") return totalAmount * (formDiscountPercent / 100);
+    return Math.min(formDiscountAmount, totalAmount);
+  }, [discountType, totalAmount, formDiscountPercent, formDiscountAmount]);
 
   const handleAddTest = (testId: string) => {
     if (!testId) return;
@@ -268,6 +281,8 @@ const DiagnosticBooking = () => {
     setFormReferredBy("");
     setFormStatus("Schedule");
     setFormDiscountPercent(0);
+    setFormDiscountAmount(0);
+    setDiscountType("percent");
     setShowFormModal(true);
   };
 
@@ -296,11 +311,11 @@ const DiagnosticBooking = () => {
     setFormRemarks(bk.remarks || "");
     setFormReferredBy(bk.referredBy || "");
     setFormStatus(bk.status || "Schedule");
-    const subTotal = bk.testsList && Array.isArray(bk.testsList)
-      ? bk.testsList.reduce((acc: number, t: any) => acc + (t.price || 0), 0)
-      : (bk.test?.price || 0);
-    const discPercent = subTotal > 0 ? Math.round((bk.discount / subTotal) * 100) : 0;
-    setFormDiscountPercent(discPercent);
+    // Restore discount — always stored as flat amount in DB, restore as amount type
+    const savedDiscount = bk.discount || 0;
+    setDiscountType("amount");
+    setFormDiscountAmount(savedDiscount);
+    setFormDiscountPercent(0);
     setShowFormModal(true);
   };
 
@@ -417,7 +432,7 @@ const DiagnosticBooking = () => {
       }
       const scheduledAt = formDate.format("YYYY-MM-DD") + "T" + startTime + ":00";
       const tax = 0;
-      const discountAmount = totalAmount * (formDiscountPercent / 100);
+      const discountAmount = resolvedDiscountAmount;
       const finalTotalAmount = Math.max(0, totalAmount - discountAmount);
 
       if (formMode === "add") {
@@ -1234,40 +1249,181 @@ const DiagnosticBooking = () => {
                     </div>
                   )}
                 </div>
-                <div className="modal-footer bg-light d-flex align-items-center justify-content-between" style={{ borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px', padding: '15px 24px' }}>
-                  <div className="d-flex align-items-center gap-3 flex-wrap">
-                    <div className="d-flex flex-column text-start">
-                      <span className="text-muted small fw-bold">TEST AMOUNT</span>
-                      <span className="text-dark fw-bold" style={{ fontSize: '15px' }}>₹{totalAmount.toLocaleString("en-IN")}</span>
-                    </div>
-                    
-                    <div className="d-flex align-items-center gap-1" style={{ maxWidth: '140px' }}>
-                      <div className="d-flex flex-column text-start">
-                        <span className="text-muted small fw-bold">DISCOUNT (%)</span>
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          className="form-control form-control-sm text-center fw-bold border-secondary"
-                          style={{ width: '70px', height: '30px', padding: '2px 5px' }}
-                          value={formDiscountPercent}
-                          onChange={(e) => {
-                            const val = parseFloat(e.target.value);
-                            setFormDiscountPercent(isNaN(val) ? 0 : Math.min(100, Math.max(0, val)));
-                          }}
-                        />
+                <div
+                  className="modal-footer border-top-0"
+                  style={{
+                    background: 'linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%)',
+                    borderBottomLeftRadius: '16px',
+                    borderBottomRightRadius: '16px',
+                    padding: '16px 24px',
+                    flexDirection: 'column',
+                    gap: '14px',
+                    alignItems: 'stretch',
+                  }}
+                >
+                  {/* ── Billing Summary Bar ── */}
+                  <div
+                    className="d-flex align-items-center flex-wrap"
+                    style={{ gap: '6px' }}
+                  >
+                    {/* Sub Total */}
+                    <div
+                      className="d-flex align-items-center gap-2 px-3 py-2 rounded-3 bg-white border"
+                      style={{ minWidth: '120px', flex: '0 0 auto' }}
+                    >
+                      <i className="ti ti-receipt text-muted" style={{ fontSize: '16px' }} />
+                      <div>
+                        <div className="text-muted" style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase' }}>Subtotal</div>
+                        <div className="fw-bold text-dark" style={{ fontSize: '15px', lineHeight: 1.2 }}>₹{totalAmount.toLocaleString("en-IN")}</div>
                       </div>
                     </div>
 
-                    <div className="d-flex flex-column text-start">
-                      <span className="text-muted small fw-bold">FINAL AMOUNT</span>
-                      <span className="text-success fw-bold" style={{ fontSize: '15px' }}>₹{finalAmount.toLocaleString("en-IN")}</span>
+                    <i className="ti ti-minus text-muted" style={{ fontSize: '14px', opacity: 0.5 }} />
+
+                    {/* Discount control — inline pill toggle + input */}
+                    <div
+                      className="d-flex align-items-center gap-0 rounded-3 bg-white border overflow-hidden"
+                      style={{ flex: '0 0 auto', height: '52px' }}
+                    >
+                      {/* Label */}
+                      <div className="px-3 border-end d-flex align-items-center" style={{ height: '100%', background: '#f8fafc' }}>
+                        <i className="ti ti-tag text-primary" style={{ fontSize: '15px' }} />
+                        <span className="ms-1 text-muted" style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase' }}>Discount</span>
+                      </div>
+
+                      {/* Pill type toggle */}
+                      <div
+                        className="d-flex align-items-center mx-2 rounded-pill p-1"
+                        style={{ background: '#f1f3f8', gap: '2px', height: '32px' }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDiscountType("percent");
+                            setFormDiscountPercent(totalAmount > 0 ? Math.round((formDiscountAmount / totalAmount) * 100) : 0);
+                          }}
+                          className="border-0 fw-bold rounded-pill"
+                          style={{
+                            fontSize: '11px',
+                            padding: '2px 10px',
+                            height: '24px',
+                            background: discountType === "percent" ? '#3b82f6' : 'transparent',
+                            color: discountType === "percent" ? '#fff' : '#6b7280',
+                            transition: 'all 0.18s',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          % Off
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDiscountType("amount");
+                            setFormDiscountAmount(Math.round(totalAmount * (formDiscountPercent / 100)));
+                          }}
+                          className="border-0 fw-bold rounded-pill"
+                          style={{
+                            fontSize: '11px',
+                            padding: '2px 10px',
+                            height: '24px',
+                            background: discountType === "amount" ? '#16a34a' : 'transparent',
+                            color: discountType === "amount" ? '#fff' : '#6b7280',
+                            transition: 'all 0.18s',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          ₹ Flat
+                        </button>
+                      </div>
+
+                      {/* Input */}
+                      {discountType === "percent" ? (
+                        <div className="d-flex align-items-center pe-3" style={{ gap: '4px' }}>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            className="form-control form-control-sm text-center fw-bold border-0 bg-transparent"
+                            style={{ width: '58px', height: '32px', fontSize: '15px', padding: '2px 4px', outline: 'none', boxShadow: 'none' }}
+                            value={formDiscountPercent}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              setFormDiscountPercent(isNaN(val) ? 0 : Math.min(100, Math.max(0, val)));
+                            }}
+                          />
+                          <span className="fw-bold text-muted" style={{ fontSize: '13px' }}>%</span>
+                        </div>
+                      ) : (
+                        <div className="d-flex align-items-center pe-3" style={{ gap: '3px' }}>
+                          <span className="fw-bold text-muted" style={{ fontSize: '13px' }}>₹</span>
+                          <input
+                            type="number"
+                            min="0"
+                            max={totalAmount}
+                            className="form-control form-control-sm text-center fw-bold border-0 bg-transparent"
+                            style={{ width: '72px', height: '32px', fontSize: '15px', padding: '2px 4px', outline: 'none', boxShadow: 'none' }}
+                            value={formDiscountAmount}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              setFormDiscountAmount(isNaN(val) ? 0 : Math.min(totalAmount, Math.max(0, val)));
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Resolved discount badge */}
+                    {resolvedDiscountAmount > 0 && (
+                      <div
+                        className="d-flex align-items-center gap-1 px-2 py-1 rounded-pill"
+                        style={{ background: '#fef2f2', border: '1px solid #fecaca', flex: '0 0 auto' }}
+                      >
+                        <i className="ti ti-arrow-down text-danger" style={{ fontSize: '12px' }} />
+                        <span className="fw-bold text-danger" style={{ fontSize: '13px' }}>-₹{resolvedDiscountAmount.toLocaleString("en-IN")}</span>
+                      </div>
+                    )}
+
+                    <i className="ti ti-equal text-muted" style={{ fontSize: '14px', opacity: 0.5 }} />
+
+                    {/* Final Amount */}
+                    <div
+                      className="d-flex align-items-center gap-2 px-3 py-2 rounded-3"
+                      style={{
+                        minWidth: '130px',
+                        flex: '0 0 auto',
+                        background: finalAmount > 0 ? 'linear-gradient(135deg,#dcfce7,#bbf7d0)' : '#f1f5f9',
+                        border: `1px solid ${finalAmount > 0 ? '#86efac' : '#e2e8f0'}`,
+                      }}
+                    >
+                      <i className="ti ti-cash text-success" style={{ fontSize: '16px' }} />
+                      <div>
+                        <div className="text-success" style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase' }}>Final Amount</div>
+                        <div className="fw-bold text-success" style={{ fontSize: '17px', lineHeight: 1.2 }}>₹{finalAmount.toLocaleString("en-IN")}</div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="d-flex gap-2">
-                    <button type="button" className="btn btn-light" onClick={() => setShowFormModal(false)}>Cancel</button>
-                    <button type="submit" className="btn btn-primary px-4" disabled={submitting}>{submitting ? (formMode === "add" ? "Creating..." : "Updating...") : (formMode === "add" ? "Create Booking" : "Update Booking")}</button>
+                  {/* ── Action Buttons ── */}
+                  <div className="d-flex justify-content-end gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-light border fw-semibold px-4"
+                      style={{ borderRadius: '8px', fontSize: '13px' }}
+                      onClick={() => setShowFormModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary fw-semibold px-5"
+                      style={{ borderRadius: '8px', fontSize: '13px' }}
+                      disabled={submitting}
+                    >
+                      {submitting
+                        ? (formMode === "add" ? "Creating..." : "Updating...")
+                        : (formMode === "add" ? <><i className="ti ti-plus me-1" />Create Booking</> : <><i className="ti ti-check me-1" />Update Booking</>)
+                      }
+                    </button>
                   </div>
                 </div>
               </form>

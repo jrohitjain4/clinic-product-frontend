@@ -45,16 +45,30 @@ export const patientToTableRow = (p: ClinicPatient, index: number) => {
     "user-25.jpg",
     "user-39.jpg",
   ];
+  const doctorPlaceholders = [
+    "doctor-01.jpg",
+    "doctor-02.jpg",
+    "doctor-03.jpg",
+    "doctor-04.jpg",
+    "doctor-05.jpg",
+  ];
   const img =
     p.profileImage ||
     `assets/img/users/${placeholders[index % placeholders.length]}`;
+  const firstDoctor = p.doctors?.[0];
+  const doctorImg =
+    firstDoctor?.profileImage ||
+    `assets/img/doctors/${doctorPlaceholders[index % doctorPlaceholders.length]}`;
 
   return {
     key: p.id,
     Patient: p.fullName || `${p.firstName} ${p.lastName}`,
     Gender: p.ageGenderLabel || "—",
     Patient_img: img,
+    Doctor_img: doctorImg,
     Phone: p.phone || "—",
+    Doctor: p.doctors && p.doctors.length > 0 ? p.doctors.map((d: any) => d.fullName).join(", ") : "—",
+    Role: p.doctors && p.doctors.length > 0 ? p.doctors.map((d: any) => d.designation?.name).filter(Boolean).join(", ") : "—",
     Address: p.addressShort || "—",
     Last_Visit: p.lastVisitLabel || "—",
     Status: p.statusLabel || statusToLabel(p.status),
@@ -64,26 +78,15 @@ export const patientToTableRow = (p: ClinicPatient, index: number) => {
 
 export const emptyPatientForm = () => ({
   firstName: "",
-  middleName: "",
   lastName: "",
   status: "Active",
   profileImage: null as string | null,
   phone: "",
-  alternateMobile: "",
   email: "",
+  doctorIds: [] as string[],
   dob: null as import("dayjs").Dayjs | null,
   gender: "",
   bloodGroup: "",
-  maritalStatus: "",
-  occupation: "",
-  aadhaarNumber: "",
-  passportNumber: "",
-  referredBy: "",
-  referId: "",
-
-  emergencyContactName: "",
-  emergencyContactRelation: "",
-  emergencyContactPhone: "",
   address1: "",
   address2: "",
   country: "",

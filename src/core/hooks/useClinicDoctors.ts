@@ -4,7 +4,7 @@ import type { ClinicDoctor } from "../types/clinicDoctor";
 
 export type { ClinicDoctor } from "../types/clinicDoctor";
 
-export const useClinicDoctors = (clinicId?: string) => {
+export const useClinicDoctors = (clinicId?: string, type?: string) => {
   const [doctors, setDoctors] = useState<ClinicDoctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,7 +14,11 @@ export const useClinicDoctors = (clinicId?: string) => {
     setError(null);
     try {
       const token = localStorage.getItem("token");
-      const url = clinicId ? apiUrl(`/api/doctors?clinicId=${clinicId}`) : apiUrl("/api/doctors");
+      const params = new URLSearchParams();
+      if (clinicId) params.append("clinicId", clinicId);
+      if (type) params.append("type", type);
+      const queryString = params.toString();
+      const url = apiUrl(`/api/doctors${queryString ? `?${queryString}` : ""}`);
       const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -30,7 +34,7 @@ export const useClinicDoctors = (clinicId?: string) => {
     } finally {
       setLoading(false);
     }
-  }, [clinicId]);
+  }, [clinicId, type]);
 
   useEffect(() => {
     fetchDoctors();

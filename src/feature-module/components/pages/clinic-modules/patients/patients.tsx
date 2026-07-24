@@ -1,147 +1,23 @@
-import { apiGet } from "../../../../../core/utils/apiClient";
-import { useEffect, useMemo, useState } from "react";
-import EmptyState from "../../../../../core/common/emptyState";
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { DatePicker } from "antd";
-import type { Dayjs } from "dayjs";
-import dayjs from "dayjs";
-import isBetween from "dayjs/plugin/isBetween";
-
-dayjs.extend(isBetween);
 import { all_routes } from "../../../../routes/all_routes";
 import Datatable from "../../../../../core/common/dataTable";
 import { useClinicPatients } from "../../../../../core/hooks/useClinicPatients";
 import type { ClinicPatient } from "../../../../../core/types/clinicPatient";
 import { patientToTableRow } from "../../../../../core/utils/patientForm";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
+import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import PatientsDeleteModal from "./patientsDeleteModal";
 import { HasPermission } from "../../../../../core/utils/staffPermissions";
-import { apiUrl } from "../../../../../core/config/api";
-import { toast } from "react-toastify";
-
-const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-const GENDERS = ["Male", "Female", "Other"];
 
 const Patients = () => {
   const { patients, loading, error, refetch, reload } = useClinicPatients();
   const [searchText, setSearchText] = useState("");
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [patientToDelete, setPatientToDelete] = useState<string | null>(null);
-
-  // HRM-style inline filters
-  const [filterStatus, setFilterStatus] = useState("All");
-  const [filterBloodGroup, setFilterBloodGroup] = useState("All");
-  const [filterGender, setFilterGender] = useState("All");
-  const [filterRefer, setFilterRefer] = useState("All");
-  const [filterDatePreset, setFilterDatePreset] = useState("All");
-  const [customRange, setCustomRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
-
-  const [refers, setRefers] = useState<{ id: string; name: string }[]>([]);
-
-  useEffect(() => {
-    apiGet<any[]>("/api/refers")
-      .then((data) => setRefers(Array.isArray(data) ? data : []))
-      .catch((err) => console.error(err));
-  }, []);
-
-  const isFilterActive = useMemo(() => {
-    return (
-      filterStatus !== "All" ||
-      filterBloodGroup !== "All" ||
-      filterGender !== "All" ||
-      filterRefer !== "All" ||
-      filterDatePreset !== "All"
-    );
-  }, [filterStatus, filterBloodGroup, filterGender, filterRefer, filterDatePreset]);
-
-  const getModalContainer = () =>
-    document.getElementById("modal-datepicker") || document.body;
-
-  const handleClearAll = () => {
-    setFilterStatus("All");
-    setFilterBloodGroup("All");
-    setFilterGender("All");
-    setFilterRefer("All");
-    setFilterDatePreset("All");
-    setCustomRange([null, null]);
-  };
-
-  const executeBulkDelete = async (idsToDelete: string[]) => {
-    if (idsToDelete.length === 0) return;
-    const token = localStorage.getItem("token");
-    try {
-      let successCount = 0;
-      for (const id of idsToDelete) {
-        const res = await fetch(apiUrl(`/api/patients/${id}`), {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) successCount++;
-      }
-
-      if (successCount === idsToDelete.length) {
-        toast.success(`${successCount} Patient(s) deleted successfully`);
-      } else if (successCount > 0) {
-        toast.warning(`${successCount} out of ${idsToDelete.length} patients deleted.`);
-      } else {
-        throw new Error("Delete failed");
-      }
-
-      setSelectedIds([]);
-      setPatientToDelete(null);
-      refetch();
-    } catch (err) {
-      toast.error("Error: Could not complete deletion properly.");
-    }
-  };
-
-  // Filtered patients
-  const filteredPatients = useMemo(() => {
-    return patients.filter((p) => {
-      const matchStatus = filterStatus === "All" || p.status === filterStatus;
-      const matchBlood = filterBloodGroup === "All" || p.bloodGroup === filterBloodGroup;
-      const matchGender = filterGender === "All" || p.gender === filterGender;
-      const matchRefer =
-        filterRefer === "All" ||
-        (p as any).referId === filterRefer ||
-        p.referredBy === filterRefer ||
-        ((p as any).refer?.name && (p as any).refer.name === filterRefer);
-
-      let matchDate = true;
-      if (filterDatePreset !== "All" && p.createdAt) {
-        const itemDate = dayjs(p.createdAt);
-        if (filterDatePreset === "Today") {
-          matchDate = itemDate.isSame(dayjs(), "day");
-        } else if (filterDatePreset === "Yesterday") {
-          matchDate = itemDate.isSame(dayjs().subtract(1, "day"), "day");
-        } else if (filterDatePreset === "Last 7 Days") {
-          matchDate = itemDate.isAfter(dayjs().subtract(7, "day").startOf("day"));
-        } else if (filterDatePreset === "This Month") {
-          matchDate = itemDate.isSame(dayjs(), "month");
-        } else if (filterDatePreset === "Custom") {
-          if (customRange[0] && customRange[1]) {
-            matchDate = itemDate.isAfter(customRange[0].startOf("day").subtract(1, "second")) && itemDate.isBefore(customRange[1].endOf("day").add(1, "second"));
-          }
-        }
-      }
-      return matchStatus && matchBlood && matchGender && matchRefer && matchDate;
-    });
-  }, [patients, filterStatus, filterBloodGroup, filterGender, filterRefer, filterDatePreset, customRange]);
+  const [selected, setSelected] = useState<ClinicPatient | null>(null);
 
   const tableData = useMemo(
-    () => filteredPatients.map((p, i) => {
-      const hasImage = p.profileImage && p.profileImage.trim() !== "" && !p.profileImage.includes("300x300");
-      const patientImg = hasImage
-        ? p.profileImage
-        : "assets/img/patient-placeholder.png";
-
-      return {
-        ...patientToTableRow(p, i),
-        SrNo: i + 1,
-        Patient_img: patientImg
-      };
-    }),
-    [filteredPatients]
+    () => patients.map((p, i) => patientToTableRow(p, i)),
+    [patients]
   );
 
   const patientDetailsPath = (id: string) =>
@@ -152,34 +28,22 @@ const Patients = () => {
 
   const columns = [
     {
-      title: "Sr No",
-      dataIndex: "SrNo",
-      render: (text: number) => <span className="text-dark fw-bold">{text}</span>,
-      sorter: (a: any, b: any) => a.SrNo - b.SrNo,
-    },
-    {
-      title: "Patient ID",
-      dataIndex: "PatientID",
-      render: (_: any, record: any) => <span className="text-primary fw-bold">{record._raw.patientId || `PAT-${record._raw.id?.slice(-4).toUpperCase() || '000'}`}</span>,
-      sorter: (a: any, b: any) => (a._raw.patientId || "").localeCompare(b._raw.patientId || ""),
-    },
-    {
       title: "Patient",
       dataIndex: "Patient",
-      render: (text: string, record: any) => (
+      render: (text: string, record: (typeof tableData)[0]) => (
         <div className="d-flex align-items-center">
           <Link
             to={patientDetailsPath(record._raw.id)}
-            className="avatar avatar-md me-2"
+            className="avatar me-2"
           >
             <ImageWithBasePath
               src={record.Patient_img}
               alt="Patient"
-              className="rounded-circle border"
+              className="rounded-circle"
             />
           </Link>
           <div>
-            <h6 className="mb-0 fs-14 fw-bold">
+            <h6 className="mb-1 fs-14 fw-semibold">
               <Link
                 to={patientDetailsPath(record._raw.id)}
                 className="text-dark"
@@ -187,51 +51,75 @@ const Patients = () => {
                 {text}
               </Link>
             </h6>
+            <span className="text-body fs-13 fw-normal d-block">
+              {record.Gender}
+            </span>
           </div>
         </div>
       ),
-      sorter: (a: any, b: any) => a.Patient.localeCompare(b.Patient),
+      sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+        a.Patient.localeCompare(b.Patient),
     },
     {
       title: "Phone",
       dataIndex: "Phone",
-      render: (text: string) => <span className="text-dark fw-medium">{text}</span>,
-      sorter: (a: any, b: any) => a.Phone.localeCompare(b.Phone),
+      sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+        a.Phone.localeCompare(b.Phone),
     },
     {
-      title: "Gender",
-      dataIndex: "GenderText",
-      render: (_: any, record: any) => (
-        <span className="text-dark fw-medium text-capitalize">{record._raw.gender || "—"}</span>
+      title: "Doctor",
+      dataIndex: "Doctor",
+      render: (text: string, record: (typeof tableData)[0]) => (
+        <div className="d-flex align-items-center">
+          <Link
+            to={
+              record._raw.doctors?.[0]?.id
+                ? all_routes.doctorsDetails.replace(
+                  ":id",
+                  record._raw.doctors[0].id
+                )
+                : "#"
+            }
+            className="avatar me-2 flex-shrink-0"
+            onClick={(e) => {
+              if (!record._raw.doctors?.[0]?.id) e.preventDefault();
+            }}
+          >
+            <ImageWithBasePath
+              src={record.Doctor_img}
+              alt="Doctor"
+              className="rounded-circle"
+            />
+          </Link>
+          <div>
+            <h6 className="fs-14 mb-1">
+              <span className="fw-semibold">{text}</span>
+            </h6>
+            <p className="mb-0 fs-13">{record.Role}</p>
+          </div>
+        </div>
       ),
-      sorter: (a: any, b: any) => (a._raw.gender || "").localeCompare(b._raw.gender || ""),
+      sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+        a.Doctor.localeCompare(b.Doctor),
     },
     {
-      title: "Blood Group",
-      dataIndex: "BloodGroup",
-      render: (_: any, record: any) => (
-        <span className="badge badge-soft-primary border border-primary fw-bold text-primary" style={{ minWidth: "40px" }}>
-          {record._raw.bloodGroup || "—"}
-        </span>
-      ),
-      sorter: (a: any, b: any) => (a._raw.bloodGroup || "").localeCompare(b._raw.bloodGroup || ""),
+      title: "Address",
+      dataIndex: "Address",
+      sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+        a.Address.localeCompare(b.Address),
     },
     {
-      title: "Referred By",
-      dataIndex: "ReferredBy",
-      render: (_: any, record: any) => (
-        <span className="text-dark fw-medium fs-13">
-          {record._raw.referredBy || record._raw.refer?.name || "—"}
-        </span>
-      ),
-      sorter: (a: any, b: any) => (a._raw.referredBy || "").localeCompare(b._raw.referredBy || ""),
+      title: "Last Visit",
+      dataIndex: "Last_Visit",
+      sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+        a.Last_Visit.localeCompare(b.Last_Visit),
     },
     {
       title: "Status",
       dataIndex: "Status",
       render: (text: string) => (
         <span
-          className={`badge rounded fs-12 fw-bold border ${text === "Available"
+          className={`badge rounded fs-13 fw-medium border ${text === "Available"
             ? "badge-soft-success text-success border-success"
             : "badge-soft-danger text-danger border-danger"
             }`}
@@ -239,23 +127,62 @@ const Patients = () => {
           {text}
         </span>
       ),
-      sorter: (a: any, b: any) => a.Status.localeCompare(b.Status),
+      sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+        a.Status.localeCompare(b.Status),
     },
     {
-      title: "Action",
-      dataIndex: "action",
-      align: "center",
-      className: "text-nowrap",
-      width: 130,
-      render: (_: unknown, record: any) => (
-        <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
-          <Link to={patientDetailsPath(record._raw.id)} className="text-info p-1" title="View"><i className="ti ti-eye fs-18" /></Link>
-          <HasPermission module="Patients" action="EDIT">
-            <Link to={editPatientPath(record._raw.id)} className="text-primary p-1" title="Edit"><i className="ti ti-edit fs-18" /></Link>
-          </HasPermission>
-          <HasPermission module="Patients" action="DELETE">
-            <button className="bg-transparent border-0 text-danger p-1" title="Delete" data-bs-toggle="modal" data-bs-target="#delete_patient_modal" onClick={() => setPatientToDelete(record._raw.id)}><i className="ti ti-trash fs-18" /></button>
-          </HasPermission>
+      title: "",
+      render: (_: unknown, record: (typeof tableData)[0]) => (
+        <div className="d-flex align-items-center gap-1">
+          <Link
+            to={all_routes.appointments}
+            className="shadow-sm fs-14 d-inline-flex border rounded-2 p-1 me-1"
+          >
+            <i className="ti ti-calendar-cog" />
+          </Link>
+          <div className="action-item">
+            <button
+              type="button"
+              className="btn btn-link p-0 shadow-sm fs-14 border rounded-2"
+              data-bs-toggle="dropdown"
+              aria-label="Actions"
+            >
+              <i className="ti ti-dots-vertical" />
+            </button>
+            <ul className="dropdown-menu p-2">
+              <HasPermission module="Patients" action="EDIT">
+                <li>
+                  <Link
+                    to={editPatientPath(record._raw.id)}
+                    className="dropdown-item d-flex align-items-center"
+                  >
+                    Edit
+                  </Link>
+                </li>
+              </HasPermission>
+              <li>
+                <Link
+                  to={patientDetailsPath(record._raw.id)}
+                  className="dropdown-item d-flex align-items-center"
+                >
+                  View
+                </Link>
+              </li>
+              <HasPermission module="Patients" action="DELETE">
+                <li>
+                  <button
+                    type="button"
+                    className="dropdown-item d-flex align-items-center"
+                    data-bs-toggle="modal"
+                    data-bs-target="#delete_patient_modal"
+                    onClick={() => setSelected(record._raw)}
+                  >
+                    Delete
+                  </button>
+                </li>
+              </HasPermission>
+            </ul>
+          </div>
         </div>
       ),
     },
@@ -265,187 +192,97 @@ const Patients = () => {
     <>
       <div className="page-wrapper">
         <div className="content">
-          <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-bottom">
+          <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
             <div className="flex-grow-1">
-              <h4 className="fw-bold mb-0 text-dark">
+              <h4 className="fw-bold mb-0">
                 Patients List
-                <span className="badge badge-soft-primary fw-bold ms-2">
-                  {loading ? "" : filteredPatients.length} Patients
+                <span className="badge badge-soft-primary fw-medium border py-1 px-2 border-primary fs-13 ms-1">
+                  Total Patients : {loading ? "…" : patients.length}
                 </span>
               </h4>
             </div>
-            <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
-              {isFilterActive && (
-                <button
-                  className="btn btn-sm btn-light border text-primary fw-bold me-1"
-                  onClick={handleClearAll}
-                  style={{ height: "38px" }}
-                >
-                  Clear All
-                </button>
-              )}
-              <div className="dropdown">
+            <div className="text-end d-flex">
+              <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center me-2">
+                <span className="bg-light rounded p-1 d-flex align-items-center justify-content-center">
+                  <i className="ti ti-list fs-14 text-dark" />
+                </span>
                 <Link
-                  to="#"
-                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap"
-                  style={{ minWidth: "160px", height: "38px" }}
-                  data-bs-toggle="dropdown"
+                  to={all_routes.patientsGrid}
+                  className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
                 >
-                  <span className="text-truncate">
-                    <span className="text-muted"><i className="ti ti-calendar me-1"></i></span> {filterDatePreset === "All" ? "Select Date" : filterDatePreset}
-                  </span>
+                  <i className="ti ti-layout-grid fs-14 text-body" />
                 </Link>
-                <ul className="dropdown-menu dropdown-menu-end p-2" style={{ minWidth: "220px" }}>
-                  {["All", "Today", "Yesterday", "Last 7 Days", "This Month", "Custom"].map((preset) => (
-                    <li key={preset}>
-                      <Link
-                        to="#"
-                        className={`dropdown-item rounded-1${filterDatePreset === preset ? ' active' : ''}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (preset === "Custom") e.stopPropagation();
-                          setFilterDatePreset(preset);
-                        }}
-                      >
-                        {preset}
-                      </Link>
-                    </li>
-                  ))}
-                  {filterDatePreset === "Custom" && (
-                    <li className="p-2 border-top mt-2">
-                      <DatePicker.RangePicker
-                        format="DD-MM-YYYY"
-                        className="w-100"
-                        value={customRange}
-                        onChange={(dates) => setCustomRange(dates ? [dates[0], dates[1]] : [null, null])}
-                      />
-                    </li>
-                  )}
-                </ul>
-              </div>
-              <div className="dropdown">
-                <Link to="#" className="form-select text-dark d-flex align-items-center justify-content-between" style={{ minWidth: "125px", height: "38px" }} data-bs-toggle="dropdown">
-                  <span className="text-truncate"><span className="text-muted">Status:</span> {filterStatus === "All" ? "All" : filterStatus === "Active" ? "Available" : "Unavailable"}</span>
-                </Link>
-                <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item" onClick={() => setFilterStatus("All")}>All</Link></li>
-                  <li><Link to="#" className="dropdown-item" onClick={() => setFilterStatus("Active")}>Available</Link></li>
-                  <li><Link to="#" className="dropdown-item" onClick={() => setFilterStatus("Inactive")}>Unavailable</Link></li>
-                </ul>
-              </div>
-              <div className="dropdown">
-                <Link to="#" className="form-select text-dark d-flex align-items-center justify-content-between" style={{ minWidth: "135px", height: "38px" }} data-bs-toggle="dropdown">
-                  <span className="text-truncate"><span className="text-muted">Blood:</span> {filterBloodGroup}</span>
-                </Link>
-                <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item" onClick={() => setFilterBloodGroup("All")}>All</Link></li>
-                  {BLOOD_GROUPS.map((bg) => (<li key={bg}><Link to="#" className="dropdown-item" onClick={() => setFilterBloodGroup(bg)}>{bg}</Link></li>))}
-                </ul>
-              </div>
-              <div className="dropdown">
-                <Link to="#" className="form-select text-dark d-flex align-items-center justify-content-between" style={{ minWidth: "125px", height: "38px" }} data-bs-toggle="dropdown">
-                  <span className="text-truncate"><span className="text-muted">Gender:</span> {filterGender}</span>
-                </Link>
-                <ul className="dropdown-menu dropdown-menu-end p-2">
-                  <li><Link to="#" className="dropdown-item" onClick={() => setFilterGender("All")}>All</Link></li>
-                  {GENDERS.map((g) => (<li key={g}><Link to="#" className="dropdown-item" onClick={() => setFilterGender(g)}>{g}</Link></li>))}
-                </ul>
-              </div>
-              <div className="dropdown">
-                <Link to="#" className="form-select text-dark d-flex align-items-center justify-content-between text-nowrap" style={{ minWidth: "145px", height: "38px" }} data-bs-toggle="dropdown">
-                  <span className="text-truncate">
-                    <span className="text-muted">Refer:</span> {filterRefer === "All" ? "All" : refers.find(r => r.id === filterRefer || r.name === filterRefer)?.name || filterRefer}
-                  </span>
-                </Link>
-                <ul className="dropdown-menu dropdown-menu-end p-2" style={{ maxHeight: "250px", overflowY: "auto" }}>
-                  <li><Link to="#" className={`dropdown-item${filterRefer === "All" ? " active" : ""}`} onClick={() => setFilterRefer("All")}>All</Link></li>
-                  {refers.map((r) => (
-                    <li key={r.id}>
-                      <Link to="#" className={`dropdown-item${filterRefer === r.id || filterRefer === r.name ? " active" : ""}`} onClick={() => setFilterRefer(r.id)}>
-                        {r.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="d-flex align-items-center gap-2">
-                <Link to={all_routes.patients} className="btn btn-icon btn-sm bg-primary-subtle text-primary border border-primary d-flex align-items-center justify-content-center" style={{ width: '38px', height: '38px', borderRadius: '8px' }}><i className="ti ti-list-tree fs-16" /></Link>
-                <Link to={all_routes.patientsGrid} className="btn btn-icon btn-sm bg-white text-dark border d-flex align-items-center justify-content-center" style={{ width: '38px', height: '38px', borderRadius: '8px' }}><i className="ti ti-layout-grid fs-16" /></Link>
               </div>
               <HasPermission module="Patients" action="CREATE">
-                <Link to={all_routes.createPatient} className="btn btn-primary ms-1 fw-bold" style={{ height: '38px' }}>New Patient <i className="ti ti-plus ms-1" /></Link>
+                <Link
+                  to={all_routes.createPatient}
+                  className="btn btn-primary ms-2 fs-13 btn-md"
+                >
+                  <i className="ti ti-plus me-1" />
+                  New Patient
+                </Link>
               </HasPermission>
             </div>
           </div>
 
           {error && (
-            <div className="alert alert-danger mb-3">
+            <div className="alert alert-danger d-flex align-items-center justify-content-between mb-3">
               <span>{error}</span>
-              <button className="btn btn-sm btn-outline-danger ms-2" onClick={() => reload()}>Retry</button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => reload()}
+              >
+                Retry
+              </button>
             </div>
           )}
+
+          <div className="search-set mb-3">
+            <div className="table-search d-flex align-items-center mb-0">
+              <div className="search-input">
+                <SearchInput value={searchText} onChange={setSearchText} />
+              </div>
+            </div>
+          </div>
 
           {loading ? (
             <div className="text-center py-5">
               <span className="spinner-border text-primary" role="status" />
+              <p className="text-muted mt-2 mb-0">Loading patients…</p>
             </div>
-          ) : filteredPatients.length === 0 && !error ? (
-            <div className="border rounded bg-white">
-              <EmptyState
-                title="No patients found"
-                message="We couldn't find any patient records matching your criteria. Add a new patient to get started."
-                action={
-                  patients.length === 0 && (
-                    <HasPermission module="Patients" action="CREATE">
-                      <Link to={all_routes.createPatient} className="btn btn-primary">New Patient <i className="ti ti-plus ms-2" /></Link>
-                    </HasPermission>
-                  )
-                }
-              />
+          ) : patients.length === 0 && !error ? (
+            <div className="text-center py-5 border rounded bg-white">
+              <i className="ti ti-users fs-1 text-muted d-block mb-2" />
+              <h6 className="fw-bold">No patients yet</h6>
+              <p className="text-muted mb-3">Add your first patient.</p>
+              <HasPermission module="Patients" action="CREATE">
+                <Link to={all_routes.createPatient} className="btn btn-primary">
+                  <i className="ti ti-plus me-1" />
+                  New Patient
+                </Link>
+              </HasPermission>
             </div>
           ) : (
-            <div className="table-responsive border rounded bg-white">
+            <div className="table-responsive">
               <Datatable
                 columns={columns}
                 dataSource={tableData}
-                Selection={true}
-                onSelectionChange={(keys: any) => setSelectedIds(keys as string[])}
+                Selection={false}
                 searchText={searchText}
               />
             </div>
           )}
-
-          {selectedIds.length > 0 && (
-            <div className="d-flex justify-content-center mt-3 pb-3">
-              <button
-                className="btn btn-danger d-flex align-items-center gap-2 px-4 shadow"
-                data-bs-toggle="modal"
-                data-bs-target="#delete_patient_modal"
-                onClick={() => setPatientToDelete(null)}
-                style={{ borderRadius: '8px', minHeight: '40px', fontWeight: 'bold' }}
-              >
-                <i className="ti ti-trash"></i>
-                Delete Selected ({selectedIds.length})
-              </button>
-            </div>
-          )}
         </div>
-        <div className="footer text-center bg-white p-2 border-top mt-auto">
-          <p className="text-dark mb-0 fw-medium">2025  Docyari, All Rights Reserved</p>
+        <div className="footer text-center bg-white p-2 border-top">
+          <p className="text-dark mb-0">2025 © Docyari, All Rights Reserved</p>
         </div>
       </div>
 
       <PatientsDeleteModal
-        patient={patients.find(p => p.id === (patientToDelete || "")) || null}
-        selectedCount={patientToDelete ? 1 : selectedIds.length}
-        onClear={() => { setPatientToDelete(null); setSelectedIds([]); }}
+        patient={selected}
+        onClear={() => setSelected(null)}
         onDeleted={refetch}
-        onConfirmBulk={() => {
-          const ids = patientToDelete ? [patientToDelete] : selectedIds;
-          setPatientToDelete(null);
-          setSelectedIds([]);
-          executeBulkDelete(ids);
-        }}
       />
     </>
   );

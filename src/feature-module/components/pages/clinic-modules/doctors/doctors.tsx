@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import Modals from "./modals/modals";
 import { all_routes } from "../../../../routes/all_routes";
 import { useClinicDoctors } from "../../../../../core/hooks/useClinicDoctors";
@@ -12,7 +12,11 @@ interface DeptItem { id: string; name: string; status?: string; }
 interface DesigItem { id: string; name: string; type?: string; }
 
 const Doctors = () => {
-  const { doctors, loading, error, refetch } = useClinicDoctors();
+  const location = useLocation();
+  const isIpdPage = location.pathname.includes("/ipd");
+  const typeFilter = isIpdPage ? "IPD" : undefined;
+
+  const { doctors, loading, error, refetch } = useClinicDoctors(undefined, typeFilter);
   const [doctorToDelete, setDoctorToDelete] = useState<string | null>(null);
 
   // Filters State
@@ -48,9 +52,10 @@ const Doctors = () => {
       const matchDept = filterDept === "All" || d.department?.name === filterDept;
       const matchDesig = filterDesig === "All" || d.designation?.name === filterDesig;
       const matchStatus = filterStatus === "All" || d.status === filterStatus;
-      return matchDept && matchDesig && matchStatus;
+      const matchType = !isIpdPage || d.doctorType === "IPD" || (Array.isArray(d.doctorTypes) && d.doctorTypes.includes("IPD"));
+      return matchDept && matchDesig && matchStatus && matchType;
     });
-  }, [doctors, filterDept, filterDesig, filterStatus]);
+  }, [doctors, filterDept, filterDesig, filterStatus, isIpdPage]);
 
   const uniqueDepts = useMemo(
     () => [...new Set(departments.map((d) => d.name))].filter(Boolean).sort(),
@@ -93,7 +98,7 @@ const Doctors = () => {
           <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
             <div className="flex-grow-1">
               <h4 className="fw-bold mb-0">
-                Doctor Grid
+                {isIpdPage ? "IPD Doctor Grid" : "Doctor Grid"}
                 <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
                   Total Doctors : {loading ? "…" : filteredDoctors.length}
                 </span>

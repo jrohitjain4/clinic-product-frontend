@@ -293,10 +293,79 @@ import { Route } from "react-router";
 
 const AppointmentDetails = lazy(() => import("../components/pages/clinic-modules/appointments/appointmentDetails"));
 const SuperAdminDashboard = lazy(() => import("../components/pages/super-admin/super-admin-dashboard/superAdminDashboard"));
+const IpdDashboardPage = lazy(() => import("../components/pages/ipd-modules/IpdDashboardPage"));
+const IpdGenericPage = lazy(() => import("../components/pages/ipd-modules/IpdGenericPage"));
+const IpdTreatmentsPage = lazy(() => import("../components/pages/ipd-modules/IpdTreatmentsPage"));
+const IpdWardManagementPage = lazy(() => import("../components/pages/ipd-modules/IpdWardManagementPage"));
+const IpdAdmissionsPage = lazy(() => import("../components/pages/ipd-modules/IpdAdmissionsPage"));
+const IpdBillingsPage = lazy(() => import("../components/pages/ipd-modules/IpdBillingsPage"));
+const IpdDischargePage = lazy(() => import("../components/pages/ipd-modules/IpdDischargePage"));
+const IpdInpatientsPage = lazy(() => import("../components/pages/ipd-modules/IpdInpatientsPage"));
+const IpdNursesPage = lazy(() => import("../components/pages/ipd-modules/IpdNursesPage"));
 
 const routes = all_routes;
 
 export const publicRoutes = [
+  {
+    path: routes.ipdDashboard,
+    element: <IpdDashboardPage />,
+    route: Route,
+  },
+  {
+    path: routes.ipdPatients,
+    element: <Patients />,
+    route: Route,
+  },
+  {
+    path: routes.ipdAdmissions,
+    element: <IpdAdmissionsPage />,
+    route: Route,
+  },
+  {
+    path: routes.ipdInpatients,
+    element: <IpdInpatientsPage />,
+    route: Route,
+  },
+  {
+    path: routes.ipdDischarge,
+    element: <IpdDischargePage />,
+    route: Route,
+  },
+  {
+    path: routes.ipdWardManagement,
+    element: <IpdWardManagementPage />,
+    route: Route,
+  },
+  {
+    path: routes.ipdBillings,
+    element: <IpdBillingsPage />,
+    route: Route,
+  },
+  {
+    path: routes.ipdDoctors,
+    element: <Doctors />,
+    route: Route,
+  },
+  {
+    path: routes.ipdNurses,
+    element: <IpdNursesPage />,
+    route: Route,
+  },
+  {
+    path: routes.ipdTreatments,
+    element: <IpdTreatmentsPage />,
+    route: Route,
+  },
+  {
+    path: routes.ipdPriceManagement,
+    element: <IpdGenericPage title="Price Management" subtitle="Manage Admission Fee, Required Advance Deposit & Daily Charges" moduleType="price" />,
+    route: Route,
+  },
+  {
+    path: routes.ipdReports,
+    element: <IpdGenericPage title="IPD Reports & Analytics" subtitle="Comprehensive Admission, Discharge, Bed Occupancy & Revenue Reports" moduleType="report" />,
+    route: Route,
+  },
   {
     path: routes.packages,
     element: <PackagesAdmin />,

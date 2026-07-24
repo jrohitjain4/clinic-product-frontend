@@ -2,24 +2,14 @@ export interface ClinicPatient {
   id: string;
   patientCode?: string | null;
   firstName: string;
-  middleName?: string | null;
   lastName: string;
   fullName?: string;
   profileImage?: string | null;
   phone?: string | null;
-  alternateMobile?: string | null;
   email?: string | null;
   dob?: string | null;
   gender?: string | null;
   bloodGroup?: string | null;
-  maritalStatus?: string | null;
-  occupation?: string | null;
-  aadhaarNumber?: string | null;
-  passportNumber?: string | null;
-  referredBy?: string | null;
-  emergencyContactName?: string | null;
-  emergencyContactRelation?: string | null;
-  emergencyContactPhone?: string | null;
   status: string;
   statusLabel?: string;
   ageGenderLabel?: string;
@@ -38,10 +28,16 @@ export interface ClinicPatient {
     profileImage?: string | null;
     designation?: { id: string; name: string } | null;
   } | null;
+  doctorIds?: string[];
+  doctors?: Array<{
+    id: string;
+    fullName: string;
+    profileImage?: string | null;
+    designation?: { id: string; name: string } | null;
+  }>;
   lastVisitedAt?: string | null;
   lastVisitLabel?: string;
   vitals?: Record<string, unknown> | null;
-  suggestIPD?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

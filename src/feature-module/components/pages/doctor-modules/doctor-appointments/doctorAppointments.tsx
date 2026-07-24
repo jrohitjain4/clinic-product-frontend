@@ -9,6 +9,7 @@ import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppoin
 import { usePrescriptions } from "../../../../../core/hooks/usePrescriptions";
 import { useClinicPatients } from "../../../../../core/hooks/useClinicPatients";
 import { useClinicDepartments } from "../../../../../core/hooks/useClinicDepartments";
+import { useLabBookings } from "../../../../../core/hooks/useLabBookings";
 import AddPrescriptionModal from "../doctors-prescriptions/AddPrescriptionModal";
 import {
   APPOINTMENT_STATUS_OPTIONS,
@@ -66,6 +67,9 @@ const DoctorAppointments = () => {
   const { createPrescription } = usePrescriptions();
   const [showPresModal, setShowPresModal] = useState(false);
   const [selectedAppForPres, setSelectedAppForPres] = useState<any>(null);
+
+  const [activeTab, setActiveTab] = useState<"appointments" | "diagnostics">("appointments");
+  const { bookings: labBookings, loading: labLoading } = useLabBookings();
 
   const [showAddAppointment, setShowAddAppointment] = useState(false);
   const [doctorDetails, setDoctorDetails] = useState<any>(null);
@@ -414,11 +418,29 @@ const DoctorAppointments = () => {
     <>
       <div className="page-wrapper d-flex flex-column" style={{ minHeight: '100vh' }}>
         <div className="content flex-grow-1">
-          {/* Header with Filters - Cloned from Admin Design */}
+          {/* Tab Header */}
           <div className="d-flex align-items-center pb-3 mb-4 border-bottom flex-wrap appointment-header" style={{ minWidth: 0 }}>
-            <h3 className="fw-bolder mb-0 flex-shrink-0 text-dark" style={{ fontSize: '20px' }}>Appointment</h3>
-            
-            {["All", "Schedule", "Confirmed", "Checked In", "Checked Out"].map((s) => (
+            <h3 className="fw-bolder mb-0 flex-shrink-0 text-dark" style={{ fontSize: '20px' }}>My Desk</h3>
+
+            <button
+              className={`btn btn-sm ${activeTab === "appointments" ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-3 fs-13 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
+              onClick={() => setActiveTab("appointments")}
+              style={{ borderRadius: '8px', height: '38px' }}
+            >
+              <i className="ti ti-calendar-event me-1" />
+              Appointments
+              <span className={`badge ${activeTab === "appointments" ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>{counts.all}</span>
+            </button>
+
+            <button
+              className={`btn btn-sm ${activeTab === "diagnostics" ? "btn-success shadow-sm" : "btn-light border bg-white"} py-1 px-3 fs-13 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
+              onClick={() => setActiveTab("diagnostics")}
+              style={{ borderRadius: '8px', height: '38px' }}
+            >
+              <i className="ti ti-microscope me-1" />
+              Diagnostic Bookings
+              <span className={`badge ${activeTab === "diagnostics" ? "bg-white text-success" : "bg-light text-dark"} ms-1`}>{labBookings.length}</span>
+            </button>
               <button
                 key={s}
                 className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "All") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-3 fs-13 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
@@ -461,7 +483,25 @@ const DoctorAppointments = () => {
             </button>
           </div>
 
-          {/* Table Content - Premium HRM Style */}
+          {/* Appointments Tab Content */}
+          {activeTab === "appointments" && (
+            <>
+              {/* Status filter buttons — shown only for appointments tab */}
+              <div className="d-flex align-items-center gap-2 flex-wrap mb-3">
+                {["All", "Schedule", "Confirmed", "Checked In", "Checked Out"].map((s) => (
+                  <button
+                    key={s}
+                    className={`btn btn-sm ${filterStatus === s ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-3 fs-13 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}
+                    onClick={() => setFilterStatus(s)}
+                    style={{ borderRadius: '8px', height: '34px' }}
+                  >
+                    {s === "Checked Out" ? "Check-out" : s === "Checked In" ? "Check-in" : s}
+                    <span className={`badge ${filterStatus === s ? "bg-white text-primary" : "bg-light text-dark"} ms-1`}>
+                      {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : s === "Checked Out" ? counts.checkedOut : counts.all}
+                    </span>
+                  </button>
+                ))}
+              </div>
           <div className="mb-4">
             <div className="p-0">
               <style>{`
@@ -558,6 +598,100 @@ const DoctorAppointments = () => {
               </div>
             </div>
           </div>
+            </>
+          )}
+
+          {/* Diagnostic Bookings Tab */}
+          {activeTab === "diagnostics" && (
+            <div className="mb-4">
+              {labLoading ? (
+                <div className="text-center py-5">
+                  <div className="spinner-border text-success" role="status" />
+                  <p className="text-muted mt-2 mb-0">Loading your diagnostic bookings...</p>
+                </div>
+              ) : labBookings.length === 0 ? (
+                <div className="text-center py-5">
+                  <i className="ti ti-microscope fs-40 text-muted mb-2 d-block" />
+                  <h5 className="fw-bold">No Diagnostic Bookings Assigned</h5>
+                  <p className="text-muted fs-13">You currently have no diagnostic/lab bookings assigned to you.</p>
+                </div>
+              ) : (
+                <div className="table-responsive border rounded-3 bg-white shadow-sm">
+                  <table className="table table-hover align-middle mb-0">
+                    <thead className="table-light">
+                      <tr>
+                        <th className="ps-3">Booking Code</th>
+                        <th>Patient</th>
+                        <th>Test / Panel</th>
+                        <th>Scheduled At</th>
+                        <th>Session Slot</th>
+                        <th>Status</th>
+                        <th>Payment</th>
+                        <th>Amount</th>
+                        <th>Remarks</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {labBookings.map((bk) => {
+                        const statusColors: Record<string, string> = {
+                          "Pending": "bg-soft-warning text-warning",
+                          "Schedule": "bg-soft-secondary text-secondary",
+                          "Confirmed": "bg-soft-primary text-primary",
+                          "Checked In": "bg-soft-info text-info",
+                          "Completed": "bg-soft-success text-success",
+                          "Checked Out": "bg-soft-success text-success",
+                          "Cancelled": "bg-soft-danger text-danger",
+                        };
+                        const payColors: Record<string, string> = {
+                          "Paid": "bg-soft-success text-success",
+                          "Partial": "bg-soft-warning text-warning",
+                          "Unpaid": "bg-soft-danger text-danger",
+                        };
+                        return (
+                          <tr key={bk.id}>
+                            <td className="ps-3">
+                              <span className="badge bg-soft-dark text-dark fw-bold">{bk.bookingCode}</span>
+                            </td>
+                            <td>
+                              <span className="fw-semibold text-dark d-block">
+                                {bk.patient ? `${bk.patient.firstName} ${bk.patient.lastName}` : "—"}
+                              </span>
+                              <small className="text-muted">{bk.patient?.phone || ""}</small>
+                            </td>
+                            <td>
+                              <span className="fw-medium text-dark">{bk.test?.name || "—"}</span>
+                              {bk.test?.category && <small className="text-muted d-block">{bk.test.category.name}</small>}
+                            </td>
+                            <td>
+                              <span className="fw-medium">{dayjs(bk.scheduledAt).format("DD MMM YYYY")}</span>
+                              <small className="text-muted d-block">{dayjs(bk.scheduledAt).format("hh:mm A")}</small>
+                            </td>
+                            <td>{bk.sessionSlot || <span className="text-muted">—</span>}</td>
+                            <td>
+                              <span className={`badge ${statusColors[bk.status] || "bg-soft-secondary text-secondary"}`}>
+                                {bk.status}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={`badge ${payColors[bk.paymentStatus] || "bg-soft-secondary text-secondary"}`}>
+                                {bk.paymentStatus}
+                              </span>
+                            </td>
+                            <td>
+                              <span className="fw-bold text-dark">₹{bk.totalAmount?.toLocaleString("en-IN") || "0"}</span>
+                            </td>
+                            <td>
+                              <small className="text-muted">{bk.remarks || "—"}</small>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Improved Footer */}

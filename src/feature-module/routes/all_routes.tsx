@@ -393,4 +393,18 @@ export const all_routes = {
   pharmacyInventory: "/pharmacy/inventory",
   pharmacyBilling: "/pharmacy/billing",
   pharmacySalesHistory: "/pharmacy/sales-history",
+
+  // IPD Routes
+  ipdDashboard: "/ipd/dashboard",
+  ipdPatients: "/ipd/patients",
+  ipdAdmissions: "/ipd/admissions",
+  ipdInpatients: "/ipd/inpatients",
+  ipdDischarge: "/ipd/discharge",
+  ipdWardManagement: "/ipd/ward-management",
+  ipdBillings: "/ipd/billings",
+  ipdDoctors: "/ipd/doctors",
+  ipdNurses: "/ipd/nurses",
+  ipdTreatments: "/ipd/treatments",
+  ipdPriceManagement: "/ipd/price-management",
+  ipdReports: "/ipd/reports",
 };

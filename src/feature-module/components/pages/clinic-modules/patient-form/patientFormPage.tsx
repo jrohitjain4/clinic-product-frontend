@@ -21,8 +21,8 @@ import {
   emptyPatientForm,
 } from "../../../../../core/utils/patientForm";
 import { findSelectOption } from "../../../../../core/utils/doctorSchedule";
-import { apiGet, apiPost } from "../../../../../core/utils/apiClient";
-import { toast } from "react-toastify";
+
+type DoctorOption = { id: string; fullName: string };
 
 interface PatientFormPageProps {
   mode: "create" | "edit";
@@ -36,54 +36,10 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
   );
 
   const [form, setForm] = useState(emptyPatientForm);
-  const [doctors, setDoctors] = useState<{ id: string; fullName: string }[]>([]);
+  const [doctors, setDoctors] = useState<DoctorOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [phoneWarning, setPhoneWarning] = useState<string | null>(null);
-  
-  // Collapse states for optional details sections
-  const [showOptionalDetails, setShowOptionalDetails] = useState(false);
-  const [showEmergencyContact, setShowEmergencyContact] = useState(false);
-  const [refers, setRefers] = useState<{ id: string; name: string; description?: string }[]>([]);
-  const [showAddReferModal, setShowAddReferModal] = useState(false);
-  const [newReferName, setNewReferName] = useState("");
-  const [newReferDesc, setNewReferDesc] = useState("");
-  const [addingRefer, setAddingRefer] = useState(false);
-  const [referError, setReferError] = useState<string | null>(null);
-
-  const fetchRefers = async () => {
-    try {
-      const data = await apiGet<any[]>("/api/refers");
-      setRefers(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  useEffect(() => { fetchRefers(); }, []);
-
-  const handleAddNewRefer = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newReferName.trim()) return;
-    setAddingRefer(true);
-    setReferError(null);
-    try {
-      const created: any = await apiPost("/api/refers", {
-        name: newReferName.trim(),
-        description: newReferDesc.trim() || null,
-      });
-      toast.success("Refer source added successfully!");
-      await fetchRefers();
-      setForm((f: any) => ({ ...f, referId: created.id, referredBy: created.name }));
-      setShowAddReferModal(false);
-      setNewReferName("");
-      setNewReferDesc("");
-    } catch (err: any) {
-      setReferError(err.message || "Error adding refer");
-    } finally {
-      setAddingRefer(false);
-    }
-  };
 
   const getModalContainer = () =>
     document.getElementById("modal-datepicker") || document.body;
@@ -91,28 +47,25 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     fetch(apiUrl("/api/doctors"), {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then((r) => r.json())
-      .then((data) => setDoctors(Array.isArray(data) ? data : []))
+      .then((data: DoctorOption[]) =>
+        setDoctors(Array.isArray(data) ? data.filter((d) => d.id) : [])
+      )
       .catch(console.error);
   }, []);
-
-  const doctorOptions = doctors.map((d) => ({
-    value: d.id,
-    label: d.fullName,
-  }));
 
   useEffect(() => {
     if (mode === "edit" && patient) {
       setForm({
         firstName: patient.firstName || "",
-        middleName: patient.middleName || "",
         lastName: patient.lastName || "",
         status: patient.status === "Inactive" ? "Inactive" : "Active",
         profileImage: patient.profileImage || null,
         phone: patient.phone || "",
         email: patient.email || "",
+        doctorIds: patient.doctors ? patient.doctors.map((d: any) => d.id) : [],
         dob: patient.dob ? dayjs(patient.dob) : null,
         gender: patient.gender || "",
         bloodGroup: patient.bloodGroup || "",
@@ -122,16 +75,6 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
         state: patient.state || "",
         city: patient.city || "",
         pincode: patient.pincode || "",
-        alternateMobile: patient.alternateMobile || "",
-        maritalStatus: patient.maritalStatus || "",
-        occupation: patient.occupation || "",
-        aadhaarNumber: patient.aadhaarNumber || "",
-        passportNumber: patient.passportNumber || "",
-        referredBy: patient.referredBy || "",
-        referId: (patient as any).referId || "",
-        emergencyContactName: patient.emergencyContactName || "",
-        emergencyContactRelation: patient.emergencyContactRelation || "",
-        emergencyContactPhone: patient.emergencyContactPhone || "",
       });
     }
   }, [mode, patient?.id]);
@@ -164,15 +107,19 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
       .catch(() => setPhoneWarning(null));
   }, [form.phone, mode, id]);
 
+  const doctorOptions = doctors.map((d) => ({
+    value: d.id,
+    label: d.fullName,
+  }));
+
   const buildPayload = () => ({
     firstName: form.firstName.trim(),
-    middleName: form.middleName || null,
     lastName: form.lastName.trim(),
     profileImage: form.profileImage,
     phone: form.phone || null,
     email: form.email || null,
+    doctorIds: form.doctorIds,
     dob: form.dob ? form.dob.toISOString() : null,
-    age: form.dob ? dayjs().diff(form.dob, "year") : null,
     gender: form.gender || null,
     bloodGroup: form.bloodGroup || null,
     status: form.status || "Active",
@@ -182,16 +129,6 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
     state: form.state || null,
     city: form.city || null,
     pincode: form.pincode || null,
-    alternateMobile: form.alternateMobile || null,
-    maritalStatus: form.maritalStatus || null,
-    occupation: form.occupation || null,
-    aadhaarNumber: form.aadhaarNumber || null,
-    passportNumber: form.passportNumber || null,
-    referredBy: form.referredBy || null,
-    referId: (form as any).referId || null,
-    emergencyContactName: form.emergencyContactName || null,
-    emergencyContactRelation: form.emergencyContactRelation || null,
-    emergencyContactPhone: form.emergencyContactPhone || null,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -204,8 +141,8 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
       setFormError("Last name is required.");
       return;
     }
-    if (!form.address1.trim()) {
-      setFormError("Address Line 1 is required.");
+    if (!form.doctorIds || form.doctorIds.length === 0) {
+      setFormError("At least one doctor is required.");
       return;
     }
 
@@ -229,59 +166,9 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Failed to save patient");
       }
-      const data = await res.json();
-      toast.success(mode === "create" ? "Patient created successfully" : "Patient updated successfully");
-
-      // Send WhatsApp notification if a new patient is created
-      if (mode === "create" && data && data.phone) {
-        const patientName = data.fullName || `${data.firstName} ${data.lastName}`.trim();
-        const confirmSend = window.confirm(`Do you want to send a WhatsApp welcome notification to ${patientName}?`);
-        if (confirmSend) {
-          try {
-            const userStr = localStorage.getItem("user");
-            const currentUser = userStr ? JSON.parse(userStr) : {};
-            const clinicName = currentUser?.clinic?.name || "our clinic";
-            const loginLink = `${window.location.origin}/login`;
-            const regDate = data.createdAt ? dayjs(data.createdAt).format("DD-MM-YYYY") : dayjs().format("DD-MM-YYYY");
-
-            const msg = `Dear ${patientName},
-Your registration has been successfully completed at ${clinicName}.
-
-Registration Details:
-🆔 Patient ID (UHID): ${data.patientCode || "—"}
-👤 Patient Name: ${patientName}
-📱 Registered Mobile: ${data.phone}
-📅 Registration Date: ${regDate}
-
-You can access your patient account using your registered mobile number and OTP verification.
-🔗 Patient Portal:
- ${loginLink}
-
-Login Instructions:
-1. Open the link above.
-2. Enter your registered mobile number.
-3. Verify with the OTP sent to your mobile.
-4. Access your appointments, prescriptions, lab reports, bills, and medical records anytime.
-
-Thank you for choosing ${clinicName}.
-Regards,
- ${clinicName}
-Powered by DocYori`;
-
-            const cleanPhone = data.phone.replace(/\D/g, "");
-            const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
-            window.open(whatsappUrl, "_blank");
-          } catch (e) {
-            console.error("Error generating Patient WhatsApp link", e);
-          }
-        }
-      }
-
       navigate(all_routes.patients, { replace: true });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to save patient";
-      setFormError(msg);
-      toast.error(msg);
+      setFormError(err instanceof Error ? err.message : "Failed to save patient");
     } finally {
       setSubmitting(false);
     }
@@ -299,18 +186,9 @@ Powered by DocYori`;
 
   return (
     <div className="page-wrapper">
-      <style>{`
-        .input-icon-end .ant-picker-dropdown {
-          position: absolute !important;
-          top: 100% !important;
-          bottom: auto !important;
-          transform: none !important;
-          z-index: 10000 !important;
-        }
-      `}</style>
       <div className="content">
         <div className="row justify-content-center">
-          <div className="col-lg-12">
+          <div className="col-lg-10">
             <div className="mb-4">
               <h6 className="fw-bold mb-0 d-flex align-items-center">
                 <Link to={all_routes.patients} className="text-dark">
@@ -327,11 +205,11 @@ Powered by DocYori`;
                       {formError}
                     </div>
                   )}
-                  <h6 className="fw-bold mb-3 text-primary">Patient Information (Primary Details)</h6>
+                  <h6 className="fw-bold mb-3">Patient Information</h6>
                   <div className="row">
                     <div className="col-lg-12">
-                      <div className="mb-3 d-flex align-items-center gap-3">
-                        <label className="form-label mb-0 fw-bold">Profile Image</label>
+                      <div className="mb-3 d-flex align-items-center">
+                        <label className="form-label mb-0">Profile Image</label>
                         <PatientProfileUpload
                           value={form.profileImage}
                           onChange={(url) =>
@@ -340,29 +218,105 @@ Powered by DocYori`;
                         />
                       </div>
                     </div>
-                    <div className="col-md-4">
+                    <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
                           First Name<span className="text-danger ms-1">*</span>
                         </label>
-                        <input type="text" className="form-control" placeholder="Enter First Name" value={form.firstName} onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))} />
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={form.firstName}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, firstName: e.target.value }))
+                          }
+                        />
                       </div>
                     </div>
-                    <div className="col-md-4">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">Middle Name <span className="text-muted fw-normal fs-12">(Optional)</span></label>
-                        <input type="text" className="form-control" placeholder="Enter Middle Name" value={form.middleName} onChange={(e) => setForm((f) => ({ ...f, middleName: e.target.value }))} />
-                      </div>
-                    </div>
-                    <div className="col-md-4">
+                    <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
                           Last Name<span className="text-danger ms-1">*</span>
                         </label>
-                        <input type="text" className="form-control" placeholder="Enter Last Name" value={form.lastName} onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))} />
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={form.lastName}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, lastName: e.target.value }))
+                          }
+                        />
                       </div>
                     </div>
-                    <div className="col-md-2">
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label mb-1 fw-medium">
+                          Phone Number<span className="text-danger ms-1">*</span>
+                        </label>
+                        <PhoneInput
+                          defaultCountry="IN"
+                          value={form.phone}
+                          onChange={(v) =>
+                            setForm((f) => ({ ...f, phone: v || "" }))
+                          }
+                        />
+                        {phoneWarning && (
+                          <div className="text-warning fs-12 mt-1">
+                            <i className="ti ti-alert-triangle me-1" />
+                            {phoneWarning}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label mb-1 fw-medium">
+                          Email Address<span className="text-danger ms-1">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          className="form-control"
+                          value={form.email}
+                          onChange={(e) =>
+                            setForm((f) => ({ ...f, email: e.target.value }))
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label mb-1 fw-medium">
+                          Associate Doctors<span className="text-danger ms-1">*</span>
+                        </label>
+                        {doctorOptions.length > 0 ? (
+                          <CommonSelect
+                            options={doctorOptions}
+                            className="select"
+                            isMulti={true}
+                            value={doctorOptions.filter((opt) =>
+                              form.doctorIds.includes(opt.value)
+                            )}
+                            placeholder="Select doctors"
+                            onChange={(opts) => {
+                              const selectedIds = Array.isArray(opts)
+                                ? opts.map((opt: any) => opt.value)
+                                : opts
+                                ? [opts.value]
+                                : [];
+                              setForm((f) => ({
+                                ...f,
+                                doctorIds: selectedIds,
+                              }));
+                            }}
+                          />
+                        ) : (
+                          <div className="form-control text-muted py-2 fs-13">
+                            No doctors - add a doctor first
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
                           DOB<span className="text-danger ms-1">*</span>
@@ -371,14 +325,13 @@ Powered by DocYori`;
                           <DatePicker
                             className="form-control datetimepicker w-100"
                             format={{ format: "DD-MM-YYYY", type: "mask" }}
-                            getPopupContainer={(triggerNode) => triggerNode.parentElement || document.body}
+                            getPopupContainer={getModalContainer}
                             placeholder="DD-MM-YYYY"
                             suffixIcon={null}
                             value={form.dob}
                             onChange={(d: Dayjs | null) =>
                               setForm((f) => ({ ...f, dob: d }))
                             }
-                            placement="bottomLeft"
                           />
                           <span className="input-icon-addon">
                             <i className="ti ti-calendar" />
@@ -386,31 +339,7 @@ Powered by DocYori`;
                         </div>
                       </div>
                     </div>
-                    <div className="col-md-2">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">
-                          Age (Years)
-                        </label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          placeholder="Age"
-                          value={form.dob ? dayjs().diff(form.dob, "year") : ""}
-                          onChange={(e) => {
-                            const ageVal = parseInt(e.target.value, 10);
-                            if (!isNaN(ageVal) && ageVal >= 0) {
-                              setForm((f) => ({
-                                ...f,
-                                dob: dayjs().subtract(ageVal, "year").startOf("year")
-                              }));
-                            } else {
-                              setForm((f) => ({ ...f, dob: null }));
-                            }
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-4">
+                    <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
                           Gender<span className="text-danger ms-1">*</span>
@@ -419,42 +348,34 @@ Powered by DocYori`;
                           options={Gender}
                           className="select"
                           value={findSelectOption(Gender, form.gender) || Gender[0]}
-                          placeholder="Select Gender"
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, gender: opt?.value || "" }))
                           }
                         />
                       </div>
                     </div>
-                    <div className="col-md-4">
+                    <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
-                          Phone Number<span className="text-danger ms-1">*</span>
+                          Blood Group<span className="text-danger ms-1">*</span>
                         </label>
-                        <PhoneInput 
-                          defaultCountry="IN" 
-                          placeholder="Enter Phone Number" 
-                          value={form.phone} 
-                          onChange={(v) => setForm((f) => ({ ...f, phone: v || "" }))} 
-                          disabled={mode === "edit"}
+                        <CommonSelect
+                          options={Blood_Group}
+                          className="select"
+                          value={
+                            findSelectOption(Blood_Group, form.bloodGroup) ||
+                            Blood_Group[0]
+                          }
+                          onChange={(opt) =>
+                            setForm((f) => ({
+                              ...f,
+                              bloodGroup: opt?.value || "",
+                            }))
+                          }
                         />
-                        {mode === "edit" && (
-                          <div className="text-muted fs-11 mt-1">Mobile number is permanent and cannot be changed.</div>
-                        )}
-                        {phoneWarning && (
-                          <div className="text-warning fs-12 mt-1"><i className="ti ti-alert-triangle me-1" />{phoneWarning}</div>
-                        )}
                       </div>
                     </div>
-                    <div className="col-md-4">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">
-                          Email Address <span className="text-muted fw-normal fs-12">(Optional)</span>
-                        </label>
-                        <input type="email" className="form-control" placeholder="Enter Email Address" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
-                      </div>
-                    </div>
-                    <div className="col-md-4">
+                    <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
                           Status<span className="text-danger ms-1">*</span>
@@ -462,16 +383,21 @@ Powered by DocYori`;
                         <CommonSelect
                           options={PATIENT_STATUS_OPTIONS}
                           className="select"
-                          value={findSelectOption(PATIENT_STATUS_OPTIONS, form.status)}
-                          placeholder="Select Status"
-                          onChange={(opt) => setForm((f) => ({ ...f, status: opt?.value || "Active" }))}
+                          value={findSelectOption(
+                            PATIENT_STATUS_OPTIONS,
+                            form.status
+                          )}
+                          onChange={(opt) =>
+                            setForm((f) => ({
+                              ...f,
+                              status: opt?.value || "Active",
+                            }))
+                          }
                         />
                       </div>
                     </div>
                   </div>
-
-                  {/* --- Address Information (Permanent) --- */}
-                  <h6 className="fw-bold mb-3 border-top pt-3 text-dark">
+                  <h6 className="fw-bold mb-3 border-top pt-3">
                     Address Information
                   </h6>
                   <div className="row">
@@ -483,7 +409,6 @@ Powered by DocYori`;
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="House No, Building, Street Name"
                           value={form.address1}
                           onChange={(e) =>
                             setForm((f) => ({ ...f, address1: e.target.value }))
@@ -494,12 +419,11 @@ Powered by DocYori`;
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
-                          Address 2 <span className="text-muted fw-normal fs-12">(Optional)</span>
+                          Address 2<span className="text-danger ms-1">*</span>
                         </label>
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Area, Landmark, Suite"
                           value={form.address2}
                           onChange={(e) =>
                             setForm((f) => ({ ...f, address2: e.target.value }))
@@ -507,7 +431,7 @@ Powered by DocYori`;
                         />
                       </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-lg-6">
                       <div className="mb-3">
                         <label className="form-label mb-1">
                           Country<span className="text-danger ms-1">*</span>
@@ -518,14 +442,13 @@ Powered by DocYori`;
                           value={
                             findSelectOption(Country, form.country) || Country[0]
                           }
-                          placeholder="Select Country"
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, country: opt?.value || "" }))
                           }
                         />
                       </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-lg-6">
                       <div className="mb-3">
                         <label className="form-label mb-1">
                           State<span className="text-danger ms-1">*</span>
@@ -534,14 +457,13 @@ Powered by DocYori`;
                           options={State}
                           className="select"
                           value={findSelectOption(State, form.state) || State[0]}
-                          placeholder="Select State"
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, state: opt?.value || "" }))
                           }
                         />
                       </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-lg-6">
                       <div className="mb-3">
                         <label className="form-label mb-1">
                           City<span className="text-danger ms-1">*</span>
@@ -550,14 +472,13 @@ Powered by DocYori`;
                           options={City}
                           className="select"
                           value={findSelectOption(City, form.city) || City[0]}
-                          placeholder="Select City"
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, city: opt?.value || "" }))
                           }
                         />
                       </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-lg-6">
                       <div className="mb-3">
                         <label className="form-label mb-1">
                           Pincode<span className="text-danger ms-1">*</span>
@@ -565,7 +486,6 @@ Powered by DocYori`;
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Enter Pincode"
                           value={form.pincode}
                           onChange={(e) =>
                             setForm((f) => ({ ...f, pincode: e.target.value }))
@@ -574,246 +494,33 @@ Powered by DocYori`;
                       </div>
                     </div>
                   </div>
-
-                  {/* --- Optional Information --- */}
-                  <div 
-                    className="d-flex align-items-center justify-content-between border-top pt-3 mb-3"
-                    onClick={() => setShowOptionalDetails(!showOptionalDetails)}
-                    style={{ cursor: "pointer", userSelect: "none" }}
-                  >
-                    <h6 className="fw-bold mb-0 text-dark">Optional Details</h6>
-                    <i className={`ti ${showOptionalDetails ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-secondary`} />
-                  </div>
-                  {showOptionalDetails && (
-                    <div className="row">
-                      <div className="col-md-4">
-                        <div className="mb-3">
-                          <label className="form-label mb-1 fw-medium">Alternate Mobile</label>
-                          <PhoneInput defaultCountry="IN" placeholder="Enter Alternate Mobile" value={form.alternateMobile} onChange={(v) => setForm((f) => ({ ...f, alternateMobile: v || "" }))} />
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="mb-3">
-                          <label className="form-label mb-1 fw-medium">
-                            Blood Group <span className="text-muted fw-normal fs-12">(Optional)</span>
-                          </label>
-                          <CommonSelect
-                            options={Blood_Group}
-                            className="select"
-                            value={
-                              findSelectOption(Blood_Group, form.bloodGroup) ||
-                              Blood_Group[0]
-                            }
-                            placeholder="Select Blood Group"
-                            onChange={(opt) =>
-                              setForm((f) => ({
-                                ...f,
-                                bloodGroup: opt?.value || "",
-                              }))
-                            }
-                          />
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="mb-3">
-                          <label className="form-label mb-1 fw-medium">Marital Status</label>
-                          <CommonSelect
-                            options={[{ value: "Single", label: "Single" }, { value: "Married", label: "Married" }, { value: "Divorced", label: "Divorced" }, { value: "Widowed", label: "Widowed" }]}
-                            className="select"
-                            value={[{ value: "Single", label: "Single" }, { value: "Married", label: "Married" }, { value: "Divorced", label: "Divorced" }, { value: "Widowed", label: "Widowed" }].find(o => o.value === form.maritalStatus)}
-                            placeholder="Select Marital Status"
-                            onChange={(opt) => setForm((f) => ({ ...f, maritalStatus: opt?.value || "" }))}
-                          />
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="mb-3">
-                          <label className="form-label mb-1 fw-medium">Occupation</label>
-                          <input type="text" className="form-control" placeholder="Enter Occupation" value={form.occupation} onChange={(e) => setForm((f) => ({ ...f, occupation: e.target.value }))} />
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="mb-3">
-                          <label className="form-label mb-1 fw-medium">Aadhaar Number</label>
-                          <input type="text" className="form-control" placeholder="Enter Aadhaar Number" value={form.aadhaarNumber} onChange={(e) => setForm((f) => ({ ...f, aadhaarNumber: e.target.value }))} />
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="mb-3">
-                          <label className="form-label mb-1 fw-medium">Passport Number</label>
-                          <input type="text" className="form-control" placeholder="Enter Passport Number" value={form.passportNumber} onChange={(e) => setForm((f) => ({ ...f, passportNumber: e.target.value }))} />
-                        </div>
-                      </div>
-                      <div className="col-md-12">
-                        <div className="mb-3">
-                          <div className="d-flex align-items-center justify-content-between mb-1">
-                            <label className="form-label mb-0 fw-medium">Referred By</label>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-primary py-0 px-2"
-                              style={{ fontSize: "12px" }}
-                              onClick={() => { setShowAddReferModal(true); setNewReferName(""); setNewReferDesc(""); }}
-                            >
-                              <i className="ti ti-plus me-1" />Add New
-                            </button>
-                          </div>
-                          <select
-                            className="form-select"
-                            value={(form as any).referId || ""}
-                            onChange={(e) => {
-                              const selected = refers.find(r => r.id === e.target.value);
-                              setForm((f: any) => ({
-                                ...f,
-                                referId: e.target.value || "",
-                                referredBy: selected ? selected.name : "",
-                              }));
-                            }}
-                          >
-                            <option value="">-- Select Refer Source --</option>
-                            {refers.map(r => (
-                              <option key={r.id} value={r.id}>
-                                {r.name}{r.description ? ` — ${r.description}` : ""}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* --- Emergency Contact (Optional) --- */}
-                  <div 
-                    className="d-flex align-items-center justify-content-between border-top pt-3 mb-3"
-                    onClick={() => setShowEmergencyContact(!showEmergencyContact)}
-                    style={{ cursor: "pointer", userSelect: "none" }}
-                  >
-                    <h6 className="fw-bold mb-0 text-danger">Emergency Contact (Optional)</h6>
-                    <i className={`ti ${showEmergencyContact ? "ti-chevron-up" : "ti-chevron-down"} fs-18 text-danger`} />
-                  </div>
-                  {showEmergencyContact && (
-                    <div className="row">
-                      <div className="col-md-4">
-                        <div className="mb-3">
-                          <label className="form-label mb-1 fw-medium">Name</label>
-                          <input type="text" className="form-control" placeholder="Enter Contact Name" value={form.emergencyContactName} onChange={(e) => setForm((f) => ({ ...f, emergencyContactName: e.target.value }))} />
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="mb-3">
-                          <label className="form-label mb-1 fw-medium">Relation</label>
-                          <input type="text" className="form-control" placeholder="e.g. Brother, Wife" value={form.emergencyContactRelation} onChange={(e) => setForm((f) => ({ ...f, emergencyContactRelation: e.target.value }))} />
-                        </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="mb-3">
-                          <label className="form-label mb-1 fw-medium">Phone Number</label>
-                          <PhoneInput defaultCountry="IN" placeholder="Enter Phone Number" value={form.emergencyContactPhone} onChange={(v) => setForm((f) => ({ ...f, emergencyContactPhone: v || "" }))} />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="d-flex align-items-center justify-content-end mt-4 mb-4">
-                    <Link to={all_routes.patients} className="btn btn-light me-2">
-                      Cancel
-                    </Link>
-                    <button
-                      type="submit"
-                      className="btn btn-primary"
-                      disabled={submitting}
-                    >
-                      {submitting
-                        ? "Saving…"
-                        : mode === "create"
-                          ? "Add New Patient"
-                          : "Save Changes"}
-                    </button>
-                  </div>
                 </div>
+              </div>
+              <div className="d-flex align-items-center justify-content-end mt-3">
+                <Link to={all_routes.patients} className="btn btn-light me-2">
+                  Cancel
+                </Link>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={submitting}
+                >
+                  {submitting
+                    ? "Saving…"
+                    : mode === "create"
+                      ? "Add New Patient"
+                      : "Save Changes"}
+                </button>
               </div>
             </form>
           </div>
         </div>
-        <div className="footer text-center bg-white p-2 border-top">
-          <p className="text-dark mb-0">
-            2025 © <span className="link-primary">Docyari</span>, All Rights Reserved
-          </p>
-        </div>
       </div>
-
-      {/* ── Add New Refer Source Modal ── */}
-      {showAddReferModal && (
-        <div
-          className="modal fade show d-block"
-          tabIndex={-1}
-          role="dialog"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1055 }}
-          onClick={(e) => { if (e.target === e.currentTarget) setShowAddReferModal(false); }}
-        >
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "12px", overflow: "hidden" }}>
-              <div className="modal-header bg-primary text-white">
-                <h5 className="modal-title text-white">Add New Refer Source</h5>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white"
-                  onClick={() => setShowAddReferModal(false)}
-                  aria-label="Close"
-                />
-              </div>
-              <form onSubmit={handleAddNewRefer}>
-                <div className="modal-body p-4">
-                  {referError && <div className="alert alert-danger py-2 fs-13 mb-3">{referError}</div>}
-                  <div className="mb-3">
-                    <label className="form-label fw-medium">
-                      Refer Name <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="e.g. Google, Walk-in, Doctor Referral"
-                      value={newReferName}
-                      onChange={(e) => setNewReferName(e.target.value)}
-                      autoFocus
-                      required
-                    />
-                  </div>
-                  <div className="mb-0">
-                    <label className="form-label fw-medium">
-                      Description <span className="text-muted fw-normal fs-12">(Optional)</span>
-                    </label>
-                    <textarea
-                      className="form-control"
-                      rows={3}
-                      placeholder="Enter Description"
-                      value={newReferDesc}
-                      onChange={(e) => setNewReferDesc(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="d-flex justify-content-end gap-2 p-3 border-top bg-light">
-                  <button
-                    type="button"
-                    className="btn btn-light px-4 shadow-sm"
-                    onClick={() => setShowAddReferModal(false)}
-                    style={{ borderRadius: "6px" }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center gap-2"
-                    disabled={addingRefer || !newReferName.trim()}
-                    style={{ borderRadius: "6px" }}
-                  >
-                    {addingRefer ? "Saving..." : "Add Refer"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="footer text-center bg-white p-2 border-top">
+        <p className="text-dark mb-0">
+          2025 © <span className="link-primary">Docyari</span>, All Rights Reserved
+        </p>
+      </div>
     </div>
   );
 };

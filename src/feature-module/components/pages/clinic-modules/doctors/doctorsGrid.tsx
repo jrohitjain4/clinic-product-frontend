@@ -135,18 +135,29 @@ const DoctorsGrid = ({ doctors, loading, error, onRetry, onDelete }: DoctorsGrid
                         {statusLabel}
                       </span>
                     </p>
-                    <div className="d-flex align-items-center justify-content-between border-top pt-2 mt-2">
-                      <h6 className="text-dark fs-15 mb-0 fw-bold">
-                        <span className="text-muted fs-13 fw-normal">Starts From : </span>
-                        {fee}
-                      </h6>
-                      <div
-                        className="d-flex align-items-center justify-content-center border-primary border-2 border rounded-circle text-primary fw-bold"
-                        style={{ width: "38px", height: "38px", fontSize: "10px", backgroundColor: "#f0f0ff" }}
-                        title="Profile Completion"
-                      >
-                        85%
+                    {/* Types Badges */}
+                    <div className="d-flex align-items-center gap-1 flex-wrap mb-1">
+                      {(doctor.doctorTypes && doctor.doctorTypes.length > 0 ? doctor.doctorTypes : [doctor.doctorType || "regular"]).map((t) => (
+                        <span key={t} className={`badge fs-10 ${t === 'IPD' ? 'bg-soft-warning text-dark border border-warning' : (t === 'therapist' ? 'bg-soft-info text-info border border-info' : 'bg-soft-primary text-primary border border-primary')}`}>
+                          {t === 'regular' ? 'OPD' : t}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="d-flex flex-column border-top pt-2 mt-2">
+                      <div className="d-flex align-items-center justify-content-between">
+                        <h6 className="text-dark fs-13 mb-0 fw-semibold">
+                          <span className="text-muted fs-12 fw-normal">OPD Fee: </span>
+                          {fee}
+                        </h6>
                       </div>
+                      {doctor.ipdVisitCharge != null && (
+                        <div className="d-flex align-items-center justify-content-between mt-1">
+                          <h6 className="text-dark fs-13 mb-0 fw-semibold">
+                            <span className="text-muted fs-12 fw-normal">IPD Visit: </span>
+                            <span className="text-success fw-bold">₹{doctor.ipdVisitCharge}</span>
+                          </h6>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -11,4 +11,6 @@ export interface ClinicDoctor {
   department?: { id: string; name: string } | null;
   designation?: { id: string; name: string } | null;
   doctorType?: string | null;
+  doctorTypes?: string[] | null;
+  ipdVisitCharge?: number | null;
 }

@@ -97,6 +97,8 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
   const [bloodGroup, setBloodGroup] = useState("");
   const [gender, setGender] = useState("");
   const [doctorType, setDoctorType] = useState(defaultDoctorType);
+  const [selectedDoctorTypes, setSelectedDoctorTypes] = useState<string[]>([defaultDoctorType || "regular"]);
+  const [ipdVisitCharge, setIpdVisitCharge] = useState("");
   const backRoute = doctorType === "therapist" ? all_routes.therapistList : all_routes.doctors;
   const [bio, setBio] = useState("About Doctor");
   const [featureOnWebsite, setFeatureOnWebsite] = useState(false);
@@ -384,6 +386,14 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
         setPanCard(d.panCard || null);
         setStatus(d.status || "Active");
         setDoctorType(d.doctorType || "regular");
+        if (Array.isArray(d.doctorTypes) && d.doctorTypes.length > 0) {
+          setSelectedDoctorTypes(d.doctorTypes);
+        } else {
+          setSelectedDoctorTypes([d.doctorType || "regular"]);
+        }
+        if (d.ipdVisitCharge != null) {
+          setIpdVisitCharge(String(d.ipdVisitCharge));
+        }
         setAddress1(d.address1 || "");
         setAddress2(d.address2 || "");
         setCountry(d.country || "");
@@ -799,7 +809,9 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
         educations: showEducation ? serializeEducations(educations) : null,
         awards: showAwards ? serializeAwards(awards) : null,
         certifications: showCertifications ? serializeAwards(certifications) : null,
-        doctorType,
+        doctorType: selectedDoctorTypes.length > 0 ? selectedDoctorTypes[0] : doctorType,
+        doctorTypes: selectedDoctorTypes,
+        ipdVisitCharge: selectedDoctorTypes.includes("IPD") && ipdVisitCharge ? parseFloat(ipdVisitCharge) : null,
       };
 
       const res = await fetch(
@@ -1309,24 +1321,67 @@ Powered by DocYori`;
                           </div>
                         </div>
 
-                        {/* Doctor Type */}
+                        {/* Doctor Type & IPD Visit Charge */}
                         <div className="col-lg-6">
                           <div style={{ marginBottom: "10px" }}>
-                            <label className="form-label mb-0">
-                              Doctor Type <span className="text-danger ms-1">*</span>
+                            <label className="form-label mb-1 fw-bold">
+                              Doctor Type(s) <span className="text-muted font-normal">(Select all that apply)</span> <span className="text-danger">*</span>
                             </label>
-                            <CommonSelect
-                              options={Doctor_Types}
-                              className="select"
-                              value={
-                                findSelectOption(Doctor_Types, doctorType) ||
-                                Doctor_Types[0]
-                              }
-                              onChange={(opt: any) => setDoctorType(opt?.value || "")}
-                              isDisabled={disableDoctorTypeChange}
-                            />
+                            <div className="d-flex align-items-center gap-2 flex-wrap pt-1">
+                              {[
+                                { id: "regular", label: "OPD / Regular" },
+                                { id: "IPD", label: "IPD" },
+                                { id: "therapist", label: "Therapist" },
+                              ].map((t) => {
+                                const isChecked = selectedDoctorTypes.includes(t.id);
+                                return (
+                                  <button
+                                    key={t.id}
+                                    type="button"
+                                    className={`btn btn-sm d-flex align-items-center gap-1 ${
+                                      isChecked
+                                        ? "btn-primary shadow-sm"
+                                        : "btn-outline-secondary"
+                                    }`}
+                                    onClick={() => {
+                                      let updated: string[];
+                                      if (isChecked) {
+                                        if (selectedDoctorTypes.length <= 1) return; // Keep at least 1 type
+                                        updated = selectedDoctorTypes.filter((x) => x !== t.id);
+                                      } else {
+                                        updated = [...selectedDoctorTypes, t.id];
+                                      }
+                                      setSelectedDoctorTypes(updated);
+                                      setDoctorType(updated[0] || "regular");
+                                    }}
+                                  >
+                                    <i className={`ti ti-${isChecked ? "checkbox" : "square"} fs-14`} />
+                                    {t.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
                         </div>
+
+                        {/* Optional IPD Visit Charge Field when IPD type is selected */}
+                        {selectedDoctorTypes.includes("IPD") && (
+                          <div className="col-lg-6">
+                            <div style={{ marginBottom: "10px" }}>
+                              <label className="form-label mb-0 fw-bold text-dark">
+                                IPD Visit Charges (₹) <span className="text-muted font-normal">(Optional)</span>
+                              </label>
+                              <input
+                                type="number"
+                                className="form-control"
+                                placeholder="e.g. 500 (per visit / round)"
+                                value={ipdVisitCharge}
+                                onChange={(e) => setIpdVisitCharge(e.target.value)}
+                                min={0}
+                              />
+                            </div>
+                          </div>
+                        )}
 
                       </div>
                     </div>

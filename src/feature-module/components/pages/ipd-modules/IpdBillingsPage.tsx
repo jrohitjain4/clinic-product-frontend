@@ -19,6 +19,7 @@ interface IPDInvoice {
   admission?: {
     id: string;
     admissionCode: string;
+    status?: string;
     ward?: { wardName: string };
   };
   patient?: {

@@ -101,7 +101,7 @@ const IpdTreatmentsPage: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const token = localStorage.getItem("token");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
     try {
       const [trtRes, catRes, deptRes] = await Promise.all([

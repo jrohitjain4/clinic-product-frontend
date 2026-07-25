@@ -179,7 +179,7 @@ const IpdAdmissionsPage: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const token = localStorage.getItem("token");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
     try {
       const [admRes, patRes, docRes, wrdRes, trtRes] = await Promise.all([
@@ -521,7 +521,7 @@ const IpdAdmissionsPage: React.FC = () => {
                   <option value="">All Patients</option>
                   {/* unique admitted patients only */}
                   {Array.from(
-                    new Map(admissions.map((a) => [a.patient?.id, a.patient]).filter(([id]) => id)).values()
+                    new Map(admissions.map((a) => [a.patient?.id, a.patient] as [string | undefined, any]).filter(([id]) => id)).values()
                   ).map((p: any) => (
                     <option key={p.id} value={p.id}>{getPatientName(p)} {p.patientCode ? `(${p.patientCode})` : ""}</option>
                   ))}

@@ -40,4 +40,13 @@ export interface ClinicPatient {
   vitals?: Record<string, unknown> | null;
   createdAt?: string;
   updatedAt?: string;
+  aadhaarNumber?: string | null;
+  maritalStatus?: string | null;
+  passportNumber?: string | null;
+  occupation?: string | null;
+  referredBy?: string | null;
+  emergencyContactName?: string | null;
+  emergencyContactRelation?: string | null;
+  emergencyContactPhone?: string | null;
+  suggestIPD?: boolean | null;
 }

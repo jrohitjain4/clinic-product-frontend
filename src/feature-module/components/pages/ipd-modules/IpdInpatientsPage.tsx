@@ -57,7 +57,7 @@ const IpdInpatientsPage: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const token = localStorage.getItem("token");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
     try {
       const res = await fetch(apiUrl("/api/ipd/admissions"), { headers });

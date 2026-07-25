@@ -53,7 +53,7 @@ const IpdNursesPage: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const token = localStorage.getItem("token");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
     try {
       const [nurseRes, wardRes] = await Promise.all([

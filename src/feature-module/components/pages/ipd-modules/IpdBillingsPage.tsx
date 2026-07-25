@@ -153,7 +153,7 @@ const IpdBillingsPage: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const token = localStorage.getItem("token");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
     try {
       const [invRes, admRes, ctRes] = await Promise.all([
@@ -611,6 +611,7 @@ const IpdBillingsPage: React.FC = () => {
           patient: inv.patient,
           wardName: inv.admission?.ward?.wardName || "Ward",
           doctorName: "Primary Doctor",
+          admissionStatus: inv.admission?.status || "Admitted",
           invoices: [],
           totalBilled: 0,
           totalPaid: 0,
@@ -620,10 +621,10 @@ const IpdBillingsPage: React.FC = () => {
         map.set(inv.admissionId, group);
       }
 
-      group.invoices.push(inv);
-      group.totalBilled += inv.totalAmount || 0;
-      group.totalPaid += inv.paidAmount || 0;
-      group.totalDue += inv.dueAmount || 0;
+      group!.invoices.push(inv);
+      group!.totalBilled += inv.totalAmount || 0;
+      group!.totalPaid += inv.paidAmount || 0;
+      group!.totalDue += inv.dueAmount || 0;
     });
 
     // Compute overall paymentStatus for each grouped admission

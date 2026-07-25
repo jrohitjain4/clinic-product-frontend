@@ -441,6 +441,8 @@ const DoctorAppointments = () => {
               Diagnostic Bookings
               <span className={`badge ${activeTab === "diagnostics" ? "bg-white text-success" : "bg-light text-dark"} ms-1`}>{labBookings.length}</span>
             </button>
+
+            {["All", "Schedule", "Confirmed", "Checked In", "Checked Out"].map((s) => (
               <button
                 key={s}
                 className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "All") ? "btn-primary shadow-sm" : "btn-light border bg-white"} py-1 px-3 fs-13 fw-bold flex-shrink-0 d-flex align-items-center gap-1`}

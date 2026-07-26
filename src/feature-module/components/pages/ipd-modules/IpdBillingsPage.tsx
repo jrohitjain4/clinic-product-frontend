@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Footer from "../../../../core/common/footer/footer";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
+import IpdViewDetailsModal from "./IpdViewDetailsModal";
 
 interface InvoiceItem {
   id: string;
@@ -115,9 +116,11 @@ const IpdBillingsPage: React.FC = () => {
   const [masterItemFee, setMasterItemFee] = useState("");
   const [submittingMasterItem, setSubmittingMasterItem] = useState(false);
 
-  // View Details Modal State
+  // Single Invoice View Modal State
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<IPDInvoice | null>(null);
+  const [showIpdViewDetailsModal, setShowIpdViewDetailsModal] = useState(false);
+  const [selectedViewAdmissionData, setSelectedViewAdmissionData] = useState<any>(null);
 
   // Master IPD Statement Modal State
   const [showMasterModal, setShowMasterModal] = useState(false);
@@ -659,31 +662,60 @@ const IpdBillingsPage: React.FC = () => {
     <div className="page-wrapper">
       <div className="content">
         {/* Page Header */}
-        <div className="d-md-flex d-block align-items-center justify-content-between mb-4">
+        <div className="d-md-flex d-block align-items-center justify-content-between mb-4 gap-3 flex-wrap">
           <div>
             <h3 className="page-title mb-0">IPD Billings & Invoices</h3>
-            <p className="text-muted fs-13 mb-0">
-              Manage Dynamic Charge Categories, Raise Multi-Item Invoices & Collect Due Balances
-            </p>
           </div>
 
-          <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
+          <div className="d-flex align-items-center gap-2 flex-wrap">
+            {/* Search Input */}
+            <input
+              type="text"
+              className="form-control form-control-sm"
+              style={{ width: "200px" }}
+              placeholder="Search invoice/patient..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+
+            {/* Payment Status Select */}
+            <select
+              className="form-select form-select-sm"
+              style={{ width: "150px" }}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="All">All Statuses</option>
+              <option value="Paid">Paid</option>
+              <option value="Partial">Partially Paid</option>
+              <option value="Unpaid">Unpaid</option>
+            </select>
+
+            {(searchQuery || statusFilter !== "All") && (
+              <button
+                className="btn btn-sm btn-light border fw-semibold"
+                style={{ fontSize: '12px', borderRadius: '6px' }}
+                onClick={() => { setSearchQuery(""); setStatusFilter("All"); }}
+              >
+                <i className="ti ti-x me-1" />Clear
+              </button>
+            )}
+
             <button
-              className="btn btn-outline-secondary"
+              className="btn btn-outline-secondary btn-sm"
               onClick={() => {
                 if (chargeTypes.length > 0) setSelectedTypeForMaster(chargeTypes[0]);
                 setShowManageTypesModal(true);
               }}
             >
-              <i className="ti ti-settings me-1" /> Manage Charge Types
+              <i className="ti ti-settings me-1" /> Charge Types
             </button>
 
-            <button className="btn btn-primary" onClick={() => handleOpenRaiseModal()}>
-              <i className="ti ti-plus me-1" /> + Raise New IPD Charge
+            <button className="btn btn-primary btn-sm" onClick={() => handleOpenRaiseModal()}>
+              <i className="ti ti-plus me-1" /> + Raise Charge
             </button>
           </div>
         </div>
-
         {/* Overview Metric Cards */}
         <div className="row g-3 mb-4">
           <div className="col-xl-3 col-sm-6">
@@ -756,48 +788,6 @@ const IpdBillingsPage: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Filter Bar */}
-        <div className="card border-0 shadow-sm mb-4">
-          <div className="card-body p-3">
-            <div className="row g-2 align-items-center">
-              <div className="col-md-5">
-                <div className="input-group">
-                  <span className="input-group-text bg-white border-end-0">
-                    <i className="ti ti-search text-muted" />
-                  </span>
-                  <input
-                    type="text"
-                    className="form-control border-start-0 ps-0"
-                    placeholder="Search by invoice #, patient name, or admission code..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="col-md-4">
-                <select
-                  className="form-select"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <option value="All">All Payment Statuses</option>
-                  <option value="Paid">Paid Invoices</option>
-                  <option value="Partial">Partially Paid</option>
-                  <option value="Unpaid">Unpaid Invoices</option>
-                </select>
-              </div>
-
-              <div className="col-md-3 text-md-end">
-                <span className="badge bg-soft-primary text-primary fs-13 py-2 px-3">
-                  Showing {groupedAdmissions.length} Inpatient Admissions
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Invoices Table */}
         <div className="card border-0 shadow-sm">
           <div className="card-body p-0">
@@ -913,44 +903,69 @@ const IpdBillingsPage: React.FC = () => {
                                   {group.paymentStatus}
                                 </span>
                               </td>
-                              <td className="text-end">
-                                <div className="dropdown">
+                              <td className="text-center">
+                                <div className="d-flex align-items-center justify-content-center gap-1">
+                                  {/* View IPD Details */}
                                   <button
-                                    className="btn btn-sm btn-primary dropdown-toggle"
                                     type="button"
-                                    data-bs-toggle="dropdown"
+                                    className="btn btn-sm btn-soft-secondary p-0 d-flex align-items-center justify-content-center"
+                                    style={{ width: "32px", height: "32px", borderRadius: "8px" }}
+                                    title="View Full IPD Details"
+                                    onClick={() => {
+                                      const fullAdm = admissions.find((a) => a.id === group.admissionId) || {
+                                        admissionCode: group.admissionCode,
+                                        patient: group.patient,
+                                        ward: { wardName: group.wardName },
+                                        doctor: { fullName: group.doctorName },
+                                        status: group.admissionStatus,
+                                        totalBilled: group.totalBilled,
+                                        totalPaid: group.totalPaid,
+                                        dueAmount: group.totalDue,
+                                        paymentStatus: group.paymentStatus,
+                                      };
+                                      setSelectedViewAdmissionData(fullAdm);
+                                      setShowIpdViewDetailsModal(true);
+                                    }}
                                   >
-                                    Actions
+                                    <i className="ti ti-eye fs-16" />
                                   </button>
-                                  <ul className="dropdown-menu dropdown-menu-end shadow-sm">
-                                    <li>
-                                      <button
-                                        className="dropdown-item d-flex align-items-center fw-semibold text-primary"
-                                        onClick={() => handleViewMasterStatement(group.admissionId)}
-                                      >
-                                        <i className="ti ti-receipt-tax me-2 fs-16 text-primary" /> View Full Master IPD Statement
-                                      </button>
-                                    </li>
-                                    <li>
-                                      <button
-                                        className="dropdown-item d-flex align-items-center text-info"
-                                        onClick={() => handleOpenRaiseModal(group.admissionId)}
-                                      >
-                                        <i className="ti ti-plus me-2" /> + Raise New IPD Charge
-                                      </button>
-                                    </li>
-                                    {group.invoices.length > 0 && (
-                                      <li>
-                                        <button
-                                          className="dropdown-item d-flex align-items-center"
-                                          onClick={() => toggleExpandAdmission(group.admissionId)}
-                                        >
-                                          <i className="ti ti-list-details me-2" />
-                                          {isExpanded ? "Hide Individual Invoices" : "Show All Invoices List"}
-                                        </button>
-                                      </li>
-                                    )}
-                                  </ul>
+
+                                  {/* Master Statement */}
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-soft-primary p-0 d-flex align-items-center justify-content-center"
+                                    style={{ width: "32px", height: "32px", borderRadius: "8px" }}
+                                    title="View Master IPD Statement"
+                                    onClick={() => handleViewMasterStatement(group.admissionId)}
+                                  >
+                                    <i className="ti ti-receipt-tax fs-16" />
+                                  </button>
+
+                                  {/* Raise Charge */}
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-soft-info p-0 d-flex align-items-center justify-content-center"
+                                    style={{ width: "32px", height: "32px", borderRadius: "8px" }}
+                                    title="Raise New IPD Charge"
+                                    onClick={() => handleOpenRaiseModal(group.admissionId)}
+                                  >
+                                    <i className="ti ti-plus fs-16" />
+                                  </button>
+
+                                  {/* Toggle Invoices */}
+                                  {group.invoices.length > 0 && (
+                                    <button
+                                      type="button"
+                                      className={`btn btn-sm p-0 d-flex align-items-center justify-content-center ${
+                                        isExpanded ? "btn-dark text-white" : "btn-soft-warning"
+                                      }`}
+                                      style={{ width: "32px", height: "32px", borderRadius: "8px" }}
+                                      title={isExpanded ? "Hide Invoices" : "View Invoices List"}
+                                      onClick={() => toggleExpandAdmission(group.admissionId)}
+                                    >
+                                      <i className={`ti ti-${isExpanded ? "chevron-up" : "list-details"} fs-16`} />
+                                    </button>
+                                  )}
                                 </div>
                               </td>
                             </tr>
@@ -2002,6 +2017,13 @@ const IpdBillingsPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* VIEW IPD DETAILS MODAL */}
+      <IpdViewDetailsModal
+        show={showIpdViewDetailsModal}
+        onClose={() => setShowIpdViewDetailsModal(false)}
+        admission={selectedViewAdmissionData}
+      />
 
       <Footer />
     </div>

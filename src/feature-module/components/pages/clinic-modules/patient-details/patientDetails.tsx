@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import PredefinedDatePicker from "../../../../../core/common/datePicker";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import Modals from "./modals/modals";
@@ -9,6 +9,8 @@ import { useClinicPatient } from "../../../../../core/hooks/useClinicPatient";
 import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppointments";
 import { useClinicInvoices } from "../../../../../core/hooks/useClinicInvoices";
 import { useLabBookings } from "../../../../../core/hooks/useLabBookings";
+import { apiUrl } from "../../../../../core/config/api";
+import IpdViewDetailsModal from "../../ipd-modules/IpdViewDetailsModal";
 import dayjs from "dayjs";
 import {
   formatPatientDateLong,
@@ -57,6 +59,33 @@ const PatientDetails = () => {
   const [searchText, setSearchText] = useState<string>("");
   const [filterType, setFilterType] = useState<string>("All");
 
+  const [ipdAdmissions, setIpdAdmissions] = useState<any[]>([]);
+  const [showIpdModal, setShowIpdModal] = useState(false);
+  const [selectedIpdAdmission, setSelectedIpdAdmission] = useState<any>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchIpdData = async () => {
+      const token = localStorage.getItem("token");
+      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+      try {
+        const res = await fetch(apiUrl("/api/ipd/admissions"), { headers });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            const patientIpd = data.filter(
+              (adm: any) => adm.patientId === id || adm.patient?.id === id
+            );
+            setIpdAdmissions(patientIpd);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading IPD data for patient:", err);
+      }
+    };
+    fetchIpdData();
+  }, [id]);
+
   const handleSearch = (value: string) => {
     setSearchText(value);
   };
@@ -99,11 +128,26 @@ const PatientDetails = () => {
         };
       });
 
-    // 3. Combine and sort by date descending
-    const combined = [...appts, ...diagBookings];
+    // 3. Normalize IPD Admissions for this patient
+    const ipdAppts = (ipdAdmissions || []).map((adm) => ({
+      id: adm.id,
+      scheduledAt: adm.admissionDate,
+      doctorName: adm.doctor?.fullName ? `Dr. ${adm.doctor.fullName}` : "Primary Doctor",
+      doctorDesignation: adm.ward?.wardName ? `Ward: ${adm.ward.wardName}` : "IPD Inpatient",
+      doctorImage: "assets/img/icons/shape-01.svg",
+      department: "IPD Admission",
+      mode: "Inpatient",
+      status: adm.status === "Admitted" ? "Active Inpatient" : "Discharged",
+      type: "IPD Admission",
+      raw: adm,
+      link: "/ipd/admissions"
+    }));
+
+    // 4. Combine and sort by date descending
+    const combined = [...appts, ...diagBookings, ...ipdAppts];
     combined.sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
     return combined;
-  }, [appointments, bookings, id]);
+  }, [appointments, bookings, ipdAdmissions, id]);
 
   const filteredAppointments = useMemo(() => {
     return normalizedAppointments.filter((a) => {
@@ -123,6 +167,51 @@ const PatientDetails = () => {
       return matchesSearch && matchesType;
     });
   }, [normalizedAppointments, searchText, filterType]);
+
+  const combinedInvoices = useMemo(() => {
+    const regularInvoices = invoices
+      .filter((inv) => inv.patientId === id)
+      .map((inv) => {
+        const isPharmacy = (inv as any).otherInfo === "Pharmacy" || inv.invoiceCode?.startsWith("PH-");
+        const isPathlab = inv.invoiceCode?.startsWith("INV-AUTO-LB") || (inv as any).otherInfo === "Pathlab";
+        const isTherapy = (inv as any).appointment?.appointmentType === "therapy" || (inv as any).consultationId !== null || (inv as any).otherInfo === "Therapy";
+        const txnType = isPharmacy ? "Pharmacy" : isPathlab ? "Pathlab" : isTherapy ? "Therapy" : "OPD / Clinic";
+
+        return {
+          id: inv.id,
+          invoiceCode: inv.invoiceCode,
+          type: txnType,
+          description: inv.items?.[0]?.description || "Invoice Details",
+          date: inv.invoiceDate,
+          paymentMethod: inv.paymentMethod || "—",
+          amount: inv.totalAmount,
+          paymentStatus: inv.paymentStatus,
+          isIpd: false,
+          raw: inv,
+        };
+      });
+
+    const ipdInvoices = (ipdAdmissions || []).map((adm) => {
+      const doctorName = adm.doctor?.fullName ? `Dr. ${adm.doctor.fullName}` : "Doctor";
+      const wardName = adm.ward?.wardName || "Ward";
+      return {
+        id: adm.id,
+        invoiceCode: adm.admissionCode || "IPD Stay",
+        type: "IPD Admission",
+        description: `IPD Stay — Ward: ${wardName} (${doctorName})`,
+        date: adm.admissionDate,
+        paymentMethod: adm.paymentMethod || "Cash",
+        amount: adm.totalAmount || adm.totalBilled || 0,
+        paymentStatus: adm.paymentStatus || (adm.dueAmount > 0 ? "Partial" : "Paid"),
+        isIpd: true,
+        raw: adm,
+      };
+    });
+
+    const combined = [...regularInvoices, ...ipdInvoices];
+    combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return combined;
+  }, [invoices, ipdAdmissions, id]);
 
   const isInvalidImage = (img?: string | null) =>
     !img || img.trim() === "" || img.includes("300x300") || img.includes("placeholder");
@@ -1590,53 +1679,75 @@ const PatientDetails = () => {
                           <span className="spinner-border spinner-border-sm text-primary" role="status" />
                         </td>
                       </tr>
-                    ) : invoices.filter(inv => inv.patientId === id).length === 0 ? (
+                    ) : combinedInvoices.length === 0 ? (
                       <tr>
                         <td colSpan={8} className="text-center py-4 text-muted">No transactions or invoices found</td>
                       </tr>
-                    ) : invoices
-                      .filter(inv => inv.patientId === id)
-                      .map((inv) => {
-                        const isPharmacy = (inv as any).otherInfo === "Pharmacy" || inv.invoiceCode?.startsWith("PH-");
-                        const isPathlab = inv.invoiceCode?.startsWith("INV-AUTO-LB") || (inv as any).otherInfo === "Pathlab";
-                        const isTherapy = (inv as any).appointment?.appointmentType === "therapy" || (inv as any).consultationId !== null || (inv as any).otherInfo === "Therapy";
-                        const txnType = isPharmacy ? "Pharmacy" : isPathlab ? "Pathlab" : isTherapy ? "Therapy" : "OPD / Clinic";
-                        
-                        const badgeClass = isPharmacy 
-                          ? "badge-soft-warning border-warning text-warning" 
-                          : isPathlab 
-                            ? "badge-soft-info border-info text-info" 
-                            : isTherapy 
-                              ? "badge-soft-danger border-danger text-danger" 
-                              : "badge-soft-primary border-primary text-primary";
+                    ) : (
+                      combinedInvoices.map((inv) => {
+                        const badgeClass = inv.isIpd
+                          ? "badge-soft-primary border-primary text-primary"
+                          : inv.type === "Pharmacy"
+                          ? "badge-soft-warning border-warning text-warning"
+                          : inv.type === "Pathlab"
+                          ? "badge-soft-info border-info text-info"
+                          : inv.type === "Therapy"
+                          ? "badge-soft-danger border-danger text-danger"
+                          : "badge-soft-primary border-primary text-primary";
 
                         return (
                           <tr key={inv.id}>
                             <td>
-                              <Link to={all_routes.invoicesDetails.replace(":id", inv.id)} className="fw-bold text-dark">{inv.invoiceCode}</Link>
+                              {inv.isIpd ? (
+                                <button
+                                  type="button"
+                                  className="btn btn-link p-0 fw-bold text-primary text-decoration-none"
+                                  onClick={() => {
+                                    setSelectedIpdAdmission(inv.raw);
+                                    setShowIpdModal(true);
+                                  }}
+                                >
+                                  {inv.invoiceCode}
+                                </button>
+                              ) : (
+                                <Link to={all_routes.invoicesDetails.replace(":id", inv.id)} className="fw-bold text-dark">{inv.invoiceCode}</Link>
+                              )}
                             </td>
                             <td>
-                              <span className={`badge border ${badgeClass} fs-11 fw-medium`}>{txnType}</span>
+                              <span className={`badge border ${badgeClass} fs-11 fw-medium`}>{inv.type}</span>
                             </td>
-                            <td className="text-dark">
-                              {inv.items?.[0]?.description || "Invoice Details"}
-                            </td>
-                            <td className="text-dark"> {dayjs(inv.invoiceDate).format("DD MMM YYYY")}</td>
-                            <td className="text-dark"> {inv.paymentMethod || "—"}</td>
-                            <td className="text-dark fw-bold"> ₹{inv.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                            <td className="text-dark">{inv.description}</td>
+                            <td className="text-dark">{dayjs(inv.date).format("DD MMM YYYY")}</td>
+                            <td className="text-dark">{inv.paymentMethod}</td>
+                            <td className="text-dark fw-bold">₹{inv.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
                             <td>
                               <span className={`badge border fs-12 fw-bold ${paymentStatusBadgeClass(inv.paymentStatus)}`}>
                                 {displayPaymentStatus(inv.paymentStatus)}
                               </span>
                             </td>
                             <td className="text-end">
-                              <Link to={all_routes.invoicesDetails.replace(":id", inv.id)} className="btn btn-icon btn-sm bg-primary-subtle text-primary rounded-circle">
-                                <i className="ti ti-eye fs-13" />
-                              </Link>
+                              {inv.isIpd ? (
+                                <button
+                                  type="button"
+                                  className="btn btn-icon btn-sm bg-primary-subtle text-primary rounded-circle"
+                                  title="View IPD Stay Details"
+                                  onClick={() => {
+                                    setSelectedIpdAdmission(inv.raw);
+                                    setShowIpdModal(true);
+                                  }}
+                                >
+                                  <i className="ti ti-eye fs-13" />
+                                </button>
+                              ) : (
+                                <Link to={all_routes.invoicesDetails.replace(":id", inv.id)} className="btn btn-icon btn-sm bg-primary-subtle text-primary rounded-circle">
+                                  <i className="ti ti-eye fs-13" />
+                                </Link>
+                              )}
                             </td>
                           </tr>
                         );
-                      })}
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1735,7 +1846,13 @@ const PatientDetails = () => {
       {/* ========================
 			End Page Content
 		========================= */}
-      < Modals />
+      <IpdViewDetailsModal
+        show={showIpdModal}
+        onClose={() => setShowIpdModal(false)}
+        admission={selectedIpdAdmission}
+      />
+
+      <Modals />
     </>
   );
 };

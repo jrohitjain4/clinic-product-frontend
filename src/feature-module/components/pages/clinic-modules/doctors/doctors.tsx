@@ -16,6 +16,14 @@ const Doctors = () => {
   const isIpdPage = location.pathname.includes("/ipd");
   const typeFilter = isIpdPage ? "IPD" : undefined;
 
+  useEffect(() => {
+    if (isIpdPage) {
+      localStorage.setItem("activeModuleMode", "ipd");
+    } else if (location.pathname === "/doctors") {
+      localStorage.setItem("activeModuleMode", "opd");
+    }
+  }, [isIpdPage, location.pathname]);
+
   const { doctors, loading, error, refetch } = useClinicDoctors(undefined, typeFilter);
   const [doctorToDelete, setDoctorToDelete] = useState<string | null>(null);
 

@@ -370,23 +370,53 @@ const IpdTreatmentsPage: React.FC = () => {
     <div className="page-wrapper">
       <div className="content">
         {/* Page Header */}
-        <div className="d-md-flex d-block align-items-center justify-content-between mb-4">
+        <div className="d-md-flex d-block align-items-center justify-content-between mb-4 gap-3 flex-wrap">
           <div>
             <h3 className="page-title mb-0">IPD Treatment & Surgery Master</h3>
-            <p className="text-muted fs-13 mb-0">
-              Manage Surgery Procedures, Component Breakdown, Total Charges & IPD Categories
-            </p>
           </div>
 
-          <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
+          <div className="d-flex align-items-center gap-2 flex-wrap">
+            {/* Search Input */}
+            <input
+              type="text"
+              className="form-control form-control-sm"
+              style={{ width: "220px" }}
+              placeholder="Search procedure/code..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+
+            {/* Category Filter */}
+            <select
+              className="form-select form-select-sm"
+              style={{ width: "160px" }}
+              value={selectedCategoryFilter}
+              onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+            >
+              <option value="All">All Categories</option>
+              {categoryOptions.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+
+            {(searchQuery || selectedCategoryFilter !== "All") && (
+              <button
+                className="btn btn-sm btn-light border fw-semibold"
+                style={{ fontSize: '12px', borderRadius: '6px' }}
+                onClick={() => { setSearchQuery(""); setSelectedCategoryFilter("All"); }}
+              >
+                <i className="ti ti-x me-1" />Clear
+              </button>
+            )}
+
             <button
-              className="btn btn-outline-primary"
+              className="btn btn-outline-primary btn-sm"
               onClick={handleOpenAddCategoryModal}
             >
-              <i className="ti ti-folder-plus me-1" /> + Add IPD Category
+              <i className="ti ti-folder-plus me-1" /> + Add Category
             </button>
             <button
-              className="btn btn-primary"
+              className="btn btn-primary btn-sm"
               onClick={handleOpenAddProcedureModal}
             >
               <i className="ti ti-plus me-1" /> + Add Surgery / Procedure
@@ -419,46 +449,7 @@ const IpdTreatmentsPage: React.FC = () => {
         {/* TAB 1: PROCEDURES TABLE */}
         {activeTab === "procedures" && (
           <>
-            {/* Filter Bar */}
-            <div className="card border-0 shadow-sm mb-4">
-              <div className="card-body p-3">
-                <div className="row g-2 align-items-center">
-                  <div className="col-md-5">
-                    <div className="input-group">
-                      <span className="input-group-text bg-white border-end-0">
-                        <i className="ti ti-search text-muted" />
-                      </span>
-                      <input
-                        type="text"
-                        className="form-control border-start-0 ps-0"
-                        placeholder="Search by procedure name, code, or department..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                    </div>
-                  </div>
 
-                  <div className="col-md-4">
-                    <select
-                      className="form-select"
-                      value={selectedCategoryFilter}
-                      onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-                    >
-                      <option value="All">All Categories</option>
-                      {categoryOptions.map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="col-md-3 text-md-end">
-                    <span className="badge bg-soft-primary text-primary fs-13 py-2 px-3">
-                      Total Procedures: {filteredTreatments.length}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Procedures Data Table */}
             <div className="card border-0 shadow-sm">

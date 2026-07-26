@@ -109,9 +109,11 @@ const DoctorDetails = () => {
   const { appointments, loading: appointmentsLoading, refetch: refetchAppointments } = useClinicAppointments({ doctorId: id });
   const [selectedAppointment, setSelectedAppointment] = useState<ClinicAppointment | null>(null);
 
-  const isTherapy = localStorage.getItem("activeModuleMode") === "therapy";
-  const listLabel = isTherapy ? "Therapists" : "Doctors";
-  const backLabel = isTherapy ? "Back to Therapists" : "Back to Doctors";
+  const mode = localStorage.getItem("activeModuleMode");
+  const isTherapy = mode === "therapy";
+  const isIpd = mode === "ipd";
+  const listLabel = isTherapy ? "Therapists" : (isIpd ? "IPD Doctors" : "Doctors");
+  const backLabel = isTherapy ? "Back to Therapists" : (isIpd ? "Back to IPD Doctors" : "Back to Doctors");
 
   const patientPath = (patientId: string) =>
     all_routes.patientDetails.replace(":id", patientId);

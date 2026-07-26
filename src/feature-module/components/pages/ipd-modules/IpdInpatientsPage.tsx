@@ -3,6 +3,7 @@ import Footer from "../../../../core/common/footer/footer";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import IpdViewDetailsModal from "./IpdViewDetailsModal";
 
 interface Patient {
   id: string;
@@ -51,6 +52,8 @@ const IpdInpatientsPage: React.FC = () => {
   const [admissions, setAdmissions] = useState<Admission[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedViewAdmission, setSelectedViewAdmission] = useState<any>(null);
   const navigate = useNavigate();
 
   // Fetch Inpatients
@@ -276,12 +279,25 @@ const IpdInpatientsPage: React.FC = () => {
                           </strong>
                         </div>
 
-                        <button
-                          className="btn btn-sm btn-primary fw-bold"
-                          onClick={() => navigate("/ipd/discharge")}
-                        >
-                          <i className="ti ti-user-check me-1" /> Settle & Discharge
-                        </button>
+                        <div className="d-flex align-items-center gap-2">
+                          <button
+                            className="btn btn-sm btn-outline-secondary p-0 d-flex align-items-center justify-content-center"
+                            style={{ width: "32px", height: "32px", borderRadius: "8px" }}
+                            title="View Full IPD Details"
+                            onClick={() => {
+                              setSelectedViewAdmission(adm);
+                              setShowViewModal(true);
+                            }}
+                          >
+                            <i className="ti ti-eye fs-16" />
+                          </button>
+                          <button
+                            className="btn btn-sm btn-primary fw-bold"
+                            onClick={() => navigate("/ipd/discharge")}
+                          >
+                            <i className="ti ti-user-check me-1" /> Settle & Discharge
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -291,6 +307,13 @@ const IpdInpatientsPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* VIEW IPD DETAILS MODAL */}
+      <IpdViewDetailsModal
+        show={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        admission={selectedViewAdmission}
+      />
 
       <Footer />
     </div>

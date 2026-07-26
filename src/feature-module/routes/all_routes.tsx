@@ -17,6 +17,9 @@ export const doctorsListPath = () => {
   if (mode === "therapy") {
     return "/therapist-list";
   }
+  if (mode === "ipd") {
+    return "/ipd/doctors";
+  }
   return "/doctors";
 };
 

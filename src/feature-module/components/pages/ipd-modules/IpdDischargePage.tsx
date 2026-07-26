@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import Footer from "../../../../core/common/footer/footer";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
+import IpdViewDetailsModal from "./IpdViewDetailsModal";
 
 interface Patient {
   id: string;
@@ -71,6 +72,7 @@ const IpdDischargePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusTab, setStatusTab] = useState<"All" | "Admitted" | "Discharged">("All");
+  const [wardFilter, setWardFilter] = useState("All");
 
   // Discharge Settlement Modal State
   const [showDischargeModal, setShowDischargeModal] = useState(false);
@@ -79,6 +81,8 @@ const IpdDischargePage: React.FC = () => {
   // View Discharged Settled Receipt Modal State
   const [showSettledReceiptModal, setShowSettledReceiptModal] = useState(false);
   const [settledAdmissionData, setSettledAdmissionData] = useState<Admission | null>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedViewAdmission, setSelectedViewAdmission] = useState<any>(null);
 
   // Discount & Payment Inputs
   const [discountType, setDiscountType] = useState<"Fixed" | "Percentage">("Fixed");
@@ -424,6 +428,15 @@ const IpdDischargePage: React.FC = () => {
     setTimeout(() => setCopyNotify(null), 2500);
   };
 
+  // Unique Ward Options
+  const wardOptions = useMemo(() => {
+    const names = new Set<string>();
+    admissions.forEach((a) => {
+      if (a.ward?.wardName) names.add(a.ward.wardName);
+    });
+    return Array.from(names);
+  }, [admissions]);
+
   // Filtered Admissions List
   const filteredAdmissions = useMemo(() => {
     return admissions.filter((adm) => {
@@ -437,41 +450,69 @@ const IpdDischargePage: React.FC = () => {
         pCode.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchStatus = statusTab === "All" || adm.status === statusTab;
-      return matchQuery && matchStatus;
+      const matchWard = wardFilter === "All" || adm.ward?.wardName === wardFilter;
+      return matchQuery && matchStatus && matchWard;
     });
-  }, [admissions, searchQuery, statusTab]);
+  }, [admissions, searchQuery, statusTab, wardFilter]);
 
   return (
     <div className="page-wrapper">
       <div className="content">
         {/* Header */}
-        <div className="d-md-flex d-block align-items-center justify-content-between mb-4">
+        <div className="d-md-flex d-block align-items-center justify-content-between mb-4 gap-3 flex-wrap">
           <div>
             <h3 className="page-title mb-0">Discharge Management & Final Settlement</h3>
-            <p className="text-muted fs-13 mb-0">
-              Process Patient Discharges, Apply Concessions/Discounts & Settle Final IPD Balances
-            </p>
           </div>
 
-          <div className="btn-group mt-3 mt-md-0">
-            <button
-              className={`btn btn-sm ${statusTab === "Admitted" ? "btn-primary fw-bold" : "btn-outline-primary"}`}
-              onClick={() => setStatusTab("Admitted")}
+          <div className="d-flex align-items-center gap-2 flex-wrap mt-3 mt-md-0">
+            {/* Search Filter Input */}
+            <input
+              type="text"
+              className="form-control form-control-sm"
+              style={{ width: "190px" }}
+              placeholder="Search code/patient..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+
+            {/* Status Dropdown Filter */}
+            <select
+              className="form-select form-select-sm"
+              style={{ width: "150px" }}
+              value={statusTab}
+              onChange={(e) => setStatusTab(e.target.value as any)}
             >
-              Active Inpatients ({metrics.totalAdmitted})
-            </button>
-            <button
-              className={`btn btn-sm ${statusTab === "Discharged" ? "btn-success fw-bold" : "btn-outline-success"}`}
-              onClick={() => setStatusTab("Discharged")}
+              <option value="All">All Statuses ({admissions.length})</option>
+              <option value="Admitted">Active ({metrics.totalAdmitted})</option>
+              <option value="Discharged">Discharged ({metrics.totalDischarged})</option>
+            </select>
+
+            {/* Ward Dropdown Filter */}
+            <select
+              className="form-select form-select-sm"
+              style={{ width: "150px" }}
+              value={wardFilter}
+              onChange={(e) => setWardFilter(e.target.value)}
             >
-              Discharged ({metrics.totalDischarged})
-            </button>
-            <button
-              className={`btn btn-sm ${statusTab === "All" ? "btn-secondary fw-bold" : "btn-outline-secondary"}`}
-              onClick={() => setStatusTab("All")}
-            >
-              All Records
-            </button>
+              <option value="All">All Wards</option>
+              {wardOptions.map((w) => (
+                <option key={w} value={w}>{w}</option>
+              ))}
+            </select>
+
+            {(searchQuery || statusTab !== "All" || wardFilter !== "All") && (
+              <button
+                className="btn btn-sm btn-light border fw-semibold"
+                style={{ fontSize: '12px', borderRadius: '6px' }}
+                onClick={() => {
+                  setSearchQuery("");
+                  setStatusTab("All");
+                  setWardFilter("All");
+                }}
+              >
+                <i className="ti ti-x me-1" />Clear
+              </button>
+            )}
           </div>
         </div>
 
@@ -547,24 +588,6 @@ const IpdDischargePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="card border-0 shadow-sm mb-4">
-          <div className="card-body p-3">
-            <div className="input-group">
-              <span className="input-group-text bg-white border-end-0">
-                <i className="ti ti-search text-muted" />
-              </span>
-              <input
-                type="text"
-                className="form-control border-start-0 ps-0"
-                placeholder="Search patient name, UHID, or admission code..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-
         {/* Admissions Table */}
         <div className="card border-0 shadow-sm">
           <div className="card-body p-0">
@@ -584,6 +607,7 @@ const IpdDischargePage: React.FC = () => {
                 <table className="table table-hover align-middle mb-0">
                   <thead className="table-light">
                     <tr>
+                      <th style={{ width: "46px" }}>Sr.</th>
                       <th>Admission Code</th>
                       <th>Patient Details</th>
                       <th>Primary Doctor & Ward</th>
@@ -592,12 +616,15 @@ const IpdDischargePage: React.FC = () => {
                       <th>Paid Amount</th>
                       <th>Due Balance</th>
                       <th>Discharge Status</th>
-                      <th className="text-end">Action / Settlement</th>
+                      <th className="text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredAdmissions.map((adm) => (
+                    {filteredAdmissions.map((adm, idx) => (
                       <tr key={adm.id}>
+                        <td>
+                          <span className="text-muted fw-semibold fs-13">{idx + 1}</span>
+                        </td>
                         <td>
                           <span className="badge bg-soft-dark text-dark fw-bold">
                             {adm.admissionCode}
@@ -638,46 +665,71 @@ const IpdDischargePage: React.FC = () => {
 
                         <td>
                           {adm.status === "Admitted" ? (
-                            <span className="badge bg-success py-1 px-3 fs-12 fw-bold">
-                              <i className="ti ti-point me-1" /> Active Inpatient
+                            <span className="badge bg-success py-1 px-2 fs-12 fw-bold d-inline-flex align-items-center gap-1">
+                              <i className="ti ti-activity" />
+                              <span>Active</span>
                             </span>
                           ) : (
-                            <span className="badge bg-danger py-1 px-3 fs-12 fw-bold">
-                              <i className="ti ti-user-check me-1" /> DISCHARGED (
-                              {adm.dischargeDate
-                                ? new Date(adm.dischargeDate).toLocaleDateString()
-                                : "Completed"}
-                              )
+                            <span className="badge bg-danger py-1 px-2 fs-12 fw-bold d-flex flex-column align-items-start gap-0" style={{ lineHeight: 1.4 }}>
+                              <span className="d-flex align-items-center gap-1">
+                                <i className="ti ti-user-check" /> Discharged
+                              </span>
+                              <span className="fw-normal fs-11 opacity-75">
+                                {adm.dischargeDate
+                                  ? new Date(adm.dischargeDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                                  : "Completed"}
+                              </span>
                             </span>
                           )}
                         </td>
-                        <td className="text-end">
-                          <div className="d-flex align-items-center justify-content-end gap-1">
-                            {/* Prescription icon */}
+                        <td className="text-center">
+                          <div className="d-flex align-items-center justify-content-center gap-1">
+                            {/* View Admission Details */}
                             <button
                               type="button"
-                              className={`btn btn-sm ${((adm as any).ipdPrescriptions?.length > 0) ? 'btn-soft-success' : 'btn-soft-primary'} px-2`}
-                              title={((adm as any).ipdPrescriptions?.length > 0) ? "View Prescription" : "Write Prescription"}
+                              className="btn btn-sm btn-soft-secondary p-0 d-flex align-items-center justify-content-center"
+                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
+                              title="View Full IPD Details"
+                              onClick={() => {
+                                setSelectedViewAdmission(adm);
+                                setShowViewModal(true);
+                              }}
+                            >
+                              <i className="ti ti-eye fs-16" />
+                            </button>
+                            {/* Prescription */}
+                            <button
+                              type="button"
+                              className={`btn btn-sm p-0 d-flex align-items-center justify-content-center ${
+                                (adm as any).ipdPrescriptions?.length > 0 ? 'btn-soft-success' : 'btn-soft-primary'
+                              }`}
+                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
+                              title={(adm as any).ipdPrescriptions?.length > 0 ? "View Prescription" : "Write Prescription"}
                               onClick={() => handlePrescriptionClick(adm)}
                             >
                               <i className="ti ti-file-text fs-16" />
                             </button>
+                            {/* Settle / Receipt */}
                             {adm.status === "Admitted" ? (
                               <button
-                                className="btn btn-sm btn-primary fw-bold px-3"
+                                className="btn btn-sm btn-soft-warning p-0 d-flex align-items-center justify-content-center"
+                                style={{ width: "32px", height: "32px", borderRadius: "8px" }}
+                                title="Settle & Discharge"
                                 onClick={() => handleOpenDischargeModal(adm)}
                               >
-                                <i className="ti ti-user-check me-1" /> Settle &amp; Discharge
+                                <i className="ti ti-user-check fs-16" />
                               </button>
                             ) : (
                               <button
-                                className="btn btn-sm btn-outline-success fw-bold px-3"
+                                className="btn btn-sm btn-soft-success p-0 d-flex align-items-center justify-content-center"
+                                style={{ width: "32px", height: "32px", borderRadius: "8px" }}
+                                title="View Settled Receipt"
                                 onClick={() => {
                                   setSettledAdmissionData(adm);
                                   setShowSettledReceiptModal(true);
                                 }}
                               >
-                                <i className="ti ti-receipt me-1" /> View Settled Receipt
+                                <i className="ti ti-receipt fs-16" />
                               </button>
                             )}
                           </div>
@@ -1397,6 +1449,13 @@ const IpdDischargePage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* VIEW IPD DETAILS MODAL */}
+      <IpdViewDetailsModal
+        show={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        admission={selectedViewAdmission}
+      />
 
       <Footer />
     </div>

@@ -4,6 +4,7 @@ import { all_routes } from "../../../routes/all_routes";
 import Footer from "../../../../core/common/footer/footer";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
+import IpdViewDetailsModal from "./IpdViewDetailsModal";
 
 interface Patient {
   id: string;
@@ -136,6 +137,8 @@ const IpdAdmissionsPage: React.FC = () => {
   const [showViewPrescriptionModal, setShowViewPrescriptionModal] = useState(false);
   const [selectedPrescription, setSelectedPrescription] = useState<any>(null);
   const [viewAdmission, setViewAdmission] = useState<Admission | null>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedViewAdmission, setSelectedViewAdmission] = useState<any>(null);
 
   // System medicines for autocomplete
   const [systemMedicines, setSystemMedicines] = useState<any[]>([]);
@@ -471,119 +474,81 @@ const IpdAdmissionsPage: React.FC = () => {
     <div className="page-wrapper">
       <div className="content">
         {/* Header */}
-        <div className="d-md-flex d-block align-items-center justify-content-between mb-4">
+        <div className="d-md-flex d-block align-items-center justify-content-between mb-4 gap-3 flex-wrap">
           <div>
             <h3 className="page-title mb-0">IPD Admission Desk</h3>
-            <p className="text-muted fs-13 mb-0">
-              Admit Patients, Select Treatment & Wards, Record Advance Deposits & Raise Initial Receipts
-            </p>
           </div>
 
-          <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
-            <button className="btn btn-primary" onClick={() => handleOpenModal("Direct")}>
+          <div className="d-flex align-items-center gap-2 flex-wrap">
+            {/* Ward Filter */}
+            <select
+              className="form-select form-select-sm"
+              style={{ width: "140px" }}
+              value={filterWard}
+              onChange={(e) => setFilterWard(e.target.value)}
+            >
+              <option value="">All Wards</option>
+              {wards.map((w) => (
+                <option key={w.id} value={w.id}>{w.wardName} ({w.wardType})</option>
+              ))}
+            </select>
+
+            {/* Patient Filter */}
+            <select
+              className="form-select form-select-sm"
+              style={{ width: "150px" }}
+              value={filterPatient}
+              onChange={(e) => setFilterPatient(e.target.value)}
+            >
+              <option value="">All Patients</option>
+              {Array.from(
+                new Map(admissions.map((a) => [a.patient?.id, a.patient] as [string | undefined, any]).filter(([id]) => id)).values()
+              ).map((p: any) => (
+                <option key={p.id} value={p.id}>{getPatientName(p)} {p.patientCode ? `(${p.patientCode})` : ""}</option>
+              ))}
+            </select>
+
+            {/* Doctor Filter */}
+            <select
+              className="form-select form-select-sm"
+              style={{ width: "140px" }}
+              value={filterDoctor}
+              onChange={(e) => setFilterDoctor(e.target.value)}
+            >
+              <option value="">All Doctors</option>
+              {Array.from(
+                new Map(admissions.filter((a) => a.doctor?.id).map((a) => [a.doctor!.id, a.doctor!])).values()
+              ).map((d: any) => (
+                <option key={d.id} value={d.id}>Dr. {d.fullName}</option>
+              ))}
+            </select>
+
+            {/* Due Amount Filter */}
+            <select
+              className="form-select form-select-sm"
+              style={{ width: "130px" }}
+              value={filterDue}
+              onChange={(e) => setFilterDue(e.target.value)}
+            >
+              <option value="">All Dues</option>
+              <option value="due">Has Due</option>
+              <option value="paid">Fully Paid</option>
+              <option value="advance">Advance Paid</option>
+            </select>
+
+            {hasActiveFilters && (
+              <button
+                className="btn btn-sm btn-light border fw-semibold"
+                style={{ fontSize: '12px', borderRadius: '6px' }}
+                onClick={() => { setFilterWard(""); setFilterPatient(""); setFilterDoctor(""); setFilterDue(""); }}
+              >
+                <i className="ti ti-x me-1" />Clear
+              </button>
+            )}
+
+            <button className="btn btn-primary btn-sm ms-md-2" onClick={() => handleOpenModal("Direct")}>
               <i className="ti ti-user-plus me-1" /> + Add Patient Admission
             </button>
-          </div>
-        </div>
-
-        {/* ── Filter Bar ── */}
-        <div className="card border-0 shadow-sm mb-4">
-          <div className="card-body py-3 px-4">
-            <div className="d-flex align-items-end gap-3 flex-wrap">
-
-              {/* Ward Filter */}
-              <div style={{ minWidth: '170px', flex: '1 1 170px' }}>
-                <label className="form-label fw-semibold mb-1" style={{ fontSize: '11px', letterSpacing: '0.5px', textTransform: 'uppercase', color: '#6b7280' }}>
-                  <i className="ti ti-building-hospital me-1" />Ward
-                </label>
-                <select
-                  className="form-select form-select-sm"
-                  value={filterWard}
-                  onChange={(e) => setFilterWard(e.target.value)}
-                >
-                  <option value="">All Wards</option>
-                  {wards.map((w) => (
-                    <option key={w.id} value={w.id}>{w.wardName} ({w.wardType})</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Patient Filter */}
-              <div style={{ minWidth: '190px', flex: '1 1 190px' }}>
-                <label className="form-label fw-semibold mb-1" style={{ fontSize: '11px', letterSpacing: '0.5px', textTransform: 'uppercase', color: '#6b7280' }}>
-                  <i className="ti ti-user me-1" />Patient
-                </label>
-                <select
-                  className="form-select form-select-sm"
-                  value={filterPatient}
-                  onChange={(e) => setFilterPatient(e.target.value)}
-                >
-                  <option value="">All Patients</option>
-                  {/* unique admitted patients only */}
-                  {Array.from(
-                    new Map(admissions.map((a) => [a.patient?.id, a.patient] as [string | undefined, any]).filter(([id]) => id)).values()
-                  ).map((p: any) => (
-                    <option key={p.id} value={p.id}>{getPatientName(p)} {p.patientCode ? `(${p.patientCode})` : ""}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Doctor Filter */}
-              <div style={{ minWidth: '190px', flex: '1 1 190px' }}>
-                <label className="form-label fw-semibold mb-1" style={{ fontSize: '11px', letterSpacing: '0.5px', textTransform: 'uppercase', color: '#6b7280' }}>
-                  <i className="ti ti-stethoscope me-1" />Doctor
-                </label>
-                <select
-                  className="form-select form-select-sm"
-                  value={filterDoctor}
-                  onChange={(e) => setFilterDoctor(e.target.value)}
-                >
-                  <option value="">All Doctors</option>
-                  {Array.from(
-                    new Map(admissions.filter((a) => a.doctor?.id).map((a) => [a.doctor!.id, a.doctor!])).values()
-                  ).map((d: any) => (
-                    <option key={d.id} value={d.id}>Dr. {d.fullName}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Due Amount Filter */}
-              <div style={{ minWidth: '160px', flex: '1 1 160px' }}>
-                <label className="form-label fw-semibold mb-1" style={{ fontSize: '11px', letterSpacing: '0.5px', textTransform: 'uppercase', color: '#6b7280' }}>
-                  <i className="ti ti-currency-rupee me-1" />Due Amount
-                </label>
-                <select
-                  className="form-select form-select-sm"
-                  value={filterDue}
-                  onChange={(e) => setFilterDue(e.target.value)}
-                >
-                  <option value="">All</option>
-                  <option value="due">Has Due Amount</option>
-                  <option value="paid">Fully Paid</option>
-                  <option value="advance">Advance Paid</option>
-                </select>
-              </div>
-
-              {/* Stats badge + clear */}
-              <div className="d-flex align-items-center gap-2 ms-auto flex-shrink-0">
-                <span
-                  className="badge py-2 px-3 fw-semibold"
-                  style={{ background: '#ede9fe', color: '#6d28d9', fontSize: '12px', borderRadius: '8px' }}
-                >
-                  <i className="ti ti-users me-1" />{filteredAdmissions.length} Inpatients
-                </span>
-                {hasActiveFilters && (
-                  <button
-                    className="btn btn-sm btn-light border fw-semibold"
-                    style={{ fontSize: '12px', borderRadius: '8px' }}
-                    onClick={() => { setFilterWard(""); setFilterPatient(""); setFilterDoctor(""); setFilterDue(""); }}
-                  >
-                    <i className="ti ti-x me-1" />Clear
-                  </button>
-                )}
-              </div>
-
-            </div>
           </div>
         </div>
 
@@ -611,6 +576,7 @@ const IpdAdmissionsPage: React.FC = () => {
                 <table className="table table-hover align-middle mb-0">
                   <thead className="table-light">
                     <tr>
+                      <th style={{ width: "48px" }}>Sr.</th>
                       <th>Admission Code</th>
                       <th>Patient Details</th>
                       <th>Primary Doctor</th>
@@ -621,12 +587,15 @@ const IpdAdmissionsPage: React.FC = () => {
                       <th>Due Amount</th>
                       <th>Payment Status</th>
                       <th>Status</th>
-                      <th className="text-end">Actions</th>
+                      <th className="text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredAdmissions.map((adm) => (
+                    {filteredAdmissions.map((adm, idx) => (
                       <tr key={adm.id}>
+                        <td>
+                          <span className="text-muted fw-semibold fs-13">{idx + 1}</span>
+                        </td>
                         <td>
                           <span className="badge bg-soft-dark text-dark fw-bold">
                             {adm.admissionCode}
@@ -664,17 +633,17 @@ const IpdAdmissionsPage: React.FC = () => {
                         </td>
                         <td>
                           <span className="fw-bold text-dark fs-14">
-                            ₹{adm.totalEstimatedAmount.toLocaleString("en-IN")}
+                            {adm.totalEstimatedAmount > 0 ? `₹${adm.totalEstimatedAmount.toLocaleString("en-IN")}` : "₹0"}
                           </span>
                         </td>
                         <td>
                           <span className="fw-bold text-success fs-14">
-                            ₹{adm.advancePaid.toLocaleString("en-IN")}
+                            {adm.advancePaid > 0 ? `₹${adm.advancePaid.toLocaleString("en-IN")}` : "₹0"}
                           </span>
                         </td>
                         <td>
-                          <span className="fw-bold text-danger fs-14">
-                            ₹{adm.dueAmount.toLocaleString("en-IN")}
+                          <span className={`fw-bold fs-14 ${adm.dueAmount > 0 ? "text-danger" : "text-success"}`}>
+                            {adm.dueAmount > 0 ? `₹${adm.dueAmount.toLocaleString("en-IN")}` : "₹0"}
                           </span>
                         </td>
                         <td>
@@ -699,43 +668,48 @@ const IpdAdmissionsPage: React.FC = () => {
                             {adm.status}
                           </span>
                         </td>
-                        <td className="text-end">
-                          <div className="d-flex align-items-center justify-content-end gap-2">
-                            <div className="dropdown">
-                              <button
-                                className="btn btn-sm btn-light dropdown-toggle border"
-                                type="button"
-                                data-bs-toggle="dropdown"
-                              >
-                                Actions
-                              </button>
-                            <ul className="dropdown-menu dropdown-menu-end shadow-sm">
-                              <li>
-                                <Link
-                                  to={all_routes.ipdDischarge}
-                                  className="dropdown-item d-flex align-items-center text-success fw-semibold"
-                                >
-                                  <i className="ti ti-user-check me-2 fs-16" /> Process Discharge & Settle
-                                </Link>
-                              </li>
-                              <li>
-                                <Link
-                                  to={all_routes.ipdBillings}
-                                  className="dropdown-item d-flex align-items-center"
-                                >
-                                  <i className="ti ti-file-invoice me-2 text-primary" /> View Invoices & Receipts
-                                </Link>
-                              </li>
-                              <li>
-                                <Link
-                                  to={all_routes.ipdBillings}
-                                  className="dropdown-item d-flex align-items-center text-info"
-                                >
-                                  <i className="ti ti-plus me-2" /> + Raise IPD Charge
-                                </Link>
-                              </li>
-                            </ul>
-                          </div>
+                        <td className="text-center">
+                          <div className="d-flex align-items-center justify-content-center gap-1">
+                            {/* View Admission Details */}
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-soft-secondary p-0 d-flex align-items-center justify-content-center"
+                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
+                              title="View Full IPD Details"
+                              onClick={() => {
+                                setSelectedViewAdmission(adm);
+                                setShowViewModal(true);
+                              }}
+                            >
+                              <i className="ti ti-eye fs-16" />
+                            </button>
+                            {/* Discharge */}
+                            <Link
+                              to={all_routes.ipdDischarge}
+                              className="btn btn-sm btn-soft-success p-0 d-flex align-items-center justify-content-center"
+                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
+                              title="Process Discharge & Settle"
+                            >
+                              <i className="ti ti-user-check fs-16" />
+                            </Link>
+                            {/* View Invoices */}
+                            <Link
+                              to={all_routes.ipdBillings}
+                              className="btn btn-sm btn-soft-primary p-0 d-flex align-items-center justify-content-center"
+                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
+                              title="View Invoices & Receipts"
+                            >
+                              <i className="ti ti-file-invoice fs-16" />
+                            </Link>
+                            {/* Raise IPD Charge */}
+                            <Link
+                              to={all_routes.ipdBillings}
+                              className="btn btn-sm btn-soft-info p-0 d-flex align-items-center justify-content-center"
+                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
+                              title="Raise IPD Charge"
+                            >
+                              <i className="ti ti-plus fs-16" />
+                            </Link>
                           </div>
                         </td>
                       </tr>
@@ -1032,6 +1006,13 @@ const IpdAdmissionsPage: React.FC = () => {
       )}
 
 
+
+      {/* VIEW IPD DETAILS MODAL */}
+      <IpdViewDetailsModal
+        show={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        admission={selectedViewAdmission}
+      />
 
       <Footer />
     </div>

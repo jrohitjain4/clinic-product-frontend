@@ -4,6 +4,7 @@ import ImageWithBasePath from "../../../../../../../core/imageWithBasePath"
 import { useState } from "react";
 import TagInput from "../../../../../../../core/common/Taginput";
 import DefaultEditor from "react-simple-wysiwyg";
+import { IconFormControl } from "../../../../../../../core/common/form-fields";
 
 
 const Modals = () => {
@@ -51,7 +52,7 @@ const Modals = () => {
               <label className="form-label">
                 Template Name<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl fieldLabel="Title" type="text" placeholder="Enter template name" />
             </div>
             <div className="mb-0">
               <label className="form-label">Content</label>
@@ -98,9 +99,10 @@ const Modals = () => {
               <label className="form-label">
                 Template Name<span className="text-danger ms-1">*</span>
               </label>
-              <input
+              <IconFormControl
+                fieldLabel="Title"
                 type="text"
-                className="form-control"
+                placeholder="Enter template name"
                 defaultValue="Welcome Email"
               />
             </div>

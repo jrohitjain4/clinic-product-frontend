@@ -1,0 +1,71 @@
+.gender-option-group {
+  width: 100%;
+}
+
+.gender-option-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.gender-option-card {
+  flex: 1 1 0;
+  min-width: 100px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.gender-option-card:hover {
+  border-color: #c7d2fe;
+}
+
+.gender-option-card.is-selected {
+  background: #f3f0ff;
+  border-color: #7c3aed;
+  color: #4c1d95;
+}
+
+.gender-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.gender-option-card.is-selected .gender-radio {
+  border-color: #7c3aed;
+}
+
+.gender-radio-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #7c3aed;
+}
+
+.gender-option-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.gender-option-label {
+  white-space: nowrap;
+}

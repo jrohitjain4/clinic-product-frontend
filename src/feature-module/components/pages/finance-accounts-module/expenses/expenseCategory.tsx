@@ -7,6 +7,7 @@ import { useExpenseCategories } from "../../../../../core/hooks/useExpenseCatego
 import { toast } from "react-toastify";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { apiDelete } from "../../../../../core/utils/apiClient";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 const ExpenseCategory = () => {
   const { categories, refetch, loading, error } = useExpenseCategories();
@@ -323,9 +324,10 @@ const ExpenseCategory = () => {
                     <label className="form-label fw-bold small text-uppercase text-muted">
                       Category Name
                     </label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="Category"
                       type="text"
-                      className="form-control bg-light"
+                      className="bg-light"
                       value={viewCategory.name || ""}
                       readOnly
                     />
@@ -335,9 +337,10 @@ const ExpenseCategory = () => {
                     <label className="form-label fw-bold small text-uppercase text-muted">
                       Status
                     </label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="Status"
                       type="text"
-                      className="form-control bg-light"
+                      className="bg-light"
                       value={viewCategory.status || ""}
                       readOnly
                     />

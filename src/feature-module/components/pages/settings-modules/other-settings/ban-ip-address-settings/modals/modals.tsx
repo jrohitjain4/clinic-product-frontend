@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../../../routes/all_routes";
+import { IconFormControl, IconTextarea } from "../../../../../../../core/common/form-fields";
 
 const Modals = () => {
   return (
@@ -28,14 +29,14 @@ const Modals = () => {
                   <label className="form-label">
                     IP Address<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl type="text" placeholder="Enter IP address" />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">
                     IP Address<span className="text-danger ms-1">*</span>
                   </label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="Description"
                     rows={3}
                     placeholder="Description"
                     defaultValue={""}
@@ -82,9 +83,9 @@ const Modals = () => {
                   <label className="form-label">
                     IP Address<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
+                    placeholder="Enter IP address"
                     defaultValue="211.11.0.25"
                   />
                 </div>
@@ -92,9 +93,10 @@ const Modals = () => {
                   <label className="form-label">
                     IP Address<span className="text-danger ms-1">*</span>
                   </label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="Description"
                     rows={3}
+                    placeholder="Description"
                     defaultValue={
                       "You can get on-demand services in order to find a nearby service."
                     }

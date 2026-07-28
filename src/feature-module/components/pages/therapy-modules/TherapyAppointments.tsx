@@ -7,6 +7,7 @@ import { ViewModal } from "../../../../core/common/modal/ViewModal";
 import EmptyState from "../../../../core/common/emptyState";
 import { apiUrl } from "../../../../core/config/api";
 import { useMedicines } from "../../../../core/hooks/useMedicines";
+import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
 
 const TherapyAppointments = () => {
   const location = useLocation();
@@ -1203,10 +1204,11 @@ const TherapyAppointments = () => {
                                         className="border-0 py-1 position-relative"
                                         style={{ zIndex: activeSearchIndex === idx ? 1000 : 1 }}
                                       >
-                                        <input
+                                        <IconFormControl
                                           type="text"
-                                          className="form-control form-control-sm"
-                                          placeholder="Search/Enter Medicine..."
+                                          fieldLabel="medicine"
+                                          className="form-control-sm"
+                                          placeholder="Medicine Name"
                                           value={m.name}
                                           onChange={(e) => updateModalMedicineRow(idx, "name", e.target.value)}
                                           onFocus={() => setActiveSearchIndex(idx)}
@@ -1346,8 +1348,8 @@ const TherapyAppointments = () => {
                           <h6 className="fw-bold mb-2 d-flex align-items-center gap-2">
                             <i className="ti ti-message-report text-primary"></i> Advice
                           </h6>
-                          <textarea
-                            className="form-control"
+                          <IconTextarea
+                            fieldLabel="notes"
                             rows={4}
                             value={selectedConsultation.advice || ""}
                             onChange={(e) => updateModalAdvice(e.target.value)}
@@ -1359,9 +1361,10 @@ const TherapyAppointments = () => {
                           <h6 className="fw-bold mb-2 d-flex align-items-center gap-2">
                             <i className="ti ti-stethoscope text-primary"></i> Diagnostic Tests
                           </h6>
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control form-control-sm mb-2"
+                            fieldLabel="search"
+                            className="form-control-sm mb-2"
                             placeholder="Search/Add Diagnostic Test..."
                             disabled
                             style={{ borderRadius: 8 }}
@@ -1433,9 +1436,10 @@ const TherapyAppointments = () => {
                                       style={{ width: "100%", height: 90, objectFit: "cover", cursor: "zoom-in" }}
                                     />
                                   </a>
-                                  <input
+                                  <IconFormControl
                                     type="text"
-                                    className="form-control form-control-sm"
+                                    fieldLabel="notes"
+                                    className="form-control-sm"
                                     placeholder="Add remark..."
                                     value={att.remark || ""}
                                     onChange={(e) => handleUpdateModalRemark(idx, e.target.value)}

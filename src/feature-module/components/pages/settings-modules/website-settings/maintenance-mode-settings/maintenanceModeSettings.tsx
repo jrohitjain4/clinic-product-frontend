@@ -3,6 +3,7 @@ import { Link } from "react-router"
 import { toast } from "react-toastify"
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar"
 import { resolveMediaUrl } from "../../../../../../core/config/api"
+import { IconFormControl } from "../../../../../../core/common/form-fields"
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000"
 const GALLERY_CATEGORIES = ["Reception", "Waiting Area", "Consultation Room", "Equipment", "Other"]
@@ -153,9 +154,14 @@ const MaintenanceModeSettings = () => {
                                     onChange={e => updateItem(i, "category", e.target.value)}>
                                     {GALLERY_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                   </select>
-                                  <input type="text" className="form-control form-control-sm" placeholder="Caption (optional)"
+                                  <IconFormControl
+                                    fieldLabel="Title"
+                                    type="text"
+                                    className="form-control-sm"
+                                    placeholder="Enter caption"
                                     value={item.caption || ""}
-                                    onChange={e => updateItem(i, "caption", e.target.value)} />
+                                    onChange={e => updateItem(i, "caption", e.target.value)}
+                                  />
                                 </div>
                               </div>
                             </div>
@@ -176,9 +182,13 @@ const MaintenanceModeSettings = () => {
                       <div className="row g-3">
                         <div className="col-12">
                           <label className="form-label mb-1">Google Maps Embed URL</label>
-                          <input type="url" className="form-control"
-                            placeholder="Paste the embed src URL from Google Maps → Share → Embed a map"
-                            value={mapUrl} onChange={e => setMapUrl(e.target.value)} />
+                          <IconFormControl
+                            fieldLabel="URL"
+                            type="url"
+                            placeholder="Enter Google Maps embed URL"
+                            value={mapUrl}
+                            onChange={e => setMapUrl(e.target.value)}
+                          />
                           <small className="text-muted">Go to <strong>Google Maps → Share → Embed a map</strong>, copy the <code>src</code> URL.</small>
                         </div>
                         {mapUrl && (
@@ -191,9 +201,13 @@ const MaintenanceModeSettings = () => {
                         )}
                         <div className="col-12">
                           <label className="form-label mb-1">Get Directions URL</label>
-                          <input type="url" className="form-control"
-                            placeholder="e.g. https://maps.google.com/?q=YourClinicAddress"
-                            value={directionsUrl} onChange={e => setDirectionsUrl(e.target.value)} />
+                          <IconFormControl
+                            fieldLabel="URL"
+                            type="url"
+                            placeholder="Enter get directions URL"
+                            value={directionsUrl}
+                            onChange={e => setDirectionsUrl(e.target.value)}
+                          />
                           <small className="text-muted">Opens in Google Maps when patient clicks "Get Directions".</small>
                         </div>
                       </div>

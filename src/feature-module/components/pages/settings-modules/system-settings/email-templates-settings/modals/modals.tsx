@@ -4,6 +4,7 @@ import { useState } from "react";
 import TagInput from "../../../../../../../core/common/Taginput";
 import { all_routes } from "../../../../../../routes/all_routes";
 import { Link } from "react-router";
+import { IconFormControl } from "../../../../../../../core/common/form-fields";
 
 const Modals = () => {
   const [tags, setTags] = useState<string[]>([
@@ -48,7 +49,7 @@ const Modals = () => {
                   <label className="form-label">
                     Template Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl fieldLabel="Title" type="text" placeholder="Enter template name" />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">
@@ -97,9 +98,10 @@ const Modals = () => {
                   <label className="form-label">
                     Template Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Title"
                     type="text"
-                    className="form-control"
+                    placeholder="Enter template name"
                     defaultValue="Welcome Email"
                   />
                 </div>

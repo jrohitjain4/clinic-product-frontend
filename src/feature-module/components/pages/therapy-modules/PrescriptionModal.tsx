@@ -3,6 +3,7 @@ import { apiGet, apiPut, apiPost } from "../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
 import { useMedicines } from "../../../../core/hooks/useMedicines";
 import { apiUrl } from "../../../../core/config/api";
+import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
 
 interface PrescriptionModalProps {
   appointment: any | null;
@@ -385,10 +386,11 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                                         className="border-0 py-1 position-relative"
                                         style={{ zIndex: activeSearchIndex === idx ? 1000 : 1 }}
                                       >
-                                        <input
+                                        <IconFormControl
                                           type="text"
-                                          className="form-control form-control-sm"
-                                          placeholder="Search/Enter Medicine..."
+                                          fieldLabel="medicine"
+                                          className="form-control-sm"
+                                          placeholder="Medicine Name"
                                           value={m.name}
                                           onChange={(e) => updateModalMedicineRow(idx, "name", e.target.value)}
                                           onFocus={() => setActiveSearchIndex(idx)}
@@ -587,8 +589,8 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                           <h6 className="fw-bold mb-2 d-flex align-items-center gap-2">
                             <i className="ti ti-message-report text-primary"></i> Advice
                           </h6>
-                          <textarea
-                            className="form-control"
+                          <IconTextarea
+                            fieldLabel="notes"
                             rows={4}
                             value={selectedConsultation.advice || ""}
                             onChange={(e) => updateModalAdvice(e.target.value)}
@@ -600,9 +602,10 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                           <h6 className="fw-bold mb-2 d-flex align-items-center gap-2">
                             <i className="ti ti-stethoscope text-primary"></i> Diagnostic Tests
                           </h6>
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control form-control-sm mb-2"
+                            fieldLabel="search"
+                            className="form-control-sm mb-2"
                             placeholder="Search/Add Diagnostic Test..."
                             disabled
                             style={{ borderRadius: 8 }}
@@ -674,9 +677,10 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                                       style={{ width: "100%", height: 90, objectFit: "cover", cursor: "zoom-in" }}
                                     />
                                   </a>
-                                  <input
+                                  <IconFormControl
                                     type="text"
-                                    className="form-control form-control-sm"
+                                    fieldLabel="notes"
+                                    className="form-control-sm"
                                     placeholder="Add remark..."
                                     value={att.remark || ""}
                                     onChange={(e) => handleUpdateModalRemark(idx, e.target.value)}

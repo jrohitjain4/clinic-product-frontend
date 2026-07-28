@@ -7,6 +7,7 @@ import {
   State,
 } from "../../../../../../core/common/selectOption";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
+import { IconFormControl, IconSelect } from "../../../../../../core/common/form-fields";
 
 const Modals = () => {
   return (
@@ -55,7 +56,7 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       Name<span className="text-danger ms-1">*</span>
                     </label>
-                    <input type="text" className="form-control" />
+                    <IconFormControl fieldLabel="Name" type="text" placeholder="Enter location name" />
                   </div>
                 </div>
                 <div className="col-lg-12">
@@ -75,7 +76,7 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       Email Address<span className="text-danger ms-1">*</span>
                     </label>
-                    <input type="email" className="form-control" />
+                    <IconFormControl fieldLabel="Email Address" type="email" placeholder="Enter email address" />
                   </div>
                 </div>
                 <div className="col-lg-12">
@@ -83,7 +84,7 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       Phone Number<span className="text-danger ms-1">*</span>
                     </label>
-                    <input type="tel" className="form-control" />
+                    <IconFormControl fieldLabel="Phone Number" type="tel" placeholder="Enter phone number" />
                   </div>
                 </div>
                 <div className="col-lg-12">
@@ -91,7 +92,7 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       Address 1<span className="text-danger ms-1">*</span>
                     </label>
-                    <input type="text" className="form-control" />
+                    <IconFormControl fieldLabel="Address 1" type="text" placeholder="Enter address line 1" />
                   </div>
                 </div>
                 <div className="col-lg-12">
@@ -99,7 +100,7 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       Address 2<span className="text-danger ms-1">*</span>
                     </label>
-                    <input type="text" className="form-control" />
+                    <IconFormControl fieldLabel="Address 2" type="text" placeholder="Enter address line 2" />
                   </div>
                 </div>
                 <div className="col-lg-6">
@@ -107,9 +108,11 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       Country<span className="text-danger ms-1">*</span>
                     </label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="Country"
                       options={Country}
                       className="select"
+                      placeholder="Select country"
                       defaultValue={Country[0]}
                     />
                   </div>
@@ -119,9 +122,11 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       State<span className="text-danger ms-1">*</span>
                     </label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="State"
                       options={State}
                       className="select"
+                      placeholder="Select state"
                       defaultValue={State[0]}
                     />
                   </div>
@@ -131,9 +136,11 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       City<span className="text-danger ms-1">*</span>
                     </label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="City"
                       options={City}
                       className="select"
+                      placeholder="Select city"
                       defaultValue={City[0]}
                     />
                   </div>
@@ -143,7 +150,7 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       Pincode<span className="text-danger ms-1">*</span>
                     </label>
-                    <input type="text" className="form-control" />
+                    <IconFormControl fieldLabel="Pincode" type="text" placeholder="Enter pincode" />
                   </div>
                 </div>
               </div>
@@ -216,9 +223,9 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       Name<span className="text-danger ms-1">*</span>
                     </label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="Name"
                       type="text"
-                      className="form-control"
                       defaultValue="James Carter"
                     />
                   </div>
@@ -240,9 +247,9 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       Email Address<span className="text-danger ms-1">*</span>
                     </label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="Email Address"
                       type="email"
-                      className="form-control"
                       defaultValue="james@example.com"
                     />
                   </div>
@@ -252,9 +259,9 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       Phone Number<span className="text-danger ms-1">*</span>
                     </label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="Phone Number"
                       type="tel"
-                      className="form-control"
                       defaultValue="+1 43554 54584"
                     />
                   </div>
@@ -264,9 +271,9 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       Address 1<span className="text-danger ms-1">*</span>
                     </label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="Address 1"
                       type="text"
-                      className="form-control"
                       defaultValue="123 Main Street"
                     />
                   </div>
@@ -276,9 +283,9 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       Address 2<span className="text-danger ms-1">*</span>
                     </label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="Address 2"
                       type="text"
-                      className="form-control"
                       defaultValue=" Apartment 4B"
                     />
                   </div>
@@ -288,9 +295,11 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       Country<span className="text-danger ms-1">*</span>
                     </label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="Country"
                       options={Country}
                       className="select"
+                      placeholder="Select country"
                       defaultValue={Country[1]}
                     />
                   </div>
@@ -300,9 +309,11 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       State<span className="text-danger ms-1">*</span>
                     </label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="State"
                       options={State}
                       className="select"
+                      placeholder="Select state"
                       defaultValue={State[1]}
                     />
                   </div>
@@ -312,9 +323,11 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       City<span className="text-danger ms-1">*</span>
                     </label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="City"
                       options={City}
                       className="select"
+                      placeholder="Select city"
                       defaultValue={City[1]}
                     />
                   </div>
@@ -324,9 +337,9 @@ const Modals = () => {
                     <label className="form-label mb-1">
                       Pincode<span className="text-danger ms-1">*</span>
                     </label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="Pincode"
                       type="text"
-                      className="form-control"
                       defaultValue={90001}
                     />
                   </div>

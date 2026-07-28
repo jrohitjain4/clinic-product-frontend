@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { apiGet, apiPost } from "../../../../core/utils/apiClient";
 import { resolveMediaUrl, apiUrl } from "../../../../core/config/api";
 import ImageCropperModal from "../../../../core/common/crop/ImageCropperModal";
+import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
 
 interface CategoryOption {
   id: string;
@@ -230,9 +231,9 @@ const AddService = () => {
                   <div className="row g-3">
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Therapy Name <span className="text-danger">*</span></label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="service"
                         type="text"
-                        className="form-control"
                         placeholder="e.g. Cognitive Behavioral Therapy (CBT)"
                         required
                         value={name}
@@ -264,19 +265,21 @@ const AddService = () => {
 
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">Therapy Code (Auto)</label>
-                      <input
+                      <IconFormControl
                         type="text"
-                        className="form-control bg-light"
+                        fieldLabel="service"
+                        className="bg-light"
                         readOnly
                         value={code}
+                        placeholder="Therapy Code (Auto)"
                       />
                     </div>
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">Duration (Minutes) <span className="text-danger">*</span></label>
-                      <input
+                      <IconFormControl
                         type="number"
-                        className="form-control"
-                        placeholder="e.g. 45"
+                        fieldLabel="time"
+                        placeholder="Duration (Minutes)"
                         required
                         min="1"
                         value={duration}
@@ -285,9 +288,9 @@ const AddService = () => {
                     </div>
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">Base Price/Session (₹) <span className="text-danger">*</span></label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="price"
                         type="number"
-                        className="form-control"
                         placeholder="e.g. 1500"
                         required
                         min="0"
@@ -298,8 +301,8 @@ const AddService = () => {
 
                     <div className="col-12">
                       <label className="form-label fw-semibold">Description (Optional)</label>
-                      <textarea
-                        className="form-control"
+                      <IconTextarea
+                        fieldLabel="description"
                         rows={3}
                         placeholder="Provide details about the therapy, conditions treated, etc."
                         value={description}
@@ -319,9 +322,10 @@ const AddService = () => {
                   <div className="row g-3">
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">Minimum Sessions <span className="text-danger">*</span></label>
-                      <input
+                      <IconFormControl
                         type="number"
-                        className="form-control"
+                        fieldLabel="quantity"
+                        placeholder="Minimum Sessions"
                         min="1"
                         required
                         value={minSessions}
@@ -330,9 +334,10 @@ const AddService = () => {
                     </div>
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">Maximum Sessions <span className="text-danger">*</span></label>
-                      <input
+                      <IconFormControl
                         type="number"
-                        className="form-control"
+                        fieldLabel="quantity"
+                        placeholder="Maximum Sessions"
                         min="1"
                         required
                         value={maxSessions}
@@ -341,9 +346,10 @@ const AddService = () => {
                     </div>
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">Session Gap (Days)</label>
-                      <input
+                      <IconFormControl
                         type="number"
-                        className="form-control"
+                        fieldLabel="time"
+                        placeholder="Session Gap (Days)"
                         min="0"
                         disabled={scheduleType !== "custom"}
                         value={sessionGap}

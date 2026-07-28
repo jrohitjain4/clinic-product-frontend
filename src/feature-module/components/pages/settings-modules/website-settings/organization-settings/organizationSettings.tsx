@@ -5,6 +5,7 @@ import { apiUrl, resolveMediaUrl } from "../../../../../../core/config/api"
 import { toast } from "react-toastify"
 import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
+import { IconFormControl } from "../../../../../../core/common/form-fields";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000"
 
@@ -359,9 +360,9 @@ const OrganizationSettings = () => {
                                 </label>
                               </div>
                               <div className="col-lg-8">
-                                <input
+                                <IconFormControl
+                                  fieldLabel={f.label}
                                   type={f.type}
-                                  className="form-control"
                                   placeholder={f.ph}
                                   value={form[f.key]}
                                   onChange={set(f.key)}
@@ -380,7 +381,7 @@ const OrganizationSettings = () => {
                           <h6 className="fw-semibold text-muted">Clinic Address <small className="text-muted fw-normal">(managed from Profile Settings)</small></h6>
                         </div>
                         <div className="col-12">
-                          <input type="text" className="form-control" value={form.address1} disabled placeholder="Address" />
+                          <IconFormControl fieldLabel="Address" type="text" value={form.address1} disabled placeholder="Address" />
                         </div>
                       </div>
 

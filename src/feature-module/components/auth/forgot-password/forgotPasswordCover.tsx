@@ -1,6 +1,7 @@
 import { Link } from "react-router"
 import { all_routes } from "../../../routes/all_routes"
 import ImageWithBasePath from "../../../../core/imageWithBasePath"
+import { IconFormControl } from "../../../../core/common/form-fields";
 
 
 const ForgotPasswordCover = () => {
@@ -58,22 +59,16 @@ const ForgotPasswordCover = () => {
                       <div className="text-center mb-3">
                         <h5 className="mb-1 fs-20 fw-bold">Forgot Password</h5>
                         <p className="mb-0">
-                          No worries, we’ll send you reset instructions
+                          No worries, weï¿½ll send you reset instructions
                         </p>
                       </div>
                       <div className="mb-3">
                         <label className="form-label">Email Address</label>
-                        <div className="input-group">
-                          <span className="input-group-text border-end-0 bg-white">
-                            <i className="ti ti-mail fs-14 text-dark" />
-                          </span>
-                          <input
-                            type="text"
-                            
-                            className="form-control border-start-0 ps-0"
-                            placeholder="Enter Email Address"
-                          />
-                        </div>
+                        <IconFormControl
+                          type="text"
+                          fieldLabel="Email Address"
+                          placeholder="Email Address"
+                        />
                       </div>
                       <div className="mb-3">
                         <Link
@@ -100,7 +95,7 @@ const ForgotPasswordCover = () => {
               </form>
               <p className="fs-14 text-dark text-center mt-4">
                 
-                Copyright © 2025 - Docyari
+                Copyright ï¿½ 2025 - Docyari
               </p>
             </div>
             {/* end row*/}

@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { apiPost, apiPut, apiDelete } from "../../../../../core/utils/apiClient";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
+import { IconFormControl, IconTextarea } from "../../../../../core/common/form-fields";
 
 interface HolidaysModalProps {
   selectedHoliday?: any;
@@ -130,14 +131,14 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch,
                   <label className="form-label">
                     Title<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Christmas Day" required />
+                  <IconFormControl fieldLabel="Title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Christmas Day" required />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Description</label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="Description"
                     rows={3}
-                    placeholder="Enter Description"
+                    placeholder="Enter description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                   />
@@ -217,10 +218,10 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch,
                   <label className="form-label">
                     Title<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Title"
                     type="text"
-                    className="form-control"
-                    placeholder="Enter Title"
+                    placeholder="Enter title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     required
@@ -228,10 +229,10 @@ const HolidaysModal: React.FC<HolidaysModalProps> = ({ selectedHoliday, refetch,
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Description</label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="Description"
                     rows={3}
-                    placeholder="Enter Description"
+                    placeholder="Enter description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                   />

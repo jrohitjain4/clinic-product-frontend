@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
+import { IconFormControl } from "../../../../core/common/form-fields";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -171,9 +172,10 @@ const DemoBookingsAdmin = () => {
                             </button>
                         )}
                         <div className="position-relative">
-                            <input
+                            <IconFormControl
                                 type="text"
-                                className="form-control px-3"
+                                fieldLabel="search"
+                                className="px-3"
                                 style={{ height: '38px', width: '220px', borderRadius: '6px', fontSize: '13px' }}
                                 placeholder="Search bookings..."
                                 value={searchText}
@@ -395,7 +397,7 @@ const DemoBookingsAdmin = () => {
                             <div className="modal-body p-4">
                                 <div className="mb-3">
                                     <label className="form-label fw-semibold fs-13 text-muted">Requester Name</label>
-                                    <input type="text" className="form-control" value={activeBooking.name || "N/A"} disabled />
+                                    <IconFormControl type="text" fieldLabel="name" placeholder="Requester Name" value={activeBooking.name || "N/A"} disabled />
                                 </div>
                                 <div className="mb-0">
                                     <label className="form-label fw-semibold fs-13 text-muted">Status</label>

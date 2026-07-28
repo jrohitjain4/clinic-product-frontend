@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Footer from "../../../../core/common/footer/footer";
+import Datatable from "../../../../core/common/dataTable";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 import IpdViewDetailsModal from "./IpdViewDetailsModal";
+import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
 
 interface Patient {
   id: string;
@@ -455,8 +457,236 @@ const IpdDischargePage: React.FC = () => {
     });
   }, [admissions, searchQuery, statusTab, wardFilter]);
 
+  const tableData = useMemo(
+    () =>
+      filteredAdmissions.map((adm, idx) => ({
+        key: adm.id,
+        sr: idx + 1,
+        admissionCode: adm.admissionCode,
+        patientName: getPatientName(adm.patient),
+        patientCode: adm.patient?.patientCode || "—",
+        doctorName: adm.doctor?.fullName || "Unassigned",
+        wardName: adm.ward?.wardName || "Ward",
+        admissionDate: adm.admissionDate,
+        totalAmount: adm.totalAmount,
+        totalPaid: adm.totalPaid,
+        dueAmount: adm.dueAmount,
+        status: adm.status,
+        dischargeDate: adm.dischargeDate || null,
+        hasPrescription: (adm.ipdPrescriptions?.length ?? 0) > 0,
+        _raw: adm,
+      })),
+    [filteredAdmissions]
+  );
+
+  const columns = useMemo(
+    () => [
+      {
+        title: "Sr.",
+        dataIndex: "sr",
+        width: 60,
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) => a.sr - b.sr,
+      },
+      {
+        title: "Admission Code",
+        dataIndex: "admissionCode",
+        render: (text: string) => (
+          <span
+            className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+            style={{
+              backgroundColor: "#e2e8f0",
+              color: "#1e293b",
+              fontWeight: 600,
+              fontSize: "12px",
+            }}
+          >
+            <i className="ti ti-hash fs-14" />
+            {text}
+          </span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.admissionCode.localeCompare(b.admissionCode),
+      },
+      {
+        title: "Patient Details",
+        dataIndex: "patientName",
+        render: (text: string, record: (typeof tableData)[0]) => (
+          <div className="lh-1">
+            <h6 className="mb-1 fs-14 fw-semibold text-dark">{text}</h6>
+            <span className="text-muted fs-12 fw-normal d-block mt-1">
+              UHID: {record.patientCode}
+            </span>
+          </div>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.patientName.localeCompare(b.patientName),
+      },
+      {
+        title: "Primary Doctor & Ward",
+        dataIndex: "doctorName",
+        render: (text: string, record: (typeof tableData)[0]) => (
+          <>
+            <span className="fw-semibold text-primary d-block fs-13">{text}</span>
+            <span className="badge bg-soft-info text-info fw-medium mt-1 d-inline-flex">
+              {record.wardName}
+            </span>
+          </>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.doctorName.localeCompare(b.doctorName),
+      },
+      {
+        title: "Admission Date",
+        dataIndex: "admissionDate",
+        render: (text: string) => (
+          <span className="text-muted fs-13">{new Date(text).toLocaleDateString()}</span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          new Date(a.admissionDate).getTime() - new Date(b.admissionDate).getTime(),
+      },
+      {
+        title: "Total Billed",
+        dataIndex: "totalAmount",
+        render: (val: number) => (
+          <span className="fw-bold text-dark fs-14">₹{val.toLocaleString("en-IN")}</span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.totalAmount - b.totalAmount,
+      },
+      {
+        title: "Paid Amount",
+        dataIndex: "totalPaid",
+        render: (val: number) => (
+          <span className="fw-bold text-success fs-14">₹{val.toLocaleString("en-IN")}</span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.totalPaid - b.totalPaid,
+      },
+      {
+        title: "Due Balance",
+        dataIndex: "dueAmount",
+        render: (val: number) => (
+          <span className={`fw-bold fs-14 ${val > 0 ? "text-danger" : "text-success"}`}>
+            ₹{val.toLocaleString("en-IN")}
+          </span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.dueAmount - b.dueAmount,
+      },
+      {
+        title: "Discharge Status",
+        dataIndex: "status",
+        render: (text: string, record: (typeof tableData)[0]) => {
+          const isAdmitted = text === "Admitted";
+          return isAdmitted ? (
+            <span
+              className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+              style={{
+                backgroundColor: "#e6f8ef",
+                color: "#198754",
+                fontWeight: 600,
+                fontSize: "12px",
+              }}
+            >
+              <i className="ti ti-activity fs-14" />
+              Active
+            </span>
+          ) : (
+            <span
+              className="badge px-3 py-2 rounded-pill d-inline-flex flex-column align-items-start gap-0"
+              style={{
+                backgroundColor: "#fdeded",
+                color: "#dc3545",
+                fontWeight: 600,
+                fontSize: "12px",
+                lineHeight: 1.35,
+              }}
+            >
+              <span className="d-flex align-items-center gap-1">
+                <i className="ti ti-user-check fs-14" /> Discharged
+              </span>
+              <span className="fw-normal fs-11" style={{ opacity: 0.8 }}>
+                {record.dischargeDate
+                  ? new Date(record.dischargeDate).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "Completed"}
+              </span>
+            </span>
+          );
+        },
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.status.localeCompare(b.status),
+      },
+      {
+        title: "Action",
+        className: "text-center text-nowrap",
+        width: 160,
+        align: "center" as const,
+        render: (_: unknown, record: (typeof tableData)[0]) => (
+          <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
+            <button
+              type="button"
+              className="bg-transparent border-0 text-primary p-1"
+              title="View Full IPD Details"
+              onClick={() => {
+                setSelectedViewAdmission(record._raw);
+                setShowViewModal(true);
+              }}
+            >
+              <i className="ti ti-eye fs-18" />
+            </button>
+            <button
+              type="button"
+              className={`bg-transparent border-0 p-1 ${
+                record.hasPrescription ? "text-success" : "text-info"
+              }`}
+              title={record.hasPrescription ? "View Prescription" : "Write Prescription"}
+              onClick={() => handlePrescriptionClick(record._raw)}
+            >
+              <i className="ti ti-file-text fs-18" />
+            </button>
+            {record.status === "Admitted" ? (
+              <button
+                type="button"
+                className="bg-transparent border-0 text-warning p-1"
+                title="Settle & Discharge"
+                onClick={() => handleOpenDischargeModal(record._raw)}
+              >
+                <i className="ti ti-user-check fs-18" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="bg-transparent border-0 text-success p-1"
+                title="View Settled Receipt"
+                onClick={() => {
+                  setSettledAdmissionData(record._raw);
+                  setShowSettledReceiptModal(true);
+                }}
+              >
+                <i className="ti ti-receipt fs-18" />
+              </button>
+            )}
+          </div>
+        ),
+      },
+    ],
+    []
+  );
+
   return (
     <div className="page-wrapper">
+      <style>{`
+        .page-wrapper .ipd-discharge-empty-card.card,
+        .page-wrapper .datatable-main-container .datatable-table-shell.card {
+          border: none !important;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+          border-radius: 12px !important;
+        }
+      `}</style>
       <div className="content">
         {/* Header */}
         <div className="d-md-flex d-block align-items-center justify-content-between mb-4 gap-3 flex-wrap">
@@ -466,9 +696,10 @@ const IpdDischargePage: React.FC = () => {
 
           <div className="d-flex align-items-center gap-2 flex-wrap mt-3 mt-md-0">
             {/* Search Filter Input */}
-            <input
+            <IconFormControl
+              fieldLabel="search"
               type="text"
-              className="form-control form-control-sm"
+              className="form-control-sm"
               style={{ width: "190px" }}
               placeholder="Search code/patient..."
               value={searchQuery}
@@ -588,160 +819,34 @@ const IpdDischargePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Admissions Table */}
-        <div className="card border-0 shadow-sm">
-          <div className="card-body p-0">
-            {loading ? (
-              <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status" />
-                <p className="text-muted mt-2 mb-0">Loading Inpatient Records...</p>
-              </div>
-            ) : filteredAdmissions.length === 0 ? (
-              <div className="text-center py-5">
-                <i className="ti ti-user-check fs-40 text-muted mb-2 d-block" />
-                <h5 className="fw-bold">No Inpatient Records Found</h5>
-                <p className="text-muted fs-13 mb-0">All patients in this view are discharged or no records exist.</p>
-              </div>
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-hover align-middle mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th style={{ width: "46px" }}>Sr.</th>
-                      <th>Admission Code</th>
-                      <th>Patient Details</th>
-                      <th>Primary Doctor & Ward</th>
-                      <th>Admission Date</th>
-                      <th>Total Billed</th>
-                      <th>Paid Amount</th>
-                      <th>Due Balance</th>
-                      <th>Discharge Status</th>
-                      <th className="text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAdmissions.map((adm, idx) => (
-                      <tr key={adm.id}>
-                        <td>
-                          <span className="text-muted fw-semibold fs-13">{idx + 1}</span>
-                        </td>
-                        <td>
-                          <span className="badge bg-soft-dark text-dark fw-bold">
-                            {adm.admissionCode}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="fw-bold text-dark d-block">{getPatientName(adm.patient)}</span>
-                          <small className="text-muted">UHID: {adm.patient?.patientCode || "—"}</small>
-                        </td>
-                        <td>
-                          <span className="fw-medium text-primary d-block">
-                            {adm.doctor?.fullName || "Unassigned"}
-                          </span>
-                          <span className="badge bg-soft-info text-info fs-11">
-                            {adm.ward?.wardName || "Ward"}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="text-muted fs-13">
-                            {new Date(adm.admissionDate).toLocaleDateString()}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="fw-bold text-dark fs-14">
-                            ₹{adm.totalAmount.toLocaleString("en-IN")}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="fw-bold text-success fs-14">
-                            ₹{adm.totalPaid.toLocaleString("en-IN")}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="fw-bold text-danger fs-14">
-                            ₹{adm.dueAmount.toLocaleString("en-IN")}
-                          </span>
-                        </td>
-
-                        <td>
-                          {adm.status === "Admitted" ? (
-                            <span className="badge bg-success py-1 px-2 fs-12 fw-bold d-inline-flex align-items-center gap-1">
-                              <i className="ti ti-activity" />
-                              <span>Active</span>
-                            </span>
-                          ) : (
-                            <span className="badge bg-danger py-1 px-2 fs-12 fw-bold d-flex flex-column align-items-start gap-0" style={{ lineHeight: 1.4 }}>
-                              <span className="d-flex align-items-center gap-1">
-                                <i className="ti ti-user-check" /> Discharged
-                              </span>
-                              <span className="fw-normal fs-11 opacity-75">
-                                {adm.dischargeDate
-                                  ? new Date(adm.dischargeDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
-                                  : "Completed"}
-                              </span>
-                            </span>
-                          )}
-                        </td>
-                        <td className="text-center">
-                          <div className="d-flex align-items-center justify-content-center gap-1">
-                            {/* View Admission Details */}
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-soft-secondary p-0 d-flex align-items-center justify-content-center"
-                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                              title="View Full IPD Details"
-                              onClick={() => {
-                                setSelectedViewAdmission(adm);
-                                setShowViewModal(true);
-                              }}
-                            >
-                              <i className="ti ti-eye fs-16" />
-                            </button>
-                            {/* Prescription */}
-                            <button
-                              type="button"
-                              className={`btn btn-sm p-0 d-flex align-items-center justify-content-center ${
-                                (adm as any).ipdPrescriptions?.length > 0 ? 'btn-soft-success' : 'btn-soft-primary'
-                              }`}
-                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                              title={(adm as any).ipdPrescriptions?.length > 0 ? "View Prescription" : "Write Prescription"}
-                              onClick={() => handlePrescriptionClick(adm)}
-                            >
-                              <i className="ti ti-file-text fs-16" />
-                            </button>
-                            {/* Settle / Receipt */}
-                            {adm.status === "Admitted" ? (
-                              <button
-                                className="btn btn-sm btn-soft-warning p-0 d-flex align-items-center justify-content-center"
-                                style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                                title="Settle & Discharge"
-                                onClick={() => handleOpenDischargeModal(adm)}
-                              >
-                                <i className="ti ti-user-check fs-16" />
-                              </button>
-                            ) : (
-                              <button
-                                className="btn btn-sm btn-soft-success p-0 d-flex align-items-center justify-content-center"
-                                style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                                title="View Settled Receipt"
-                                onClick={() => {
-                                  setSettledAdmissionData(adm);
-                                  setShowSettledReceiptModal(true);
-                                }}
-                              >
-                                <i className="ti ti-receipt fs-16" />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+        {/* Discharge Table — same Datatable shell/header/pagination as Patients */}
+        {loading ? (
+          <div className="card ipd-discharge-empty-card">
+            <div className="card-body text-center py-5">
+              <div className="spinner-border text-primary" role="status" />
+              <p className="text-muted mt-2 mb-0">Loading Inpatient Records...</p>
+            </div>
           </div>
-        </div>
+        ) : filteredAdmissions.length === 0 ? (
+          <div className="card ipd-discharge-empty-card">
+            <div className="card-body text-center py-5">
+              <i className="ti ti-user-check fs-40 text-muted mb-2 d-block" />
+              <h5 className="fw-bold">No Inpatient Records Found</h5>
+              <p className="text-muted fs-13 mb-0">
+                All patients in this view are discharged or no records exist.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <Datatable
+              columns={columns}
+              dataSource={tableData}
+              Selection={false}
+              searchText=""
+            />
+          </div>
+        )}
       </div>
 
       {/* MODAL: DISCHARGE & FINAL BILL SETTLEMENT */}
@@ -843,9 +948,10 @@ const IpdDischargePage: React.FC = () => {
                         <label className="form-label fs-13 fw-semibold">
                           Discount Value {discountType === "Percentage" ? "(%)" : "(₹)"}
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="amount"
                           type="number"
-                          className="form-control fw-bold text-warning"
+                          className="fw-bold text-warning"
                           placeholder={discountType === "Percentage" ? "e.g. 10" : "e.g. 500"}
                           value={discountValue}
                           onChange={(e) => setDiscountValue(e.target.value)}
@@ -885,9 +991,11 @@ const IpdDischargePage: React.FC = () => {
                         <label className="form-label fs-13 fw-semibold">
                           Final Payment Collecting (₹) <span className="text-danger">*</span>
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="amount"
                           type="number"
-                          className="form-control fw-bold text-success fs-18"
+                          className="fw-bold text-success fs-18"
+                          placeholder="Enter final payment amount"
                           value={paymentAmount}
                           onChange={(e) => setPaymentAmount(e.target.value)}
                           min={0}
@@ -913,8 +1021,8 @@ const IpdDischargePage: React.FC = () => {
 
                   <div>
                     <label className="form-label fw-semibold">Discharge Summary / Notes</label>
-                    <textarea
-                      className="form-control"
+                    <IconTextarea
+                      fieldLabel="notes"
                       rows={2}
                       placeholder="e.g. Patient fully recovered. Prescribed post-op medications for 7 days."
                       value={dischargeNotes}
@@ -1121,8 +1229,8 @@ const IpdDischargePage: React.FC = () => {
                       {/* Discharge Summary */}
                       <div className="mb-3">
                         <label className="form-label fw-semibold">Discharge Summary / Diagnosis Notes</label>
-                        <textarea
-                          className="form-control"
+                        <IconTextarea
+                          fieldLabel="notes"
                           rows={4}
                           placeholder="Enter detailed discharge summary, diagnosis findings, and doctor's advice..."
                           value={dischargeSummary}
@@ -1137,10 +1245,11 @@ const IpdDischargePage: React.FC = () => {
                           <div className="row g-2 align-items-end mb-2">
                             <div className="col-md-3" style={{ position: 'relative' }}>
                               <label className="form-label fs-11 fw-semibold mb-1">Medicine Name</label>
-                              <input
+                              <IconFormControl
+                                fieldLabel="medicine"
                                 ref={medInputRef}
                                 type="text"
-                                className="form-control form-control-sm"
+                                className="form-control-sm"
                                 placeholder="Search medicine..."
                                 value={medSearch || newMedName}
                                 autoComplete="off"
@@ -1193,11 +1302,11 @@ const IpdDischargePage: React.FC = () => {
                             </div>
                             <div className="col-md-2">
                               <label className="form-label fs-11 fw-semibold mb-1">Dosage</label>
-                              <input type="text" className="form-control form-control-sm" placeholder="Dosage" value={newMedDosage} onChange={(e) => setNewMedDosage(e.target.value)} />
+                              <IconFormControl fieldLabel="dosage" type="text" className="form-control-sm" placeholder="Dosage" value={newMedDosage} onChange={(e) => setNewMedDosage(e.target.value)} />
                             </div>
                             <div className="col-md-2">
                               <label className="form-label fs-11 fw-semibold mb-1">Strength</label>
-                              <input type="text" className="form-control form-control-sm" placeholder="Strength" value={newMedStrength} onChange={(e) => setNewMedStrength(e.target.value)} />
+                              <IconFormControl fieldLabel="medicine" type="text" className="form-control-sm" placeholder="Enter strength" value={newMedStrength} onChange={(e) => setNewMedStrength(e.target.value)} />
                             </div>
                             <div className="col-md-2">
                               <label className="form-label fs-11 fw-semibold mb-1">Frequency</label>
@@ -1207,10 +1316,10 @@ const IpdDischargePage: React.FC = () => {
                             </div>
                             <div className="col-md-3">
                               <label className="form-label fs-11 fw-semibold mb-1">Duration</label>
-                              <input type="text" className="form-control form-control-sm" placeholder="e.g. 5 days" value={newMedDuration} onChange={(e) => setNewMedDuration(e.target.value)} />
+                              <IconFormControl fieldLabel="Date" type="text" className="form-control-sm" placeholder="Enter duration" value={newMedDuration} onChange={(e) => setNewMedDuration(e.target.value)} />
                             </div>
                             <div className="col-md-8 mt-2">
-                              <input type="text" className="form-control form-control-sm" placeholder="Instructions (e.g. after meal, with water)" value={newMedInstructions} onChange={(e) => setNewMedInstructions(e.target.value)} />
+                              <IconFormControl fieldLabel="Notes" type="text" className="form-control-sm" placeholder="Enter instructions" value={newMedInstructions} onChange={(e) => setNewMedInstructions(e.target.value)} />
                             </div>
                             <div className="col-md-4 mt-2">
                               <button type="button" className="btn btn-success btn-sm w-100 fw-bold d-flex align-items-center justify-content-center shadow-sm" onClick={handleAddMedicineRow}>

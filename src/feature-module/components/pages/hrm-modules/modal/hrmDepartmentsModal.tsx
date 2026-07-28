@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
+import { IconFormControl, IconTextarea } from "../../../../../core/common/form-fields";
 
 const HrmDepartmentsModal = () => {
   return (
@@ -28,13 +29,18 @@ const HrmDepartmentsModal = () => {
                   <label className="form-label">
                     Department Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl
+                    fieldLabel="Department"
+                    type="text"
+                    placeholder="Enter department name"
+                  />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">Description</label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="Description"
                     rows={3}
+                    placeholder="Enter description"
                     defaultValue={""}
                   />
                 </div>
@@ -77,17 +83,19 @@ const HrmDepartmentsModal = () => {
                   <label className="form-label">
                     Designation Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Designation"
                     type="text"
-                    className="form-control"
+                    placeholder="Enter designation name"
                     defaultValue="Nursing"
                   />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">Description</label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="Description"
                     rows={3}
+                    placeholder="Enter description"
                     defaultValue={
                       "Nursing is caring for and supporting patients."
                     }

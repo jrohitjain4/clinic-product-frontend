@@ -5,9 +5,9 @@ import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { useExpenseCategories } from "../../../../../core/hooks/useExpenseCategories";
 import { useClinicDoctors } from "../../../../../core/hooks/useClinicDoctors";
 import { useClinicStaff } from "../../../../../core/hooks/useClinicStaff";
-import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import { toast } from "react-toastify";
 import { apiPost, apiPut, apiDelete } from "../../../../../core/utils/apiClient";
+import { IconFormControl, IconSelect } from "../../../../../core/common/form-fields";
 
 interface ExpensesModalProps {
   selectedExpense?: any;
@@ -198,9 +198,9 @@ const ExpensesModal: React.FC<ExpensesModalProps> = ({ selectedExpense, refetch 
           <label className="form-label mb-1 text-dark fs-14 fw-medium">
             Expense Name <span className="text-danger">*</span>
           </label>
-          <input
+          <IconFormControl
+            fieldLabel="Name"
             type="text"
-            className="form-control"
             placeholder="Enter expense name"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -211,7 +211,8 @@ const ExpensesModal: React.FC<ExpensesModalProps> = ({ selectedExpense, refetch 
           <label className="form-label mb-1 text-dark fs-14 fw-medium">
             Category <span className="text-danger">*</span>
           </label>
-          <CommonSelect
+          <IconSelect
+            fieldLabel="Category"
             options={categoryOptions}
             className="select"
             value={selectedCategoryOption}
@@ -224,9 +225,9 @@ const ExpensesModal: React.FC<ExpensesModalProps> = ({ selectedExpense, refetch 
           <label className="form-label mb-1 text-dark fs-14 fw-medium">
             Amount ($) <span className="text-danger">*</span>
           </label>
-          <input
+          <IconFormControl
+            fieldLabel="Amount"
             type="number"
-            className="form-control"
             placeholder="0.00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
@@ -257,7 +258,8 @@ const ExpensesModal: React.FC<ExpensesModalProps> = ({ selectedExpense, refetch 
 
         <div className="col-12">
           <label className="form-label mb-1 text-dark fs-14 fw-medium">Purchased By</label>
-          <CommonSelect
+          <IconSelect
+            fieldLabel="Name"
             options={staffOptions}
             className="select"
             value={selectedPurchaserOption}
@@ -268,7 +270,8 @@ const ExpensesModal: React.FC<ExpensesModalProps> = ({ selectedExpense, refetch 
 
         <div className="col-md-6">
           <label className="form-label mb-1 text-dark fs-14 fw-medium">Payment Method</label>
-          <CommonSelect
+          <IconSelect
+            fieldLabel="Payment Method"
             options={paymentMethodOptions}
             className="select"
             value={selectedPaymentMethodOption}
@@ -279,7 +282,8 @@ const ExpensesModal: React.FC<ExpensesModalProps> = ({ selectedExpense, refetch 
 
         <div className="col-md-6">
           <label className="form-label mb-1 text-dark fs-14 fw-medium">Status</label>
-          <CommonSelect
+          <IconSelect
+            fieldLabel="Status"
             options={statusOptions}
             className="select"
             value={selectedStatusOption}

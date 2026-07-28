@@ -5,6 +5,7 @@ import { DatePicker } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import { apiGet, apiPost } from "../../../../core/utils/apiClient";
 import AddPatientModal from "../clinic-modules/appointments/modals/addPatientModal";
+import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
 
 interface Patient {
   id: string;
@@ -491,11 +492,13 @@ const BookTherapyAppointment = () => {
 
                       <div className="col-md-6">
                         <label className="form-label fw-semibold">Appointment ID (Auto)</label>
-                        <input
+                        <IconFormControl
                           type="text"
-                          className="form-control bg-light"
+                          fieldLabel="invoice"
+                          className="bg-light"
                           readOnly
                           value={apptCode}
+                          placeholder="Appointment ID (Auto)"
                         />
                       </div>
 
@@ -750,9 +753,10 @@ const BookTherapyAppointment = () => {
                         </div>
 
                         {mode === "Online" && (
-                          <input
+                          <IconFormControl
+                            fieldLabel="url"
                             type="url"
-                            className="form-control mb-2"
+                            className="mb-2"
                             placeholder="Input video meeting link (e.g. Zoom, Google Meet)"
                             required
                             value={onlineLink}
@@ -761,8 +765,9 @@ const BookTherapyAppointment = () => {
                         )}
 
                         {mode === "Home Visit" && (
-                          <textarea
-                            className="form-control mb-2"
+                          <IconTextarea
+                            fieldLabel="address"
+                            className="mb-2"
                             rows={2}
                             placeholder="Input Home Visit Address"
                             required
@@ -806,8 +811,8 @@ const BookTherapyAppointment = () => {
 
                       <div className="col-12">
                         <label className="form-label fw-semibold">Reason of Appointment (Optional)</label>
-                        <textarea
-                          className="form-control"
+                        <IconTextarea
+                          fieldLabel="description"
                           rows={2}
                           placeholder="Provide details or remarks..."
                           value={reason}
@@ -828,9 +833,10 @@ const BookTherapyAppointment = () => {
                   <div className="card-body">
                     <div className="mb-3">
                       <label className="form-label fw-semibold">Consultation Fee (₹) <span className="text-danger">*</span></label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control fw-bold"
+                        className="fw-bold"
                         required
                         min="0"
                         value={consultationFee}
@@ -859,9 +865,9 @@ const BookTherapyAppointment = () => {
                         <label className="form-label fw-semibold">
                           Discount Value {discountType === "percentage" ? "(%)" : "(₹)"}
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="amount"
                           type="number"
-                          className="form-control"
                           min="0"
                           value={discountValue}
                           onChange={(e) => setDiscountValue(e.target.value)}

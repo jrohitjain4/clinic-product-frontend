@@ -7,6 +7,7 @@ import DoctorProfileUpload from "../../../core/common/doctor-profile-upload/Doct
 import { apiUrl, resolveMediaUrl } from "../../../core/config/api";
 import { setLocalStorageUser } from "../../../core/utils/apiClient";
 import ImageCropperModal from "../../../core/common/crop/ImageCropperModal";
+import { IconFormControl, IconSelect } from "../../../core/common/form-fields";
 
 
 interface OnboardingWizardProps {
@@ -376,9 +377,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                     <div className="col-md-9">
                       <div className="row g-3">
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
+                            fieldLabel="first name"
                             placeholder="First Name *"
                             value={formData.firstName}
                             onChange={e => setFormData({ ...formData, firstName: e.target.value })}
@@ -386,9 +387,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                           />
                         </div>
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
+                            fieldLabel="last name"
                             placeholder="Surname (Last Name) *"
                             value={formData.lastName}
                             onChange={e => setFormData({ ...formData, lastName: e.target.value })}
@@ -396,9 +397,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                           />
                         </div>
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="email"
-                            className="form-control"
+                            fieldLabel="email"
                             placeholder="Email Address *"
                             value={formData.email}
                             onChange={e => setFormData({ ...formData, email: e.target.value })}
@@ -406,9 +407,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                           />
                         </div>
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
+                            fieldLabel="phone"
                             placeholder="Phone Number *"
                             value={formData.phone}
                             onChange={e => setFormData({ ...formData, phone: e.target.value })}
@@ -520,9 +521,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                     <div className="col-md-9">
                       <div className="row g-3">
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
+                            fieldLabel="company"
                             placeholder="Clinic Name *"
                             value={formData.clinicName}
                             onChange={e => setFormData({ ...formData, clinicName: e.target.value })}
@@ -530,27 +531,26 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                           />
                         </div>
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
                             placeholder="GST Number"
                             value={formData.gstNo}
                             onChange={e => setFormData({ ...formData, gstNo: e.target.value })}
                           />
                         </div>
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
+                            fieldLabel="address 1"
                             placeholder="Address Line 1"
                             value={formData.addressLine1}
                             onChange={e => setFormData({ ...formData, addressLine1: e.target.value })}
                           />
                         </div>
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
+                            fieldLabel="address 2"
                             placeholder="Address Line 2"
                             value={formData.addressLine2}
                             onChange={e => setFormData({ ...formData, addressLine2: e.target.value })}
@@ -564,39 +564,39 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                 {/* ── Location Row ── */}
                 <div className="row g-3 mt-1">
                   <div className="col-md-3">
-                    <select
-                      className="form-select"
-                      value={formData.country}
-                      onChange={e => setFormData({ ...formData, country: e.target.value })}
-                    >
-                      <option value="">Select Country</option>
-                      {Country.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                    </select>
+                    <IconSelect
+                      fieldLabel="country"
+                      options={Country}
+                      className="select"
+                      placeholder="Select Country"
+                      value={formData.country ? Country.find(c => c.value === formData.country) || null : null}
+                      onChange={(opt) => setFormData({ ...formData, country: opt?.value || "" })}
+                    />
                   </div>
                   <div className="col-md-3">
-                    <select
-                      className="form-select"
-                      value={formData.state}
-                      onChange={e => setFormData({ ...formData, state: e.target.value })}
-                    >
-                      <option value="">Select State</option>
-                      {State.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                    </select>
+                    <IconSelect
+                      fieldLabel="state"
+                      options={State}
+                      className="select"
+                      placeholder="Select State"
+                      value={formData.state ? State.find(s => s.value === formData.state) || null : null}
+                      onChange={(opt) => setFormData({ ...formData, state: opt?.value || "" })}
+                    />
                   </div>
                   <div className="col-md-3">
-                    <select
-                      className="form-select"
-                      value={formData.city}
-                      onChange={e => setFormData({ ...formData, city: e.target.value })}
-                    >
-                      <option value="">Select City</option>
-                      {City.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                    </select>
+                    <IconSelect
+                      fieldLabel="city"
+                      options={City}
+                      className="select"
+                      placeholder="Select City"
+                      value={formData.city ? City.find(c => c.value === formData.city) || null : null}
+                      onChange={(opt) => setFormData({ ...formData, city: opt?.value || "" })}
+                    />
                   </div>
                   <div className="col-md-3">
-                    <input
+                    <IconFormControl
                       type="text"
-                      className="form-control"
+                      fieldLabel="pincode"
                       placeholder="Pincode"
                       value={formData.pincode}
                       onChange={e => setFormData({ ...formData, pincode: e.target.value })}

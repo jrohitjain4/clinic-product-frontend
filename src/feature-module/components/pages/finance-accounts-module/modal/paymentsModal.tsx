@@ -2,6 +2,7 @@
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { DatePicker } from "antd";
+import { IconFormControl, IconTextarea } from "../../../../../core/common/form-fields";
 
 const PaymentsModal = () => {
   const getModalContainer = () => {
@@ -32,7 +33,7 @@ const PaymentsModal = () => {
                       Invoice ID <span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="Invoice" type="text" placeholder="Enter invoice ID" />
                     </div>
                   </div>
                 </div>{" "}
@@ -610,9 +611,10 @@ const PaymentsModal = () => {
                       Other Information <span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <textarea
-                        className="form-control"
+                      <IconTextarea
+                        fieldLabel="Description"
                         rows={4}
+                        placeholder="Enter other information"
                         defaultValue={""}
                       />
                     </div>
@@ -663,9 +665,10 @@ const PaymentsModal = () => {
                       Invoice ID <span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input
+                      <IconFormControl
+                        fieldLabel="Invoice"
                         type="text"
-                        className="form-control"
+                        placeholder="Enter invoice ID"
                         defaultValue="#INV0025"
                       />
                     </div>
@@ -1229,9 +1232,10 @@ const PaymentsModal = () => {
                       Other Information <span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <textarea
-                        className="form-control"
+                      <IconTextarea
+                        fieldLabel="Description"
                         rows={4}
+                        placeholder="Enter other information"
                         defaultValue={" "}
                       />
                     </div>

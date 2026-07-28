@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { IconFormControl, IconSelect } from "../../../../../../core/common/form-fields";
 
 interface RoleModalProps {
     show: boolean;
@@ -52,9 +53,10 @@ export const RoleModal = ({ show, onClose, onSubmit, initialData }: RoleModalPro
                             <div className="modal-body">
                                 <div className="mb-3">
                                     <label className="form-label">Role Name <span className="text-danger">*</span></label>
-                                    <input
+                                    <IconFormControl
                                         type="text"
-                                        className="form-control"
+                                        fieldLabel="role"
+                                        placeholder="Enter role name (e.g. Accountant)"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         required
@@ -62,14 +64,16 @@ export const RoleModal = ({ show, onClose, onSubmit, initialData }: RoleModalPro
                                 </div>
                                 <div className="mb-3">
                                     <label className="form-label">Status</label>
-                                    <select
-                                        className="form-select"
-                                        value={status}
-                                        onChange={(e) => setStatus(e.target.value)}
-                                    >
-                                        <option value="Active">Active</option>
-                                        <option value="Inactive">Inactive</option>
-                                    </select>
+                                    <IconSelect
+                                        fieldLabel="status"
+                                        options={[
+                                            { value: "Active", label: "Active" },
+                                            { value: "Inactive", label: "Inactive" },
+                                        ]}
+                                        className="select"
+                                        value={{ value: status, label: status }}
+                                        onChange={(opt: any) => setStatus(opt?.value || "Active")}
+                                    />
                                 </div>
                             </div>
                             <div className="modal-footer">

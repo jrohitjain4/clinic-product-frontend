@@ -1,8 +1,8 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { all_routes } from "../../../../routes/all_routes";
 import { DatePicker } from "antd";
-import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import { useState, useMemo, useEffect } from "react";
+import { IconFormControl, IconSelect, IconTextarea } from "../../../../../core/common/form-fields";
 import dayjs from "dayjs";
 import { useClinicServices } from "../../../../../core/hooks/useClinicServices";
 import { useClinicProducts } from "../../../../../core/hooks/useClinicProducts";
@@ -240,7 +240,7 @@ const EditInvoices = () => {
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">
                         Patient Name <span className="text-danger">*</span>
                       </label>
-                      <CommonSelect options={patientOptions} value={selectedPatient} onChange={setSelectedPatient} className="select" />
+                      <IconSelect fieldLabel="Patient" options={patientOptions} value={selectedPatient} onChange={setSelectedPatient} placeholder="Select patient" className="select" />
                     </div>
                   </div>
                   <div className="col-lg-6 col-md-6">
@@ -249,7 +249,7 @@ const EditInvoices = () => {
                         Email <span className="text-danger">*</span>
                       </label>
                       <div className="input-group">
-                        <input type="text" className="form-control" value={selectedPatient ? selectedPatient.email : ""} readOnly />
+                        <IconFormControl fieldLabel="Email Address" type="text" placeholder="Patient email" value={selectedPatient ? selectedPatient.email : ""} readOnly />
                       </div>
                     </div>
                   </div>
@@ -259,7 +259,7 @@ const EditInvoices = () => {
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">
                         Status <span className="text-danger">*</span>
                       </label>
-                      <CommonSelect options={statusOptions} value={status} onChange={setStatus} className="select" />
+                      <IconSelect fieldLabel="Status" options={statusOptions} value={status} onChange={setStatus} placeholder="Select status" className="select" />
                     </div>
                   </div>
 
@@ -268,9 +268,11 @@ const EditInvoices = () => {
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">
                         Status <span className="text-danger">*</span>
                       </label>
-                      <CommonSelect 
+                      <IconSelect 
+                        fieldLabel="Status"
                         options={statusOptions} 
                         value={status} 
+                        placeholder="Select status"
                         onChange={(val: any) => {
                           setStatus(val);
                           if (val.value === "Paid") {
@@ -291,9 +293,11 @@ const EditInvoices = () => {
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">
                         Previously Paid (₹)
                       </label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="text"
-                        className="form-control bg-light"
+                        className="bg-light"
+                        placeholder="0.00"
                         value={`₹${previouslyPaid.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
                         readOnly
                       />
@@ -305,9 +309,9 @@ const EditInvoices = () => {
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">
                         Pay New Amount / Add-on Payment (₹)
                       </label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
                         placeholder="Enter amount to pay now"
                         value={addonPayment === 0 ? "" : addonPayment}
                         onFocus={(e) => {
@@ -361,7 +365,7 @@ const EditInvoices = () => {
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">
                         Tax <span className="text-danger">*</span>
                       </label>
-                      <CommonSelect options={taxOptions} value={selectedTax} onChange={setSelectedTax} className="select" />
+                      <IconSelect fieldLabel="Tax Rate" options={taxOptions} value={selectedTax} onChange={setSelectedTax} placeholder="Select tax" className="select" />
                     </div>
                   </div>
 
@@ -370,7 +374,8 @@ const EditInvoices = () => {
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">
                         Payment Method <span className="text-danger">*</span>
                       </label>
-                      <CommonSelect
+                      <IconSelect
+                        fieldLabel="Payment Method"
                         options={[
                           { value: "Cash", label: "Cash" },
                           { value: "UPI", label: "UPI" },
@@ -383,6 +388,7 @@ const EditInvoices = () => {
                         ]}
                         value={paymentMethod}
                         onChange={setPaymentMethod}
+                        placeholder="Select method"
                         className="select"
                       />
                     </div>
@@ -427,36 +433,37 @@ const EditInvoices = () => {
                           {invoices.map((invoice, _idx) => (
                             <tr key={invoice.id} className="invoices-list-item">
                               <td>
-                                <input 
+                                <IconFormControl
+                                  fieldLabel="Description"
                                   type="text" 
-                                  className="form-control" 
                                   placeholder="Enter item name or description (e.g. Consultation Fee, Therapy, Medicine...)"
                                   value={invoice.description} 
                                   onChange={(e) => handleItemUpdate(invoice.id, "description", e.target.value)} 
                                 />
                               </td>
                               <td>
-                                <input 
+                                <IconFormControl
+                                  fieldLabel="Price"
                                   type="number" 
-                                  className="form-control" 
                                   placeholder="0"
                                   value={invoice.price} 
                                   onChange={(e) => handleItemUpdate(invoice.id, "price", e.target.value)} 
                                 />
                               </td>
                               <td>
-                                <input 
+                                <IconFormControl
+                                  fieldLabel="Quantity"
                                   type="number" 
-                                  className="form-control" 
                                   placeholder="1"
                                   value={invoice.quantity} 
                                   onChange={(e) => handleItemUpdate(invoice.id, "quantity", e.target.value)} 
                                 />
                               </td>
                               <td>
-                                <input 
+                                <IconFormControl
+                                  fieldLabel="Amount"
                                   type="text" 
-                                  className="form-control bg-light" 
+                                  className="bg-light" 
                                   readOnly 
                                   value={`₹${invoice.amount.toFixed(2)}`} 
                                 />
@@ -504,7 +511,7 @@ const EditInvoices = () => {
                         Other Information <span className="text-danger">*</span>
                       </label>
                       <div className="input-group">
-                        <textarea rows={3} className="form-control" value={otherInfo} onChange={e => setOtherInfo(e.target.value)} />
+                        <IconTextarea fieldLabel="Description" rows={3} placeholder="Enter other information" value={otherInfo} onChange={e => setOtherInfo(e.target.value)} />
                       </div>
                     </div>
                   </div>

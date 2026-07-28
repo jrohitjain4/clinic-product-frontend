@@ -5,6 +5,7 @@ import { useState } from "react";
 import TagInput from "../../../../../core/common/Taginput";
 import DefaultEditor from "react-simple-wysiwyg";
 import { all_routes } from "../../../../routes/all_routes";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 const EditPage = () => {
   const [tags, setTags] = useState<string[]>(["departments", "doctors"]);
@@ -42,9 +43,9 @@ const EditPage = () => {
                           <label className="form-label mb-1 fw-medium">
                             Title<span className="text-danger ms-1">*</span>
                           </label>
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
+                            fieldLabel="title"
                             defaultValue="Specializations"
                           />
                         </div>
@@ -59,9 +60,10 @@ const EditPage = () => {
                             </span>
                             <span className="text-danger ms-1">*</span>
                           </label>
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
+                            fieldLabel="title"
+                            placeholder="Slug"
                             defaultValue="specializations"
                           />
                         </div>
@@ -75,9 +77,10 @@ const EditPage = () => {
                             </span>
                             <span className="text-danger ms-1">*</span>
                           </label>
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control text-truncate"
+                            fieldLabel="description"
+                            className="text-truncate"
                             defaultValue="Expert doctors by specialization to meet your needs"
                           />
                         </div>

@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import CommonSelect from "../../../../../core/common/common-select/commonSelect";
+import { IconFormControl, IconSelect } from "../../../../../core/common/form-fields";
 import { Category } from "../../../../../core/common/selectOption";
 import DefaultEditor from "react-simple-wysiwyg";
 import TagInput from "../../../../../core/common/Taginput";
@@ -35,15 +35,16 @@ const EditBlog = () => {
                 <div className="card-body">
                   <div className="mb-3">
                     <label className="form-label">Title</label>
-                    <input
+                    <IconFormControl
                       type="text"
-                      className="form-control"
+                      fieldLabel="title"
                       defaultValue="Health First: Your Guide to Better Living"
                     />
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Category</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="category"
                       options={Category}
                       className="select"
                       defaultValue={Category[0]}
@@ -99,7 +100,7 @@ const EditBlog = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 ï¿½
             <Link to="#" className="link-primary">
               Docyari
             </Link>

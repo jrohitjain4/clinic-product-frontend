@@ -5,6 +5,7 @@ import FloatingActions from "./FloatingActions";
 import NavbarFront from "./NavbarFront";
 import FooterFront from "./FooterFront";
 import CtaBanner from "./CtaBanner";
+import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
 import "./homePage.scss";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -196,22 +197,22 @@ const ContactUs = () => {
                             <form className="d-flex flex-column gap-3">
                                 <div className="row g-3">
                                     <div className="col-md-6">
-                                        <input type="text" className="form-control" placeholder="Your Name *" style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }} />
+                                        <IconFormControl type="text" fieldLabel="name" placeholder="Your Name *" style={{ padding: '12px 16px 12px 40px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }} />
                                     </div>
                                     <div className="col-md-6">
-                                        <input type="email" className="form-control" placeholder="Email Address *" style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }} />
+                                        <IconFormControl type="email" fieldLabel="email" placeholder="Email Address *" style={{ padding: '12px 16px 12px 40px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }} />
                                     </div>
                                 </div>
                                 <div className="row g-3">
                                     <div className="col-md-6">
-                                        <input type="tel" className="form-control" placeholder="Phone Number *" style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }} />
+                                        <IconFormControl type="tel" fieldLabel="phone" placeholder="Phone Number *" style={{ padding: '12px 16px 12px 40px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }} />
                                     </div>
                                     <div className="col-md-6">
-                                        <input type="text" className="form-control" placeholder="Subject *" style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }} />
+                                        <IconFormControl type="text" fieldLabel="subject" placeholder="Subject *" style={{ padding: '12px 16px 12px 40px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }} />
                                     </div>
                                 </div>
                                 <div>
-                                    <textarea className="form-control" placeholder="Your Message *" rows={4} style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', resize: 'none' }}></textarea>
+                                    <IconTextarea fieldLabel="message" placeholder="Your Message *" rows={4} style={{ padding: '12px 16px 12px 40px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', resize: 'none' }} />
                                 </div>
                                 <button type="button" className="btn btn-primary d-flex align-items-center justify-content-center gap-2 mt-2 w-100" style={{ padding: '12px', borderRadius: '8px', fontWeight: 600 }}>
                                     Send Message <i className="ti ti-send" />

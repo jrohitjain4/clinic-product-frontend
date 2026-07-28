@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { apiPost, apiPut, apiDelete } from "../../../../../core/utils/apiClient";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
-import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import { toast } from "react-toastify";
+import { IconFormControl, IconSelect } from "../../../../../core/common/form-fields";
 
 interface ExpenseCategoryModalProps {
   selectedCategory?: any;
@@ -119,9 +119,9 @@ const ExpenseCategoryModal: React.FC<ExpenseCategoryModalProps> = ({ selectedCat
           <label className="form-label mb-1 text-dark fs-14 fw-medium">
             Category Name <span className="text-danger">*</span>
           </label>
-          <input
+          <IconFormControl
+            fieldLabel="Category"
             type="text"
-            className="form-control"
             placeholder="Enter category name"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -129,7 +129,8 @@ const ExpenseCategoryModal: React.FC<ExpenseCategoryModalProps> = ({ selectedCat
         </div>
         <div className="col-12">
           <label className="form-label mb-1 text-dark fs-14 fw-medium">Status</label>
-          <CommonSelect
+          <IconSelect
+            fieldLabel="Status"
             options={statusOptions}
             className="select"
             value={selectedStatusOption}

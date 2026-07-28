@@ -1,6 +1,7 @@
 import { Link } from "react-router"
 import { all_routes } from "../../../../../../routes/all_routes"
 import ImageWithBasePath from "../../../../../../../core/imageWithBasePath"
+import { IconFormControl } from "../../../../../../../core/common/form-fields"
 
 
 const Modals = () => {
@@ -27,13 +28,13 @@ const Modals = () => {
               <label className="form-label">
                 Currency Name<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl fieldLabel="Currency" type="text" placeholder="Enter currency name" />
             </div>
             <div className="mb-3">
               <label className="form-label">
                 Exchange Rate<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl type="text" placeholder="Enter exchange rate" />
             </div>
             {/* start row */}
             <div className="row mb-3">
@@ -42,7 +43,7 @@ const Modals = () => {
                   <label className="form-label">
                     Code<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl type="text" placeholder="Enter code" />
                 </div>
               </div>
               {/* end col */}
@@ -51,7 +52,7 @@ const Modals = () => {
                   <label className="form-label">
                     Symbol<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl type="text" placeholder="Enter symbol" />
                 </div>
               </div>
               {/* end col */}
@@ -108,9 +109,10 @@ const Modals = () => {
               <label className="form-label">
                 Currency Name<span className="text-danger ms-1">*</span>
               </label>
-              <input
+              <IconFormControl
+                fieldLabel="Currency"
                 type="text"
-                className="form-control"
+                placeholder="Enter currency name"
                 defaultValue="Dollar"
               />
             </div>
@@ -118,7 +120,7 @@ const Modals = () => {
               <label className="form-label">
                 Exchange Rate<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" defaultValue="{01} "/>
+              <IconFormControl type="text" placeholder="Enter exchange rate" defaultValue="{01} "/>
             </div>
             {/* start row */}
             <div className="row mb-3">
@@ -127,9 +129,9 @@ const Modals = () => {
                   <label className="form-label">
                     Code<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
+                    placeholder="Enter code"
                     defaultValue="USD"
                   />
                 </div>
@@ -140,9 +142,9 @@ const Modals = () => {
                   <label className="form-label">
                     Symbol<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
+                    placeholder="Enter symbol"
                     defaultValue="$"
                   />
                 </div>

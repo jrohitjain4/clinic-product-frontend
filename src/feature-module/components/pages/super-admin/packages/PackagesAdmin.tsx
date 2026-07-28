@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { apiUrl } from "../../../../../core/config/api";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 interface Package {
     id: string;
@@ -194,19 +195,16 @@ const PackagesAdmin = () => {
                                     <div className="row g-4">
                                         <div className="col-12">
                                             <label className="form-label fw-bold">Plan Name</label>
-                                            <input type="text" className="form-control form-control-lg" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Enterprise Monthly" />
+                                            <IconFormControl type="text" fieldLabel="package" className="form-control-lg" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Enterprise Monthly" />
                                         </div>
 
                                         <div className="col-md-6">
                                             <label className="form-label fw-bold">Price (₹)</label>
-                                            <div className="input-group">
-                                                <span className="input-group-text">₹</span>
-                                                <input type="number" step="0.01" className="form-control form-control-lg" required value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
-                                            </div>
+                                            <IconFormControl type="number" step="0.01" fieldLabel="price" className="form-control-lg" placeholder="Price (₹)" required value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
                                         </div>
                                         <div className="col-md-6">
                                             <label className="form-label fw-bold">Duration (Days)</label>
-                                            <input type="number" className="form-control form-control-lg" required value={formData.durationInDays} onChange={e => setFormData({ ...formData, durationInDays: e.target.value })} />
+                                            <IconFormControl type="number" fieldLabel="time" className="form-control-lg" placeholder="Duration (Days)" required value={formData.durationInDays} onChange={e => setFormData({ ...formData, durationInDays: e.target.value })} />
                                         </div>
                                     </div>
 

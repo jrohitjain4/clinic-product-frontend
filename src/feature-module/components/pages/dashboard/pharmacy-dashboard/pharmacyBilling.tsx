@@ -16,6 +16,7 @@ import CommonSelect from "../../../../../core/common/common-select/commonSelect"
 import { apiUrl } from "../../../../../core/config/api";
 import EmptyState from "../../../../../core/common/emptyState";
 import AddPatientModal from "../../clinic-modules/appointments/modals/addPatientModal";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 import { usePrescriptions } from "../../../../../core/hooks/usePrescriptions";
 
 interface BillingItem {
@@ -537,7 +538,34 @@ const PharmacyBilling = () => {
       title: "Payment",
       dataIndex: "Status",
       render: (text: string) => (
-        <span className={`badge border ${text === "Paid" ? "badge-soft-success border-success" : "badge-soft-danger border-danger"} px-2 py-1 fs-12 fw-medium`}>
+        <span
+          className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+          style={{
+            backgroundColor:
+              text === "Paid"
+                ? "#e6f8ef"
+                : text === "Partial"
+                  ? "#fff3cd"
+                  : "#fdeded",
+            color:
+              text === "Paid"
+                ? "#198754"
+                : text === "Partial"
+                  ? "#fd7e14"
+                  : "#dc3545",
+            fontWeight: 600,
+            fontSize: "12px",
+          }}
+        >
+          <i
+            className={`${
+              text === "Paid"
+                ? "ti ti-circle-check"
+                : text === "Partial"
+                  ? "ti ti-clock"
+                  : "ti ti-circle-x"
+            } fs-14`}
+          />
           {text}
         </span>
       ),
@@ -607,7 +635,7 @@ const PharmacyBilling = () => {
 
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
               <div className="search-field position-relative" style={{ width: "220px" }}>
-                <input type="text" className="form-control fs-13 py-2" placeholder="Search Invoice/Patient/Medicine..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+                <IconFormControl fieldLabel="search" type="text" className="fs-13 py-2" placeholder="Search Invoice/Patient/Medicine..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
               </div>
 
               {/* Date Filter */}
@@ -794,11 +822,12 @@ const PharmacyBilling = () => {
                       </div>
                       <div className="col-md-3">
                         <label className="form-label text-muted mb-0">Discount (%)</label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="Amount"
                           type="number"
                           min={0}
                           max={100}
-                          className="form-control form-control-sm"
+                          className="form-control-sm"
                           placeholder="0"
                           value={discountPercent}
                           onChange={(e) => setDiscountPercent(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}

@@ -3,12 +3,12 @@ import SettingsSidebar from "../../../../../../core/common/settings-sidebar/sett
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import { Country, State, City } from "country-state-city";
 import { useState, useRef, useEffect } from "react";
-import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import DoctorProfileUpload from "../../../../../../core/common/doctor-profile-upload/DoctorProfileUpload";
 import { toast } from "react-toastify";
 import { resolveMediaUrl, apiUrl } from "../../../../../../core/config/api";
 import ImageCropperModal from "../../../../../../core/common/crop/ImageCropperModal";
 import { setLocalStorageUser as setSanitizedUser } from "../../../../../../core/utils/apiClient";
+import { IconFormControl, IconSelect } from "../../../../../../core/common/form-fields";
 
 
 const ProfileSettings = () => {
@@ -342,7 +342,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-12">
-                              <input type="text" className="form-control" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} disabled={!isEditing} />
+                              <IconFormControl fieldLabel="First Name" type="text" placeholder="Enter first name" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -360,7 +360,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-12">
-                              <input type="text" className="form-control" value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} disabled={!isEditing} />
+                              <IconFormControl fieldLabel="Last Name" type="text" placeholder="Enter surname" value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -377,7 +377,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-12">
-                              <input type="email" className="form-control" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} disabled={!isEditing} />
+                              <IconFormControl fieldLabel="Email Address" type="email" placeholder="Enter email address" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -395,7 +395,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-12">
-                              <input type="text" className="form-control" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} disabled={!isEditing} />
+                              <IconFormControl fieldLabel="Phone Number" type="text" placeholder="Enter phone number" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -419,7 +419,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-12">
-                              <input type="text" className="form-control" value={formData.addressLine1} onChange={e => setFormData({ ...formData, addressLine1: e.target.value })} disabled={!isEditing} />
+                              <IconFormControl fieldLabel="Address 1" type="text" placeholder="Enter address line 1" value={formData.addressLine1} onChange={e => setFormData({ ...formData, addressLine1: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -436,7 +436,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-12">
-                              <input type="text" className="form-control" value={formData.addressLine2} onChange={e => setFormData({ ...formData, addressLine2: e.target.value })} disabled={!isEditing} />
+                              <IconFormControl fieldLabel="Address 2" type="text" placeholder="Enter address line 2" value={formData.addressLine2} onChange={e => setFormData({ ...formData, addressLine2: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -451,9 +451,11 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-12">
-                              <CommonSelect
+                              <IconSelect
+                                fieldLabel="Country"
                                 options={countriesList}
                                 className="select"
+                                placeholder="Select country"
                                 value={selectedCountry}
                                 onChange={handleCountryChange}
                                 isDisabled={!isEditing}
@@ -472,9 +474,11 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-12">
-                              <CommonSelect
+                              <IconSelect
+                                fieldLabel="State"
                                 options={statesList}
                                 className="select"
+                                placeholder="Select state"
                                 value={selectedState}
                                 onChange={handleStateChange}
                                 isDisabled={!isEditing || !selectedCountry}
@@ -493,9 +497,11 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-12">
-                              <CommonSelect
+                              <IconSelect
+                                fieldLabel="City"
                                 options={citiesList}
                                 className="select"
+                                placeholder="Select city"
                                 value={selectedCity}
                                 onChange={handleCityChange}
                                 isDisabled={!isEditing || !selectedState}
@@ -514,7 +520,7 @@ const ProfileSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-12">
-                              <input type="text" className="form-control" value={formData.pincode} onChange={e => setFormData({ ...formData, pincode: e.target.value })} disabled={!isEditing} />
+                              <IconFormControl fieldLabel="Pincode" type="text" placeholder="Enter pincode" value={formData.pincode} onChange={e => setFormData({ ...formData, pincode: e.target.value })} disabled={!isEditing} />
                             </div>
                             {/* end col */}
                           </div>
@@ -614,7 +620,7 @@ const ProfileSettings = () => {
                               </label>
                             </div>
                             <div className="col-lg-12">
-                              <input type="text" className="form-control" value={formData.clinicName} onChange={e => setFormData({ ...formData, clinicName: e.target.value })} disabled={!isEditing} />
+                              <IconFormControl fieldLabel="Organization" type="text" placeholder="Enter clinic name" value={formData.clinicName} onChange={e => setFormData({ ...formData, clinicName: e.target.value })} disabled={!isEditing} />
                             </div>
                           </div>
                         </div>
@@ -624,7 +630,7 @@ const ProfileSettings = () => {
                               <label className="form-label mb-0">GST Number</label>
                             </div>
                             <div className="col-lg-12">
-                              <input type="text" className="form-control" value={formData.gstNo} onChange={e => setFormData({ ...formData, gstNo: e.target.value })} disabled={!isEditing} />
+                              <IconFormControl fieldLabel="GST Number" type="text" placeholder="Enter GST number" value={formData.gstNo} onChange={e => setFormData({ ...formData, gstNo: e.target.value })} disabled={!isEditing} />
                             </div>
                           </div>
                         </div>

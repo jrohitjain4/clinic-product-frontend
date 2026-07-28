@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { all_routes } from "../../../routes/all_routes";
 import { DatePicker } from "antd";
 import dayjs, { Dayjs } from "dayjs";
+import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
 
 const routes = all_routes;
 
@@ -700,8 +701,8 @@ const ConsultationForm = () => {
           {/* General Advice */}
           <div className="mb-4">
             <label className="form-label fw-bold small">Doctor Advice / Instruction</label>
-            <textarea
-              className="form-control"
+            <IconTextarea
+              fieldLabel="notes"
               rows={3}
               value={advice}
               onChange={(e) => setAdvice(e.target.value)}
@@ -733,10 +734,11 @@ const ConsultationForm = () => {
                     {medicines.map((m, idx) => (
                       <tr key={idx}>
                         <td className="border-0 py-1">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control form-control-sm"
-                            placeholder="e.g. Paracetamol 650mg"
+                            fieldLabel="medicine"
+                            className="form-control-sm"
+                            placeholder="Medicine Name"
                             value={m.name}
                             onChange={(e) => updateMedicineRow(idx, "name", e.target.value)}
                             style={{ borderRadius: 6 }}
@@ -758,10 +760,11 @@ const ConsultationForm = () => {
                           </select>
                         </td>
                         <td className="border-0 py-1">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control form-control-sm"
-                            placeholder="e.g. 5 Days"
+                            fieldLabel="time"
+                            className="form-control-sm"
+                            placeholder="Duration"
                             value={m.duration}
                             onChange={(e) => updateMedicineRow(idx, "duration", e.target.value)}
                             style={{ borderRadius: 6 }}
@@ -847,9 +850,10 @@ const ConsultationForm = () => {
                         className="rounded-2"
                         style={{ width: "100%", height: 120, objectFit: "cover" }}
                       />
-                      <input
+                      <IconFormControl
                         type="text"
-                        className="form-control form-control-sm"
+                        fieldLabel="notes"
+                        className="form-control-sm"
                         placeholder="Add caption / remark..."
                         value={att.remark}
                         onChange={(e) => updateAttachmentRemark(idx, e.target.value)}
@@ -1084,8 +1088,9 @@ const ConsultationForm = () => {
                           <div className="fw-bold mb-2 text-primary">{pendingPart.label}</div>
                           <div className="mb-2">
                             <label className="form-label fw-semibold small mb-1">Remark</label>
-                            <textarea
-                              className="form-control form-control-sm"
+                            <IconTextarea
+                              fieldLabel="notes"
+                              className="form-control-sm"
                               rows={2}
                               value={remarkDraft}
                               onChange={(e) => setRemarkDraft(e.target.value)}
@@ -1106,9 +1111,11 @@ const ConsultationForm = () => {
                           </div>
                           <div className="mb-3">
                             <label className="form-label fw-semibold small mb-1">Days Since</label>
-                            <input
+                            <IconFormControl
                               type="number"
-                              className="form-control form-control-sm"
+                              fieldLabel="time"
+                              className="form-control-sm"
+                              placeholder="Days Since"
                               value={daysSinceDraft}
                               onChange={(e) => setDaysSinceDraft(parseInt(e.target.value) || 0)}
                             />
@@ -1123,8 +1130,8 @@ const ConsultationForm = () => {
                       <div>
                         <label className="form-label fw-bold small">General Examination Notes</label>
                         {isEditing ? (
-                          <textarea
-                            className="form-control"
+                          <IconTextarea
+                            fieldLabel="notes"
                             rows={4}
                             value={generalNotes}
                             onChange={(e) => setGeneralNotes(e.target.value)}
@@ -1251,9 +1258,10 @@ const ConsultationForm = () => {
                       <h6 className="fw-bold mb-2 small">Collect Payment</h6>
                       <div className="row g-2">
                         <div className="col-7">
-                          <input
+                          <IconFormControl
                             type="number"
-                            className="form-control form-control-sm"
+                            fieldLabel="amount"
+                            className="form-control-sm"
                             max={pendingBalance}
                             min={1}
                             placeholder="Amount (₹)"
@@ -1663,8 +1671,8 @@ const ConsultationForm = () => {
                       <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                         Remark
                       </label>
-                      <textarea
-                        className="form-control"
+                      <IconTextarea
+                        fieldLabel="notes"
                         rows={2}
                         value={remarkDraft}
                         onChange={(e) => setRemarkDraft(e.target.value)}
@@ -1690,9 +1698,10 @@ const ConsultationForm = () => {
                       <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                         Since how many days?
                       </label>
-                      <input
+                      <IconFormControl
                         type="number"
-                        className="form-control"
+                        fieldLabel="time"
+                        placeholder="Since how many days?"
                         min={0}
                         value={daysSinceDraft}
                         onChange={(e) => setDaysSinceDraft(parseInt(e.target.value) || 0)}
@@ -1787,8 +1796,8 @@ const ConsultationForm = () => {
                     <i className="ti ti-notes me-2 text-primary" />
                     General Examination Notes (Optional)
                   </h6>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="notes"
                     rows={4}
                     value={generalNotes}
                     onChange={(e) => setGeneralNotes(e.target.value)}
@@ -1919,9 +1928,10 @@ const ConsultationForm = () => {
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                               Total Sessions *
                             </label>
-                            <input
+                            <IconFormControl
                               type="number"
-                              className="form-control"
+                              fieldLabel="quantity"
+                              placeholder="Total Sessions"
                               min={1}
                               value={plan.totalSessions}
                               onChange={(e) => {
@@ -1935,9 +1945,10 @@ const ConsultationForm = () => {
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                               Fee per Session (₹) *
                             </label>
-                            <input
+                            <IconFormControl
                               type="number"
-                              className="form-control"
+                              fieldLabel="price"
+                              placeholder="Fee per Session (₹)"
                               min={0}
                               value={plan.sessionFee}
                               onChange={(e) => {
@@ -1974,9 +1985,10 @@ const ConsultationForm = () => {
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                               Session Time (Optional)
                             </label>
-                            <input
+                            <IconFormControl
                               type="time"
-                              className="form-control"
+                              fieldLabel="time"
+                              placeholder="Session Time (Optional)"
                               value={plan.sessionTime}
                               onChange={(e) => updatePlan(idx, "sessionTime", e.target.value)}
                               style={{ borderRadius: 8, fontSize: 13 }}
@@ -2001,9 +2013,9 @@ const ConsultationForm = () => {
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                               Notes (Optional)
                             </label>
-                            <input
+                            <IconFormControl
+                              fieldLabel="notes"
                               type="text"
-                              className="form-control"
                               placeholder="Any instructions..."
                               value={plan.notes}
                               onChange={(e) => updatePlan(idx, "notes", e.target.value)}
@@ -2083,9 +2095,9 @@ const ConsultationForm = () => {
                         <option value="fixed">Fixed (₹)</option>
                       </select>
                       {discountType !== "none" && (
-                        <input
+                        <IconFormControl
+                          fieldLabel="amount"
                           type="number"
-                          className="form-control"
                           min={0}
                           value={discountValue}
                           onChange={(e) => {
@@ -2116,9 +2128,9 @@ const ConsultationForm = () => {
                   {/* Payment */}
                   <div className="mb-3">
                     <label className="form-label fw-semibold" style={{ fontSize: 13 }}>Amount Paid Now (₹)</label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="amount"
                       type="number"
-                      className="form-control"
                       min={0}
                       max={finalTotal}
                       value={amountPaid}

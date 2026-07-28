@@ -9,18 +9,23 @@ import {
   Blood_Group,
   City,
   Country,
-  Gender,
   State,
 } from "../../../../../core/common/selectOption";
-import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import PatientProfileUpload from "../../../../../core/common/patient-profile-upload/PatientProfileUpload";
+import {
+  IconFormControl,
+  IconSelect,
+  GenderOptionGroup,
+  StatusOptionGroup,
+} from "../../../../../core/common/form-fields";
+import type { GenderValue, PatientStatusValue } from "../../../../../core/common/form-fields";
 import { apiUrl } from "../../../../../core/config/api";
 import { useClinicPatient } from "../../../../../core/hooks/useClinicPatient";
 import {
-  PATIENT_STATUS_OPTIONS,
   emptyPatientForm,
 } from "../../../../../core/utils/patientForm";
 import { findSelectOption } from "../../../../../core/utils/doctorSchedule";
+import "../../../../../core/common/form-fields/IconField.scss";
 
 type DoctorOption = { id: string; fullName: string };
 
@@ -186,6 +191,18 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
 
   return (
     <div className="page-wrapper">
+      <style>{`
+        .page-wrapper .card.patient-form-main-card {
+          border: none !important;
+          box-shadow: 0 10px 28px rgba(15, 23, 42, 0.1) !important;
+          border-radius: 12px !important;
+          overflow: hidden !important;
+        }
+        .page-wrapper .card.patient-form-main-card > .patient-form-card-header {
+          border-top-left-radius: 12px !important;
+          border-top-right-radius: 12px !important;
+        }
+      `}</style>
       <div className="content">
         <div className="row justify-content-center">
           <div className="col-lg-10">
@@ -198,7 +215,53 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
               </h6>
             </div>
             <form onSubmit={handleSubmit}>
-              <div className="card">
+              <div className="card overflow-hidden border-0 patient-form-main-card">
+                <div
+                  className="d-flex align-items-center justify-content-between px-4 py-3 bg-white border-bottom patient-form-card-header"
+                  style={{ borderColor: "#e5e7eb" }}
+                >
+                  <div className="d-flex align-items-center gap-3">
+                    <div
+                      className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                      style={{
+                        width: 44,
+                        height: 44,
+                        background: "#f3e8ff",
+                        color: "#6d28d9",
+                      }}
+                    >
+                      <i
+                        className={`ti ${mode === "create" ? "ti-user-plus" : "ti-user-edit"} fs-20`}
+                      />
+                    </div>
+                    <div>
+                      <h5
+                        className="mb-0 fw-bold"
+                        style={{ color: "#1e1b4b", fontSize: 18 }}
+                      >
+                        {mode === "create" ? "Add New Patient" : "Edit Patient"}
+                      </h5>
+                      <p className="mb-0 text-muted" style={{ fontSize: 13 }}>
+                        {mode === "create"
+                          ? "Enter patient details to register in the system"
+                          : "Update patient details in the system"}
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    to={all_routes.patients}
+                    className="d-inline-flex align-items-center justify-content-center text-muted bg-white"
+                    aria-label="Close"
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 8,
+                      border: "1px solid #e5e7eb",
+                    }}
+                  >
+                    <i className="ti ti-x fs-18" />
+                  </Link>
+                </div>
                 <div className="card-body pb-0">
                   {formError && (
                     <div className="alert alert-danger py-2 fs-13 mb-3">
@@ -223,9 +286,10 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1 fw-medium">
                           First Name<span className="text-danger ms-1">*</span>
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="First Name"
                           type="text"
-                          className="form-control"
+                          placeholder="Enter first name"
                           value={form.firstName}
                           onChange={(e) =>
                             setForm((f) => ({ ...f, firstName: e.target.value }))
@@ -238,9 +302,10 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1 fw-medium">
                           Last Name<span className="text-danger ms-1">*</span>
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="Last Name"
                           type="text"
-                          className="form-control"
+                          placeholder="Enter last name"
                           value={form.lastName}
                           onChange={(e) =>
                             setForm((f) => ({ ...f, lastName: e.target.value }))
@@ -253,13 +318,19 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1 fw-medium">
                           Phone Number<span className="text-danger ms-1">*</span>
                         </label>
-                        <PhoneInput
-                          defaultCountry="IN"
-                          value={form.phone}
-                          onChange={(v) =>
-                            setForm((f) => ({ ...f, phone: v || "" }))
-                          }
-                        />
+                        <div className="icon-field-shell">
+                          <span className="icon-field-box" aria-hidden>
+                            <i className="ti ti-phone" />
+                          </span>
+                          <PhoneInput
+                            defaultCountry="IN"
+                            value={form.phone}
+                            onChange={(v) =>
+                              setForm((f) => ({ ...f, phone: v || "" }))
+                            }
+                            className="icon-field-phone"
+                          />
+                        </div>
                         {phoneWarning && (
                           <div className="text-warning fs-12 mt-1">
                             <i className="ti ti-alert-triangle me-1" />
@@ -273,9 +344,10 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1 fw-medium">
                           Email Address<span className="text-danger ms-1">*</span>
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="Email Address"
                           type="email"
-                          className="form-control"
+                          placeholder="Enter email address"
                           value={form.email}
                           onChange={(e) =>
                             setForm((f) => ({ ...f, email: e.target.value }))
@@ -289,7 +361,8 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                           Associate Doctors<span className="text-danger ms-1">*</span>
                         </label>
                         {doctorOptions.length > 0 ? (
-                          <CommonSelect
+                          <IconSelect
+                            fieldLabel="Associate Doctors"
                             options={doctorOptions}
                             className="select"
                             isMulti={true}
@@ -321,21 +394,21 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1 fw-medium">
                           DOB<span className="text-danger ms-1">*</span>
                         </label>
-                        <div className="input-icon-end position-relative">
+                        <div className="icon-field-shell">
+                          <span className="icon-field-box" aria-hidden>
+                            <i className="ti ti-calendar" />
+                          </span>
                           <DatePicker
-                            className="form-control datetimepicker w-100"
+                            className="form-control datetimepicker w-100 icon-field-input"
                             format={{ format: "DD-MM-YYYY", type: "mask" }}
                             getPopupContainer={getModalContainer}
                             placeholder="DD-MM-YYYY"
-                            suffixIcon={null}
+                            suffixIcon={<i className="ti ti-calendar text-muted" />}
                             value={form.dob}
                             onChange={(d: Dayjs | null) =>
                               setForm((f) => ({ ...f, dob: d }))
                             }
                           />
-                          <span className="input-icon-addon">
-                            <i className="ti ti-calendar" />
-                          </span>
                         </div>
                       </div>
                     </div>
@@ -344,12 +417,10 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1 fw-medium">
                           Gender<span className="text-danger ms-1">*</span>
                         </label>
-                        <CommonSelect
-                          options={Gender}
-                          className="select"
-                          value={findSelectOption(Gender, form.gender) || Gender[0]}
-                          onChange={(opt) =>
-                            setForm((f) => ({ ...f, gender: opt?.value || "" }))
+                        <GenderOptionGroup
+                          value={form.gender}
+                          onChange={(val: GenderValue) =>
+                            setForm((f) => ({ ...f, gender: val }))
                           }
                         />
                       </div>
@@ -359,13 +430,15 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1 fw-medium">
                           Blood Group<span className="text-danger ms-1">*</span>
                         </label>
-                        <CommonSelect
+                        <IconSelect
+                          fieldLabel="Blood Group"
                           options={Blood_Group}
                           className="select"
                           value={
                             findSelectOption(Blood_Group, form.bloodGroup) ||
                             Blood_Group[0]
                           }
+                          placeholder="Select blood group"
                           onChange={(opt) =>
                             setForm((f) => ({
                               ...f,
@@ -380,35 +453,50 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1 fw-medium">
                           Status<span className="text-danger ms-1">*</span>
                         </label>
-                        <CommonSelect
-                          options={PATIENT_STATUS_OPTIONS}
-                          className="select"
-                          value={findSelectOption(
-                            PATIENT_STATUS_OPTIONS,
-                            form.status
-                          )}
-                          onChange={(opt) =>
+                        <StatusOptionGroup
+                          value={form.status}
+                          onChange={(val: PatientStatusValue) =>
                             setForm((f) => ({
                               ...f,
-                              status: opt?.value || "Active",
+                              status: val || "Active",
                             }))
                           }
                         />
                       </div>
                     </div>
                   </div>
-                  <h6 className="fw-bold mb-3 border-top pt-3">
-                    Address Information
-                  </h6>
+                  <div className="d-flex align-items-center gap-2 mb-3 border-top pt-3">
+                    <span
+                      className="d-inline-flex align-items-center justify-content-center rounded"
+                      style={{
+                        width: 28,
+                        height: 28,
+                        background: "#f3e8ff",
+                        color: "#7c3aed",
+                      }}
+                    >
+                      <i className="ti ti-map-pin fs-14" />
+                    </span>
+                    <h6
+                      className="fw-bold mb-0 pb-1"
+                      style={{
+                        borderBottom: "2px solid #7c3aed",
+                        display: "inline-block",
+                      }}
+                    >
+                      Address Information
+                    </h6>
+                  </div>
                   <div className="row">
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
                           Address 1<span className="text-danger ms-1">*</span>
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="Address 1"
                           type="text"
-                          className="form-control"
+                          placeholder="Enter address line 1"
                           value={form.address1}
                           onChange={(e) =>
                             setForm((f) => ({ ...f, address1: e.target.value }))
@@ -419,11 +507,12 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
-                          Address 2<span className="text-danger ms-1">*</span>
+                          Address 2
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="Address 2"
                           type="text"
-                          className="form-control"
+                          placeholder="Enter address line 2 (optional)"
                           value={form.address2}
                           onChange={(e) =>
                             setForm((f) => ({ ...f, address2: e.target.value }))
@@ -436,12 +525,14 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1">
                           Country<span className="text-danger ms-1">*</span>
                         </label>
-                        <CommonSelect
+                        <IconSelect
+                          fieldLabel="Country"
                           options={Country}
                           className="select"
                           value={
                             findSelectOption(Country, form.country) || Country[0]
                           }
+                          placeholder="Select country"
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, country: opt?.value || "" }))
                           }
@@ -453,10 +544,12 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1">
                           State<span className="text-danger ms-1">*</span>
                         </label>
-                        <CommonSelect
+                        <IconSelect
+                          fieldLabel="State"
                           options={State}
                           className="select"
                           value={findSelectOption(State, form.state) || State[0]}
+                          placeholder="Select state"
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, state: opt?.value || "" }))
                           }
@@ -468,10 +561,12 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1">
                           City<span className="text-danger ms-1">*</span>
                         </label>
-                        <CommonSelect
+                        <IconSelect
+                          fieldLabel="City"
                           options={City}
                           className="select"
                           value={findSelectOption(City, form.city) || City[0]}
+                          placeholder="Select city"
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, city: opt?.value || "" }))
                           }
@@ -483,9 +578,10 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         <label className="form-label mb-1">
                           Pincode<span className="text-danger ms-1">*</span>
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="Pincode"
                           type="text"
-                          className="form-control"
+                          placeholder="Enter pincode"
                           value={form.pincode}
                           onChange={(e) =>
                             setForm((f) => ({ ...f, pincode: e.target.value }))

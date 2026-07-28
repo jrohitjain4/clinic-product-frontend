@@ -3,6 +3,7 @@ import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { toast } from "react-toastify";
 import { apiUrl } from "../../../../../../../core/config/api";
+import { IconFormControl, IconTextarea } from "../../../../../../../core/common/form-fields";
 type PasswordField = "password" | "confirmPassword" | "newpassword";
 
 const Modals = () => {
@@ -246,13 +247,13 @@ const Modals = () => {
                     Current Email Address
                     <span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="email" className="form-control" />
+                  <IconFormControl fieldLabel="Email Address" type="email" placeholder="Enter current email address" />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">
                     New Email Address<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="email" className="form-control" />
+                  <IconFormControl fieldLabel="Email Address" type="email" placeholder="Enter new email address" />
                   <p className="mt-2 d-inline-flex align-items-center">
                     <i className="ti ti-info-circle me-1" />
                     New email address only updated once you verified
@@ -297,7 +298,7 @@ const Modals = () => {
                   <label className="form-label">
                     Phone Number<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" id="phone3" />
+                  <IconFormControl fieldLabel="Phone Number" type="text" id="phone3" placeholder="Enter phone number" />
                 </div>
                 <p className="fs-13 mb-0">
                   By providing your phone number, you agree to receive text
@@ -446,9 +447,10 @@ const Modals = () => {
                   <label className="form-label">
                     Reason<span className="text-danger ms-1">*</span>
                   </label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="Description"
                     rows={3}
+                    placeholder="Please specify your reason"
                     defaultValue={""}
                   />
                 </div>

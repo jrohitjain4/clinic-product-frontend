@@ -1,3 +1,5 @@
+import { IconFormControl } from "../../../../../../../core/common/form-fields";
+
 const Modals = () => {
   return (
     <>
@@ -22,31 +24,31 @@ const Modals = () => {
                   <label className="form-label">
                     AWS Access Key<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl type="text" placeholder="Enter AWS access key" />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">
                     Secret Key<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl fieldLabel="Password" type="text" placeholder="Enter secret key" />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">
                     Bucket Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl type="text" placeholder="Enter bucket name" />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">
                     Region<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl fieldLabel="Location" type="text" placeholder="Enter region" />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">
                     Base URL<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl fieldLabel="Website" type="text" placeholder="Enter base URL" />
                 </div>
               </div>
               <div className="modal-footer d-flex align-items-center gap-1">

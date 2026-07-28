@@ -18,6 +18,7 @@ import { statusBadgeClass } from "../../../../../core/utils/appointmentForm";
 import AppointmentPrintSlip from "../../clinic-modules/appointments/AppointmentPrintSlip";
 import { resolveMediaUrl } from "../../../../../core/config/api";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
+import { IconFormControl, IconTextarea } from "../../../../../core/common/form-fields";
 
 const customSelectStyles = `
   @media print {
@@ -795,7 +796,7 @@ const DiagnosticBooking = () => {
             ))}
 
             <div className="search-field position-relative ms-1" style={{ width: "110px" }}>
-              <input type="text" className="form-control fs-13" style={{ height: '36px', paddingLeft: '8px', paddingRight: '8px' }} placeholder="Search..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+              <IconFormControl fieldLabel="search" type="text" className="fs-13" style={{ height: '36px', paddingLeft: '8px', paddingRight: '8px' }} placeholder="Search..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
             </div>
 
 
@@ -980,7 +981,7 @@ const DiagnosticBooking = () => {
                     </div>
                     <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold">Total Price (₹)</label>
-                      <input type="text" className="form-control bg-light fw-bold text-dark" value={`₹${totalAmount.toLocaleString("en-IN")}`} disabled />
+                      <IconFormControl fieldLabel="Amount" type="text" className="bg-light fw-bold text-dark" value={`₹${totalAmount.toLocaleString("en-IN")}`} disabled />
                     </div>
                   </div>
 
@@ -1056,13 +1057,13 @@ const DiagnosticBooking = () => {
                   <div className="row">
                     <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold">Referred By</label>
-                      <input type="text" className="form-control" value={formReferredBy} onChange={(e) => setFormReferredBy(e.target.value)} placeholder="e.g. Dr. Amit Sharma, Self" />
+                      <IconFormControl fieldLabel="doctor" type="text" value={formReferredBy} onChange={(e) => setFormReferredBy(e.target.value)} placeholder="e.g. Dr. Amit Sharma, Self" />
                     </div>
                   </div>
                   <div className="row">
                     <div className="col-md-12 mb-3">
                       <label className="form-label fw-semibold">Remarks</label>
-                      <textarea className="form-control" rows={2} value={formRemarks} onChange={(e) => setFormRemarks(e.target.value)} placeholder="Any special notes or remarks..." />
+                      <IconTextarea fieldLabel="notes" rows={2} value={formRemarks} onChange={(e) => setFormRemarks(e.target.value)} placeholder="Any special notes or remarks..." />
                     </div>
                   </div>
                   <hr className="my-2" />
@@ -1643,7 +1644,7 @@ const DiagnosticBooking = () => {
               <option value="Custom">Choose Custom Date</option>
             </select>
             {datePreset === "Custom" && (
-              <input type="date" className="form-control fs-13" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
+              <IconFormControl fieldLabel="Date" type="date" className="fs-13" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
             )}
           </div>
 

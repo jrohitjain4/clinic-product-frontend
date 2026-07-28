@@ -261,7 +261,7 @@ const DoctorAppointments = () => {
 
   const columns = [
     {
-      title: "Sr / Queue",
+      title: "# / Queue",
       dataIndex: "SrNo",
       render: (text: number, record: any) => {
         const isSlotBooking = !!(record._raw.doctor?.appointmentDuration && record._raw.doctor?.maxBookingsPerSlot);
@@ -294,9 +294,17 @@ const DoctorAppointments = () => {
         const date = parts[0] || text;
         const time = parts[1] || "";
         return (
-          <div className="d-flex flex-column align-items-start">
-            <span className="text-black fw-bold mb-0" style={{ fontSize: '13px' }}>{date}</span>
-            {time && <span className="text-black fw-semibold fs-11" style={{ marginTop: '2px' }}>{time}</span>}
+          <div className="d-flex flex-column gap-1">
+            <div className="d-flex align-items-center fw-bold text-dark fs-13">
+              <i className="ti ti-calendar-event me-2 text-primary fs-16"></i>
+              {date}
+            </div>
+            {time && (
+              <div className="d-flex align-items-center text-muted fs-12 fw-medium">
+                <i className="ti ti-clock me-2 fs-16"></i>
+                {time}
+              </div>
+            )}
           </div>
         );
       },
@@ -334,9 +342,15 @@ const DoctorAppointments = () => {
     {
       title: "Mode",
       dataIndex: "Mode",
-      render: (text: string) => (
-        <span className="fw-bold text-black small">{text}</span>
-      ),
+            render: (text: string) => {
+        const isOnline = (text || "").toLowerCase() === "online";
+        return (
+          <div className="d-flex align-items-center fw-bold text-dark fs-13">
+            <i className={`${isOnline ? 'ti ti-world' : 'ti ti-walk'} me-2 fs-18`} style={{ color: '#6610f2' }}></i>
+            {text || "—"}
+          </div>
+        );
+      },
       sorter: (a: any, b: any) => a.Mode.localeCompare(b.Mode),
     },
     {
@@ -344,37 +358,21 @@ const DoctorAppointments = () => {
       dataIndex: "Status",
       render: (text: string, record: any) => {
         const raw = record._raw;
+        const s = (text || "").toLowerCase();
+        let bg = "#f8f9fa", color = "#6c757d", icon = "ti ti-point";
+        if (s.includes("completed")) { bg = "#e6f8ef"; color = "#198754"; icon = "ti ti-circle-check"; }
+        else if (s.includes("confirmed")) { bg = "#f0eaff"; color = "#6610f2"; icon = "ti ti-circle-check"; }
+        else if (s.includes("checked out")) { bg = "#e8f3ff"; color = "#0d6efd"; icon = "ti ti-circle-check"; }
+        else if (s.includes("checked in")) { bg = "#fff3cd"; color = "#fd7e14"; icon = "ti ti-clock"; }
+        else if (s.includes("cancel")) { bg = "#fdeded"; color = "#dc3545"; icon = "ti ti-circle-x"; }
+
         return (
           <div className="d-flex flex-column align-items-start gap-1">
-            <span className={`badge ${statusBadgeClass(text)} px-2 py-1 text-uppercase`} style={{ fontSize: '10px' }}>
-              {text}
+            <span className="badge px-3 py-2 rounded-pill d-flex align-items-center gap-1" style={{ backgroundColor: bg, color: color, fontWeight: 600, fontSize: '12px' }}>
+              <i className={`${icon} fs-14`}></i> {text}
             </span>
-            {["Schedule", "Confirmed", "Checked In"].includes(text) && (
-              <div className="form-check form-switch p-0 ms-1 mt-1" style={{ minHeight: 'auto' }}>
-                <input
-                  className="form-check-input ms-0"
-                  type="checkbox"
-                  role="switch"
-                  checked={togglingId === raw.id}
-                  onChange={() => handleStatusToggle(raw.id, text)}
-                  style={{ cursor: 'pointer', width: '30px', height: '16px' }}
-                />
-                <label className="text-black fw-bold small ms-1" style={{ fontSize: '10px' }}>
-                  {text === "Schedule" ? "Confirm" : text === "Confirmed" ? "Checkin" : "Checkout"}
-                </label>
-              </div>
-            )}
             {raw?.isFollowUp && (
-              <div className="d-flex flex-column gap-1 mt-1">
-                <span className={`badge fs-10 px-2 py-1 ${raw.paymentStatus === "Free" ? "badge-soft-success text-success" : "badge-soft-info text-info border-info-subtle"}`} style={{ border: '1px solid currentColor', opacity: 0.85 }}>
-                  {raw.followUpStatus || "Follow-up"} ({raw.paymentStatus || "Unpaid"})
-                </span>
-                {raw?.parentAppointmentId && (
-                  <div className="d-flex align-items-center gap-1 text-muted ms-1" style={{ fontSize: '9px', fontWeight: 600, letterSpacing: '0.3px', textTransform: 'uppercase' }}>
-                    <i className="ti ti-link" /> Linked Visit
-                  </div>
-                )}
-              </div>
+              <div className="mt-1 ms-1 text-muted fw-medium fs-11">Free Follow-up</div>
             )}
           </div>
         );
@@ -388,7 +386,6 @@ const DoctorAppointments = () => {
       align: "center" as const,
       render: (_: any, record: any) => (
         <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
-          {/* Quick Add Prescription */}
           <Link
             to="#"
             className="text-primary p-1"
@@ -398,10 +395,9 @@ const DoctorAppointments = () => {
               setShowPresModal(true);
             }}
           >
-            <i className="ti ti-file-plus fs-18" />
+            <i className="ti ti-prescription fs-18" />
           </Link>
 
-          {/* View Details */}
           <Link
             to={all_routes.doctorsappointmentdetails.replace(":id", record.id)}
             className="text-info p-1"
@@ -834,3 +830,4 @@ const DoctorAppointments = () => {
 };
 
 export default DoctorAppointments;
+

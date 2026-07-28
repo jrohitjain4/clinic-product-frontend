@@ -19,9 +19,14 @@ import {
   City,
   Country,
   Appointment_Type,
-  Gender,
   State,
 } from "../../../../../core/common/selectOption";
+import {
+  IconFormControl,
+  IconSelect,
+  IconTextarea,
+  GenderOptionGroup,
+} from "../../../../../core/common/form-fields";
 import type { Dayjs } from "dayjs";
 import type { RowType } from "../../../../../core/common/duplicate-forms/duplicateForms.types";
 import type { AwardEntry, EducationEntry } from "../../../../../core/types/doctorProfile";
@@ -908,29 +913,91 @@ Powered by DocYori`;
   return (
     <>
       <div className="page-wrapper">
+        <style>{`
+          .page-wrapper .card.doctor-form-main-card {
+            border: none !important;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.1) !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+          }
+          .page-wrapper .card.doctor-form-main-card > .doctor-form-card-header {
+            border-top-left-radius: 12px !important;
+            border-top-right-radius: 12px !important;
+          }
+        `}</style>
         <div className="content">
           <div className="row">
             <div className="col-lg-10 mx-auto">
               {/* Page Header */}
-              <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-2 pb-3 border-bottom">
+              <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-2 pb-3">
                 <div className="flex-grow-1">
                   <h6 className="fw-bold mb-0 d-flex align-items-center">
-                    <Link to={backRoute}>
+                    <Link to={backRoute} className="text-dark">
                       <i className="ti ti-chevron-left me-1 fs-14" />
-                      {doctorType === "therapist" ? "Therapist" : "Doctor"}
+                      {doctorType === "therapist" ? "Therapists" : "Doctors"}
                     </Link>
                   </h6>
                 </div>
               </div>
 
-              <div className="card">
-                <div className="card-body">
-                  <div className="border-bottom d-flex align-items-center justify-content-between pb-3 mb-2">
-                    <h5 className="offcanvas-title fs-18 fw-bold">
-                      {isEdit ? (doctorType === "therapist" ? "Edit Therapist" : "Edit Doctor") : (doctorType === "therapist" ? "New Therapist" : "New Doctor")}
-                    </h5>
+              <div className="card border-0 doctor-form-main-card">
+                <div
+                  className="d-flex align-items-center justify-content-between px-4 py-3 bg-white border-bottom doctor-form-card-header"
+                  style={{ borderColor: "#e5e7eb" }}
+                >
+                  <div className="d-flex align-items-center gap-3">
+                    <div
+                      className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                      style={{
+                        width: 44,
+                        height: 44,
+                        background: "#f3e8ff",
+                        color: "#6d28d9",
+                      }}
+                    >
+                      <i
+                        className={`ti ${isEdit ? "ti-user-edit" : "ti-user-plus"} fs-20`}
+                      />
+                    </div>
+                    <div>
+                      <h5
+                        className="mb-0 fw-bold"
+                        style={{ color: "#1e1b4b", fontSize: 18 }}
+                      >
+                        {isEdit
+                          ? doctorType === "therapist"
+                            ? "Edit Therapist"
+                            : "Edit Doctor"
+                          : doctorType === "therapist"
+                            ? "Add New Therapist"
+                            : "Add New Doctor"}
+                      </h5>
+                      <p className="mb-0 text-muted" style={{ fontSize: 13 }}>
+                        {isEdit
+                          ? doctorType === "therapist"
+                            ? "Update therapist details in the system"
+                            : "Update doctor details in the system"
+                          : doctorType === "therapist"
+                            ? "Enter therapist details to register in the system"
+                            : "Enter doctor details to register in the system"}
+                      </p>
+                    </div>
                   </div>
-
+                  <Link
+                    to={backRoute}
+                    className="d-inline-flex align-items-center justify-content-center text-muted bg-white"
+                    aria-label="Close"
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 8,
+                      border: "1px solid #e5e7eb",
+                    }}
+                  >
+                    <i className="ti ti-x fs-18" />
+                  </Link>
+                </div>
+                <div className="card-body">
                   <form onSubmit={handleSubmit}>
                     {/* Stepper Progress Header UI */}
                     <div className="d-flex align-items-center justify-content-between mb-4 border rounded p-3 flex-wrap gap-3 bg-white shadow-sm" style={{ borderLeft: "4px solid #7367f0" }}>
@@ -1102,9 +1169,9 @@ Powered by DocYori`;
                             <label className="form-label mb-0">
                               Name <span className="text-danger">*</span>
                             </label>
-                            <input
+                            <IconFormControl
+                              fieldLabel="Name"
                               type="text"
-                              className="form-control"
                               value={fullName}
                               onChange={(e) => setFullName(e.target.value)}
                               placeholder="Dr. Full Name"
@@ -1118,9 +1185,9 @@ Powered by DocYori`;
                             <label className="form-label mb-0">
                               Username <span className="text-danger">*</span>
                             </label>
-                            <input
+                            <IconFormControl
+                              fieldLabel="Username"
                               type="text"
-                              className="form-control"
                               value={username}
                               onChange={(e) => setUsername(e.target.value)}
                               placeholder="username"
@@ -1156,9 +1223,9 @@ Powered by DocYori`;
                             <label className="form-label mb-0">
                               Email Address <span className="text-danger">*</span>
                             </label>
-                            <input
+                            <IconFormControl
+                              fieldLabel="Email Address"
                               type="email"
-                              className="form-control"
                               value={email}
                               onChange={(e) => setEmail(e.target.value)}
                               placeholder="doctor@clinic.com"
@@ -1233,9 +1300,8 @@ Powered by DocYori`;
                             <label className="form-label mb-0">
                               Year Of Experience <span className="text-danger">*</span>
                             </label>
-                            <input
+                            <IconFormControl
                               type="number"
-                              className="form-control"
                               value={yearOfExperience}
                               onChange={(e) => setYearOfExperience(e.target.value)}
                               placeholder="e.g. 5"
@@ -1268,7 +1334,8 @@ Powered by DocYori`;
                                 Loading departments...
                               </div>
                             ) : deptOptions.length > 0 ? (
-                              <CommonSelect
+                              <IconSelect
+                                fieldLabel="Department"
                                 options={deptOptions}
                                 className="select"
                                 value={selectedDeptOption}
@@ -1303,7 +1370,8 @@ Powered by DocYori`;
                               </button>
                             </div>
                             {departmentId && desigOptions.length > 0 ? (
-                              <CommonSelect
+                              <IconSelect
+                                fieldLabel="Designation"
                                 key={departmentId}
                                 options={desigOptions}
                                 className="select"
@@ -1371,9 +1439,9 @@ Powered by DocYori`;
                               <label className="form-label mb-0 fw-bold text-dark">
                                 IPD Visit Charges (₹) <span className="text-muted font-normal">(Optional)</span>
                               </label>
-                              <input
+                              <IconFormControl
+                                fieldLabel="amount"
                                 type="number"
-                                className="form-control"
                                 placeholder="e.g. 500 (per visit / round)"
                                 value={ipdVisitCharge}
                                 onChange={(e) => setIpdVisitCharge(e.target.value)}
@@ -1672,9 +1740,11 @@ Powered by DocYori`;
                               <div className="col-lg-4">
                                 <div style={{ marginBottom: "10px" }}>
                                   <label className="form-label mb-0">Appointment Type</label>
-                                  <CommonSelect
+                                  <IconSelect
+                                    fieldLabel="Appointment Type"
                                     options={Appointment_Type}
                                     className="select"
+                                    placeholder="Select appointment type"
                                     isDisabled={!acceptingAppointments}
                                     value={
                                       findSelectOption(Appointment_Type, appointmentType) ||
@@ -1687,9 +1757,8 @@ Powered by DocYori`;
                               <div className="col-lg-4">
                                 <div style={{ marginBottom: "10px" }}>
                                   <label className="form-label mb-0">Accept bookings (in Advance)</label>
-                                  <input
+                                  <IconFormControl
                                     type="number"
-                                    className="form-control"
                                     min={0}
                                     disabled={!acceptingAppointments}
                                     value={acceptBookingsInAdvance}
@@ -1701,9 +1770,9 @@ Powered by DocYori`;
                               <div className="col-lg-4">
                                 <div style={{ marginBottom: "10px" }}>
                                   <label className="form-label mb-0">Consultation Charge</label>
-                                  <input
+                                  <IconFormControl
+                                    fieldLabel="amount"
                                     type="number"
-                                    className="form-control"
                                     min={0}
                                     step="0.01"
                                     disabled={!acceptingAppointments}
@@ -1762,9 +1831,8 @@ Powered by DocYori`;
                                   <label className="form-label mb-1 d-flex align-items-center" style={{ minHeight: "22px" }}>
                                     Follow-up Validity
                                   </label>
-                                  <input
+                                  <IconFormControl
                                     type="number"
-                                    className="form-control"
                                     disabled={!followUpEnabled}
                                     value={followUpValidityDays}
                                     onChange={(e) => setFollowUpValidityDays(e.target.value)}
@@ -1781,9 +1849,8 @@ Powered by DocYori`;
                                       <i className="ti ti-info-circle me-1" />0 = Unlimited
                                     </span>
                                   </label>
-                                  <input
+                                  <IconFormControl
                                     type="number"
-                                    className="form-control"
                                     disabled={!followUpEnabled}
                                     value={freeFollowUpLimit}
                                     onChange={(e) => setFreeFollowUpLimit(e.target.value)}
@@ -1795,9 +1862,9 @@ Powered by DocYori`;
                               <div className="col-lg-6">
                                 <div style={{ marginBottom: "10px" }}>
                                   <label className="form-label mb-0">Follow-up Fee (₹)</label>
-                                  <input
+                                  <IconFormControl
+                                    fieldLabel="amount"
                                     type="number"
-                                    className="form-control"
                                     disabled={!followUpEnabled}
                                     value={followUpFee}
                                     onChange={(e) => setFollowUpFee(e.target.value)}
@@ -1875,9 +1942,8 @@ Powered by DocYori`;
                                 <div className="col-lg-4">
                                   <div style={{ marginBottom: "15px" }}>
                                     <label className="form-label mb-1 fw-bold">Slot Duration (Minutes) <span className="text-danger">*</span></label>
-                                    <input
+                                    <IconFormControl
                                       type="number"
-                                      className="form-control"
                                       min={1}
                                       value={appointmentDuration}
                                       onChange={(e) => setAppointmentDuration(e.target.value)}
@@ -1889,9 +1955,8 @@ Powered by DocYori`;
                                 <div className="col-lg-4">
                                   <div style={{ marginBottom: "15px" }}>
                                     <label className="form-label mb-1 fw-bold">Bookings per Slot <span className="text-danger">*</span></label>
-                                    <input
+                                    <IconFormControl
                                       type="number"
-                                      className="form-control"
                                       min={1}
                                       value={maxBookingsPerSlot}
                                       onChange={(e) => setMaxBookingsPerSlot(e.target.value)}
@@ -1967,9 +2032,9 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Address 1</label>
-                                <input
+                                <IconFormControl
+                                  fieldLabel="Address 1"
                                   type="text"
-                                  className="form-control"
                                   value={address1}
                                   onChange={(e) => setAddress1(e.target.value)}
                                   placeholder="House No, Building, Street Name"
@@ -1979,9 +2044,9 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Address 2 (Optional)</label>
-                                <input
+                                <IconFormControl
+                                  fieldLabel="Address 2"
                                   type="text"
-                                  className="form-control"
                                   value={address2}
                                   onChange={(e) => setAddress2(e.target.value)}
                                   placeholder="Landmark, Area, Colony"
@@ -1991,7 +2056,8 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Country</label>
-                                <CommonSelect
+                                <IconSelect
+                                  fieldLabel="Country"
                                   options={Country}
                                   className="select"
                                   value={findSelectOption(Country, country) || { value: "India", label: "India" }}
@@ -2002,7 +2068,8 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">State</label>
-                                <CommonSelect
+                                <IconSelect
+                                  fieldLabel="State"
                                   options={State}
                                   className="select"
                                   value={findSelectOption(State, stateVal) || State[0]}
@@ -2013,7 +2080,8 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">City</label>
-                                <CommonSelect
+                                <IconSelect
+                                  fieldLabel="City"
                                   options={City}
                                   className="select"
                                   value={findSelectOption(City, city) || City[0]}
@@ -2024,11 +2092,12 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Pincode</label>
-                                <input
+                                <IconFormControl
+                                  fieldLabel="Pincode"
                                   type="text"
-                                  className="form-control"
                                   value={pincode}
                                   onChange={(e) => setPincode(e.target.value)}
+                                  placeholder="Enter pincode"
                                 />
                               </div>
                             </div>
@@ -2059,7 +2128,8 @@ Powered by DocYori`;
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Specializations</label>
                                 {specOptions.length > 0 ? (
-                                  <CommonSelect
+                                  <IconSelect
+                                    fieldLabel="Specialization"
                                     options={specOptions}
                                     className="select"
                                     value={specOptions.filter((o: any) => selectedSpecializations.includes(o.value)) as any}
@@ -2081,9 +2151,10 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Qualification</label>
-                                <input
+                                <IconFormControl
+                                  fieldLabel="Qualification"
+                                  icon="ti ti-school"
                                   type="text"
-                                  className="form-control"
                                   value={qualification}
                                   onChange={(e) => setQualification(e.target.value)}
                                   placeholder="e.g. MBBS, MD"
@@ -2115,9 +2186,10 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Medical License Number</label>
-                                <input
+                                <IconFormControl
+                                  fieldLabel="Medical License Number"
+                                  icon="ti ti-license"
                                   type="text"
-                                  className="form-control"
                                   value={medicalLicenseNumber}
                                   onChange={(e) => setMedicalLicenseNumber(e.target.value)}
                                   placeholder="ML-123456"
@@ -2139,9 +2211,9 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Alternative Contact No</label>
-                                <input
+                                <IconFormControl
+                                  fieldLabel="Mobile Number"
                                   type="text"
-                                  className="form-control"
                                   value={alternateMobile}
                                   onChange={(e) => setAlternateMobile(e.target.value)}
                                   placeholder="e.g. 9876543210"
@@ -2155,7 +2227,8 @@ Powered by DocYori`;
                                 <label className="form-label mb-0">
                                   Blood Group <span className="text-danger ms-1">*</span>
                                 </label>
-                                <CommonSelect
+                                <IconSelect
+                                  fieldLabel="Blood Group"
                                   options={Blood_Group}
                                   className="select"
                                   value={
@@ -2171,11 +2244,9 @@ Powered by DocYori`;
                                 <label className="form-label mb-0">
                                   Gender <span className="text-danger ms-1">*</span>
                                 </label>
-                                <CommonSelect
-                                  options={Gender}
-                                  className="select"
-                                  value={findSelectOption(Gender, gender) || Gender[0]}
-                                  onChange={(opt: any) => setGender(opt?.value || "")}
+                                <GenderOptionGroup
+                                  value={gender}
+                                  onChange={(v) => setGender(v)}
                                 />
                               </div>
                             </div>
@@ -2184,11 +2255,13 @@ Powered by DocYori`;
                             <div className="col-lg-12">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Bio</label>
-                                <textarea
+                                <IconTextarea
+                                  fieldLabel="description"
                                   className="form-control"
                                   rows={3}
                                   value={bio}
                                   onChange={(e) => setBio(e.target.value)}
+                                  placeholder="Write a short bio about the doctor"
                                 />
                               </div>
                             </div>
@@ -2460,9 +2533,9 @@ Powered by DocYori`;
               <div style={{ padding: '24px 24px 0' }}>
                 <div style={{ marginBottom: '16px' }}>
                   <label className="form-label fw-semibold">Department Name<span className="text-danger ms-1">*</span></label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Department"
                     type="text"
-                    className="form-control"
                     value={quickDeptName}
                     onChange={(e) => setQuickDeptName(e.target.value)}
                     placeholder="e.g. Cardiology"
@@ -2471,8 +2544,8 @@ Powered by DocYori`;
                 </div>
                 <div style={{ marginBottom: '16px' }}>
                   <label className="form-label fw-semibold">Description</label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="description"
                     rows={3}
                     value={quickDeptDesc}
                     onChange={(e) => setQuickDeptDesc(e.target.value)}
@@ -2558,7 +2631,8 @@ Powered by DocYori`;
               <div style={{ padding: '24px 24px 0' }}>
                 <div style={{ marginBottom: '16px' }}>
                   <label className="form-label fw-semibold">Department<span className="text-danger ms-1">*</span></label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="Department"
                     options={deptOptions}
                     className="select"
                     value={deptOptions.find(o => o.value === quickDesigDeptId) || null}
@@ -2568,9 +2642,9 @@ Powered by DocYori`;
                 </div>
                 <div style={{ marginBottom: '16px' }}>
                   <label className="form-label fw-semibold">Designation Name<span className="text-danger ms-1">*</span></label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Designation"
                     type="text"
-                    className="form-control"
                     value={quickDesigName}
                     onChange={(e) => setQuickDesigName(e.target.value)}
                     placeholder="e.g. Senior Consultant"

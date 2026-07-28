@@ -3,7 +3,7 @@ import { AppointmentReportData } from "../../../../../../core/json/appointmentRe
 import { Link } from "react-router";
 import Datatable from "../../../../../../core/common/dataTable";
 import TagInput from "../../../../../../core/common/Taginput";
-import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
+import { IconSelect } from "../../../../../../core/common/form-fields";
 import {
   Designation,
   Location,
@@ -128,7 +128,8 @@ const AppointmentReport = () => {
                 <div className="col-lg-4">
                   <div className="mb-0">
                     <label className="form-label">Patient</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="patient"
                       options={Patient}
                       className="select"
                       defaultValue={Patient[0]}
@@ -139,7 +140,8 @@ const AppointmentReport = () => {
                 <div className="col-lg-4">
                   <div className="mb-0">
                     <label className="form-label">Location</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="location"
                       options={Location}
                       className="select"
                       defaultValue={Location[0]}
@@ -150,7 +152,8 @@ const AppointmentReport = () => {
                 <div className="col-lg-4">
                   <div className="mb-0">
                     <label className="form-label">Practioner</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="doctor"
                       options={Practioner}
                       className="select"
                       defaultValue={Practioner[0]}
@@ -161,7 +164,8 @@ const AppointmentReport = () => {
                 <div className="col-lg-4">
                   <div className="mb-0">
                     <label className="form-label">Designation</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="designation"
                       options={Designation}
                       className="select"
                       defaultValue={Designation[0]}
@@ -207,7 +211,7 @@ const AppointmentReport = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 ï¿½
             <Link to="#" className="link-primary">
               Docyari
             </Link>

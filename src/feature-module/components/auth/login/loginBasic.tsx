@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { all_routes } from "../../../routes/all_routes";
 import { useState } from "react";
+import { IconFormControl } from "../../../../core/common/form-fields";
 type PasswordField = "password" | "confirmPassword";
 
 const LoginBasic = () => {
@@ -45,33 +46,25 @@ const LoginBasic = () => {
                       </div>
                       <div className="mb-3">
                         <label className="form-label">Email Address</label>
-                        <div className="input-group">
-                          <span className="input-group-text border-end-0 bg-white">
-                            <i className="ti ti-mail fs-14 text-dark" />
-                          </span>
-                          <input
-                            type="text"
-
-                            className="form-control border-start-0 ps-0"
-                            placeholder="Enter Email Address"
-                          />
-                        </div>
+                        <IconFormControl
+                          type="text"
+                          fieldLabel="Email Address"
+                          placeholder="Email Address"
+                        />
                       </div>
                       <div className="mb-3">
                         <label className="form-label">Password</label>
                         <div className="position-relative">
-                          <div className="pass-group input-group position-relative border rounded">
-                            <span className="input-group-text bg-white border-0">
-                              <i className="ti ti-lock text-dark fs-14" />
-                            </span>
-                            <input
+                          <div className="pass-group position-relative">
+                            <IconFormControl
                               type={
                                 passwordVisibility.password
                                   ? "text"
                                   : "password"
                               }
-                              className="pass-input form-control border-start-0 ps-0"
-                              placeholder="****************"
+                              fieldLabel="Password"
+                              placeholder="Password"
+                              className="pass-input pe-5"
                             />
                             <span
                               className={`ti toggle-password text-dark fs-14 ${passwordVisibility.password

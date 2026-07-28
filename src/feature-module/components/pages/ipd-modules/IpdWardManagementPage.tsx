@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Footer from "../../../../core/common/footer/footer";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
+import { IconFormControl } from "../../../../core/common/form-fields";
 
 interface Ward {
   id: string;
@@ -242,9 +243,10 @@ const IpdWardManagementPage: React.FC = () => {
 
           <div className="d-flex align-items-center gap-2 flex-wrap">
             {/* Search Input */}
-            <input
+            <IconFormControl
+              fieldLabel="search"
               type="text"
-              className="form-control form-control-sm"
+              className="form-control-sm"
               style={{ width: "200px" }}
               placeholder="Search ward/code/floor..."
               value={searchQuery}
@@ -559,9 +561,9 @@ const IpdWardManagementPage: React.FC = () => {
                       <label className="form-label fw-semibold">
                         Ward / Room Name <span className="text-danger">*</span>
                       </label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="name"
                         type="text"
-                        className="form-control"
                         placeholder="e.g. Deluxe AC Room 101, General Male Ward A"
                         value={wardName}
                         onChange={(e) => setWardName(e.target.value)}
@@ -573,10 +575,10 @@ const IpdWardManagementPage: React.FC = () => {
                       <label className="form-label fw-semibold">
                         Ward / Room Code <span className="text-muted font-normal">(Optional)</span>
                       </label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Title"
                         type="text"
-                        className="form-control"
-                        placeholder="e.g. WARD-101"
+                        placeholder="Enter ward / room code"
                         value={wardCode}
                         onChange={(e) => setWardCode(e.target.value)}
                       />
@@ -604,9 +606,9 @@ const IpdWardManagementPage: React.FC = () => {
                       <label className="form-label fw-semibold">
                         Bed Capacity Limit <span className="text-danger">*</span>
                       </label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="bed"
                         type="number"
-                        className="form-control"
                         placeholder="Kitne log / beds (e.g. 1, 4, 10)"
                         value={totalBeds}
                         onChange={(e) => setTotalBeds(e.target.value)}
@@ -618,9 +620,9 @@ const IpdWardManagementPage: React.FC = () => {
 
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">Floor Location</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="location"
                         type="text"
-                        className="form-control"
                         placeholder="e.g. 1st Floor, 2nd Floor"
                         value={floorNumber}
                         onChange={(e) => setFloorNumber(e.target.value)}
@@ -641,9 +643,10 @@ const IpdWardManagementPage: React.FC = () => {
                           <i className="ti ti-currency-rupee text-success me-1" />
                           Room Charge Per Night (₹) <span className="text-danger">*</span>
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="amount"
                           type="number"
-                          className="form-control fw-bold text-success fs-16"
+                          className="fw-bold text-success fs-16"
                           placeholder="e.g. 1500 (per night rate)"
                           value={chargePerNight}
                           onChange={(e) => setChargePerNight(e.target.value)}
@@ -659,9 +662,9 @@ const IpdWardManagementPage: React.FC = () => {
                         <label className="form-label fw-bold text-dark mb-1">
                           Nursing Charge Per Night (₹) <span className="text-muted font-normal">(Optional)</span>
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="amount"
                           type="number"
-                          className="form-control"
                           placeholder="e.g. 500 (optional per night)"
                           value={nursingChargePerNight}
                           onChange={(e) => setNursingChargePerNight(e.target.value)}
@@ -716,9 +719,9 @@ const IpdWardManagementPage: React.FC = () => {
 
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Description / Notes</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="description"
                         type="text"
-                        className="form-control"
                         placeholder="Additional details about ward..."
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}

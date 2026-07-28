@@ -10,6 +10,10 @@ import { useLabTests } from "../../../../../core/hooks/useLabTests";
 import { useClinicPatient } from "../../../../../core/hooks/useClinicPatient";
 import { apiPut } from "../../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
+import {
+    IconFormControl,
+    IconTextarea,
+} from "../../../../../core/common/form-fields";
 
 interface Medicine {
     medicineName: string;
@@ -876,8 +880,9 @@ const AddPrescriptionModal = ({
                                                     <h6 className="fw-bold text-dark mb-0 fs-14">Advice</h6>
                                                 </div>
                                                 <div className="position-relative">
-                                                    <textarea
-                                                        className="form-control text-dark border-secondary-subtle p-3"
+                                                    <IconTextarea
+                                                        fieldLabel="Advice"
+                                                        className="text-dark border-secondary-subtle p-3"
                                                         rows={6}
                                                         placeholder="Enter doctor's instructions, recommendations, or advices..."
                                                         value={activeAdvice}
@@ -931,9 +936,10 @@ const AddPrescriptionModal = ({
                                                             Remarks (Optional)
                                                         </label>
                                                         <div className="position-relative">
-                                                            <input
+                                                            <IconFormControl
+                                                                fieldLabel="Remarks"
                                                                 type="text"
-                                                                className="form-control form-control-sm text-dark border-secondary-subtle p-2 px-3 rounded-3"
+                                                                className="form-control-sm text-dark border-secondary-subtle p-2 px-3 rounded-3"
                                                                 placeholder="e.g. Review after 1 week"
                                                                 value={activeFollowUpNotes}
                                                                 onChange={(e) => {

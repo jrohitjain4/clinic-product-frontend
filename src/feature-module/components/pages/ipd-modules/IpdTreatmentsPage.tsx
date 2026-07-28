@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Footer from "../../../../core/common/footer/footer";
+import Datatable from "../../../../core/common/dataTable";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
+import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
 
 interface Department {
   id: string;
@@ -366,8 +368,290 @@ const IpdTreatmentsPage: React.FC = () => {
     });
   }, [treatments, searchQuery, selectedCategoryFilter]);
 
+  const procedureTableData = useMemo(
+    () =>
+      filteredTreatments.map((t) => ({
+        key: t.id,
+        procedureCode: t.procedureCode || "—",
+        procedureName: t.procedureName,
+        description: t.description || "",
+        departmentName: t.department?.name || "General",
+        categoryLabel: t.categoryRef?.name || t.category || "Minor Procedure",
+        procedureFee: t.procedureFee,
+        otCharges: t.otCharges,
+        anaesthesiaCharges: t.anaesthesiaCharges,
+        surgeonCharges: t.surgeonCharges,
+        assistantSurgeonCharges: t.assistantSurgeonCharges,
+        totalPrice: t.totalPrice,
+        estimatedDuration: t.estimatedDuration || "—",
+        _raw: t,
+      })),
+    [filteredTreatments]
+  );
+
+  const procedureColumns = useMemo(
+    () => [
+      {
+        title: "Code",
+        dataIndex: "procedureCode",
+        render: (text: string) => (
+          <span
+            className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+            style={{
+              backgroundColor: "#e2e8f0",
+              color: "#1e293b",
+              fontWeight: 600,
+              fontSize: "12px",
+            }}
+          >
+            <i className="ti ti-hash fs-14" />
+            {text}
+          </span>
+        ),
+        sorter: (a: (typeof procedureTableData)[0], b: (typeof procedureTableData)[0]) =>
+          a.procedureCode.localeCompare(b.procedureCode),
+      },
+      {
+        title: "Procedure / Surgery Name",
+        dataIndex: "procedureName",
+        render: (text: string, record: (typeof procedureTableData)[0]) => (
+          <div className="lh-1">
+            <h6 className="mb-1 fs-14 fw-semibold text-dark">{text}</h6>
+            {record.description && (
+              <span
+                className="text-muted fs-12 fw-normal d-block mt-1 text-truncate"
+                style={{ maxWidth: "220px" }}
+              >
+                {record.description}
+              </span>
+            )}
+          </div>
+        ),
+        sorter: (a: (typeof procedureTableData)[0], b: (typeof procedureTableData)[0]) =>
+          a.procedureName.localeCompare(b.procedureName),
+      },
+      {
+        title: "Department",
+        dataIndex: "departmentName",
+        render: (text: string) => (
+          <span
+            className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+            style={{
+              backgroundColor: "#e0f2fe",
+              color: "#2563eb",
+              fontWeight: 600,
+              fontSize: "12px",
+            }}
+          >
+            <i className="ti ti-building-hospital fs-14" />
+            {text}
+          </span>
+        ),
+        sorter: (a: (typeof procedureTableData)[0], b: (typeof procedureTableData)[0]) =>
+          a.departmentName.localeCompare(b.departmentName),
+      },
+      {
+        title: "Category",
+        dataIndex: "categoryLabel",
+        render: (text: string) => (
+          <span
+            className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+            style={{
+              backgroundColor: "#ede9fe",
+              color: "#7c3aed",
+              fontWeight: 600,
+              fontSize: "12px",
+            }}
+          >
+            <i className="ti ti-category fs-14" />
+            {text}
+          </span>
+        ),
+        sorter: (a: (typeof procedureTableData)[0], b: (typeof procedureTableData)[0]) =>
+          a.categoryLabel.localeCompare(b.categoryLabel),
+      },
+      {
+        title: "Breakdown Details",
+        dataIndex: "procedureFee",
+        render: (_: unknown, record: (typeof procedureTableData)[0]) => (
+          <div className="fs-12 text-muted">
+            <div>Proc Fee: ₹{record.procedureFee}</div>
+            {record.otCharges > 0 && <div>OT Charges: ₹{record.otCharges}</div>}
+            {record.anaesthesiaCharges > 0 && (
+              <div>Anaesthesia: ₹{record.anaesthesiaCharges}</div>
+            )}
+            {record.surgeonCharges > 0 && <div>Surgeon: ₹{record.surgeonCharges}</div>}
+            {record.assistantSurgeonCharges > 0 && (
+              <div>Asst Surg: ₹{record.assistantSurgeonCharges}</div>
+            )}
+          </div>
+        ),
+      },
+      {
+        title: "Total Charge",
+        dataIndex: "totalPrice",
+        align: "right" as const,
+        render: (val: number) => (
+          <>
+            <h6 className="fw-bold text-success mb-0 fs-15">
+              ₹{val.toLocaleString("en-IN")}
+            </h6>
+            <small className="text-muted fs-11">Total Charge</small>
+          </>
+        ),
+        sorter: (a: (typeof procedureTableData)[0], b: (typeof procedureTableData)[0]) =>
+          a.totalPrice - b.totalPrice,
+      },
+      {
+        title: "Duration",
+        dataIndex: "estimatedDuration",
+        render: (text: string) => (
+          <span className="text-secondary fs-13">
+            <i className="ti ti-clock me-1 text-muted" />
+            {text}
+          </span>
+        ),
+        sorter: (a: (typeof procedureTableData)[0], b: (typeof procedureTableData)[0]) =>
+          a.estimatedDuration.localeCompare(b.estimatedDuration),
+      },
+      {
+        title: "Action",
+        className: "text-center text-nowrap",
+        width: 120,
+        align: "center" as const,
+        render: (_: unknown, record: (typeof procedureTableData)[0]) => (
+          <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
+            <button
+              type="button"
+              className="bg-transparent border-0 text-primary p-1"
+              title="Edit Procedure"
+              onClick={() => handleEditProcedure(record._raw)}
+            >
+              <i className="ti ti-edit fs-18" />
+            </button>
+            <button
+              type="button"
+              className="bg-transparent border-0 text-danger p-1"
+              title="Delete Procedure"
+              onClick={() => handleDeleteProcedure(record.key)}
+            >
+              <i className="ti ti-trash fs-18" />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    []
+  );
+
+  const categoryTableData = useMemo(
+    () =>
+      categories.map((cat, idx) => ({
+        key: cat.id,
+        sr: idx + 1,
+        name: cat.name,
+        description: cat.description || "—",
+        linkedCount: cat._count?.treatments || 0,
+        status: cat.status || "Active",
+        _raw: cat,
+      })),
+    [categories]
+  );
+
+  const categoryColumns = useMemo(
+    () => [
+      {
+        title: "#",
+        dataIndex: "sr",
+        width: 60,
+        sorter: (a: (typeof categoryTableData)[0], b: (typeof categoryTableData)[0]) =>
+          a.sr - b.sr,
+      },
+      {
+        title: "Category Name",
+        dataIndex: "name",
+        render: (text: string) => (
+          <span className="fw-bold text-dark fs-14">{text}</span>
+        ),
+        sorter: (a: (typeof categoryTableData)[0], b: (typeof categoryTableData)[0]) =>
+          a.name.localeCompare(b.name),
+      },
+      {
+        title: "Description",
+        dataIndex: "description",
+        render: (text: string) => (
+          <span className="text-muted fs-13">{text}</span>
+        ),
+      },
+      {
+        title: "Linked Procedures",
+        dataIndex: "linkedCount",
+        render: (count: number) => (
+          <span className="badge bg-soft-info text-info">
+            {count} Procedures
+          </span>
+        ),
+        sorter: (a: (typeof categoryTableData)[0], b: (typeof categoryTableData)[0]) =>
+          a.linkedCount - b.linkedCount,
+      },
+      {
+        title: "Status",
+        dataIndex: "status",
+        render: (text: string) => (
+          <span
+            className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+            style={{
+              backgroundColor: "#e6f8ef",
+              color: "#198754",
+              fontWeight: 600,
+              fontSize: "12px",
+            }}
+          >
+            <i className="ti ti-circle-check fs-14" />
+            {text}
+          </span>
+        ),
+      },
+      {
+        title: "Action",
+        className: "text-center text-nowrap",
+        width: 120,
+        align: "center" as const,
+        render: (_: unknown, record: (typeof categoryTableData)[0]) => (
+          <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
+            <button
+              type="button"
+              className="bg-transparent border-0 text-primary p-1"
+              title="Edit Category"
+              onClick={() => handleEditCategory(record._raw)}
+            >
+              <i className="ti ti-edit fs-18" />
+            </button>
+            <button
+              type="button"
+              className="bg-transparent border-0 text-danger p-1"
+              title="Delete Category"
+              onClick={() => handleDeleteCategory(record.key)}
+            >
+              <i className="ti ti-trash fs-18" />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    []
+  );
+
   return (
     <div className="page-wrapper">
+      <style>{`
+        .page-wrapper .ipd-treatments-empty-card.card,
+        .page-wrapper .datatable-main-container .datatable-table-shell.card {
+          border: none !important;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+          border-radius: 12px !important;
+        }
+      `}</style>
       <div className="content">
         {/* Page Header */}
         <div className="d-md-flex d-block align-items-center justify-content-between mb-4 gap-3 flex-wrap">
@@ -377,9 +661,10 @@ const IpdTreatmentsPage: React.FC = () => {
 
           <div className="d-flex align-items-center gap-2 flex-wrap">
             {/* Search Input */}
-            <input
+            <IconFormControl
+              fieldLabel="search"
               type="text"
-              className="form-control form-control-sm"
+              className="form-control-sm"
               style={{ width: "220px" }}
               placeholder="Search procedure/code..."
               value={searchQuery}
@@ -449,128 +734,51 @@ const IpdTreatmentsPage: React.FC = () => {
         {/* TAB 1: PROCEDURES TABLE */}
         {activeTab === "procedures" && (
           <>
-
-
-            {/* Procedures Data Table */}
-            <div className="card border-0 shadow-sm">
-              <div className="card-body p-0">
-                {loading ? (
-                  <div className="text-center py-5">
-                    <div className="spinner-border text-primary" role="status" />
-                    <p className="text-muted mt-2 mb-0">Loading procedures...</p>
-                  </div>
-                ) : filteredTreatments.length === 0 ? (
-                  <div className="text-center py-5">
-                    <i className="ti ti-stethoscope fs-40 text-muted mb-2 d-block" />
-                    <h5 className="fw-bold">No Surgery / Treatment Procedures Found</h5>
-                    <p className="text-muted fs-13 mb-3">
-                      Start by adding your first surgery or procedure with total charges & component breakdown.
-                    </p>
-                    <button className="btn btn-primary btn-sm" onClick={handleOpenAddProcedureModal}>
-                      <i className="ti ti-plus me-1" /> Add Surgery / Procedure
-                    </button>
-                  </div>
-                ) : (
-                  <div className="table-responsive">
-                    <table className="table table-hover align-middle mb-0">
-                      <thead className="table-light">
-                        <tr>
-                          <th>Code</th>
-                          <th>Procedure / Surgery Name</th>
-                          <th>Department</th>
-                          <th>Category</th>
-                          <th>Breakdown Details</th>
-                          <th className="text-end">Total Charge</th>
-                          <th>Duration</th>
-                          <th className="text-end">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredTreatments.map((t) => (
-                          <tr key={t.id}>
-                            <td>
-                              <span className="badge bg-soft-dark text-dark fw-bold">
-                                {t.procedureCode || "—"}
-                              </span>
-                            </td>
-                            <td>
-                              <span className="fw-bold text-dark d-block">{t.procedureName}</span>
-                              {t.description && (
-                                <small className="text-muted d-block text-truncate" style={{ maxWidth: "220px" }}>
-                                  {t.description}
-                                </small>
-                              )}
-                            </td>
-                            <td>
-                              <span className="badge bg-soft-info text-info fw-medium">
-                                {t.department?.name || "General"}
-                              </span>
-                            </td>
-                            <td>
-                              <span className="badge bg-soft-primary text-primary fw-semibold">
-                                {t.categoryRef?.name || t.category || "Minor Procedure"}
-                              </span>
-                            </td>
-                            <td>
-                              <div className="fs-12 text-muted">
-                                <div>Proc Fee: ₹{t.procedureFee}</div>
-                                {t.otCharges > 0 && <div>OT Charges: ₹{t.otCharges}</div>}
-                                {t.anaesthesiaCharges > 0 && <div>Anaesthesia: ₹{t.anaesthesiaCharges}</div>}
-                                {t.surgeonCharges > 0 && <div>Surgeon: ₹{t.surgeonCharges}</div>}
-                                {t.assistantSurgeonCharges > 0 && <div>Asst Surg: ₹{t.assistantSurgeonCharges}</div>}
-                              </div>
-                            </td>
-                            <td className="text-end">
-                              <h6 className="fw-bold text-success mb-0 fs-15">
-                                ₹{t.totalPrice.toLocaleString("en-IN")}
-                              </h6>
-                              <small className="text-muted fs-11">Total Charge</small>
-                            </td>
-                            <td>
-                              <span className="text-secondary fs-13">
-                                <i className="ti ti-clock me-1 text-muted" />
-                                {t.estimatedDuration || "—"}
-                              </span>
-                            </td>
-                            <td className="text-end">
-                              <button
-                                className="btn btn-sm btn-icon btn-light me-1"
-                                onClick={() => handleEditProcedure(t)}
-                                title="Edit Procedure"
-                              >
-                                <i className="ti ti-edit text-primary" />
-                              </button>
-                              <button
-                                className="btn btn-sm btn-icon btn-light text-danger"
-                                onClick={() => handleDeleteProcedure(t.id)}
-                                title="Delete Procedure"
-                              >
-                                <i className="ti ti-trash" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+            {loading ? (
+              <div className="card ipd-treatments-empty-card">
+                <div className="card-body text-center py-5">
+                  <div className="spinner-border text-primary" role="status" />
+                  <p className="text-muted mt-2 mb-0">Loading procedures...</p>
+                </div>
               </div>
-            </div>
+            ) : filteredTreatments.length === 0 ? (
+              <div className="card ipd-treatments-empty-card">
+                <div className="card-body text-center py-5">
+                  <i className="ti ti-stethoscope fs-40 text-muted mb-2 d-block" />
+                  <h5 className="fw-bold">No Surgery / Treatment Procedures Found</h5>
+                  <p className="text-muted fs-13 mb-3">
+                    Start by adding your first surgery or procedure with total charges & component breakdown.
+                  </p>
+                  <button className="btn btn-primary btn-sm" onClick={handleOpenAddProcedureModal}>
+                    <i className="ti ti-plus me-1" /> Add Surgery / Procedure
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <Datatable
+                  columns={procedureColumns}
+                  dataSource={procedureTableData}
+                  Selection={false}
+                  searchText=""
+                />
+              </div>
+            )}
           </>
         )}
 
         {/* TAB 2: CATEGORIES TABLE */}
         {activeTab === "categories" && (
-          <div className="card border-0 shadow-sm">
-            <div className="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+          <>
+            <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
               <h5 className="fw-bold mb-0 text-dark">IPD Treatment / Surgery Categories</h5>
               <button className="btn btn-sm btn-primary" onClick={handleOpenAddCategoryModal}>
                 <i className="ti ti-plus me-1" /> Add Category
               </button>
             </div>
-            <div className="card-body p-0">
-              {categories.length === 0 ? (
-                <div className="text-center py-5">
+            {categories.length === 0 ? (
+              <div className="card ipd-treatments-empty-card">
+                <div className="card-body text-center py-5">
                   <i className="ti ti-category fs-40 text-muted mb-2 d-block" />
                   <h5 className="fw-bold">No Custom Categories Found</h5>
                   <p className="text-muted fs-13 mb-3">
@@ -580,63 +788,18 @@ const IpdTreatmentsPage: React.FC = () => {
                     <i className="ti ti-plus me-1" /> Add Category
                   </button>
                 </div>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-hover align-middle mb-0">
-                    <thead className="table-light">
-                      <tr>
-                        <th>#</th>
-                        <th>Category Name</th>
-                        <th>Description</th>
-                        <th>Linked Procedures</th>
-                        <th>Status</th>
-                        <th className="text-end">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {categories.map((cat, idx) => (
-                        <tr key={cat.id}>
-                          <td className="fw-bold text-muted">{idx + 1}</td>
-                          <td>
-                            <span className="fw-bold text-dark">{cat.name}</span>
-                          </td>
-                          <td>
-                            <span className="text-muted fs-13">{cat.description || "—"}</span>
-                          </td>
-                          <td>
-                            <span className="badge bg-soft-info text-info">
-                              {cat._count?.treatments || 0} Procedures
-                            </span>
-                          </td>
-                          <td>
-                            <span className="badge bg-soft-success text-success">
-                              {cat.status || "Active"}
-                            </span>
-                          </td>
-                          <td className="text-end">
-                            <button
-                              className="btn btn-sm btn-icon btn-light me-1"
-                              onClick={() => handleEditCategory(cat)}
-                              title="Edit Category"
-                            >
-                              <i className="ti ti-edit text-primary" />
-                            </button>
-                            <button
-                              className="btn btn-sm btn-icon btn-light text-danger"
-                              onClick={() => handleDeleteCategory(cat.id)}
-                              title="Delete Category"
-                            >
-                              <i className="ti ti-trash" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <Datatable
+                  columns={categoryColumns}
+                  dataSource={categoryTableData}
+                  Selection={false}
+                  searchText=""
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -674,9 +837,9 @@ const IpdTreatmentsPage: React.FC = () => {
                       <label className="form-label fw-semibold">
                         Procedure Name <span className="text-danger">*</span>
                       </label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="name"
                         type="text"
-                        className="form-control"
                         placeholder="e.g. Hand Fracture Surgery"
                         value={procedureName}
                         onChange={(e) => setProcedureName(e.target.value)}
@@ -688,10 +851,10 @@ const IpdTreatmentsPage: React.FC = () => {
                       <label className="form-label fw-semibold">
                         Procedure Code <span className="text-muted font-normal">(Optional)</span>
                       </label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Title"
                         type="text"
-                        className="form-control"
-                        placeholder="e.g. ORTH-001"
+                        placeholder="Enter procedure code"
                         value={procedureCode}
                         onChange={(e) => setProcedureCode(e.target.value)}
                       />
@@ -791,9 +954,10 @@ const IpdTreatmentsPage: React.FC = () => {
                       <div className="col-md-5">
                         <div className="input-group input-group-lg">
                           <span className="input-group-text bg-success text-white fw-bold">₹</span>
-                          <input
+                          <IconFormControl
+                            fieldLabel="amount"
                             type="number"
-                            className="form-control fw-bold text-success fs-18"
+                            className="fw-bold text-success fs-18"
                             placeholder="e.g. 5000"
                             value={totalChargeInput}
                             onChange={(e) => setTotalChargeInput(e.target.value)}
@@ -808,9 +972,9 @@ const IpdTreatmentsPage: React.FC = () => {
                   <div className="row g-3 mb-4">
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Procedure Fee (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
                         placeholder="e.g. 2500"
                         value={procedureFee}
                         onChange={(e) => setProcedureFee(e.target.value)}
@@ -820,9 +984,9 @@ const IpdTreatmentsPage: React.FC = () => {
 
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">OT Charges (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
                         placeholder="e.g. 1000"
                         value={otCharges}
                         onChange={(e) => setOtCharges(e.target.value)}
@@ -832,9 +996,9 @@ const IpdTreatmentsPage: React.FC = () => {
 
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">Anaesthesia Charges (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
                         placeholder="e.g. 500"
                         value={anaesthesiaCharges}
                         onChange={(e) => setAnaesthesiaCharges(e.target.value)}
@@ -844,9 +1008,9 @@ const IpdTreatmentsPage: React.FC = () => {
 
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">Surgeon Charges (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
                         placeholder="e.g. 1000"
                         value={surgeonCharges}
                         onChange={(e) => setSurgeonCharges(e.target.value)}
@@ -856,9 +1020,9 @@ const IpdTreatmentsPage: React.FC = () => {
 
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">Assistant Surgeon Fee (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
                         placeholder="e.g. 500 (Optional)"
                         value={assistantSurgeonCharges}
                         onChange={(e) => setAssistantSurgeonCharges(e.target.value)}
@@ -893,9 +1057,9 @@ const IpdTreatmentsPage: React.FC = () => {
                       <label className="form-label fw-semibold">
                         Description / Notes <span className="text-muted font-normal">(Optional)</span>
                       </label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="description"
                         type="text"
-                        className="form-control"
                         placeholder="Special preparation or notes..."
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
@@ -962,9 +1126,9 @@ const IpdTreatmentsPage: React.FC = () => {
                     <label className="form-label fw-semibold">
                       Category Name <span className="text-danger">*</span>
                     </label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="category"
                       type="text"
-                      className="form-control"
                       placeholder="e.g. Major OT Surgery, Cosmetic Surgery, Day Care"
                       value={categoryInputName}
                       onChange={(e) => setCategoryInputName(e.target.value)}
@@ -976,8 +1140,8 @@ const IpdTreatmentsPage: React.FC = () => {
                     <label className="form-label fw-semibold">
                       Description <span className="text-muted font-normal">(Optional)</span>
                     </label>
-                    <textarea
-                      className="form-control"
+                    <IconTextarea
+                      fieldLabel="description"
                       rows={3}
                       placeholder="Brief details about this category..."
                       value={categoryInputDesc}

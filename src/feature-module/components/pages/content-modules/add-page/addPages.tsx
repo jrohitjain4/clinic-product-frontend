@@ -5,6 +5,7 @@ import TagInput from "../../../../../core/common/Taginput";
 import { Default_Language } from "../../../../../core/common/selectOption";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import DefaultEditor from "react-simple-wysiwyg";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 const AddPages = () => {
   const [tags, setTags] = useState<string[]>();
@@ -42,7 +43,7 @@ const AddPages = () => {
                           <label className="form-label mb-1 fw-medium">
                             Title<span className="text-danger ms-1">*</span>
                           </label>
-                          <input type="text" className="form-control" />
+                          <IconFormControl type="text" fieldLabel="title" placeholder="Enter page title" />
                         </div>
                       </div>
                       <div className="col-md-6">
@@ -55,7 +56,7 @@ const AddPages = () => {
                             </span>
                             <span className="text-danger ms-1">*</span>
                           </label>
-                          <input type="text" className="form-control" />
+                          <IconFormControl type="text" fieldLabel="title" placeholder="Slug" />
                         </div>
                       </div>
                       <div className="col-md-6">
@@ -67,7 +68,7 @@ const AddPages = () => {
                             </span>
                             <span className="text-danger ms-1">*</span>
                           </label>
-                          <input type="text" className="form-control" />
+                          <IconFormControl type="text" fieldLabel="description" placeholder="Enter meta description" />
                         </div>
                       </div>
                       <div className="col-md-6">

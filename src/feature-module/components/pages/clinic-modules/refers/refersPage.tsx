@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { apiUrl } from "../../../../../core/config/api";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 interface Refer {
   id: string;
@@ -128,9 +129,9 @@ const RefsPage = () => {
                     <label className="form-label fw-medium">
                       Name <span className="text-danger">*</span>
                     </label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="Name"
                       type="text"
-                      className="form-control"
                       placeholder="e.g. Google, Walk-in, Doctor Referral"
                       value={name}
                       onChange={e => setName(e.target.value)}
@@ -141,9 +142,9 @@ const RefsPage = () => {
                     <label className="form-label fw-medium">
                       Description <span className="text-muted fs-12">(Optional)</span>
                     </label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="description"
                       type="text"
-                      className="form-control"
                       placeholder="Short description (optional)"
                       value={description}
                       onChange={e => setDescription(e.target.value)}

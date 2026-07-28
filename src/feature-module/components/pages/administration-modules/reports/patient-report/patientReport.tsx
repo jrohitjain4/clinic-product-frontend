@@ -8,7 +8,7 @@ import {
   Patient,
   Practioner,
 } from "../../../../../../core/common/selectOption";
-import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
+import { IconSelect } from "../../../../../../core/common/form-fields";
 import Datatable from "../../../../../../core/common/dataTable";
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
@@ -254,7 +254,8 @@ const PatientReport = () => {
                 <div className="col-lg-4">
                   <div className="mb-0">
                     <label className="form-label">Patient</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="patient"
                       options={Patient}
                       className="select"
                       defaultValue={Patient[0]}
@@ -265,7 +266,8 @@ const PatientReport = () => {
                 <div className="col-lg-4">
                   <div className="mb-0">
                     <label className="form-label">Location</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="location"
                       options={Location}
                       className="select"
                       defaultValue={Location[0]}
@@ -276,7 +278,8 @@ const PatientReport = () => {
                 <div className="col-lg-4">
                   <div className="mb-0">
                     <label className="form-label">Practioner</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="doctor"
                       options={Practioner}
                       className="select"
                       defaultValue={Practioner[0]}
@@ -287,7 +290,8 @@ const PatientReport = () => {
                 <div className="col-lg-4">
                   <div className="mb-0">
                     <label className="form-label">Designation</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="designation"
                       options={Designation}
                       className="select"
                       defaultValue={Designation[0]}

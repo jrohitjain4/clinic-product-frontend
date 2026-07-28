@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Footer from "../../../../core/common/footer/footer";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
+import { IconFormControl } from "../../../../core/common/form-fields";
 
 interface Ward {
   id: string;
@@ -304,18 +305,13 @@ const IpdNursesPage: React.FC = () => {
           <div className="card-body p-3">
             <div className="row g-2 align-items-center">
               <div className="col-md-7">
-                <div className="input-group">
-                  <span className="input-group-text bg-white border-end-0">
-                    <i className="ti ti-search text-muted" />
-                  </span>
-                  <input
-                    type="text"
-                    className="form-control border-start-0 ps-0"
-                    placeholder="Search by nurse name, staff code, or assigned ward..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
+                <IconFormControl
+                  fieldLabel="search"
+                  type="text"
+                  placeholder="Search by nurse name, staff code, or assigned ward..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
 
               <div className="col-md-5">
@@ -482,9 +478,9 @@ const IpdNursesPage: React.FC = () => {
                       <label className="form-label fw-semibold">
                         Nurse Full Name <span className="text-danger">*</span>
                       </label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="name"
                         type="text"
-                        className="form-control"
                         placeholder="e.g. Sister Sunita Sharma"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
@@ -572,9 +568,9 @@ const IpdNursesPage: React.FC = () => {
                     {/* Phone & Email */}
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Phone Number</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="phone"
                         type="text"
-                        className="form-control"
                         placeholder="e.g. +91 98765 43210"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
@@ -583,9 +579,9 @@ const IpdNursesPage: React.FC = () => {
 
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Email Address</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="email"
                         type="email"
-                        className="form-control"
                         placeholder="e.g. nurse.sunita@docyori.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}

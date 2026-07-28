@@ -2,9 +2,11 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { Link } from "react-router-dom";
 import { all_routes } from "../../../routes/all_routes";
 import Footer from "../../../../core/common/footer/footer";
+import Datatable from "../../../../core/common/dataTable";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 import IpdViewDetailsModal from "./IpdViewDetailsModal";
+import { IconFormControl } from "../../../../core/common/form-fields";
 
 interface Patient {
   id: string;
@@ -468,10 +470,283 @@ const IpdAdmissionsPage: React.FC = () => {
     });
   }, [admissions, filterWard, filterPatient, filterDoctor, filterDue]);
 
+  const tableData = useMemo(
+    () =>
+      filteredAdmissions.map((adm, idx) => ({
+        key: adm.id,
+        sr: idx + 1,
+        admissionCode: adm.admissionCode,
+        patientName: getPatientName(adm.patient),
+        patientMeta: `UHID: ${adm.patient?.patientCode || "—"} | ${adm.patient?.phone || "—"}`,
+        doctorName: adm.doctor?.fullName || "Unassigned",
+        doctorVisitCharge: adm.doctorVisitCharge,
+        wardName: adm.ward?.wardName || "Not Assigned",
+        wardCharge: adm.wardCharge,
+        treatmentName: adm.treatment?.procedureName || "Standard IPD Care",
+        treatmentFee: adm.treatmentFee,
+        totalEstimatedAmount: adm.totalEstimatedAmount,
+        advancePaid: adm.advancePaid,
+        dueAmount: adm.dueAmount,
+        paymentStatus: adm.paymentStatus,
+        status: adm.status,
+        _raw: adm,
+      })),
+    [filteredAdmissions]
+  );
+
+  const columns = useMemo(
+    () => [
+      {
+        title: "Sr.",
+        dataIndex: "sr",
+        width: 60,
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) => a.sr - b.sr,
+      },
+      {
+        title: "Admission Code",
+        dataIndex: "admissionCode",
+        render: (text: string) => (
+          <span
+            className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+            style={{
+              backgroundColor: "#e2e8f0",
+              color: "#1e293b",
+              fontWeight: 600,
+              fontSize: "12px",
+            }}
+          >
+            <i className="ti ti-hash fs-14" />
+            {text}
+          </span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.admissionCode.localeCompare(b.admissionCode),
+      },
+      {
+        title: "Patient Details",
+        dataIndex: "patientName",
+        render: (text: string, record: (typeof tableData)[0]) => (
+          <div className="lh-1">
+            <h6 className="mb-1 fs-14 fw-semibold text-dark">{text}</h6>
+            <span className="text-muted fs-12 fw-normal d-block mt-1">
+              {record.patientMeta}
+            </span>
+          </div>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.patientName.localeCompare(b.patientName),
+      },
+      {
+        title: "Primary Doctor",
+        dataIndex: "doctorName",
+        render: (text: string, record: (typeof tableData)[0]) => (
+          <>
+            <span className="fw-semibold text-primary d-block fs-13">{text}</span>
+            {record.doctorVisitCharge > 0 && (
+              <small className="text-muted d-block mt-1">
+                Visit: ₹{record.doctorVisitCharge}
+              </small>
+            )}
+          </>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.doctorName.localeCompare(b.doctorName),
+      },
+      {
+        title: "Assigned Ward",
+        dataIndex: "wardName",
+        render: (text: string, record: (typeof tableData)[0]) => (
+          <>
+            <span
+              className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1 mb-1"
+              style={{
+                backgroundColor: "#e0f2fe",
+                color: "#2563eb",
+                fontWeight: 600,
+                fontSize: "12px",
+              }}
+            >
+              <i className="ti ti-bed fs-14" />
+              {text}
+            </span>
+            {record.wardCharge > 0 && (
+              <small className="text-muted d-block mt-1">
+                Rate: ₹{record.wardCharge}/night
+              </small>
+            )}
+          </>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.wardName.localeCompare(b.wardName),
+      },
+      {
+        title: "Treatment / Surgery",
+        dataIndex: "treatmentName",
+        render: (text: string, record: (typeof tableData)[0]) => (
+          <>
+            <span className="fw-medium text-dark d-block fs-13">{text}</span>
+            {record.treatmentFee > 0 && (
+              <small className="text-muted d-block mt-1">
+                Proc Fee: ₹{record.treatmentFee}
+              </small>
+            )}
+          </>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.treatmentName.localeCompare(b.treatmentName),
+      },
+      {
+        title: "Est. Total",
+        dataIndex: "totalEstimatedAmount",
+        render: (val: number) => (
+          <span className="fw-bold text-dark fs-14">
+            {val > 0 ? `₹${val.toLocaleString("en-IN")}` : "₹0"}
+          </span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.totalEstimatedAmount - b.totalEstimatedAmount,
+      },
+      {
+        title: "Advance Paid",
+        dataIndex: "advancePaid",
+        render: (val: number) => (
+          <span className="fw-bold text-success fs-14">
+            {val > 0 ? `₹${val.toLocaleString("en-IN")}` : "₹0"}
+          </span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.advancePaid - b.advancePaid,
+      },
+      {
+        title: "Due Amount",
+        dataIndex: "dueAmount",
+        render: (val: number) => (
+          <span className={`fw-bold fs-14 ${val > 0 ? "text-danger" : "text-success"}`}>
+            {val > 0 ? `₹${val.toLocaleString("en-IN")}` : "₹0"}
+          </span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.dueAmount - b.dueAmount,
+      },
+      {
+        title: "Payment Status",
+        dataIndex: "paymentStatus",
+        render: (text: string) => (
+          <span
+            className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+            style={{
+              backgroundColor:
+                text === "Paid"
+                  ? "#e6f8ef"
+                  : text === "Partial"
+                    ? "#fff3cd"
+                    : "#fdeded",
+              color:
+                text === "Paid"
+                  ? "#198754"
+                  : text === "Partial"
+                    ? "#fd7e14"
+                    : "#dc3545",
+              fontWeight: 600,
+              fontSize: "12px",
+            }}
+          >
+            <i
+              className={`${
+                text === "Paid"
+                  ? "ti ti-circle-check"
+                  : text === "Partial"
+                    ? "ti ti-clock"
+                    : "ti ti-circle-x"
+              } fs-14`}
+            />
+            {text}
+          </span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.paymentStatus.localeCompare(b.paymentStatus),
+      },
+      {
+        title: "Status",
+        dataIndex: "status",
+        render: (text: string) => {
+          const isAdmitted = text === "Admitted";
+          return (
+            <span
+              className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+              style={{
+                backgroundColor: isAdmitted ? "#e6f8ef" : "#f1f5f9",
+                color: isAdmitted ? "#198754" : "#64748b",
+                fontWeight: 600,
+                fontSize: "12px",
+              }}
+            >
+              <i className={`${isAdmitted ? "ti ti-circle-check" : "ti ti-circle-dashed"} fs-14`} />
+              {text}
+            </span>
+          );
+        },
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.status.localeCompare(b.status),
+      },
+      {
+        title: "Action",
+        className: "text-center text-nowrap",
+        width: 180,
+        align: "center" as const,
+        render: (_: unknown, record: (typeof tableData)[0]) => (
+          <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
+            <button
+              type="button"
+              className="bg-transparent border-0 text-primary p-1"
+              title="View Full IPD Details"
+              onClick={() => {
+                setSelectedViewAdmission(record._raw);
+                setShowViewModal(true);
+              }}
+            >
+              <i className="ti ti-eye fs-18" />
+            </button>
+            <Link
+              to={all_routes.ipdDischarge}
+              className="text-success p-1"
+              title="Process Discharge & Settle"
+            >
+              <i className="ti ti-user-check fs-18" />
+            </Link>
+            <Link
+              to={all_routes.ipdBillings}
+              className="text-info p-1"
+              title="View Invoices & Receipts"
+            >
+              <i className="ti ti-file-invoice fs-18" />
+            </Link>
+            <Link
+              to={all_routes.ipdBillings}
+              className="text-primary p-1"
+              title="Raise IPD Charge"
+            >
+              <i className="ti ti-plus fs-18" />
+            </Link>
+          </div>
+        ),
+      },
+    ],
+    []
+  );
+
   const hasActiveFilters = filterWard || filterPatient || filterDoctor || filterDue;
 
   return (
     <div className="page-wrapper">
+      <style>{`
+        .page-wrapper .ipd-admissions-empty-card.card,
+        .page-wrapper .datatable-main-container .datatable-table-shell.card {
+          border: none !important;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+          border-radius: 12px !important;
+        }
+      `}</style>
       <div className="content">
         {/* Header */}
         <div className="d-md-flex d-block align-items-center justify-content-between mb-4 gap-3 flex-wrap">
@@ -552,174 +827,37 @@ const IpdAdmissionsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Admissions Table */}
-        <div className="card border-0 shadow-sm">
-          <div className="card-body p-0">
-            {loading ? (
-              <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status" />
-                <p className="text-muted mt-2 mb-0">Loading IPD Admissions...</p>
-              </div>
-            ) : filteredAdmissions.length === 0 ? (
-              <div className="text-center py-5">
-                <i className="ti ti-user-plus fs-40 text-muted mb-2 d-block" />
-                <h5 className="fw-bold">No Inpatient Admissions Found</h5>
-                <p className="text-muted fs-13 mb-3">
-                  Click below to admit your first patient to IPD with ward & treatment selection.
-                </p>
-                <button className="btn btn-primary btn-sm" onClick={() => handleOpenModal("Direct")}>
-                  <i className="ti ti-plus me-1" /> + Add Patient Admission
-                </button>
-              </div>
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-hover align-middle mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th style={{ width: "48px" }}>Sr.</th>
-                      <th>Admission Code</th>
-                      <th>Patient Details</th>
-                      <th>Primary Doctor</th>
-                      <th>Assigned Ward</th>
-                      <th>Treatment / Surgery</th>
-                      <th>Est. Total</th>
-                      <th>Advance Paid</th>
-                      <th>Due Amount</th>
-                      <th>Payment Status</th>
-                      <th>Status</th>
-                      <th className="text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAdmissions.map((adm, idx) => (
-                      <tr key={adm.id}>
-                        <td>
-                          <span className="text-muted fw-semibold fs-13">{idx + 1}</span>
-                        </td>
-                        <td>
-                          <span className="badge bg-soft-dark text-dark fw-bold">
-                            {adm.admissionCode}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="fw-bold text-dark d-block">{getPatientName(adm.patient)}</span>
-                          <small className="text-muted">
-                            UHID: {adm.patient?.patientCode || "—"} | {adm.patient?.phone || "—"}
-                          </small>
-                        </td>
-                        <td>
-                          <span className="fw-semibold text-primary d-block">
-                            {adm.doctor?.fullName || "Unassigned"}
-                          </span>
-                          {adm.doctorVisitCharge > 0 && (
-                            <small className="text-muted">Visit: ₹{adm.doctorVisitCharge}</small>
-                          )}
-                        </td>
-                        <td>
-                          <span className="badge bg-soft-primary text-primary fw-medium d-block mb-1">
-                            {adm.ward?.wardName || "Not Assigned"}
-                          </span>
-                          {adm.wardCharge > 0 && (
-                            <small className="text-muted">Rate: ₹{adm.wardCharge}/night</small>
-                          )}
-                        </td>
-                        <td>
-                          <span className="fw-medium text-dark d-block">
-                            {adm.treatment?.procedureName || "Standard IPD Care"}
-                          </span>
-                          {adm.treatmentFee > 0 && (
-                            <small className="text-muted">Proc Fee: ₹{adm.treatmentFee}</small>
-                          )}
-                        </td>
-                        <td>
-                          <span className="fw-bold text-dark fs-14">
-                            {adm.totalEstimatedAmount > 0 ? `₹${adm.totalEstimatedAmount.toLocaleString("en-IN")}` : "₹0"}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="fw-bold text-success fs-14">
-                            {adm.advancePaid > 0 ? `₹${adm.advancePaid.toLocaleString("en-IN")}` : "₹0"}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`fw-bold fs-14 ${adm.dueAmount > 0 ? "text-danger" : "text-success"}`}>
-                            {adm.dueAmount > 0 ? `₹${adm.dueAmount.toLocaleString("en-IN")}` : "₹0"}
-                          </span>
-                        </td>
-                        <td>
-                          <span
-                            className={`badge ${
-                              adm.paymentStatus === "Paid"
-                                ? "bg-soft-success text-success"
-                                : adm.paymentStatus === "Partial"
-                                ? "bg-soft-warning text-warning"
-                                : "bg-soft-danger text-danger"
-                            }`}
-                          >
-                            {adm.paymentStatus}
-                          </span>
-                        </td>
-                        <td>
-                          <span
-                            className={`badge ${
-                              adm.status === "Admitted" ? "bg-success" : "bg-secondary"
-                            }`}
-                          >
-                            {adm.status}
-                          </span>
-                        </td>
-                        <td className="text-center">
-                          <div className="d-flex align-items-center justify-content-center gap-1">
-                            {/* View Admission Details */}
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-soft-secondary p-0 d-flex align-items-center justify-content-center"
-                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                              title="View Full IPD Details"
-                              onClick={() => {
-                                setSelectedViewAdmission(adm);
-                                setShowViewModal(true);
-                              }}
-                            >
-                              <i className="ti ti-eye fs-16" />
-                            </button>
-                            {/* Discharge */}
-                            <Link
-                              to={all_routes.ipdDischarge}
-                              className="btn btn-sm btn-soft-success p-0 d-flex align-items-center justify-content-center"
-                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                              title="Process Discharge & Settle"
-                            >
-                              <i className="ti ti-user-check fs-16" />
-                            </Link>
-                            {/* View Invoices */}
-                            <Link
-                              to={all_routes.ipdBillings}
-                              className="btn btn-sm btn-soft-primary p-0 d-flex align-items-center justify-content-center"
-                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                              title="View Invoices & Receipts"
-                            >
-                              <i className="ti ti-file-invoice fs-16" />
-                            </Link>
-                            {/* Raise IPD Charge */}
-                            <Link
-                              to={all_routes.ipdBillings}
-                              className="btn btn-sm btn-soft-info p-0 d-flex align-items-center justify-content-center"
-                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                              title="Raise IPD Charge"
-                            >
-                              <i className="ti ti-plus fs-16" />
-                            </Link>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+        {/* Admissions Table — same Datatable shell/header/pagination as Patients */}
+        {loading ? (
+          <div className="card ipd-admissions-empty-card">
+            <div className="card-body text-center py-5">
+              <div className="spinner-border text-primary" role="status" />
+              <p className="text-muted mt-2 mb-0">Loading IPD Admissions...</p>
+            </div>
           </div>
-        </div>
+        ) : filteredAdmissions.length === 0 ? (
+          <div className="card ipd-admissions-empty-card">
+            <div className="card-body text-center py-5">
+              <i className="ti ti-user-plus fs-40 text-muted mb-2 d-block" />
+              <h5 className="fw-bold">No Inpatient Admissions Found</h5>
+              <p className="text-muted fs-13 mb-3">
+                Click below to admit your first patient to IPD with ward & treatment selection.
+              </p>
+              <button className="btn btn-primary btn-sm" onClick={() => handleOpenModal("Direct")}>
+                <i className="ti ti-plus me-1" /> + Add Patient Admission
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <Datatable
+              columns={columns}
+              dataSource={tableData}
+              Selection={false}
+              searchText=""
+            />
+          </div>
+        )}
       </div>
 
       {/* ADMISSION MODAL */}
@@ -789,9 +927,9 @@ const IpdAdmissionsPage: React.FC = () => {
 
                     <div className="col-md-12">
                       <label className="form-label fw-semibold">Diagnosis / Admission Reason</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="diagnosis"
                         type="text"
-                        className="form-control"
                         placeholder="e.g. Acute Appendicitis, High Fever, Post-op Recovery..."
                         value={diagnosis}
                         onChange={(e) => setDiagnosis(e.target.value)}
@@ -862,9 +1000,10 @@ const IpdAdmissionsPage: React.FC = () => {
                   <div className="row g-3 mb-4">
                     <div className="col-md-4 col-6">
                       <label className="form-label fw-semibold">Admission Fee (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter admission fee"
                         value={admissionFee}
                         onChange={(e) => setAdmissionFee(e.target.value)}
                         min={0}
@@ -873,9 +1012,10 @@ const IpdAdmissionsPage: React.FC = () => {
 
                     <div className="col-md-4 col-6">
                       <label className="form-label fw-semibold">Treatment / Surgery Fee (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter treatment fee"
                         value={treatmentFee}
                         onChange={(e) => setTreatmentFee(e.target.value)}
                         min={0}
@@ -884,9 +1024,10 @@ const IpdAdmissionsPage: React.FC = () => {
 
                     <div className="col-md-4 col-6">
                       <label className="form-label fw-semibold">Ward Per Night Charge (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter per night ward charge"
                         value={wardCharge}
                         onChange={(e) => setWardCharge(e.target.value)}
                         min={0}
@@ -895,9 +1036,10 @@ const IpdAdmissionsPage: React.FC = () => {
 
                     <div className="col-md-4 col-6">
                       <label className="form-label fw-semibold">Doctor Visit Fee (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter doctor visit fee"
                         value={doctorVisitCharge}
                         onChange={(e) => setDoctorVisitCharge(e.target.value)}
                         min={0}
@@ -906,9 +1048,10 @@ const IpdAdmissionsPage: React.FC = () => {
 
                     <div className="col-md-4 col-6">
                       <label className="form-label fw-semibold">Nursing Fee (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter nursing fee"
                         value={nursingFee}
                         onChange={(e) => setNursingFee(e.target.value)}
                         min={0}
@@ -917,9 +1060,10 @@ const IpdAdmissionsPage: React.FC = () => {
 
                     <div className="col-md-4 col-6">
                       <label className="form-label fw-semibold">Others (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter other charges"
                         value={otherCharges}
                         onChange={(e) => setOtherCharges(e.target.value)}
                         min={0}
@@ -943,9 +1087,10 @@ const IpdAdmissionsPage: React.FC = () => {
                         <label className="form-label fw-bold text-dark mb-1">
                           Advance Payment (₹)
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="amount"
                           type="number"
-                          className="form-control fw-bold text-success fs-16"
+                          className="fw-bold text-success fs-16"
                           placeholder="e.g. 5000"
                           value={advancePaid}
                           onChange={(e) => setAdvancePaid(e.target.value)}

@@ -4,6 +4,7 @@ import { DatePicker } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import { all_routes } from "../../../../routes/all_routes";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
+import { IconFormControl, IconSelect, IconTextarea } from "../../../../../core/common/form-fields";
 import { apiUrl } from "../../../../../core/config/api";
 import { useClinicAppointment } from "../../../../../core/hooks/useClinicAppointment";
 import { useClinicAppointments } from "../../../../../core/hooks/useClinicAppointments";
@@ -792,7 +793,61 @@ Powered by DocYori`;
 
   const formContent = (
     <form onSubmit={handleSubmit}>
-      <div className={isModal ? "" : "card"}>
+      <div className={isModal ? "" : "card border-0 appointment-form-main-card"}>
+        {!isModal && (
+          <div
+            className="d-flex align-items-center justify-content-between px-4 py-3 bg-white border-bottom appointment-form-card-header"
+            style={{ borderColor: "#e5e7eb" }}
+          >
+            <div className="d-flex align-items-center gap-3">
+              <div
+                className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                style={{
+                  width: 44,
+                  height: 44,
+                  background: "#f3e8ff",
+                  color: "#6d28d9",
+                }}
+              >
+                <i
+                  className={`ti ${mode === "edit" ? "ti-calendar-event" : "ti-calendar-plus"} fs-20`}
+                />
+              </div>
+              <div>
+                <h5
+                  className="mb-0 fw-bold"
+                  style={{ color: "#1e1b4b", fontSize: 18 }}
+                >
+                  {mode === "edit"
+                    ? isSessionMode
+                      ? "Edit Session Appointment"
+                      : "Edit Appointment"
+                    : isSessionMode
+                      ? "Add New Session Appointment"
+                      : "Add New Appointment"}
+                </h5>
+                <p className="mb-0 text-muted" style={{ fontSize: 13 }}>
+                  {mode === "edit"
+                    ? "Update appointment details in the system"
+                    : "Enter appointment details to schedule a visit"}
+                </p>
+              </div>
+            </div>
+            <Link
+              to={all_routes.appointments}
+              className="d-inline-flex align-items-center justify-content-center text-muted bg-white"
+              aria-label="Close"
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                border: "1px solid #e5e7eb",
+              }}
+            >
+              <i className="ti ti-x fs-18" />
+            </Link>
+          </div>
+        )}
         <div className={isModal ? "" : "card-body"}>
           {loadError && (
             <div className="alert alert-warning d-flex justify-content-between align-items-center py-2 fs-13 mb-3">
@@ -828,9 +883,11 @@ Powered by DocYori`;
             <label className="form-label mb-1 fw-medium">
               Appointment ID
             </label>
-            <input
+            <IconFormControl
+              fieldLabel="Appointment ID"
+              icon="ti ti-hash"
               type="text"
-              className="form-control"
+              placeholder="Auto-generated appointment ID"
               value={nextCode}
               disabled
             />
@@ -853,7 +910,8 @@ Powered by DocYori`;
                     </button>
                   )}
                 </div>
-                <CommonSelect
+                <IconSelect
+                  fieldLabel="Patient"
                   key={`patient-${patientOptions.length}`}
                   options={patientOptions}
                   className="select"
@@ -879,7 +937,8 @@ Powered by DocYori`;
                 <label className="form-label mb-1 fw-medium">
                   Department (Optional)
                 </label>
-                <CommonSelect
+                <IconSelect
+                  fieldLabel="Department"
                   key={`dept-${deptOptions.length}`}
                   options={deptOptions}
                   className="select"
@@ -909,7 +968,8 @@ Powered by DocYori`;
                 <label className="form-label mb-1 fw-medium">
                   Doctor<span className="text-danger ms-1">*</span>
                 </label>
-                <CommonSelect
+                <IconSelect
+                  fieldLabel="Doctor"
                   key={`doctor-${doctorOptions.length}-${form.departmentId}`}
                   options={doctorOptions}
                   className="select"
@@ -937,9 +997,11 @@ Powered by DocYori`;
                 <label className="form-label mb-1 fw-medium">
                   Appointment Type<span className="text-danger ms-1">*</span>
                 </label>
-                <CommonSelect
+                <IconSelect
+                  fieldLabel="Appointment Type"
                   options={APPOINTMENT_TYPE_OPTIONS}
                   className="select"
+                  placeholder="Select appointment type"
                   value={findSelectOption(
                     APPOINTMENT_TYPE_OPTIONS,
                     form.appointmentType
@@ -1154,10 +1216,10 @@ Powered by DocYori`;
             <label className="form-label mb-1 fw-medium">
               Appointment Reason (Optional)
             </label>
-            <textarea
-              className="form-control"
+            <IconTextarea
               rows={3}
               value={form.reason}
+              placeholder="Enter reason for appointment"
               onChange={(e) =>
                 setForm((f) => ({ ...f, reason: e.target.value }))
               }
@@ -1507,6 +1569,18 @@ Powered by DocYori`;
 
   return (
     <div className="page-wrapper">
+      <style>{`
+        .page-wrapper .card.appointment-form-main-card {
+          border: none !important;
+          box-shadow: 0 10px 28px rgba(15, 23, 42, 0.1) !important;
+          border-radius: 12px !important;
+          overflow: hidden !important;
+        }
+        .page-wrapper .card.appointment-form-main-card > .appointment-form-card-header {
+          border-top-left-radius: 12px !important;
+          border-top-right-radius: 12px !important;
+        }
+      `}</style>
       <div className="content">
         <div className="row justify-content-center">
           <div className="col-lg-12">

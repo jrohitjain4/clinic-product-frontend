@@ -9,6 +9,7 @@ import { ViewModal } from "../../../../../core/common/modal/ViewModal";
 import InvoiceSlip from "../../patient-modules/patient-invoice-details/InvoiceSlip";
 import EmptyState from "../../../../../core/common/emptyState";
 import { usePharmacyBilling } from "../../../../../core/hooks/usePharmacyBilling";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 const SalesHistory = () => {
   const { invoices, loading, deleteInvoice } = usePharmacyBilling();
@@ -238,9 +239,10 @@ const SalesHistory = () => {
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
               {/* Search */}
               <div className="search-field position-relative" style={{ width: "220px" }}>
-                <input
+                <IconFormControl
+                  fieldLabel="search"
                   type="text"
-                  className="form-control fs-13 py-2"
+                  className="fs-13 py-2"
                   placeholder="Invoice / Patient / Medicine..."
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}

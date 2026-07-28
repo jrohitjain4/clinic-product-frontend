@@ -5,6 +5,7 @@ import Datatable from "../../../../../../core/common/dataTable";
 import TagInput from "../../../../../../core/common/Taginput";
 import { Category, Purchased_By } from "../../../../../../core/common/selectOption";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
+import { IconSelect } from "../../../../../../core/common/form-fields";
 import PredefinedDatePicker from "../../../../../../core/common/datePicker";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 
@@ -247,7 +248,8 @@ const ExpenseReport = () => {
                 <div className="col-md-6">
                   <div className="mb-0">
                     <label className="form-label">Category</label>
-                    <CommonSelect
+                    <IconSelect
+                        fieldLabel="category"
                         options={Category}
                         className="select"
                         defaultValue={Category[0]}

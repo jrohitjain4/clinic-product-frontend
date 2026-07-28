@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Footer from "../../../../core/common/footer/footer";
+import Datatable from "../../../../core/common/dataTable";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 import IpdViewDetailsModal from "./IpdViewDetailsModal";
+import { IconFormControl } from "../../../../core/common/form-fields";
 
 interface InvoiceItem {
   id: string;
@@ -658,8 +660,409 @@ const IpdBillingsPage: React.FC = () => {
     });
   }, [admissions, invoices, searchQuery, statusFilter]);
 
+  const tableData = useMemo(
+    () =>
+      groupedAdmissions.map((group) => ({
+        key: group.admissionId,
+        admissionId: group.admissionId,
+        admissionCode: group.admissionCode,
+        doctorName: group.doctorName,
+        patientName: getPatientName(group.patient),
+        patientCode: group.patient?.patientCode || "—",
+        wardName: group.wardName,
+        invoiceCount: group.invoices.length,
+        totalBilled: group.totalBilled,
+        totalPaid: group.totalPaid,
+        totalDue: group.totalDue,
+        paymentStatus: group.paymentStatus,
+        admissionStatus: group.admissionStatus,
+        patient: group.patient,
+        invoices: group.invoices,
+        computed: group.computed,
+        _raw: group,
+      })),
+    [groupedAdmissions]
+  );
+
+  const renderExpandedRow = useCallback((record: (typeof tableData)[0]) => {
+    const group = record._raw;
+    return (
+      <div className="ipd-billing-expanded p-2">
+        <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+          <span className="fw-bold text-dark fs-13">
+            <i className="ti ti-file-invoice me-1 text-primary" />
+            Individual Invoices & Receipts for Admission: {group.admissionCode}
+          </span>
+          <button
+            type="button"
+            className="btn btn-sm btn-primary py-0 px-2 fs-12"
+            onClick={() => handleOpenRaiseModal(group.admissionId)}
+          >
+            + Raise New Charge
+          </button>
+        </div>
+
+        {group.invoices.length === 0 ? (
+          <div className="text-center py-3 text-muted fs-13">
+            No individual invoices generated yet for this admission.
+          </div>
+        ) : (
+          <div className="table-responsive border rounded mb-3">
+            <table className="table table-bordered table-sm align-middle mb-0 fs-13">
+              <thead style={{ background: "#E6E6FF" }}>
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Date</th>
+                  <th>Itemized Charges</th>
+                  <th className="text-center">Total (₹)</th>
+                  <th className="text-center">Paid (₹)</th>
+                  <th className="text-center">Due (₹)</th>
+                  <th className="text-center">Status</th>
+                  <th className="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {group.invoices.map((inv: IPDInvoice) => (
+                  <tr key={inv.id}>
+                    <td className="fw-bold text-dark">{inv.invoiceNumber}</td>
+                    <td className="text-muted">
+                      {new Date(inv.invoiceDate).toLocaleDateString()}
+                    </td>
+                    <td>
+                      {inv.items && inv.items.length > 0 ? (
+                        inv.items.map((it) => (
+                          <div key={it.id} className="text-dark">
+                            • <span className="text-muted">[{it.itemType}]</span> {it.itemName}{" "}
+                            (₹{it.unitPrice} x {it.quantity})
+                          </div>
+                        ))
+                      ) : (
+                        <span className="text-muted">IPD General Charges</span>
+                      )}
+                    </td>
+                    <td className="text-center fw-bold">₹{inv.totalAmount}</td>
+                    <td className="text-center text-success fw-bold">₹{inv.paidAmount}</td>
+                    <td className="text-center text-danger fw-bold">₹{inv.dueAmount}</td>
+                    <td className="text-center">
+                      <span
+                        className={`badge rounded-pill px-2 py-1 ${
+                          inv.paymentStatus === "Paid"
+                            ? "bg-soft-success text-success"
+                            : inv.paymentStatus === "Partial"
+                              ? "bg-soft-warning text-warning"
+                              : "bg-soft-danger text-danger"
+                        }`}
+                      >
+                        {inv.paymentStatus}
+                      </span>
+                    </td>
+                    <td className="text-end">
+                      <div className="btn-group btn-group-sm">
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary"
+                          onClick={() => handleViewInvoice(inv)}
+                          title="View Invoice Items"
+                        >
+                          <i className="ti ti-eye" />
+                        </button>
+                        {inv.dueAmount > 0 && (
+                          <button
+                            type="button"
+                            className="btn btn-outline-success"
+                            onClick={() => handleOpenPayModal(inv)}
+                            title="Collect Payment"
+                          >
+                            <i className="ti ti-wallet" /> Pay
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {group.admissionStatus !== "Discharged" &&
+          group.computed &&
+          group.computed.daysStayed > 0 && (
+            <div
+              className="rounded-3 p-3 mb-3 border"
+              style={{
+                background: "linear-gradient(135deg,#fff3cd 0%,#ffeaa7 100%)",
+                borderColor: "#f0c040",
+              }}
+            >
+              <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div className="d-flex align-items-center gap-2">
+                  <i className="ti ti-building-hospital text-warning fs-20" />
+                  <div>
+                    <strong className="text-dark fs-13 d-block">
+                      Running Ward Stay Charges (Auto-calculated)
+                    </strong>
+                    <small className="text-muted">
+                      {group.wardName} — ₹
+                      {group.computed.runningWardChargePerDay.toLocaleString("en-IN")}/day
+                    </small>
+                  </div>
+                </div>
+                <div className="d-flex align-items-center gap-4">
+                  <div className="text-center">
+                    <span className="text-muted fs-11 fw-bold d-block">DAYS STAYED</span>
+                    <strong className="text-dark fs-16">{group.computed.daysStayed} Days</strong>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-muted fs-11 fw-bold d-block">WARD CHARGES</span>
+                    <strong className="text-warning fs-16">
+                      ₹{group.computed.runningWardChargeTotal.toLocaleString("en-IN")}
+                    </strong>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-muted fs-11 fw-bold d-block">TOTAL DUE (incl. Ward)</span>
+                    <strong className="text-danger fs-16">
+                      ₹{group.computed.runningDueAmount.toLocaleString("en-IN")}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+        <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-2">
+          <div className="d-flex align-items-center gap-4">
+            <div>
+              <span className="text-muted fs-12 fw-semibold d-block">TOTAL INVOICED</span>
+              <strong className="text-dark fs-15">
+                ₹{group.totalBilled.toLocaleString("en-IN")}
+              </strong>
+            </div>
+            <div>
+              <span className="text-muted fs-12 fw-semibold d-block">TOTAL PAID AMOUNT</span>
+              <strong className="text-success fs-15">
+                ₹{group.totalPaid.toLocaleString("en-IN")}
+              </strong>
+            </div>
+            <div>
+              <span className="text-muted fs-12 fw-semibold d-block">REMAINING DUE BALANCE</span>
+              <strong className="text-danger fs-15">
+                ₹{group.totalDue.toLocaleString("en-IN")}
+              </strong>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-sm btn-primary fw-bold px-3"
+            onClick={() => handleViewMasterStatement(group.admissionId)}
+          >
+            <i className="ti ti-receipt-tax me-1" /> View Full Master IPD Statement
+          </button>
+        </div>
+      </div>
+    );
+  }, []);
+
+  const columns = useMemo(
+    () => [
+      {
+        title: "Admission Code",
+        dataIndex: "admissionCode",
+        render: (text: string, record: (typeof tableData)[0]) => (
+          <>
+            <span className="badge bg-soft-dark text-dark fw-bold px-2 py-1 rounded-pill d-inline-block mb-1">
+              {text}
+            </span>
+            <small className="text-muted d-block">{record.doctorName}</small>
+          </>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.admissionCode.localeCompare(b.admissionCode),
+      },
+      {
+        title: "Patient Details",
+        dataIndex: "patientName",
+        render: (text: string, record: (typeof tableData)[0]) => (
+          <div className="lh-1">
+            <h6 className="mb-1 fs-14 fw-semibold text-primary">{text}</h6>
+            <span className="text-muted fs-12 fw-normal d-block mt-1">
+              UHID: {record.patientCode}
+            </span>
+          </div>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.patientName.localeCompare(b.patientName),
+      },
+      {
+        title: "Assigned Ward",
+        dataIndex: "wardName",
+        render: (text: string) => (
+          <span className="badge bg-soft-info text-info fw-medium">{text}</span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.wardName.localeCompare(b.wardName),
+      },
+      {
+        title: "Invoices Included",
+        dataIndex: "invoiceCount",
+        render: (count: number, record: (typeof tableData)[0]) => {
+          const isExpanded = expandedAdmissionIds.includes(record.key);
+          return (
+            <button
+              type="button"
+              className="badge bg-soft-primary text-primary fw-bold border-0"
+              onClick={() => toggleExpandAdmission(record.key)}
+            >
+              <i className="ti ti-file-invoice me-1" />
+              {count} Invoices {isExpanded ? "▲" : "▼"}
+            </button>
+          );
+        },
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.invoiceCount - b.invoiceCount,
+      },
+      {
+        title: "Total Billed",
+        dataIndex: "totalBilled",
+        render: (val: number) => (
+          <span className="fw-bold text-dark fs-14">₹{val.toLocaleString("en-IN")}</span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.totalBilled - b.totalBilled,
+      },
+      {
+        title: "Total Paid",
+        dataIndex: "totalPaid",
+        render: (val: number) => (
+          <span className="fw-bold text-success fs-14">₹{val.toLocaleString("en-IN")}</span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.totalPaid - b.totalPaid,
+      },
+      {
+        title: "Due Balance",
+        dataIndex: "totalDue",
+        render: (val: number) => (
+          <span className={`fw-bold fs-14 ${val > 0 ? "text-danger" : "text-success"}`}>
+            ₹{val.toLocaleString("en-IN")}
+          </span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.totalDue - b.totalDue,
+      },
+      {
+        title: "Status",
+        dataIndex: "paymentStatus",
+        render: (text: string) => (
+          <span
+            className={`badge rounded-pill px-3 py-2 ${
+              text === "Paid"
+                ? "bg-soft-success text-success"
+                : text === "Partial"
+                  ? "bg-soft-warning text-warning"
+                  : "bg-soft-danger text-danger"
+            }`}
+          >
+            {text}
+          </span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.paymentStatus.localeCompare(b.paymentStatus),
+      },
+      {
+        title: "Action",
+        className: "text-center text-nowrap",
+        width: 180,
+        align: "center" as const,
+        render: (_: unknown, record: (typeof tableData)[0]) => {
+          const isExpanded = expandedAdmissionIds.includes(record.key);
+          return (
+            <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
+              <button
+                type="button"
+                className="bg-transparent border-0 text-primary p-1"
+                title="View Full IPD Details"
+                onClick={() => {
+                  const fullAdm =
+                    admissions.find((a) => a.id === record.admissionId) || {
+                      admissionCode: record.admissionCode,
+                      patient: record.patient,
+                      ward: { wardName: record.wardName },
+                      doctor: { fullName: record.doctorName },
+                      status: record.admissionStatus,
+                      totalBilled: record.totalBilled,
+                      totalPaid: record.totalPaid,
+                      dueAmount: record.totalDue,
+                      paymentStatus: record.paymentStatus,
+                    };
+                  setSelectedViewAdmissionData(fullAdm);
+                  setShowIpdViewDetailsModal(true);
+                }}
+              >
+                <i className="ti ti-eye fs-18" />
+              </button>
+              <button
+                type="button"
+                className="bg-transparent border-0 text-info p-1"
+                title="View Master IPD Statement"
+                onClick={() => handleViewMasterStatement(record.admissionId)}
+              >
+                <i className="ti ti-receipt-tax fs-18" />
+              </button>
+              <button
+                type="button"
+                className="bg-transparent border-0 text-primary p-1"
+                title="Raise New IPD Charge"
+                onClick={() => handleOpenRaiseModal(record.admissionId)}
+              >
+                <i className="ti ti-plus fs-18" />
+              </button>
+              {record.invoiceCount > 0 && (
+                <button
+                  type="button"
+                  className={`bg-transparent border-0 p-1 ${
+                    isExpanded ? "text-dark" : "text-warning"
+                  }`}
+                  title={isExpanded ? "Hide Invoices" : "View Invoices List"}
+                  onClick={() => toggleExpandAdmission(record.key)}
+                >
+                  <i className={`ti ti-${isExpanded ? "chevron-up" : "list-details"} fs-18`} />
+                </button>
+              )}
+            </div>
+          );
+        },
+      },
+    ],
+    [expandedAdmissionIds, admissions]
+  );
+
+  const expandableConfig = useMemo(
+    () => ({
+      expandedRowKeys: expandedAdmissionIds,
+      onExpand: (_expanded: boolean, record: (typeof tableData)[0]) => {
+        toggleExpandAdmission(record.key);
+      },
+      expandedRowRender: renderExpandedRow,
+    }),
+    [expandedAdmissionIds, renderExpandedRow]
+  );
+
   return (
     <div className="page-wrapper">
+      <style>{`
+        .page-wrapper .ipd-billings-empty-card.card,
+        .page-wrapper .datatable-main-container .datatable-table-shell.card {
+          border: none !important;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+          border-radius: 12px !important;
+        }
+        .ipd-billing-expanded thead th {
+          background: #E6E6FF !important;
+          color: #1e293b !important;
+          font-weight: 700 !important;
+        }
+      `}</style>
       <div className="content">
         {/* Page Header */}
         <div className="d-md-flex d-block align-items-center justify-content-between mb-4 gap-3 flex-wrap">
@@ -669,9 +1072,10 @@ const IpdBillingsPage: React.FC = () => {
 
           <div className="d-flex align-items-center gap-2 flex-wrap">
             {/* Search Input */}
-            <input
+            <IconFormControl
+              fieldLabel="search"
               type="text"
-              className="form-control form-control-sm"
+              className="form-control-sm"
               style={{ width: "200px" }}
               placeholder="Search invoice/patient..."
               value={searchQuery}
@@ -788,362 +1192,38 @@ const IpdBillingsPage: React.FC = () => {
             </div>
           </div>
         </div>
-        {/* Invoices Table */}
-        <div className="card border-0 shadow-sm">
-          <div className="card-body p-0">
-            {loading ? (
-              <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status" />
-                <p className="text-muted mt-2 mb-0">Loading IPD Invoices...</p>
-              </div>
-            ) : groupedAdmissions.length === 0 ? (
-              <div className="text-center py-5">
-                <i className="ti ti-receipt-off fs-40 text-muted mb-2 d-block" />
-                <h5 className="fw-bold">No Invoices Found</h5>
-                <p className="text-muted fs-13 mb-3">
-                  Raise your first doctor visit, nurse care, oxygen or ward stay charge invoice.
-                </p>
-                <button className="btn btn-primary btn-sm" onClick={() => handleOpenRaiseModal()}>
-                  <i className="ti ti-plus me-1" /> + Raise New IPD Charge
-                </button>
-              </div>
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-hover align-middle mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th style={{ width: "40px" }}></th>
-                      <th>Admission Code</th>
-                      <th>Patient Details</th>
-                      <th>Assigned Ward</th>
-                      <th>Invoices Included</th>
-                      <th>Total Billed</th>
-                      <th>Total Paid</th>
-                      <th>Due Balance</th>
-                      <th>Status</th>
-                      <th className="text-end">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {groupedAdmissions.length === 0 ? (
-                      <tr>
-                        <td colSpan={10} className="text-center py-5 text-muted">
-                          No IPD admissions or invoices found matching criteria.
-                        </td>
-                      </tr>
-                    ) : (
-                      groupedAdmissions.map((group) => {
-                        const isExpanded = expandedAdmissionIds.includes(group.admissionId);
-                        return (
-                          <React.Fragment key={group.admissionId}>
-                            <tr className={isExpanded ? "bg-soft-primary" : ""}>
-                              <td>
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-icon btn-light border rounded-circle"
-                                  onClick={() => toggleExpandAdmission(group.admissionId)}
-                                  title={isExpanded ? "Collapse Invoices" : "Expand Invoices"}
-                                >
-                                  <i className={`ti ti-chevron-${isExpanded ? "down" : "right"}`} />
-                                </button>
-                              </td>
-                              <td>
-                                <span className="badge bg-soft-dark text-dark fw-bold fs-13 d-block mb-1">
-                                  {group.admissionCode}
-                                </span>
-                                <small className="text-muted">{group.doctorName}</small>
-                              </td>
-                              <td>
-                                <span className="fw-bold text-primary d-block">
-                                  {getPatientName(group.patient)}
-                                </span>
-                                <small className="text-muted">
-                                  UHID: {group.patient?.patientCode || "—"}
-                                </small>
-                              </td>
-                              <td>
-                                <span className="badge bg-soft-info text-info fw-medium">
-                                  {group.wardName}
-                                </span>
-                              </td>
-                              <td>
-                                <span
-                                  className="badge bg-soft-primary text-primary fw-bold cursor-pointer"
-                                  onClick={() => toggleExpandAdmission(group.admissionId)}
-                                >
-                                  <i className="ti ti-file-invoice me-1" />
-                                  {group.invoices.length} Invoices {isExpanded ? "▲" : "▼"}
-                                </span>
-                              </td>
-                              <td>
-                                <span className="fw-bold text-dark fs-14">
-                                  ₹{group.totalBilled.toLocaleString("en-IN")}
-                                </span>
-                              </td>
-                              <td>
-                                <span className="fw-bold text-success fs-14">
-                                  ₹{group.totalPaid.toLocaleString("en-IN")}
-                                </span>
-                              </td>
-                              <td>
-                                <span className="fw-bold text-danger fs-14">
-                                  ₹{group.totalDue.toLocaleString("en-IN")}
-                                </span>
-                              </td>
-                              <td>
-                                <span
-                                  className={`badge ${
-                                    group.paymentStatus === "Paid"
-                                      ? "bg-soft-success text-success"
-                                      : group.paymentStatus === "Partial"
-                                      ? "bg-soft-warning text-warning"
-                                      : "bg-soft-danger text-danger"
-                                  }`}
-                                >
-                                  {group.paymentStatus}
-                                </span>
-                              </td>
-                              <td className="text-center">
-                                <div className="d-flex align-items-center justify-content-center gap-1">
-                                  {/* View IPD Details */}
-                                  <button
-                                    type="button"
-                                    className="btn btn-sm btn-soft-secondary p-0 d-flex align-items-center justify-content-center"
-                                    style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                                    title="View Full IPD Details"
-                                    onClick={() => {
-                                      const fullAdm = admissions.find((a) => a.id === group.admissionId) || {
-                                        admissionCode: group.admissionCode,
-                                        patient: group.patient,
-                                        ward: { wardName: group.wardName },
-                                        doctor: { fullName: group.doctorName },
-                                        status: group.admissionStatus,
-                                        totalBilled: group.totalBilled,
-                                        totalPaid: group.totalPaid,
-                                        dueAmount: group.totalDue,
-                                        paymentStatus: group.paymentStatus,
-                                      };
-                                      setSelectedViewAdmissionData(fullAdm);
-                                      setShowIpdViewDetailsModal(true);
-                                    }}
-                                  >
-                                    <i className="ti ti-eye fs-16" />
-                                  </button>
-
-                                  {/* Master Statement */}
-                                  <button
-                                    type="button"
-                                    className="btn btn-sm btn-soft-primary p-0 d-flex align-items-center justify-content-center"
-                                    style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                                    title="View Master IPD Statement"
-                                    onClick={() => handleViewMasterStatement(group.admissionId)}
-                                  >
-                                    <i className="ti ti-receipt-tax fs-16" />
-                                  </button>
-
-                                  {/* Raise Charge */}
-                                  <button
-                                    type="button"
-                                    className="btn btn-sm btn-soft-info p-0 d-flex align-items-center justify-content-center"
-                                    style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                                    title="Raise New IPD Charge"
-                                    onClick={() => handleOpenRaiseModal(group.admissionId)}
-                                  >
-                                    <i className="ti ti-plus fs-16" />
-                                  </button>
-
-                                  {/* Toggle Invoices */}
-                                  {group.invoices.length > 0 && (
-                                    <button
-                                      type="button"
-                                      className={`btn btn-sm p-0 d-flex align-items-center justify-content-center ${
-                                        isExpanded ? "btn-dark text-white" : "btn-soft-warning"
-                                      }`}
-                                      style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                                      title={isExpanded ? "Hide Invoices" : "View Invoices List"}
-                                      onClick={() => toggleExpandAdmission(group.admissionId)}
-                                    >
-                                      <i className={`ti ti-${isExpanded ? "chevron-up" : "list-details"} fs-16`} />
-                                    </button>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-
-                            {/* Expandable Nested Sub-Table Row */}
-                            {isExpanded && (
-                              <tr className="bg-light">
-                                <td colSpan={10} className="p-3">
-                                  <div className="card border shadow-none mb-0">
-                                    <div className="card-header bg-white py-2 d-flex justify-content-between align-items-center">
-                                      <span className="fw-bold text-dark fs-13">
-                                        <i className="ti ti-file-invoice me-1 text-primary" />
-                                        Individual Invoices & Receipts for Admission: {group.admissionCode}
-                                      </span>
-                                      <button
-                                        className="btn btn-sm btn-primary py-0 px-2 fs-12"
-                                        onClick={() => handleOpenRaiseModal(group.admissionId)}
-                                      >
-                                        + Raise New Charge
-                                      </button>
-                                    </div>
-                                    <div className="card-body p-0">
-                                      {group.invoices.length === 0 ? (
-                                        <div className="text-center py-3 text-muted fs-13">
-                                          No individual invoices generated yet for this admission.
-                                        </div>
-                                      ) : (
-                                        <table className="table table-bordered table-sm align-middle mb-0 fs-13">
-                                          <thead className="table-light">
-                                            <tr>
-                                              <th>Invoice #</th>
-                                              <th>Date</th>
-                                              <th>Itemized Charges</th>
-                                              <th className="text-center">Total (₹)</th>
-                                              <th className="text-center">Paid (₹)</th>
-                                              <th className="text-center">Due (₹)</th>
-                                              <th className="text-center">Status</th>
-                                              <th className="text-end">Actions</th>
-                                            </tr>
-                                          </thead>
-                                          <tbody>
-                                            {group.invoices.map((inv) => (
-                                              <tr key={inv.id}>
-                                                <td className="fw-bold text-dark">{inv.invoiceNumber}</td>
-                                                <td className="text-muted">
-                                                  {new Date(inv.invoiceDate).toLocaleDateString()}
-                                                </td>
-                                                <td>
-                                                  {inv.items && inv.items.length > 0 ? (
-                                                    inv.items.map((it) => (
-                                                      <div key={it.id} className="text-dark">
-                                                        • <span className="text-muted">[{it.itemType}]</span> {it.itemName} (₹{it.unitPrice} x {it.quantity})
-                                                      </div>
-                                                    ))
-                                                  ) : (
-                                                    <span className="text-muted">IPD General Charges</span>
-                                                  )}
-                                                </td>
-                                                <td className="text-center fw-bold">₹{inv.totalAmount}</td>
-                                                <td className="text-center text-success fw-bold">₹{inv.paidAmount}</td>
-                                                <td className="text-center text-danger fw-bold">₹{inv.dueAmount}</td>
-                                                <td className="text-center">
-                                                  <span
-                                                    className={`badge ${
-                                                      inv.paymentStatus === "Paid"
-                                                        ? "bg-soft-success text-success"
-                                                        : inv.paymentStatus === "Partial"
-                                                        ? "bg-soft-warning text-warning"
-                                                        : "bg-soft-danger text-danger"
-                                                    }`}
-                                                  >
-                                                    {inv.paymentStatus}
-                                                  </span>
-                                                </td>
-                                                <td className="text-end">
-                                                  <div className="btn-group btn-group-sm">
-                                                    <button
-                                                      className="btn btn-outline-secondary"
-                                                      onClick={() => handleViewInvoice(inv)}
-                                                      title="View Invoice Items"
-                                                    >
-                                                      <i className="ti ti-eye" />
-                                                    </button>
-                                                    {inv.dueAmount > 0 && (
-                                                      <button
-                                                        className="btn btn-outline-success"
-                                                        onClick={() => handleOpenPayModal(inv)}
-                                                        title="Collect Payment"
-                                                      >
-                                                        <i className="ti ti-wallet" /> Pay
-                                                      </button>
-                                                    )}
-                                                  </div>
-                                                </td>
-                                              </tr>
-                                            ))}
-                                          </tbody>
-                                        </table>
-                                      )}
-                                    </div>
-                                    <div className="card-footer bg-light p-3 border-top">
-                                      {/* Running Ward Charges Banner (for admitted patients with ward) */}
-                                      {group.admissionStatus !== "Discharged" && group.computed && group.computed.daysStayed > 0 && (
-                                        <div
-                                          className="rounded-3 p-3 mb-3 border"
-                                          style={{ background: "linear-gradient(135deg,#fff3cd 0%,#ffeaa7 100%)", borderColor: "#f0c040 !important" }}
-                                        >
-                                          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                            <div className="d-flex align-items-center gap-2">
-                                              <i className="ti ti-building-hospital text-warning fs-20" />
-                                              <div>
-                                                <strong className="text-dark fs-13 d-block">
-                                                  🏥 Running Ward Stay Charges (Auto-calculated)
-                                                </strong>
-                                                <small className="text-muted">
-                                                  {group.wardName} — ₹{group.computed.runningWardChargePerDay.toLocaleString("en-IN")}/day
-                                                </small>
-                                              </div>
-                                            </div>
-                                            <div className="d-flex align-items-center gap-4">
-                                              <div className="text-center">
-                                                <span className="text-muted fs-11 fw-bold d-block">DAYS STAYED</span>
-                                                <strong className="text-dark fs-16">{group.computed.daysStayed} Days</strong>
-                                              </div>
-                                              <div className="text-center">
-                                                <span className="text-muted fs-11 fw-bold d-block">WARD CHARGES</span>
-                                                <strong className="text-warning fs-16">₹{group.computed.runningWardChargeTotal.toLocaleString("en-IN")}</strong>
-                                              </div>
-                                              <div className="text-center">
-                                                <span className="text-muted fs-11 fw-bold d-block">TOTAL DUE (incl. Ward)</span>
-                                                <strong className="text-danger fs-16">₹{group.computed.runningDueAmount.toLocaleString("en-IN")}</strong>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      )}
-
-                                      <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                                        <div className="d-flex align-items-center gap-4">
-                                          <div>
-                                            <span className="text-muted fs-12 fw-semibold d-block">TOTAL INVOICED</span>
-                                            <strong className="text-dark fs-15">₹{group.totalBilled.toLocaleString("en-IN")}</strong>
-                                          </div>
-                                          <div>
-                                            <span className="text-muted fs-12 fw-semibold d-block">TOTAL PAID AMOUNT</span>
-                                            <strong className="text-success fs-15">₹{group.totalPaid.toLocaleString("en-IN")}</strong>
-                                          </div>
-                                          <div>
-                                            <span className="text-muted fs-12 fw-semibold d-block">REMAINING DUE BALANCE</span>
-                                            <strong className="text-danger fs-15">₹{group.totalDue.toLocaleString("en-IN")}</strong>
-                                          </div>
-                                        </div>
-
-                                        <div className="d-flex align-items-center gap-2">
-                                          <button
-                                            type="button"
-                                            className="btn btn-sm btn-primary fw-bold px-3"
-                                            onClick={() => handleViewMasterStatement(group.admissionId)}
-                                          >
-                                            <i className="ti ti-receipt-tax me-1" /> View Full Master IPD Statement
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </React.Fragment>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
+        {/* Invoices Table — same Datatable shell/header/pagination as Patients */}
+        {loading ? (
+          <div className="card ipd-billings-empty-card">
+            <div className="card-body text-center py-5">
+              <div className="spinner-border text-primary" role="status" />
+              <p className="text-muted mt-2 mb-0">Loading IPD Invoices...</p>
+            </div>
           </div>
-        </div>
+        ) : groupedAdmissions.length === 0 ? (
+          <div className="card ipd-billings-empty-card">
+            <div className="card-body text-center py-5">
+              <i className="ti ti-receipt-off fs-40 text-muted mb-2 d-block" />
+              <h5 className="fw-bold">No Invoices Found</h5>
+              <p className="text-muted fs-13 mb-3">
+                Raise your first doctor visit, nurse care, oxygen or ward stay charge invoice.
+              </p>
+              <button className="btn btn-primary btn-sm" onClick={() => handleOpenRaiseModal()}>
+                <i className="ti ti-plus me-1" /> + Raise New IPD Charge
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <Datatable
+              columns={columns}
+              dataSource={tableData}
+              Selection={false}
+              searchText=""
+              expandable={expandableConfig}
+            />
+          </div>
+        )}
       </div>
 
       {/* MODAL: RAISE NEW IPD SERVICE CHARGE / INVOICE */}
@@ -1247,9 +1327,9 @@ const IpdBillingsPage: React.FC = () => {
                             );
                           }
                           return (
-                            <input
+                            <IconFormControl
+                              fieldLabel="service"
                               type="text"
-                              className="form-control"
                               placeholder="e.g. Doctor Round Visit, Oxygen Cylinder"
                               value={currentItemName}
                               onChange={(e) => setCurrentItemName(e.target.value)}
@@ -1262,9 +1342,10 @@ const IpdBillingsPage: React.FC = () => {
                       {/* Unit Price */}
                       <div className="col-md-2">
                         <label className="form-label fw-semibold fs-13">Unit Price (₹) *</label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="price"
                           type="number"
-                          className="form-control fw-bold text-success"
+                          className="fw-bold text-success"
                           placeholder="Rate"
                           value={currentUnitPrice}
                           onChange={(e) => setCurrentUnitPrice(e.target.value)}
@@ -1275,9 +1356,10 @@ const IpdBillingsPage: React.FC = () => {
                       {/* Quantity */}
                       <div className="col-md-2">
                         <label className="form-label fw-semibold fs-13">Quantity</label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="quantity"
                           type="number"
-                          className="form-control"
+                          placeholder="Qty"
                           value={currentQuantity}
                           onChange={(e) => setCurrentQuantity(e.target.value)}
                           min={1}
@@ -1370,9 +1452,10 @@ const IpdBillingsPage: React.FC = () => {
                         <label className="form-label fw-bold text-dark mb-1">
                           Payment Paid Now (₹)
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="amount"
                           type="number"
-                          className="form-control fw-bold text-success fs-16"
+                          className="fw-bold text-success fs-16"
                           placeholder="e.g. 0 if unpaid"
                           value={raisePaidAmount}
                           onChange={(e) => setRaisePaidAmount(e.target.value)}
@@ -1398,9 +1481,9 @@ const IpdBillingsPage: React.FC = () => {
 
                   <div>
                     <label className="form-label fw-semibold">Invoice Notes / Remark</label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="notes"
                       type="text"
-                      className="form-control"
                       placeholder="Optional remarks..."
                       value={raiseNotes}
                       onChange={(e) => setRaiseNotes(e.target.value)}
@@ -1464,9 +1547,10 @@ const IpdBillingsPage: React.FC = () => {
                     <label className="form-label fw-semibold">
                       Charge Category Name <span className="text-danger">*</span>
                     </label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="category"
                       type="text"
-                      className="form-control fw-bold"
+                      className="fw-bold"
                       placeholder="e.g. Oxygen & Equipment, ICU Nursing, Blood Bank"
                       value={newTypeName}
                       onChange={(e) => setNewTypeName(e.target.value)}
@@ -1476,9 +1560,9 @@ const IpdBillingsPage: React.FC = () => {
 
                   <div className="mb-3">
                     <label className="form-label fw-semibold">Description</label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="description"
                       type="text"
-                      className="form-control"
                       placeholder="Optional description of this charge category..."
                       value={newTypeDesc}
                       onChange={(e) => setNewTypeDesc(e.target.value)}
@@ -1578,9 +1662,9 @@ const IpdBillingsPage: React.FC = () => {
                               <label className="form-label fs-12 fw-semibold mb-1">
                                 Item / Service Name *
                               </label>
-                              <input
+                              <IconFormControl
+                                fieldLabel="service"
                                 type="text"
-                                className="form-control"
                                 placeholder="e.g. Oxygen Concentrator Per Day"
                                 value={masterItemName}
                                 onChange={(e) => setMasterItemName(e.target.value)}
@@ -1592,9 +1676,9 @@ const IpdBillingsPage: React.FC = () => {
                               <label className="form-label fs-12 fw-semibold mb-1">
                                 Standard Rate (₹) *
                               </label>
-                              <input
+                              <IconFormControl
+                                fieldLabel="amount"
                                 type="number"
-                                className="form-control"
                                 placeholder="Rate"
                                 value={masterItemFee}
                                 onChange={(e) => setMasterItemFee(e.target.value)}
@@ -1722,9 +1806,11 @@ const IpdBillingsPage: React.FC = () => {
                     <label className="form-label fw-semibold">
                       Payment Amount Collecting (₹) <span className="text-danger">*</span>
                     </label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="amount"
                       type="number"
-                      className="form-control fw-bold text-success fs-18"
+                      className="fw-bold text-success fs-18"
+                      placeholder="Enter payment amount"
                       value={paymentInput}
                       onChange={(e) => setPaymentInput(e.target.value)}
                       max={payInvoice.dueAmount}

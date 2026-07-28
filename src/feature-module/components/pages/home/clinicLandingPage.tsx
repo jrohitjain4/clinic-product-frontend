@@ -7,6 +7,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { resolveMediaUrl } from "../../../../core/config/api";
 import "./homePage.scss";
 import { toast } from "react-toastify";
+import { IconFormControl, IconTextarea, GenderOptionGroup } from "../../../../core/common/form-fields";
 
 interface Doctor {
     id: string;
@@ -1613,43 +1614,42 @@ export default function ClinicLandingPage() {
                                         {/* First Name & Last Name */}
                                         <div className="col-6">
                                             <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>First Name <span className="text-danger">*</span></label>
-                                            <input type="text" className={`form-control rounded-3 ${diagFormErrors.firstName ? 'is-invalid' : ''}`} placeholder="First name" value={diagForm.firstName} onChange={e => setDiagForm(f => ({ ...f, firstName: e.target.value }))} style={{ fontSize: "14px" }} />
+                                            <IconFormControl type="text" fieldLabel="first name" className={`rounded-3 ${diagFormErrors.firstName ? 'is-invalid' : ''}`} placeholder="First name" value={diagForm.firstName} onChange={e => setDiagForm(f => ({ ...f, firstName: e.target.value }))} style={{ fontSize: "14px" }} />
                                             {diagFormErrors.firstName && <div className="invalid-feedback">{diagFormErrors.firstName}</div>}
                                         </div>
                                         <div className="col-6">
                                             <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Last Name <span className="text-danger">*</span></label>
-                                            <input type="text" className={`form-control rounded-3 ${diagFormErrors.lastName ? 'is-invalid' : ''}`} placeholder="Last name" value={diagForm.lastName} onChange={e => setDiagForm(f => ({ ...f, lastName: e.target.value }))} style={{ fontSize: "14px" }} />
+                                            <IconFormControl type="text" fieldLabel="last name" className={`rounded-3 ${diagFormErrors.lastName ? 'is-invalid' : ''}`} placeholder="Last name" value={diagForm.lastName} onChange={e => setDiagForm(f => ({ ...f, lastName: e.target.value }))} style={{ fontSize: "14px" }} />
                                             {diagFormErrors.lastName && <div className="invalid-feedback">{diagFormErrors.lastName}</div>}
                                         </div>
 
                                         {/* Email */}
                                         <div className="col-12">
                                             <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Email Address <span className="text-danger">*</span></label>
-                                            <input type="email" className={`form-control rounded-3 ${diagFormErrors.email ? 'is-invalid' : ''}`} placeholder="username@example.com" value={diagForm.email} onChange={e => setDiagForm(f => ({ ...f, email: e.target.value }))} style={{ fontSize: "14px" }} />
+                                            <IconFormControl type="email" fieldLabel="email" className={`rounded-3 ${diagFormErrors.email ? 'is-invalid' : ''}`} placeholder="username@example.com" value={diagForm.email} onChange={e => setDiagForm(f => ({ ...f, email: e.target.value }))} style={{ fontSize: "14px" }} />
                                             {diagFormErrors.email && <div className="invalid-feedback">{diagFormErrors.email}</div>}
                                         </div>
 
                                         {/* Phone & Gender */}
                                         <div className="col-6">
                                             <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Phone Number <span className="text-danger">*</span></label>
-                                            <input type="tel" className={`form-control rounded-3 ${diagFormErrors.phone ? 'is-invalid' : ''}`} placeholder="+91 XXXXX XXXXX" value={diagForm.phone} onChange={e => setDiagForm(f => ({ ...f, phone: e.target.value }))} style={{ fontSize: "14px" }} />
+                                            <IconFormControl type="tel" fieldLabel="phone" className={`rounded-3 ${diagFormErrors.phone ? 'is-invalid' : ''}`} placeholder="+91 XXXXX XXXXX" value={diagForm.phone} onChange={e => setDiagForm(f => ({ ...f, phone: e.target.value }))} style={{ fontSize: "14px" }} />
                                             {diagFormErrors.phone && <div className="invalid-feedback">{diagFormErrors.phone}</div>}
                                         </div>
                                         <div className="col-6">
-                                            <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Gender <span className="text-danger">*</span></label>
-                                            <select className={`form-select rounded-3 text-secondary ${diagFormErrors.gender ? 'is-invalid' : ''}`} value={diagForm.gender} onChange={e => setDiagForm(f => ({ ...f, gender: e.target.value }))} style={{ fontSize: "14px" }}>
-                                                <option value="">Select Gender</option>
-                                                <option value="Male">Male</option>
-                                                <option value="Female">Female</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                            {diagFormErrors.gender && <div className="invalid-feedback">{diagFormErrors.gender}</div>}
+                                            <GenderOptionGroup
+                                                showLabel
+                                                required
+                                                value={diagForm.gender}
+                                                onChange={(val) => setDiagForm(f => ({ ...f, gender: val }))}
+                                            />
+                                            {diagFormErrors.gender && <div className="invalid-feedback d-block">{diagFormErrors.gender}</div>}
                                         </div>
 
                                         {/* Address */}
                                         <div className="col-12">
                                             <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Address (Optional)</label>
-                                            <input type="text" className="form-control rounded-3" placeholder="House no., Street, City, Pincode" value={diagForm.address} onChange={e => setDiagForm(f => ({ ...f, address: e.target.value }))} style={{ fontSize: "14px" }} />
+                                            <IconFormControl type="text" fieldLabel="address" className="rounded-3" placeholder="House no., Street, City, Pincode" value={diagForm.address} onChange={e => setDiagForm(f => ({ ...f, address: e.target.value }))} style={{ fontSize: "14px" }} />
                                         </div>
 
                                         {/* Test Selection */}
@@ -1898,7 +1898,7 @@ export default function ClinicLandingPage() {
                                         {/* Reason */}
                                         <div className="col-12">
                                             <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Reason / Notes (Optional)</label>
-                                            <textarea className="form-control rounded-3" rows={2} placeholder="Any specific reason or notes for the test..." value={diagForm.reason} onChange={e => setDiagForm(f => ({ ...f, reason: e.target.value }))} style={{ fontSize: "14px", resize: "none" }} />
+                                            <IconTextarea fieldLabel="notes" className="rounded-3" rows={2} placeholder="Any specific reason or notes for the test..." value={diagForm.reason} onChange={e => setDiagForm(f => ({ ...f, reason: e.target.value }))} style={{ fontSize: "14px", resize: "none" }} />
                                         </div>
 
                                         {/* Error */}
@@ -2160,9 +2160,10 @@ export default function ClinicLandingPage() {
                                             {/* Patient First & Last Name */}
                                             <div className="col-6">
                                                 <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>First Name <span className="text-danger">*</span></label>
-                                                <input
+                                                <IconFormControl
                                                     type="text"
-                                                    className={`form-control rounded-3 ${bookFormErrors.firstName ? 'is-invalid' : ''}`}
+                                                    fieldLabel="first name"
+                                                    className={`rounded-3 ${bookFormErrors.firstName ? 'is-invalid' : ''}`}
                                                     placeholder="First name"
                                                     value={bookForm.firstName}
                                                     onChange={e => setBookForm(f => ({ ...f, firstName: e.target.value }))}
@@ -2173,9 +2174,10 @@ export default function ClinicLandingPage() {
                                             </div>
                                             <div className="col-6">
                                                 <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Last Name <span className="text-danger">*</span></label>
-                                                <input
+                                                <IconFormControl
                                                     type="text"
-                                                    className={`form-control rounded-3 ${bookFormErrors.lastName ? 'is-invalid' : ''}`}
+                                                    fieldLabel="last name"
+                                                    className={`rounded-3 ${bookFormErrors.lastName ? 'is-invalid' : ''}`}
                                                     placeholder="Last name"
                                                     value={bookForm.lastName}
                                                     onChange={e => setBookForm(f => ({ ...f, lastName: e.target.value }))}
@@ -2188,9 +2190,10 @@ export default function ClinicLandingPage() {
                                             {/* Email & Phone */}
                                             <div className="col-12">
                                                 <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Email Address <span className="text-danger">*</span></label>
-                                                <input
+                                                <IconFormControl
                                                     type="email"
-                                                    className={`form-control rounded-3 ${bookFormErrors.email ? 'is-invalid' : ''}`}
+                                                    fieldLabel="email"
+                                                    className={`rounded-3 ${bookFormErrors.email ? 'is-invalid' : ''}`}
                                                     placeholder="username@example.com"
                                                     value={bookForm.email}
                                                     onChange={e => setBookForm(f => ({ ...f, email: e.target.value }))}
@@ -2201,9 +2204,10 @@ export default function ClinicLandingPage() {
                                             </div>
                                             <div className="col-6">
                                                 <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Phone Number <span className="text-danger">*</span></label>
-                                                <input
+                                                <IconFormControl
                                                     type="tel"
-                                                    className={`form-control rounded-3 ${bookFormErrors.phone ? 'is-invalid' : ''}`}
+                                                    fieldLabel="phone"
+                                                    className={`rounded-3 ${bookFormErrors.phone ? 'is-invalid' : ''}`}
                                                     placeholder="+91 XXXXX XXXXX"
                                                     value={bookForm.phone}
                                                     onChange={e => setBookForm(f => ({ ...f, phone: e.target.value }))}
@@ -2215,28 +2219,22 @@ export default function ClinicLandingPage() {
 
                                             {/* Gender */}
                                             <div className="col-6">
-                                                <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Gender <span className="text-danger">*</span></label>
-                                                <select
-                                                    className={`form-select rounded-3 text-secondary ${bookFormErrors.gender ? 'is-invalid' : ''}`}
-                                                    value={bookForm.gender}
-                                                    onChange={e => setBookForm(f => ({ ...f, gender: e.target.value }))}
+                                                <GenderOptionGroup
+                                                    showLabel
                                                     required
-                                                    style={{ fontSize: "14px" }}
-                                                >
-                                                    <option value="">Select Gender</option>
-                                                    <option value="Male">Male</option>
-                                                    <option value="Female">Female</option>
-                                                    <option value="Other">Other</option>
-                                                </select>
-                                                {bookFormErrors.gender && <div className="invalid-feedback">{bookFormErrors.gender}</div>}
+                                                    value={bookForm.gender}
+                                                    onChange={(val) => setBookForm(f => ({ ...f, gender: val }))}
+                                                />
+                                                {bookFormErrors.gender && <div className="invalid-feedback d-block">{bookFormErrors.gender}</div>}
                                             </div>
 
                                             {/* Patient Address */}
                                             <div className="col-12">
                                                 <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Address (Optional)</label>
-                                                <input
+                                                <IconFormControl
                                                     type="text"
-                                                    className="form-control rounded-3"
+                                                    fieldLabel="address"
+                                                    className="rounded-3"
                                                     placeholder="House no., Street, City, Pincode"
                                                     value={bookForm.address}
                                                     onChange={e => setBookForm(f => ({ ...f, address: e.target.value }))}
@@ -2490,8 +2488,9 @@ export default function ClinicLandingPage() {
                                             {/* Reason Symptoms */}
                                             <div className="col-12">
                                                 <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Reason / Symptoms (Optional)</label>
-                                                <textarea
-                                                    className="form-control rounded-3"
+                                                <IconTextarea
+                                                    fieldLabel="notes"
+                                                    className="rounded-3"
                                                     rows={2}
                                                     placeholder="Brief description of your symptoms..."
                                                     value={bookForm.reason}

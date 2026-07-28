@@ -9,6 +9,7 @@ import { useLabBookings } from "../../../../../core/hooks/useLabBookings";
 import EmptyState from "../../../../../core/common/emptyState";
 import InvoiceSlip from "../../patient-modules/patient-invoice-details/InvoiceSlip";
 import html2pdf from "html2pdf.js";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 const InvoiceManagement = () => {
   const { bookings, loading, updateBooking, deleteBooking, bulkDeleteBookings } = useLabBookings();
@@ -235,7 +236,36 @@ const InvoiceManagement = () => {
     {
       title: "Payment", dataIndex: "PaymentStatus",
       render: (text: string) => (
-        <span className={`badge border ${text === "Paid" ? "badge-soft-success border-success" : text === "Unpaid" ? "badge-soft-danger border-danger" : "badge-soft-warning border-warning"} px-2 py-1 fs-12 fw-medium`}>{text}</span>
+        <span
+          className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+          style={{
+            backgroundColor:
+              text === "Paid"
+                ? "#e6f8ef"
+                : text === "Unpaid"
+                  ? "#fdeded"
+                  : "#fff3cd",
+            color:
+              text === "Paid"
+                ? "#198754"
+                : text === "Unpaid"
+                  ? "#dc3545"
+                  : "#fd7e14",
+            fontWeight: 600,
+            fontSize: "12px",
+          }}
+        >
+          <i
+            className={`${
+              text === "Paid"
+                ? "ti ti-circle-check"
+                : text === "Unpaid"
+                  ? "ti ti-circle-x"
+                  : "ti ti-clock"
+            } fs-14`}
+          />
+          {text}
+        </span>
       ),
       sorter: (a: any, b: any) => a.PaymentStatus.localeCompare(b.PaymentStatus),
     },
@@ -260,7 +290,7 @@ const InvoiceManagement = () => {
           <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
             <div className="flex-grow-1"><h4 className="page-title fw-bold mb-0 d-flex align-items-center">Invoice Management <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">Total : {loading ? "" : filteredData.length}</span></h4></div>
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
-              <div className="search-field position-relative" style={{ width: "200px" }}><input type="text" className="form-control fs-13 py-2" placeholder="Search Invoice..." value={searchText} onChange={(e) => setSearchText(e.target.value)} /></div>
+              <div className="search-field position-relative" style={{ width: "200px" }}><IconFormControl fieldLabel="search" type="text" className="fs-13 py-2" placeholder="Search Invoice..." value={searchText} onChange={(e) => setSearchText(e.target.value)} /></div>
               <div className="dropdown">
                 <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap fs-13" style={{ minWidth: "160px", minHeight: "38px" }} data-bs-toggle="dropdown">
                   <span className="text-truncate"><span className="text-muted">Patient:</span> {filterPatient}</span>
@@ -314,8 +344,8 @@ const InvoiceManagement = () => {
               <div className="modal-header bg-primary text-white"><h5 className="modal-title text-white">Update Payment</h5><button type="button" className="btn-close btn-close-white" onClick={() => setShowEditModal(false)}></button></div>
               <form onSubmit={handleEditSubmit}>
                 <div className="modal-body p-4">
-                  <div className="mb-3"><label className="form-label fw-semibold">Invoice No</label><input type="text" className="form-control bg-light" value={selectedInvoice?.invoiceNo || ""} disabled /></div>
-                  <div className="mb-3"><label className="form-label fw-semibold">Amount</label><input type="text" className="form-control bg-light fw-bold" value={`₹${selectedInvoice?.totalAmount?.toLocaleString("en-IN") || 0}`} disabled /></div>
+                  <div className="mb-3"><label className="form-label fw-semibold">Invoice No</label><IconFormControl fieldLabel="Invoice" type="text" className="bg-light" value={selectedInvoice?.invoiceNo || ""} disabled /></div>
+                  <div className="mb-3"><label className="form-label fw-semibold">Amount</label><IconFormControl fieldLabel="Amount" type="text" className="bg-light fw-bold" value={`₹${selectedInvoice?.totalAmount?.toLocaleString("en-IN") || 0}`} disabled /></div>
                   <div className="mb-3">
                     <label className="form-label fw-semibold">Payment Status <span className="text-danger">*</span></label>
                     <select className="form-select" value={formPaymentStatus} onChange={(e) => setFormPaymentStatus(e.target.value)}>

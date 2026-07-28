@@ -7,6 +7,7 @@ import {
   Supplier,
 } from "../../../../../../core/common/selectOption";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
+import { IconFormControl, IconTextarea } from "../../../../../../core/common/form-fields";
 
 const Modals = () => {
   const getModalContainer = () => {
@@ -39,7 +40,7 @@ const Modals = () => {
                       Asset Name <span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl icon="ti ti-box" type="text" placeholder="Enter asset name" />
                     </div>
                   </div>
                 </div>
@@ -204,7 +205,7 @@ const Modals = () => {
                       Purchase From <span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl icon="ti ti-building-store" type="text" placeholder="Enter vendor / source" />
                     </div>
                   </div>
                 </div>
@@ -215,7 +216,7 @@ const Modals = () => {
                       Manufacturer&nbsp;<span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl icon="ti ti-building-factory-2" type="text" placeholder="Enter manufacturer" />
                     </div>
                   </div>
                 </div>
@@ -226,7 +227,7 @@ const Modals = () => {
                       Model&nbsp;<span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl icon="ti ti-device-imac" type="text" placeholder="Enter model" />
                     </div>
                   </div>
                 </div>
@@ -237,7 +238,7 @@ const Modals = () => {
                       Serial Number&nbsp;<span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl icon="ti ti-barcode" type="text" placeholder="Enter serial number" />
                     </div>
                   </div>
                 </div>
@@ -278,7 +279,7 @@ const Modals = () => {
                       warranty <span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl icon="ti ti-shield-check" type="text" placeholder="e.g. 2 years" />
                     </div>
                   </div>
                 </div>
@@ -291,10 +292,10 @@ const Modals = () => {
                     <span className="input-group-text bg-transparent text-dark fs-14">
                       $
                     </span>
-                    <input
+                    <IconFormControl
+                      fieldLabel="amount"
                       type="text"
-                      className="form-control"
-                      placeholder={"0"}
+                      placeholder="Enter value"
                     />
                   </div>
                 </div>
@@ -320,9 +321,10 @@ const Modals = () => {
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">
                         Description <span className="text-danger">*</span>
                       </label>
-                      <textarea
+                      <IconTextarea
+                        fieldLabel="description"
                         rows={4}
-                        className="form-control rounded"
+                        className="rounded"
                         placeholder="Description "
                       />
                     </div>
@@ -375,9 +377,9 @@ const Modals = () => {
                       Asset Name <span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input
+                      <IconFormControl
+                        icon="ti ti-box"
                         type="text"
-                        className="form-control"
                         defaultValue="VitalScan Monitor"
                       />
                     </div>
@@ -544,9 +546,9 @@ const Modals = () => {
                       Purchase From <span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input
+                      <IconFormControl
+                        icon="ti ti-building-store"
                         type="text"
-                        className="form-control"
                         defaultValue={2547}
                       />
                     </div>
@@ -559,9 +561,9 @@ const Modals = () => {
                       Manufacturer&nbsp;<span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input
+                      <IconFormControl
+                        icon="ti ti-building-factory-2"
                         type="text"
-                        className="form-control"
                         placeholder="Endosys"
                       />
                     </div>
@@ -574,9 +576,9 @@ const Modals = () => {
                       Model&nbsp;<span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input
+                      <IconFormControl
+                        icon="ti ti-device-imac"
                         type="text"
-                        className="form-control"
                         placeholder="CareKIT Pro"
                       />
                     </div>
@@ -589,9 +591,9 @@ const Modals = () => {
                       Serial Number&nbsp;<span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input
+                      <IconFormControl
+                        icon="ti ti-barcode"
                         type="text"
-                        className="form-control"
                         placeholder="ENW12547E789"
                       />
                     </div>
@@ -634,9 +636,9 @@ const Modals = () => {
                       warranty <span className="text-danger">*</span>
                     </label>
                     <div className="input-group custom-select">
-                      <input
+                      <IconFormControl
+                        icon="ti ti-shield-check"
                         type="text"
-                        className="form-control"
                         defaultValue="2 years"
                       />
                     </div>
@@ -651,11 +653,11 @@ const Modals = () => {
                     <span className="input-group-text bg-transparent text-dark fs-14">
                       $
                     </span>
-                    <input
+                    <IconFormControl
+                      fieldLabel="amount"
                       type="text"
-                      className="form-control"
-                      placeholder={"0"}
-                      defaultValue={"100"}
+                      placeholder="Enter value"
+                      defaultValue="100"
                     />
                   </div>
                 </div>
@@ -681,9 +683,10 @@ const Modals = () => {
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">
                         Description <span className="text-danger">*</span>
                       </label>
-                      <textarea
+                      <IconTextarea
+                        fieldLabel="description"
                         rows={4}
-                        className="form-control rounded"
+                        className="rounded"
                         placeholder=""
                         defaultValue={
                           " Evaluates the Autonomic Nervous System (ANS) to help identify disorders such as sudden death risk, silent heart attacks, hypertension, and syncope.​"

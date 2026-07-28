@@ -9,6 +9,9 @@ import { DatePicker } from "antd";
 import dayjs from "dayjs";
 import { resolveMediaUrl, apiUrl } from "../../../../../core/config/api";
 
+const getInitial = (value?: string) =>
+  (value || "").trim().charAt(0).toUpperCase() || "?";
+
 const PendingToggle = ({ onToggle }: { onToggle: () => void }) => {
   return (
     <div className="d-flex flex-column align-items-center justify-content-center gap-1 py-1 w-100">
@@ -291,18 +294,20 @@ const InvoicesList = () => {
       title: "Patient",
       dataIndex: "Patient",
       render: (text: string, record: any) => {
-        const hasImage = record.Image && record.Image.trim() !== "" && record.Image !== "avatar-01.jpg" && !record.Image.includes("300x300") && !record.Image.includes("ui-avatars.com");
-        const patientImg = hasImage ? record.Image : "assets/img/patient-placeholder.png";
-
         return (
           <div className="d-flex align-items-center">
             <div className="avatar avatar-sm me-2">
-              <img
-                src={patientImg.startsWith('assets') || patientImg.startsWith('/uploads') || patientImg.startsWith('http') ? `/${patientImg.replace(/^\//, '')}` : `/${patientImg}`}
-                alt={record.Patient}
-                className="rounded-circle border"
-                style={{ width: 36, height: 36, objectFit: "cover" }}
-              />
+              <span
+                className="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white"
+                style={{
+                  width: 36,
+                  height: 36,
+                  background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                  fontSize: "14px",
+                }}
+              >
+                {getInitial(record.Patient)}
+              </span>
             </div>
             <span className="text-dark fw-medium">{text}</span>
           </div>

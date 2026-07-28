@@ -1,7 +1,7 @@
 import { Link } from "react-router"
 import { Cookies_Position } from "../../../../../../core/common/selectOption"
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar"
-import CommonSelect from "../../../../../../core/common/common-select/commonSelect"
+import { IconFormControl, IconSelect } from "../../../../../../core/common/form-fields"
 
 
 const GdprCookiesSettings = () => {
@@ -42,9 +42,11 @@ const GdprCookiesSettings = () => {
                         </div>
                         {/* end col */}
                         <div className="col-lg-5">
-                       <CommonSelect
+                       <IconSelect
+                        fieldLabel="Location"
                         options={Cookies_Position}
                         className="select"
+                        placeholder="Select position"
                         defaultValue={Cookies_Position[0]}
                       />
                         </div>
@@ -63,7 +65,7 @@ const GdprCookiesSettings = () => {
                         </div>
                         {/* end col */}
                         <div className="col-lg-5">
-                          <input type="text" className="form-control" />
+                          <IconFormControl type="text" placeholder="Enter agree button text" />
                         </div>
                         {/* end col */}
                       </div>
@@ -80,7 +82,7 @@ const GdprCookiesSettings = () => {
                         </div>
                         {/* end col */}
                         <div className="col-lg-5">
-                          <input type="text" className="form-control" />
+                          <IconFormControl type="text" placeholder="Enter decline button text" />
                         </div>
                         {/* end col */}
                       </div>
@@ -120,7 +122,7 @@ const GdprCookiesSettings = () => {
                         </div>
                         {/* end col */}
                         <div className="col-lg-8">
-                          <input type="text" className="form-control" />
+                          <IconFormControl fieldLabel="Website" type="text" placeholder="Enter cookies page link" />
                         </div>
                         {/* end col */}
                       </div>
@@ -170,7 +172,7 @@ const GdprCookiesSettings = () => {
     {/* Footer Start */}
     <div className="footer text-center bg-white p-2 border-top">
       <p className="text-dark mb-0">
-        2025 ©
+        2025 ï¿½
         <Link to="#" className="link-primary">
           Docyari
         </Link>

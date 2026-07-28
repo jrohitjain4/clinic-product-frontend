@@ -3,6 +3,7 @@ import { Priority as PriorityOptions } from "../../../../../core/common/selectOp
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import type { Ticket } from "../../../../../core/hooks/useTickets";
 import dayjs from "dayjs";
+import { IconFormControl, IconTextarea } from "../../../../../core/common/form-fields";
 
 interface TicketsModalProps {
   createTicket: (data: { subject: string; description: string; priority: string }) => Promise<boolean>;
@@ -68,9 +69,9 @@ const TicketsModal: React.FC<TicketsModalProps> = ({ createTicket, selectedTicke
                       <label className="form-label">
                         Subject<span className="text-danger ms-1">*</span>
                       </label>
-                      <input
+                      <IconFormControl
                         type="text"
-                        className="form-control"
+                        fieldLabel="subject"
                         value={subject}
                         onChange={(e) => setSubject(e.target.value)}
                         placeholder="e.g., Cannot access billing page"
@@ -96,8 +97,8 @@ const TicketsModal: React.FC<TicketsModalProps> = ({ createTicket, selectedTicke
                       <label className="form-label">
                         Description / Problem Details<span className="text-danger ms-1">*</span>
                       </label>
-                      <textarea
-                        className="form-control"
+                      <IconTextarea
+                        fieldLabel="description"
                         rows={4}
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}

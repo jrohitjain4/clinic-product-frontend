@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Modal } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
 import { SuccessModal } from "./SuccessModal";
+import { IconFormControl } from "../../../../core/common/form-fields";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -115,28 +116,28 @@ export const DemoBookingModal = () => {
                         <form onSubmit={handleSubmit} noValidate>
                             <div className="mb-3">
                                 <label className="form-label fw-semibold text-dark">Full Name</label>
-                                <input type="text" className={`form-control ${formErrors.name ? 'is-invalid' : ''}`} name="name" placeholder="Enter your full name" value={formData.name} onChange={handleChange} required style={{ borderRadius: '8px', padding: '10px 14px' }} />
+                                <IconFormControl type="text" fieldLabel="name" className={formErrors.name ? 'is-invalid' : ''} name="name" placeholder="Enter your full name" value={formData.name} onChange={handleChange} required style={{ borderRadius: '8px', padding: '10px 14px 10px 36px' }} />
                                 {formErrors.name && <div className="invalid-feedback d-block">{formErrors.name}</div>}
                             </div>
                             <div className="row mb-3">
                                 <div className="col-md-6">
                                     <label className="form-label fw-semibold text-dark">Email Address <span className="text-danger">*</span></label>
-                                    <input type="email" className={`form-control ${formErrors.email ? 'is-invalid' : ''}`} name="email" placeholder="Enter your email address" value={formData.email} onChange={handleChange} required style={{ borderRadius: '8px', padding: '10px 14px' }} />
+                                    <IconFormControl type="email" fieldLabel="email" className={formErrors.email ? 'is-invalid' : ''} name="email" placeholder="Enter your email address" value={formData.email} onChange={handleChange} required style={{ borderRadius: '8px', padding: '10px 14px 10px 36px' }} />
                                     {formErrors.email && <div className="invalid-feedback d-block">{formErrors.email}</div>}
                                 </div>
                                 <div className="col-md-6 mt-3 mt-md-0">
                                     <label className="form-label fw-semibold text-dark">Phone Number <span className="text-danger">*</span></label>
-                                    <input type="tel" className={`form-control ${formErrors.phone ? 'is-invalid' : ''}`} name="phone" placeholder="Enter your phone number" value={formData.phone} onChange={handleChange} required style={{ borderRadius: '8px', padding: '10px 14px' }} />
+                                    <IconFormControl type="tel" fieldLabel="phone" className={formErrors.phone ? 'is-invalid' : ''} name="phone" placeholder="Enter your phone number" value={formData.phone} onChange={handleChange} required style={{ borderRadius: '8px', padding: '10px 14px 10px 36px' }} />
                                     {formErrors.phone && <div className="invalid-feedback d-block">{formErrors.phone}</div>}
                                 </div>
                             </div>
                             <div className="mb-3">
                                 <label className="form-label fw-semibold text-dark">Clinic Name</label>
-                                <input type="text" className="form-control" name="clinicName" placeholder="Enter your clinic name" value={formData.clinicName} onChange={handleChange} style={{ borderRadius: '8px', padding: '10px 14px' }} />
+                                <IconFormControl type="text" fieldLabel="company" name="clinicName" placeholder="Enter your clinic name" value={formData.clinicName} onChange={handleChange} style={{ borderRadius: '8px', padding: '10px 14px 10px 36px' }} />
                             </div>
                             <div className="mb-3">
                                 <label className="form-label fw-semibold text-dark">Location (City, Country)</label>
-                                <input type="text" className="form-control" name="location" placeholder="e.g. New York, USA" value={formData.location} onChange={handleChange} style={{ borderRadius: '8px', padding: '10px 14px' }} />
+                                <IconFormControl type="text" fieldLabel="location" name="location" placeholder="e.g. New York, USA" value={formData.location} onChange={handleChange} style={{ borderRadius: '8px', padding: '10px 14px 10px 36px' }} />
                             </div>
 
                             <div className="text-end mt-4">

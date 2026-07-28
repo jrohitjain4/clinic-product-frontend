@@ -8,6 +8,7 @@ import AdviceForm from "../../../../../core/common/dynamic-list/AdviceForm";
 import InvestigationList from "../../../../../core/common/dynamic-list/InvestigationForm";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import { empty_Stomach } from "../../../../../core/common/selectOption";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 import InvoiceList from "../../../../../core/common/dynamic-list/InvoiceList";
 
 const AppointmentConsultations = () => {
@@ -140,7 +141,7 @@ const AppointmentConsultations = () => {
                       Temperature
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl type="text" placeholder="Enter temperature" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         F
                       </span>
@@ -153,7 +154,7 @@ const AppointmentConsultations = () => {
                       Pulse
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl type="text" placeholder="Enter pulse" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         mmHg
                       </span>
@@ -166,7 +167,7 @@ const AppointmentConsultations = () => {
                       Respiratory Rate
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl type="text" placeholder="Enter respiratory rate" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         rpm
                       </span>
@@ -178,7 +179,7 @@ const AppointmentConsultations = () => {
                       SPO2
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl type="text" placeholder="Enter SPO2" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         %
                       </span>
@@ -190,7 +191,7 @@ const AppointmentConsultations = () => {
                       Height
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl type="text" placeholder="Enter height" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         cm
                       </span>
@@ -202,7 +203,7 @@ const AppointmentConsultations = () => {
                       Weight
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl type="text" placeholder="Enter weight" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         kg
                       </span>
@@ -214,7 +215,7 @@ const AppointmentConsultations = () => {
                       BMI
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl type="text" placeholder="Enter BMI" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         %
                       </span>
@@ -226,7 +227,7 @@ const AppointmentConsultations = () => {
                       Waist
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl type="text" placeholder="Enter waist" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         cm
                       </span>
@@ -238,7 +239,7 @@ const AppointmentConsultations = () => {
                       Weight
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl type="text" placeholder="Enter weight" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         kg
                       </span>
@@ -334,7 +335,12 @@ const AppointmentConsultations = () => {
                       Next Consultation
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control rounded" />
+                      <IconFormControl
+                        icon="ti ti-calendar"
+                        type="text"
+                        className="rounded"
+                        placeholder="DD-MM-YYYY"
+                      />
                     </div>
                   </div>
                 </div>
@@ -393,7 +399,7 @@ const AppointmentConsultations = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 ?
             <Link to="#" className="link-primary">
               Docyari
             </Link>

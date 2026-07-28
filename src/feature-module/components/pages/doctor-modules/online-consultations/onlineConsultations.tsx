@@ -1,7 +1,10 @@
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
-import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import { empty_Stomach } from "../../../../../core/common/selectOption";
+import {
+  IconFormControl,
+  IconSelect,
+} from "../../../../../core/common/form-fields";
 import ComplaintForm from "../../../../../core/common/dynamic-list/complientForm";
 import DiagnosisForm from "../../../../../core/common/dynamic-list/diagnosisForm";
 import MedicalForm from "../../../../../core/common/dynamic-list/medicalForm";
@@ -159,7 +162,7 @@ const OnlineConsultations = () => {
                       Temperature
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="Temperature" type="text" placeholder="Enter temperature" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         F
                       </span>
@@ -172,7 +175,7 @@ const OnlineConsultations = () => {
                       Pulse
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="Pulse" type="text" placeholder="Enter pulse" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         mmHg
                       </span>
@@ -185,7 +188,7 @@ const OnlineConsultations = () => {
                       Respiratory Rate
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="Respiratory Rate" type="text" placeholder="Enter respiratory rate" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         rpm
                       </span>
@@ -197,7 +200,7 @@ const OnlineConsultations = () => {
                       SPO2
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="SPO2" type="text" placeholder="Enter SPO2" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         %
                       </span>
@@ -209,7 +212,7 @@ const OnlineConsultations = () => {
                       Height
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="Height" type="text" placeholder="Enter height" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         cm
                       </span>
@@ -221,7 +224,7 @@ const OnlineConsultations = () => {
                       Weight
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="Weight" type="text" placeholder="Enter weight" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         kg
                       </span>
@@ -233,7 +236,7 @@ const OnlineConsultations = () => {
                       BMI
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="BMI" type="text" placeholder="Enter BMI" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         %
                       </span>
@@ -245,7 +248,7 @@ const OnlineConsultations = () => {
                       Waist
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="Waist" type="text" placeholder="Enter waist" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         cm
                       </span>
@@ -257,7 +260,7 @@ const OnlineConsultations = () => {
                       Weight
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="Weight" type="text" placeholder="Enter weight" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         kg
                       </span>
@@ -353,7 +356,7 @@ const OnlineConsultations = () => {
                       Next Consultation
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control rounded" />
+                      <IconFormControl fieldLabel="Date" type="text" className="rounded" placeholder="Enter next consultation date" />
                     </div>
                   </div>
                 </div>
@@ -363,7 +366,7 @@ const OnlineConsultations = () => {
                     <label className="form-label mb-1 text-dark fs-14 fw-medium">
                       Whether to come on empty Stomach
                     </label>
-                    <CommonSelect
+                    <IconSelect
                       options={empty_Stomach}
                       className="select"
                       defaultValue={empty_Stomach[0]}

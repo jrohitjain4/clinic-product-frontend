@@ -4,7 +4,7 @@ import { Link, useSearchParams } from "react-router";
 import Datatable from "../../../../../../core/common/dataTable";
 import { all_routes } from "../../../../../routes/all_routes";
 import { useClinicRoles } from "../../../../../../core/hooks/useClinicRoles";
-import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
+import { IconFormControl, IconSelect } from "../../../../../../core/common/form-fields";
 import dayjs from "dayjs";
 
 const SIDEBAR_SECTIONS = [
@@ -390,7 +390,8 @@ const RolesAndPermissions = () => {
                   <span className="text-dark fw-medium text-nowrap">Configure Role:</span>
                   <div style={{ minWidth: "180px" }}>
                     {roles.length > 0 && (
-                      <CommonSelect
+                      <IconSelect
+                        fieldLabel="role"
                         options={roles.map((r: any) => ({ value: r.id, label: r.name }))}
                         value={role ? { value: role.id, label: role.name } : null}
                         onChange={(val: any) => {
@@ -636,9 +637,11 @@ const RolesAndPermissions = () => {
                     <label className="form-label fw-bold small text-uppercase text-muted">
                       Role Name
                     </label>
-                    <input
+                    <IconFormControl
                       type="text"
-                      className="form-control bg-light"
+                      fieldLabel="role"
+                      className="bg-light"
+                      placeholder="Role Name"
                       value={viewRole.Role || ""}
                       readOnly
                     />
@@ -648,9 +651,11 @@ const RolesAndPermissions = () => {
                     <label className="form-label fw-bold small text-uppercase text-muted">
                       Status
                     </label>
-                    <input
+                    <IconFormControl
                       type="text"
-                      className="form-control bg-light"
+                      fieldLabel="status"
+                      className="bg-light"
+                      placeholder="Status"
                       value={viewRole.Status || ""}
                       readOnly
                     />
@@ -660,9 +665,11 @@ const RolesAndPermissions = () => {
                     <label className="form-label fw-bold small text-uppercase text-muted">
                       Created On
                     </label>
-                    <input
+                    <IconFormControl
                       type="text"
-                      className="form-control bg-light"
+                      fieldLabel="date"
+                      className="bg-light"
+                      placeholder="Created On"
                       value={viewRole.CreatedOn || ""}
                       readOnly
                     />
@@ -697,9 +704,9 @@ const RolesAndPermissions = () => {
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Role Name <span className="text-danger">*</span></label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
+                    fieldLabel="role"
                     placeholder="Enter role name (e.g. Accountant)"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -708,7 +715,8 @@ const RolesAndPermissions = () => {
                 </div>
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Status <span className="text-danger">*</span></label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="status"
                     options={[
                       { value: "Active", label: "Active" },
                       { value: "Inactive", label: "Inactive" }
@@ -743,9 +751,9 @@ const RolesAndPermissions = () => {
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Role Name <span className="text-danger">*</span></label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
+                    fieldLabel="role"
                     placeholder="Enter role name (e.g. Accountant)"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -754,7 +762,8 @@ const RolesAndPermissions = () => {
                 </div>
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Status <span className="text-danger">*</span></label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="status"
                     options={[
                       { value: "Active", label: "Active" },
                       { value: "Inactive", label: "Inactive" }

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { apiGet, apiPut } from "../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
 import { PrescriptionModal } from "./PrescriptionModal";
+import { IconFormControl } from "../../../../core/common/form-fields";
 
 interface Patient {
   id: string;
@@ -273,9 +274,11 @@ const SessionsList = () => {
                 <>
                   <div className="col-lg-2 col-md-4 col-sm-6">
                     <label className="form-label mb-1 fw-semibold small text-muted">From Date</label>
-                    <input
+                    <IconFormControl
                       type="date"
-                      className="form-control form-control-sm"
+                      fieldLabel="From Date"
+                      className="form-control-sm"
+                      placeholder="From Date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
                       style={{ borderRadius: 8 }}
@@ -283,9 +286,11 @@ const SessionsList = () => {
                   </div>
                   <div className="col-lg-2 col-md-4 col-sm-6">
                     <label className="form-label mb-1 fw-semibold small text-muted">To Date</label>
-                    <input
+                    <IconFormControl
                       type="date"
-                      className="form-control form-control-sm"
+                      fieldLabel="To Date"
+                      className="form-control-sm"
+                      placeholder="To Date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
                       style={{ borderRadius: 8 }}
@@ -353,9 +358,10 @@ const SessionsList = () => {
               <div className="flex-grow-1" style={{ maxWidth: "350px" }}>
                 <div className="table-search mb-0 w-100">
                   <div className="search-input w-100">
-                    <input
+                    <IconFormControl
                       type="text"
-                      className="form-control form-control-sm"
+                      fieldLabel="search"
+                      className="form-control-sm"
                       placeholder="Search code, patient, therapist..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}

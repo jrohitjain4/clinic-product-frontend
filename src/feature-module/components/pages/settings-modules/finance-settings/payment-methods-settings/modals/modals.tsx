@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../../../routes/all_routes";
+import { IconFormControl } from "../../../../../../../core/common/form-fields";
 
 const Modals = () => {
   return (
@@ -28,7 +29,7 @@ const Modals = () => {
                   <label className="form-label">
                     Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl fieldLabel="Name" type="text" placeholder="Enter payment method name" />
                 </div>
               </div>
               <div className="modal-footer d-flex align-items-center gap-1">
@@ -71,9 +72,10 @@ const Modals = () => {
                   <label className="form-label">
                     Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Name"
                     type="text"
-                    className="form-control"
+                    placeholder="Enter payment method name"
                     defaultValue="Personal Emergency"
                   />
                 </div>

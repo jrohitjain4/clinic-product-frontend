@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router"
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar"
+import { IconFormControl, IconTextarea } from "../../../../../../core/common/form-fields"
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000"
 
@@ -134,7 +135,7 @@ const PrefixesSettings = () => {
                       <div className="row g-3">
                         <div className="col-lg-6">
                           <label className="form-label mb-1">Patient Name</label>
-                          <input type="text" className="form-control" placeholder="e.g. Sunita Patel"
+                          <IconFormControl fieldLabel="Patient" type="text" placeholder="e.g. Sunita Patel"
                             value={newReview.name}
                             onChange={e => setNewReview(p => ({ ...p, name: e.target.value }))} />
                         </div>
@@ -144,7 +145,7 @@ const PrefixesSettings = () => {
                         </div>
                         <div className="col-12">
                           <label className="form-label mb-1">Feedback</label>
-                          <textarea className="form-control" rows={3} placeholder="Write the patient's feedback..."
+                          <IconTextarea fieldLabel="Description" rows={3} placeholder="Write the patient's feedback..."
                             value={newReview.feedback}
                             onChange={e => setNewReview(p => ({ ...p, feedback: e.target.value }))} />
                         </div>

@@ -6,6 +6,7 @@ import TicketsModal from "./modal/ticketsModal";
 import { useTickets } from "../../../../core/hooks/useTickets";
 import type { Ticket } from "../../../../core/hooks/useTickets";
 import dayjs from "dayjs";
+import { IconFormControl } from "../../../../core/common/form-fields";
 
 const TicketsList = () => {
   const { tickets, loading, createTicket, updateStatus } = useTickets();
@@ -159,14 +160,14 @@ const TicketsList = () => {
             </div>
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
               <div className="position-relative">
-                <i className="ti ti-search position-absolute top-50 translate-middle-y ms-2 text-muted fs-14" style={{ zIndex: 10 }} />
-                <input
+                <IconFormControl
                   type="text"
-                  className="form-control text-end"
+                  fieldLabel="search"
+                  className="text-end"
                   placeholder="Search tickets..."
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  style={{ minWidth: '220px', paddingLeft: '30px', height: '38px', fontSize: '13px', borderRadius: '6px' }}
+                  style={{ minWidth: '220px', height: '38px', fontSize: '13px', borderRadius: '6px' }}
                 />
               </div>
 

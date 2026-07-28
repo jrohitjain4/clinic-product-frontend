@@ -5,10 +5,12 @@ import Datatable from "../../../../../core/common/dataTable";
 import { useClinicPatients } from "../../../../../core/hooks/useClinicPatients";
 import type { ClinicPatient } from "../../../../../core/types/clinicPatient";
 import { patientToTableRow } from "../../../../../core/utils/patientForm";
-import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import PatientsDeleteModal from "./patientsDeleteModal";
 import { HasPermission } from "../../../../../core/utils/staffPermissions";
+
+const getInitial = (value?: string) =>
+  (value || "").trim().charAt(0).toUpperCase() || "?";
 
 const Patients = () => {
   const { patients, loading, error, refetch, reload } = useClinicPatients();
@@ -36,13 +38,19 @@ const Patients = () => {
             to={patientDetailsPath(record._raw.id)}
             className="avatar me-2"
           >
-            <ImageWithBasePath
-              src={record.Patient_img}
-              alt="Patient"
-              className="rounded-circle"
-            />
+            <span
+              className="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white"
+              style={{
+                width: "40px",
+                height: "40px",
+                background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                fontSize: "16px",
+              }}
+            >
+              {getInitial(text)}
+            </span>
           </Link>
-          <div>
+          <div className="lh-1">
             <h6 className="mb-1 fs-14 fw-semibold">
               <Link
                 to={patientDetailsPath(record._raw.id)}
@@ -51,7 +59,7 @@ const Patients = () => {
                 {text}
               </Link>
             </h6>
-            <span className="text-body fs-13 fw-normal d-block">
+            <span className="text-muted fs-12 fw-normal d-block mt-1">
               {record.Gender}
             </span>
           </div>
@@ -85,11 +93,17 @@ const Patients = () => {
               if (!record._raw.doctors?.[0]?.id) e.preventDefault();
             }}
           >
-            <ImageWithBasePath
-              src={record.Doctor_img}
-              alt="Doctor"
-              className="rounded-circle"
-            />
+            <span
+              className="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white"
+              style={{
+                width: "40px",
+                height: "40px",
+                background: "linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)",
+                fontSize: "16px",
+              }}
+            >
+              {getInitial(text)}
+            </span>
           </Link>
           <div>
             <h6 className="fs-14 mb-1">
@@ -111,78 +125,73 @@ const Patients = () => {
     {
       title: "Last Visit",
       dataIndex: "Last_Visit",
+      render: (text: string) => (
+        <div className="d-flex align-items-center fw-semibold text-dark fs-13">
+          <i className="ti ti-calendar-event me-2 text-primary fs-16" />
+          {text || "—"}
+        </div>
+      ),
       sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
         a.Last_Visit.localeCompare(b.Last_Visit),
     },
     {
       title: "Status",
       dataIndex: "Status",
-      render: (text: string) => (
-        <span
-          className={`badge rounded fs-13 fw-medium border ${text === "Available"
-            ? "badge-soft-success text-success border-success"
-            : "badge-soft-danger text-danger border-danger"
-            }`}
-        >
-          {text}
-        </span>
-      ),
+      render: (text: string) => {
+        const isAvailable = text === "Available";
+        return (
+          <span
+            className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+            style={{
+              backgroundColor: isAvailable ? "#e6f8ef" : "#fdeded",
+              color: isAvailable ? "#198754" : "#dc3545",
+              fontWeight: 600,
+              fontSize: "12px",
+            }}
+          >
+            <i className={`${isAvailable ? "ti ti-circle-check" : "ti ti-circle-x"} fs-14`} />
+            {text}
+          </span>
+        );
+      },
       sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
         a.Status.localeCompare(b.Status),
     },
     {
-      title: "",
+      title: "Action",
+      className: "text-center text-nowrap",
+      width: 160,
+      align: "center" as const,
       render: (_: unknown, record: (typeof tableData)[0]) => (
-        <div className="d-flex align-items-center gap-1">
+        <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
           <Link
-            to={all_routes.appointments}
-            className="shadow-sm fs-14 d-inline-flex border rounded-2 p-1 me-1"
+            to={patientDetailsPath(record._raw.id)}
+            className="text-primary p-1"
+            title="View Details"
           >
-            <i className="ti ti-calendar-cog" />
+            <i className="ti ti-eye fs-18" />
           </Link>
-          <div className="action-item">
+          <HasPermission module="Patients" action="EDIT">
+            <Link
+              to={editPatientPath(record._raw.id)}
+              className="text-info p-1"
+              title="Update Patient"
+            >
+              <i className="ti ti-printer fs-18" />
+            </Link>
+          </HasPermission>
+          <HasPermission module="Patients" action="DELETE">
             <button
               type="button"
-              className="btn btn-link p-0 shadow-sm fs-14 border rounded-2"
-              data-bs-toggle="dropdown"
-              aria-label="Actions"
+              className="bg-transparent border-0 text-danger p-1"
+              data-bs-toggle="modal"
+              data-bs-target="#delete_patient_modal"
+              onClick={() => setSelected(record._raw)}
+              title="Delete"
             >
-              <i className="ti ti-dots-vertical" />
+              <i className="ti ti-trash fs-18" />
             </button>
-            <ul className="dropdown-menu p-2">
-              <HasPermission module="Patients" action="EDIT">
-                <li>
-                  <Link
-                    to={editPatientPath(record._raw.id)}
-                    className="dropdown-item d-flex align-items-center"
-                  >
-                    Edit
-                  </Link>
-                </li>
-              </HasPermission>
-              <li>
-                <Link
-                  to={patientDetailsPath(record._raw.id)}
-                  className="dropdown-item d-flex align-items-center"
-                >
-                  View
-                </Link>
-              </li>
-              <HasPermission module="Patients" action="DELETE">
-                <li>
-                  <button
-                    type="button"
-                    className="dropdown-item d-flex align-items-center"
-                    data-bs-toggle="modal"
-                    data-bs-target="#delete_patient_modal"
-                    onClick={() => setSelected(record._raw)}
-                  >
-                    Delete
-                  </button>
-                </li>
-              </HasPermission>
-            </ul>
-          </div>
+          </HasPermission>
         </div>
       ),
     },

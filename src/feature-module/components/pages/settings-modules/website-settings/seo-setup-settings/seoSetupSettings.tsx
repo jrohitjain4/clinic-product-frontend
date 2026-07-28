@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { Link } from "react-router"
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar"
 import { toast } from "react-toastify"
+import { IconFormControl } from "../../../../../../core/common/form-fields"
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000"
 
@@ -97,9 +98,10 @@ const IconPicker = ({ value, onChange }: { value: string; onChange: (v: string) 
           }}
         >
           {/* Search */}
-          <input
+          <IconFormControl
+            fieldLabel="search"
             type="text"
-            className="form-control form-control-sm mb-3"
+            className="form-control-sm mb-3"
             placeholder="Search icons..."
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -110,10 +112,11 @@ const IconPicker = ({ value, onChange }: { value: string; onChange: (v: string) 
           {/* Manual class entry */}
           <div className="mb-3 pb-2 border-bottom">
             <label className="form-label mb-1 small text-muted">Or type custom class</label>
-            <input
+            <IconFormControl
+              fieldLabel="Title"
               type="text"
-              className="form-control form-control-sm"
-              placeholder="e.g. ti ti-microscope"
+              className="form-control-sm"
+              placeholder="Enter custom icon class"
               value={value}
               onChange={e => onChange(e.target.value)}
               onClick={e => e.stopPropagation()}
@@ -259,7 +262,7 @@ const SeoSetupSettings = () => {
                       <div className="row g-2 align-items-end">
                         <div className="col-lg-5">
                           <label className="form-label mb-1">Service Name</label>
-                          <input type="text" className="form-control" placeholder="e.g. Dermatology"
+                          <IconFormControl fieldLabel="Service" type="text" placeholder="e.g. Dermatology"
                             value={newLabel} onChange={e => setNewLabel(e.target.value)}
                             onKeyDown={e => e.key === "Enter" && addCustom()}
                           />

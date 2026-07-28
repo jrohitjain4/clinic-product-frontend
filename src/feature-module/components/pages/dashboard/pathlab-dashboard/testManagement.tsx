@@ -14,6 +14,7 @@ import EmptyState from "../../../../../core/common/emptyState";
 import DuplicateForms from "../../../../../core/common/duplicate-forms/duplicateForms";
 import type { RowType } from "../../../../../core/common/duplicate-forms/duplicateForms.types";
 import { parseSchedulesFromApi } from "../../../../../core/utils/doctorSchedule";
+import { IconFormControl, IconTextarea } from "../../../../../core/common/form-fields";
 
 const TestManagement = () => {
   const { tests, loading, createTest, updateTest, deleteTest, bulkDeleteTests } = useLabTests();
@@ -257,7 +258,25 @@ const TestManagement = () => {
     { title: "S.No", dataIndex: "S_No", render: (text: number) => <span className="text-dark fw-semibold">{text}</span>, sorter: (a: any, b: any) => a.S_No - b.S_No, width: 70 },
     { title: "Test Name", dataIndex: "TestName", render: (text: string) => <span className="text-dark fw-bold">{text}</span>, sorter: (a: any, b: any) => a.TestName.localeCompare(b.TestName) },
     { title: "Test Code", dataIndex: "TestCode", render: (text: string) => <span className="text-primary fw-medium">{text}</span>, sorter: (a: any, b: any) => a.TestCode.localeCompare(b.TestCode), width: 110 },
-    { title: "Category", dataIndex: "Category", render: (text: string) => <span className="badge badge-soft-info border border-info px-2 py-1 fs-12 fw-medium">{text}</span>, sorter: (a: any, b: any) => a.Category.localeCompare(b.Category) },
+    {
+      title: "Category",
+      dataIndex: "Category",
+      render: (text: string) => (
+        <span
+          className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+          style={{
+            backgroundColor: "#e0f2fe",
+            color: "#2563eb",
+            fontWeight: 600,
+            fontSize: "12px",
+          }}
+        >
+          <i className="ti ti-category fs-14" />
+          {text}
+        </span>
+      ),
+      sorter: (a: any, b: any) => a.Category.localeCompare(b.Category),
+    },
     { title: "Price", dataIndex: "Price", render: (text: string) => <span className="text-dark fw-bold">{text}</span>, sorter: (a: any, b: any) => a.raw.price - b.raw.price },
     { title: "Status", dataIndex: "Status", render: (text: string) => <span className={`badge border ${text === "Active" ? "badge-soft-success border-success" : "badge-soft-danger border-danger"} px-2 py-1 fs-12 fw-medium`}>{text}</span>, sorter: (a: any, b: any) => a.Status.localeCompare(b.Status) },
     {
@@ -295,7 +314,7 @@ const TestManagement = () => {
             </div>
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
               <div className="search-field position-relative" style={{ width: "200px" }}>
-                <input type="text" className="form-control fs-13 py-2" placeholder="Search Test..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+                <IconFormControl fieldLabel="search" type="text" className="fs-13 py-2" placeholder="Search Test..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
               </div>
               <div className="dropdown">
                 <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap fs-13" style={{ minWidth: "150px", minHeight: "38px" }} data-bs-toggle="dropdown">
@@ -355,8 +374,8 @@ const TestManagement = () => {
               <form onSubmit={handleAddSubmit}>
                 <div className="modal-body p-4">
                   <div className="row">
-                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Test Name <span className="text-danger">*</span></label><input type="text" className="form-control" placeholder="e.g. Complete Blood Count" value={formName} onChange={(e) => setFormName(e.target.value)} required /></div>
-                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Short Name <span className="text-muted fw-normal">(Optional)</span></label><input type="text" className="form-control" placeholder="e.g. CBC" value={formShortName} onChange={(e) => setFormShortName(e.target.value)} /></div>
+                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Test Name <span className="text-danger">*</span></label><IconFormControl fieldLabel="name" type="text" placeholder="e.g. Complete Blood Count" value={formName} onChange={(e) => setFormName(e.target.value)} required /></div>
+                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Short Name <span className="text-muted fw-normal">(Optional)</span></label><IconFormControl fieldLabel="name" type="text" placeholder="e.g. CBC" value={formShortName} onChange={(e) => setFormShortName(e.target.value)} /></div>
                   </div>
                   <div className="row">
                     <div className="mb-3">
@@ -368,11 +387,11 @@ const TestManagement = () => {
                     </div>
                   </div>
                   <div className="row">
-                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Test Fee (₹) <span className="text-danger">*</span></label><input type="number" className="form-control" placeholder="0" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} min="0" required /></div>
-                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Home Collection Charge (₹) <span className="text-muted fw-normal">(Optional)</span></label><input type="number" className="form-control" placeholder="e.g. 500" value={formHomeCharge} onChange={(e) => setFormHomeCharge(e.target.value)} min="0" /></div>
+                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Test Fee (₹) <span className="text-danger">*</span></label><IconFormControl fieldLabel="price" type="number" placeholder="0" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} min="0" required /></div>
+                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Home Collection Charge (₹) <span className="text-muted fw-normal">(Optional)</span></label><IconFormControl fieldLabel="price" type="number" placeholder="e.g. 500" value={formHomeCharge} onChange={(e) => setFormHomeCharge(e.target.value)} min="0" /></div>
                   </div>
                   <div className="row">
-                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Estimated Duration <span className="text-muted fw-normal">(Optional)</span></label><input type="text" className="form-control" placeholder="e.g. 2 Hours, 1 Day" value={formDuration} onChange={(e) => setFormDuration(e.target.value)} /></div>
+                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Estimated Duration <span className="text-muted fw-normal">(Optional)</span></label><IconFormControl fieldLabel="time" type="text" placeholder="e.g. 2 Hours, 1 Day" value={formDuration} onChange={(e) => setFormDuration(e.target.value)} /></div>
                     <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Assigned Type <span className="text-danger">*</span></label>
                       <select className="form-select" value={formAssignment} onChange={(e) => setFormAssignment(e.target.value)} required>
                         <option value="Doctor">Doctor</option>
@@ -393,8 +412,8 @@ const TestManagement = () => {
                       <Select isMulti options={staffOptions} value={formAssignedStaff} onChange={(selected: any) => setFormAssignedStaff(selected || [])} placeholder="Select Staff Members..." />
                     </div>
                   )}
-                  <div className="mb-3"><label className="form-label fw-semibold">Preparation Instructions <span className="text-muted fw-normal">(Optional)</span></label><textarea className="form-control" rows={2} placeholder="e.g. Fasting for 10-12 hours required." value={formPrep} onChange={(e) => setFormPrep(e.target.value)} /></div>
-                  <div className="mb-3"><label className="form-label fw-semibold">Description <span className="text-muted fw-normal">(Optional)</span></label><textarea className="form-control" rows={2} placeholder="Enter a detailed description..." value={formDesc} onChange={(e) => setFormDesc(e.target.value)} /></div>
+                  <div className="mb-3"><label className="form-label fw-semibold">Preparation Instructions <span className="text-muted fw-normal">(Optional)</span></label><IconTextarea fieldLabel="notes" rows={2} placeholder="e.g. Fasting for 10-12 hours required." value={formPrep} onChange={(e) => setFormPrep(e.target.value)} /></div>
+                  <div className="mb-3"><label className="form-label fw-semibold">Description <span className="text-muted fw-normal">(Optional)</span></label><IconTextarea fieldLabel="description" rows={2} placeholder="Enter a detailed description..." value={formDesc} onChange={(e) => setFormDesc(e.target.value)} /></div>
                   <div className="mb-3"><label className="form-label fw-semibold">Status <span className="text-danger">*</span></label><select className="form-select" value={formStatus} onChange={(e) => setFormStatus(e.target.value as any)}><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
 
                   {/* Slot Booking Section */}
@@ -408,10 +427,10 @@ const TestManagement = () => {
                   {formIsSlotBookingEnabled && (
                     <div className="row">
                       <div className="col-md-6">
-                        <div className="mb-3"><label className="form-label fw-semibold">Slot Duration (Minutes) <span className="text-danger">*</span></label><input type="number" className="form-control" value={formSlotDuration} onChange={(e) => setFormSlotDuration(e.target.value)} placeholder="e.g. 15" required /></div>
+                        <div className="mb-3"><label className="form-label fw-semibold">Slot Duration (Minutes) <span className="text-danger">*</span></label><IconFormControl fieldLabel="time" type="number" value={formSlotDuration} onChange={(e) => setFormSlotDuration(e.target.value)} placeholder="e.g. 15" required /></div>
                       </div>
                       <div className="col-md-6">
-                        <div className="mb-3"><label className="form-label fw-semibold">Max Bookings Per Slot <span className="text-danger">*</span></label><input type="number" className="form-control" value={formMaxBookingsPerSlot} onChange={(e) => setFormMaxBookingsPerSlot(e.target.value)} placeholder="e.g. 5" required /></div>
+                        <div className="mb-3"><label className="form-label fw-semibold">Max Bookings Per Slot <span className="text-danger">*</span></label><IconFormControl fieldLabel="quantity" type="number" value={formMaxBookingsPerSlot} onChange={(e) => setFormMaxBookingsPerSlot(e.target.value)} placeholder="e.g. 5" required /></div>
                       </div>
                     </div>
                   )}
@@ -479,8 +498,8 @@ const TestManagement = () => {
               <form onSubmit={handleEditSubmit}>
                 <div className="modal-body p-4">
                   <div className="row">
-                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Test Name <span className="text-danger">*</span></label><input type="text" className="form-control" placeholder="e.g. Complete Blood Count" value={formName} onChange={(e) => setFormName(e.target.value)} required /></div>
-                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Short Name <span className="text-muted fw-normal">(Optional)</span></label><input type="text" className="form-control" placeholder="e.g. CBC" value={formShortName} onChange={(e) => setFormShortName(e.target.value)} /></div>
+                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Test Name <span className="text-danger">*</span></label><IconFormControl fieldLabel="name" type="text" placeholder="e.g. Complete Blood Count" value={formName} onChange={(e) => setFormName(e.target.value)} required /></div>
+                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Short Name <span className="text-muted fw-normal">(Optional)</span></label><IconFormControl fieldLabel="name" type="text" placeholder="e.g. CBC" value={formShortName} onChange={(e) => setFormShortName(e.target.value)} /></div>
                   </div>
                   <div className="row">
                     <div className="mb-3">
@@ -492,11 +511,11 @@ const TestManagement = () => {
                     </div>
                   </div>
                   <div className="row">
-                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Test Fee (₹) <span className="text-danger">*</span></label><input type="number" className="form-control" placeholder="0" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} min="0" required /></div>
-                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Home Collection Charge (₹) <span className="text-muted fw-normal">(Optional)</span></label><input type="number" className="form-control" placeholder="e.g. 500" value={formHomeCharge} onChange={(e) => setFormHomeCharge(e.target.value)} min="0" /></div>
+                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Test Fee (₹) <span className="text-danger">*</span></label><IconFormControl fieldLabel="price" type="number" placeholder="0" value={formPrice} onChange={(e) => setFormPrice(e.target.value)} min="0" required /></div>
+                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Home Collection Charge (₹) <span className="text-muted fw-normal">(Optional)</span></label><IconFormControl fieldLabel="price" type="number" placeholder="e.g. 500" value={formHomeCharge} onChange={(e) => setFormHomeCharge(e.target.value)} min="0" /></div>
                   </div>
                   <div className="row">
-                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Estimated Duration <span className="text-muted fw-normal">(Optional)</span></label><input type="text" className="form-control" placeholder="e.g. 2 Hours, 1 Day" value={formDuration} onChange={(e) => setFormDuration(e.target.value)} /></div>
+                    <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Estimated Duration <span className="text-muted fw-normal">(Optional)</span></label><IconFormControl fieldLabel="time" type="text" placeholder="e.g. 2 Hours, 1 Day" value={formDuration} onChange={(e) => setFormDuration(e.target.value)} /></div>
                     <div className="col-md-6 mb-3"><label className="form-label fw-semibold">Assigned Type <span className="text-danger">*</span></label>
                       <select className="form-select" value={formAssignment} onChange={(e) => setFormAssignment(e.target.value)} required>
                         <option value="Doctor">Doctor</option>
@@ -517,8 +536,8 @@ const TestManagement = () => {
                       <Select isMulti options={staffOptions} value={formAssignedStaff} onChange={(selected: any) => setFormAssignedStaff(selected || [])} placeholder="Select Staff Members..." />
                     </div>
                   )}
-                  <div className="mb-3"><label className="form-label fw-semibold">Preparation Instructions <span className="text-muted fw-normal">(Optional)</span></label><textarea className="form-control" rows={2} placeholder="e.g. Fasting for 10-12 hours required." value={formPrep} onChange={(e) => setFormPrep(e.target.value)} /></div>
-                  <div className="mb-3"><label className="form-label fw-semibold">Description <span className="text-muted fw-normal">(Optional)</span></label><textarea className="form-control" rows={2} placeholder="Enter a detailed description..." value={formDesc} onChange={(e) => setFormDesc(e.target.value)} /></div>
+                  <div className="mb-3"><label className="form-label fw-semibold">Preparation Instructions <span className="text-muted fw-normal">(Optional)</span></label><IconTextarea fieldLabel="notes" rows={2} placeholder="e.g. Fasting for 10-12 hours required." value={formPrep} onChange={(e) => setFormPrep(e.target.value)} /></div>
+                  <div className="mb-3"><label className="form-label fw-semibold">Description <span className="text-muted fw-normal">(Optional)</span></label><IconTextarea fieldLabel="description" rows={2} placeholder="Enter a detailed description..." value={formDesc} onChange={(e) => setFormDesc(e.target.value)} /></div>
                   <div className="mb-3"><label className="form-label fw-semibold">Status <span className="text-danger">*</span></label><select className="form-select" value={formStatus} onChange={(e) => setFormStatus(e.target.value as any)}><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
 
                   {/* Slot Booking Section */}
@@ -532,10 +551,10 @@ const TestManagement = () => {
                   {formIsSlotBookingEnabled && (
                     <div className="row">
                       <div className="col-md-6">
-                        <div className="mb-3"><label className="form-label fw-semibold">Slot Duration (Minutes) <span className="text-danger">*</span></label><input type="number" className="form-control" value={formSlotDuration} onChange={(e) => setFormSlotDuration(e.target.value)} placeholder="e.g. 15" required /></div>
+                        <div className="mb-3"><label className="form-label fw-semibold">Slot Duration (Minutes) <span className="text-danger">*</span></label><IconFormControl fieldLabel="time" type="number" value={formSlotDuration} onChange={(e) => setFormSlotDuration(e.target.value)} placeholder="e.g. 15" required /></div>
                       </div>
                       <div className="col-md-6">
-                        <div className="mb-3"><label className="form-label fw-semibold">Max Bookings Per Slot <span className="text-danger">*</span></label><input type="number" className="form-control" value={formMaxBookingsPerSlot} onChange={(e) => setFormMaxBookingsPerSlot(e.target.value)} placeholder="e.g. 5" required /></div>
+                        <div className="mb-3"><label className="form-label fw-semibold">Max Bookings Per Slot <span className="text-danger">*</span></label><IconFormControl fieldLabel="quantity" type="number" value={formMaxBookingsPerSlot} onChange={(e) => setFormMaxBookingsPerSlot(e.target.value)} placeholder="e.g. 5" required /></div>
                       </div>
                     </div>
                   )}

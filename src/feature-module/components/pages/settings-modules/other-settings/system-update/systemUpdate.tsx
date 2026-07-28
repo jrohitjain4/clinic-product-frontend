@@ -1,5 +1,6 @@
 import { Link } from "react-router"
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar"
+import { IconFormControl } from "../../../../../../core/common/form-fields"
 
 
 const SystemUpdate = () => {
@@ -65,7 +66,7 @@ const SystemUpdate = () => {
                       <label className="form-label">
                         Purchase Key<span className="text-danger ms-1">*</span>
                       </label>
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="Title" type="text" placeholder="Enter purchase key" />
                     </div>
                   </div>
                   {/* end col */}
@@ -74,7 +75,7 @@ const SystemUpdate = () => {
                       <label className="form-label">
                         User Name<span className="text-danger ms-1">*</span>
                       </label>
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="Name" type="text" placeholder="Enter user name" />
                     </div>
                   </div>
                   {/* end col */}
@@ -94,7 +95,7 @@ const SystemUpdate = () => {
     {/* Footer Start */}
     <div className="footer text-center bg-white p-2 border-top">
       <p className="text-dark mb-0">
-        2025 ©
+        2025 ï¿½
         <Link to="#" className="link-primary">
           Docyari
         </Link>

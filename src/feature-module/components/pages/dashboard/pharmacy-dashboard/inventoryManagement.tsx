@@ -6,6 +6,7 @@ import { useMedicines } from "../../../../../core/hooks/useMedicines";
 import { usePharmacyCategories } from "../../../../../core/hooks/usePharmacyCategories";
 import EmptyState from "../../../../../core/common/emptyState";
 import { toast } from "react-toastify";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 const InventoryManagement = () => {
   const { medicines, loading, refetch: refetchMedicines, addStock } = useMedicines();
@@ -156,7 +157,20 @@ const InventoryManagement = () => {
     {
       title: "Category",
       dataIndex: "Category",
-      render: (text: string) => <span className="badge badge-soft-primary border border-primary px-2 py-1 fs-12 fw-medium">{text}</span>,
+      render: (text: string) => (
+        <span
+          className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+          style={{
+            backgroundColor: "#ede9fe",
+            color: "#7c3aed",
+            fontWeight: 600,
+            fontSize: "12px",
+          }}
+        >
+          <i className="ti ti-category fs-14" />
+          {text}
+        </span>
+      ),
       sorter: (a: any, b: any) => a.Category.localeCompare(b.Category),
     },
     {
@@ -242,7 +256,7 @@ const InventoryManagement = () => {
 
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
               <div className="search-field position-relative" style={{ width: "180px" }}>
-                <input type="text" className="form-control fs-13 py-2" placeholder="Search Medicine..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+                <IconFormControl fieldLabel="search" type="text" className="fs-13 py-2" placeholder="Search Medicine..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
               </div>
 
               <div className="dropdown">
@@ -345,9 +359,9 @@ const InventoryManagement = () => {
                   </div>
                   <div className="mb-3">
                     <label className="form-label fw-semibold">Quantity to Add <span className="text-danger">*</span></label>
-                    <input 
+                    <IconFormControl
+                      fieldLabel="quantity"
                       type="number" 
-                      className="form-control" 
                       placeholder="e.g. 50" 
                       min={1}
                       value={quantityToAdd} 

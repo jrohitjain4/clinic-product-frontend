@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
+import { IconSelect } from "../../../../../../core/common/form-fields";
 import {
   City,
   Country_Name,
@@ -33,7 +34,8 @@ const Modals = () => {
                   <label className="form-label">
                     Country Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="country"
                     options={Country_Name}
                     className="select"
                     defaultValue={Country_Name[0]}
@@ -43,7 +45,8 @@ const Modals = () => {
                   <label className="form-label">
                     State<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="state"
                     options={State}
                     className="select"
                     defaultValue={State[0]}
@@ -53,7 +56,8 @@ const Modals = () => {
                   <label className="form-label">
                     City<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="city"
                     options={City}
                     className="select"
                     defaultValue={City[0]}
@@ -63,7 +67,8 @@ const Modals = () => {
                   <label className="form-label">
                     Status<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="status"
                     options={StatusActive}
                     className="select"
                     defaultValue={StatusActive[0]}
@@ -108,7 +113,8 @@ const Modals = () => {
                   <label className="form-label">
                     Country Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="country"
                     options={Country_Name}
                     className="select"
                     defaultValue={Country_Name[1]}
@@ -118,7 +124,8 @@ const Modals = () => {
                   <label className="form-label">
                     State<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="state"
                     options={State}
                     className="select"
                     defaultValue={State[1]}
@@ -128,7 +135,8 @@ const Modals = () => {
                   <label className="form-label">
                     City<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="city"
                     options={City}
                     className="select"
                     defaultValue={City[1]}
@@ -138,7 +146,8 @@ const Modals = () => {
                   <label className="form-label">
                     Status<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="status"
                     options={StatusActive}
                     className="select"
                     defaultValue={StatusActive[1]}

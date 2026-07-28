@@ -7,6 +7,7 @@ import CommonSelect from "../../../../../core/common/common-select/commonSelect"
 import { useClinicDoctors } from "../../../../../core/hooks/useClinicDoctors";
 import { apiUrl } from "../../../../../core/config/api";
 import { toast } from "react-toastify";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -233,6 +234,14 @@ const DoctorSchedules = () => {
 
   return (
     <div className="page-wrapper">
+      <style>{`
+        .page-wrapper .doctor-schedule-card {
+          border: none !important;
+          box-shadow: 0 10px 28px rgba(15, 23, 42, 0.1) !important;
+          border-radius: 12px !important;
+          overflow: hidden !important;
+        }
+      `}</style>
       <div className="content">
         <div className="row g-2">
           <div className="col-lg-12">
@@ -279,7 +288,7 @@ const DoctorSchedules = () => {
 
             {/* Select Doctor Card (Admin only) */}
             {user?.role !== "DOCTOR" && (
-              <div className="card mb-3 shadow-sm border-0">
+              <div className="card mb-3 shadow-sm border-0 doctor-schedule-card">
                 <div className="card-body py-3">
                   <div className="row align-items-end g-3">
                     <div className="col-lg-6 col-md-8">
@@ -332,7 +341,7 @@ const DoctorSchedules = () => {
 
             {/* Schedule Display */}
             {!selectedDoctorId ? (
-              <div className="card">
+              <div className="card doctor-schedule-card">
                 <div className="card-body text-center py-5">
                   <i className="ti ti-calendar-event fs-1 text-muted d-block mb-2" />
                   <h6 className="fw-bold text-muted">Select a doctor above</h6>
@@ -340,14 +349,14 @@ const DoctorSchedules = () => {
                 </div>
               </div>
             ) : loadingSchedule ? (
-              <div className="card">
+              <div className="card doctor-schedule-card">
                 <div className="card-body text-center py-5">
                   <span className="spinner-border text-primary" role="status" />
                   <p className="text-muted mt-2 mb-0">Loading schedule…</p>
                 </div>
               </div>
             ) : (
-              <div className="card">
+              <div className="card doctor-schedule-card">
                 <div className="card-body">
                   {/* Doctor Info Banner */}
                   {selectedDoctor && (
@@ -446,7 +455,7 @@ const DoctorSchedules = () => {
                                   onChange={(opt: any) => updateSlot(activeDay, row.id, "session", opt?.value || "Session 1")}
                                 />
                               ) : (
-                                <input className="form-control" value={row.session} disabled />
+                                <IconFormControl fieldLabel="Session" type="text" value={row.session} disabled />
                               )}
                             </div>
                           </div>
@@ -462,7 +471,7 @@ const DoctorSchedules = () => {
                                     onChange={(_, timeStr) => updateSlot(activeDay, row.id, "from", timeStr as string)}
                                   />
                                 ) : (
-                                  <input className="form-control" value={row.from ? dayjs(row.from, "HH:mm").format("hh:mm A") : "—"} disabled />
+                                  <IconFormControl fieldLabel="From" type="text" value={row.from ? dayjs(row.from, "HH:mm").format("hh:mm A") : "—"} disabled />
                                 )}
                               </div>
                             </div>
@@ -479,7 +488,7 @@ const DoctorSchedules = () => {
                                     onChange={(_, timeStr) => updateSlot(activeDay, row.id, "to", timeStr as string)}
                                   />
                                 ) : (
-                                  <input className="form-control" value={row.to ? dayjs(row.to, "HH:mm").format("hh:mm A") : "—"} disabled />
+                                  <IconFormControl fieldLabel="To" type="text" value={row.to ? dayjs(row.to, "HH:mm").format("hh:mm A") : "—"} disabled />
                                 )}
                               </div>
                             </div>
@@ -559,9 +568,9 @@ const DoctorSchedules = () => {
                       <div className="row g-3">
                         <div className="col-md-6 col-12">
                           <label className="form-label fw-semibold mb-1">Slot Duration (Minutes) <span className="text-danger">*</span></label>
-                          <input
+                          <IconFormControl
+                            fieldLabel="Time"
                             type="number"
-                            className="form-control"
                             value={appointmentDuration}
                             onChange={(e) => setAppointmentDuration(e.target.value)}
                             disabled={!editing || !slotBookingEnabled}
@@ -571,9 +580,9 @@ const DoctorSchedules = () => {
                         </div>
                         <div className="col-md-6 col-12">
                           <label className="form-label fw-semibold mb-1">Max Bookings per Slot <span className="text-danger">*</span></label>
-                          <input
+                          <IconFormControl
+                            fieldLabel="Quantity"
                             type="number"
-                            className="form-control"
                             value={maxBookingsPerSlot}
                             onChange={(e) => setMaxBookingsPerSlot(e.target.value)}
                             disabled={!editing || !slotBookingEnabled}

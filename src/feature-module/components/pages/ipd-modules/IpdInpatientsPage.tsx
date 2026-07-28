@@ -4,6 +4,7 @@ import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import IpdViewDetailsModal from "./IpdViewDetailsModal";
+import { IconFormControl } from "../../../../core/common/form-fields";
 
 interface Patient {
   id: string;
@@ -190,18 +191,13 @@ const IpdInpatientsPage: React.FC = () => {
         {/* Search */}
         <div className="card border-0 shadow-sm mb-4">
           <div className="card-body p-3">
-            <div className="input-group">
-              <span className="input-group-text bg-white border-end-0">
-                <i className="ti ti-search text-muted" />
-              </span>
-              <input
-                type="text"
-                className="form-control border-start-0 ps-0"
-                placeholder="Search active inpatients by name, UHID, or admission code..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+            <IconFormControl
+              fieldLabel="search"
+              type="text"
+              placeholder="Search active inpatients by name, UHID, or admission code..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
 

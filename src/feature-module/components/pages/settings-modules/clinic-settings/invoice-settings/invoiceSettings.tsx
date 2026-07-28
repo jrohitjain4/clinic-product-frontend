@@ -1,8 +1,8 @@
 import { Link } from "react-router";
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar";
 import { Invoice_Roundoff } from "../../../../../../core/common/selectOption";
-import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import DefaultEditor from "react-simple-wysiwyg";
+import { IconFormControl, IconSelect } from "../../../../../../core/common/form-fields";
 
 const InvoiceSettings = () => {
   return (
@@ -59,7 +59,7 @@ const InvoiceSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-4">
-                              <input type="text" className="form-control" />
+                              <IconFormControl fieldLabel="Invoice" type="text" placeholder="Enter invoice prefix" />
                             </div>
                             {/* end col */}
                           </div>
@@ -76,9 +76,11 @@ const InvoiceSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-4">
-                              <CommonSelect
+                              <IconSelect
+                                fieldLabel="Invoice"
                                 options={Invoice_Roundoff}
                                 className="select"
+                                placeholder="Select roundoff"
                                 defaultValue={Invoice_Roundoff[0]}
                               />
                             </div>

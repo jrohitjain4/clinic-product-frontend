@@ -3,6 +3,8 @@ import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { Link, useNavigate } from "react-router";
 import { all_routes } from "../../../routes/all_routes";
 import { apiUrl } from "../../../../core/config/api";
+import { IconFormControl, IconTextarea, GenderOptionGroup } from "../../../../core/common/form-fields";
+import type { GenderValue } from "../../../../core/common/form-fields";
 
 interface PackageOption {
   id: string;
@@ -25,7 +27,7 @@ const RegisterBasic = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [dob, setDob] = useState("");
   const [age, setAge] = useState("");
-  const [gender, setGender] = useState("Male");
+  const [gender, setGender] = useState<GenderValue>("Male");
 
   const [clinicName, setClinicName] = useState("");
   const [gstNo, setGstNo] = useState("");
@@ -195,41 +197,36 @@ const RegisterBasic = () => {
                           <div className="row g-2">
                             <div className="col-md-12 mb-3">
                               <label className="form-label">Full Name</label>
-                              <input type="text" className="form-control" placeholder="Enter your full name" value={fullName} onChange={e => setFullName(e.target.value)} />
+                              <IconFormControl type="text" fieldLabel="Full Name" placeholder="Full Name" value={fullName} onChange={e => setFullName(e.target.value)} />
                             </div>
                             <div className="col-md-12 mb-3">
                               <label className="form-label">Email Address</label>
-                              <input type="email" className="form-control" placeholder="name@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+                              <IconFormControl type="email" fieldLabel="Email Address" placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} />
                             </div>
                           </div>
 
                           <div className="row g-2">
                             <div className="col-md-6 mb-3">
                               <label className="form-label">Date of Birth</label>
-                              <input type="date" className="form-control" value={dob} onChange={e => handleDobChange(e.target.value)} />
+                              <IconFormControl type="date" fieldLabel="Date of Birth" placeholder="Date of Birth" value={dob} onChange={e => handleDobChange(e.target.value)} />
                             </div>
-                            <div className="col-md-3 mb-3">
+                            <div className="col-md-6 mb-3">
                               <label className="form-label">Age</label>
-                              <input type="text" className="form-control" value={age} disabled placeholder="-" />
+                              <IconFormControl type="text" fieldLabel="Age" value={age} disabled placeholder="Age" />
                             </div>
-                            <div className="col-md-3 mb-3">
-                              <label className="form-label">Gender</label>
-                              <select className="form-select px-2" value={gender} onChange={e => setGender(e.target.value)}>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
-                              </select>
+                            <div className="col-md-12 mb-3">
+                              <GenderOptionGroup value={gender} onChange={setGender} required showLabel />
                             </div>
                           </div>
 
                           <div className="row g-2">
                             <div className="col-md-6 mb-3">
                               <label className="form-label">Password</label>
-                              <input type="password" title="password" className="form-control" placeholder="********" value={password} onChange={e => setPassword(e.target.value)} />
+                              <IconFormControl type="password" fieldLabel="Password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
                             </div>
                             <div className="col-md-6 mb-3">
                               <label className="form-label">Confirm Password</label>
-                              <input type="password" title="confirm-password" className="form-control" placeholder="********" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                              <IconFormControl type="password" fieldLabel="Confirm Password" placeholder="Confirm Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
                             </div>
                           </div>
 
@@ -243,15 +240,15 @@ const RegisterBasic = () => {
                         <div>
                           <div className="mb-3">
                             <label className="form-label">Clinic Name</label>
-                            <input type="text" className="form-control" placeholder="e.g. HealthCare Center" value={clinicName} onChange={e => setClinicName(e.target.value)} />
+                            <IconFormControl type="text" fieldLabel="company" placeholder="Clinic Name" value={clinicName} onChange={e => setClinicName(e.target.value)} />
                           </div>
                           <div className="mb-3">
                             <label className="form-label">GST Number</label>
-                            <input type="text" className="form-control" placeholder="Enter GSTIN Number" value={gstNo} onChange={e => setGstNo(e.target.value)} />
+                            <IconFormControl type="text" placeholder="GST Number" value={gstNo} onChange={e => setGstNo(e.target.value)} />
                           </div>
                           <div className="mb-3">
                             <label className="form-label">Clinic Address</label>
-                            <textarea className="form-control" rows={3} placeholder="Full address of your clinic" value={clinicAddress} onChange={e => setClinicAddress(e.target.value)} />
+                            <IconTextarea fieldLabel="address" rows={3} placeholder="Clinic Address" value={clinicAddress} onChange={e => setClinicAddress(e.target.value)} />
                           </div>
                           <div className="d-flex gap-2">
                             <button type="button" onClick={() => setStep(1)} className="btn btn-light flex-fill py-2">Back</button>

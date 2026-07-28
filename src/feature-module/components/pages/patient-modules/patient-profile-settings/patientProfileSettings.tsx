@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import PatientProfileUpload from "../../../../../core/common/patient-profile-upload/PatientProfileUpload";
 import Footer from "../../../../../core/common/footer/footer";
 import { setLocalStorageUser } from "../../../../../core/utils/apiClient";
+import { IconFormControl, GenderOptionGroup } from "../../../../../core/common/form-fields";
 
 
 const PatientProfileSettings = () => {
@@ -204,10 +205,12 @@ const PatientProfileSettings = () => {
 
                         <div className="col-lg-6">
                           <label className="form-label fw-bold text-dark fs-13">First Name <span className="text-danger">*</span></label>
-                          <input
+                          <IconFormControl
+                            fieldLabel="first name"
                             type="text"
                             name="firstName"
-                            className={`form-control ${!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}`}
+                            className={!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}
+                            placeholder="Enter first name"
                             value={formData.firstName}
                             onChange={handleInputChange}
                             required
@@ -217,10 +220,12 @@ const PatientProfileSettings = () => {
 
                         <div className="col-lg-6">
                           <label className="form-label fw-bold text-dark fs-13">Last Name <span className="text-danger">*</span></label>
-                          <input
+                          <IconFormControl
+                            fieldLabel="last name"
                             type="text"
                             name="lastName"
-                            className={`form-control ${!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}`}
+                            className={!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}
+                            placeholder="Enter last name"
                             value={formData.lastName}
                             onChange={handleInputChange}
                             required
@@ -230,10 +235,12 @@ const PatientProfileSettings = () => {
 
                         <div className="col-lg-6">
                           <label className="form-label fw-bold text-dark fs-13">Email Address <span className="text-danger">*</span></label>
-                          <input
+                          <IconFormControl
+                            fieldLabel="email"
                             type="email"
                             name="email"
-                            className={`form-control ${!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}`}
+                            className={!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}
+                            placeholder="Enter email address"
                             value={formData.email}
                             onChange={handleInputChange}
                             required
@@ -243,10 +250,12 @@ const PatientProfileSettings = () => {
 
                         <div className="col-lg-6">
                           <label className="form-label fw-bold text-dark fs-13">Phone Number <span className="text-danger">*</span></label>
-                          <input
+                          <IconFormControl
+                            fieldLabel="phone"
                             type="text"
                             name="phone"
-                            className={`form-control ${!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}`}
+                            className={!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}
+                            placeholder="Enter phone number"
                             value={formData.phone}
                             onChange={handleInputChange}
                             required
@@ -256,26 +265,21 @@ const PatientProfileSettings = () => {
 
                         <div className="col-lg-4">
                           <label className="form-label fw-bold text-dark fs-13">Gender</label>
-                          <select
-                            name="gender"
-                            className={`form-select ${!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}`}
-                            value={formData.gender}
-                            onChange={handleInputChange}
-                            disabled={!isEditing}
-                          >
-                            <option value="">Select Gender</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                          </select>
+                          <div style={!isEditing ? { pointerEvents: "none", opacity: 0.6 } : undefined}>
+                            <GenderOptionGroup
+                              value={formData.gender}
+                              onChange={(v) => setFormData((prev) => ({ ...prev, gender: v }))}
+                            />
+                          </div>
                         </div>
 
                         <div className="col-lg-4">
                           <label className="form-label fw-bold text-dark fs-13">Date of Birth</label>
-                          <input
+                          <IconFormControl
+                            fieldLabel="dob"
                             type="date"
                             name="dob"
-                            className={`form-control ${!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}`}
+                            className={!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}
                             value={formData.dob}
                             onChange={handleInputChange}
                             disabled={!isEditing}
@@ -311,10 +315,12 @@ const PatientProfileSettings = () => {
                       <div className="row g-4">
                         <div className="col-lg-6">
                           <label className="form-label fw-bold text-dark fs-13">Address Line 1</label>
-                          <input
+                          <IconFormControl
+                            fieldLabel="address 1"
                             type="text"
                             name="addressLine1"
-                            className={`form-control ${!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}`}
+                            className={!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}
+                            placeholder="Enter address line 1"
                             value={formData.addressLine1}
                             onChange={handleInputChange}
                             disabled={!isEditing}
@@ -322,10 +328,12 @@ const PatientProfileSettings = () => {
                         </div>
                         <div className="col-lg-6">
                           <label className="form-label fw-bold text-dark fs-13">Address Line 2</label>
-                          <input
+                          <IconFormControl
+                            fieldLabel="address 2"
                             type="text"
                             name="addressLine2"
-                            className={`form-control ${!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}`}
+                            className={!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}
+                            placeholder="Enter address line 2"
                             value={formData.addressLine2}
                             onChange={handleInputChange}
                             disabled={!isEditing}
@@ -333,10 +341,12 @@ const PatientProfileSettings = () => {
                         </div>
                         <div className="col-lg-4">
                           <label className="form-label fw-bold text-dark fs-13">City</label>
-                          <input
+                          <IconFormControl
+                            fieldLabel="city"
                             type="text"
                             name="city"
-                            className={`form-control ${!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}`}
+                            className={!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}
+                            placeholder="Enter city"
                             value={formData.city}
                             onChange={handleInputChange}
                             disabled={!isEditing}
@@ -344,10 +354,12 @@ const PatientProfileSettings = () => {
                         </div>
                         <div className="col-lg-4">
                           <label className="form-label fw-bold text-dark fs-13">State</label>
-                          <input
+                          <IconFormControl
+                            fieldLabel="state"
                             type="text"
                             name="state"
-                            className={`form-control ${!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}`}
+                            className={!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}
+                            placeholder="Enter state"
                             value={formData.state}
                             onChange={handleInputChange}
                             disabled={!isEditing}
@@ -355,10 +367,12 @@ const PatientProfileSettings = () => {
                         </div>
                         <div className="col-lg-4">
                           <label className="form-label fw-bold text-dark fs-13">Pincode</label>
-                          <input
+                          <IconFormControl
+                            fieldLabel="pincode"
                             type="text"
                             name="pincode"
-                            className={`form-control ${!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}`}
+                            className={!isEditing ? 'bg-light border-transparent shadow-none cursor-default' : 'bg-white'}
+                            placeholder="Enter pincode"
                             value={formData.pincode}
                             onChange={handleInputChange}
                             disabled={!isEditing}

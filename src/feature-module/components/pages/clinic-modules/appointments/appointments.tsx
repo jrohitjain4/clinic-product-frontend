@@ -18,6 +18,9 @@ import { apiDelete, authHeaders } from "../../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
 import AppointmentPrintSlip from "./AppointmentPrintSlip";
 
+const getInitial = (value?: string) =>
+  (value || "").trim().charAt(0).toUpperCase() || "?";
+
 const Appointments = () => {
   const customSelectStyles = `
     .custom-select-header .ant-select-selector {
@@ -634,7 +637,7 @@ const Appointments = () => {
 
   const columns = [
     {
-      title: "Sr / Queue",
+      title: "# / Queue",
       dataIndex: "SrNo",
       render: (text: number, record: any) => {
         const isSlotBooking = !!(record._raw.doctor?.appointmentDuration && record._raw.doctor?.maxBookingsPerSlot);
@@ -653,9 +656,17 @@ const Appointments = () => {
         const dateStr = record._raw.scheduledAt ? dayjs(record._raw.scheduledAt).format("DD MMM YYYY") : "—";
         const timeStr = record._raw.scheduledAt ? dayjs(record._raw.scheduledAt).format("hh:mm A") : "";
         return (
-          <div className="d-flex flex-column" style={{ lineHeight: '1.2' }}>
-            <span className="fw-medium text-dark text-nowrap">{dateStr}</span>
-            {timeStr && <span className="text-muted fs-11 mt-1 text-nowrap">{timeStr}</span>}
+          <div className="d-flex flex-column gap-1">
+            <div className="d-flex align-items-center fw-bold text-dark fs-13">
+              <i className="ti ti-calendar-event me-2 text-primary fs-16"></i>
+              {dateStr}
+            </div>
+            {timeStr && (
+              <div className="d-flex align-items-center text-muted fs-12 fw-medium">
+                <i className="ti ti-clock me-2 fs-16"></i>
+                {timeStr}
+              </div>
+            )}
           </div>
         );
       },
@@ -664,7 +675,12 @@ const Appointments = () => {
     {
       title: "Expected Time",
       dataIndex: "expectedTime",
-      render: (text: string) => <span className="fw-bold text-dark">{text}</span>,
+      render: (text: string) => (
+        <div className="d-flex align-items-center fw-bold text-dark fs-13">
+          <i className="ti ti-clock me-2 text-muted fs-16"></i>
+          {text || "—"}
+        </div>
+      ),
     },
     {
       title: "Patient",
@@ -672,7 +688,17 @@ const Appointments = () => {
       render: (text: string, record: any) => (
         <div className="d-flex align-items-center">
           <Link to={all_routes.patientDetails.replace(":id", record._raw.patientId)} className="avatar avatar-md me-2">
-            <ImageWithBasePath src={record.Patient_Image} alt="Patient" className="rounded-circle" />
+            <span
+              className="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white"
+              style={{
+                width: "38px",
+                height: "38px",
+                background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                fontSize: "15px",
+              }}
+            >
+              {getInitial(text)}
+            </span>
           </Link>
           <div className="lh-1">
             <Link to={all_routes.patientDetails.replace(":id", record._raw.patientId)} className="text-dark fw-bold d-block mb-1 fs-13 text-nowrap">{text}</Link>
@@ -693,36 +719,54 @@ const Appointments = () => {
         </div>
       ),
     },
-    { title: "Mode", dataIndex: "Mode" },
+    { 
+      title: "Mode", 
+      dataIndex: "Mode",
+      render: (text: string) => {
+        const isOnline = (text || "").toLowerCase() === "online";
+        return (
+          <div className="d-flex align-items-center fw-bold text-dark fs-13">
+            <i className={`${isOnline ? 'ti ti-world' : 'ti ti-walk'} me-2 fs-18`} style={{ color: '#6610f2' }}></i>
+            {text || "—"}
+          </div>
+        );
+      }
+    },
     {
       title: "Status",
       dataIndex: "Status",
       render: (text: string, record: any) => {
         const raw = record._raw;
+        const s = (text || "").toLowerCase();
+        let bg = "#f8f9fa", color = "#6c757d", icon = "ti ti-point";
+        if (s.includes("completed")) { bg = "#e6f8ef"; color = "#198754"; icon = "ti ti-circle-check"; }
+        else if (s.includes("confirmed")) { bg = "#f0eaff"; color = "#6610f2"; icon = "ti ti-circle-check"; }
+        else if (s.includes("checked out")) { bg = "#e8f3ff"; color = "#0d6efd"; icon = "ti ti-circle-check"; }
+        else if (s.includes("checked in")) { bg = "#fff3cd"; color = "#fd7e14"; icon = "ti ti-clock"; }
+        else if (s.includes("cancel")) { bg = "#fdeded"; color = "#dc3545"; icon = "ti ti-circle-x"; }
+
         return (
           <div className="d-flex flex-column align-items-start gap-1">
-            <span className={`badge ${statusBadgeClass(text)} `}>{text}</span>
+            <span className="badge px-3 py-2 rounded-pill d-flex align-items-center gap-1" style={{ backgroundColor: bg, color: color, fontWeight: 600, fontSize: '12px' }}>
+              <i className={`${icon} fs-14`}></i> {text}
+            </span>
             {["Schedule", "Confirmed", "Checked In"].includes(text) && (
-              <div className="form-check form-switch p-0 ms-2" style={{ minHeight: 'auto' }}>
+              <div className="form-check form-switch p-0 ms-1 mt-1" style={{ minHeight: "auto" }}>
                 <input
                   className="form-check-input ms-0"
                   type="checkbox"
                   role="switch"
                   checked={togglingId === raw.id}
                   onChange={() => handleStatusToggle(raw.id, text)}
-                  style={{ cursor: 'pointer', width: '30px', height: '16px' }}
+                  style={{ cursor: "pointer", width: "30px", height: "16px" }}
                 />
-                <label className="text-black fw-bold small ms-1" style={{ fontSize: '10px' }}>
+                <label className="text-black fw-bold small ms-1" style={{ fontSize: "10px" }}>
                   {text === "Schedule" ? "Confirm" : text === "Confirmed" ? "Checkin" : "Checkout"}
                 </label>
               </div>
             )}
             {raw?.isFollowUp && (
-              <div className="mt-1">
-                <span className="text-muted fw-bold" style={{ fontSize: '10px' }}>
-                  {raw.followUpStatus || "Follow-up"}
-                </span>
-              </div>
+              <div className="mt-1 ms-1 text-muted fw-medium fs-11">Free Follow-up</div>
             )}
           </div>
         );
@@ -736,9 +780,21 @@ const Appointments = () => {
       align: "center" as const,
       render: (_: any, record: any) => (
         <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
-          <Link to={all_routes.appointmentDetails.replace(":id", record._raw.id)} className="text-info p-1" title="View"><i className="ti ti-eye fs-18" /></Link>
-          <button className="bg-transparent border-0 text-secondary p-1" onClick={() => handlePrintAppointment(record._raw)} title="Print"><i className="ti ti-printer fs-18" /></button>
-          <button className="bg-transparent border-0 text-danger p-1" data-bs-toggle="modal" data-bs-target="#delete_appointment_modal" onClick={() => setSelected(record._raw)} title="Delete"><i className="ti ti-trash fs-18" /></button>
+          <Link to={all_routes.appointmentDetails.replace(":id", record._raw.id)} className="text-primary p-1" title="View Details">
+            <i className="ti ti-eye fs-18" />
+          </Link>
+          <button className="bg-transparent border-0 text-info p-1" onClick={() => handlePrintAppointment(record._raw)} title="Print">
+            <i className="ti ti-printer fs-18" />
+          </button>
+          <button
+            className="bg-transparent border-0 text-danger p-1"
+            data-bs-toggle="modal"
+            data-bs-target="#delete_appointment_modal"
+            onClick={() => setSelected(record._raw)}
+            title="Delete"
+          >
+            <i className="ti ti-trash fs-18" />
+          </button>
         </div>
       )
     }
@@ -836,7 +892,7 @@ const Appointments = () => {
             </Link>
           </div>
 
-          <div className="table-responsive border rounded bg-white compact-table">
+          <div className="table-responsive rounded bg-white compact-table" style={{ border: "none", borderRadius: "12px", boxShadow: "none" }}>
             <Datatable
               columns={columns}
               dataSource={filteredData}
@@ -975,3 +1031,5 @@ const Appointments = () => {
 };
 
 export default Appointments;
+
+

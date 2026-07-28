@@ -1,13 +1,17 @@
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { City, Country, State } from "../../../../../core/common/selectOption";
-import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import { all_routes } from "../../../../routes/all_routes";
 import { useEffect, useState, useMemo } from "react";
 import { useClinicDoctors } from "../../../../../core/hooks/useClinicDoctors";
 import DoctorProfileUpload from "../../../../../core/common/doctor-profile-upload/DoctorProfileUpload";
 import { toast } from "react-toastify";
 import { apiUrl } from "../../../../../core/config/api";
+import {
+  IconFormControl,
+  IconSelect,
+  IconTextarea,
+} from "../../../../../core/common/form-fields";
 
 const DoctorsProfileSettings = () => {
   const [user, setUser] = useState<any>(null);
@@ -213,27 +217,27 @@ const DoctorsProfileSettings = () => {
 
                         <div className="col-lg-6">
                           <label className="form-label">First Name <span className="text-danger">*</span></label>
-                          <input type="text" className="form-control" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} disabled={!isEditing} />
+                          <IconFormControl fieldLabel="First Name" type="text" placeholder="Enter first name" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} disabled={!isEditing} />
                         </div>
                         <div className="col-lg-6">
                           <label className="form-label">Last Name <span className="text-danger">*</span></label>
-                          <input type="text" className="form-control" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} disabled={!isEditing} />
+                          <IconFormControl fieldLabel="Last Name" type="text" placeholder="Enter last name" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} disabled={!isEditing} />
                         </div>
                         <div className="col-lg-6">
                           <label className="form-label">Email <span className="text-danger">*</span></label>
-                          <input type="email" className="form-control" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} disabled={!isEditing} />
+                          <IconFormControl fieldLabel="Email" type="email" placeholder="Enter email address" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} disabled={!isEditing} />
                         </div>
                         <div className="col-lg-6">
                           <label className="form-label">Phone Number <span className="text-danger">*</span></label>
-                          <input type="text" className="form-control" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} disabled={!isEditing} />
+                          <IconFormControl fieldLabel="Phone Number" type="text" placeholder="Enter phone number" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} disabled={!isEditing} />
                         </div>
                         <div className="col-lg-6">
                           <label className="form-label">Years of Experience</label>
-                          <input type="number" className="form-control" value={formData.yearOfExperience} onChange={(e) => setFormData({ ...formData, yearOfExperience: e.target.value })} disabled={!isEditing} />
+                          <IconFormControl fieldLabel="Years of Experience" type="number" placeholder="Enter years of experience" value={formData.yearOfExperience} onChange={(e) => setFormData({ ...formData, yearOfExperience: e.target.value })} disabled={!isEditing} />
                         </div>
                         <div className="col-lg-12">
                           <label className="form-label">Bio (Brief Summary)</label>
-                          <textarea className="form-control" rows={3} value={formData.bio} onChange={(e) => setFormData({ ...formData, bio: e.target.value })} disabled={!isEditing}></textarea>
+                          <IconTextarea fieldLabel="Bio" placeholder="Enter brief summary" rows={3} value={formData.bio} onChange={(e) => setFormData({ ...formData, bio: e.target.value })} disabled={!isEditing} />
                         </div>
                       </div>
                     </div>
@@ -244,15 +248,16 @@ const DoctorsProfileSettings = () => {
                       <div className="row g-3 border-bottom pb-4 mb-4">
                         <div className="col-lg-6">
                           <label className="form-label">Address Line 1</label>
-                          <input type="text" className="form-control" value={formData.address1} onChange={(e) => setFormData({ ...formData, address1: e.target.value })} disabled={!isEditing} />
+                          <IconFormControl fieldLabel="Address 1" type="text" placeholder="Enter address line 1" value={formData.address1} onChange={(e) => setFormData({ ...formData, address1: e.target.value })} disabled={!isEditing} />
                         </div>
                         <div className="col-lg-6">
                           <label className="form-label">Address Line 2</label>
-                          <input type="text" className="form-control" value={formData.address2} onChange={(e) => setFormData({ ...formData, address2: e.target.value })} disabled={!isEditing} />
+                          <IconFormControl fieldLabel="Address 2" type="text" placeholder="Enter address line 2" value={formData.address2} onChange={(e) => setFormData({ ...formData, address2: e.target.value })} disabled={!isEditing} />
                         </div>
                         <div className="col-lg-6">
                           <label className="form-label">Country</label>
-                          <CommonSelect
+                          <IconSelect
+                            fieldLabel="Country"
                             options={Country}
                             className="select"
                             value={Country.find(c => c.value === formData.country) || Country[0]}
@@ -262,7 +267,8 @@ const DoctorsProfileSettings = () => {
                         </div>
                         <div className="col-lg-6">
                           <label className="form-label">State</label>
-                          <CommonSelect
+                          <IconSelect
+                            fieldLabel="State"
                             options={State}
                             className="select"
                             value={State.find(s => s.value === formData.state) || State[0]}
@@ -272,7 +278,8 @@ const DoctorsProfileSettings = () => {
                         </div>
                         <div className="col-lg-6">
                           <label className="form-label">City</label>
-                          <CommonSelect
+                          <IconSelect
+                            fieldLabel="City"
                             options={City}
                             className="select"
                             value={City.find(c => c.value === formData.city) || City[0]}
@@ -282,7 +289,7 @@ const DoctorsProfileSettings = () => {
                         </div>
                         <div className="col-lg-6">
                           <label className="form-label">Pincode</label>
-                          <input type="text" className="form-control" value={formData.pincode} onChange={(e) => setFormData({ ...formData, pincode: e.target.value })} disabled={!isEditing} />
+                          <IconFormControl fieldLabel="Pincode" type="text" placeholder="Enter pincode" value={formData.pincode} onChange={(e) => setFormData({ ...formData, pincode: e.target.value })} disabled={!isEditing} />
                         </div>
                       </div>
                     </div>
@@ -303,7 +310,7 @@ const DoctorsProfileSettings = () => {
                             <div className="row g-2 align-items-end">
                               <div className="col-lg-4">
                                 <label className="form-label fs-12">Degree</label>
-                                <input type="text" className="form-control form-control-sm" value={edu.degree} onChange={(e) => {
+                                <IconFormControl fieldLabel="Degree" type="text" className="form-control-sm" placeholder="Enter degree" value={edu.degree} onChange={(e) => {
                                   const updated = [...formData.educations];
                                   updated[idx].degree = e.target.value;
                                   setFormData({ ...formData, educations: updated });
@@ -311,7 +318,7 @@ const DoctorsProfileSettings = () => {
                               </div>
                               <div className="col-lg-4">
                                 <label className="form-label fs-12">College / University</label>
-                                <input type="text" className="form-control form-control-sm" value={edu.college} onChange={(e) => {
+                                <IconFormControl fieldLabel="College" type="text" className="form-control-sm" placeholder="Enter college / university" value={edu.college} onChange={(e) => {
                                   const updated = [...formData.educations];
                                   updated[idx].college = e.target.value;
                                   setFormData({ ...formData, educations: updated });
@@ -319,7 +326,7 @@ const DoctorsProfileSettings = () => {
                               </div>
                               <div className="col-lg-3">
                                 <label className="form-label fs-12">Year</label>
-                                <input type="text" className="form-control form-control-sm" value={edu.year} onChange={(e) => {
+                                <IconFormControl fieldLabel="Year" type="text" className="form-control-sm" placeholder="Enter year" value={edu.year} onChange={(e) => {
                                   const updated = [...formData.educations];
                                   updated[idx].year = e.target.value;
                                   setFormData({ ...formData, educations: updated });
@@ -355,7 +362,7 @@ const DoctorsProfileSettings = () => {
                             <div className="row g-2 align-items-end">
                               <div className="col-lg-7">
                                 <label className="form-label fs-12">Certification Name</label>
-                                <input type="text" className="form-control form-control-sm" value={cert.name} onChange={(e) => {
+                                <IconFormControl fieldLabel="Certification Name" type="text" className="form-control-sm" placeholder="Enter certification name" value={cert.name} onChange={(e) => {
                                   const updated = [...formData.certifications];
                                   updated[idx].name = e.target.value;
                                   setFormData({ ...formData, certifications: updated });
@@ -363,7 +370,7 @@ const DoctorsProfileSettings = () => {
                               </div>
                               <div className="col-lg-4">
                                 <label className="form-label fs-12">Year</label>
-                                <input type="text" className="form-control form-control-sm" value={cert.year} onChange={(e) => {
+                                <IconFormControl fieldLabel="Year" type="text" className="form-control-sm" placeholder="Enter year" value={cert.year} onChange={(e) => {
                                   const updated = [...formData.certifications];
                                   updated[idx].year = e.target.value;
                                   setFormData({ ...formData, certifications: updated });
@@ -389,11 +396,11 @@ const DoctorsProfileSettings = () => {
                       <div className="row g-3 border-bottom pb-4 mb-4">
                         <div className="col-lg-6">
                           <label className="form-label">Consultation Duration (Mins)</label>
-                          <input type="number" className="form-control" value={formData.appointmentDuration} onChange={(e) => setFormData({ ...formData, appointmentDuration: e.target.value })} disabled={!isEditing} />
+                          <IconFormControl fieldLabel="Consultation Duration" type="number" placeholder="Enter consultation duration" value={formData.appointmentDuration} onChange={(e) => setFormData({ ...formData, appointmentDuration: e.target.value })} disabled={!isEditing} />
                         </div>
                         <div className="col-lg-6">
                           <label className="form-label">Consultation Fee (₹)</label>
-                          <input type="number" className="form-control" value={formData.consultationCharge} onChange={(e) => setFormData({ ...formData, consultationCharge: e.target.value })} disabled={!isEditing} />
+                          <IconFormControl fieldLabel="Consultation Fee" type="number" placeholder="Enter consultation fee" value={formData.consultationCharge} onChange={(e) => setFormData({ ...formData, consultationCharge: e.target.value })} disabled={!isEditing} />
                         </div>
                       </div>
                     </div>
@@ -420,11 +427,11 @@ const DoctorsProfileSettings = () => {
                           <>
                             <div className="col-lg-6 mt-3">
                               <label className="form-label">Follow-up Validity (Days)</label>
-                              <input type="number" className="form-control" value={formData.followUpValidityDays} onChange={(e) => setFormData({ ...formData, followUpValidityDays: e.target.value })} disabled={!isEditing} />
+                              <IconFormControl fieldLabel="Follow-up Validity" type="number" placeholder="Enter follow-up validity" value={formData.followUpValidityDays} onChange={(e) => setFormData({ ...formData, followUpValidityDays: e.target.value })} disabled={!isEditing} />
                             </div>
                             <div className="col-lg-6 mt-3">
                               <label className="form-label">Follow-up Fee (₹)</label>
-                              <input type="number" className="form-control" value={formData.followUpFee} onChange={(e) => setFormData({ ...formData, followUpFee: e.target.value })} disabled={!isEditing} />
+                              <IconFormControl fieldLabel="Follow-up Fee" type="number" placeholder="Enter follow-up fee" value={formData.followUpFee} onChange={(e) => setFormData({ ...formData, followUpFee: e.target.value })} disabled={!isEditing} />
                             </div>
                           </>
                         )}

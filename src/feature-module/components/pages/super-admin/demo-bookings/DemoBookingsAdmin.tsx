@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
-import { IconFormControl } from "../../../../core/common/form-fields";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -179,7 +179,7 @@ const DemoBookingsAdmin = () => {
                                 style={{ height: '38px', width: '220px', borderRadius: '6px', fontSize: '13px' }}
                                 placeholder="Search bookings..."
                                 value={searchText}
-                                onChange={(e) => setSearchText(e.target.value)}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
                             />
                         </div>
                     </div>

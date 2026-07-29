@@ -925,7 +925,7 @@ const PatientDetails = () => {
   }, 0);
 
   const isActivePatient =
-    patient.status === "Active" || statusLabel === "Available" || statusLabel === "Active";
+    patient.status === "Active" || statusLabel === "Available";
 
   const metaParts = [
     patient.patientCode ? `P#${patient.patientCode}` : null,

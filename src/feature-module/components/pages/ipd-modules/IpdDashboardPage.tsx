@@ -171,15 +171,266 @@ const IpdDashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="page-wrapper">
+    <div className="page-wrapper ipd-dashboard-wrapper">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        .ipd-dashboard-wrapper {
+          background-color: #F8FAFC !important;
+          min-height: 100vh;
+          font-family: 'Inter', sans-serif;
+          color: #0f172a;
+        }
+        .ipd-dashboard-wrapper .content {
+          background: transparent !important;
+          padding: 32px 32px 20px 32px !important;
+          max-width: 1600px;
+          margin: 0 auto;
+        }
+
+        /* Premium Hero Cards */
+        .ipd-dashboard-wrapper .hero-card {
+          background: #ffffff;
+          border: 1px solid rgba(226, 232, 240, 0.8);
+          border-radius: 20px;
+          padding: 24px;
+          position: relative;
+          overflow: hidden;
+          box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 0 3px rgba(0,0,0,0.02);
+          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          width: 100%;
+          height: 100%;
+        }
+        .ipd-dashboard-wrapper .hero-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.06), 0 4px 8px -2px rgba(0,0,0,0.04);
+          border-color: rgba(203, 213, 225, 1);
+        }
+        .ipd-dashboard-wrapper .hero-card-bg-glow {
+          position: absolute;
+          top: -20px;
+          right: -20px;
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          filter: blur(40px);
+          opacity: 0.15;
+          z-index: 0;
+          pointer-events: none;
+        }
+        .ipd-dashboard-wrapper .hero-icon-box {
+          width: 48px;
+          height: 48px;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          z-index: 1;
+          position: relative;
+          box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .ipd-dashboard-wrapper .hero-val {
+          font-size: 36px;
+          font-weight: 800;
+          letter-spacing: -1px;
+          color: #0f172a;
+          margin-top: 16px;
+          margin-bottom: 4px;
+          z-index: 1;
+          position: relative;
+          line-height: 1.1;
+        }
+        .ipd-dashboard-wrapper .hero-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          z-index: 1;
+          position: relative;
+        }
+        .ipd-dashboard-wrapper .hero-sub {
+          font-size: 12px;
+          font-weight: 500;
+          margin-top: 8px;
+          z-index: 1;
+          position: relative;
+        }
+
+        /* Analytics Cards */
+        .ipd-dashboard-wrapper .analytic-card {
+          background: #ffffff;
+          border: 1px solid rgba(226, 232, 240, 0.8);
+          border-radius: 20px;
+          box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+          margin-bottom: 24px;
+          overflow: hidden;
+          transition: all 0.3s ease;
+        }
+        .ipd-dashboard-wrapper .analytic-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.06), 0 4px 8px -2px rgba(0,0,0,0.04);
+          border-color: rgba(203, 213, 225, 1);
+        }
+        .ipd-dashboard-wrapper .analytic-card-header {
+          padding: 20px 24px;
+          border-bottom: 1px solid rgba(241, 245, 249, 1);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: #ffffff;
+        }
+        .ipd-dashboard-wrapper .analytic-card-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: #0f172a;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .ipd-dashboard-wrapper .analytic-card-body {
+          padding: 24px;
+        }
+        .ipd-dashboard-wrapper .analytic-card-footer {
+          padding: 16px 24px;
+          border-top: 1px solid rgba(241, 245, 249, 1);
+          background: #ffffff;
+        }
+        .ipd-dashboard-wrapper .dash-h-icon {
+          width: 34px; height: 34px; border-radius: 10px;
+          display: inline-flex; align-items: center; justify-content: center;
+          font-size: 18px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        /* Buttons */
+        .ipd-dashboard-wrapper .btn-premium {
+          background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+          color: white !important;
+          border: none !important;
+          box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+          font-weight: 600 !important;
+          padding: 8px 16px !important;
+          border-radius: 10px !important;
+          transition: all 0.3s ease !important;
+          font-size: 13px !important;
+        }
+        .ipd-dashboard-wrapper .btn-premium:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35) !important;
+          color: white !important;
+        }
+        .ipd-dashboard-wrapper .btn-primary {
+          background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+          border: none !important;
+          box-shadow: 0 6px 16px rgba(79, 70, 229, 0.25) !important;
+          transition: all 0.2s ease;
+        }
+        .ipd-dashboard-wrapper .btn-primary:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35) !important;
+        }
+        .ipd-dashboard-wrapper .btn-outline-primary {
+          border-color: #c7d2fe !important;
+          color: #4f46e5 !important;
+          font-weight: 600 !important;
+          border-radius: 10px !important;
+          transition: all 0.2s ease;
+        }
+        .ipd-dashboard-wrapper .btn-outline-primary:hover {
+          background: #eef2ff !important;
+          border-color: #a5b4fc !important;
+          color: #4338ca !important;
+        }
+        .ipd-dashboard-wrapper .btn-outline-secondary {
+          border-color: #e2e8f0 !important;
+          color: #475569 !important;
+          font-weight: 600 !important;
+          border-radius: 10px !important;
+          background: #ffffff !important;
+        }
+        .ipd-dashboard-wrapper .btn-outline-secondary:hover {
+          background: #f8fafc !important;
+          border-color: #cbd5e1 !important;
+        }
+        .ipd-dashboard-wrapper .btn-outline-success {
+          border-color: #a7f3d0 !important;
+          color: #059669 !important;
+          font-weight: 600 !important;
+          border-radius: 10px !important;
+        }
+        .ipd-dashboard-wrapper .btn-outline-success:hover {
+          background: #ecfdf5 !important;
+          border-color: #6ee7b7 !important;
+        }
+        .ipd-dashboard-wrapper .btn-link {
+          color: #4f46e5 !important;
+          font-weight: 600 !important;
+          transition: all 0.2s ease;
+        }
+        .ipd-dashboard-wrapper .btn-link:hover {
+          color: #3730a3 !important;
+          text-decoration: underline !important;
+        }
+        .ipd-dashboard-wrapper .btn-light.border {
+          border-radius: 12px !important;
+          border-color: #e2e8f0 !important;
+          background: #ffffff !important;
+          transition: all 0.2s ease;
+        }
+        .ipd-dashboard-wrapper .btn-light.border:hover {
+          background: #f8fafc !important;
+          border-color: #cbd5e1 !important;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+
+        /* Table polish */
+        .ipd-dashboard-wrapper .table thead th {
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.4px;
+          color: #64748b;
+          border-bottom-color: #f1f5f9 !important;
+          background: #f8fafc !important;
+        }
+        .ipd-dashboard-wrapper .table tbody td {
+          border-color: #f1f5f9 !important;
+          vertical-align: middle;
+        }
+        .ipd-dashboard-wrapper .table-hover tbody tr:hover {
+          background: #f8fafc !important;
+        }
+
+        /* Animations */
+        .ipd-dashboard-wrapper .fade-in-up {
+          animation: ipdFadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        @keyframes ipdFadeInUp {
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .ipd-dashboard-wrapper .delay-1 { animation-delay: 0.1s; }
+        .ipd-dashboard-wrapper .delay-2 { animation-delay: 0.2s; }
+        .ipd-dashboard-wrapper .delay-3 { animation-delay: 0.3s; }
+        .ipd-dashboard-wrapper .delay-4 { animation-delay: 0.4s; }
+      `}</style>
       <div className="content">
         {/* Page Header */}
-        <div className="d-md-flex d-block align-items-center justify-content-between mb-4">
+        <div className="d-md-flex d-block align-items-center justify-content-between mb-4 fade-in-up">
           <div>
-            <h3 className="page-title mb-1 fw-bold">IPD Dashboard</h3>
-            <p className="text-muted fs-13 mb-0">
+            <h1 className="fw-bold mb-1" style={{ fontSize: "32px", letterSpacing: "-0.5px", color: "#0f172a" }}>
+              IPD Dashboard
+            </h1>
+            <p className="mb-0" style={{ color: "#64748b", fontSize: "15px" }}>
               <i className="ti ti-clock me-1" />
-              Live In-Patient Department Overview &nbsp;Â·&nbsp;
+              Live In-Patient Department Overview &nbsp;·&nbsp;
               {new Date().toLocaleTimeString("en-IN")}
             </p>
           </div>
@@ -188,7 +439,7 @@ const IpdDashboardPage: React.FC = () => {
               <i className={`ti ti-refresh me-1`} />
               Refresh
             </button>
-            <Link to={all_routes.ipdAdmissions} className="btn btn-primary btn-sm">
+            <Link to={all_routes.ipdAdmissions} className="btn btn-premium btn-sm">
               <i className="ti ti-plus me-1" /> New Admission
             </Link>
             <Link to={all_routes.ipdWardManagement} className="btn btn-outline-primary btn-sm">
@@ -197,116 +448,106 @@ const IpdDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* â”€â”€ Stats Cards â”€â”€ */}
-        <div className="row g-3 mb-4">
+        {/* Stats Cards */}
+        <div className="row g-4 mb-4">
           {/* Active Inpatients */}
-          <div className="col-xl-3 col-sm-6 d-flex">
-            <div className="card flex-fill bg-white border-0 shadow-sm rounded-3">
-              <div className="card-body p-4">
-                <div className="d-flex align-items-center justify-content-between">
-                  <div>
-                    <span className="text-muted fs-12 fw-medium d-block mb-1">Active Inpatients</span>
-                    <h2 className="mb-0 fw-bold text-dark" style={{ fontSize: "28px" }}>
-                      {loading ? "â€”" : stats.admitted}
-                    </h2>
-                    <span className={`fs-12 mt-2 d-block fw-medium ${stats.pendingSettlement > 0 ? "text-warning" : "text-success"}`}>
-                      {loading ? "" : stats.pendingSettlement > 0
-                        ? `${stats.pendingSettlement} with pending dues`
-                        : "All payments clear"}
-                    </span>
-                  </div>
-                  <div className="avatar avatar-xl rounded-3 bg-soft-primary text-primary d-flex align-items-center justify-content-center" style={{ width: "56px", height: "56px" }}>
-                    <i className="ti ti-bed fs-26" />
-                  </div>
+          <div className="col-xl-3 col-sm-6 d-flex fade-in-up delay-1">
+            <div className="hero-card">
+              <div className="hero-card-bg-glow" style={{ background: "#4f46e5" }}></div>
+              <div className="d-flex justify-content-between align-items-start">
+                <div className="hero-icon-box" style={{ background: "#e0e7ff", color: "#4f46e5" }}>
+                  <i className="ti ti-bed" />
+                </div>
+              </div>
+              <div>
+                <div className="hero-val">{loading ? "—" : stats.admitted}</div>
+                <div className="hero-title">Active Inpatients</div>
+                <div className={`hero-sub ${stats.pendingSettlement > 0 ? "text-warning" : "text-success"}`}>
+                  {loading ? "" : stats.pendingSettlement > 0
+                    ? `${stats.pendingSettlement} with pending dues`
+                    : "All payments clear"}
                 </div>
               </div>
             </div>
           </div>
 
           {/* Bed Occupancy */}
-          <div className="col-xl-3 col-sm-6 d-flex">
-            <div className="card flex-fill bg-white border-0 shadow-sm rounded-3">
-              <div className="card-body p-4">
-                <div className="d-flex align-items-center justify-content-between">
-                  <div>
-                    <span className="text-muted fs-12 fw-medium d-block mb-1">Bed Occupancy</span>
-                    <h2 className="mb-0 fw-bold text-dark" style={{ fontSize: "28px" }}>
-                      {loading ? "â€”" : `${stats.occupancyRate}%`}
-                    </h2>
-                    <span className="text-muted fs-12 mt-2 d-block">
-                      {loading ? "" : `${stats.occupiedBeds} / ${stats.totalBeds} beds Â· ${stats.freeBeds} free`}
-                    </span>
-                  </div>
-                  <div className="avatar avatar-xl rounded-3 bg-soft-warning text-warning d-flex align-items-center justify-content-center" style={{ width: "56px", height: "56px" }}>
-                    <i className="ti ti-building-community fs-26" />
-                  </div>
+          <div className="col-xl-3 col-sm-6 d-flex fade-in-up delay-2">
+            <div className="hero-card">
+              <div className="hero-card-bg-glow" style={{ background: "#f59e0b" }}></div>
+              <div className="d-flex justify-content-between align-items-start">
+                <div className="hero-icon-box" style={{ background: "#fef3c7", color: "#d97706" }}>
+                  <i className="ti ti-building-community" />
+                </div>
+              </div>
+              <div>
+                <div className="hero-val">{loading ? "—" : `${stats.occupancyRate}%`}</div>
+                <div className="hero-title">Bed Occupancy</div>
+                <div className="hero-sub text-muted">
+                  {loading ? "" : `${stats.occupiedBeds} / ${stats.totalBeds} beds · ${stats.freeBeds} free`}
                 </div>
               </div>
             </div>
           </div>
 
           {/* Discharges Today */}
-          <div className="col-xl-3 col-sm-6 d-flex">
-            <div className="card flex-fill bg-white border-0 shadow-sm rounded-3">
-              <div className="card-body p-4">
-                <div className="d-flex align-items-center justify-content-between">
-                  <div>
-                    <span className="text-muted fs-12 fw-medium d-block mb-1">Discharges Today</span>
-                    <h2 className="mb-0 fw-bold text-dark" style={{ fontSize: "28px" }}>
-                      {loading ? "â€”" : stats.dischargedToday}
-                    </h2>
-                    <span className="text-muted fs-12 mt-2 d-block">
-                      {loading ? "" : `${stats.discharged} total discharged overall`}
-                    </span>
-                  </div>
-                  <div className="avatar avatar-xl rounded-3 bg-soft-info text-info d-flex align-items-center justify-content-center" style={{ width: "56px", height: "56px" }}>
-                    <i className="ti ti-door-exit fs-26" />
-                  </div>
+          <div className="col-xl-3 col-sm-6 d-flex fade-in-up delay-3">
+            <div className="hero-card">
+              <div className="hero-card-bg-glow" style={{ background: "#0ea5e9" }}></div>
+              <div className="d-flex justify-content-between align-items-start">
+                <div className="hero-icon-box" style={{ background: "#e0f2fe", color: "#0284c7" }}>
+                  <i className="ti ti-door-exit" />
+                </div>
+              </div>
+              <div>
+                <div className="hero-val">{loading ? "—" : stats.dischargedToday}</div>
+                <div className="hero-title">Discharges Today</div>
+                <div className="hero-sub text-muted">
+                  {loading ? "" : `${stats.discharged} total discharged overall`}
                 </div>
               </div>
             </div>
           </div>
 
           {/* Revenue */}
-          <div className="col-xl-3 col-sm-6 d-flex">
-            <div className="card flex-fill bg-white border-0 shadow-sm rounded-3">
-              <div className="card-body p-4">
-                <div className="d-flex align-items-center justify-content-between">
-                  <div>
-                    <span className="text-muted fs-12 fw-medium d-block mb-1">Total IPD Revenue</span>
-                    <h2 className="mb-0 fw-bold text-dark" style={{ fontSize: "24px" }}>
-                      {loading ? "—" : formatINR(stats.totalRevenue)}
-                    </h2>
-                    <span className={`fs-12 mt-2 d-block fw-medium ${stats.totalDue > 0 ? "text-danger" : "text-success"}`}>
-                      {loading ? "" : stats.totalDue > 0
-                        ? `${formatINR(stats.totalDue)} outstanding`
-                        : "No dues pending"}
-                    </span>
-                  </div>
-                  <div className="avatar avatar-xl rounded-3 bg-soft-success text-success d-flex align-items-center justify-content-center" style={{ width: "56px", height: "56px" }}>
-                    <i className="ti ti-coin fs-26" />
-                  </div>
+          <div className="col-xl-3 col-sm-6 d-flex fade-in-up delay-4">
+            <div className="hero-card">
+              <div className="hero-card-bg-glow" style={{ background: "#10b981" }}></div>
+              <div className="d-flex justify-content-between align-items-start">
+                <div className="hero-icon-box" style={{ background: "#d1fae5", color: "#059669" }}>
+                  <i className="ti ti-coin" />
+                </div>
+              </div>
+              <div>
+                <div className="hero-val" style={{ fontSize: loading ? undefined : (formatINR(stats.totalRevenue).length > 8 ? "28px" : undefined) }}>
+                  {loading ? "—" : formatINR(stats.totalRevenue)}
+                </div>
+                <div className="hero-title">Total IPD Revenue</div>
+                <div className={`hero-sub ${stats.totalDue > 0 ? "text-danger" : "text-success"}`}>
+                  {loading ? "" : stats.totalDue > 0
+                    ? `${formatINR(stats.totalDue)} outstanding`
+                    : "No dues pending"}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* â”€â”€ Recent Admissions + Ward Occupancy â”€â”€ */}
-        <div className="row g-3">
+        {/* Recent Admissions + Ward Occupancy */}
+        <div className="row g-4">
           {/* Recent Admissions Table */}
-          <div className="col-lg-8">
-            <div className="card border-0 shadow-sm">
-              <div className="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between py-3">
-                <h5 className="card-title mb-0 fw-bold">
-                  <i className="ti ti-user-plus me-2 text-primary" />
+          <div className="col-lg-8 fade-in-up delay-2 d-flex">
+            <div className="analytic-card mb-0 h-100 w-100">
+              <div className="analytic-card-header">
+                <h3 className="analytic-card-title">
+                  <span className="dash-h-icon" style={{ background: "#e0e7ff", color: "#4f46e5" }}><i className="ti ti-user-plus" /></span>
                   Recent Admissions
-                </h5>
+                </h3>
                 <Link to={all_routes.ipdAdmissions} className="btn btn-link btn-sm text-primary p-0 fw-semibold">
                   View All <i className="ti ti-arrow-right ms-1" />
                 </Link>
               </div>
-              <div className="card-body p-0">
+              <div className="analytic-card-body p-0">
                 {loading ? (
                   <div className="text-center py-5">
                     <div className="spinner-border text-primary" role="status" />
@@ -357,8 +598,8 @@ const IpdDashboardPage: React.FC = () => {
                                   </div>
                                 </div>
                               </td>
-                              <td><span className="fs-13">{adm.ward?.wardName || "â€”"}</span></td>
-                              <td><span className="fs-13">{adm.doctor ? `Dr. ${adm.doctor.fullName}` : "â€”"}</span></td>
+                              <td><span className="fs-13">{adm.ward?.wardName || "—"}</span></td>
+                              <td><span className="fs-13">{adm.doctor ? `Dr. ${adm.doctor.fullName}` : "—"}</span></td>
                               <td>
                                 <span className="fs-13">
                                   {new Date(adm.admissionDate).toLocaleDateString("en-IN", {
@@ -394,15 +635,15 @@ const IpdDashboardPage: React.FC = () => {
           </div>
 
           {/* Ward Occupancy Panel */}
-          <div className="col-lg-4">
-            <div className="card border-0 shadow-sm h-100" style={{ display: "flex", flexDirection: "column" }}>
-              <div className="card-header bg-transparent border-bottom py-3">
-                <h5 className="card-title mb-0 fw-bold">
-                  <i className="ti ti-building-community me-2 text-warning" />
+          <div className="col-lg-4 fade-in-up delay-3">
+            <div className="analytic-card mb-0 h-100" style={{ display: "flex", flexDirection: "column" }}>
+              <div className="analytic-card-header">
+                <h3 className="analytic-card-title">
+                  <span className="dash-h-icon" style={{ background: "#fef3c7", color: "#d97706" }}><i className="ti ti-building-community" /></span>
                   Ward Occupancy
-                </h5>
+                </h3>
               </div>
-              <div className="card-body" style={{ overflowY: "auto", maxHeight: "360px", flex: 1 }}>
+              <div className="analytic-card-body" style={{ overflowY: "auto", maxHeight: "360px", flex: 1 }}>
                 {loading ? (
                   <div className="text-center py-4">
                     <div className="spinner-border spinner-border-sm text-warning" role="status" />
@@ -438,7 +679,7 @@ const IpdDashboardPage: React.FC = () => {
                   ))
                 )}
               </div>
-              <div className="card-footer bg-transparent border-top pt-3">
+              <div className="analytic-card-footer">
                 <div className="d-flex justify-content-between fs-12 text-muted mb-2">
                   <span><span className="badge bg-success me-1" style={{ width: "10px", height: "10px", borderRadius: "50%", display: "inline-block", padding: 0 }} />Available</span>
                   <span><span className="badge bg-warning me-1" style={{ width: "10px", height: "10px", borderRadius: "50%", display: "inline-block", padding: 0 }} />Filling up</span>
@@ -452,15 +693,18 @@ const IpdDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* â”€â”€ Bottom Row â”€â”€ */}
-        <div className="row g-3 mt-1">
+        {/* Bottom Row */}
+        <div className="row g-4 mt-1">
           {/* Bed Breakdown */}
-          <div className="col-md-4">
-            <div className="card border-0 shadow-sm">
-              <div className="card-header bg-transparent border-bottom py-3">
-                <h6 className="mb-0 fw-bold"><i className="ti ti-chart-bar me-2 text-info" />Occupancy Breakdown</h6>
+          <div className="col-md-4 fade-in-up delay-2">
+            <div className="analytic-card mb-0">
+              <div className="analytic-card-header">
+                <h3 className="analytic-card-title">
+                  <span className="dash-h-icon" style={{ background: "#ecfeff", color: "#0891b2" }}><i className="ti ti-chart-bar" /></span>
+                  Occupancy Breakdown
+                </h3>
               </div>
-              <div className="card-body">
+              <div className="analytic-card-body">
                 {loading ? (
                   <div className="text-center py-3"><div className="spinner-border spinner-border-sm text-info" role="status" /></div>
                 ) : (
@@ -484,12 +728,15 @@ const IpdDashboardPage: React.FC = () => {
           </div>
 
           {/* Revenue Overview */}
-          <div className="col-md-4">
-            <div className="card border-0 shadow-sm">
-              <div className="card-header bg-transparent border-bottom py-3">
-                <h6 className="mb-0 fw-bold"><i className="ti ti-cash me-2 text-success" />Revenue Overview</h6>
+          <div className="col-md-4 fade-in-up delay-3">
+            <div className="analytic-card mb-0">
+              <div className="analytic-card-header">
+                <h3 className="analytic-card-title">
+                  <span className="dash-h-icon" style={{ background: "#d1fae5", color: "#059669" }}><i className="ti ti-cash" /></span>
+                  Revenue Overview
+                </h3>
               </div>
-              <div className="card-body">
+              <div className="analytic-card-body">
                 {loading ? (
                   <div className="text-center py-3"><div className="spinner-border spinner-border-sm text-success" role="status" /></div>
                 ) : (
@@ -516,12 +763,15 @@ const IpdDashboardPage: React.FC = () => {
           </div>
 
           {/* Quick Navigation */}
-          <div className="col-md-4">
-            <div className="card border-0 shadow-sm">
-              <div className="card-header bg-transparent border-bottom py-3">
-                <h6 className="mb-0 fw-bold"><i className="ti ti-layout-grid me-2" />Quick Navigation</h6>
+          <div className="col-md-4 fade-in-up delay-4">
+            <div className="analytic-card mb-0">
+              <div className="analytic-card-header">
+                <h3 className="analytic-card-title">
+                  <span className="dash-h-icon" style={{ background: "#e0e7ff", color: "#4f46e5" }}><i className="ti ti-layout-grid" /></span>
+                  Quick Navigation
+                </h3>
               </div>
-              <div className="card-body p-3">
+              <div className="analytic-card-body p-3">
                 <div className="d-grid gap-2">
                   <Link to={all_routes.ipdAdmissions} className="btn btn-light border d-flex align-items-center gap-2 fw-semibold fs-13">
                     <i className="ti ti-user-plus text-primary fs-16" /> Admissions
@@ -552,4 +802,3 @@ const IpdDashboardPage: React.FC = () => {
 };
 
 export default IpdDashboardPage;
-

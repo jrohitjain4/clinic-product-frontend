@@ -299,6 +299,9 @@ const Sidebar = () => {
                                   }}
                                 >
                                   {title?.submenuItems?.filter((item: any) => {
+                                    if (user?.role === "STAFF") {
+                                      return canSeeMenuItem(item?.label, title?.label);
+                                    }
                                     if (user?.role === "ADMIN" || user?.role === "SUPER_ADMIN") {
                                       if (item.label === "Doctor Dashboard" || item.label === "Patient Dashboard") return false;
                                     } else if (user?.role === "DOCTOR") {

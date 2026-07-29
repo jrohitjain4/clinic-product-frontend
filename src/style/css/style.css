@@ -14600,13 +14600,25 @@ html[data-bs-theme=dark] #light-dark-mode .ti-moon::before {
   border: none;
 }
 .sidebar .sidebar-menu > ul li .submenu > ul li a.active {
-  color: var(--pr-menu-item-hover-color);
+  color: #ffffff !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-weight: 500;
 }
 .sidebar .sidebar-menu > ul li .submenu > ul li a.active::before {
-  opacity: 1;
+  opacity: 1 !important;
 }
 .sidebar .sidebar-menu > ul li .submenu > ul li a.active::after {
-  color: var(--pr-menu-item-hover-color);
+  display: flex !important;
+  opacity: 1 !important;
+  background-color: #0F172A !important;
+  color: #0F172A !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: none !important;
+  width: 10px;
+  height: 10px;
 }
 .sidebar .sidebar-menu > ul li .submenu > ul li a:hover {
   color: var(--pr-menu-item-hover-color);
@@ -14641,21 +14653,35 @@ html[data-bs-theme=dark] #light-dark-mode .ti-moon::before {
   justify-content: center;
 }
 .sidebar .sidebar-menu > ul li .submenu > a.subdrop {
-  color: var(--pr-menu-item-hover-color);
-  border-color: var(--pr-menu-item-border);
-  border-radius: 5px;
+  color: #0F172A !important;
+  background: #ffffff !important;
+  border-color: transparent;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
 }
 .sidebar .sidebar-menu > ul li .submenu > a.active {
-  border-radius: 5px;
-  border-color: var(--pr-menu-item-border);
-  box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.0509803922);
+  color: #0F172A !important;
+  background: #ffffff !important;
+  border-radius: 8px;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
 }
-.sidebar .sidebar-menu > ul li .submenu.submenu-two a.subdrop, .sidebar .sidebar-menu > ul li .submenu.submenu-two a.active {
+.sidebar .sidebar-menu > ul li .submenu > a.active span,
+.sidebar .sidebar-menu > ul li .submenu > a.subdrop span {
+  color: #0F172A !important;
+}
+.sidebar .sidebar-menu > ul li .submenu > a.active i,
+.sidebar .sidebar-menu > ul li .submenu > a.subdrop i {
+  color: #0F172A !important;
+}
+.sidebar .sidebar-menu > ul li .submenu.submenu-two > a.subdrop,
+.sidebar .sidebar-menu > ul li .submenu.submenu-two > a.active {
   background: transparent;
   color: var(--pr-menu-item-active-color);
   border: 0;
 }
-.sidebar .sidebar-menu > ul li .submenu.submenu-two a.subdrop .menu-arrow::before, .sidebar .sidebar-menu > ul li .submenu.submenu-two a.active .menu-arrow::before {
+.sidebar .sidebar-menu > ul li .submenu.submenu-two > a.subdrop .menu-arrow::before,
+.sidebar .sidebar-menu > ul li .submenu.submenu-two > a.active .menu-arrow::before {
   border-color: var(--pr-menu-item-active-color);
 }
 .sidebar .sidebar-menu > ul li .submenu.submenu-two ul {
@@ -27673,6 +27699,82 @@ img {
   transform: none !important;
 }
 .page-wrapper .card { border: 1px solid #94a3b8 !important; border-radius: 12px !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important; }
+
+/* Doctor Grid cards: no border, soft shadow (beats .page-wrapper .card) */
+.page-wrapper .card.doctor-grid-card {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  border-radius: 18px !important;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+}
+.page-wrapper .card.doctor-grid-card:hover {
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.14), 0 6px 16px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Patient View page: all cards no border + soft shadow */
+.page-wrapper.patient-details-page .card {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+}
+.page-wrapper.patient-details-page .card:hover {
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10) !important;
+}
+
+/* Nested sidebar items: black-dot active (no white badge) */
+.sidebar .sidebar-menu > ul li .submenu > ul > li > a.active,
+.sidebar .sidebar-menu > ul li .submenu > ul > li > a.active.subdrop,
+.sidebar .sidebar-menu > ul li .submenu.submenu-two > ul > li > a.active,
+.sidebar .sidebar-menu > ul li .submenu.submenu-two > ul > li > a.active.subdrop {
+  color: #ffffff !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-weight: 500 !important;
+}
+.sidebar .sidebar-menu > ul li .submenu > ul > li > a.active::before,
+.sidebar .sidebar-menu > ul li .submenu.submenu-two > ul > li > a.active::before {
+  opacity: 1 !important;
+  display: block !important;
+}
+.sidebar .sidebar-menu > ul li .submenu > ul > li > a.active::after,
+.sidebar .sidebar-menu > ul li .submenu.submenu-two > ul > li > a.active::after {
+  display: flex !important;
+  opacity: 1 !important;
+  background-color: #0F172A !important;
+  color: #0F172A !important;
+  border: 2px solid #ffffff !important;
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50% !important;
+  left: 16px !important;
+  box-shadow: none !important;
+}
+/* Mid-level open parents (Doctors under OPD): keep black-dot, no white badge */
+.sidebar .sidebar-menu > ul li .submenu.submenu-two > a.active,
+.sidebar .sidebar-menu > ul li .submenu.submenu-two > a.active.subdrop,
+.sidebar .sidebar-menu > ul li .submenu.submenu-two > a.subdrop {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  color: #ffffff !important;
+}
+.sidebar .sidebar-menu > ul li .submenu.submenu-two > a.active::after,
+.sidebar .sidebar-menu > ul li .submenu.submenu-two > a.subdrop::after {
+  display: flex !important;
+  opacity: 1 !important;
+  background-color: #0F172A !important;
+  border: 2px solid #ffffff !important;
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50% !important;
+}
 
 /* Force IconSelect (Department/Designation/etc.) to match form-control */
 .icon-select-wrap .react-select__control,

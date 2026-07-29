@@ -63,6 +63,25 @@ const DoctorsGrid = ({ doctors, loading, error, onRetry, onDelete }: DoctorsGrid
 
   return (
     <>
+      <style>{`
+        /* Must beat global: .page-wrapper .card { border: 1px solid #94a3b8 !important; } */
+        .page-wrapper .card.doctor-grid-card,
+        .page-wrapper .doctor-grid-card.card,
+        .page-wrapper .content .card.doctor-grid-card {
+          border: 0 !important;
+          border-width: 0 !important;
+          border-style: none !important;
+          border-color: transparent !important;
+          outline: none !important;
+          background: #ffffff !important;
+          border-radius: 18px !important;
+          box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+        }
+        .page-wrapper .card.doctor-grid-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 16px 40px rgba(15, 23, 42, 0.14), 0 6px 16px rgba(15, 23, 42, 0.08) !important;
+        }
+      `}</style>
       <div className="row g-2">
         {doctors.map((doctor, index) => {
           const img = doctor.profileImage || "assets/img/doctor-placeholder.png";
@@ -74,7 +93,18 @@ const DoctorsGrid = ({ doctors, loading, error, onRetry, onDelete }: DoctorsGrid
 
           return (
             <div key={doctor.id} className="col-xxl-3 col-xl-4 col-lg-6 col-md-6 mb-3">
-              <div className="card h-100 shadow-sm border-0 border-top border-3 border-primary transition-all doctor-grid-card">
+              <div
+                className="card h-100 border-0 doctor-grid-card"
+                style={{
+                  borderRadius: "18px",
+                  border: "none",
+                  outline: "none",
+                  background: "#ffffff",
+                  backgroundClip: "padding-box",
+                  boxShadow: "0 12px 32px rgba(15, 23, 42, 0.10), 0 3px 10px rgba(15, 23, 42, 0.05)",
+                  transition: "transform 0.25s ease, box-shadow 0.25s ease",
+                }}
+              >
                 <div className="card-body d-flex align-items-center flex-sm-nowrap flex-wrap row-gap-3 p-3">
                   <div className="me-2 ps-1">
                     <Link to={doctorDetailsPath(doctor.id)} className="d-block overflow-hidden rounded-circle border border-2 border-primary-light p-1" style={{ width: "100px", height: "100px" }}>

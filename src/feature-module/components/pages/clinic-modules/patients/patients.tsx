@@ -177,7 +177,7 @@ const Patients = () => {
               className="text-info p-1"
               title="Update Patient"
             >
-              <i className="ti ti-printer fs-18" />
+              <i className="ti ti-edit fs-18" />
             </Link>
           </HasPermission>
           <HasPermission module="Patients" action="DELETE">

@@ -128,6 +128,46 @@ export const hasAction = (perms: PermissionsMap, moduleName: string, action: str
 export const canSeeMenuItem = (label: string, sectionTitle?: string): boolean => {
     const perms = getStoredPermissions();
     if (perms === null) return true;
+
+    // Parent dropdown modules (Dashboard-style expandable items)
+    const parentModules: Record<string, string[]> = {
+        OPD: ["Doctors", "Patients", "Appointments", "Services"],
+        Clinic: ["Doctors", "Patients", "Appointments", "Services"],
+        IPD: [], // no staff permission modules yet — show to all staff
+        Diagnostic: [
+            "Diagnostic Dashboard",
+            "Category",
+            "Diagnostic Test",
+            "Diagnostic Booking",
+            "Invoice (Diagnostic)",
+        ],
+        Pharmacy: [
+            "Pharmacy Dashboard",
+            "Pharmacy Category",
+            "Medicine",
+            "Inventory",
+            "Pharmacy Billing",
+            "Sales History",
+        ],
+        HRM: [
+            "Staffs",
+            "Departments",
+            "Designation",
+            "Attendance",
+            "Leaves",
+            "Holidays",
+            "Payroll",
+            "Specializations",
+        ],
+        "Finance & Accounts": ["Expenses", "Invoices", "Transactions"],
+        Application: [],
+    };
+
+    if (label in parentModules) {
+        const modules = parentModules[label];
+        if (!modules.length) return true;
+        return modules.some((m) => hasModuleAccess(perms, m));
+    }
     
     let lookupLabel = label;
     if (label === "Dashboard" && sectionTitle === "Diagnostic") {
@@ -172,11 +212,41 @@ export const canSeeSection = (sectionTitle: string): boolean => {
     if (sectionTitle === "Super Admin" || sectionTitle === "Administration") return false;
 
     const sectionModules: Record<string, string[]> = {
-        "Clinic": ["Doctors", "Patients", "Appointments", "Services"],
-        "HRM": ["Staffs", "Departments", "Designation", "Attendance", "Leaves", "Holidays", "Payroll", "Specializations"],
+        "Main Menu": [
+            "Dashboard",
+            "Doctors",
+            "Patients",
+            "Appointments",
+            "Services",
+            "Diagnostic Dashboard",
+            "Category",
+            "Diagnostic Test",
+            "Diagnostic Booking",
+            "Invoice (Diagnostic)",
+            "Pharmacy Dashboard",
+            "Pharmacy Category",
+            "Medicine",
+            "Inventory",
+            "Pharmacy Billing",
+            "Sales History",
+            "Staffs",
+            "Departments",
+            "Designation",
+            "Attendance",
+            "Leaves",
+            "Holidays",
+            "Payroll",
+            "Specializations",
+            "Expenses",
+            "Invoices",
+            "Transactions",
+        ],
+        OPD: ["Doctors", "Patients", "Appointments", "Services"],
+        Clinic: ["Doctors", "Patients", "Appointments", "Services"],
+        HRM: ["Staffs", "Departments", "Designation", "Attendance", "Leaves", "Holidays", "Payroll", "Specializations"],
         "Finance & Accounts": ["Expenses", "Invoices", "Transactions"],
-        "Diagnostic": ["Diagnostic Dashboard", "Category", "Diagnostic Test", "Diagnostic Booking", "Invoice (Diagnostic)"],
-        "Pharmacy": ["Pharmacy Dashboard", "Pharmacy Category", "Medicine", "Inventory", "Pharmacy Billing", "Sales History"],
+        Diagnostic: ["Diagnostic Dashboard", "Category", "Diagnostic Test", "Diagnostic Booking", "Invoice (Diagnostic)"],
+        Pharmacy: ["Pharmacy Dashboard", "Pharmacy Category", "Medicine", "Inventory", "Pharmacy Billing", "Sales History"],
     };
 
     const modules = sectionModules[sectionTitle];

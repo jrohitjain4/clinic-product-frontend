@@ -46,12 +46,183 @@ const PatientDashboard = () => {
   const recentAppointments = appointments?.slice(0, 5) || [];
 
   const localStyles = `
-    .patient-dashboard-wrapper .card {
-      margin-bottom: 12px !important;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    .patient-dashboard-wrapper {
+      background-color: #F8FAFC !important;
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      color: #0f172a;
     }
-    .patient-dashboard-wrapper .card-body .mb-3 {
-      margin-bottom: 10px !important;
+    .patient-dashboard-wrapper .content {
+      background: transparent !important;
+      padding: 32px 32px 20px 32px !important;
+      max-width: 1600px;
+      margin: 0 auto;
     }
+    /* Premium Hero Cards */
+    .patient-dashboard-wrapper .hero-card {
+      background: #ffffff;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 0 3px rgba(0,0,0,0.02);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      width: 100%;
+    }
+    .patient-dashboard-wrapper .hero-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.06), 0 4px 8px -2px rgba(0,0,0,0.04);
+      border-color: rgba(203, 213, 225, 1);
+    }
+    .patient-dashboard-wrapper .hero-card-bg-glow {
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0.15;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .patient-dashboard-wrapper .hero-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      z-index: 1;
+      position: relative;
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .patient-dashboard-wrapper .hero-val {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #0f172a;
+      margin-top: 16px;
+      margin-bottom: 4px;
+      z-index: 1;
+      position: relative;
+      line-height: 1.1;
+    }
+    .patient-dashboard-wrapper .hero-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      z-index: 1;
+      position: relative;
+    }
+    .patient-dashboard-wrapper .hero-sub {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 6px;
+      z-index: 1;
+      position: relative;
+    }
+
+    /* Analytics Cards */
+    .patient-dashboard-wrapper .analytic-card {
+      background: #ffffff;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      border-radius: 20px;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+      margin-bottom: 24px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      height: 100%;
+      width: 100%;
+    }
+    .patient-dashboard-wrapper .analytic-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.06), 0 4px 8px -2px rgba(0,0,0,0.04);
+      border-color: rgba(203, 213, 225, 1);
+    }
+    .patient-dashboard-wrapper .analytic-card-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(241, 245, 249, 1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+    }
+    .patient-dashboard-wrapper .analytic-card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .patient-dashboard-wrapper .analytic-card-body {
+      padding: 24px;
+    }
+
+    /* Buttons & Badges */
+    .patient-dashboard-wrapper .btn-premium {
+      background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+      color: white !important;
+      border: none !important;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+      font-weight: 600 !important;
+      padding: 10px 20px !important;
+      border-radius: 10px !important;
+      transition: all 0.3s ease !important;
+    }
+    .patient-dashboard-wrapper .btn-premium:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35) !important;
+    }
+    .patient-dashboard-wrapper .badge-trend {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      z-index: 1;
+      position: relative;
+    }
+    .patient-dashboard-wrapper .badge-trend.up { background: #dcfce7; color: #059669; }
+    .patient-dashboard-wrapper .badge-trend.down { background: #fee2e2; color: #e11d48; }
+    .patient-dashboard-wrapper .badge-soft {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      z-index: 1;
+      position: relative;
+    }
+
+    /* Animations */
+    .patient-dashboard-wrapper .fade-in-up {
+      animation: patientFadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    @keyframes patientFadeInUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .patient-dashboard-wrapper .delay-1 { animation-delay: 0.1s; }
+    .patient-dashboard-wrapper .delay-2 { animation-delay: 0.2s; }
+    .patient-dashboard-wrapper .delay-3 { animation-delay: 0.3s; }
+    .patient-dashboard-wrapper .delay-4 { animation-delay: 0.4s; }
   `;
 
   return (
@@ -63,214 +234,187 @@ const PatientDashboard = () => {
       <div className="page-wrapper patient-dashboard-wrapper">
         <div className="content pb-0">
           {/* Page Header */}
-          <div className="d-flex align-items-sm-center justify-content-between flex-wrap gap-2 mb-4">
+          <div className="d-flex align-items-sm-center justify-content-between flex-wrap gap-2 mb-4 fade-in-up">
             <div>
-              <h4 className="fw-bold mb-0">Patient Dashboard</h4>
+              <h4 className="fw-bold mb-1" style={{ fontSize: '32px', letterSpacing: '-0.5px', color: '#0f172a' }}>Patient Dashboard</h4>
+              <p className="mb-0" style={{ color: '#64748b', fontSize: '15px' }}>Welcome back to your health portal.</p>
             </div>
             <div className="d-flex align-items-center flex-wrap gap-2">
               <button
                 type="button"
-                className="btn btn-primary d-inline-flex align-items-center justify-content-center fw-semibold px-3 py-2 text-white shadow-sm"
+                className="btn-premium d-inline-flex align-items-center justify-content-center gap-2"
                 onClick={() => setShowAddAppointment(true)}
-                style={{ borderRadius: '8px', fontSize: '13px', minHeight: '38px', backgroundColor: '#3b82f6', borderColor: '#3b82f6' }}
               >
-                <i className="ti ti-plus ms-2 order-2" />
+                <i className="ti ti-plus" />
                 New Appointment
               </button>
             </div>
           </div>
           {/* End Page Header */}
           {/* row start */}
-          <div className="row g-2">
-            {/* col start */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
-              <div className="card flex-fill w-100 shadow-sm">
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#3b82f6' }}>
-                        <i className="ti ti-calendar-heart fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Total Appointments</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{totalAppointments}</h4>
-                      </div>
-                    </div>
-                    <span className="badge fw-semibold" style={{ color: '#10b981', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>+95%</span>
+          <div className="row g-4 mb-4">
+            {/* Total Appointments */}
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex fade-in-up delay-1">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#3b82f6' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#dbeafe', color: '#2563eb' }}>
+                    <i className="ti ti-calendar-heart" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>in last 7 Days</p>
+                  <span className="badge-trend up">+95%</span>
+                </div>
+                <div>
+                  <div className="hero-val">{totalAppointments}</div>
+                  <div className="hero-title">Total Appointments</div>
+                  <div className="hero-sub">in last 7 Days</div>
                 </div>
               </div>
             </div>
-            {/* col end */}
-            {/* col start */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
-              <div className="card flex-fill w-100 shadow-sm">
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#ef4444' }}>
-                        <i className="ti ti-building-hospital fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Total Clinics</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{totalClinics}</h4>
-                      </div>
-                    </div>
-                    <span className="badge fw-semibold" style={{ color: '#ef4444', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>-15%</span>
+            {/* Total Clinics */}
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex fade-in-up delay-2">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#ef4444' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#fef2f2', color: '#ef4444' }}>
+                    <i className="ti ti-building-hospital" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>in last 7 Days</p>
+                  <span className="badge-trend down">-15%</span>
+                </div>
+                <div>
+                  <div className="hero-val">{totalClinics}</div>
+                  <div className="hero-title">Total Clinics</div>
+                  <div className="hero-sub">in last 7 Days</div>
                 </div>
               </div>
             </div>
-            {/* col end */}
-            {/* col start */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
-              <div className="card flex-fill w-100 shadow-sm">
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#f59e0b' }}>
-                        <i className="ti ti-activity fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Blood Pressure</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{profile?.details?.vitals?.bp || "—"}</h4>
-                      </div>
-                    </div>
-                    {profile?.details?.vitals?.bp && (
-                      <span className="badge fw-semibold" style={{ color: '#f59e0b', backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Normal</span>
-                    )}
+            {/* Blood Pressure */}
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex fade-in-up delay-3">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#f59e0b' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#fffbeb', color: '#d97706' }}>
+                    <i className="ti ti-activity" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{profile?.details?.vitals?.bp ? "Last recorded vital sign" : "No vital data recorded"}</p>
+                  {profile?.details?.vitals?.bp && (
+                    <span className="badge-soft" style={{ color: '#f59e0b', backgroundColor: '#fffbeb', border: '1px solid #fde68a' }}>Normal</span>
+                  )}
+                </div>
+                <div>
+                  <div className="hero-val">{profile?.details?.vitals?.bp || "—"}</div>
+                  <div className="hero-title">Blood Pressure</div>
+                  <div className="hero-sub">{profile?.details?.vitals?.bp ? "Last recorded vital sign" : "No vital data recorded"}</div>
                 </div>
               </div>
             </div>
-            {/* col end */}
-            {/* col start */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
-              <div className="card flex-fill w-100 shadow-sm">
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#10b981' }}>
-                        <i className="ti ti-heartbeat fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Heart Rate</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>
-                          {profile?.details?.vitals?.heartRate ? `${profile.details.vitals.heartRate} bpm` : "—"}
-                        </h4>
-                      </div>
-                    </div>
-                    {profile?.details?.vitals?.heartRate && (
-                      <span className="badge fw-semibold" style={{ color: '#10b981', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Good</span>
-                    )}
+            {/* Heart Rate */}
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex fade-in-up delay-4">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#10b981' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#ecfdf5', color: '#059669' }}>
+                    <i className="ti ti-heartbeat" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{profile?.details?.vitals?.heartRate ? "Last recorded vital sign" : "No vital data recorded"}</p>
+                  {profile?.details?.vitals?.heartRate && (
+                    <span className="badge-soft" style={{ color: '#10b981', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0' }}>Good</span>
+                  )}
+                </div>
+                <div>
+                  <div className="hero-val">
+                    {profile?.details?.vitals?.heartRate ? `${profile.details.vitals.heartRate} bpm` : "—"}
+                  </div>
+                  <div className="hero-title">Heart Rate</div>
+                  <div className="hero-sub">{profile?.details?.vitals?.heartRate ? "Last recorded vital sign" : "No vital data recorded"}</div>
                 </div>
               </div>
             </div>
-            {/* col end */}
-            {/* col start */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
-              <div className="card flex-fill w-100 shadow-sm">
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#8b5cf6' }}>
-                        <i className="ti ti-stethoscope fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Total Doctors</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{doctors?.length || 0}</h4>
-                      </div>
-                    </div>
-                    <span className="badge fw-semibold" style={{ color: '#8b5cf6', backgroundColor: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Active</span>
+            {/* Total Doctors */}
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex fade-in-up delay-1">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#8b5cf6' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#f5f3ff', color: '#7c3aed' }}>
+                    <i className="ti ti-stethoscope" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Your consulted doctors</p>
+                  <span className="badge-soft" style={{ color: '#8b5cf6', backgroundColor: '#f5f3ff', border: '1px solid #ddd6fe' }}>Active</span>
+                </div>
+                <div>
+                  <div className="hero-val">{doctors?.length || 0}</div>
+                  <div className="hero-title">Total Doctors</div>
+                  <div className="hero-sub">Your consulted doctors</div>
                 </div>
               </div>
             </div>
-            {/* col end */}
-            {/* col start */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
-              <div className="card flex-fill w-100 shadow-sm">
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#14b8a6' }}>
-                        <i className="ti ti-prescription fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Prescriptions</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{prescriptions?.length || 0}</h4>
-                      </div>
-                    </div>
-                    <span className="badge fw-semibold" style={{ color: '#14b8a6', backgroundColor: '#f0fdfa', border: '1px solid #ccfbf1', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>New</span>
+            {/* Prescriptions */}
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex fade-in-up delay-2">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#14b8a6' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#f0fdfa', color: '#0d9488' }}>
+                    <i className="ti ti-prescription" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Total issued prescriptions</p>
+                  <span className="badge-soft" style={{ color: '#14b8a6', backgroundColor: '#f0fdfa', border: '1px solid #ccfbf1' }}>New</span>
+                </div>
+                <div>
+                  <div className="hero-val">{prescriptions?.length || 0}</div>
+                  <div className="hero-title">Prescriptions</div>
+                  <div className="hero-sub">Total issued prescriptions</div>
                 </div>
               </div>
             </div>
-            {/* col end */}
-            {/* col start */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
-              <div className="card flex-fill w-100 shadow-sm">
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#ec4899' }}>
-                        <i className="ti ti-file-invoice fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Total Invoices</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{invoices?.length || 0}</h4>
-                      </div>
-                    </div>
-                    <span className="badge fw-semibold" style={{ color: '#ec4899', backgroundColor: '#fdf2f8', border: '1px solid #fbcfe8', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Paid</span>
+            {/* Total Invoices */}
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex fade-in-up delay-3">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#ec4899' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#fdf2f8', color: '#db2777' }}>
+                    <i className="ti ti-file-invoice" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>All billing records</p>
+                  <span className="badge-soft" style={{ color: '#ec4899', backgroundColor: '#fdf2f8', border: '1px solid #fbcfe8' }}>Paid</span>
+                </div>
+                <div>
+                  <div className="hero-val">{invoices?.length || 0}</div>
+                  <div className="hero-title">Total Invoices</div>
+                  <div className="hero-sub">All billing records</div>
                 </div>
               </div>
             </div>
-            {/* col end */}
-            {/* col start */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex">
-              <div className="card flex-fill w-100 shadow-sm">
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#0ea5e9' }}>
-                        <i className="ti ti-droplet fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Glucose Level</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>
-                          {profile?.details?.vitals?.glucose ? `${profile.details.vitals.glucose} mg/dl` : "—"}
-                        </h4>
-                      </div>
-                    </div>
-                    {profile?.details?.vitals?.glucose && (
-                      <span className="badge fw-semibold" style={{ color: '#0ea5e9', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Normal</span>
-                    )}
+            {/* Glucose Level */}
+            <div className="col-xxl-3 col-xl-6 col-md-6 col-12 d-flex fade-in-up delay-4">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#0ea5e9' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#e0f2fe', color: '#0284c7' }}>
+                    <i className="ti ti-droplet" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{profile?.details?.vitals?.glucose ? "Last recorded vital sign" : "No vital data recorded"}</p>
+                  {profile?.details?.vitals?.glucose && (
+                    <span className="badge-soft" style={{ color: '#0ea5e9', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd' }}>Normal</span>
+                  )}
+                </div>
+                <div>
+                  <div className="hero-val">
+                    {profile?.details?.vitals?.glucose ? `${profile.details.vitals.glucose} mg/dl` : "—"}
+                  </div>
+                  <div className="hero-title">Glucose Level</div>
+                  <div className="hero-sub">{profile?.details?.vitals?.glucose ? "Last recorded vital sign" : "No vital data recorded"}</div>
                 </div>
               </div>
             </div>
-            {/* col end */}
           </div>
           {/* row start */}
-          <div className="row g-2">
+          <div className="row g-4 mb-4">
             {/* Block 1: Recent Invoices */}
-            <div className="col-xxl-4 col-xl-4 col-lg-4 d-flex">
-              <div className="card flex-fill w-100 shadow-sm">
-                <div className="card-header d-flex align-items-center justify-content-between">
-                  <h5 className="fw-bold mb-0">Recent Invoices</h5>
-                  <Link to="#" className="text-primary fs-13 fw-medium text-decoration-none">View All</Link>
+            <div className="col-xxl-4 col-xl-4 col-lg-4 d-flex fade-in-up delay-1">
+              <div className="analytic-card flex-fill mb-0">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#dbeafe', color: '#2563eb', boxShadow: 'none' }}>
+                      <i className="ti ti-file-invoice" />
+                    </div>
+                    Recent Invoices
+                  </h3>
+                  <Link to="#" className="text-decoration-none fs-13 fw-medium" style={{ color: '#4f46e5' }}>View All</Link>
                 </div>
-                <div className="card-body">
+                <div className="analytic-card-body">
                   <div className="table-responsive">
                     <table className="table table-borderless align-middle mb-0">
                       <tbody>
@@ -311,13 +455,18 @@ const PatientDashboard = () => {
             </div>
 
             {/* Block 2: Clinic List */}
-            <div className="col-xxl-4 col-xl-4 col-lg-4 d-flex">
-              <div className="card flex-fill w-100 shadow-sm">
-                <div className="card-header d-flex align-items-center justify-content-between">
-                  <h5 className="fw-bold mb-0">Clinic List</h5>
-                  <Link to="#" className="text-primary fs-13 fw-medium text-decoration-none">View All</Link>
+            <div className="col-xxl-4 col-xl-4 col-lg-4 d-flex fade-in-up delay-2">
+              <div className="analytic-card flex-fill mb-0">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#ecfdf5', color: '#059669', boxShadow: 'none' }}>
+                      <i className="ti ti-building-hospital" />
+                    </div>
+                    Clinic List
+                  </h3>
+                  <Link to="#" className="text-decoration-none fs-13 fw-medium" style={{ color: '#4f46e5' }}>View All</Link>
                 </div>
-                <div className="card-body">
+                <div className="analytic-card-body">
                   <div className="d-flex flex-column gap-3">
                     {(clinics || []).slice(0, 3).map((clinic: any, idx: number) => {
                       const colors = ['primary', 'info', 'success', 'warning', 'danger'];
@@ -350,21 +499,26 @@ const PatientDashboard = () => {
             </div>
 
             {/* Block 3: Schedule Appointment */}
-            <div className="col-xxl-4 col-xl-4 col-lg-4 d-flex">
-              <div className="card flex-fill w-100 shadow-sm border-primary" style={{ background: 'linear-gradient(145deg, #ffffff 0%, #f8faff 100%)' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-bottom-0 pb-0">
-                  <h5 className="fw-bold mb-0 text-primary">Schedule Appointment</h5>
+            <div className="col-xxl-4 col-xl-4 col-lg-4 d-flex fade-in-up delay-3">
+              <div className="analytic-card flex-fill mb-0" style={{ background: 'linear-gradient(145deg, #ffffff 0%, #f8faff 100%)' }}>
+                <div className="analytic-card-header border-bottom-0 pb-0">
+                  <h3 className="analytic-card-title" style={{ color: '#4f46e5' }}>
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#e0e7ff', color: '#4f46e5', boxShadow: 'none' }}>
+                      <i className="ti ti-calendar-plus" />
+                    </div>
+                    Schedule Appointment
+                  </h3>
                 </div>
-                <div className="card-body d-flex flex-column align-items-center justify-content-center text-center p-4">
+                <div className="analytic-card-body d-flex flex-column align-items-center justify-content-center text-center p-4">
                   <div className="mb-4 bg-primary-transparent rounded-circle d-flex align-items-center justify-content-center shadow-sm" style={{ width: '80px', height: '80px', backgroundColor: '#e0e7ff' }}>
-                    <i className="ti ti-calendar-plus text-primary" style={{ fontSize: '36px' }}></i>
+                    <i className="ti ti-calendar-plus" style={{ fontSize: '36px', color: '#4f46e5' }}></i>
                   </div>
                   <h5 className="fw-bold mb-2">Book a New Visit</h5>
                   <p className="text-muted fs-13 mb-4 px-3">Quickly schedule an appointment with your preferred doctor or clinic in just a few clicks.</p>
                   
                   <button 
                     type="button" 
-                    className="btn btn-primary btn-lg w-100 rounded-pill d-flex align-items-center justify-content-center gap-2 shadow-sm" 
+                    className="btn-premium btn-lg w-100 rounded-pill d-flex align-items-center justify-content-center gap-2" 
                     onClick={() => setShowAddAppointment(true)}
                   >
                     <i className="ti ti-plus fs-18"></i> Book Appointment Now

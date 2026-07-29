@@ -270,13 +270,29 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                   )}
                   <h6 className="fw-bold mb-3">Patient Information</h6>
                   <div className="row">
-                    <div className="col-lg-12">
-                      <div className="mb-3 d-flex align-items-center">
+                    <div className="col-md-6">
+                      <div className="mb-3 d-flex align-items-center gap-2">
                         <label className="form-label mb-0">Profile Image</label>
                         <PatientProfileUpload
                           value={form.profileImage}
                           onChange={(url) =>
                             setForm((f) => ({ ...f, profileImage: url }))
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label className="form-label mb-1 fw-medium">
+                          Status<span className="text-danger ms-1">*</span>
+                        </label>
+                        <StatusOptionGroup
+                          value={form.status}
+                          onChange={(val: PatientStatusValue) =>
+                            setForm((f) => ({
+                              ...f,
+                              status: val || "Active",
+                            }))
                           }
                         />
                       </div>
@@ -443,22 +459,6 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                             setForm((f) => ({
                               ...f,
                               bloodGroup: opt?.value || "",
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">
-                          Status<span className="text-danger ms-1">*</span>
-                        </label>
-                        <StatusOptionGroup
-                          value={form.status}
-                          onChange={(val: PatientStatusValue) =>
-                            setForm((f) => ({
-                              ...f,
-                              status: val || "Active",
                             }))
                           }
                         />

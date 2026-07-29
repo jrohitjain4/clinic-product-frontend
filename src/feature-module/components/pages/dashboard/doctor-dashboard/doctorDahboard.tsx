@@ -94,243 +94,400 @@ const DoctorDahboard = () => {
         {/* Start Content */}
         <div className="content pb-0">
           <style>{`
-            .dashboard-page-wrapper {
-              background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%) !important;
-              min-height: 100vh;
-            }
-            .dashboard-page-wrapper .content {
-              background: transparent !important;
-              padding: 15px 15px 2px 15px !important;
-            }
-            .dashboard-page-wrapper .card {
-              border: 1px solid #94a3b8 !important;
-              border-radius: 12px !important;
-              box-shadow: 0 6px 15px rgba(0, 0, 0, 0.04) !important;
-              background-color: #ffffff;
-              margin-bottom: 0 !important;
-            }
-            .dashboard-page-wrapper .card-header {
-               padding: 12px 15px !important;
-               background: transparent !important;
-               border-bottom: 1px solid #f1f5f9 !important;
-            }
-            .dashboard-page-wrapper .card-body {
-               padding: 12px 15px !important;
-            }
-          `}</style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+          
+          .dashboard-page-wrapper {
+            background-color: #F8FAFC !important;
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
+          }
+          .dashboard-page-wrapper .content {
+            background: transparent !important;
+            padding: 32px 32px 20px 32px !important;
+            max-width: 1600px;
+            margin: 0 auto;
+          }
+          /* Premium Hero Cards */
+          .hero-card {
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 0 3px rgba(0,0,0,0.02);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+          }
+          .hero-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.06), 0 4px 8px -2px rgba(0,0,0,0.04);
+            border-color: rgba(203, 213, 225, 1);
+          }
+          .hero-card-bg-glow {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.15;
+            z-index: 0;
+            pointer-events: none;
+          }
+          .hero-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            z-index: 1;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 10px rgba(0,0,0,0.05);
+          }
+          .hero-val {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #0f172a;
+            margin-top: 16px;
+            margin-bottom: 4px;
+            z-index: 1;
+            position: relative;
+          }
+          .hero-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            z-index: 1;
+            position: relative;
+          }
+          
+          /* Analytics Cards */
+          .analytic-card {
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+            margin-bottom: 24px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+          }
+          .analytic-card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(241, 245, 249, 1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+          }
+          .analytic-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+          .analytic-card-body {
+            padding: 24px;
+          }
+          
+          /* Quick Action Pills */
+          .action-pill {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 8px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            text-decoration: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            width: 100%;
+          }
+          .action-pill:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 16px -4px rgba(0,0,0,0.05);
+          }
+          .action-pill-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+          }
+          .action-pill-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+            white-space: nowrap;
+          }
+
+          /* Buttons & Badges */
+          .btn-premium {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+            font-weight: 600 !important;
+            padding: 10px 20px !important;
+            border-radius: 10px !important;
+            transition: all 0.3s ease !important;
+          }
+          .btn-premium:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35) !important;
+          }
+          
+          .badge-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+          }
+          .badge-trend.up { background: #dcfce7; color: #059669; }
+          .badge-trend.down { background: #fee2e2; color: #e11d48; }
+
+          /* Avatars & Lists */
+          .appt-list-item {
+            padding: 16px;
+            border: 1px solid #f1f5f9;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            background: #ffffff;
+          }
+          .appt-list-item:hover {
+            border-color: #e2e8f0;
+            background: #f8fafc;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+          }
+          
+          /* Calendar Overrides */
+          .premium-calendar-wrapper .ant-picker-calendar {
+            background: transparent;
+          }
+          .premium-calendar-wrapper .ant-picker-cell-inner {
+            border-radius: 8px !important;
+          }
+          .premium-calendar-wrapper .ant-picker-cell-selected .ant-picker-cell-inner {
+            background: #4f46e5 !important;
+          }
+          .premium-calendar-wrapper .ant-picker-calendar-header {
+            padding-top: 0 !important;
+          }
+
+          /* Animations */
+          .fade-in-up {
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .delay-1 { animation-delay: 0.1s; }
+          .delay-2 { animation-delay: 0.2s; }
+          .delay-3 { animation-delay: 0.3s; }
+          .delay-4 { animation-delay: 0.4s; }
+        `}</style>
           {/* Page Header */}
-          <div className="d-flex align-items-sm-center justify-content-between flex-wrap gap-2 mb-4">
+          <div className="d-flex align-items-sm-center justify-content-between flex-wrap gap-2 mb-4 fade-in-up">
             <div>
-              <h4 className="fw-bold mb-1 fs-20">Welcome back, Doctor! 👋</h4>
-              <p className="text-muted mb-0 fs-13">Here's what's happening in your schedule today.</p>
+              <h4 className="fw-bold mb-1 fs-20" style={{ fontSize: '32px', letterSpacing: '-0.5px', color: '#0f172a' }}>Welcome back, Doctor! 👋</h4>
+              <p className="mb-0" style={{ color: '#64748b', fontSize: '15px' }}>Here's what's happening in your schedule today.</p>
             </div>
-            <div className="d-flex align-items-center flex-wrap gap-2">
-              <Link to={all_routes.doctorsprofilesettings} className="btn btn-outline-light border text-dark bg-white d-inline-flex align-items-center justify-content-center fw-semibold px-4 py-2" style={{ borderRadius: '8px', fontSize: '14px', minHeight: '46px' }}>
+            <div className="d-flex align-items-center flex-wrap gap-3">
+              <Link to={all_routes.doctorsprofilesettings} className="d-flex align-items-center gap-2 px-3 py-2 rounded-3 text-decoration-none" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#0f172a', fontWeight: 600, fontSize: '13px' }}>
                 Profile Setting <i className="ti ti-settings ms-2" />
               </Link>
               <button
                 type="button"
-                className={`btn d-inline-flex align-items-center justify-content-center fw-semibold px-4 py-2 text-white`}
+                className={`btn-premium d-inline-flex align-items-center justify-content-center gap-2`}
                 onClick={handleMarkAttendance}
                 disabled={marking || marked}
-                style={{ borderRadius: '8px', fontSize: '14px', minHeight: '46px', backgroundColor: marked ? '#10b981' : '#6366f1', borderColor: marked ? '#10b981' : '#6366f1' }}
+                style={marked ? { background: '#10b981', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)' } : {}}
               >
                 {marking ? (
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
                 ) : (
-                  <i className={`ti ti-${marked ? 'check' : 'hand-click'} ms-2 order-2`} />
+                  <i className={`ti ti-${marked ? 'check' : 'hand-click'}`} />
                 )}
                 {marked ? (markedByAdmin ? 'Admin Marked' : 'Attendance Marked') : 'Mark Today\'s Attendance'}
               </button>
               <button
                 type="button"
-                className="btn btn-primary d-inline-flex align-items-center justify-content-center fw-semibold px-4 py-2 text-white shadow-sm"
+                className="btn-premium d-inline-flex align-items-center justify-content-center gap-2"
                 onClick={() => setShowAddAppointment(true)}
-                style={{ borderRadius: '8px', fontSize: '14px', minHeight: '46px', backgroundColor: '#3b82f6', borderColor: '#3b82f6' }}
               >
-                New Appointment <i className="ti ti-plus ms-2" />
+                <i className="ti ti-plus" /> New Appointment
               </button>
             </div>
           </div>
           {/* End Page Header */}
           {/* Row 1 Stats */}
-          <div className="row g-2 mb-2">
+          <div className="row g-4 mb-4">
             {/* Today's Appointments */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#3b82f6' }}>
-                        <i className="ti ti-calendar-event fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Today's Appts</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{dashData?.stats?.todayAppointments || 0}</h4>
-                      </div>
-                    </div>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-1">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#3b82f6' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#dbeafe', color: '#2563eb' }}>
+                    <i className="ti ti-calendar-event" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Appointments scheduled today</p>
+                </div>
+                <div>
+                  <div className="hero-val">{dashData?.stats?.todayAppointments || 0}</div>
+                  <div className="hero-title">Today's Appts</div>
                 </div>
               </div>
             </div>
 
             {/* Total Patients */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#8b5cf6' }}>
-                        <i className="ti ti-users fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Total Patients</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{dashData?.stats?.totalPatients || 0}</h4>
-                      </div>
-                    </div>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-2">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#8b5cf6' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#f3e8ff', color: '#7c3aed' }}>
+                    <i className="ti ti-users" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Unique patients treated</p>
+                </div>
+                <div>
+                  <div className="hero-val">{dashData?.stats?.totalPatients || 0}</div>
+                  <div className="hero-title">Total Patients</div>
                 </div>
               </div>
             </div>
 
             {/* Scheduled */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#64748b' }}>
-                        <i className="ti ti-calendar-time fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Scheduled</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{dashData?.stats?.scheduled || 0}</h4>
-                      </div>
-                    </div>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-3">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#64748b' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#f1f5f9', color: '#475569' }}>
+                    <i className="ti ti-calendar-time" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Awaiting confirmation</p>
+                </div>
+                <div>
+                  <div className="hero-val">{dashData?.stats?.scheduled || 0}</div>
+                  <div className="hero-title">Scheduled</div>
                 </div>
               </div>
             </div>
 
             {/* Confirmed */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#0ea5e9' }}>
-                        <i className="ti ti-calendar-check fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Confirmed</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{dashData?.stats?.confirmed || 0}</h4>
-                      </div>
-                    </div>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-4">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#0ea5e9' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#e0f2fe', color: '#0284c7' }}>
+                    <i className="ti ti-calendar-check" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Appointments confirmed</p>
+                </div>
+                <div>
+                  <div className="hero-val">{dashData?.stats?.confirmed || 0}</div>
+                  <div className="hero-title">Confirmed</div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Row 2 Stats */}
-          <div className="row g-2 mb-3">
+          <div className="row g-4 mb-4">
             {/* Checked In */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#f59e0b' }}>
-                        <i className="ti ti-user-check fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Checked In</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{dashData?.stats?.checkedIn || 0}</h4>
-                      </div>
-                    </div>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-1">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#f59e0b' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#fef3c7', color: '#d97706' }}>
+                    <i className="ti ti-user-check" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Patients waiting</p>
+                </div>
+                <div>
+                  <div className="hero-val">{dashData?.stats?.checkedIn || 0}</div>
+                  <div className="hero-title">Checked In</div>
                 </div>
               </div>
             </div>
 
             {/* Checked Out */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#10b981' }}>
-                        <i className="ti ti-user-x fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Checked Out</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{dashData?.stats?.checkedOut || 0}</h4>
-                      </div>
-                    </div>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-2">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#10b981' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#d1fae5', color: '#059669' }}>
+                    <i className="ti ti-user-x" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Patients departed</p>
+                </div>
+                <div>
+                  <div className="hero-val">{dashData?.stats?.checkedOut || 0}</div>
+                  <div className="hero-title">Checked Out</div>
                 </div>
               </div>
             </div>
 
             {/* Completed */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#0d9488' }}>
-                        <i className="ti ti-circle-check fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Completed</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{dashData?.stats?.completed || dashData?.stats?.completedAppointments || 0}</h4>
-                      </div>
-                    </div>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-3">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#0d9488' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#ccfbf1', color: '#0f766e' }}>
+                    <i className="ti ti-circle-check" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Successfully completed visits</p>
+                </div>
+                <div>
+                  <div className="hero-val">{dashData?.stats?.completed || dashData?.stats?.completedAppointments || 0}</div>
+                  <div className="hero-title">Completed</div>
                 </div>
               </div>
             </div>
 
             {/* Cancelled */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-6">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#ef4444' }}>
-                        <i className="ti ti-calendar-off fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Cancelled</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{dashData?.stats?.cancelledAppointments || 0}</h4>
-                      </div>
-                    </div>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-4">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#ef4444' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#fee2e2', color: '#e11d48' }}>
+                    <i className="ti ti-calendar-off" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Cancelled or no-show</p>
+                </div>
+                <div>
+                  <div className="hero-val">{dashData?.stats?.cancelledAppointments || 0}</div>
+                  <div className="hero-title">Cancelled</div>
                 </div>
               </div>
             </div>
           </div>
           {/* row end */}
           {/* row start */}
-          <div className="row g-3 mb-3">
+          <div className="row g-4 mb-4">
             {/* Today's Schedule (formerly Upcoming Appointments) */}
-            <div className="col-xl-4 col-12 d-flex">
-              <div className="card h-100 border-0 shadow-sm flex-fill w-100" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>
+            <div className="col-xl-4 col-12 d-flex fade-in-up delay-2">
+              <div className="analytic-card w-100 flex-fill mb-0">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#e0e7ff', color: '#4f46e5', boxShadow: 'none' }}>
+                      <i className="ti ti-calendar-event" />
+                    </div>
                     Upcoming Appointment
-                  </h5>
-                  <Link to={all_routes.appointments} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
+                  </h3>
+                  <Link to={all_routes.appointments} className="btn-link text-decoration-none fs-13" style={{ color: '#4f46e5', fontWeight: 600 }}>View All</Link>
                 </div>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
+                <div className="analytic-card-body p-3 d-flex flex-column justify-content-between">
                   {!dashData?.todayAppointment ? (
                     <div className="text-center py-4 my-auto">
                       <div className="mb-3">
@@ -340,7 +497,7 @@ const DoctorDahboard = () => {
                     </div>
                   ) : (
                     <>
-                      <div className="d-flex align-items-center mb-3 p-3 rounded-3" style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                      <div className="d-flex align-items-center mb-3 p-3 rounded-3 appt-list-item" style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', marginBottom: '12px' }}>
                         <Link to="#" className="avatar me-3 flex-shrink-0" style={{ width: '48px', height: '48px' }}>
                           {dashData.todayAppointment.patient?.profileImage ? (
                             <img src={dashData.todayAppointment.patient.profileImage} className="rounded-circle w-100 h-100 object-fit-cover" alt="patient" />
@@ -388,10 +545,10 @@ const DoctorDahboard = () => {
                         </div>
                       </div>
                       <div className="d-flex flex-column gap-2 mt-auto">
-                        <Link to={all_routes.doctorsappointmentdetails.replace(":id", dashData.todayAppointment.id)} className="btn btn-primary w-100 fw-semibold" style={{ backgroundColor: '#6366f1', borderColor: '#6366f1', borderRadius: '8px' }}>
+                        <Link to={all_routes.doctorsappointmentdetails.replace(":id", dashData.todayAppointment.id)} className="btn-premium w-100 text-center text-decoration-none">
                           Start Appointment
                         </Link>
-                        <Link to="#" className="btn btn-light w-100 fw-semibold" style={{ borderRadius: '8px', border: '1px solid #e2e8f0', color: '#475569' }}>
+                        <Link to="#" className="btn btn-light w-100 fw-semibold" style={{ borderRadius: '10px', border: '1px solid #e2e8f0', color: '#475569', padding: '10px 20px' }}>
                           <i className="ti ti-brand-hipchat me-1 fs-16 align-middle" />
                           Chat with Patient
                         </Link>
@@ -403,17 +560,22 @@ const DoctorDahboard = () => {
             </div>
 
             {/* Appointments Chart */}
-            <div className="col-xl-8 col-12 d-flex">
-              <div className="card h-100 border-0 shadow-sm flex-fill w-100" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Appointments Overview</h5>
+            <div className="col-xl-8 col-12 d-flex fade-in-up delay-3">
+              <div className="analytic-card w-100 flex-fill mb-0">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#dbeafe', color: '#2563eb', boxShadow: 'none' }}>
+                      <i className="ti ti-chart-bar" />
+                    </div>
+                    Appointments Overview
+                  </h3>
                   <div className="dropdown">
-                    <button className="btn btn-sm btn-outline-light border text-dark dropdown-toggle fw-semibold bg-white" type="button" style={{ fontSize: '12px', borderRadius: '6px' }}>
+                    <button className="badge bg-light text-dark border px-3 py-2 rounded-pill fw-semibold dropdown-toggle" type="button" style={{ background: '#fff' }}>
                       Monthly
                     </button>
                   </div>
                 </div>
-                <div className="card-body p-3">
+                <div className="analytic-card-body p-3">
                   <div className="d-flex align-items-center justify-content-end gap-2 mb-1 flex-wrap mb-3">
                     <p className="mb-0 d-inline-flex align-items-center">
                       <i className="ti ti-point-filled me-1 fs-18 text-primary" />
@@ -429,19 +591,24 @@ const DoctorDahboard = () => {
               </div>
             </div>
           </div>
-          <div className="row g-3 mb-3">
+          <div className="row g-4 mb-4">
             {/* 1. Schedule (Recent Appointments) */}
-            <div className="col-xl-6 col-12 d-flex">
-              <div className="card border-0 shadow-sm flex-fill w-100" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Recent Appointments</h5>
+            <div className="col-xl-6 col-12 d-flex fade-in-up delay-2">
+              <div className="analytic-card w-100 flex-fill mb-0">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#ecfeff', color: '#0891b2', boxShadow: 'none' }}>
+                      <i className="ti ti-list-details" />
+                    </div>
+                    Recent Appointments
+                  </h3>
                   <div className="dropdown">
-                    <button className="btn btn-sm btn-outline-light border text-dark dropdown-toggle fw-semibold bg-white" type="button" style={{ fontSize: '12px', borderRadius: '6px' }}>
+                    <button className="badge bg-light text-dark border px-3 py-2 rounded-pill fw-semibold dropdown-toggle" type="button" style={{ background: '#fff' }}>
                       Weekly
                     </button>
                   </div>
                 </div>
-                <div className="card-body p-0">
+                <div className="analytic-card-body p-0">
                   <div className="table-responsive">
                     <table className="table table-hover align-middle mb-0" style={{ fontSize: '13px' }}>
                       <thead className="bg-light text-muted" style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -521,13 +688,18 @@ const DoctorDahboard = () => {
             </div>
 
             {/* 2. Attendance */}
-            <div className="col-xl-3 col-md-6 col-12 d-flex">
-              <div className="card h-100 border-0 shadow-sm flex-fill w-100" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>My Attendance</h5>
-                  <Link to="#" className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
+            <div className="col-xl-3 col-md-6 col-12 d-flex fade-in-up delay-3">
+              <div className="analytic-card w-100 mb-0 flex-fill">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#fef3c7', color: '#d97706', boxShadow: 'none' }}>
+                      <i className="ti ti-user-check" />
+                    </div>
+                    My Attendance
+                  </h3>
+                  <Link to="#" className="btn-link text-decoration-none fs-13">View All</Link>
                 </div>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
+                <div className="analytic-card-body d-flex flex-column justify-content-between p-3">
                   <div className="d-flex align-items-center justify-content-center mb-4 mt-2">
                     <div className="position-relative" style={{ width: '120px', height: '120px' }}>
                       <svg className="w-100 h-100" viewBox="0 0 36 36">
@@ -581,17 +753,22 @@ const DoctorDahboard = () => {
             </div>
 
             {/* 3. Prescriptions */}
-            <div className="col-xl-3 col-md-6 col-12 d-flex">
-              <div className="card h-100 border-0 shadow-sm flex-fill w-100" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Prescriptions</h5>
+            <div className="col-xl-3 col-md-6 col-12 d-flex fade-in-up delay-4">
+              <div className="analytic-card w-100 flex-fill mb-0">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#f3e8ff', color: '#9333ea', boxShadow: 'none' }}>
+                      <i className="ti ti-prescription" />
+                    </div>
+                    Prescriptions
+                  </h3>
                   <div className="dropdown">
-                    <button className="btn btn-sm btn-outline-light border text-dark dropdown-toggle fw-semibold bg-white" type="button" style={{ fontSize: '12px', borderRadius: '6px' }}>
+                    <button className="badge bg-light text-dark border px-3 py-2 rounded-pill fw-semibold dropdown-toggle" type="button" style={{ background: '#fff' }}>
                       Today
                     </button>
                   </div>
                 </div>
-                <div className="card-body p-3 d-flex flex-column">
+                <div className="analytic-card-body p-3 d-flex flex-column">
                   <div className="d-flex align-items-center gap-3 mb-4">
                     <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '48px', height: '48px', backgroundColor: '#f0fdf4' }}>
                       <i className="ti ti-pill fs-24 text-success" />
@@ -627,7 +804,7 @@ const DoctorDahboard = () => {
                     )}
                   </div>
                   
-                  <Link to="#" className="btn btn-primary w-100 fw-semibold mt-auto" style={{ borderRadius: '8px', backgroundColor: '#6366f1', borderColor: '#6366f1' }}>
+                  <Link to="#" className="btn-premium w-100 text-center text-decoration-none mt-auto">
                     <i className="ti ti-plus me-1" /> Add Prescription
                   </Link>
                 </div>
@@ -635,15 +812,20 @@ const DoctorDahboard = () => {
             </div>
           </div>
           
-          <div className="row g-3">
+          <div className="row g-4 mb-4">
             {/* Availability */}
-            <div className="col-xl-4 col-md-6 col-12 d-flex">
-              <div className="card border-0 shadow-sm flex-fill w-100" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Availability</h5>
-                  <Link to="#" className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>Edit</Link>
+            <div className="col-xl-4 col-md-6 col-12 d-flex fade-in-up delay-2">
+              <div className="analytic-card w-100 flex-fill mb-0">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#d1fae5', color: '#059669', boxShadow: 'none' }}>
+                      <i className="ti ti-clock-check" />
+                    </div>
+                    Availability
+                  </h3>
+                  <Link to="#" className="btn-link text-decoration-none fs-13">Edit</Link>
                 </div>
-                <div className="card-body p-3">
+                <div className="analytic-card-body p-3">
                   <div className="d-flex flex-column gap-2">
                     {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
                       const slots = dashData?.schedules?.[day] || [];
@@ -676,17 +858,22 @@ const DoctorDahboard = () => {
             </div>
 
             {/* Appointment Statistics Donut */}
-            <div className="col-xl-4 col-md-6 col-12 d-flex">
-              <div className="card border-0 shadow-sm flex-fill w-100" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Appointment Stats</h5>
+            <div className="col-xl-4 col-md-6 col-12 d-flex fade-in-up delay-3">
+              <div className="analytic-card w-100 flex-fill mb-0">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#e0e7ff', color: '#4f46e5', boxShadow: 'none' }}>
+                      <i className="ti ti-chart-dots" />
+                    </div>
+                    Appointment Stats
+                  </h3>
                   <div className="dropdown">
-                    <button className="btn btn-sm btn-outline-light border text-dark dropdown-toggle fw-semibold bg-white" type="button" style={{ fontSize: '12px', borderRadius: '6px' }}>
+                    <button className="badge bg-light text-dark border px-3 py-2 rounded-pill fw-semibold dropdown-toggle" type="button" style={{ background: '#fff' }}>
                       Monthly
                     </button>
                   </div>
                 </div>
-                <div className="card-body p-4 d-flex flex-column">
+                <div className="analytic-card-body p-4 d-flex flex-column">
                   <div className="d-flex align-items-center justify-content-center flex-grow-1" style={{ minHeight: '200px' }}>
                     <div style={{ transform: 'scale(0.8)' }}>
                       <CircleChart2 
@@ -726,13 +913,18 @@ const DoctorDahboard = () => {
             </div>
 
             {/* Holiday Calendar */}
-            <div className="col-xl-4 col-12 d-flex">
-              <div className="card border-0 shadow-sm flex-fill w-100" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Holiday Calendar</h5>
-                  <Link to={all_routes.holidays} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
+            <div className="col-xl-4 col-12 d-flex fade-in-up delay-4">
+              <div className="analytic-card w-100 flex-fill mb-0">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#fce7f3', color: '#db2777', boxShadow: 'none' }}>
+                      <i className="ti ti-calendar-heart" />
+                    </div>
+                    Holiday Calendar
+                  </h3>
+                  <Link to={all_routes.holidays} className="btn-link text-decoration-none fs-13">View All</Link>
                 </div>
-                <div className="card-body p-3">
+                <div className="analytic-card-body p-3 premium-calendar-wrapper">
                   <Calendar fullscreen={false} cellRender={cellRender} />
                 </div>
               </div>
@@ -741,10 +933,10 @@ const DoctorDahboard = () => {
         </div>
         {/* End Content */}
         {/* Footer Start */}
-        <div className="footer text-center bg-white p-2 border-top">
-          <p className="text-dark mb-0">
+        <div className="footer text-center p-3" style={{ background: 'transparent', borderTop: '1px solid rgba(226,232,240,0.8)' }}>
+          <p className="mb-0" style={{ color: '#64748b', fontSize: '13px' }}>
             2025 ©
-            <Link to="#" className="link-primary ms-1">
+            <Link to="#" className="ms-1" style={{ color: '#4f46e5', fontWeight: 600, textDecoration: 'none' }}>
               Docyari
             </Link>
             , All Rights Reserved

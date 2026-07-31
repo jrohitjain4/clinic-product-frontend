@@ -1049,8 +1049,9 @@ const IpdBillingsPage: React.FC = () => {
   );
 
   return (
-    <div className="page-wrapper">
+    <div className="page-wrapper ipd-billings-page">
       <style>{`
+        .ipd-billings-page .ipd-metric-card.card,
         .page-wrapper .ipd-billings-empty-card.card,
         .page-wrapper .datatable-main-container .datatable-table-shell.card {
           border: none !important;
@@ -1065,65 +1066,75 @@ const IpdBillingsPage: React.FC = () => {
       `}</style>
       <div className="content">
         {/* Page Header */}
-        <div className="d-md-flex d-block align-items-center justify-content-between mb-4 gap-3 flex-wrap">
-          <div>
-            <h3 className="page-title mb-0">IPD Billings & Invoices</h3>
-          </div>
+        <div className="d-flex align-items-center gap-2 mb-4 flex-wrap">
+          <h3 className="page-title mb-0 flex-shrink-0 me-auto">IPD Billings & Invoices</h3>
 
-          <div className="d-flex align-items-center gap-2 flex-wrap">
-            {/* Search Input */}
+          <div style={{ width: "220px", flexShrink: 0 }}>
             <IconFormControl
               fieldLabel="search"
               type="text"
               className="form-control-sm"
-              style={{ width: "200px" }}
               placeholder="Search invoice/patient..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-
-            {/* Payment Status Select */}
-            <select
-              className="form-select form-select-sm"
-              style={{ width: "150px" }}
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="All">All Statuses</option>
-              <option value="Paid">Paid</option>
-              <option value="Partial">Partially Paid</option>
-              <option value="Unpaid">Unpaid</option>
-            </select>
-
-            {(searchQuery || statusFilter !== "All") && (
-              <button
-                className="btn btn-sm btn-light border fw-semibold"
-                style={{ fontSize: '12px', borderRadius: '6px' }}
-                onClick={() => { setSearchQuery(""); setStatusFilter("All"); }}
-              >
-                <i className="ti ti-x me-1" />Clear
-              </button>
-            )}
-
-            <button
-              className="btn btn-outline-secondary btn-sm"
-              onClick={() => {
-                if (chargeTypes.length > 0) setSelectedTypeForMaster(chargeTypes[0]);
-                setShowManageTypesModal(true);
-              }}
-            >
-              <i className="ti ti-settings me-1" /> Charge Types
-            </button>
-
-            <button className="btn btn-primary btn-sm" onClick={() => handleOpenRaiseModal()}>
-              <i className="ti ti-plus me-1" /> + Raise Charge
-            </button>
           </div>
+
+          <select
+            className="form-select"
+            style={{
+              width: "150px",
+              height: "46px",
+              minHeight: "46px",
+              flexShrink: 0,
+              borderRadius: "12px",
+              borderWidth: "1.5px",
+              borderColor: "#6366f1",
+              fontSize: "14px",
+              fontWeight: 500,
+            }}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="All">All Statuses</option>
+            <option value="Paid">Paid</option>
+            <option value="Partial">Partially Paid</option>
+            <option value="Unpaid">Unpaid</option>
+          </select>
+
+          {(searchQuery || statusFilter !== "All") && (
+            <button
+              className="btn btn-light border fw-semibold d-inline-flex align-items-center"
+              style={{ height: "46px", fontSize: "13px", borderRadius: "12px", flexShrink: 0 }}
+              onClick={() => { setSearchQuery(""); setStatusFilter("All"); }}
+            >
+              <i className="ti ti-x me-1" />Clear
+            </button>
+          )}
+
+          <button
+            className="btn btn-outline-secondary d-inline-flex align-items-center"
+            style={{ height: "46px", flexShrink: 0, borderRadius: "12px" }}
+            onClick={() => {
+              if (chargeTypes.length > 0) setSelectedTypeForMaster(chargeTypes[0]);
+              setShowManageTypesModal(true);
+            }}
+          >
+            <i className="ti ti-settings me-1" /> Charge Types
+          </button>
+
+          <button
+            className="btn btn-primary d-inline-flex align-items-center"
+            style={{ height: "46px", flexShrink: 0, borderRadius: "12px" }}
+            onClick={() => handleOpenRaiseModal()}
+          >
+            <i className="ti ti-plus me-1" /> Raise Charge
+          </button>
         </div>
         {/* Overview Metric Cards */}
         <div className="row g-3 mb-4">
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-primary">
+            <div className="card border-0 shadow ipd-metric-card">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -1139,7 +1150,7 @@ const IpdBillingsPage: React.FC = () => {
           </div>
 
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-info">
+            <div className="card border-0 shadow ipd-metric-card">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -1157,7 +1168,7 @@ const IpdBillingsPage: React.FC = () => {
           </div>
 
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-success">
+            <div className="card border-0 shadow ipd-metric-card">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -1175,7 +1186,7 @@ const IpdBillingsPage: React.FC = () => {
           </div>
 
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-danger">
+            <div className="card border-0 shadow ipd-metric-card">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>

@@ -678,8 +678,9 @@ const IpdDischargePage: React.FC = () => {
   );
 
   return (
-    <div className="page-wrapper">
+    <div className="page-wrapper ipd-discharge-page">
       <style>{`
+        .ipd-discharge-page .ipd-metric-card.card,
         .page-wrapper .ipd-discharge-empty-card.card,
         .page-wrapper .datatable-main-container .datatable-table-shell.card {
           border: none !important;
@@ -689,68 +690,82 @@ const IpdDischargePage: React.FC = () => {
       `}</style>
       <div className="content">
         {/* Header */}
-        <div className="d-md-flex d-block align-items-center justify-content-between mb-4 gap-3 flex-wrap">
-          <div>
-            <h3 className="page-title mb-0">Discharge Management & Final Settlement</h3>
-          </div>
+        <div className="d-flex align-items-center gap-2 mb-4 flex-wrap">
+          <h3 className="page-title mb-0 flex-shrink-0 me-auto">Discharge Management & Final Settlement</h3>
 
-          <div className="d-flex align-items-center gap-2 flex-wrap mt-3 mt-md-0">
-            {/* Search Filter Input */}
+          <div style={{ width: "190px", flexShrink: 0 }}>
             <IconFormControl
               fieldLabel="search"
               type="text"
               className="form-control-sm"
-              style={{ width: "190px" }}
               placeholder="Search code/patient..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-
-            {/* Status Dropdown Filter */}
-            <select
-              className="form-select form-select-sm"
-              style={{ width: "150px" }}
-              value={statusTab}
-              onChange={(e) => setStatusTab(e.target.value as any)}
-            >
-              <option value="All">All Statuses ({admissions.length})</option>
-              <option value="Admitted">Active ({metrics.totalAdmitted})</option>
-              <option value="Discharged">Discharged ({metrics.totalDischarged})</option>
-            </select>
-
-            {/* Ward Dropdown Filter */}
-            <select
-              className="form-select form-select-sm"
-              style={{ width: "150px" }}
-              value={wardFilter}
-              onChange={(e) => setWardFilter(e.target.value)}
-            >
-              <option value="All">All Wards</option>
-              {wardOptions.map((w) => (
-                <option key={w} value={w}>{w}</option>
-              ))}
-            </select>
-
-            {(searchQuery || statusTab !== "All" || wardFilter !== "All") && (
-              <button
-                className="btn btn-sm btn-light border fw-semibold"
-                style={{ fontSize: '12px', borderRadius: '6px' }}
-                onClick={() => {
-                  setSearchQuery("");
-                  setStatusTab("All");
-                  setWardFilter("All");
-                }}
-              >
-                <i className="ti ti-x me-1" />Clear
-              </button>
-            )}
           </div>
+
+          <select
+            className="form-select"
+            style={{
+              width: "150px",
+              height: "46px",
+              minHeight: "46px",
+              flexShrink: 0,
+              borderRadius: "12px",
+              borderWidth: "1.5px",
+              borderColor: "#6366f1",
+              fontSize: "14px",
+              fontWeight: 500,
+            }}
+            value={statusTab}
+            onChange={(e) => setStatusTab(e.target.value as any)}
+          >
+            <option value="All">All Statuses ({admissions.length})</option>
+            <option value="Admitted">Active ({metrics.totalAdmitted})</option>
+            <option value="Discharged">Discharged ({metrics.totalDischarged})</option>
+          </select>
+
+          <select
+            className="form-select"
+            style={{
+              width: "150px",
+              height: "46px",
+              minHeight: "46px",
+              flexShrink: 0,
+              borderRadius: "12px",
+              borderWidth: "1.5px",
+              borderColor: "#6366f1",
+              fontSize: "14px",
+              fontWeight: 500,
+            }}
+            value={wardFilter}
+            onChange={(e) => setWardFilter(e.target.value)}
+          >
+            <option value="All">All Wards</option>
+            {wardOptions.map((w) => (
+              <option key={w} value={w}>{w}</option>
+            ))}
+          </select>
+
+          {(searchQuery || statusTab !== "All" || wardFilter !== "All") && (
+            <button
+              className="btn btn-light border fw-semibold d-inline-flex align-items-center"
+              style={{ height: "46px", fontSize: "13px", borderRadius: "12px", flexShrink: 0 }}
+              onClick={() => {
+                setSearchQuery("");
+                setStatusTab("All");
+                setWardFilter("All");
+              }}
+            >
+              <i className="ti ti-x me-1" />Clear
+            </button>
+          )}
         </div>
 
         {/* Overview Metric Cards */}
         <div className="row g-3 mb-4">
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-primary">
+            <div className="card border-0 shadow ipd-metric-card">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -766,7 +781,7 @@ const IpdDischargePage: React.FC = () => {
           </div>
 
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-success">
+            <div className="card border-0 shadow ipd-metric-card">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -774,7 +789,6 @@ const IpdDischargePage: React.FC = () => {
                     <h3 className="fw-bold mb-0 text-success">{metrics.totalDischarged}</h3>
                   </div>
                   <div className="avatar avatar-md bg-soft-success text-success rounded-circle">
-                    <i className="ti ti-[#1]" />
                     <i className="ti ti-user-check fs-20" />
                   </div>
                 </div>
@@ -783,7 +797,7 @@ const IpdDischargePage: React.FC = () => {
           </div>
 
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-danger">
+            <div className="card border-0 shadow ipd-metric-card">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -801,7 +815,7 @@ const IpdDischargePage: React.FC = () => {
           </div>
 
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-info">
+            <div className="card border-0 shadow ipd-metric-card">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>

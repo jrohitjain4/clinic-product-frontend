@@ -233,59 +233,75 @@ const IpdWardManagementPage: React.FC = () => {
   }, [wards, searchQuery, selectedTypeFilter]);
 
   return (
-    <div className="page-wrapper">
+    <div className="page-wrapper ipd-ward-page">
+      <style>{`
+        .ipd-ward-page .card {
+          border: none !important;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+          border-radius: 12px !important;
+        }
+      `}</style>
       <div className="content">
         {/* Page Header */}
-        <div className="d-md-flex d-block align-items-center justify-content-between mb-4 gap-3 flex-wrap">
-          <div>
-            <h3 className="page-title mb-0">Ward & Room Management</h3>
-          </div>
+        <div className="d-flex align-items-center gap-2 mb-4 flex-wrap">
+          <h3 className="page-title mb-0 flex-shrink-0 me-auto">Ward & Room Management</h3>
 
-          <div className="d-flex align-items-center gap-2 flex-wrap">
-            {/* Search Input */}
+          <div style={{ width: "220px", flexShrink: 0 }}>
             <IconFormControl
               fieldLabel="search"
               type="text"
               className="form-control-sm"
-              style={{ width: "200px" }}
               placeholder="Search ward/code/floor..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-
-            {/* Ward Type Select */}
-            <select
-              className="form-select form-select-sm"
-              style={{ width: "160px" }}
-              value={selectedTypeFilter}
-              onChange={(e) => setSelectedTypeFilter(e.target.value)}
-            >
-              <option value="All">All Ward Types</option>
-              {WARD_TYPES.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-
-            {(searchQuery || selectedTypeFilter !== "All") && (
-              <button
-                className="btn btn-sm btn-light border fw-semibold"
-                style={{ fontSize: '12px', borderRadius: '6px' }}
-                onClick={() => { setSearchQuery(""); setSelectedTypeFilter("All"); }}
-              >
-                <i className="ti ti-x me-1" />Clear
-              </button>
-            )}
-
-            <button className="btn btn-primary btn-sm" onClick={handleOpenAddModal}>
-              <i className="ti ti-plus me-1" /> + Add Ward / Room
-            </button>
           </div>
+
+          <select
+            className="form-select"
+            style={{
+              width: "160px",
+              height: "46px",
+              minHeight: "46px",
+              flexShrink: 0,
+              borderRadius: "12px",
+              borderWidth: "1.5px",
+              borderColor: "#6366f1",
+              fontSize: "14px",
+              fontWeight: 500,
+            }}
+            value={selectedTypeFilter}
+            onChange={(e) => setSelectedTypeFilter(e.target.value)}
+          >
+            <option value="All">All Ward Types</option>
+            {WARD_TYPES.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+
+          {(searchQuery || selectedTypeFilter !== "All") && (
+            <button
+              className="btn btn-light border fw-semibold d-inline-flex align-items-center"
+              style={{ height: "46px", fontSize: "13px", borderRadius: "12px", flexShrink: 0 }}
+              onClick={() => { setSearchQuery(""); setSelectedTypeFilter("All"); }}
+            >
+              <i className="ti ti-x me-1" />Clear
+            </button>
+          )}
+
+          <button
+            className="btn btn-primary d-inline-flex align-items-center"
+            style={{ height: "46px", flexShrink: 0, borderRadius: "12px" }}
+            onClick={handleOpenAddModal}
+          >
+            <i className="ti ti-plus me-1" /> Add Ward / Room
+          </button>
         </div>
 
         {/* Overview Metric Cards */}
         <div className="row g-3 mb-4">
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-primary">
+            <div className="card border-0 shadow">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -301,7 +317,7 @@ const IpdWardManagementPage: React.FC = () => {
           </div>
 
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-info">
+            <div className="card border-0 shadow">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -317,7 +333,7 @@ const IpdWardManagementPage: React.FC = () => {
           </div>
 
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-success">
+            <div className="card border-0 shadow">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -333,7 +349,7 @@ const IpdWardManagementPage: React.FC = () => {
           </div>
 
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-warning">
+            <div className="card border-0 shadow">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -356,7 +372,7 @@ const IpdWardManagementPage: React.FC = () => {
             <p className="text-muted mt-2 mb-0">Loading Ward & Room Management data...</p>
           </div>
         ) : filteredWards.length === 0 ? (
-          <div className="card border-0 shadow-sm text-center py-5">
+          <div className="card border-0 shadow text-center py-5">
             <i className="ti ti-building-hospital fs-40 text-muted mb-2 d-block" />
             <h5 className="fw-bold">No Wards or Rooms Found</h5>
             <p className="text-muted fs-13 mb-3">
@@ -364,7 +380,7 @@ const IpdWardManagementPage: React.FC = () => {
             </p>
             <div>
               <button className="btn btn-primary btn-sm" onClick={handleOpenAddModal}>
-                <i className="ti ti-plus me-1" /> + Add Ward / Room
+                <i className="ti ti-plus me-1" /> Add Ward / Room
               </button>
             </div>
           </div>
@@ -379,12 +395,7 @@ const IpdWardManagementPage: React.FC = () => {
 
               return (
                 <div key={w.id} className="col-lg-4 col-md-6">
-                  <div
-                    className={`card h-100 border-0 shadow-sm border-top border-3 ${
-                      isFull ? "border-danger" : "border-primary"
-                    }`}
-                    style={isFull ? { boxShadow: "0 0 0 1px rgba(220,53,69,0.25)" } : {}}
-                  >
+                  <div className="card h-100 border-0 shadow">
                     <div className="card-body p-3 d-flex flex-column justify-content-between">
                       <div>
                         {/* Header Badge & Title */}
@@ -428,7 +439,7 @@ const IpdWardManagementPage: React.FC = () => {
                         )}
 
                         {/* Charges Card */}
-                        <div className="p-2 bg-light rounded-3 mb-3 border">
+                        <div className="p-2 bg-light rounded-3 mb-3">
                           <div className="d-flex align-items-center justify-content-between mb-1">
                             <span className="fs-12 text-muted fw-semibold">Room Charge (Per Night):</span>
                             <span className="fw-bold text-success fs-15">₹{w.chargePerNight.toLocaleString("en-IN")}</span>

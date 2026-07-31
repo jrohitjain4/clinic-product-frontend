@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { all_routes } from "../../../routes/all_routes";
 import Footer from "../../../../core/common/footer/footer";
 import { apiUrl } from "../../../../core/config/api";
+import ImageWithBasePath from "../../../../core/imageWithBasePath";
 
 interface Patient {
   id: string;
@@ -188,77 +189,156 @@ const IpdDashboardPage: React.FC = () => {
           margin: 0 auto;
         }
 
-        /* Premium Hero Cards */
+        /* Premium Hero Cards — match main dashboard */
         .ipd-dashboard-wrapper .hero-card {
           background: #ffffff;
-          border: 1px solid rgba(226, 232, 240, 0.8);
-          border-radius: 20px;
-          padding: 24px;
+          border: none;
+          border-radius: 18px;
+          padding: 20px 20px 16px;
           position: relative;
           overflow: hidden;
-          box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 0 3px rgba(0,0,0,0.02);
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
           transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
           display: flex;
           flex-direction: column;
-          justify-content: space-between;
+          min-height: 148px;
           width: 100%;
-          height: 100%;
+          height: auto;
         }
         .ipd-dashboard-wrapper .hero-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.06), 0 4px 8px -2px rgba(0,0,0,0.04);
-          border-color: rgba(203, 213, 225, 1);
+          box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0,0,0,0.04);
         }
         .ipd-dashboard-wrapper .hero-card-bg-glow {
           position: absolute;
-          top: -20px;
+          top: -30px;
           right: -20px;
-          width: 120px;
-          height: 120px;
+          width: 140px;
+          height: 140px;
           border-radius: 50%;
-          filter: blur(40px);
-          opacity: 0.15;
+          filter: blur(48px);
+          opacity: 0.18;
           z-index: 0;
           pointer-events: none;
         }
+        .ipd-dashboard-wrapper .hero-card-main {
+          display: flex;
+          justify-content: space-between;
+          align-items: stretch;
+          gap: 12px;
+          position: relative;
+          z-index: 1;
+          height: 100%;
+        }
+        .ipd-dashboard-wrapper .hero-card-left {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          min-width: 0;
+          flex: 1;
+        }
+        .ipd-dashboard-wrapper .hero-card-right {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          justify-content: space-between;
+          flex-shrink: 0;
+          min-width: 100px;
+        }
         .ipd-dashboard-wrapper .hero-icon-box {
-          width: 48px;
-          height: 48px;
-          border-radius: 14px;
+          width: 42px;
+          height: 42px;
+          border-radius: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 24px;
+          font-size: 20px;
           z-index: 1;
           position: relative;
-          box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 10px rgba(0,0,0,0.05);
+          box-shadow: none;
         }
         .ipd-dashboard-wrapper .hero-val {
-          font-size: 36px;
+          font-size: 28px;
           font-weight: 800;
           letter-spacing: -1px;
           color: #0f172a;
-          margin-top: 16px;
-          margin-bottom: 4px;
+          margin-top: 10px;
+          margin-bottom: 2px;
           z-index: 1;
           position: relative;
           line-height: 1.1;
         }
         .ipd-dashboard-wrapper .hero-title {
-          font-size: 14px;
-          font-weight: 600;
+          font-size: 12px;
+          font-weight: 700;
           color: #64748b;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
+          letter-spacing: 0.6px;
           z-index: 1;
           position: relative;
         }
         .ipd-dashboard-wrapper .hero-sub {
           font-size: 12px;
           font-weight: 500;
-          margin-top: 8px;
+          margin-top: 0;
           z-index: 1;
           position: relative;
+        }
+        .ipd-dashboard-wrapper .hero-chart-wrap {
+          margin-top: 8px;
+          display: flex;
+          align-items: flex-end;
+          justify-content: flex-end;
+          width: 100%;
+        }
+        .ipd-dashboard-wrapper .hero-chart-wrap img {
+          max-width: 100px;
+          height: auto;
+          display: block;
+        }
+        .ipd-dashboard-wrapper .hero-chart-caption {
+          font-size: 10px;
+          color: #94a3b8;
+          font-weight: 500;
+          text-align: right;
+          margin-bottom: 4px;
+          line-height: 1.2;
+          max-width: 120px;
+        }
+        .ipd-dashboard-wrapper .hero-kpi-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 16px;
+          margin-bottom: 20px;
+          width: 100%;
+        }
+        .ipd-dashboard-wrapper .hero-kpi-grid .hero-card {
+          width: 100%;
+          max-width: none;
+          min-height: 138px;
+          padding: 16px;
+        }
+        .ipd-dashboard-wrapper .hero-period-pill {
+          display: inline-flex;
+          align-items: center;
+          padding: 4px 10px;
+          border-radius: 999px;
+          font-size: 10px;
+          font-weight: 600;
+          color: #64748b;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          white-space: nowrap;
+        }
+        @media (max-width: 1199.98px) {
+          .ipd-dashboard-wrapper .hero-kpi-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+        @media (max-width: 575.98px) {
+          .ipd-dashboard-wrapper .hero-kpi-grid {
+            grid-template-columns: minmax(0, 1fr);
+          }
         }
 
         /* Analytics Cards */
@@ -448,85 +528,105 @@ const IpdDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="row g-4 mb-4">
-          {/* Active Inpatients */}
-          <div className="col-xl-3 col-sm-6 d-flex fade-in-up delay-1">
-            <div className="hero-card">
-              <div className="hero-card-bg-glow" style={{ background: "#4f46e5" }}></div>
-              <div className="d-flex justify-content-between align-items-start">
+        {/* Stats Cards — same layout as main dashboard */}
+        <div className="hero-kpi-grid">
+          <div className="hero-card fade-in-up delay-1">
+            <div className="hero-card-bg-glow" style={{ background: "#4f46e5" }}></div>
+            <div className="hero-card-main">
+              <div className="hero-card-left">
                 <div className="hero-icon-box" style={{ background: "#e0e7ff", color: "#4f46e5" }}>
                   <i className="ti ti-bed" />
                 </div>
+                <div>
+                  <div className="hero-val">{loading ? "—" : stats.admitted}</div>
+                  <div className="hero-title">Active Inpatients</div>
+                </div>
               </div>
-              <div>
-                <div className="hero-val">{loading ? "—" : stats.admitted}</div>
-                <div className="hero-title">Active Inpatients</div>
-                <div className={`hero-sub ${stats.pendingSettlement > 0 ? "text-warning" : "text-success"}`}>
-                  {loading ? "" : stats.pendingSettlement > 0
-                    ? `${stats.pendingSettlement} with pending dues`
-                    : "All payments clear"}
+              <div className="hero-card-right">
+                <span className={`hero-period-pill ${!loading && stats.pendingSettlement > 0 ? "text-warning" : ""}`}>
+                  {loading
+                    ? "…"
+                    : stats.pendingSettlement > 0
+                      ? `${stats.pendingSettlement} dues`
+                      : "All clear"}
+                </span>
+                <div className="hero-chart-wrap">
+                  <ImageWithBasePath src="assets/img/charts/patients-donut.svg" alt="Active inpatients" />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Bed Occupancy */}
-          <div className="col-xl-3 col-sm-6 d-flex fade-in-up delay-2">
-            <div className="hero-card">
-              <div className="hero-card-bg-glow" style={{ background: "#f59e0b" }}></div>
-              <div className="d-flex justify-content-between align-items-start">
+          <div className="hero-card fade-in-up delay-2">
+            <div className="hero-card-bg-glow" style={{ background: "#f59e0b" }}></div>
+            <div className="hero-card-main">
+              <div className="hero-card-left">
                 <div className="hero-icon-box" style={{ background: "#fef3c7", color: "#d97706" }}>
                   <i className="ti ti-building-community" />
                 </div>
+                <div>
+                  <div className="hero-val">{loading ? "—" : `${stats.occupancyRate}%`}</div>
+                  <div className="hero-title">Bed Occupancy</div>
+                </div>
               </div>
-              <div>
-                <div className="hero-val">{loading ? "—" : `${stats.occupancyRate}%`}</div>
-                <div className="hero-title">Bed Occupancy</div>
-                <div className="hero-sub text-muted">
-                  {loading ? "" : `${stats.occupiedBeds} / ${stats.totalBeds} beds · ${stats.freeBeds} free`}
+              <div className="hero-card-right">
+                <div>
+                  <div className="hero-chart-caption">
+                    {loading ? "" : `${stats.occupiedBeds} / ${stats.totalBeds} · ${stats.freeBeds} free`}
+                  </div>
+                  <div className="hero-chart-wrap">
+                    <ImageWithBasePath src="assets/img/charts/appointments-bars.svg" alt="Bed occupancy" />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Discharges Today */}
-          <div className="col-xl-3 col-sm-6 d-flex fade-in-up delay-3">
-            <div className="hero-card">
-              <div className="hero-card-bg-glow" style={{ background: "#0ea5e9" }}></div>
-              <div className="d-flex justify-content-between align-items-start">
+          <div className="hero-card fade-in-up delay-3">
+            <div className="hero-card-bg-glow" style={{ background: "#0ea5e9" }}></div>
+            <div className="hero-card-main">
+              <div className="hero-card-left">
                 <div className="hero-icon-box" style={{ background: "#e0f2fe", color: "#0284c7" }}>
                   <i className="ti ti-door-exit" />
                 </div>
+                <div>
+                  <div className="hero-val">{loading ? "—" : stats.dischargedToday}</div>
+                  <div className="hero-title">Discharges Today</div>
+                </div>
               </div>
-              <div>
-                <div className="hero-val">{loading ? "—" : stats.dischargedToday}</div>
-                <div className="hero-title">Discharges Today</div>
-                <div className="hero-sub text-muted">
-                  {loading ? "" : `${stats.discharged} total discharged overall`}
+              <div className="hero-card-right">
+                <span className="hero-period-pill">Today</span>
+                <div className="hero-chart-wrap">
+                  <ImageWithBasePath src="assets/img/charts/completed-bars.svg" alt="Discharges today" />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Revenue */}
-          <div className="col-xl-3 col-sm-6 d-flex fade-in-up delay-4">
-            <div className="hero-card">
-              <div className="hero-card-bg-glow" style={{ background: "#10b981" }}></div>
-              <div className="d-flex justify-content-between align-items-start">
+          <div className="hero-card fade-in-up delay-4">
+            <div className="hero-card-bg-glow" style={{ background: "#10b981" }}></div>
+            <div className="hero-card-main">
+              <div className="hero-card-left">
                 <div className="hero-icon-box" style={{ background: "#d1fae5", color: "#059669" }}>
                   <i className="ti ti-coin" />
                 </div>
-              </div>
-              <div>
-                <div className="hero-val" style={{ fontSize: loading ? undefined : (formatINR(stats.totalRevenue).length > 8 ? "28px" : undefined) }}>
-                  {loading ? "—" : formatINR(stats.totalRevenue)}
+                <div>
+                  <div className="hero-val" style={{ fontSize: !loading && formatINR(stats.totalRevenue).length > 8 ? "22px" : undefined }}>
+                    {loading ? "—" : formatINR(stats.totalRevenue)}
+                  </div>
+                  <div className="hero-title">Total IPD Revenue</div>
                 </div>
-                <div className="hero-title">Total IPD Revenue</div>
-                <div className={`hero-sub ${stats.totalDue > 0 ? "text-danger" : "text-success"}`}>
-                  {loading ? "" : stats.totalDue > 0
-                    ? `${formatINR(stats.totalDue)} outstanding`
-                    : "No dues pending"}
+              </div>
+              <div className="hero-card-right">
+                <span className={`hero-period-pill ${!loading && stats.totalDue > 0 ? "text-danger" : "text-success"}`}>
+                  {loading
+                    ? "…"
+                    : stats.totalDue > 0
+                      ? `${formatINR(stats.totalDue)} due`
+                      : "No dues"}
+                </span>
+                <div className="hero-chart-wrap">
+                  <ImageWithBasePath src="assets/img/charts/revenue-area.svg" alt="IPD revenue" />
                 </div>
               </div>
             </div>

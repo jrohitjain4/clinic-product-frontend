@@ -757,8 +757,18 @@ const IpdAdmissionsPage: React.FC = () => {
           <div className="d-flex align-items-center gap-2 flex-wrap">
             {/* Ward Filter */}
             <select
-              className="form-select form-select-sm"
-              style={{ width: "140px" }}
+              className="form-select"
+              style={{
+                width: "140px",
+                height: "46px",
+                minHeight: "46px",
+                flexShrink: 0,
+                borderRadius: "12px",
+                borderWidth: "1.5px",
+                borderColor: "#6366f1",
+                fontSize: "14px",
+                fontWeight: 500,
+              }}
               value={filterWard}
               onChange={(e) => setFilterWard(e.target.value)}
             >
@@ -770,8 +780,18 @@ const IpdAdmissionsPage: React.FC = () => {
 
             {/* Patient Filter */}
             <select
-              className="form-select form-select-sm"
-              style={{ width: "150px" }}
+              className="form-select"
+              style={{
+                width: "150px",
+                height: "46px",
+                minHeight: "46px",
+                flexShrink: 0,
+                borderRadius: "12px",
+                borderWidth: "1.5px",
+                borderColor: "#6366f1",
+                fontSize: "14px",
+                fontWeight: 500,
+              }}
               value={filterPatient}
               onChange={(e) => setFilterPatient(e.target.value)}
             >
@@ -785,8 +805,18 @@ const IpdAdmissionsPage: React.FC = () => {
 
             {/* Doctor Filter */}
             <select
-              className="form-select form-select-sm"
-              style={{ width: "140px" }}
+              className="form-select"
+              style={{
+                width: "140px",
+                height: "46px",
+                minHeight: "46px",
+                flexShrink: 0,
+                borderRadius: "12px",
+                borderWidth: "1.5px",
+                borderColor: "#6366f1",
+                fontSize: "14px",
+                fontWeight: 500,
+              }}
               value={filterDoctor}
               onChange={(e) => setFilterDoctor(e.target.value)}
             >
@@ -800,8 +830,18 @@ const IpdAdmissionsPage: React.FC = () => {
 
             {/* Due Amount Filter */}
             <select
-              className="form-select form-select-sm"
-              style={{ width: "130px" }}
+              className="form-select"
+              style={{
+                width: "130px",
+                height: "46px",
+                minHeight: "46px",
+                flexShrink: 0,
+                borderRadius: "12px",
+                borderWidth: "1.5px",
+                borderColor: "#6366f1",
+                fontSize: "14px",
+                fontWeight: 500,
+              }}
               value={filterDue}
               onChange={(e) => setFilterDue(e.target.value)}
             >
@@ -813,16 +853,20 @@ const IpdAdmissionsPage: React.FC = () => {
 
             {hasActiveFilters && (
               <button
-                className="btn btn-sm btn-light border fw-semibold"
-                style={{ fontSize: '12px', borderRadius: '6px' }}
+                className="btn btn-light border fw-semibold d-inline-flex align-items-center"
+                style={{ height: "46px", fontSize: "13px", borderRadius: "12px", flexShrink: 0 }}
                 onClick={() => { setFilterWard(""); setFilterPatient(""); setFilterDoctor(""); setFilterDue(""); }}
               >
                 <i className="ti ti-x me-1" />Clear
               </button>
             )}
 
-            <button className="btn btn-primary btn-sm ms-md-2" onClick={() => handleOpenModal("Direct")}>
-              <i className="ti ti-user-plus me-1" /> + Add Patient Admission
+            <button
+              className="btn btn-primary d-inline-flex align-items-center ms-md-2"
+              style={{ height: "46px", flexShrink: 0, borderRadius: "12px" }}
+              onClick={() => handleOpenModal("Direct")}
+            >
+              <i className="ti ti-user-plus me-1" /> Add Patient Admission
             </button>
           </div>
         </div>

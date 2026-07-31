@@ -71,6 +71,7 @@ export const patientToTableRow = (p: ClinicPatient, index: number) => {
     Role: p.doctors && p.doctors.length > 0 ? p.doctors.map((d: any) => d.designation?.name).filter(Boolean).join(", ") : "—",
     Address: p.addressShort || "—",
     Last_Visit: p.lastVisitLabel || "—",
+    Registration_Date: formatPatientDateLong(p.createdAt),
     Status: p.statusLabel || statusToLabel(p.status),
     _raw: p,
   };
@@ -93,6 +94,8 @@ export const emptyPatientForm = () => ({
   state: "",
   city: "",
   pincode: "",
+  referredBy: "",
+  referId: "",
 });
 
 // patientToForm is applied in patientFormPage with dayjs()

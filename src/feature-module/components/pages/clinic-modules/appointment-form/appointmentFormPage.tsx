@@ -1283,6 +1283,78 @@ Powered by DocYori`;
             <label className="form-label mb-1 fw-medium">
               Status<span className="text-danger ms-1">*</span>
             </label>
+            <ul
+              className="mb-2 mt-1 appointment-status-help"
+              style={{
+                fontSize: 12,
+                lineHeight: 1.65,
+                paddingLeft: 0,
+                marginLeft: 0,
+                listStyle: "none",
+                color: "#64748b",
+              }}
+            >
+              <li style={{ position: "relative", paddingLeft: 14, marginBottom: 2 }}>
+                <span
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: "0.55em",
+                    width: 5,
+                    height: 5,
+                    borderRadius: "50%",
+                    background: "#0f172a",
+                  }}
+                />
+                <strong className="text-dark">Schedule:</strong> Appointment booked, but payment not yet made.
+              </li>
+              <li style={{ position: "relative", paddingLeft: 14, marginBottom: 2 }}>
+                <span
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: "0.55em",
+                    width: 5,
+                    height: 5,
+                    borderRadius: "50%",
+                    background: "#0f172a",
+                  }}
+                />
+                <strong className="text-dark">Confirmed:</strong> Payment has been made.
+              </li>
+              <li style={{ position: "relative", paddingLeft: 14, marginBottom: 2 }}>
+                <span
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: "0.55em",
+                    width: 5,
+                    height: 5,
+                    borderRadius: "50%",
+                    background: "#0f172a",
+                  }}
+                />
+                <strong className="text-dark">Check-in:</strong> Patient has entered the doctor&apos;s cabin.
+              </li>
+              <li style={{ position: "relative", paddingLeft: 14, marginBottom: 2 }}>
+                <span
+                  aria-hidden
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: "0.55em",
+                    width: 5,
+                    height: 5,
+                    borderRadius: "50%",
+                    background: "#0f172a",
+                  }}
+                />
+                <strong className="text-dark">Check-out:</strong> Patient has left the doctor&apos;s cabin.
+              </li>
+            </ul>
             <CommonSelect
               options={APPOINTMENT_STATUS_OPTIONS}
               className="select"

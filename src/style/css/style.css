@@ -27726,6 +27726,25 @@ img {
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10) !important;
 }
 
+/* Doctor View page: all cards no border + soft shadow */
+.page-wrapper.doctor-details-page .card,
+.page-wrapper.doctor-details-page .content .card {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+}
+.page-wrapper.doctor-details-page .card:hover,
+.page-wrapper.doctor-details-page .content .card:hover {
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10) !important;
+}
+.page-wrapper.doctor-details-page .card.border-primary {
+  border: 0 !important;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.14) !important;
+}
+
 /* Nested sidebar items: black-dot active (no white badge) */
 .sidebar .sidebar-menu > ul li .submenu > ul > li > a.active,
 .sidebar .sidebar-menu > ul li .submenu > ul > li > a.active.subdrop,

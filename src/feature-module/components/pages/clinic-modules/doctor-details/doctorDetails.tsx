@@ -257,7 +257,7 @@ const DoctorDetails = () => {
 
   if (loading) {
     return (
-      <div className="page-wrapper">
+      <div className="page-wrapper doctor-details-page">
         <div className="content text-center py-5">
           <span className="spinner-border text-primary" role="status" />
           <p className="text-muted mt-2 mb-0">Loading doctor details…</p>
@@ -268,7 +268,7 @@ const DoctorDetails = () => {
 
   if (error || !doctor) {
     return (
-      <div className="page-wrapper">
+      <div className="page-wrapper doctor-details-page">
         <div className="content">
           <Link to={doctorsListPath()} className="btn btn-light mb-3">
             <i className="ti ti-chevron-left me-1" />
@@ -281,7 +281,26 @@ const DoctorDetails = () => {
   }
 
   return (
-    <div className="page-wrapper">
+    <div className="page-wrapper doctor-details-page">
+      <style>{`
+        .page-wrapper.doctor-details-page .card,
+        .page-wrapper.doctor-details-page .content .card {
+          border: 0 !important;
+          border-width: 0 !important;
+          border-style: none !important;
+          border-color: transparent !important;
+          border-radius: 16px !important;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+        }
+        .page-wrapper.doctor-details-page .card:hover,
+        .page-wrapper.doctor-details-page .content .card:hover {
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.10) !important;
+        }
+        .page-wrapper.doctor-details-page .card.border-primary {
+          border: 0 !important;
+          box-shadow: 0 8px 24px rgba(99, 102, 241, 0.14) !important;
+        }
+      `}</style>
       <div className="content pb-0 pt-1">
         <div className="mb-2">
           <h6 className="fw-semibold fs-14 mb-0">

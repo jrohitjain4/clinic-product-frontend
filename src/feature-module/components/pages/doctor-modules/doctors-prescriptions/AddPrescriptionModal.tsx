@@ -192,7 +192,59 @@ const AddPrescriptionModal = ({
         return allPrescriptions.find((p: any) => p.appointmentId === selectedVisitTab);
     }, [selectedVisitTab, allPrescriptions, initialAppointmentId]);
 
-    const isCurrentVisit = selectedVisitTab === initialAppointmentId;
+    const isCurrentVisit =
+        !selectedVisitTab ||
+        selectedVisitTab === (initialAppointmentId || "") ||
+        selectedVisitTab === appointmentId;
+
+    // Resolve full appointment (not only "Schedule") for print/download
+    const printAppointment = useMemo(() => {
+        const fromProp = appointment || null;
+        const fromList =
+            appointments.find((a: any) => a.id === (appointmentId || initialAppointmentId)) ||
+            null;
+        const base = fromProp || fromList || {};
+        const resolvedPatient =
+            base.patient ||
+            patient ||
+            initialPrescription?.patient ||
+            null;
+        const resolvedDoctor =
+            base.doctor ||
+            initialPrescription?.doctor ||
+            appointments.find((a: any) => a.doctorId === doctorId || a.doctor?.id === doctorId)?.doctor ||
+            null;
+        const resolvedClinic =
+            base.clinic ||
+            initialPrescription?.clinic ||
+            null;
+
+        return {
+            ...base,
+            id: base.id || appointmentId || initialAppointmentId,
+            patientId: base.patientId || patientId,
+            doctorId: base.doctorId || doctorId,
+            patient: resolvedPatient,
+            doctor: resolvedDoctor,
+            clinic: resolvedClinic,
+            scheduledAt: base.scheduledAt || initialPrescription?.appointment?.scheduledAt || new Date(),
+            appointmentCode: base.appointmentCode || base.bookingCode,
+            paymentStatus: base.paymentStatus,
+            amount: base.amount,
+            mode: base.mode,
+            appointmentType: base.appointmentType,
+            department: base.department || resolvedDoctor?.department,
+        };
+    }, [
+        appointment,
+        appointments,
+        appointmentId,
+        initialAppointmentId,
+        patient,
+        patientId,
+        doctorId,
+        initialPrescription,
+    ]);
 
     // Active form values depend on whether we are viewing current draft or a past prescription
     const activeMedicines = useMemo(() => {
@@ -228,15 +280,67 @@ const AddPrescriptionModal = ({
         return selectedVisitPrescription?.diagnosticTests || [];
     }, [isCurrentVisit, currentDraft.diagnosticTests, selectedVisitPrescription]);
 
+    const printPrescription = useMemo(
+        () => ({
+            createdAt: initialPrescription?.createdAt || new Date(),
+            id: initialPrescription?.id || "draft",
+            prescriptionCode: initialPrescription?.prescriptionCode || "",
+            medicines: activeMedicines,
+            advice: activeAdvice,
+            followUpDate: activeFollowUpDate?.toDate
+                ? activeFollowUpDate.toDate()
+                : activeFollowUpDate,
+            followUpNotes: activeFollowUpNotes,
+            diagnosticTests: activeDiagnosticTests,
+            patient: printAppointment?.patient || initialPrescription?.patient,
+            doctor: printAppointment?.doctor || initialPrescription?.doctor,
+            clinic: printAppointment?.clinic || initialPrescription?.clinic,
+            department: printAppointment?.department || initialPrescription?.department,
+        }),
+        [
+            initialPrescription,
+            activeMedicines,
+            activeAdvice,
+            activeFollowUpDate,
+            activeFollowUpNotes,
+            activeDiagnosticTests,
+            printAppointment,
+        ]
+    );
+
     const handlePrint = () => {
         const pad = document.getElementById('modal-print-prescription-pad');
         if (!pad) return;
+        const hideSelectors = [
+            '#print-prescription-pad',
+            '#print-prescription-slip',
+            '#print-appointment',
+            '#print-prescription',
+        ];
+        const hiddenEls: HTMLElement[] = [];
+        hideSelectors.forEach((sel) => {
+            document.querySelectorAll<HTMLElement>(sel).forEach((el) => {
+                if (el === pad || pad.contains(el)) return;
+                el.setAttribute('data-hidden-for-print', 'true');
+                el.style.setProperty('display', 'none', 'important');
+                hiddenEls.push(el);
+            });
+        });
         const originalDisplay = pad.style.display;
         pad.style.display = 'block';
-        window.print();
-        setTimeout(() => {
-            pad.style.display = originalDisplay;
-        }, 1500);
+        // Allow layout to paint filled draft before browser print
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                window.print();
+                setTimeout(() => {
+                    pad.style.display = originalDisplay;
+                    hiddenEls.forEach((el) => {
+                        el.removeAttribute('data-hidden-for-print');
+                        el.style.removeProperty('display');
+                    });
+                }, 1500);
+            }, 50);
+        });
     };
 
     const handleDownload = () => {
@@ -248,8 +352,9 @@ const AddPrescriptionModal = ({
             margin: 0,
             filename: `Prescription-${initialPrescription?.prescriptionCode || 'Record'}.pdf`,
             image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+            html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, windowY: 0 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+            pagebreak: { mode: ['avoid-all'] as const }
         };
         html2pdf()
             .from(element)
@@ -464,35 +569,31 @@ const AddPrescriptionModal = ({
             {/* Backdrop */}
             <div
                 className="modal-backdrop fade show"
-                style={{ zIndex: 1040, backgroundColor: '#004fc4', opacity: 0.45 }}
+                style={{ zIndex: 1040 }}
                 onClick={onClose}
             />
             {/* Modal Container */}
             <div className="modal fade show d-block prescription-modal-wrapper" style={{ zIndex: 1050 }} tabIndex={-1}>
-                <div className="modal-dialog modal-xxl modal-dialog-centered">
-                    <div className="modal-content text-dark border-0 rounded-4 shadow-2xl overflow-hidden" style={{ maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
+                <div className="modal-dialog modal-xl modal-dialog-centered">
+                    <div className="modal-content text-dark border-0 shadow-lg overflow-hidden" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column', borderRadius: '12px' }}>
 
                         {/* Header */}
-                        <div className="modal-header border-bottom bg-white p-3 px-4 d-flex align-items-center justify-content-between" style={{ flexShrink: 0 }}>
-                            <div className="d-flex align-items-center gap-2.5">
-                                <div className="rx-badge-icon d-flex align-items-center justify-content-center bg-primary text-white rounded-circle">
-                                    <span className="fw-bold fs-14">Rx</span>
-                                </div>
-                                <div>
-                                    <h5 className="modal-title fw-bold text-dark mb-0 fs-16">Generate Prescription</h5>
-                                    <p className="text-muted mb-0 fs-12">Create prescription for this visit</p>
-                                </div>
-                            </div>
+                        <div className="modal-header bg-primary text-white py-3 px-4 d-flex align-items-center justify-content-between" style={{ flexShrink: 0 }}>
+                            <h5 className="modal-title fw-bold text-white mb-0 d-flex align-items-center">
+                                <i className="ti ti-prescription me-2 fs-20" />
+                                Generate Prescription
+                            </h5>
                             <button
                                 type="button"
-                                className="btn-close text-dark opacity-75"
+                                className="btn-close btn-close-white"
                                 onClick={onClose}
+                                aria-label="Close"
                             />
                         </div>
 
                         {/* Top Visits horizontal bar selector */}
                         {sortedVisits.length > 0 && (
-                            <div className="visits-bar bg-light border-bottom p-2 px-4 d-flex align-items-center justify-content-between flex-shrink-0" style={{ whiteSpace: 'nowrap' }}>
+                            <div className="visits-bar bg-light border-bottom p-2 px-3 d-flex align-items-center justify-content-between flex-shrink-0" style={{ whiteSpace: 'nowrap' }}>
                                 <div className="visits-bar-inner d-flex align-items-center gap-2 overflow-auto" style={{ flex: 1 }}>
                                     {sortedVisits.map((apt, index) => {
                                         const isCurrent = apt.id === initialAppointmentId;
@@ -528,26 +629,49 @@ const AddPrescriptionModal = ({
 
                                 {patientId && (
                                     <div className="ms-3 flex-shrink-0">
-                                        <div 
+                                        <div
                                             onClick={handleToggleIPD}
-                                            className="d-flex align-items-center gap-2.5 px-3 py-1.5 rounded-3 border cursor-pointer hover-shadow transition-all"
-                                            style={{ 
-                                                backgroundColor: isIPDRecommended ? '#fff7ed' : '#ffffff', 
-                                                borderColor: isIPDRecommended ? '#ea580c' : '#cbd5e1',
-                                                maxWidth: '280px',
-                                                lineHeight: '1.2'
+                                            className="ipd-recommend-card d-flex align-items-center gap-3 px-3 py-2 rounded-3 border cursor-pointer"
+                                            style={{
+                                                backgroundColor: isIPDRecommended ? "#fff7ed" : "#ffffff",
+                                                borderColor: isIPDRecommended ? "#fb923c" : "#e2e8f0",
+                                                minWidth: "220px",
                                             }}
-                                            title="Click to toggle IPD Admission recommendation for patient"
+                                            title="Click to toggle IPD admission recommendation"
                                         >
-                                            <div className="d-flex align-items-center justify-content-center rounded-circle" style={{ width: '32px', height: '32px', backgroundColor: isIPDRecommended ? '#ffedd5' : '#f1f5f9', minWidth: '32px' }}>
-                                                <i className={`ti ti-bed fs-18 ${isIPDRecommended ? 'text-warning-emphasis' : 'text-muted'}`} style={{ color: isIPDRecommended ? '#ea580c' : undefined }} />
+                                            <div
+                                                className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                                                style={{
+                                                    width: "36px",
+                                                    height: "36px",
+                                                    backgroundColor: isIPDRecommended ? "#ffedd5" : "#f1f5f9",
+                                                }}
+                                            >
+                                                <i
+                                                    className="ti ti-bed fs-18"
+                                                    style={{ color: isIPDRecommended ? "#ea580c" : "#64748b" }}
+                                                />
                                             </div>
-                                            <div className="d-flex flex-column text-start">
-                                                <span className="fw-bold text-dark mb-0.5" style={{ fontSize: '12px' }}>Admit Recommendation</span>
-                                                <span className="fw-bold fs-10" style={{ color: isIPDRecommended ? '#ea580c' : '#64748b' }}>
-                                                    {isIPDRecommended ? 'Recommended for IPD' : 'Recommend for IPD Admission'}
-                                                </span>
-                                                <small className="text-muted" style={{ fontSize: '8.5px' }}>Click if hospitalization is required</small>
+                                            <div className="text-start" style={{ lineHeight: 1.35 }}>
+                                                <div
+                                                    className="fw-bold text-dark"
+                                                    style={{ fontSize: "12px", marginBottom: "2px" }}
+                                                >
+                                                    IPD Admission
+                                                </div>
+                                                <div
+                                                    className="fw-semibold"
+                                                    style={{
+                                                        fontSize: "11px",
+                                                        color: isIPDRecommended ? "#c2410c" : "#64748b",
+                                                        marginBottom: "2px",
+                                                    }}
+                                                >
+                                                    {isIPDRecommended ? "Recommended" : "Not recommended"}
+                                                </div>
+                                                <div className="text-muted" style={{ fontSize: "10px", fontWeight: 400 }}>
+                                                    Click to toggle
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -560,11 +684,11 @@ const AddPrescriptionModal = ({
                             <div className="modal-body bg-light-subtle p-0 d-flex overflow-hidden" style={{ flex: 1 }}>
 
                                 {/* Left main scrollable content area */}
-                                <div className="prescription-main-content p-4" style={{ flex: 1, overflowY: 'auto' }}>
+                                <div className="prescription-main-content p-3" style={{ flex: 1, overflowY: 'auto' }}>
 
                                     {/* Past Visit Warning and Copy Action Banner */}
                                     {!isCurrentVisit && (
-                                        <div className="alert bg-warning-subtle border border-warning rounded-3 mb-4 p-3 d-flex align-items-center justify-content-between">
+                                        <div className="alert bg-warning-subtle border border-warning rounded-3 mb-3 p-2 d-flex align-items-center justify-content-between">
                                             <div className="d-flex align-items-center gap-2 text-warning-emphasis fw-medium fs-13">
                                                 <i className="ti ti-history fs-16 text-warning" />
                                                 {selectedVisitPrescription ? (
@@ -624,7 +748,7 @@ const AddPrescriptionModal = ({
 
                                     {/* Patient & Doctor (Hidden if pre-decided) */}
                                     {(!initialPatientId || !initialDoctorId) && (
-                                        <div className="row g-3 mb-4">
+                                        <div className="row g-2 mb-3">
                                             <div className="col-md-6">
                                                 <label className="form-label fw-bold text-dark fs-12">
                                                     PATIENT (SCHEDULED ONLY) <span className="text-danger">*</span>
@@ -674,7 +798,7 @@ const AddPrescriptionModal = ({
                                     )}
 
                                     {/* Medicines table */}
-                                    <div className="bg-white border rounded-4 shadow-sm p-4 mb-4" style={{ overflow: 'visible' }}>
+                                    <div className="bg-white border rounded-3 shadow-sm p-3 mb-3" style={{ overflow: 'visible' }}>
                                         <div className="d-flex align-items-center justify-content-between mb-3">
                                             <div className="d-flex align-items-center gap-2">
                                                 <i className="ti ti-pill text-primary fs-18" />
@@ -870,20 +994,20 @@ const AddPrescriptionModal = ({
                                     </div>
 
                                     {/* Advice and Follow-up container */}
-                                    <div className="row g-4">
+                                    <div className="row g-3">
 
                                         {/* Advice */}
                                         <div className="col-md-4">
-                                            <div className="bg-white border rounded-4 shadow-sm p-4 h-100">
-                                                <div className="d-flex align-items-center gap-2 mb-3">
+                                            <div className="bg-white border rounded-3 shadow-sm p-3 h-100">
+                                                <div className="d-flex align-items-center gap-2 mb-2">
                                                     <i className="ti ti-message-dots text-primary fs-18" />
                                                     <h6 className="fw-bold text-dark mb-0 fs-14">Advice</h6>
                                                 </div>
                                                 <div className="position-relative">
                                                     <IconTextarea
                                                         fieldLabel="Advice"
-                                                        className="text-dark border-secondary-subtle p-3"
-                                                        rows={6}
+                                                        className="text-dark border-secondary-subtle p-2"
+                                                        rows={4}
                                                         placeholder="Enter doctor's instructions, recommendations, or advices..."
                                                         value={activeAdvice}
                                                         onChange={(e) => {
@@ -892,7 +1016,7 @@ const AddPrescriptionModal = ({
                                                             }
                                                         }}
                                                         maxLength={500}
-                                                        style={{ borderRadius: '8px', fontSize: '13px', lineHeight: '1.6' }}
+                                                        style={{ borderRadius: '8px', fontSize: '13px', lineHeight: '1.5' }}
                                                         disabled={!isCurrentVisit}
                                                     />
                                                     <span className="position-absolute text-muted fs-11" style={{ bottom: '8px', right: '12px' }}>
@@ -904,14 +1028,14 @@ const AddPrescriptionModal = ({
 
                                         {/* Next Follow Up */}
                                         <div className="col-md-4">
-                                            <div className="bg-white border rounded-4 shadow-sm p-4 h-100">
-                                                <div className="d-flex align-items-center gap-2 mb-3">
+                                            <div className="bg-white border rounded-3 shadow-sm p-3 h-100">
+                                                <div className="d-flex align-items-center gap-2 mb-2">
                                                     <i className="ti ti-calendar-stats text-primary fs-18" />
                                                     <h6 className="fw-bold text-dark mb-0 fs-14">Next Follow-up</h6>
                                                 </div>
-                                                <div className="row g-3">
+                                                <div className="row g-2">
                                                     <div className="col-12">
-                                                        <label className="form-label text-secondary fw-semibold fs-12 mb-1.5">
+                                                        <label className="form-label fw-medium text-dark fs-13 mb-1">
                                                             Follow-up Date <span className="text-danger">*</span>
                                                         </label>
                                                         <div className="position-relative input-group-sm">
@@ -932,7 +1056,7 @@ const AddPrescriptionModal = ({
                                                         </div>
                                                     </div>
                                                     <div className="col-12">
-                                                        <label className="form-label text-secondary fw-semibold fs-12 mb-1.5">
+                                                        <label className="form-label fw-medium text-dark fs-13 mb-1">
                                                             Remarks (Optional)
                                                         </label>
                                                         <div className="position-relative">
@@ -962,8 +1086,8 @@ const AddPrescriptionModal = ({
 
                                         {/* Diagnostic Tests */}
                                         <div className="col-md-4">
-                                            <div className="bg-white border rounded-4 shadow-sm p-4 h-100 d-flex flex-column">
-                                                <div className="d-flex align-items-center gap-2 mb-3">
+                                            <div className="bg-white border rounded-3 shadow-sm p-3 h-100 d-flex flex-column">
+                                                <div className="d-flex align-items-center gap-2 mb-2">
                                                     <i className="ti ti-activity text-primary fs-18" />
                                                     <h6 className="fw-bold text-dark mb-0 fs-14">Diagnostic Tests</h6>
                                                 </div>
@@ -1069,7 +1193,7 @@ const AddPrescriptionModal = ({
                                                 </div>
 
                                                 {/* Selected Tests List */}
-                                                <div className="flex-grow-1 border rounded-3 p-3 bg-light-subtle d-flex flex-wrap gap-2 align-content-start" style={{ minHeight: '120px', overflowY: 'auto' }}>
+                                                <div className="flex-grow-1 border rounded-3 p-2 bg-light-subtle d-flex flex-wrap gap-2 align-content-start" style={{ minHeight: '72px', overflowY: 'auto' }}>
                                                     {activeDiagnosticTests.length > 0 ? (
                                                         activeDiagnosticTests.map((testName: string, idx: number) => (
                                                             <span
@@ -1105,22 +1229,16 @@ const AddPrescriptionModal = ({
                                 </div>
 
                                 {/* Right sidebar: Previous Prescriptions */}
-                                <div className="prescription-sidebar bg-white border-start p-4" style={{ width: '310px', flexShrink: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-                                    <div className="d-flex align-items-center justify-content-between mb-3">
+                                <div className="prescription-sidebar bg-white border-start p-3" style={{ width: '250px', flexShrink: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                                    <div className="d-flex align-items-center justify-content-between mb-2">
                                         <div className="d-flex align-items-center gap-2">
                                             <i className="ti ti-history text-primary fs-18" />
                                             <h6 className="fw-bold text-dark mb-0 fs-14">Previous Prescriptions</h6>
                                         </div>
-                                        <button
-                                            type="button"
-                                            className="btn-close btn-sm text-muted"
-                                            style={{ width: '8px', height: '8px' }}
-                                            onClick={() => { }}
-                                        />
                                     </div>
 
                                     {/* Sidebar Info alert box */}
-                                    <div className="alert bg-warning-subtle border-0 rounded-3 mb-4 p-2.5 d-flex align-items-start gap-2 text-warning-emphasis fs-12" style={{ lineHeight: '1.45' }}>
+                                    <div className="alert bg-warning-subtle border-0 rounded-3 mb-3 p-2 d-flex align-items-start gap-2 text-warning-emphasis fs-12" style={{ lineHeight: '1.45' }}>
                                         <i className="ti ti-bulb fs-15 text-warning mt-0.5" />
                                         <span>Click on any visit to copy its prescription and continue.</span>
                                     </div>
@@ -1194,10 +1312,10 @@ const AddPrescriptionModal = ({
                                     </div>
 
                                     {/* Clear Prescription */}
-                                    <div className="mt-4 pt-3 border-top" style={{ flexShrink: 0 }}>
+                                    <div className="mt-3 pt-2 border-top" style={{ flexShrink: 0 }}>
                                         <button
                                             type="button"
-                                            className="btn btn-outline-danger w-100 rounded-3 fw-bold d-flex align-items-center justify-content-center gap-1.5 fs-13"
+                                            className="btn btn-outline-danger w-100 fw-bold d-flex align-items-center justify-content-center gap-1.5 fs-13"
                                             onClick={handleClearPrescription}
                                             disabled={!isCurrentVisit}
                                         >
@@ -1208,41 +1326,41 @@ const AddPrescriptionModal = ({
                             </div>
 
                             {/* Footer */}
-                            <div className="modal-footer bg-light border-top py-3 px-4 d-flex align-items-center justify-content-between" style={{ flexShrink: 0 }}>
+                            <div className="modal-footer bg-light border-top-0 p-3 d-flex align-items-center justify-content-between" style={{ flexShrink: 0 }}>
                                 <div className="d-flex align-items-center gap-2">
                                     <button
                                         type="button"
-                                        className="btn btn-outline-info rounded-3 fw-bold px-3 fs-13 d-flex align-items-center gap-1.5"
+                                        className="btn btn-outline-info fw-bold px-3 fs-13 d-flex align-items-center gap-1.5"
                                         onClick={handlePrint}
                                     >
                                         <i className="ti ti-printer" /> Print
                                     </button>
                                     <button
                                         type="button"
-                                        className="btn btn-outline-success rounded-3 fw-bold px-3 fs-13 d-flex align-items-center gap-1.5"
+                                        className="btn btn-outline-success fw-bold px-3 fs-13 d-flex align-items-center gap-1.5"
                                         onClick={handleDownload}
                                     >
                                         <i className="ti ti-download" /> Download PDF
                                     </button>
                                 </div>
-                                <div className="d-flex align-items-center gap-3">
-                                    <button type="button" className="btn btn-white border rounded-3 fw-bold px-4 fs-13" onClick={onClose} disabled={submitting}>
+                                <div className="d-flex align-items-center gap-2">
+                                    <button type="button" className="btn btn-light fw-bold px-4" onClick={onClose} disabled={submitting}>
                                         Cancel
                                     </button>
 
                                     {isCurrentVisit ? (
-                                        <button type="submit" className="btn btn-primary rounded-3 fw-bold px-4 shadow-sm fs-13 d-flex align-items-center gap-1.5" disabled={submitting}>
+                                        <button type="submit" className="btn btn-primary fw-bold px-4 shadow-sm d-flex align-items-center gap-1.5" disabled={submitting}>
                                             {submitting ? (
                                                 <><span className="spinner-border spinner-border-sm me-1" />Processing...</>
                                             ) : (
-                                                <><i className="ti ti-printer fs-15" /> Generate Prescription</>
+                                                <><i className="ti ti-check fs-15" /> Generate Prescription</>
                                             )}
                                         </button>
                                     ) : (
                                         selectedVisitPrescription && (
                                             <button
                                                 type="button"
-                                                className="btn btn-primary rounded-3 fw-bold px-4 shadow-sm fs-13 d-flex align-items-center gap-1.5"
+                                                className="btn btn-primary fw-bold px-4 shadow-sm d-flex align-items-center gap-1.5"
                                                 onClick={() => handleCopyPrescription(selectedVisitPrescription)}
                                             >
                                                 <i className="ti ti-copy" /> Copy to Current Visit
@@ -1258,22 +1376,17 @@ const AddPrescriptionModal = ({
 
             {/* Custom Premium Styles overriding default bootstrap variables locally */}
             <style>{`
-                .prescription-modal-wrapper .modal-xxl {
-                    max-width: 1400px;
-                    width: 95%;
-                }
-                .prescription-modal-wrapper .rx-badge-icon {
-                    width: 32px;
-                    height: 32px;
-                    background-color: #4f46e5 !important;
+                .prescription-modal-wrapper .modal-xl {
+                    max-width: 1080px;
+                    width: 92%;
                 }
                 .prescription-modal-wrapper .visit-tab-card {
-                    min-width: 140px;
+                    min-width: 120px;
                     display: flex;
                     align-items: center;
                     background-color: #f8fafc !important;
                     border: 1px solid #cbd5e1 !important;
-                    padding: 8px 16px !important;
+                    padding: 6px 12px !important;
                     border-radius: 8px !important;
                     cursor: pointer;
                     transition: all 0.2s ease;
@@ -1388,22 +1501,45 @@ const AddPrescriptionModal = ({
 
                 @media print {
                     @page { size: A4; margin: 0; }
+                    html, body {
+                        height: auto !important;
+                        overflow: hidden !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
                     body * { visibility: hidden !important; }
-                    #modal-print-prescription-pad, #modal-print-prescription-pad * { visibility: visible !important; }
+                    #print-prescription-pad,
+                    #print-prescription-slip,
+                    #print-appointment,
+                    #print-prescription,
+                    [data-hidden-for-print],
+                    [data-hidden-for-print] * {
+                        display: none !important;
+                        visibility: hidden !important;
+                    }
+                    #modal-print-prescription-pad,
+                    #modal-print-prescription-pad * {
+                        visibility: visible !important;
+                    }
                     #modal-print-prescription-pad {
                         visibility: visible !important;
                         display: block !important;
                         position: absolute !important;
                         left: 0 !important;
                         top: 0 !important;
-                        width: 21cm !important;
-                        height: 29.7cm !important;
+                        width: 210mm !important;
+                        height: auto !important;
+                        max-height: 297mm !important;
+                        min-height: 0 !important;
                         background: white !important;
                         z-index: 99999 !important;
-                        padding: 0.8cm 1cm !important;
+                        padding: 0 !important;
                         margin: 0 !important;
                         overflow: hidden !important;
                         border: none !important;
+                        page-break-after: avoid !important;
+                        page-break-inside: avoid !important;
+                        break-inside: avoid !important;
                     }
                 }
             `}</style>
@@ -1411,16 +1547,8 @@ const AddPrescriptionModal = ({
             {/* Printable Prescription Pad */}
             <div id="modal-print-prescription-pad" style={{ display: 'none' }}>
                 <PrescriptionPadSlip
-                    appointment={appointment || (scheduledAppointments.find((a: any) => a.id === appointmentId))}
-                    prescription={{
-                        createdAt: initialPrescription?.createdAt || new Date(),
-                        id: initialPrescription?.id || "draft",
-                        prescriptionCode: initialPrescription?.prescriptionCode || "",
-                        medicines: activeMedicines,
-                        advice: activeAdvice,
-                        followUpDate: activeFollowUpDate?.toDate ? activeFollowUpDate.toDate() : activeFollowUpDate,
-                        followUpNotes: activeFollowUpNotes
-                    }}
+                    appointment={printAppointment}
+                    prescription={printPrescription}
                     suggestIPD={isIPDRecommended}
                 />
             </div>

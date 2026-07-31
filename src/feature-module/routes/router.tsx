@@ -5,11 +5,13 @@ import AuthFeature from "../feathure-components/authFeature";
 import Feature from "../feathure-components/feature";
 import ClinicLandingPage from "../components/pages/home/clinicLandingPage";
 import PermissionGuard from "../components/PermissionGuard";
+import ScrollToTop from "../../core/common/scroll-to-top/ScrollToTop";
 
 
 const ALLRoutes: React.FC = () => {
   return (
     <>
+      <ScrollToTop />
       <Routes>
         {/* Public Clinic Landing Pages (Top Priority - outside all layout wrappers) */}
         <Route path="/c/:username" element={<ClinicLandingPage />} />

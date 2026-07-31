@@ -43,19 +43,32 @@ const Consultations = () => {
     .appointments-filter-line {
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex-wrap: nowrap;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
       width: 100%;
+      overflow: visible;
     }
     .appointments-filter-line h4 {
       font-size: 16px !important;
+      flex-shrink: 0;
+      margin: 0 !important;
+    }
+    .appointments-filter-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex: 1 1 auto;
+      min-width: 0;
     }
     .status-buttons-group {
       display: flex;
       align-items: center;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       gap: 4px;
-      margin-left: auto !important;
+      margin-left: 0 !important;
     }
     .status-btn {
       padding: 0 8px !important;
@@ -81,10 +94,21 @@ const Consultations = () => {
       height: 32px !important;
       font-size: 11px !important;
       font-weight: bold !important;
-      padding: 0 24px 0 8px !important;
+      padding: 0 34px 0 10px !important;
       text-overflow: ellipsis !important;
       white-space: nowrap !important;
       overflow: hidden !important;
+      min-width: 140px !important;
+      max-width: 190px !important;
+      background-position: right 10px center !important;
+      background-size: 12px 10px !important;
+    }
+    .follow-up-select > span {
+      display: block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-right: 4px;
     }
     .filter-btn {
       height: 32px !important;
@@ -120,6 +144,9 @@ const Consultations = () => {
       .appointments-filter-line h4 {
         font-size: 18px !important;
       }
+      .appointments-filter-actions {
+        gap: 12px;
+      }
       .status-buttons-group {
         gap: 12px;
       }
@@ -139,7 +166,10 @@ const Consultations = () => {
       .follow-up-select {
         height: 36px !important;
         font-size: 13px !important;
-        padding: 0 24px 0 12px !important;
+        padding: 0 36px 0 12px !important;
+        min-width: 150px !important;
+        max-width: 210px !important;
+        background-position: right 12px center !important;
       }
       .filter-btn {
         height: 36px !important;
@@ -159,10 +189,13 @@ const Consultations = () => {
     @media print {
       @page { size: A4; margin: 0; }
       body * { visibility: hidden !important; }
-      #print-prescription-pad, #print-prescription-pad *, #print-prescription-slip, #print-prescription-slip * {
+      #print-prescription-pad[data-print-active],
+      #print-prescription-pad[data-print-active] *,
+      #print-prescription-slip[data-print-active],
+      #print-prescription-slip[data-print-active] * {
         visibility: visible !important;
       }
-      #print-prescription-pad {
+      #print-prescription-pad[data-print-active] {
         visibility: visible !important;
         display: block !important;
         position: absolute !important;
@@ -171,20 +204,32 @@ const Consultations = () => {
         width: 100% !important;
         background: white !important;
         z-index: 99999 !important;
-        padding: 1.5cm !important;
+        padding: 0 !important;
         margin: 0 !important;
       }
-      #print-prescription-slip {
+      #print-prescription-slip[data-print-active] {
         visibility: visible !important;
         display: block !important;
         position: absolute !important;
         left: 0 !important;
         top: 0 !important;
-        width: 100% !important;
+        width: 210mm !important;
+        max-height: 297mm !important;
+        height: auto !important;
+        overflow: hidden !important;
         background: white !important;
         z-index: 99999 !important;
-        padding: 1.5cm !important;
+        padding: 0 !important;
         margin: 0 !important;
+        page-break-after: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      #print-prescription-pad:not([data-print-active]),
+      #print-prescription-slip:not([data-print-active]),
+      [data-hidden-for-print],
+      [data-hidden-for-print] * {
+        display: none !important;
+        visibility: hidden !important;
       }
     }
   `;
@@ -387,12 +432,26 @@ const Consultations = () => {
     // Give state time to update prior to printing
     setTimeout(() => {
       const elementId = detailed && pres ? 'print-prescription-slip' : 'print-prescription-pad';
+      const otherId = detailed && pres ? 'print-prescription-pad' : 'print-prescription-slip';
       const el = document.getElementById(elementId);
+      const other = document.getElementById(otherId);
       if (!el) return;
       el.style.display = 'block';
+      el.setAttribute('data-print-active', 'true');
+      el.removeAttribute('data-hidden-for-print');
+      if (other) {
+        other.setAttribute('data-hidden-for-print', 'true');
+        other.removeAttribute('data-print-active');
+        other.style.display = 'none';
+      }
       window.print();
       setTimeout(() => {
         el.style.display = 'none';
+        el.removeAttribute('data-print-active');
+        if (other) {
+          other.removeAttribute('data-hidden-for-print');
+          other.style.display = 'none';
+        }
         setPrintAppointment(null);
         setPrintPrescription(null);
       }, 1500);
@@ -414,8 +473,9 @@ const Consultations = () => {
         margin: 0,
         filename: `Prescription-${detailed && pres?.prescriptionCode ? pres.prescriptionCode : (appt.appointmentCode || 'Pad')}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+        html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, windowY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+        pagebreak: { mode: ['avoid-all'] as const }
       };
       html2pdf().from(el).set(opt).save().then(() => {
         el.style.display = 'none';
@@ -636,93 +696,141 @@ const Consultations = () => {
         <div className="content">
           <div className="appointments-filter-line pb-3 mb-3 border-bottom">
             <h4 className="fw-bold mb-0 text-dark flex-shrink-0">Consultations</h4>
-            
-            {/* Tab Filters: Checked Out, Checked In, Confirmed, Cancelled */}
-            <div className="status-buttons-group ms-auto">
-              {[
-                { key: "All", label: "All", count: counts.all },
-                { key: "Checked Out", label: "Checked Out", count: counts.checkedOut },
-                { key: "Checked In", label: "Checked In", count: counts.checkedIn },
-                { key: "Confirmed", label: "Confirmed", count: counts.confirmed },
-                { key: "Cancelled", label: "Cancelled", count: counts.cancelled }
-              ].map((s) => (
-                <button
-                  key={s.key}
-                  className={`btn btn-sm ${filterStatus === s.key || (s.key === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} status-btn`}
-                  onClick={() => setFilterStatus(s.key)}
-                >
-                  {s.label}
-                  <span className={`badge ${filterStatus === s.key || (s.key === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1 count-badge`}>
-                    {s.count}
-                  </span>
-                </button>
-              ))}
-            </div>
+            <div className="appointments-filter-actions">
+              {/* Tab Filters: Checked Out, Checked In, Confirmed, Cancelled */}
+              <div className="status-buttons-group">
+                {[
+                  { key: "All", label: "All", count: counts.all },
+                  { key: "Checked Out", label: "Checked Out", count: counts.checkedOut },
+                  { key: "Checked In", label: "Checked In", count: counts.checkedIn },
+                  { key: "Confirmed", label: "Confirmed", count: counts.confirmed },
+                  { key: "Cancelled", label: "Cancelled", count: counts.cancelled }
+                ].map((s) => (
+                  <button
+                    key={s.key}
+                    className={`btn btn-sm ${filterStatus === s.key || (s.key === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} status-btn`}
+                    onClick={() => setFilterStatus(s.key)}
+                  >
+                    {s.label}
+                    <span className={`badge ${filterStatus === s.key || (s.key === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1 count-badge`}>
+                      {s.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
 
-            <div className="dropdown">
-              <Link
-                to="#"
-                className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap follow-up-select"
-                style={{ minWidth: "140px", height: "32px", fontSize: "11px", display: "flex", alignItems: "center" }}
-                data-bs-toggle="dropdown"
-                data-bs-auto-close="outside"
-              >
-                <span className="text-truncate">
-                  <span className="text-muted"><i className="ti ti-calendar me-1"></i></span> {datePreset === "All" ? "Filter Date" : datePreset}
-                </span>
-              </Link>
-              <ul className="dropdown-menu dropdown-menu-end p-2 animate__animated animate__fadeIn" style={{ minWidth: "180px", zIndex: 1050 }}>
-                {["All", "Today", "Yesterday", "Last 7 Days", "Custom"].map((preset) => (
-                  <li key={preset}>
+              <div className="dropdown flex-shrink-0">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center text-nowrap follow-up-select"
+                  style={{ height: "32px", fontSize: "11px", display: "flex", alignItems: "center", minWidth: "150px" }}
+                  data-bs-toggle="dropdown"
+                >
+                  <span className="text-truncate pe-1">
+                    <span className="text-muted"><i className="ti ti-user-heart me-1"></i></span>{" "}
+                    {filterDoctor || "Filter Doctor"}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2 animate__animated animate__fadeIn" style={{ minWidth: "200px", maxHeight: "280px", overflowY: "auto", zIndex: 1050 }}>
+                  <li>
                     <Link
                       to="#"
-                      className="dropdown-item rounded-1 fs-12 py-2"
+                      className={`dropdown-item rounded-1 fs-12 py-2 ${!filterDoctor ? "active" : ""}`}
                       onClick={(e) => {
                         e.preventDefault();
-                        if (preset === "Custom") {
-                          e.stopPropagation();
-                        }
-                        setDatePreset(preset);
+                        setFilterDoctor("");
                       }}
                     >
-                      {preset}
+                      All Doctors
                     </Link>
                   </li>
-                ))}
-                {datePreset === "Custom" && (
-                  <li className="p-2 border-top mt-2" onClick={(e) => e.stopPropagation()}>
-                    <div className="d-flex flex-column gap-1">
-                      <label className="text-muted fs-10 fw-bold text-uppercase mb-0">Start Date</label>
-                      <input
-                        type="date"
-                        className="form-control fs-12 px-2 py-1"
-                        value={filterStartDate}
-                        onChange={(e) => setFilterStartDate(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <label className="text-muted fs-10 fw-bold text-uppercase mb-0 mt-1">End Date</label>
-                      <input
-                        type="date"
-                        className="form-control fs-12 px-2 py-1"
-                        value={filterEndDate}
-                        onChange={(e) => setFilterEndDate(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                  </li>
-                )}
-              </ul>
-            </div>
+                  {doctorsList.map((d) => (
+                    <li key={d}>
+                      <Link
+                        to="#"
+                        className={`dropdown-item rounded-1 fs-12 py-2 ${filterDoctor === d ? "active" : ""}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterDoctor(d || "");
+                        }}
+                      >
+                        {d}
+                      </Link>
+                    </li>
+                  ))}
+                  {doctorsList.length === 0 && (
+                    <li>
+                      <span className="dropdown-item-text text-muted fs-12 py-2">No doctors found</span>
+                    </li>
+                  )}
+                </ul>
+              </div>
 
-            {isAnyFilterActive ? (
-              <button className="btn btn-sm clear-filter-btn" onClick={handleClearFilters}>
-                <i className="ti ti-refresh" /> Clear
-              </button>
-            ) : (
-              <button className="btn btn-sm btn-light border filter-btn" data-bs-toggle="offcanvas" data-bs-target="#filter_drawer">
-                <i className="ti ti-filter" /> Filter
-              </button>
-            )}
+              <div className="dropdown flex-shrink-0">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap follow-up-select"
+                  style={{ minWidth: "140px", height: "32px", fontSize: "11px", display: "flex", alignItems: "center" }}
+                  data-bs-toggle="dropdown"
+                  data-bs-auto-close="outside"
+                >
+                  <span className="text-truncate">
+                    <span className="text-muted"><i className="ti ti-calendar me-1"></i></span> {datePreset === "All" ? "Filter Date" : datePreset}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2 animate__animated animate__fadeIn" style={{ minWidth: "180px", zIndex: 1050 }}>
+                  {["All", "Today", "Yesterday", "Last 7 Days", "Custom"].map((preset) => (
+                    <li key={preset}>
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1 fs-12 py-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (preset === "Custom") {
+                            e.stopPropagation();
+                          }
+                          setDatePreset(preset);
+                        }}
+                      >
+                        {preset}
+                      </Link>
+                    </li>
+                  ))}
+                  {datePreset === "Custom" && (
+                    <li className="p-2 border-top mt-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="d-flex flex-column gap-1">
+                        <label className="text-muted fs-10 fw-bold text-uppercase mb-0">Start Date</label>
+                        <input
+                          type="date"
+                          className="form-control fs-12 px-2 py-1"
+                          value={filterStartDate}
+                          onChange={(e) => setFilterStartDate(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <label className="text-muted fs-10 fw-bold text-uppercase mb-0 mt-1">End Date</label>
+                        <input
+                          type="date"
+                          className="form-control fs-12 px-2 py-1"
+                          value={filterEndDate}
+                          onChange={(e) => setFilterEndDate(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </li>
+                  )}
+                </ul>
+              </div>
+
+              {isAnyFilterActive ? (
+                <button className="btn btn-sm clear-filter-btn" onClick={handleClearFilters}>
+                  <i className="ti ti-refresh" /> Clear
+                </button>
+              ) : (
+                <button className="btn btn-sm btn-light border filter-btn" data-bs-toggle="offcanvas" data-bs-target="#filter_drawer">
+                  <i className="ti ti-filter" /> Filter
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="table-responsive rounded bg-white compact-table" style={{ border: "none", borderRadius: "12px", boxShadow: "none" }}>

@@ -1,12 +1,14 @@
 import { useState } from "react";
 import EmptyState from "../../../../../core/common/emptyState";
 import { Link } from "react-router";
-import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
 import { useClinicPatients } from "../../../../../core/hooks/useClinicPatients";
 import type { ClinicPatient } from "../../../../../core/types/clinicPatient";
 import PatientsDeleteModal from "../patients/patientsDeleteModal";
 import { HasPermission } from "../../../../../core/utils/staffPermissions";
+
+const getInitial = (value?: string) =>
+  (value || "").trim().charAt(0).toUpperCase() || "?";
 
 const PatientsGrid = () => {
   const { patients, loading, error, refetch, reload } = useClinicPatients();
@@ -81,8 +83,7 @@ const PatientsGrid = () => {
 
           <div className="row g-2">
             {patients.map((p) => {
-              const hasImage = p.profileImage && p.profileImage.trim() !== "" && !p.profileImage.includes("300x300");
-              const img = hasImage ? p.profileImage : "assets/img/patient-placeholder.png";
+              const displayName = p.fullName || `${p.firstName} ${p.lastName}`;
 
               // Ensure location is concise and doesn't include emails
               const location =
@@ -97,20 +98,27 @@ const PatientsGrid = () => {
                   <div className="card h-100 shadow-sm border-0 border-top border-3 border-primary transition-all position-relative">
                     <div className="card-body d-flex align-items-center p-2 overflow-hidden">
                       <div className="me-2 ps-1">
-                        <Link to={patientDetailsPath(p.id)} className="d-block overflow-hidden rounded-circle border border-2 border-primary-light p-1" style={{ width: "85px", height: "85px" }}>
-                          <ImageWithBasePath
-                            src={img || "assets/img/patient-placeholder.png"}
-                            className="w-100 h-100 rounded-circle"
-                            alt={p.fullName || "Patient"}
-                            style={{ objectFit: "cover" }}
-                          />
+                        <Link
+                          to={patientDetailsPath(p.id)}
+                          className="d-flex align-items-center justify-content-center overflow-hidden rounded-circle border border-2 border-primary-light p-1"
+                          style={{ width: "85px", height: "85px" }}
+                        >
+                          <span
+                            className="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white w-100 h-100"
+                            style={{
+                              background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                              fontSize: "28px",
+                            }}
+                          >
+                            {getInitial(displayName)}
+                          </span>
                         </Link>
                       </div>
                       <div className="flex-fill pe-2 overflow-hidden">
                         <div className="d-flex align-items-center justify-content-between mb-1">
                           <h5 className="mb-0 fw-bold">
                             <Link to={patientDetailsPath(p.id)} className="text-dark text-truncate d-block" style={{ maxWidth: '140px' }}>
-                              {p.fullName || `${p.firstName} ${p.lastName}`}
+                              {displayName}
                             </Link>
                           </h5>
                           <div className="dropdown">

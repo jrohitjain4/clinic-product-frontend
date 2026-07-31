@@ -75,56 +75,14 @@ const Patients = () => {
         a.Phone.localeCompare(b.Phone),
     },
     {
-      title: "Doctor",
-      dataIndex: "Doctor",
-      render: (text: string, record: (typeof tableData)[0]) => (
-        <div className="d-flex align-items-center">
-          <Link
-            to={
-              record._raw.doctors?.[0]?.id
-                ? all_routes.doctorsDetails.replace(
-                  ":id",
-                  record._raw.doctors[0].id
-                )
-                : "#"
-            }
-            className="avatar me-2 flex-shrink-0"
-            onClick={(e) => {
-              if (!record._raw.doctors?.[0]?.id) e.preventDefault();
-            }}
-          >
-            <span
-              className="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white"
-              style={{
-                width: "40px",
-                height: "40px",
-                background: "linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)",
-                fontSize: "16px",
-              }}
-            >
-              {getInitial(text)}
-            </span>
-          </Link>
-          <div>
-            <h6 className="fs-14 mb-1">
-              <span className="fw-semibold">{text}</span>
-            </h6>
-            <p className="mb-0 fs-13">{record.Role}</p>
-          </div>
-        </div>
-      ),
-      sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
-        a.Doctor.localeCompare(b.Doctor),
-    },
-    {
       title: "Address",
       dataIndex: "Address",
       sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
         a.Address.localeCompare(b.Address),
     },
     {
-      title: "Last Visit",
-      dataIndex: "Last_Visit",
+      title: "Registration Date",
+      dataIndex: "Registration_Date",
       render: (text: string) => (
         <div className="d-flex align-items-center fw-semibold text-dark fs-13">
           <i className="ti ti-calendar-event me-2 text-primary fs-16" />
@@ -132,7 +90,7 @@ const Patients = () => {
         </div>
       ),
       sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
-        a.Last_Visit.localeCompare(b.Last_Visit),
+        a.Registration_Date.localeCompare(b.Registration_Date),
     },
     {
       title: "Status",
@@ -210,22 +168,27 @@ const Patients = () => {
                 </span>
               </h4>
             </div>
-            <div className="text-end d-flex">
-              <div className="bg-white border shadow-sm rounded px-1 pb-0 text-center d-flex align-items-center justify-content-center me-2">
-                <span className="bg-light rounded p-1 d-flex align-items-center justify-content-center">
-                  <i className="ti ti-list fs-14 text-dark" />
-                </span>
+            <div className="text-end d-flex align-items-center flex-wrap gap-2">
+              <div className="d-flex align-items-center gap-2">
+                <Link
+                  to={all_routes.patients}
+                  className="btn btn-icon btn-sm bg-primary-subtle text-primary border border-primary d-flex align-items-center justify-content-center"
+                  style={{ width: "38px", height: "38px", borderRadius: "8px" }}
+                >
+                  <i className="ti ti-list-tree fs-16" />
+                </Link>
                 <Link
                   to={all_routes.patientsGrid}
-                  className="bg-white rounded p-1 d-flex align-items-center justify-content-center"
+                  className="btn btn-icon btn-sm bg-white text-dark border d-flex align-items-center justify-content-center"
+                  style={{ width: "38px", height: "38px", borderRadius: "8px" }}
                 >
-                  <i className="ti ti-layout-grid fs-14 text-body" />
+                  <i className="ti ti-layout-grid fs-16" />
                 </Link>
               </div>
               <HasPermission module="Patients" action="CREATE">
                 <Link
                   to={all_routes.createPatient}
-                  className="btn btn-primary ms-2 fs-13 btn-md"
+                  className="btn btn-primary fs-13 btn-md"
                 >
                   <i className="ti ti-plus me-1" />
                   New Patient

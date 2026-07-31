@@ -345,7 +345,8 @@ const Sidebar = () => {
 
 
                                           >
-                                            {item?.label}
+                                            <i className={`ti ti-${item?.icon || "point"} menu-tree-icon`} />
+                                            <span>{item?.label}</span>
                                             {(item?.submenu ||
                                               item?.customSubmenuTwo) && (
                                                 <span className="menu-arrow"></span>
@@ -386,7 +387,8 @@ const Sidebar = () => {
                                                           : ""
                                                           }`}
                                                       >
-                                                        {items?.label}
+                                                        <i className={`ti ti-${items?.icon || "box"} menu-tree-icon`} />
+                                                        <span>{items?.label}</span>
                                                       </Link>
                                                     </li>
                                                   );

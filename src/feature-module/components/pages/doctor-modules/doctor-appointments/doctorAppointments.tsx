@@ -794,6 +794,7 @@ const DoctorAppointments = () => {
           initialDoctorId={selectedAppForPres.doctorId}
           initialAppointmentId={selectedAppForPres.id}
           linkedAppointments={appointments.filter(a => (a as any).rootParentId === ((selectedAppForPres as any).rootParentId || selectedAppForPres.id))}
+          appointment={selectedAppForPres}
         />
       )}
 

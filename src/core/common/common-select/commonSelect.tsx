@@ -16,6 +16,7 @@ export interface SelectProps {
   placeholder?: string;
   isDisabled?: boolean;
   isMulti?: boolean;
+  isClearable?: boolean;
   onChange?: (option: any) => void;
   filterOption?: (option: any, inputValue: string) => boolean;
   formatOptionLabel?: (option: any, formatOptionLabelMeta: any) => React.ReactNode;
@@ -30,6 +31,7 @@ const CommonSelect: React.FC<SelectProps> = ({
   placeholder = "Select",
   isDisabled = false,
   isMulti = false,
+  isClearable = true,
   onChange,
   filterOption,
   formatOptionLabel,
@@ -112,7 +114,7 @@ const CommonSelect: React.FC<SelectProps> = ({
       placeholder={placeholder}
       isDisabled={isDisabled}
       isMulti={isMulti}
-      isClearable
+      isClearable={isClearable}
       filterOption={filterOption}
       formatOptionLabel={formatOptionLabel}
       isSearchable={isSearchable}

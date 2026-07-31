@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { Link, useNavigate } from "react-router";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import TagInput from "../../../../../core/common/Taginput";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import DuplicateForms, {
   cloneScheduleRows,
 } from "../../../../../core/common/duplicate-forms/duplicateForms";
@@ -26,7 +26,9 @@ import {
   IconSelect,
   IconTextarea,
   GenderOptionGroup,
+  StatusOptionGroup,
 } from "../../../../../core/common/form-fields";
+import type { PatientStatusValue } from "../../../../../core/common/form-fields";
 import type { Dayjs } from "dayjs";
 import type { RowType } from "../../../../../core/common/duplicate-forms/duplicateForms.types";
 import type { AwardEntry, EducationEntry } from "../../../../../core/types/doctorProfile";
@@ -66,6 +68,14 @@ const Doctor_Types = [
 ];
 
 const isValidDoctorId = (id?: string) => !!id && id !== ":id" && !id.includes(":");
+
+/** "Dr. Ramesh Yadav" → "rameshyadav" */
+const buildUsernameFromName = (name: string) => {
+  let s = name.trim();
+  s = s.replace(/^(dr\.?|doctor)\s+/i, "");
+  s = s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return s;
+};
 
 const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disableDoctorTypeChange = false }: DoctorFormPageProps) => {
   const navigate = useNavigate();
@@ -193,6 +203,7 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
   const [awardsKey, setAwardsKey] = useState(0);
   const [certsKey, setCertsKey] = useState(0);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showWhatsAppConfirmModal, setShowWhatsAppConfirmModal] = useState(false);
   const [showEducation, setShowEducation] = useState(false);
   const [showAwards, setShowAwards] = useState(false);
   const [showCertifications, setShowCertifications] = useState(false);
@@ -281,6 +292,22 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const [initialUsername, setInitialUsername] = useState("");
   const [usernameWarning, setUsernameWarning] = useState<string | null>(null);
+  const usernameManuallyEditedRef = useRef(false);
+  const usernameAutoRetryRef = useRef(0);
+
+  const handleFullNameChange = (value: string) => {
+    setFullName(value);
+    // Auto-generate username only on create, and only until user edits username
+    if (isEdit || usernameManuallyEditedRef.current) return;
+    usernameAutoRetryRef.current = 0;
+    setUsername(buildUsernameFromName(value));
+  };
+
+  const handleUsernameChange = (value: string) => {
+    usernameManuallyEditedRef.current = true;
+    usernameAutoRetryRef.current = 0;
+    setUsername(value);
+  };
 
   // -- Username Availability Check -------------------------------
   useEffect(() => {
@@ -323,7 +350,18 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
         const data = await res.json();
         if (data.available) {
           setUsernameStatus("available");
+          usernameAutoRetryRef.current = 0;
         } else {
+          // Auto-append random number if still auto-generated (user hasn't edited)
+          if (!isEdit && !usernameManuallyEditedRef.current && usernameAutoRetryRef.current < 5) {
+            usernameAutoRetryRef.current += 1;
+            const base = buildUsernameFromName(fullName) || username.replace(/\d+$/, "");
+            if (base.length >= 2) {
+              const suffix = Math.floor(10 + Math.random() * 90);
+              setUsername(`${base}${suffix}`);
+              return;
+            }
+          }
           setUsernameStatus("taken");
         }
       } catch (err) {
@@ -334,7 +372,7 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
 
     const timeoutId = setTimeout(check, 500);
     return () => clearTimeout(timeoutId);
-  }, [username, isEdit, initialUsername]);
+  }, [username, isEdit, initialUsername, fullName]);
 
   // -- Load doctor for edit -----------------------------------------
   useEffect(() => {
@@ -356,6 +394,7 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
         setFullName(d.fullName || "");
         setUsername(d.username || "");
         setInitialUsername(d.username || "");
+        usernameManuallyEditedRef.current = true;
         setPhone(d.phone || undefined);
         setEmail(d.email || "");
         setDob(d.dob ? dayjs(d.dob) : null);
@@ -841,17 +880,31 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
       toast.success(isEdit ? "Doctor updated successfully!" : "Doctor added successfully!");
       setSuccess(true);
 
-      // Send WhatsApp notification if it's a new doctor creation
+      // Ask to send WhatsApp welcome (theme modal, not browser confirm)
       if (!isEdit && phone) {
-        const confirmSend = window.confirm(`Do you want to send a WhatsApp welcome notification to Dr. ${fullName}?`);
-        if (confirmSend) {
-          try {
-            const userStr = localStorage.getItem("user");
-            const currentUser = userStr ? JSON.parse(userStr) : {};
-            const clinicName = currentUser?.clinic?.name || "our clinic";
-            const loginLink = `${window.location.origin}/login`;
+        setShowWhatsAppConfirmModal(true);
+        return;
+      }
 
-            const msg = `Dear Dr. ${fullName},
+      setTimeout(() => navigate(backRoute), 1500);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const doctorDisplayName = fullName.trim().replace(/^(dr\.?|doctor)\s+/i, "");
+
+  const handleWhatsAppConfirm = (send: boolean) => {
+    if (send && phone) {
+      try {
+        const userStr = localStorage.getItem("user");
+        const currentUser = userStr ? JSON.parse(userStr) : {};
+        const clinicName = currentUser?.clinic?.name || "our clinic";
+        const loginLink = `${window.location.origin}/login`;
+
+        const msg = `Dear Dr. ${doctorDisplayName},
 Welcome to ${clinicName}. Your doctor account has been successfully created on the DocYori Clinic Management System.
 You can now securely access your account using your registered mobile number and OTP verification.
 🔗 Login Here:
@@ -869,21 +922,15 @@ Thank you,
  ${clinicName}
 Powered by DocYori`;
 
-            const cleanPhone = phone.replace(/\D/g, "");
-            const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
-            window.open(whatsappUrl, "_blank");
-          } catch (e) {
-            console.error("Error generating WhatsApp notification link", e);
-          }
-        }
+        const cleanPhone = phone.replace(/\D/g, "");
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
+        window.open(whatsappUrl, "_blank");
+      } catch (e) {
+        console.error("Error generating WhatsApp notification link", e);
       }
-
-      setTimeout(() => navigate(backRoute), 1500);
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setSubmitting(false);
     }
+    setShowWhatsAppConfirmModal(false);
+    navigate(backRoute);
   };
 
   if (loadingDoctor) {
@@ -1124,7 +1171,7 @@ Powered by DocYori`;
                       <div className="row">
                         {/* Profile Image */}
                         <div className="col-lg-12">
-                          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2" style={{ marginBottom: "10px" }}>
+                          <div className="d-flex align-items-center justify-content-between flex-wrap gap-3" style={{ marginBottom: "10px" }}>
                             <div className="d-flex align-items-center">
                               <label className="form-label me-3 mb-0">Profile Image</label>
                               <DoctorProfileUpload
@@ -1132,34 +1179,17 @@ Powered by DocYori`;
                                 onChange={setProfileImage}
                               />
                             </div>
-                            <div className="d-flex align-items-center border rounded p-2 bg-white shadow-sm">
-                              <label className="form-label me-3 mb-0 fw-bold">Availability Status:</label>
-                              <div className="form-check form-check-inline mb-0">
-                                <input
-                                  className="form-check-input"
-                                  type="radio"
-                                  name="dr_status"
-                                  id="status_active"
-                                  checked={status === "Active"}
-                                  onChange={() => setStatus("Active")}
-                                />
-                                <label className="form-check-label text-success fw-medium" htmlFor="status_active">
-                                  Available
-                                </label>
-                              </div>
-                              <div className="form-check form-check-inline mb-0">
-                                <input
-                                  className="form-check-input"
-                                  type="radio"
-                                  name="dr_status"
-                                  id="status_inactive"
-                                  checked={status === "Inactive"}
-                                  onChange={() => setStatus("Inactive")}
-                                />
-                                <label className="form-check-label text-danger fw-medium" htmlFor="status_inactive">
-                                  Unable
-                                </label>
-                              </div>
+                            <div style={{ minWidth: 280, maxWidth: 360, flex: "1 1 280px" }}>
+                              <label className="form-label mb-1 fw-medium">
+                                Availability Status
+                                <span className="text-danger ms-1">*</span>
+                              </label>
+                              <StatusOptionGroup
+                                value={status}
+                                onChange={(val: PatientStatusValue) =>
+                                  setStatus(val || "Active")
+                                }
+                              />
                             </div>
                           </div>
                         </div>
@@ -1173,7 +1203,7 @@ Powered by DocYori`;
                               fieldLabel="Name"
                               type="text"
                               value={fullName}
-                              onChange={(e) => setFullName(e.target.value)}
+                              onChange={(e) => handleFullNameChange(e.target.value)}
                               placeholder="Dr. Full Name"
                             />
                           </div>
@@ -1189,7 +1219,7 @@ Powered by DocYori`;
                               fieldLabel="Username"
                               type="text"
                               value={username}
-                              onChange={(e) => setUsername(e.target.value)}
+                              onChange={(e) => handleUsernameChange(e.target.value)}
                               placeholder="username"
                             />
                             <div className="d-flex flex-column" style={{ minHeight: "0px", marginTop: "2px" }}>
@@ -1309,6 +1339,20 @@ Powered by DocYori`;
                             />
                           </div>
                         </div>
+
+                        {/* Gender — same as Add Patient (half width, right side empty) */}
+                        <div className="col-lg-6">
+                          <div style={{ marginBottom: "10px" }}>
+                            <label className="form-label mb-1 fw-medium">
+                              Gender<span className="text-danger ms-1">*</span>
+                            </label>
+                            <GenderOptionGroup
+                              value={gender}
+                              onChange={(v) => setGender(v)}
+                            />
+                          </div>
+                        </div>
+                        <div className="w-100" />
 
                         {/* Department */}
                         <div className="col-lg-6">
@@ -1515,8 +1559,11 @@ Powered by DocYori`;
                               onClick={() => setActiveScheduleDay(day)}
                             >
                               {day}
-                              {lockedDays[day] && <i className="ti ti-circle-check-filled fs-14 text-white shadow-sm" />}
-                              {!lockedDays[day] && dayEnabled[day] && <i className="ti ti-circle-filled fs-10 text-warning" />}
+                              {lockedDays[day] ? (
+                                <i className="ti ti-circle-check-filled fs-16 text-success" title="Locked" />
+                              ) : (
+                                <i className="ti ti-circle-x-filled fs-16 text-danger" title="Not locked" />
+                              )}
                             </button>
                           </li>
                         )
@@ -2221,7 +2268,7 @@ Powered by DocYori`;
                               </div>
                             </div>
 
-                            {/* Blood Group + Gender */}
+                            {/* Blood Group */}
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">
@@ -2236,17 +2283,6 @@ Powered by DocYori`;
                                     Blood_Group[0]
                                   }
                                   onChange={(opt: any) => setBloodGroup(opt?.value || "")}
-                                />
-                              </div>
-                            </div>
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">
-                                  Gender <span className="text-danger ms-1">*</span>
-                                </label>
-                                <GenderOptionGroup
-                                  value={gender}
-                                  onChange={(v) => setGender(v)}
                                 />
                               </div>
                             </div>
@@ -2394,6 +2430,84 @@ Powered by DocYori`;
           </p>
         </div>
       </div>
+
+      {/* --- WhatsApp welcome confirm modal --- */}
+      {showWhatsAppConfirmModal && (
+        <div
+          className="modal fade show"
+          style={{
+            display: "block",
+            backgroundColor: "rgba(15, 23, 42, 0.45)",
+            backdropFilter: "blur(5px)",
+            WebkitBackdropFilter: "blur(5px)",
+            zIndex: 1060,
+          }}
+          role="dialog"
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div
+              className="modal-content border-0 shadow-lg"
+              style={{ borderRadius: "12px", overflow: "hidden" }}
+            >
+              <div
+                className="modal-header text-white border-0"
+                style={{
+                  background: "linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)",
+                }}
+              >
+                <h5 className="modal-title d-flex align-items-center gap-2 mb-0 fw-bold">
+                  <i className="ti ti-brand-whatsapp fs-22" />
+                  WhatsApp Notification
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  aria-label="Close"
+                  onClick={() => handleWhatsAppConfirm(false)}
+                />
+              </div>
+              <div className="modal-body p-4 text-center">
+                <div className="mb-3">
+                  <span
+                    className="avatar avatar-xl rounded-circle d-inline-flex align-items-center justify-content-center"
+                    style={{ background: "#dcfce7", color: "#16a34a", width: 72, height: 72 }}
+                  >
+                    <i className="ti ti-brand-whatsapp fs-36" />
+                  </span>
+                </div>
+                <h5 className="fw-bold mb-2 text-dark">Send welcome message?</h5>
+                <p className="text-muted mb-0 fs-14">
+                  Do you want to send a WhatsApp welcome notification to{" "}
+                  <strong className="text-dark">Dr. {doctorDisplayName}</strong>?
+                </p>
+              </div>
+              <div className="modal-footer border-top-0 pt-0 pb-4 justify-content-center gap-2">
+                <button
+                  type="button"
+                  className="btn btn-light px-4 border"
+                  style={{ borderRadius: "8px" }}
+                  onClick={() => handleWhatsAppConfirm(false)}
+                >
+                  Skip
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary px-4 shadow-sm d-inline-flex align-items-center gap-2"
+                  style={{
+                    borderRadius: "8px",
+                    background: "linear-gradient(90deg, #22c55e 0%, #16a34a 100%)",
+                    border: "none",
+                  }}
+                  onClick={() => handleWhatsAppConfirm(true)}
+                >
+                  <i className="ti ti-brand-whatsapp" />
+                  Send WhatsApp
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* --- Error Modal for missing Dept/Desig --- */}
       {showErrorModal && (

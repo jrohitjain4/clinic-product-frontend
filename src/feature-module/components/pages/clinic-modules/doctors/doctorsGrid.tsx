@@ -132,6 +132,14 @@ const DoctorsGrid = ({ doctors, loading, error, onRetry, onDelete }: DoctorsGrid
                         <ul className="dropdown-menu dropdown-menu-end shadow-lg border-0">
                           <li>
                             <Link
+                              to={doctorDetailsPath(doctor.id)}
+                              className="dropdown-item d-flex align-items-center py-2"
+                            >
+                              <i className="ti ti-eye me-2 text-info" /> View
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
                               to={editDoctorPath(doctor.id)}
                               className="dropdown-item d-flex align-items-center py-2"
                             >

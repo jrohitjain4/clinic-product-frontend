@@ -4,6 +4,7 @@ import { DatePicker } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+import { toast } from "react-toastify";
 import { all_routes } from "../../../../routes/all_routes";
 import {
   Blood_Group,
@@ -20,6 +21,7 @@ import {
 } from "../../../../../core/common/form-fields";
 import type { GenderValue, PatientStatusValue } from "../../../../../core/common/form-fields";
 import { apiUrl } from "../../../../../core/config/api";
+import { apiGet, apiPost } from "../../../../../core/utils/apiClient";
 import { useClinicPatient } from "../../../../../core/hooks/useClinicPatient";
 import {
   emptyPatientForm,
@@ -27,7 +29,7 @@ import {
 import { findSelectOption } from "../../../../../core/utils/doctorSchedule";
 import "../../../../../core/common/form-fields/IconField.scss";
 
-type DoctorOption = { id: string; fullName: string };
+type ReferOption = { id: string; name: string; description?: string };
 
 interface PatientFormPageProps {
   mode: "create" | "edit";
@@ -41,25 +43,59 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
   );
 
   const [form, setForm] = useState(emptyPatientForm);
-  const [doctors, setDoctors] = useState<DoctorOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [phoneWarning, setPhoneWarning] = useState<string | null>(null);
 
+  const [refers, setRefers] = useState<ReferOption[]>([]);
+  const [showAddReferModal, setShowAddReferModal] = useState(false);
+  const [newReferName, setNewReferName] = useState("");
+  const [newReferDesc, setNewReferDesc] = useState("");
+  const [addingRefer, setAddingRefer] = useState(false);
+  const [referError, setReferError] = useState<string | null>(null);
+
   const getModalContainer = () =>
     document.getElementById("modal-datepicker") || document.body;
 
+  const fetchRefers = async () => {
+    try {
+      const data = await apiGet<ReferOption[]>("/api/refers");
+      setRefers(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch(apiUrl("/api/doctors"), {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then((r) => r.json())
-      .then((data: DoctorOption[]) =>
-        setDoctors(Array.isArray(data) ? data.filter((d) => d.id) : [])
-      )
-      .catch(console.error);
+    fetchRefers();
   }, []);
+
+  const handleAddNewRefer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newReferName.trim()) return;
+    setAddingRefer(true);
+    setReferError(null);
+    try {
+      const created = await apiPost<ReferOption>("/api/refers", {
+        name: newReferName.trim(),
+        description: newReferDesc.trim() || null,
+      });
+      toast.success("Refer source added successfully!");
+      await fetchRefers();
+      setForm((f) => ({
+        ...f,
+        referId: created.id,
+        referredBy: created.name,
+      }));
+      setShowAddReferModal(false);
+      setNewReferName("");
+      setNewReferDesc("");
+    } catch (err: unknown) {
+      setReferError(err instanceof Error ? err.message : "Error adding refer");
+    } finally {
+      setAddingRefer(false);
+    }
+  };
 
   useEffect(() => {
     if (mode === "edit" && patient) {
@@ -80,6 +116,8 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
         state: patient.state || "",
         city: patient.city || "",
         pincode: patient.pincode || "",
+        referredBy: patient.referredBy || "",
+        referId: patient.referId || "",
       });
     }
   }, [mode, patient?.id]);
@@ -112,9 +150,9 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
       .catch(() => setPhoneWarning(null));
   }, [form.phone, mode, id]);
 
-  const doctorOptions = doctors.map((d) => ({
-    value: d.id,
-    label: d.fullName,
+  const referOptions = refers.map((r) => ({
+    value: r.id,
+    label: r.description ? `${r.name} — ${r.description}` : r.name,
   }));
 
   const buildPayload = () => ({
@@ -123,7 +161,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
     profileImage: form.profileImage,
     phone: form.phone || null,
     email: form.email || null,
-    doctorIds: form.doctorIds,
+    doctorIds: form.doctorIds || [],
     dob: form.dob ? form.dob.toISOString() : null,
     gender: form.gender || null,
     bloodGroup: form.bloodGroup || null,
@@ -134,6 +172,8 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
     state: form.state || null,
     city: form.city || null,
     pincode: form.pincode || null,
+    referredBy: form.referredBy || null,
+    referId: form.referId || null,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -144,10 +184,6 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
     }
     if (!form.lastName.trim()) {
       setFormError("Last name is required.");
-      return;
-    }
-    if (!form.doctorIds || form.doctorIds.length === 0) {
-      setFormError("At least one doctor is required.");
       return;
     }
 
@@ -204,8 +240,8 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
         }
       `}</style>
       <div className="content">
-        <div className="row justify-content-center">
-          <div className="col-lg-10">
+        <div className="row">
+          <div className="col-12">
             <div className="mb-4">
               <h6 className="fw-bold mb-0 d-flex align-items-center">
                 <Link to={all_routes.patients} className="text-dark">
@@ -358,7 +394,8 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
-                          Email Address<span className="text-danger ms-1">*</span>
+                          Email Address{" "}
+                          <span className="text-muted fw-normal fs-12">(Optional)</span>
                         </label>
                         <IconFormControl
                           fieldLabel="Email Address"
@@ -373,36 +410,46 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     </div>
                     <div className="col-md-6">
                       <div className="mb-3">
-                        <label className="form-label mb-1 fw-medium">
-                          Associate Doctors<span className="text-danger ms-1">*</span>
-                        </label>
-                        {doctorOptions.length > 0 ? (
-                          <IconSelect
-                            fieldLabel="Associate Doctors"
-                            options={doctorOptions}
-                            className="select"
-                            isMulti={true}
-                            value={doctorOptions.filter((opt) =>
-                              form.doctorIds.includes(opt.value)
-                            )}
-                            placeholder="Select doctors"
-                            onChange={(opts) => {
-                              const selectedIds = Array.isArray(opts)
-                                ? opts.map((opt: any) => opt.value)
-                                : opts
-                                ? [opts.value]
-                                : [];
-                              setForm((f) => ({
-                                ...f,
-                                doctorIds: selectedIds,
-                              }));
+                        <div className="d-flex align-items-center justify-content-between mb-1">
+                          <label className="form-label mb-0 fw-medium">
+                            Referred By
+                          </label>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-primary py-0 px-2"
+                            style={{ fontSize: "12px" }}
+                            onClick={() => {
+                              setShowAddReferModal(true);
+                              setNewReferName("");
+                              setNewReferDesc("");
+                              setReferError(null);
                             }}
-                          />
-                        ) : (
-                          <div className="form-control text-muted py-2 fs-13">
-                            No doctors - add a doctor first
-                          </div>
-                        )}
+                          >
+                            <i className="ti ti-plus me-1" />
+                            Add New
+                          </button>
+                        </div>
+                        <IconSelect
+                          fieldLabel="Referred By"
+                          options={referOptions}
+                          className="select"
+                          value={
+                            referOptions.find((opt) => opt.value === form.referId) ||
+                            null
+                          }
+                          placeholder="Select refer source"
+                          isClearable
+                          onChange={(opt) => {
+                            const selected = refers.find(
+                              (r) => r.id === (opt?.value || "")
+                            );
+                            setForm((f) => ({
+                              ...f,
+                              referId: opt?.value || "",
+                              referredBy: selected ? selected.name : "",
+                            }));
+                          }}
+                        />
                       </div>
                     </div>
                     <div className="col-md-6">
@@ -444,17 +491,16 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
-                          Blood Group<span className="text-danger ms-1">*</span>
+                          Blood Group{" "}
+                          <span className="text-muted fw-normal fs-12">(Optional)</span>
                         </label>
                         <IconSelect
                           fieldLabel="Blood Group"
                           options={Blood_Group}
                           className="select"
-                          value={
-                            findSelectOption(Blood_Group, form.bloodGroup) ||
-                            Blood_Group[0]
-                          }
+                          value={findSelectOption(Blood_Group, form.bloodGroup) || null}
                           placeholder="Select blood group"
+                          isClearable
                           onChange={(opt) =>
                             setForm((f) => ({
                               ...f,
@@ -484,14 +530,15 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                         display: "inline-block",
                       }}
                     >
-                      Address Information
+                      Address Information{" "}
+                      <span className="text-muted fw-normal fs-12">(Optional)</span>
                     </h6>
                   </div>
                   <div className="row">
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
-                          Address 1<span className="text-danger ms-1">*</span>
+                          Address 1
                         </label>
                         <IconFormControl
                           fieldLabel="Address 1"
@@ -523,16 +570,15 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     <div className="col-lg-6">
                       <div className="mb-3">
                         <label className="form-label mb-1">
-                          Country<span className="text-danger ms-1">*</span>
+                          Country
                         </label>
                         <IconSelect
                           fieldLabel="Country"
                           options={Country}
                           className="select"
-                          value={
-                            findSelectOption(Country, form.country) || Country[0]
-                          }
+                          value={findSelectOption(Country, form.country) || null}
                           placeholder="Select country"
+                          isClearable
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, country: opt?.value || "" }))
                           }
@@ -542,14 +588,15 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     <div className="col-lg-6">
                       <div className="mb-3">
                         <label className="form-label mb-1">
-                          State<span className="text-danger ms-1">*</span>
+                          State
                         </label>
                         <IconSelect
                           fieldLabel="State"
                           options={State}
                           className="select"
-                          value={findSelectOption(State, form.state) || State[0]}
+                          value={findSelectOption(State, form.state) || null}
                           placeholder="Select state"
+                          isClearable
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, state: opt?.value || "" }))
                           }
@@ -559,14 +606,15 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     <div className="col-lg-6">
                       <div className="mb-3">
                         <label className="form-label mb-1">
-                          City<span className="text-danger ms-1">*</span>
+                          City
                         </label>
                         <IconSelect
                           fieldLabel="City"
                           options={City}
                           className="select"
-                          value={findSelectOption(City, form.city) || City[0]}
+                          value={findSelectOption(City, form.city) || null}
                           placeholder="Select city"
+                          isClearable
                           onChange={(opt) =>
                             setForm((f) => ({ ...f, city: opt?.value || "" }))
                           }
@@ -576,7 +624,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     <div className="col-lg-6">
                       <div className="mb-3">
                         <label className="form-label mb-1">
-                          Pincode<span className="text-danger ms-1">*</span>
+                          Pincode
                         </label>
                         <IconFormControl
                           fieldLabel="Pincode"
@@ -612,6 +660,88 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
           </div>
         </div>
       </div>
+      {showAddReferModal && (
+        <div
+          className="modal fade show d-block"
+          tabIndex={-1}
+          role="dialog"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1055 }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowAddReferModal(false);
+          }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div
+              className="modal-content border-0 shadow-lg"
+              style={{ borderRadius: "12px", overflow: "hidden" }}
+            >
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title text-white">Add New Refer Source</h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowAddReferModal(false)}
+                  aria-label="Close"
+                />
+              </div>
+              <form onSubmit={handleAddNewRefer}>
+                <div className="modal-body p-4">
+                  {referError && (
+                    <div className="alert alert-danger py-2 fs-13 mb-3">
+                      {referError}
+                    </div>
+                  )}
+                  <div className="mb-3">
+                    <label className="form-label fw-medium">
+                      Refer Name <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="e.g. Google, Walk-in, Doctor Referral"
+                      value={newReferName}
+                      onChange={(e) => setNewReferName(e.target.value)}
+                      autoFocus
+                      required
+                    />
+                  </div>
+                  <div className="mb-0">
+                    <label className="form-label fw-medium">
+                      Description{" "}
+                      <span className="text-muted fw-normal fs-12">(Optional)</span>
+                    </label>
+                    <textarea
+                      className="form-control"
+                      rows={3}
+                      placeholder="Enter Description"
+                      value={newReferDesc}
+                      onChange={(e) => setNewReferDesc(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="d-flex justify-content-end gap-2 p-3 border-top bg-light">
+                  <button
+                    type="button"
+                    className="btn btn-light px-4 shadow-sm"
+                    onClick={() => setShowAddReferModal(false)}
+                    style={{ borderRadius: "6px" }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary px-4 shadow-sm d-flex align-items-center justify-content-center gap-2"
+                    disabled={addingRefer || !newReferName.trim()}
+                    style={{ borderRadius: "6px" }}
+                  >
+                    {addingRefer ? "Saving..." : "Add Refer"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="footer text-center bg-white p-2 border-top">
         <p className="text-dark mb-0">
           2025 © <span className="link-primary">Docyari</span>, All Rights Reserved

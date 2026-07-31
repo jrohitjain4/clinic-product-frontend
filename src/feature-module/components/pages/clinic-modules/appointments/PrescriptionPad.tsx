@@ -305,22 +305,10 @@ const PrescriptionPad: React.FC<PrescriptionPadProps> = ({ appointment, prescrip
 
         /* ---- PRINT ---- */
         @media print {
-          @page { size: A4; margin: 0; }
-          body { visibility: hidden !important; }
-          #print-prescription-pad, #print-prescription-pad * { visibility: visible !important; }
-          #print-prescription-pad {
-            visibility: visible !important;
-            display: block !important;
-            position: fixed !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 21cm !important;
-            height: 29.7cm !important;
-            background: white !important;
-            z-index: 99999 !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            overflow: hidden !important;
+          #print-prescription-pad[data-hidden-for-print],
+          #print-prescription-pad[data-hidden-for-print] * {
+            display: none !important;
+            visibility: hidden !important;
           }
           .prescription-pad-card {
             page-break-after: avoid !important;

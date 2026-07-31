@@ -14,13 +14,22 @@ export const APPOINTMENT_TYPE_OPTIONS = [
   { value: "Both", label: "Both" },
 ];
 
+/** Align legacy / extra statuses with Add Appointment options */
+export const normalizeAppointmentStatus = (status?: string | null) => {
+  if (!status) return "Schedule";
+  if (status === "Completed") return "Checked Out";
+  if (status === "Follow-up" || status === "Scheduled") return "Schedule";
+  return status;
+};
+
 export const statusBadgeClass = (status: string) => {
-  if (status === "Checked Out") return "badge-soft-info text-info";
-  if (status === "Checked In") return "badge-soft-warning text-warning";
-  if (status === "Cancelled") return "badge-soft-danger text-danger";
-  if (status === "Schedule") return "badge-soft-primary text-primary";
-  if (status === "Follow-up") return "badge-soft-success text-success";
-  return "badge-soft-success text-success";
+  const s = normalizeAppointmentStatus(status);
+  if (s === "Checked Out") return "badge-soft-info text-info";
+  if (s === "Checked In") return "badge-soft-warning text-warning";
+  if (s === "Cancelled") return "badge-soft-danger text-danger";
+  if (s === "Schedule") return "badge-soft-primary text-primary";
+  if (s === "Confirmed") return "badge-soft-success text-success";
+  return "badge-soft-secondary text-secondary";
 };
 
 export const appointmentToTableRow = (a: ClinicAppointment, index: number) => {
@@ -49,7 +58,7 @@ export const appointmentToTableRow = (a: ClinicAppointment, index: number) => {
       : (a.mode === "In-person" || a.mode === "In Person" || a.mode === "Walk-in" || a.mode === "Walk In" || !a.mode)
         ? "Walk In"
         : a.mode,
-    Status: a.status,
+    Status: normalizeAppointmentStatus(a.status),
     Code: a.appointmentCode || "—",
     _raw: a,
   };

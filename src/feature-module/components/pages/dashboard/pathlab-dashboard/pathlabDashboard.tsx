@@ -1,9 +1,21 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { useLabDashboard } from "../../../../../core/hooks/useLabBookings";
+import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import dayjs from "dayjs";
+import AddDiagnosticTestModal from "./AddDiagnosticTestModal";
 
 const PathlabDashboard = () => {
   const { stats, loading } = useLabDashboard();
+  const [showAddTestModal, setShowAddTestModal] = useState(false);
+
+  const user = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "{}");
+    } catch {
+      return {};
+    }
+  }, []);
 
   const statCards = [
     {
@@ -11,10 +23,10 @@ const PathlabDashboard = () => {
       value: stats?.totalBookings ?? 0,
       icon: "ti-clipboard-list",
       bg: "#6366f1",
+      iconBg: "#e0e7ff",
+      iconColor: "#4f46e5",
       badge: "All Time",
-      badgeColor: "#6366f1",
-      badgeBg: "#e0e7ff",
-      badgeBorder: "#c7d2fe",
+      chart: "assets/img/charts/appointments-bars.svg",
       sub: "All diagnostic bookings",
     },
     {
@@ -22,10 +34,10 @@ const PathlabDashboard = () => {
       value: stats?.todaysBookings ?? 0,
       icon: "ti-calendar-event",
       bg: "#3b82f6",
+      iconBg: "#dbeafe",
+      iconColor: "#2563eb",
       badge: "Today",
-      badgeColor: "#3b82f6",
-      badgeBg: "#eff6ff",
-      badgeBorder: "#bfdbfe",
+      chart: "assets/img/charts/today-appts.svg",
       sub: "Bookings scheduled today",
     },
     {
@@ -33,10 +45,10 @@ const PathlabDashboard = () => {
       value: stats?.pendingBookings ?? 0,
       icon: "ti-clock",
       bg: "#f97316",
+      iconBg: "#ffedd5",
+      iconColor: "#c2410c",
       badge: "Pending",
-      badgeColor: "#f97316",
-      badgeBg: "#fff7ed",
-      badgeBorder: "#fed7aa",
+      chart: "assets/img/charts/new-patients-donut.svg",
       sub: "Awaiting confirmation",
     },
     {
@@ -44,10 +56,10 @@ const PathlabDashboard = () => {
       value: stats?.confirmedBookings ?? 0,
       icon: "ti-circle-check",
       bg: "#8b5cf6",
+      iconBg: "#f3e8ff",
+      iconColor: "#7c3aed",
       badge: "Confirmed",
-      badgeColor: "#8b5cf6",
-      badgeBg: "#f5f3ff",
-      badgeBorder: "#ddd6fe",
+      chart: "assets/img/charts/patients-donut.svg",
       sub: "Confirmed & scheduled",
     },
     {
@@ -55,10 +67,10 @@ const PathlabDashboard = () => {
       value: stats?.completedBookings ?? 0,
       icon: "ti-checkbox",
       bg: "#10b981",
+      iconBg: "#d1fae5",
+      iconColor: "#059669",
       badge: "Done",
-      badgeColor: "#10b981",
-      badgeBg: "#ecfdf5",
-      badgeBorder: "#a7f3d0",
+      chart: "assets/img/charts/completed-bars.svg",
       sub: "Successfully completed",
     },
     {
@@ -66,10 +78,10 @@ const PathlabDashboard = () => {
       value: stats?.cancelledBookings ?? 0,
       icon: "ti-calendar-x",
       bg: "#ef4444",
+      iconBg: "#fee2e2",
+      iconColor: "#dc2626",
       badge: "Cancelled",
-      badgeColor: "#ef4444",
-      badgeBg: "#fef2f2",
-      badgeBorder: "#fecaca",
+      chart: "assets/img/charts/noshow-heatmap.svg",
       sub: "Cancelled / No Show",
     },
     {
@@ -77,10 +89,10 @@ const PathlabDashboard = () => {
       value: `₹${(stats?.todaysRevenue ?? 0).toLocaleString("en-IN")}`,
       icon: "ti-currency-rupee",
       bg: "#0d9488",
+      iconBg: "#ccfbf1",
+      iconColor: "#0f766e",
       badge: "Today",
-      badgeColor: "#0d9488",
-      badgeBg: "#f0fdfa",
-      badgeBorder: "#99f6e4",
+      chart: "assets/img/charts/revenue-area.svg",
       sub: "Revenue collected today",
     },
     {
@@ -88,10 +100,10 @@ const PathlabDashboard = () => {
       value: `₹${(stats?.totalRevenue ?? 0).toLocaleString("en-IN")}`,
       icon: "ti-cash",
       bg: "#2563eb",
+      iconBg: "#dbeafe",
+      iconColor: "#1d4ed8",
       badge: "Total",
-      badgeColor: "#2563eb",
-      badgeBg: "#dbeafe",
-      badgeBorder: "#bfdbfe",
+      chart: "assets/img/charts/doctors-heatmap.svg",
       sub: "All time lab revenue",
     },
   ];
@@ -117,12 +129,12 @@ const PathlabDashboard = () => {
             margin: 0 auto;
           }
 
-          /* Premium Hero Cards */
+          /* Premium Hero Cards — same layout as main dashboard */
           .pathlab-dashboard-wrapper .hero-card {
             background: #ffffff;
             border: 1px solid rgba(226, 232, 240, 0.8);
             border-radius: 20px;
-            padding: 24px;
+            padding: 16px;
             position: relative;
             overflow: hidden;
             box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 0 3px rgba(0,0,0,0.02);
@@ -131,6 +143,7 @@ const PathlabDashboard = () => {
             flex-direction: column;
             justify-content: space-between;
             height: 100%;
+            min-height: 138px;
             cursor: default;
           }
           .pathlab-dashboard-wrapper .hero-card:hover {
@@ -150,44 +163,124 @@ const PathlabDashboard = () => {
             z-index: 0;
             pointer-events: none;
           }
+          .pathlab-dashboard-wrapper .hero-card-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+            height: 100%;
+          }
+          .pathlab-dashboard-wrapper .hero-card-left {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 0;
+            flex: 1;
+          }
+          .pathlab-dashboard-wrapper .hero-card-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-shrink: 0;
+            min-width: 100px;
+          }
           .pathlab-dashboard-wrapper .hero-icon-box {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
             z-index: 1;
             position: relative;
-            box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 10px rgba(0,0,0,0.05);
           }
           .pathlab-dashboard-wrapper .hero-val {
-            font-size: 36px;
+            font-size: 28px;
             font-weight: 800;
             letter-spacing: -1px;
             color: #0f172a;
-            margin-top: 16px;
-            margin-bottom: 4px;
+            margin-top: 10px;
+            margin-bottom: 2px;
             z-index: 1;
             position: relative;
             line-height: 1.1;
           }
           .pathlab-dashboard-wrapper .hero-title {
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 700;
             color: #64748b;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
             z-index: 1;
             position: relative;
           }
           .pathlab-dashboard-wrapper .hero-sub {
-            font-size: 12px;
+            font-size: 11px;
             color: #94a3b8;
-            margin-top: 6px;
+            margin-top: 4px;
             z-index: 1;
             position: relative;
+          }
+          .pathlab-dashboard-wrapper .hero-chart-wrap {
+            margin-top: 8px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: flex-end;
+            width: 100%;
+          }
+          .pathlab-dashboard-wrapper .hero-chart-wrap img {
+            max-width: 100px;
+            height: auto;
+            display: block;
+          }
+          .pathlab-dashboard-wrapper .hero-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+            width: 100%;
+          }
+          .pathlab-dashboard-wrapper .hero-period-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #64748b;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            white-space: nowrap;
+          }
+          @media (max-width: 1199.98px) {
+            .pathlab-dashboard-wrapper .hero-kpi-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+          }
+          @media (max-width: 575.98px) {
+            .pathlab-dashboard-wrapper .hero-kpi-grid {
+              grid-template-columns: minmax(0, 1fr);
+            }
+          }
+
+          .pathlab-dashboard-wrapper .btn-premium {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+            font-weight: 600 !important;
+            padding: 10px 20px !important;
+            border-radius: 10px !important;
+            transition: all 0.3s ease !important;
+          }
+          .pathlab-dashboard-wrapper .btn-premium:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35) !important;
+            color: white !important;
           }
 
           /* Analytics Cards */
@@ -295,15 +388,24 @@ const PathlabDashboard = () => {
         <div className="content pb-0">
 
           {/* Page Header */}
-          <div className="d-flex align-items-center justify-content-between mb-4 fade-in-up">
+          <div className="d-flex align-items-center justify-content-between mb-4 fade-in-up flex-wrap gap-3">
             <div>
               <h1 className="fw-bold mb-1" style={{ fontSize: "32px", letterSpacing: "-0.5px", color: "#0f172a" }}>
-                PathLab Dashboard
+                Diagnostic Dashboard
               </h1>
               <p className="mb-0" style={{ color: "#64748b", fontSize: "15px" }}>
                 Here's what's happening in your lab today.
               </p>
             </div>
+            {user?.role !== "DOCTOR" && (
+              <button
+                type="button"
+                className="btn-premium d-flex align-items-center gap-2"
+                onClick={() => setShowAddTestModal(true)}
+              >
+                <i className="ti ti-plus fs-16" /> Add New Diagnostic Test
+              </button>
+            )}
           </div>
 
           {loading ? (
@@ -313,71 +415,53 @@ const PathlabDashboard = () => {
             </div>
           ) : (
             <>
-              {/* Row 1 — Stat Cards (4+4) */}
-              <div className="row g-4 mb-4">
+              {/* Stat Cards — same SVG layout as main dashboard */}
+              <div className="hero-kpi-grid fade-in-up delay-1">
                 {statCards.slice(0, 4).map((card, i) => (
-                  <div className={`col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12 fade-in-up delay-${(i % 4) + 1}`} key={i}>
-                    <div className="hero-card">
-                      <div className="hero-card-bg-glow" style={{ background: card.bg }} />
-                      <div className="d-flex justify-content-between align-items-start">
-                        <div className="hero-icon-box" style={{ background: card.badgeBg, color: card.badgeColor }}>
+                  <div className={`hero-card fade-in-up delay-${(i % 4) + 1}`} key={card.title}>
+                    <div className="hero-card-bg-glow" style={{ background: card.bg }} />
+                    <div className="hero-card-main">
+                      <div className="hero-card-left">
+                        <div className="hero-icon-box" style={{ background: card.iconBg, color: card.iconColor }}>
                           <i className={`ti ${card.icon}`} />
                         </div>
-                        <span
-                          className="badge fw-semibold"
-                          style={{
-                            color: card.badgeColor,
-                            backgroundColor: card.badgeBg,
-                            border: `1px solid ${card.badgeBorder}`,
-                            borderRadius: "6px",
-                            padding: "4px 8px",
-                            fontSize: "10px",
-                            zIndex: 1,
-                            position: "relative",
-                          }}
-                        >
-                          {card.badge}
-                        </span>
+                        <div>
+                          <div className="hero-val">{card.value}</div>
+                          <div className="hero-title">{card.title}</div>
+                          <div className="hero-sub">{card.sub}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="hero-val">{card.value}</div>
-                        <div className="hero-title">{card.title}</div>
-                        <div className="hero-sub">{card.sub}</div>
+                      <div className="hero-card-right">
+                        <span className="hero-period-pill">{card.badge}</span>
+                        <div className="hero-chart-wrap">
+                          <ImageWithBasePath src={card.chart} alt={card.title} />
+                        </div>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="row g-4 mb-4">
+              <div className="hero-kpi-grid fade-in-up delay-2">
                 {statCards.slice(4).map((card, i) => (
-                  <div className={`col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12 fade-in-up delay-${(i % 4) + 1}`} key={i}>
-                    <div className="hero-card">
-                      <div className="hero-card-bg-glow" style={{ background: card.bg }} />
-                      <div className="d-flex justify-content-between align-items-start">
-                        <div className="hero-icon-box" style={{ background: card.badgeBg, color: card.badgeColor }}>
+                  <div className={`hero-card fade-in-up delay-${(i % 4) + 1}`} key={card.title}>
+                    <div className="hero-card-bg-glow" style={{ background: card.bg }} />
+                    <div className="hero-card-main">
+                      <div className="hero-card-left">
+                        <div className="hero-icon-box" style={{ background: card.iconBg, color: card.iconColor }}>
                           <i className={`ti ${card.icon}`} />
                         </div>
-                        <span
-                          className="badge fw-semibold"
-                          style={{
-                            color: card.badgeColor,
-                            backgroundColor: card.badgeBg,
-                            border: `1px solid ${card.badgeBorder}`,
-                            borderRadius: "6px",
-                            padding: "4px 8px",
-                            fontSize: "10px",
-                            zIndex: 1,
-                            position: "relative",
-                          }}
-                        >
-                          {card.badge}
-                        </span>
+                        <div>
+                          <div className="hero-val">{card.value}</div>
+                          <div className="hero-title">{card.title}</div>
+                          <div className="hero-sub">{card.sub}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="hero-val">{card.value}</div>
-                        <div className="hero-title">{card.title}</div>
-                        <div className="hero-sub">{card.sub}</div>
+                      <div className="hero-card-right">
+                        <span className="hero-period-pill">{card.badge}</span>
+                        <div className="hero-chart-wrap">
+                          <ImageWithBasePath src={card.chart} alt={card.title} />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -748,6 +832,11 @@ const PathlabDashboard = () => {
           </p>
         </div>
       </div>
+
+      <AddDiagnosticTestModal
+        open={showAddTestModal}
+        onClose={() => setShowAddTestModal(false)}
+      />
     </>
   );
 };

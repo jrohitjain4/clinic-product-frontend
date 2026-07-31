@@ -848,23 +848,42 @@ html[data-sidebar="light"][data-color="primary"] {
       }
     }
 
-    /* Top-level items (Dashboard, OPD, IPD, …): keep current active */
-    .sidebar-menu>ul>li>ul>li.submenu:not(.submenu-two)>a.active,
+    /* Top-level open parent: white text, no active border */
     .sidebar-menu>ul>li>ul>li.submenu:not(.submenu-two)>a.subdrop {
-      background: rgba(255, 255, 255, 0.85) !important;
-      color: #3730a3 !important;
+      background: transparent !important;
+      color: #ffffff !important;
+      border: none !important;
       border-left: none !important;
       border-radius: 8px !important;
       box-shadow: none !important;
 
       span,
       i {
-        color: #3730a3 !important;
+        color: #ffffff !important;
         font-weight: 700 !important;
       }
 
       .menu-arrow::before {
-        color: #3730a3 !important;
+        color: #ffffff !important;
+      }
+    }
+
+    /* Top-level active page: white text/icon + white border */
+    .sidebar-menu>ul>li>ul>li.submenu:not(.submenu-two)>a.active {
+      background: transparent !important;
+      color: #ffffff !important;
+      border: 1.5px solid rgba(255, 255, 255, 0.9) !important;
+      border-radius: 8px !important;
+      box-shadow: none !important;
+
+      span,
+      i {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+      }
+
+      .menu-arrow::before {
+        color: #ffffff !important;
       }
     }
 
@@ -1062,24 +1081,24 @@ html[data-sidebar="light"][data-color="primary"] {
       }
     }
 
-    /* Nested / leaf page active — transparent bg, border only */
+    /* Nested / leaf page active — white text/icon, border only */
     .sidebar-menu>ul>li>ul>li.submenu:not(.submenu-two)>ul>li:not(.submenu)>a.active,
     .sidebar-menu>ul>li>ul>li.submenu .submenu.submenu-two>ul>li>a.active {
       background: transparent !important;
       box-shadow: none !important;
       border: 1.5px solid rgba(255, 255, 255, 0.9) !important;
       border-radius: 8px !important;
-      color: #0f172a !important;
+      color: #ffffff !important;
       font-weight: 600 !important;
 
       span {
-        color: #0f172a !important;
+        color: #ffffff !important;
         font-weight: 600 !important;
       }
 
       i.menu-tree-icon,
       i.ti {
-        color: #0f172a !important;
+        color: #ffffff !important;
         filter: none !important;
       }
     }

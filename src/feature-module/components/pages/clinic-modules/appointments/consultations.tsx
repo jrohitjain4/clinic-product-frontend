@@ -40,6 +40,24 @@ const Consultations = () => {
       border-radius: 8px !important;
     }
 
+    .print-action-btn {
+      width: 48px !important;
+      min-width: 48px !important;
+      height: 40px !important;
+      padding: 0 8px !important;
+      border-radius: 10px !important;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+      gap: 6px !important;
+    }
+    .print-action-btn.dropdown-toggle::after {
+      margin-left: 2px !important;
+      vertical-align: middle !important;
+      border-top-width: 0.35em !important;
+      border-right-width: 0.35em !important;
+      border-left-width: 0.35em !important;
+      opacity: 0.75;
+    }
+
     .appointments-filter-line {
       display: flex;
       align-items: center;
@@ -245,6 +263,7 @@ const Consultations = () => {
 
   const [selectedAppointment, setSelectedAppointment] = useState<ClinicAppointment | null>(null);
   const [showPresModal, setShowPresModal] = useState(false);
+  const [showViewPresModal, setShowViewPresModal] = useState(false);
 
   const [searchText, setSearchText] = useState("");
   const [printAppointment, setPrintAppointment] = useState<any | null>(null);
@@ -590,14 +609,13 @@ const Consultations = () => {
     {
       title: "Status",
       dataIndex: "Status",
-      render: (text: string, record: any) => {
-        const raw = record._raw;
+      render: (text: string) => {
         const s = (text || "").toLowerCase();
         let bg = "#f8f9fa", color = "#6c757d", icon = "ti ti-point";
-        if (s.includes("completed")) { bg = "#e6f8ef"; color = "#198754"; icon = "ti ti-circle-check"; }
-        else if (s.includes("confirmed")) { bg = "#f0eaff"; color = "#6610f2"; icon = "ti ti-circle-check"; }
+        if (s.includes("confirmed")) { bg = "#f0eaff"; color = "#6610f2"; icon = "ti ti-circle-check"; }
         else if (s.includes("checked out")) { bg = "#e8f3ff"; color = "#0d6efd"; icon = "ti ti-circle-check"; }
         else if (s.includes("checked in")) { bg = "#fff3cd"; color = "#fd7e14"; icon = "ti ti-clock"; }
+        else if (s.includes("schedule")) { bg = "#e7f1ff"; color = "#0d6efd"; icon = "ti ti-calendar"; }
         else if (s.includes("cancel")) { bg = "#fdeded"; color = "#dc3545"; icon = "ti ti-circle-x"; }
 
         return (
@@ -605,9 +623,6 @@ const Consultations = () => {
             <span className="badge px-3 py-2 rounded-pill d-flex align-items-center gap-1" style={{ backgroundColor: bg, color: color, fontWeight: 600, fontSize: '12px' }}>
               <i className={`${icon} fs-14`}></i> {text}
             </span>
-            {raw?.isFollowUp && (
-              <div className="mt-1 ms-1 text-muted fw-medium fs-11">Free Follow-up</div>
-            )}
           </div>
         );
       },
@@ -623,11 +638,18 @@ const Consultations = () => {
         const hasPres = prescriptions.some(p => p.appointmentId === raw.id || p.appointmentCode === raw.appointmentCode);
         return (
           <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
-            {/* Add / Edit Prescription */}
+            {/* Add / View Prescription */}
             <button
               className={`bg-transparent border-0 p-1 position-relative ${hasPres ? 'text-success' : 'text-primary'}`}
-              onClick={() => { setSelectedAppointment(raw); setShowPresModal(true); }}
-              title={hasPres ? "Edit Prescription" : "Add Prescription"}
+              onClick={() => {
+                setSelectedAppointment(raw);
+                if (hasPres) {
+                  setShowViewPresModal(true);
+                } else {
+                  setShowPresModal(true);
+                }
+              }}
+              title={hasPres ? "View Prescription" : "Generate Prescription"}
               style={{ transition: 'transform 0.15s ease' }}
               onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -644,16 +666,13 @@ const Consultations = () => {
             {/* Print/Download Dropdown Option Menu */}
             <div className="dropdown d-inline-block">
               <button
-                className="bg-transparent border-0 text-secondary p-1 dropdown-toggle no-caret"
+                className="btn btn-light border print-action-btn dropdown-toggle d-inline-flex align-items-center justify-content-center gap-1"
                 type="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
                 title="Print / Download Options"
-                style={{ width: "38px", height: "38px", transition: 'transform 0.15s ease' }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               >
-                <i className="ti ti-printer fs-18" />
+                <i className="ti ti-printer fs-18 text-secondary" />
               </button>
               <ul className="dropdown-menu dropdown-menu-end shadow border-0 py-2 fs-12" style={{ zIndex: 1050 }}>
                 {hasPres && (
@@ -922,6 +941,131 @@ const Consultations = () => {
           </div>
         </div>
       </div>
+
+      {/* View existing prescription (print-style slip) */}
+      {showViewPresModal && selectedAppointment && (() => {
+        const viewPres =
+          prescriptions.find(
+            (p) =>
+              p.appointmentId === selectedAppointment.id ||
+              p.appointmentCode === selectedAppointment.appointmentCode
+          ) || null;
+        if (!viewPres) return null;
+        return (
+          <div
+            className="modal fade show d-block"
+            tabIndex={-1}
+            style={{ backgroundColor: "rgba(15, 23, 42, 0.45)", zIndex: 1060 }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowViewPresModal(false);
+                setSelectedAppointment(null);
+              }
+            }}
+          >
+            <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+              <div
+                className="modal-content border-0 shadow-lg"
+                style={{ borderRadius: 12, overflow: "hidden" }}
+              >
+                <div
+                  className="d-flex align-items-center justify-content-between px-4 py-3 bg-white border-bottom"
+                  style={{ borderColor: "#e5e7eb" }}
+                >
+                  <div className="d-flex align-items-center gap-3">
+                    <div
+                      className="d-flex align-items-center justify-content-center rounded-2 flex-shrink-0"
+                      style={{
+                        width: 44,
+                        height: 44,
+                        background: "#f3e8ff",
+                        color: "#6d28d9",
+                      }}
+                    >
+                      <i className="ti ti-prescription fs-20" />
+                    </div>
+                    <div>
+                      <h5 className="mb-0 fw-bold" style={{ color: "#1e1b4b", fontSize: 18 }}>
+                        Prescription
+                      </h5>
+                      <p className="mb-0 text-muted" style={{ fontSize: 13 }}>
+                        {selectedAppointment.appointmentCode || "Visit prescription"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowViewPresModal(false);
+                      setSelectedAppointment(null);
+                    }}
+                    className="d-inline-flex align-items-center justify-content-center text-muted bg-white"
+                    aria-label="Close"
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 8,
+                      border: "1px solid #e5e7eb",
+                    }}
+                  >
+                    <i className="ti ti-x fs-18" />
+                  </button>
+                </div>
+
+                <div
+                  className="px-3 py-3 bg-light"
+                  style={{ maxHeight: "70vh", overflowY: "auto" }}
+                >
+                  <div className="bg-white rounded-3 shadow-sm p-2">
+                    <PrescriptionPadSlip
+                      appointment={selectedAppointment}
+                      prescription={viewPres}
+                      suggestIPD={
+                        selectedAppointment?.patient?.suggestIPD ||
+                        viewPres?.patient?.suggestIPD
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="d-flex align-items-center justify-content-between gap-2 px-4 py-3 border-top bg-white">
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary d-inline-flex align-items-center gap-2"
+                    onClick={() => {
+                      setShowViewPresModal(false);
+                      setShowPresModal(true);
+                    }}
+                  >
+                    <i className="ti ti-edit" />
+                    Edit Prescription
+                  </button>
+                  <div className="d-flex gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-light"
+                      onClick={() => {
+                        setShowViewPresModal(false);
+                        setSelectedAppointment(null);
+                      }}
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary d-inline-flex align-items-center gap-2"
+                      onClick={() => handlePrintPrescription(selectedAppointment, true)}
+                    >
+                      <i className="ti ti-printer" />
+                      Print
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Add/Edit Prescription Modal */}
       {showPresModal && selectedAppointment && (() => {

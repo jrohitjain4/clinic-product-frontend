@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { Link } from "react-router";
 import dayjs from "dayjs";
 import { usePharmacyDashboard } from "../../../../../core/hooks/usePharmacyDashboard";
 import { all_routes } from "../../../../routes/all_routes";
+import CreatePharmacyBillModal from "./CreatePharmacyBillModal";
 
 const routes = all_routes;
 
 const PharmacyDashboard = () => {
-  const { stats, loading } = usePharmacyDashboard();
+  const { stats, loading, refetch } = usePharmacyDashboard();
+  const [showCreateBillModal, setShowCreateBillModal] = useState(false);
 
   const statCards = [
     {
@@ -278,17 +281,42 @@ const PharmacyDashboard = () => {
           .ph-dashboard-wrapper .delay-2 { animation-delay: 0.2s; }
           .ph-dashboard-wrapper .delay-3 { animation-delay: 0.3s; }
           .ph-dashboard-wrapper .delay-4 { animation-delay: 0.4s; }
+
+          .ph-dashboard-wrapper .btn-premium {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+            font-weight: 600 !important;
+            padding: 10px 20px !important;
+            border-radius: 10px !important;
+            transition: all 0.3s ease !important;
+          }
+          .ph-dashboard-wrapper .btn-premium:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35) !important;
+            color: white !important;
+          }
         `}</style>
 
         <div className="content pb-0">
           {/* Header */}
-          <div className="mb-4 fade-in-up">
-            <h1 className="fw-bold mb-1" style={{ fontSize: "32px", letterSpacing: "-0.5px", color: "#0f172a" }}>
-              Pharmacy Dashboard
-            </h1>
-            <p className="mb-0" style={{ color: "#64748b", fontSize: "15px" }}>
-              Here's what's happening in your pharmacy today.
-            </p>
+          <div className="d-flex align-items-center justify-content-between mb-4 fade-in-up flex-wrap gap-3">
+            <div>
+              <h1 className="fw-bold mb-1" style={{ fontSize: "32px", letterSpacing: "-0.5px", color: "#0f172a" }}>
+                Pharmacy Dashboard
+              </h1>
+              <p className="mb-0" style={{ color: "#64748b", fontSize: "15px" }}>
+                Here's what's happening in your pharmacy today.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="btn-premium d-flex align-items-center gap-2"
+              onClick={() => setShowCreateBillModal(true)}
+            >
+              <i className="ti ti-plus fs-16" /> Create Bill
+            </button>
           </div>
 
           {loading ? (
@@ -643,6 +671,12 @@ const PharmacyDashboard = () => {
           <p className="text-dark mb-0">2025 <Link to="#" className="link-primary">Docyari</Link>, All Rights Reserved</p>
         </div>
       </div>
+
+      <CreatePharmacyBillModal
+        open={showCreateBillModal}
+        onClose={() => setShowCreateBillModal(false)}
+        onCreated={() => refetch()}
+      />
     </>
   );
 };

@@ -13,6 +13,7 @@ import { useLabBookings } from "../../../../../core/hooks/useLabBookings";
 import AddPrescriptionModal from "../doctors-prescriptions/AddPrescriptionModal";
 import {
   APPOINTMENT_STATUS_OPTIONS,
+  normalizeAppointmentStatus,
   statusBadgeClass
 } from "../../../../../core/utils/appointmentForm";
 import Modal from "./modal/modals";
@@ -207,7 +208,7 @@ const DoctorAppointments = () => {
           img: getProfileImage(app.patient?.profileImage),
           phone_number: app.patient?.phone || "",
           Mode: app.mode,
-          Status: app.status,
+          Status: normalizeAppointmentStatus(app.status),
           _raw: app
         };
       });
@@ -357,13 +358,12 @@ const DoctorAppointments = () => {
       title: "Status",
       dataIndex: "Status",
       render: (text: string, record: any) => {
-        const raw = record._raw;
         const s = (text || "").toLowerCase();
         let bg = "#f8f9fa", color = "#6c757d", icon = "ti ti-point";
-        if (s.includes("completed")) { bg = "#e6f8ef"; color = "#198754"; icon = "ti ti-circle-check"; }
-        else if (s.includes("confirmed")) { bg = "#f0eaff"; color = "#6610f2"; icon = "ti ti-circle-check"; }
+        if (s.includes("confirmed")) { bg = "#f0eaff"; color = "#6610f2"; icon = "ti ti-circle-check"; }
         else if (s.includes("checked out")) { bg = "#e8f3ff"; color = "#0d6efd"; icon = "ti ti-circle-check"; }
         else if (s.includes("checked in")) { bg = "#fff3cd"; color = "#fd7e14"; icon = "ti ti-clock"; }
+        else if (s.includes("schedule")) { bg = "#e7f1ff"; color = "#0d6efd"; icon = "ti ti-calendar"; }
         else if (s.includes("cancel")) { bg = "#fdeded"; color = "#dc3545"; icon = "ti ti-circle-x"; }
 
         return (
@@ -371,9 +371,6 @@ const DoctorAppointments = () => {
             <span className="badge px-3 py-2 rounded-pill d-flex align-items-center gap-1" style={{ backgroundColor: bg, color: color, fontWeight: 600, fontSize: '12px' }}>
               <i className={`${icon} fs-14`}></i> {text}
             </span>
-            {raw?.isFollowUp && (
-              <div className="mt-1 ms-1 text-muted fw-medium fs-11">Free Follow-up</div>
-            )}
           </div>
         );
       },

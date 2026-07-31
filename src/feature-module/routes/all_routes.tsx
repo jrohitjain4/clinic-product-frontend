@@ -383,7 +383,7 @@ export const all_routes = {
   formMask: "/form-mask",
 
   // PathLab
-  pathlabDashboard: "/pathlab/dashboard",
+  pathlabDashboard: "/diagnostic/dashboard",
   pathlabCategories: "/pathlab/categories",
   pathlabTests: "/pathlab/tests",
   pathlabBookings: "/pathlab/bookings",

@@ -313,24 +313,30 @@ const Sidebar = () => {
                                   }).map(
                                     (item: any, j: any) => {
                                       const currentFullPath = Location.pathname + Location.search;
+                                      const hasNestedSubmenu =
+                                        !!item?.submenu &&
+                                        Array.isArray(item?.submenuItems) &&
+                                        item.submenuItems.length > 0;
                                       const isSubActive =
-                                        item?.submenuItems
-                                          ?.map((link: any) => link?.link)
-                                          .includes(Location.pathname) ||
-                                        (item?.link?.includes("?")
-                                          ? (currentFullPath === item?.link || (item?.link?.includes("tab=roles") && !Location.search))
-                                          : item?.link === Location.pathname);
+                                        (hasNestedSubmenu &&
+                                          item.submenuItems
+                                            .map((link: any) => link?.link)
+                                            .includes(Location.pathname)) ||
+                                        (!hasNestedSubmenu &&
+                                          (item?.link?.includes("?")
+                                            ? (currentFullPath === item?.link || (item?.link?.includes("tab=roles") && !Location.search))
+                                            : item?.link === Location.pathname));
 
                                       return (
                                         <li
-                                          className={`${item?.submenuItems
+                                          className={`${hasNestedSubmenu
                                             ? "submenu submenu-two"
                                             : ""
                                             } `}
                                           key={`item-${j}`}
                                         >
                                           <Link
-                                            to={item?.submenu ? "#" : item?.link}
+                                            to={hasNestedSubmenu ? "#" : item?.link}
                                             className={`${isSubActive ? "active subdrop" : ""
                                               } ${subsidebar === item?.label
                                                 ? "subdrop"
@@ -347,12 +353,12 @@ const Sidebar = () => {
                                           >
                                             <i className={`ti ti-${item?.icon || "point"} menu-tree-icon`} />
                                             <span>{item?.label}</span>
-                                            {(item?.submenu ||
+                                            {(hasNestedSubmenu ||
                                               item?.customSubmenuTwo) && (
                                                 <span className="menu-arrow"></span>
                                               )}
                                           </Link>
-                                          {item?.submenuItems ? (
+                                          {hasNestedSubmenu ? (
                                             <ul
                                               style={{
                                                 display:

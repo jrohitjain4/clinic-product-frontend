@@ -3,7 +3,6 @@ import Datatable from "../../../../../core/common/dataTable";
 import { DatePicker } from "antd";
 import { Link } from "react-router";
 import { ViewModal } from "../../../../../core/common/modal/ViewModal";
-import DeleteModal from "../../../../../core/common/modal/DeleteModal";
 import html2pdf from "html2pdf.js";
 import InvoiceSlip from "../../patient-modules/patient-invoice-details/InvoiceSlip";
 import { toast } from "react-toastify";
@@ -30,7 +29,7 @@ interface BillingItem {
 }
 
 const PharmacyBilling = () => {
-  const { invoices, loading, refetch: refetchInvoices, createInvoice, deleteInvoice } = usePharmacyBilling();
+  const { invoices, loading, refetch: refetchInvoices, createInvoice } = usePharmacyBilling();
   const { patients, refetch: refetchPatients } = useClinicPatients();
   const { medicines, refetch: refetchMedicines } = useMedicines();
   const { prescriptions } = usePrescriptions();
@@ -43,8 +42,6 @@ const PharmacyBilling = () => {
   const [showAddBillModal, setShowAddBillModal] = useState(false);
   const [printInvoiceData, setPrintInvoiceData] = useState<PharmacyInvoice | null>(null);
   const [viewInvoiceData, setViewInvoiceData] = useState<PharmacyInvoice | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
   // Form states inside modal
   const [selectedPatientId, setSelectedPatientId] = useState("");
@@ -433,27 +430,6 @@ const PharmacyBilling = () => {
     }, 100);
   };
 
-  const handleDeleteClick = (inv: any) => {
-    setSelectedInvoice(inv);
-    setShowDeleteModal(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!selectedInvoice) return;
-    setSubmitting(true);
-    try {
-      await deleteInvoice(selectedInvoice.id);
-      toast.success("Invoice deleted successfully and stock restored!");
-      setShowDeleteModal(false);
-      setSelectedInvoice(null);
-      refetchMedicines();
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to delete invoice");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const [filterDate, setFilterDate] = useState<dayjs.Dayjs | null>(null);
 
   // Main list filters
@@ -603,17 +579,9 @@ const PharmacyBilling = () => {
           >
             <i className="ti ti-download fs-18"></i>
           </button>
-          <button
-            type="button"
-            className="bg-transparent border-0 text-danger p-1"
-            title="Delete Invoice"
-            onClick={() => handleDeleteClick(record.raw)}
-          >
-            <i className="ti ti-trash fs-18"></i>
-          </button>
         </div>
       ),
-      width: 140,
+      width: 120,
     }
   ];
 
@@ -969,21 +937,6 @@ const PharmacyBilling = () => {
           </div>
         )}
       </ViewModal>
-
-      <DeleteModal
-        show={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDeleteConfirm}
-        title="Delete Invoice?"
-        message={
-          <>
-            Are you sure you want to delete <strong>{selectedInvoice?.invoiceNo}</strong>?
-            <br />
-            This will restore the deducted medicine stock to inventory.
-          </>
-        }
-        submitting={submitting}
-      />
 
       <style>{`
         @media print {

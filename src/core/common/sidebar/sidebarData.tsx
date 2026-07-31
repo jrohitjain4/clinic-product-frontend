@@ -148,18 +148,8 @@ export const SidebarData = [
     icon: "airplay",
     showAsTab: true,
     separateRoute: false,
+    hideHeader: true,
     submenuItems: [
-      {
-        label: "Dashboard",
-        link: routes.dashboard,
-        submenu: false,
-        showSubRoute: false,
-        icon: "layout-dashboard",
-        base: "dashboard",
-        materialicons: "start",
-        dot: true,
-        submenuItems: [],
-      },
       {
         label: "OPD",
         link: "index",
@@ -170,6 +160,15 @@ export const SidebarData = [
         materialicons: "start",
         dot: true,
         submenuItems: [
+          {
+            label: "Dashboard",
+            link: routes.dashboard,
+            submenu: false,
+            showSubRoute: false,
+            icon: "layout-dashboard",
+            base: "dashboard",
+            submenuItems: [],
+          },
           {
             label: "Doctors",
             link: "index",
@@ -244,7 +243,7 @@ export const SidebarData = [
         submenu: true,
         showSubRoute: false,
         icon: "microscope",
-        base: "pathlab",
+        base: "diagnostic",
         materialicons: "start",
         dot: true,
         submenuItems: [

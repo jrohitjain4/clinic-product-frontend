@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Datatable from "../../../../../core/common/dataTable";
 import { Link } from "react-router";
 import { ViewModal } from "../../../../../core/common/modal/ViewModal";
@@ -67,6 +67,34 @@ const DiagnosticBooking = () => {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [viewBooking, setViewBooking] = useState<any>(null);
   const [printBooking, setPrintBooking] = useState<any | null>(null);
+  const [expandedBookingIds, setExpandedBookingIds] = useState<string[]>([]);
+
+  const toggleExpandBooking = (id: string) => {
+    setExpandedBookingIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const getBookingTests = (bk: any) => {
+    if (Array.isArray(bk?.testsList) && bk.testsList.length > 0) {
+      return bk.testsList;
+    }
+    if (bk?.test) {
+      return [
+        {
+          testId: bk.test.id,
+          name: bk.test.name,
+          price: bk.test.price || 0,
+          categoryName: bk.test.category?.name || "—",
+          status:
+            bk.status === "Checked Out" || bk.status === "Completed"
+              ? "Completed"
+              : "Pending",
+        },
+      ];
+    }
+    return [];
+  };
 
   const [filterDate, setFilterDate] = useState("");
   const [datePreset, setDatePreset] = useState("All");
@@ -662,33 +690,146 @@ const DiagnosticBooking = () => {
     }
   };
 
-  const data = filteredData.map((bk, index) => {
-    const isMultiple = Array.isArray(bk.testsList) && bk.testsList.length > 0;
-    const testNames = isMultiple 
-      ? bk.testsList.map((t: any) => t.name).join(", ") 
-      : (bk.test?.name || "—");
-    const categoryNames = isMultiple 
-      ? Array.from(new Set(bk.testsList.map((t: any) => t.categoryName))).join(", ") 
-      : (bk.test?.category?.name || "—");
-    const priceAmount = isMultiple 
-      ? bk.testsList.reduce((acc: number, t: any) => acc + (t.price || 0), 0)
-      : (bk.test?.price || 0);
+  const data = useMemo(() => {
+    return filteredData.map((bk, index) => {
+      const tests = getBookingTests(bk).map((t: any) => ({
+        ...t,
+        bookingId: bk.id,
+        bookingCode: bk.bookingCode,
+        scheduledAt: bk.scheduledAt,
+      }));
+      const isMultiple = tests.length >= 2;
+      const testNames = tests.length > 0 ? tests.map((t: any) => t.name).join(", ") : "—";
+      const categoryNames =
+        tests.length > 0
+          ? Array.from(new Set(tests.map((t: any) => t.categoryName).filter(Boolean))).join(", ") || "—"
+          : "—";
+      const priceAmount = tests.reduce((acc: number, t: any) => acc + (Number(t.price) || 0), 0);
 
-    return {
-      key: bk.id,
-      id: bk.id,
-      S_No: index + 1,
-      BookingCode: bk.bookingCode || "—",
-      Patient: bk.patient ? `${bk.patient.firstName} ${bk.patient.lastName}` : "—",
-      PatientCode: bk.patient?.patientCode || "",
-      Test: testNames,
-      Category: categoryNames,
-      Date_Time: dayjs(bk.scheduledAt).format("DD MMM YYYY, hh:mm A"),
-      Price: `₹${priceAmount.toLocaleString("en-IN")}`,
-      Status: bk.status === "Pending" ? "Schedule" : bk.status === "Completed" ? "Checked Out" : bk.status,
-      raw: bk,
-    };
-  });
+      return {
+        key: bk.id,
+        id: bk.id,
+        S_No: index + 1,
+        BookingCode: bk.bookingCode || "—",
+        Patient: bk.patient ? `${bk.patient.firstName} ${bk.patient.lastName}` : "—",
+        PatientCode: bk.patient?.patientCode || "",
+        Test: testNames,
+        Category: categoryNames,
+        Date_Time: dayjs(bk.scheduledAt).format("DD MMM YYYY, hh:mm A"),
+        Price: `₹${priceAmount.toLocaleString("en-IN")}`,
+        Status:
+          bk.status === "Pending"
+            ? "Schedule"
+            : bk.status === "Completed"
+              ? "Checked Out"
+              : bk.status,
+        testCount: tests.length,
+        canExpand: isMultiple,
+        tests,
+        allBookings: [bk],
+        raw: bk,
+      };
+    });
+  }, [filteredData]);
+
+  const renderExpandedRow = useCallback((record: (typeof data)[0]) => {
+    const tests = record.tests || getBookingTests(record.raw);
+    const showBookingCol = (record.allBookings?.length || 0) > 1;
+    return (
+      <div className="pathlab-booking-expanded p-2">
+        <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+          <span className="fw-bold text-dark fs-13">
+            <i className="ti ti-test-pipe me-1 text-primary" />
+            Booked Diagnostic Tests for {record.Patient}
+          </span>
+          <span className="badge bg-soft-primary text-primary fw-bold">
+            {tests.length} Test{tests.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+
+        {tests.length === 0 ? (
+          <div className="text-center py-3 text-muted fs-13">No tests found for this booking.</div>
+        ) : (
+          <div className="table-responsive border rounded mb-2">
+            <table className="table table-bordered table-sm align-middle mb-0 fs-13">
+              <thead style={{ background: "#E6E6FF" }}>
+                <tr>
+                  <th style={{ width: 50 }}>#</th>
+                  {showBookingCol && <th>Booking</th>}
+                  <th>Test Name</th>
+                  <th>Category</th>
+                  <th className="text-center">Price (₹)</th>
+                  <th className="text-center">Status</th>
+                  {user?.role !== "PATIENT" && record.Status !== "Schedule" && (
+                    <th className="text-center">Mark Done</th>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {tests.map((t: any, idx: number) => {
+                  const isDone = t.status === "Completed";
+                  const bookingId = t.bookingId || record.id;
+                  return (
+                    <tr key={t.testId || `${record.id}-${idx}`}>
+                      <td className="fw-semibold text-muted">{idx + 1}</td>
+                      {showBookingCol && (
+                        <td className="fw-bold text-primary fs-12">{t.bookingCode || "—"}</td>
+                      )}
+                      <td className="fw-bold text-dark">{t.name || "—"}</td>
+                      <td className="text-muted">{t.categoryName || "—"}</td>
+                      <td className="text-center fw-bold">
+                        ₹{Number(t.price || 0).toLocaleString("en-IN")}
+                      </td>
+                      <td className="text-center">
+                        <span
+                          className={`badge rounded-pill px-2 py-1 ${
+                            isDone ? "bg-soft-success text-success" : "bg-soft-warning text-warning"
+                          }`}
+                        >
+                          {isDone ? "Completed" : "Pending"}
+                        </span>
+                      </td>
+                      {user?.role !== "PATIENT" && record.Status !== "Schedule" && (
+                        <td className="text-center">
+                          <div className="form-check form-switch d-inline-flex justify-content-center m-0">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              role="switch"
+                              checked={isDone}
+                              onChange={() => handleTestStatusToggle(bookingId, t.testId)}
+                              style={{ cursor: "pointer" }}
+                            />
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="d-flex flex-wrap align-items-center gap-4 pt-1">
+          <div>
+            <span className="text-muted fs-11 fw-semibold d-block">TOTAL TESTS</span>
+            <strong className="text-dark fs-14">{tests.length}</strong>
+          </div>
+          <div>
+            <span className="text-muted fs-11 fw-semibold d-block">TOTAL AMOUNT</span>
+            <strong className="text-dark fs-14">{record.Price}</strong>
+          </div>
+          <div>
+            <span className="text-muted fs-11 fw-semibold d-block">COMPLETED</span>
+            <strong className="text-success fs-14">
+              {tests.filter((t: any) => t.status === "Completed").length}/{tests.length}
+            </strong>
+          </div>
+        </div>
+      </div>
+    );
+  }, [user?.role]);
 
   const columns = [
     { title: "S.No", dataIndex: "S_No", render: (text: number) => <span className="text-dark fw-semibold">{text}</span>, sorter: (a: any, b: any) => a.S_No - b.S_No, width: 70 },
@@ -707,23 +848,40 @@ const DiagnosticBooking = () => {
       title: "Diagnostic Test", dataIndex: "Test",
       render: (text: string, record: any) => (
         <div className="d-flex flex-column">
-          <span className="text-dark fw-medium text-wrap" style={{ maxWidth: '240px' }}>{text}</span>
-          <span className="text-muted fs-11" style={{ opacity: 0.85 }}>Category: {record.Category}</span>
+          {record.canExpand ? (
+            <button
+              type="button"
+              className="badge bg-soft-primary text-primary fw-bold border-0 align-self-start mb-1"
+              onClick={() => toggleExpandBooking(record.key)}
+            >
+              <i className="ti ti-test-pipe me-1" />
+              {record.testCount} Tests {expandedBookingIds.includes(record.key) ? "▲" : "▼"}
+            </button>
+          ) : (
+            <span className="text-dark fw-medium text-wrap" style={{ maxWidth: "240px" }}>{text}</span>
+          )}
+          <span className="text-muted fs-11" style={{ opacity: 0.85 }}>
+            {record.canExpand ? "Click + to view all tests" : `Category: ${record.Category}`}
+          </span>
         </div>
       ),
       sorter: (a: any, b: any) => a.Test.localeCompare(b.Test),
     },
     { title: "Date & Time", dataIndex: "Date_Time", render: (text: string) => <span className="text-dark">{text}</span>, sorter: (a: any, b: any) => new Date(a.raw.scheduledAt).getTime() - new Date(b.raw.scheduledAt).getTime() },
-    { title: "Price", dataIndex: "Price", render: (text: string) => <span className="text-dark fw-bold">{text}</span>, sorter: (a: any, b: any) => (a.raw.test?.price || 0) - (b.raw.test?.price || 0) },
+    { title: "Price", dataIndex: "Price", render: (text: string) => <span className="text-dark fw-bold">{text}</span>, sorter: (a: any, b: any) => {
+      const pa = a.tests?.reduce((s: number, t: any) => s + (Number(t.price) || 0), 0) || 0;
+      const pb = b.tests?.reduce((s: number, t: any) => s + (Number(t.price) || 0), 0) || 0;
+      return pa - pb;
+    }},
     {
       title: "Status", dataIndex: "Status",
       render: (text: string, record: any) => {
         const raw = record.raw;
-        const isMultiple = Array.isArray(raw.testsList) && raw.testsList.length > 0;
+        const isMultiple = record.canExpand;
         const isSchedule = text === "Schedule";
-        const totalTests = isMultiple ? raw.testsList.length : 1;
-        const completedTests = isMultiple 
-          ? raw.testsList.filter((t: any) => t.status === "Completed").length 
+        const totalTests = record.testCount || 1;
+        const completedTests = isMultiple
+          ? (record.tests || []).filter((t: any) => t.status === "Completed").length
           : (text === "Checked Out" || text === "Completed" ? 1 : 0);
 
         return (
@@ -758,25 +916,80 @@ const DiagnosticBooking = () => {
       sorter: (a: any, b: any) => a.Status.localeCompare(b.Status),
     },
     {
-      title: "Action", align: "center" as const, width: 120,
-      render: (_: string, record: any) => (
-        <div className="d-flex align-items-center justify-content-center gap-2">
-          <button className="bg-transparent border-0 text-info p-1" title="View" data-bs-toggle="modal" data-bs-target="#view_booking" onClick={() => setViewBooking(record.raw)}><i className="ti ti-eye fs-18"></i></button>
-          <button className="bg-transparent border-0 text-secondary p-1" onClick={() => setPrintBooking(record.raw)} title="Print"><i className="ti ti-printer fs-18" /></button>
-          {user?.role !== "PATIENT" && (
-            <>
-              <button className="bg-transparent border-0 text-primary p-1" title="Edit Booking" onClick={() => handleOpenEdit(record.raw)}><i className="ti ti-edit fs-18"></i></button>
-              <button className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={() => handleOpenDelete(record.raw)}><i className="ti ti-trash fs-18"></i></button>
-            </>
-          )}
-        </div>
-      ),
+      title: "Action", align: "center" as const, width: 150,
+      render: (_: string, record: any) => {
+        const isExpanded = expandedBookingIds.includes(record.key);
+        return (
+          <div className="d-flex align-items-center justify-content-center gap-2">
+            <button className="bg-transparent border-0 text-info p-1" title="View" data-bs-toggle="modal" data-bs-target="#view_booking" onClick={() => setViewBooking(record.raw)}><i className="ti ti-eye fs-18"></i></button>
+            <button className="bg-transparent border-0 text-secondary p-1" onClick={() => setPrintBooking(record.raw)} title="Print"><i className="ti ti-printer fs-18" /></button>
+            {record.canExpand && (
+              <button
+                type="button"
+                className={`bg-transparent border-0 p-1 ${isExpanded ? "text-dark" : "text-warning"}`}
+                title={isExpanded ? "Hide tests" : "View all tests"}
+                onClick={() => toggleExpandBooking(record.key)}
+              >
+                <i className={`ti ti-${isExpanded ? "chevron-up" : "list-details"} fs-18`} />
+              </button>
+            )}
+            {user?.role !== "PATIENT" && (
+              <>
+                <button className="bg-transparent border-0 text-primary p-1" title="Edit Booking" onClick={() => handleOpenEdit(record.raw)}><i className="ti ti-edit fs-18"></i></button>
+                <button className="bg-transparent border-0 text-danger p-1" title="Delete" onClick={() => handleOpenDelete(record.raw)}><i className="ti ti-trash fs-18"></i></button>
+              </>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
+  const expandableConfig = useMemo(
+    () => ({
+      expandedRowKeys: expandedBookingIds,
+      onExpand: (_expanded: boolean, record: any) => {
+        if (record.canExpand) toggleExpandBooking(record.key);
+      },
+      rowExpandable: (record: any) => !!record.canExpand,
+      expandedRowRender: renderExpandedRow,
+      expandIcon: ({ expanded, onExpand, record }: any) => {
+        if (!record.canExpand) {
+          return <span style={{ display: "inline-block", width: 28 }} />;
+        }
+        return (
+          <button
+            type="button"
+            className="btn btn-sm d-inline-flex align-items-center justify-content-center p-0"
+            title={expanded ? "Hide tests" : "View booked tests"}
+            onClick={(e) => onExpand(record, e)}
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              border: "1px solid #bfdbfe",
+              background: "#eff6ff",
+              color: "#2563eb",
+            }}
+          >
+            <i className={`ti ti-${expanded ? "minus" : "plus"} fs-14`} />
+          </button>
+        );
+      },
+    }),
+    [expandedBookingIds, renderExpandedRow]
+  );
+
   return (
     <>
-      <style>{customSelectStyles}</style>
+      <style>{`
+        ${customSelectStyles}
+        .pathlab-booking-expanded thead th {
+          background: #E6E6FF !important;
+          color: #1e293b !important;
+          font-weight: 700 !important;
+        }
+      `}</style>
       <div className="page-wrapper">
         <div className="content">
           <div className="d-flex align-items-center flex-wrap pb-3 mb-3 border-bottom gap-2">
@@ -844,7 +1057,16 @@ const DiagnosticBooking = () => {
           ) : bookings.length === 0 ? (
             <div className="border rounded bg-white"><EmptyState title="No bookings yet" message="Create your first diagnostic booking." /></div>
           ) : (
-            <div className="table-responsive"><Datatable columns={columns} dataSource={data} Selection={user?.role !== "PATIENT"} searchText={searchText} onSelectionChange={(keys) => setSelectedIds(keys as string[])} /></div>
+            <div className="table-responsive">
+              <Datatable
+                columns={columns}
+                dataSource={data}
+                Selection={user?.role !== "PATIENT"}
+                searchText={searchText}
+                onSelectionChange={(keys) => setSelectedIds(keys as string[])}
+                expandable={expandableConfig}
+              />
+            </div>
           )}
 
           {user?.role !== "PATIENT" && selectedIds.length > 0 && (

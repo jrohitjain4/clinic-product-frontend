@@ -81,6 +81,7 @@ const PATH_TO_MODULE: Record<string, string> = {
     "/edit-invoices": "Invoices",
     "/payments": "Payments",
     "/transactions": "Transactions",
+    "/diagnostic/dashboard": "Diagnostic Dashboard",
     "/pathlab/dashboard": "Diagnostic Dashboard",
     "/pathlab/categories": "Category",
     "/pathlab/tests": "Diagnostic Test",
@@ -131,8 +132,8 @@ export const canSeeMenuItem = (label: string, sectionTitle?: string): boolean =>
 
     // Parent dropdown modules (Dashboard-style expandable items)
     const parentModules: Record<string, string[]> = {
-        OPD: ["Doctors", "Patients", "Appointments", "Services"],
-        Clinic: ["Doctors", "Patients", "Appointments", "Services"],
+        OPD: ["Dashboard", "Doctors", "Patients", "Appointments", "Services"],
+        Clinic: ["Dashboard", "Doctors", "Patients", "Appointments", "Services"],
         IPD: [], // no staff permission modules yet — show to all staff
         Diagnostic: [
             "Diagnostic Dashboard",
@@ -241,8 +242,8 @@ export const canSeeSection = (sectionTitle: string): boolean => {
             "Invoices",
             "Transactions",
         ],
-        OPD: ["Doctors", "Patients", "Appointments", "Services"],
-        Clinic: ["Doctors", "Patients", "Appointments", "Services"],
+        OPD: ["Dashboard", "Doctors", "Patients", "Appointments", "Services"],
+        Clinic: ["Dashboard", "Doctors", "Patients", "Appointments", "Services"],
         HRM: ["Staffs", "Departments", "Designation", "Attendance", "Leaves", "Holidays", "Payroll", "Specializations"],
         "Finance & Accounts": ["Expenses", "Invoices", "Transactions"],
         Diagnostic: ["Diagnostic Dashboard", "Category", "Diagnostic Test", "Diagnostic Booking", "Invoice (Diagnostic)"],

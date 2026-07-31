@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { all_routes } from "../../../routes/all_routes";
 import Datatable from "../../../../core/common/dataTable";
@@ -7,17 +7,45 @@ import { useTickets } from "../../../../core/hooks/useTickets";
 import type { Ticket } from "../../../../core/hooks/useTickets";
 import dayjs from "dayjs";
 import { IconFormControl } from "../../../../core/common/form-fields";
+import { apiUrl } from "../../../../core/config/api";
+
+const DEFAULT_SUPPORT_PHONE = "+918709122663";
+const DEFAULT_SUPPORT_EMAIL = "info@docyori.com";
 
 const TicketsList = () => {
   const { tickets, loading, createTicket, updateStatus } = useTickets();
   const [searchText, setSearchText] = useState<string>("");
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [supportPhone, setSupportPhone] = useState(DEFAULT_SUPPORT_PHONE);
+  const [supportEmail, setSupportEmail] = useState(DEFAULT_SUPPORT_EMAIL);
 
   const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : {};
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const [filterStatus, setFilterStatus] = useState("All");
+
+  useEffect(() => {
+    const fetchSupportContact = async () => {
+      try {
+        const [phoneRes, emailRes] = await Promise.all([
+          fetch(apiUrl("/api/settings/contact_phone")),
+          fetch(apiUrl("/api/settings/contact_email")),
+        ]);
+        if (phoneRes.ok) {
+          const data = await phoneRes.json();
+          if (data?.value) setSupportPhone(data.value);
+        }
+        if (emailRes.ok) {
+          const data = await emailRes.json();
+          if (data?.value) setSupportEmail(data.value);
+        }
+      } catch {
+        // keep defaults if settings unavailable
+      }
+    };
+    fetchSupportContact();
+  }, []);
 
   const filteredTickets = tickets.filter(t => {
     let matchSearch = true;
@@ -151,11 +179,31 @@ const TicketsList = () => {
         <div className="content">
           <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
             <div className="flex-grow-1">
-              <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
+              <h4 className="page-title fw-bold mb-0 d-flex align-items-center flex-wrap gap-2">
                 Support Tickets
-                <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
+                <span className="badge badge-soft-primary border border-primary fs-13 fw-medium">
                   Total Tickets : {tickets.length}
                 </span>
+                {supportPhone && (
+                  <a
+                    href={`tel:${supportPhone.replace(/\s+/g, "")}`}
+                    className="badge badge-soft-success border border-success fs-13 fw-medium text-decoration-none d-inline-flex align-items-center gap-1"
+                    title="Call Support"
+                  >
+                    <i className="ti ti-phone" />
+                    {supportPhone}
+                  </a>
+                )}
+                {supportEmail && (
+                  <a
+                    href={`mailto:${supportEmail}`}
+                    className="badge badge-soft-info border border-info fs-13 fw-medium text-decoration-none d-inline-flex align-items-center gap-1"
+                    title="Email Support"
+                  >
+                    <i className="ti ti-mail" />
+                    {supportEmail}
+                  </a>
+                )}
               </h4>
             </div>
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">

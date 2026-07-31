@@ -342,14 +342,13 @@ const PatientAppointments = () => {
     {
       title: "Status",
       dataIndex: "Status",
-      render: (text: string, record: any) => {
-        const raw = record._raw;
+      render: (text: string) => {
         const s = (text || "").toLowerCase();
         let bg = "#f8f9fa", color = "#6c757d", icon = "ti ti-point";
-        if (s.includes("completed")) { bg = "#e6f8ef"; color = "#198754"; icon = "ti ti-circle-check"; }
-        else if (s.includes("confirmed")) { bg = "#f0eaff"; color = "#6610f2"; icon = "ti ti-circle-check"; }
+        if (s.includes("confirmed")) { bg = "#f0eaff"; color = "#6610f2"; icon = "ti ti-circle-check"; }
         else if (s.includes("checked out")) { bg = "#e8f3ff"; color = "#0d6efd"; icon = "ti ti-circle-check"; }
         else if (s.includes("checked in")) { bg = "#fff3cd"; color = "#fd7e14"; icon = "ti ti-clock"; }
+        else if (s.includes("schedule")) { bg = "#e7f1ff"; color = "#0d6efd"; icon = "ti ti-calendar"; }
         else if (s.includes("cancel")) { bg = "#fdeded"; color = "#dc3545"; icon = "ti ti-circle-x"; }
 
         return (
@@ -357,9 +356,6 @@ const PatientAppointments = () => {
             <span className="badge px-3 py-2 rounded-pill d-flex align-items-center gap-1" style={{ backgroundColor: bg, color: color, fontWeight: 600, fontSize: '12px' }}>
               <i className={`${icon} fs-14`}></i> {text}
             </span>
-            {raw?.isFollowUp && (
-              <div className="mt-1 ms-1 text-muted fw-medium fs-11">Free Follow-up</div>
-            )}
           </div>
         );
       },

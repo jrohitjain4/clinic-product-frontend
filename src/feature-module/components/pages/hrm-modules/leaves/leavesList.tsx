@@ -374,7 +374,7 @@ const LeavesList = () => {
           <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
             <div className="flex-grow-1">
               <h4 className="page-title fw-bold mb-0 d-flex align-items-center">
-                Admin Leaves
+                Leaves
                 <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">
                   Total : {loading ? "" : filteredData.length}
                 </span>

@@ -7,6 +7,7 @@ import { all_routes } from "../../../routes/all_routes";
 import { DatePicker } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
+import BodyDiagram3D from "./BodyDiagram3D";
 
 const routes = all_routes;
 
@@ -272,7 +273,6 @@ const ConsultationForm = () => {
 
     return info.originNode;
   };
-  const [bodyView, setBodyView] = useState<"front" | "back">("front");
   const [bodyPoints, setBodyPoints] = useState<BodyPoint[]>([]);
   const [pendingPart, setPendingPart] = useState<(typeof BODY_PARTS)[0] | null>(null);
   const [remarkDraft, setRemarkDraft] = useState("");
@@ -870,8 +870,6 @@ const ConsultationForm = () => {
     );
   };
 
-  const visibleParts = BODY_PARTS.filter((p) => p.view === bodyView);
-
   if (loadingConsultation) {
     return (
       <div className="page-wrapper">
@@ -1008,78 +1006,19 @@ const ConsultationForm = () => {
                     </span>
                     Body Diagram Findings {isEditing && "(Click to Edit Points)"}
                   </h6>
-                  <div className="btn-group btn-group-sm">
-                    <button
-                      type="button"
-                      className={`btn ${bodyView === "front" ? "btn-primary" : "btn-outline-secondary"}`}
-                      style={{ borderRadius: "8px 0 0 8px", fontSize: 12 }}
-                      onClick={() => setBodyView("front")}
-                    >
-                      Front
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn ${bodyView === "back" ? "btn-primary" : "btn-outline-secondary"}`}
-                      style={{ borderRadius: "0 8px 8px 0", fontSize: 12 }}
-                      onClick={() => setBodyView("back")}
-                    >
-                      Back
-                    </button>
-                  </div>
                 </div>
 
                 <div className="card-body px-4 py-3">
                   <div className="row">
                     <div className="col-md-6 d-flex justify-content-center mb-3">
-                      <svg viewBox="0 0 290 360" width="100%" style={{ maxWidth: 280, cursor: "pointer" }}>
-                        <g opacity={0.15} fill="#6366f1">
-                          <ellipse cx="145" cy="20" rx="20" ry="22" />
-                          <rect x="136" y="42" width="18" height="18" rx="4" />
-                          <rect x="100" y="60" width="90" height="110" rx="10" />
-                          <rect x="57" y="65" width="43" height="120" rx="8" />
-                          <rect x="190" y="65" width="43" height="120" rx="8" />
-                          <ellipse cx="70" cy="195" rx="14" ry="10" />
-                          <ellipse cx="220" cy="195" rx="14" ry="10" />
-                          <rect x="98" y="170" width="40" height="170" rx="8" />
-                          <rect x="152" y="170" width="40" height="170" rx="8" />
-                        </g>
-                        {visibleParts.map((part) => {
-                          const marked = bodyPoints.find((bp) => bp.part === part.id);
-                          return (
-                            <g key={part.id} onClick={() => isEditing && handleBodyClick(part)} style={{ cursor: isEditing ? "pointer" : "default" }}>
-                              <circle
-                                cx={part.x}
-                                cy={part.y}
-                                r={part.r}
-                                fill={marked ? severityColor(marked.severity) : "transparent"}
-                                opacity={marked ? 0.85 : 0}
-                              />
-                              <circle
-                                cx={part.x}
-                                cy={part.y}
-                                r={part.r}
-                                fill="transparent"
-                                stroke={marked ? severityColor(marked.severity) : "#6366f1"}
-                                strokeWidth={marked ? 2 : 1}
-                                strokeDasharray={marked ? "none" : "3 2"}
-                                opacity={0.5}
-                              />
-                              {marked && (
-                                <text
-                                  x={part.x}
-                                  y={part.y + 4}
-                                  textAnchor="middle"
-                                  fill="#fff"
-                                  fontSize={10}
-                                  fontWeight="bold"
-                                >
-                                  {marked.severity}
-                                </text>
-                              )}
-                            </g>
-                          );
-                        })}
-                      </svg>
+                      <BodyDiagram3D
+                        parts={BODY_PARTS}
+                        marks={bodyPoints}
+                        interactive={isEditing}
+                        onPartClick={handleBodyClick}
+                        severityColor={severityColor}
+                        height={340}
+                      />
                     </div>
 
                     <div className="col-md-6 d-flex flex-column gap-3">
@@ -1531,106 +1470,16 @@ const ConsultationForm = () => {
                     </span>
                     Body Diagram – Click to Mark
                   </h6>
-                  <div className="btn-group btn-group-sm">
-                    <button
-                      type="button"
-                      className={`btn ${bodyView === "front" ? "btn-primary" : "btn-outline-secondary"}`}
-                      style={{ borderRadius: "8px 0 0 8px", fontSize: 12 }}
-                      onClick={() => setBodyView("front")}
-                    >
-                      Front
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn ${bodyView === "back" ? "btn-primary" : "btn-outline-secondary"}`}
-                      style={{ borderRadius: "0 8px 8px 0", fontSize: 12 }}
-                      onClick={() => setBodyView("back")}
-                    >
-                      Back
-                    </button>
-                  </div>
                 </div>
-                <div className="card-body d-flex justify-content-center" style={{ padding: "8px 24px 24px" }}>
-                  <svg
-                    viewBox="0 0 290 360"
-                    width="100%"
-                    style={{ maxWidth: 280, cursor: "pointer" }}
-                  >
-                    {/* Body outline - front */}
-                    {bodyView === "front" && (
-                      <g opacity={0.15} fill="#6366f1">
-                        {/* Head */}
-                        <ellipse cx="145" cy="20" rx="20" ry="22" />
-                        {/* Neck */}
-                        <rect x="136" y="42" width="18" height="18" rx="4" />
-                        {/* Torso */}
-                        <rect x="100" y="60" width="90" height="110" rx="10" />
-                        {/* Left arm */}
-                        <rect x="57" y="65" width="43" height="120" rx="8" />
-                        {/* Right arm */}
-                        <rect x="190" y="65" width="43" height="120" rx="8" />
-                        {/* Left hand */}
-                        <ellipse cx="70" cy="195" rx="14" ry="10" />
-                        {/* Right hand */}
-                        <ellipse cx="220" cy="195" rx="14" ry="10" />
-                        {/* Left leg */}
-                        <rect x="98" y="170" width="40" height="170" rx="8" />
-                        {/* Right leg */}
-                        <rect x="152" y="170" width="40" height="170" rx="8" />
-                      </g>
-                    )}
-                    {bodyView === "back" && (
-                      <g opacity={0.15} fill="#6366f1">
-                        <ellipse cx="145" cy="20" rx="20" ry="22" />
-                        <rect x="136" y="42" width="18" height="18" rx="4" />
-                        <rect x="100" y="60" width="90" height="110" rx="10" />
-                        <rect x="57" y="65" width="43" height="120" rx="8" />
-                        <rect x="190" y="65" width="43" height="120" rx="8" />
-                        <ellipse cx="70" cy="195" rx="14" ry="10" />
-                        <ellipse cx="220" cy="195" rx="14" ry="10" />
-                        <rect x="98" y="170" width="40" height="170" rx="8" />
-                        <rect x="152" y="170" width="40" height="170" rx="8" />
-                      </g>
-                    )}
-
-                    {/* Clickable hit zones */}
-                    {visibleParts.map((part) => {
-                      const marked = bodyPoints.find((bp) => bp.part === part.id);
-                      return (
-                        <g key={part.id} onClick={() => handleBodyClick(part)} style={{ cursor: "pointer" }}>
-                          <circle
-                            cx={part.x}
-                            cy={part.y}
-                            r={part.r}
-                            fill={marked ? severityColor(marked.severity) : "transparent"}
-                            opacity={marked ? 0.85 : 0}
-                          />
-                          <circle
-                            cx={part.x}
-                            cy={part.y}
-                            r={part.r}
-                            fill="transparent"
-                            stroke={marked ? severityColor(marked.severity) : "#6366f1"}
-                            strokeWidth={marked ? 2 : 1}
-                            strokeDasharray={marked ? "none" : "3 2"}
-                            opacity={0.5}
-                          />
-                          {marked && (
-                            <text
-                              x={part.x}
-                              y={part.y + 4}
-                              textAnchor="middle"
-                              fill="#fff"
-                              fontSize={10}
-                              fontWeight="bold"
-                            >
-                              {marked.severity}
-                            </text>
-                          )}
-                        </g>
-                      );
-                    })}
-                  </svg>
+                <div className="card-body" style={{ padding: "8px 16px 16px" }}>
+                  <BodyDiagram3D
+                    parts={BODY_PARTS}
+                    marks={bodyPoints}
+                    interactive
+                    onPartClick={handleBodyClick}
+                    severityColor={severityColor}
+                    height={400}
+                  />
                 </div>
                 <div className="px-4 pb-3">
                   <div className="d-flex align-items-center gap-3 flex-wrap">

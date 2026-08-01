@@ -369,13 +369,28 @@ const TherapyAppointments = () => {
     toast.info("Cleared prescription inputs.");
   };
 
-  const statusBadgeClass = (status: string) => {
-    if (status === "Checked Out") return "badge-soft-info text-info border-info";
-    if (status === "Checked In") return "badge-soft-warning text-warning border-warning";
-    if (status === "Cancelled") return "badge-soft-danger text-danger border-danger";
-    if (status === "Schedule") return "badge-soft-primary text-primary border-primary";
-    if (status === "Confirmed") return "badge-soft-success text-success border-success";
-    return "badge-soft-secondary text-secondary border-secondary";
+  const statusMeta = (status: string) => {
+    if (status === "Checked Out")
+      return { cls: "ta-badge ta-badge-info", icon: "ti ti-circle-check", label: status };
+    if (status === "Checked In")
+      return { cls: "ta-badge ta-badge-warning", icon: "ti ti-login", label: status };
+    if (status === "Cancelled")
+      return { cls: "ta-badge ta-badge-danger", icon: "ti ti-ban", label: status };
+    if (status === "Schedule")
+      return { cls: "ta-badge ta-badge-primary", icon: "ti ti-calendar-event", label: status };
+    if (status === "Confirmed")
+      return { cls: "ta-badge ta-badge-success", icon: "ti ti-rosette-discount-check", label: status };
+    return { cls: "ta-badge ta-badge-muted", icon: "ti ti-point", label: status || "—" };
+  };
+
+  const statusBadgeClass = (status: string) => statusMeta(status).cls;
+
+  const paymentMeta = (status: string) => {
+    const isPaid = status === "Paid";
+    const isPartial = status === "Partial Paid" || status === "Partially Paid";
+    if (isPaid) return { cls: "ta-badge ta-badge-success", icon: "ti ti-cash", label: status };
+    if (isPartial) return { cls: "ta-badge ta-badge-warning", icon: "ti ti-coins", label: status };
+    return { cls: "ta-badge ta-badge-danger", icon: "ti ti-alert-circle", label: status || "Unpaid" };
   };
 
   // Auto-expand parents if they have a child appointment scheduled for today
@@ -410,15 +425,17 @@ const TherapyAppointments = () => {
     }
 
     return (
-      <div className="p-3 bg-light rounded-3" style={{ border: "1px solid #e2e8f0" }}>
-        <h6 className="fw-bold mb-2 text-dark fs-13 d-flex align-items-center gap-1">
-          <i className="ti ti-link text-primary"></i> Connected Sessions / Slots
+      <div className="ta-expand p-3">
+        <h6 className="fw-bold mb-3 text-dark fs-13 d-flex align-items-center gap-2">
+          <span className="ta-mini-icon"><i className="ti ti-link" /></span>
+          Connected Sessions / Slots
+          <span className="ta-badge ta-badge-muted ms-1">{sortedChildren.length} sessions</span>
         </h6>
-        <div className="table-responsive bg-white rounded-2 border">
-          <table className="table table-sm table-hover align-middle mb-0" style={{ fontSize: "11px" }}>
-            <thead className="bg-light text-muted">
+        <div className="table-responsive bg-white rounded-3 border overflow-hidden">
+          <table className="table table-sm align-middle mb-0 ta-child-table">
+            <thead>
               <tr>
-                <th className="py-2 px-3 border-0" style={{ width: 80 }}>Session No</th>
+                <th className="py-2 px-3 border-0" style={{ width: 90 }}>Session</th>
                 <th className="py-2 px-3 border-0">Appointment ID</th>
                 <th className="py-2 px-3 border-0">Date & Time</th>
                 <th className="py-2 px-3 border-0">Therapist</th>
@@ -430,60 +447,61 @@ const TherapyAppointments = () => {
             </thead>
             <tbody>
               {sortedChildren.map((child: any) => {
-                const isPaid = child.paymentStatus === "Paid";
-                const isPartial = child.paymentStatus === "Partial Paid";
+                const pay = paymentMeta(child.paymentStatus || "Unpaid");
+                const st = statusMeta(child.status);
                 return (
                   <tr key={child.id}>
-                    <td className="py-2 px-3 border-0 fw-semibold text-dark">
-                      Session {child.sessionNumber || "—"}
-                    </td>
-                    <td className="py-2 px-3 border-0 fw-semibold text-primary">
-                      {child.appointmentCode}
-                    </td>
-                    <td className="py-2 px-3 border-0 text-dark">
-                      {child.dateTimeLabel || new Date(child.scheduledAt).toLocaleString("en-GB", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })}
-                    </td>
-                    <td className="py-2 px-3 border-0 text-secondary">
-                      {child.doctorName || child.doctor?.fullName || "—"}
+                    <td className="py-2 px-3 border-0">
+                      <span className="ta-session-chip">Session {child.sessionNumber || "—"}</span>
                     </td>
                     <td className="py-2 px-3 border-0">
-                      <span className="badge bg-light text-dark border px-2 py-0.5">
+                      <span className="ta-code">{child.appointmentCode}</span>
+                    </td>
+                    <td className="py-2 px-3 border-0">
+                      <div className="ta-meta-line">
+                        <i className="ti ti-calendar-event" />
+                        <span>
+                          {child.dateTimeLabel || new Date(child.scheduledAt).toLocaleString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-2 px-3 border-0">
+                      <div className="ta-meta-line text-secondary">
+                        <i className="ti ti-user" />
+                        <span>{child.doctorName || child.doctor?.fullName || "—"}</span>
+                      </div>
+                    </td>
+                    <td className="py-2 px-3 border-0">
+                      <span className="ta-mode-chip">
+                        <i className={`ti ${child.mode === "Online" ? "ti-video" : "ti-building"}`} />
                         {child.mode}
                       </span>
                     </td>
                     <td className="py-2 px-3 border-0">
-                      <span className="text-dark fw-semibold">₹{child.finalFee || child.consultationFee || 0}</span>
-                      <span className={`badge border ms-2 ${
-                        isPaid 
-                          ? "badge-soft-success border-success text-success" 
-                          : isPartial 
-                          ? "badge-soft-warning border-warning text-warning" 
-                          : "badge-soft-danger border-danger text-danger"
-                      } px-1 py-0.2 fs-10`}>
-                        {child.paymentStatus || "Unpaid"}
-                      </span>
+                      <div className="d-flex flex-column align-items-start gap-1">
+                        <span className="fw-bold text-dark">₹{child.finalFee || child.consultationFee || 0}</span>
+                        <span className={pay.cls}><i className={pay.icon} />{pay.label}</span>
+                      </div>
                     </td>
                     <td className="py-2 px-3 border-0">
-                      <div className="d-flex align-items-center gap-1">
-                        <span className={`badge border ${statusBadgeClass(child.status)} px-2 py-0.5 fs-11`}>
-                          {child.status}
-                        </span>
+                      <div className="d-flex align-items-center gap-2 flex-wrap">
+                        <span className={st.cls}><i className={st.icon} />{st.label}</span>
                         {["Schedule", "Confirmed", "Checked In"].includes(child.status) && (
-                          <div className="form-check form-switch p-0 ms-2" style={{ minHeight: 'auto', display: 'inline-block' }}>
+                          <div className="form-check form-switch p-0 mb-0" style={{ minHeight: "auto" }}>
                             <input
                               className="form-check-input ms-0"
                               type="checkbox"
                               role="switch"
                               checked={togglingId === child.id}
                               onChange={() => handleStatusToggle(child.id, child.status)}
-                              style={{ cursor: 'pointer', width: '25px', height: '14px' }}
+                              style={{ cursor: "pointer", width: "28px", height: "15px" }}
                             />
                           </div>
                         )}
@@ -493,16 +511,17 @@ const TherapyAppointments = () => {
                       <div className="d-flex align-items-center justify-content-end gap-1">
                         <button
                           type="button"
-                          className={`bg-transparent border-0 p-1 ${child.consultation ? "text-success" : "text-primary"}`}
+                          className={`ta-action-btn ${child.consultation ? "success" : "primary"}`}
                           title={child.consultation ? "View / Upload Prescription Scan" : "Create Prescription Upload"}
                           data-bs-toggle="modal"
                           data-bs-target="#prescription_modal"
                           onClick={() => handleOpenPrescriptionModal(child)}
                         >
-                          <i className="ti ti-pill fs-14"></i>
+                          <i className="ti ti-pill" />
                         </button>
                         <button
-                          className="bg-transparent border-0 text-info p-1"
+                          type="button"
+                          className="ta-action-btn info"
                           title="View Details"
                           data-bs-toggle="modal"
                           data-bs-target="#view_therapy_appt"
@@ -519,16 +538,17 @@ const TherapyAppointments = () => {
                             }
                           }}
                         >
-                          <i className="ti ti-eye fs-14"></i>
+                          <i className="ti ti-eye" />
                         </button>
                         <button
-                          className="bg-transparent border-0 text-danger p-1"
+                          type="button"
+                          className="ta-action-btn danger"
                           data-bs-toggle="modal"
                           data-bs-target="#delete_therapy_appt"
                           onClick={() => setSelectedAppt(child)}
                           title="Cancel Appointment"
                         >
-                          <i className="ti ti-trash fs-14"></i>
+                          <i className="ti ti-trash" />
                         </button>
                       </div>
                     </td>
@@ -564,32 +584,49 @@ const TherapyAppointments = () => {
     {
       title: "Sr No.",
       dataIndex: "sr_no",
-      render: (text: number) => <span className="fs-13 fw-medium text-dark">{text}</span>,
+      render: (text: number) => (
+        <span className="ta-sr">{text}</span>
+      ),
       sorter: (a: any, b: any) => a.sr_no - b.sr_no,
-      width: 60,
+      width: 70,
     },
     {
       title: "Appointment ID",
       dataIndex: "code",
-      render: (text: string) => <span className="text-primary fw-semibold">{text}</span>,
+      render: (text: string) => <span className="ta-code">{text}</span>,
       sorter: (a: any, b: any) => a.code.localeCompare(b.code),
     },
     {
       title: "Patient Name",
       dataIndex: "patientName",
-      render: (text: string) => <span className="fw-semibold text-dark fs-14">{text}</span>,
+      render: (text: string) => (
+        <div className="d-flex align-items-center gap-2">
+          <span className="ta-avatar">{(text || "?").charAt(0).toUpperCase()}</span>
+          <span className="fw-semibold text-dark">{text}</span>
+        </div>
+      ),
       sorter: (a: any, b: any) => a.patientName.localeCompare(b.patientName),
     },
     {
       title: "Therapist",
       dataIndex: "therapist",
-      render: (text: string) => <span className="text-secondary">{text}</span>,
+      render: (text: string) => (
+        <div className="ta-meta-line text-secondary">
+          <i className="ti ti-stethoscope" />
+          <span className="fw-medium">{text}</span>
+        </div>
+      ),
       sorter: (a: any, b: any) => a.therapist.localeCompare(b.therapist),
     },
     {
       title: "Date & Time",
       dataIndex: "date",
-      render: (text: string) => <span className="text-dark fs-13">{text}</span>,
+      render: (text: string) => (
+        <div className="ta-meta-line text-dark">
+          <i className="ti ti-calendar-event" />
+          <span className="fs-13">{text}</span>
+        </div>
+      ),
       sorter: (a: any, b: any) => a.date.localeCompare(b.date),
     },
     {
@@ -610,26 +647,22 @@ const TherapyAppointments = () => {
         const remaining = Math.max(0, total - paid);
         const status = c.paymentStatus || inv?.paymentStatus || "Unpaid";
         const invoiceCode = inv?.invoiceCode || "";
-        
-        const isPaid = status === "Paid";
-        const isPartial = status === "Partial Paid" || status === "Partially Paid";
+        const pay = paymentMeta(status);
         
         return (
-          <div className="d-flex flex-column align-items-start gap-1">
-            {invoiceCode && <span className="fw-semibold text-dark fs-13">{invoiceCode}</span>}
-            <div className="text-muted fs-11" style={{ lineHeight: '1.2' }}>
-              <div>Total: ₹{total.toLocaleString()}</div>
-              <div className="fw-medium text-danger">Due: ₹{remaining.toLocaleString()}</div>
-            </div>
-            <span className={`badge border ${
-              isPaid 
-                ? "badge-soft-success border-success text-success" 
-                : isPartial 
-                ? "badge-soft-warning border-warning text-warning" 
-                : "badge-soft-danger border-danger text-danger"
-            } px-1.5 py-0.2 fs-10 mt-1`}>
-              {status}
-            </span>
+          <div className="ta-invoice-cell d-flex flex-column align-items-start gap-1">
+            {invoiceCode && <span className="ta-invoice-code">{invoiceCode}</span>}
+            {(total > 0 || remaining > 0) && (
+              <div className="ta-amount-stack">
+                {total > 0 && (
+                  <span>Total <strong>₹{total.toLocaleString()}</strong></span>
+                )}
+                {remaining > 0 && (
+                  <span className="due">Due <strong>₹{remaining.toLocaleString()}</strong></span>
+                )}
+              </div>
+            )}
+            <span className={pay.cls}><i className={pay.icon} />{pay.label}</span>
           </div>
         );
       },
@@ -642,26 +675,18 @@ const TherapyAppointments = () => {
         const hasConsult = !!raw.consultation;
         const status = hasConsult ? "Paid" : (raw.paymentStatus || "Unpaid");
         const isPaid = status === "Paid";
-        const isPartial = status === "Partial Paid";
+        const pay = paymentMeta(status);
         return (
-          <div className="d-flex flex-column align-items-start gap-1">
-            <span className="text-dark fw-bold">₹{text}</span>
-            <span className={`badge border ${
-              isPaid 
-                ? "badge-soft-success border-success text-success" 
-                : isPartial 
-                ? "badge-soft-warning border-warning text-warning" 
-                : "badge-soft-danger border-danger text-danger"
-            } px-1 py-0.5 fs-11`}>
-              {status}
-            </span>
+          <div className="d-flex flex-column align-items-start gap-1" style={{ minWidth: 110 }}>
+            <span className="ta-fee">₹{Number(text).toLocaleString()}</span>
+            <span className={pay.cls}><i className={pay.icon} />{pay.label}</span>
             {!isPaid && (
               <button
-                className="btn btn-xs btn-outline-success py-0 px-1 fs-10 fw-bold mt-1 text-uppercase"
+                type="button"
+                className="ta-mark-paid"
                 onClick={() => handleMarkPaymentPaid(raw.id)}
-                style={{ borderRadius: "4px" }}
               >
-                Mark Paid
+                <i className="ti ti-check" /> Mark Paid
               </button>
             )}
           </div>
@@ -674,24 +699,25 @@ const TherapyAppointments = () => {
       dataIndex: "status",
       render: (text: string, record: any) => {
         const raw = record.raw;
+        const st = statusMeta(text);
         return (
-          <div className="d-flex flex-column align-items-start gap-1">
-            <span className={`badge border ${statusBadgeClass(text)} px-2 py-1 fs-12`}>
-              {text}
-            </span>
+          <div className="d-flex flex-column align-items-start gap-2">
+            <span className={st.cls}><i className={st.icon} />{st.label}</span>
             {["Schedule", "Confirmed", "Checked In"].includes(text) && (
-              <div className="form-check form-switch p-0 ms-2" style={{ minHeight: 'auto' }}>
-                <input
-                  className="form-check-input ms-0"
-                  type="checkbox"
-                  role="switch"
-                  checked={togglingId === raw.id}
-                  onChange={() => handleStatusToggle(raw.id, text)}
-                  style={{ cursor: 'pointer', width: '30px', height: '16px' }}
-                />
-                <label className="text-black fw-bold small ms-1" style={{ fontSize: '10px' }}>
-                  {text === "Schedule" ? "Confirm" : text === "Confirmed" ? "Checkin" : "Checkout"}
-                </label>
+              <div className="d-flex align-items-center gap-2">
+                <div className="form-check form-switch p-0 mb-0" style={{ minHeight: "auto" }}>
+                  <input
+                    className="form-check-input ms-0"
+                    type="checkbox"
+                    role="switch"
+                    checked={togglingId === raw.id}
+                    onChange={() => handleStatusToggle(raw.id, text)}
+                    style={{ cursor: "pointer", width: "32px", height: "17px" }}
+                  />
+                </div>
+                <span className="ta-status-hint">
+                  {text === "Schedule" ? "Confirm" : text === "Confirmed" ? "Check-in" : "Check-out"}
+                </span>
               </div>
             )}
           </div>
@@ -711,33 +737,34 @@ const TherapyAppointments = () => {
         const isExpanded = expandedRowKeys.includes(raw.id);
 
         return (
-          <div className="d-flex align-items-center justify-content-center gap-2">
+          <div className="d-flex align-items-center justify-content-center gap-1">
             {hasChildren && (
               <button
                 type="button"
-                className={`bg-transparent border-0 p-1 ${isExpanded ? "text-primary" : "text-muted"}`}
+                className={`ta-action-btn ${isExpanded ? "primary" : "muted"}`}
                 title={isExpanded ? "Hide Connected Sessions" : "Show Connected Sessions"}
                 onClick={() => handleToggleExpand(raw.id)}
               >
-                <i className={`ti ${isExpanded ? "ti-chevron-up" : "ti-chevron-down"} fs-18`}></i>
+                <i className={`ti ${isExpanded ? "ti-chevron-up" : "ti-chevron-down"}`} />
               </button>
             )}
 
             {!isChildAppt && (
               <button
                 type="button"
-                className={`bg-transparent border-0 p-1 ${hasConsult ? "text-success" : "text-primary"}`}
+                className={`ta-action-btn ${hasConsult ? "success" : "primary"}`}
                 title={hasConsult ? "View / Upload Prescription Scan" : "Create Prescription Upload"}
                 data-bs-toggle="modal"
                 data-bs-target="#prescription_modal"
                 onClick={() => handleOpenPrescriptionModal(raw)}
               >
-                <i className="ti ti-pill fs-18"></i>
+                <i className="ti ti-pill" />
               </button>
             )}
 
             <button
-              className="bg-transparent border-0 text-info p-1"
+              type="button"
+              className="ta-action-btn info"
               title="View Details"
               onClick={async () => {
                 if (isConsultancy) {
@@ -770,34 +797,36 @@ const TherapyAppointments = () => {
                 }
               }}
             >
-              <i className="ti ti-eye fs-18"></i>
+              <i className="ti ti-eye" />
             </button>
             <button
-              className="bg-transparent border-0 text-danger p-1"
+              type="button"
+              className="ta-action-btn danger"
               data-bs-toggle="modal"
               data-bs-target="#delete_therapy_appt"
               onClick={() => setSelectedAppt(record.raw)}
               title="Cancel Appointment"
             >
-              <i className="ti ti-trash fs-18"></i>
+              <i className="ti ti-trash" />
             </button>
           </div>
         );
       },
-      width: 120,
+      width: 140,
     },
   ];
 
   return (
     <>
       <div className="page-wrapper">
-        <div className="content">
+        <div className="content therapy-appt-page">
           {/* Page Header */}
           <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
             <div className="flex-grow-1">
-              <h4 className="page-title fw-bold mb-0">
+              <h4 className="page-title fw-bold mb-0 d-flex align-items-center flex-wrap gap-2">
                 {isConsultancy ? "Therapy Consultancy" : "Therapy Appointments"}
-                <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
+                <span className="ta-badge ta-badge-primary">
+                  <i className="ti ti-calendar-check" />
                   {isConsultancy ? "Total Consultations" : "Total Bookings"}: {loading ? "" : data.length}
                 </span>
               </h4>
@@ -806,7 +835,7 @@ const TherapyAppointments = () => {
               <Link
                 to="/book-therapy-appointment"
                 className="btn btn-primary d-flex align-items-center gap-2"
-                style={{ minHeight: "38px" }}
+                style={{ minHeight: "38px", borderRadius: 8 }}
               >
                 <i className="ti ti-plus" /> Book Appointment
               </Link>
@@ -846,7 +875,7 @@ const TherapyAppointments = () => {
               />
             </div>
           ) : (
-            <div className="table-responsive">
+            <div className="table-responsive ta-table-wrap">
               <Datatable
                 columns={columns}
                 dataSource={data}
@@ -866,6 +895,234 @@ const TherapyAppointments = () => {
               />
             </div>
           )}
+
+          <style>{`
+            .ta-badge {
+              display: inline-flex;
+              align-items: center;
+              gap: 5px;
+              border-radius: 999px;
+              padding: 5px 10px;
+              font-size: 11px;
+              font-weight: 600;
+              line-height: 1.2;
+              border: 1px solid transparent;
+              white-space: nowrap;
+              flex-shrink: 0;
+            }
+            .ta-badge i { font-size: 13px; }
+            .ta-badge-primary {
+              background: rgba(79, 70, 229, 0.1);
+              color: #4f46e5;
+              border-color: rgba(79, 70, 229, 0.25);
+            }
+            .ta-badge-success {
+              background: rgba(25, 135, 84, 0.1);
+              color: #198754;
+              border-color: rgba(25, 135, 84, 0.28);
+            }
+            .ta-badge-warning {
+              background: rgba(245, 158, 11, 0.12);
+              color: #b45309;
+              border-color: rgba(245, 158, 11, 0.3);
+            }
+            .ta-badge-danger {
+              background: rgba(220, 53, 69, 0.1);
+              color: #dc3545;
+              border-color: rgba(220, 53, 69, 0.28);
+            }
+            .ta-badge-info {
+              background: rgba(13, 202, 240, 0.12);
+              color: #0aa2c0;
+              border-color: rgba(13, 202, 240, 0.3);
+            }
+            .ta-badge-muted {
+              background: #f1f5f9;
+              color: #64748b;
+              border-color: #e2e8f0;
+            }
+            .therapy-appt-page .ta-table-wrap {
+              background: #fff;
+              border: 1px solid #e8edf3;
+              border-radius: 12px;
+              overflow: hidden;
+              box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            }
+            .therapy-appt-page .ta-table-wrap .ant-table-tbody > tr > td {
+              border-bottom: 1px solid #f1f5f9 !important;
+              vertical-align: middle;
+              padding-top: 14px !important;
+              padding-bottom: 14px !important;
+            }
+            .therapy-appt-page .ta-table-wrap .ant-table-tbody > tr:hover > td {
+              background: #fafbff !important;
+            }
+            .therapy-appt-page .ta-sr {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              min-width: 28px;
+              height: 28px;
+              border-radius: 8px;
+              background: #f1f5f9;
+              color: #475569;
+              font-size: 12px;
+              font-weight: 700;
+            }
+            .therapy-appt-page .ta-code {
+              display: inline-flex;
+              color: #4f46e5;
+              font-weight: 700;
+              font-size: 13px;
+              background: rgba(79, 70, 229, 0.06);
+              border: 1px solid rgba(79, 70, 229, 0.14);
+              border-radius: 8px;
+              padding: 4px 8px;
+              white-space: nowrap;
+            }
+            .therapy-appt-page .ta-invoice-code {
+              display: inline-block;
+              color: #4f46e5;
+              font-weight: 700;
+              font-size: 10px;
+              line-height: 1.2;
+              background: rgba(79, 70, 229, 0.06);
+              border: 1px solid rgba(79, 70, 229, 0.14);
+              border-radius: 6px;
+              padding: 3px 6px;
+              white-space: nowrap;
+              max-width: 100%;
+            }
+            .therapy-appt-page .ta-avatar {
+              width: 32px;
+              height: 32px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+              color: #fff;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 13px;
+              font-weight: 700;
+              flex-shrink: 0;
+            }
+            .therapy-appt-page .ta-meta-line {
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              font-size: 13px;
+            }
+            .therapy-appt-page .ta-meta-line i {
+              color: #94a3b8;
+              font-size: 15px;
+            }
+            .therapy-appt-page .ta-amount-stack {
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+              font-size: 11px;
+              color: #64748b;
+            }
+            .therapy-appt-page .ta-amount-stack .due {
+              color: #dc3545;
+            }
+            .therapy-appt-page .ta-fee {
+              font-size: 14px;
+              font-weight: 800;
+              color: #0f172a;
+            }
+            .therapy-appt-page .ta-mark-paid {
+              display: inline-flex;
+              align-items: center;
+              gap: 4px;
+              border: 1px solid rgba(25, 135, 84, 0.35);
+              background: rgba(25, 135, 84, 0.08);
+              color: #198754;
+              border-radius: 999px;
+              padding: 3px 10px;
+              font-size: 10px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.02em;
+              white-space: nowrap;
+              flex-shrink: 0;
+            }
+            .therapy-appt-page .ta-mark-paid:hover {
+              background: rgba(25, 135, 84, 0.14);
+            }
+            .therapy-appt-page .ta-status-hint {
+              font-size: 10px;
+              font-weight: 700;
+              color: #64748b;
+              text-transform: uppercase;
+              letter-spacing: 0.03em;
+            }
+            .therapy-appt-page .ta-action-btn {
+              width: 32px;
+              height: 32px;
+              border-radius: 9px;
+              border: 1px solid #e2e8f0;
+              background: #fff;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              color: #64748b;
+              transition: all 0.15s ease;
+            }
+            .therapy-appt-page .ta-action-btn i { font-size: 15px; }
+            .therapy-appt-page .ta-action-btn:hover { transform: translateY(-1px); }
+            .therapy-appt-page .ta-action-btn.primary { color: #4f46e5; background: rgba(79,70,229,0.08); border-color: rgba(79,70,229,0.2); }
+            .therapy-appt-page .ta-action-btn.success { color: #198754; background: rgba(25,135,84,0.08); border-color: rgba(25,135,84,0.22); }
+            .therapy-appt-page .ta-action-btn.info { color: #0aa2c0; background: rgba(13,202,240,0.1); border-color: rgba(13,202,240,0.25); }
+            .therapy-appt-page .ta-action-btn.danger { color: #dc3545; background: rgba(220,53,69,0.08); border-color: rgba(220,53,69,0.22); }
+            .therapy-appt-page .ta-action-btn.muted { color: #94a3b8; }
+            .therapy-appt-page .ta-expand {
+              background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+              border-top: 1px solid #e8edf3;
+            }
+            .therapy-appt-page .ta-mini-icon {
+              width: 26px;
+              height: 26px;
+              border-radius: 8px;
+              background: rgba(79, 70, 229, 0.1);
+              color: #4f46e5;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .therapy-appt-page .ta-child-table thead tr {
+              background: #f8fafc;
+              color: #64748b;
+              font-size: 11px;
+              text-transform: uppercase;
+              letter-spacing: 0.03em;
+            }
+            .therapy-appt-page .ta-child-table tbody tr:hover {
+              background: #fafbff;
+            }
+            .therapy-appt-page .ta-session-chip {
+              display: inline-flex;
+              align-items: center;
+              background: #eef2ff;
+              color: #4338ca;
+              border-radius: 8px;
+              padding: 4px 8px;
+              font-size: 11px;
+              font-weight: 700;
+            }
+            .therapy-appt-page .ta-mode-chip {
+              display: inline-flex;
+              align-items: center;
+              gap: 4px;
+              background: #f8fafc;
+              border: 1px solid #e2e8f0;
+              color: #334155;
+              border-radius: 999px;
+              padding: 4px 9px;
+              font-size: 11px;
+              font-weight: 600;
+            }
+          `}</style>
         </div>
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
@@ -886,8 +1143,9 @@ const TherapyAppointments = () => {
         headerIcon={<i className="ti ti-calendar" />}
         highlightTitle={viewAppt ? `Appointment ID: ${viewAppt.appointmentCode}` : "Appointment"}
         highlightStatus={
-          <span className={`badge border ${statusBadgeClass(viewAppt?.status || "Schedule")} fw-bold px-2 py-1`} style={{ fontSize: "10px", borderRadius: "10px" }}>
-            <i className="ti ti-point-filled me-1"></i>{viewAppt?.status || "Schedule"}
+          <span className={statusBadgeClass(viewAppt?.status || "Schedule")}>
+            <i className={statusMeta(viewAppt?.status || "Schedule").icon} />
+            {viewAppt?.status || "Schedule"}
           </span>
         }
         highlightColor="#e0e7ff"

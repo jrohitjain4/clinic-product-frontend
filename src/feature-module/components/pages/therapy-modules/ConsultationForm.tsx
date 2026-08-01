@@ -8,11 +8,12 @@ import { DatePicker } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
 import BodyDiagram3D from "./BodyDiagram3D";
+import type { BodyPartDef } from "./BodyDiagram3D";
 
 const routes = all_routes;
 
 // ─── Body Part Definitions ───────────────────────────────────
-const BODY_PARTS = [
+const BODY_PARTS: BodyPartDef[] = [
   // Front
   { id: "head", label: "Head", view: "front", x: 145, y: 18, r: 22 },
   { id: "neck", label: "Neck", view: "front", x: 145, y: 54, r: 12 },

@@ -49,6 +49,12 @@ interface AdmissionOption {
   patient: { fullName?: string; firstName?: string; lastName?: string; patientCode?: string };
   doctor?: { fullName: string; ipdVisitCharge?: number };
   ward?: { wardName: string; chargePerNight?: number; nursingChargePerNight?: number };
+  doctorId?: string;
+  doctorVisitCharge?: number;
+  nursingFee?: number;
+  wardId?: string;
+  admissionDate?: string;
+  invoices?: any[];
 }
 
 interface ChargeItemMaster {

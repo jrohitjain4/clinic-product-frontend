@@ -72,6 +72,8 @@ interface Admission {
   paymentStatus: string;
   createdAt: string;
   ipdPrescriptions?: any[];
+  treatmentReason?: string | null;
+  referralAppointmentCode?: string | null;
 }
 
 const IpdAdmissionsPage: React.FC = () => {

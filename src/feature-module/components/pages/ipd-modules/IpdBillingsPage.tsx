@@ -1249,6 +1249,15 @@ const IpdBillingsPage: React.FC = () => {
     [expandedAdmissionIds, renderExpandedRow]
   );
 
+  const getMinInvoiceDate = () => {
+    if (!selectedAdmissionId) return "";
+    const adm = admissions.find((a) => a.id === selectedAdmissionId);
+    if (adm && adm.admissionDate) {
+      return adm.admissionDate.split("T")[0];
+    }
+    return "";
+  };
+
   return (
     <div className="page-wrapper ipd-billings-page">
       <style>{`
@@ -1733,7 +1742,7 @@ const IpdBillingsPage: React.FC = () => {
                           className="form-control fw-bold text-dark"
                           value={invoiceDate}
                           onChange={(e) => setInvoiceDate(e.target.value)}
-                          min={selectedAdmissionId ? (admissions.find((a) => a.id === selectedAdmissionId)?.admissionDate ? admissions.find((a) => a.id === selectedAdmissionId)!.admissionDate.split("T")[0] : "") : ""}
+                          min={getMinInvoiceDate()}
                           required
                         />
                       </div>

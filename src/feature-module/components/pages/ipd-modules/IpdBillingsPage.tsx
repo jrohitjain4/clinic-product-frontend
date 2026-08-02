@@ -49,6 +49,12 @@ interface AdmissionOption {
   patient: { fullName?: string; firstName?: string; lastName?: string; patientCode?: string };
   doctor?: { fullName: string; ipdVisitCharge?: number };
   ward?: { wardName: string; chargePerNight?: number; nursingChargePerNight?: number };
+  doctorId?: string;
+  doctorVisitCharge?: number;
+  nursingFee?: number;
+  wardId?: string;
+  admissionDate?: string;
+  invoices?: any[];
 }
 
 interface ChargeItemMaster {
@@ -82,6 +88,8 @@ const IpdBillingsPage: React.FC = () => {
   const [invoices, setInvoices] = useState<IPDInvoice[]>([]);
   const [admissions, setAdmissions] = useState<AdmissionOption[]>([]);
   const [chargeTypes, setChargeTypes] = useState<ChargeType[]>([]);
+  const [wardsList, setWardsList] = useState<any[]>([]);
+  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
 
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -92,10 +100,14 @@ const IpdBillingsPage: React.FC = () => {
   const [selectedAdmissionId, setSelectedAdmissionId] = useState("");
   
   // Current Item Input state in Raise Modal
-  const [currentType, setCurrentType] = useState("");
+  const [currentType, setCurrentType] = useState("Doctor Visit");
   const [currentItemName, setCurrentItemName] = useState("");
   const [currentUnitPrice, setCurrentUnitPrice] = useState("");
   const [currentQuantity, setCurrentQuantity] = useState("1");
+  const [doctorsList, setDoctorsList] = useState<any[]>([]);
+  const [medicinesList, setMedicinesList] = useState<any[]>([]);
+  const [labTestsList, setLabTestsList] = useState<any[]>([]);
+  const [selectedItemId, setSelectedItemId] = useState("");
 
   // Draft Items List inside Raise Modal
   const [draftItems, setDraftItems] = useState<DraftInvoiceItem[]>([]);
@@ -155,6 +167,12 @@ const IpdBillingsPage: React.FC = () => {
   const [paymentMethodInput, setPaymentMethodInput] = useState("Cash");
   const [submittingPay, setSubmittingPay] = useState(false);
 
+  const [showAdmissionPayModal, setShowAdmissionPayModal] = useState(false);
+  const [payAdmissionRecord, setPayAdmissionRecord] = useState<any>(null);
+  const [admissionPaymentInput, setAdmissionPaymentInput] = useState("");
+  const [admissionPaymentMethod, setAdmissionPaymentMethod] = useState("Cash");
+  const [submittingAdmissionPay, setSubmittingAdmissionPay] = useState(false);
+
   // Fetch Data
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -162,10 +180,14 @@ const IpdBillingsPage: React.FC = () => {
     const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
     try {
-      const [invRes, admRes, ctRes] = await Promise.all([
+      const [invRes, admRes, ctRes, docRes, medRes, labRes, wardRes] = await Promise.all([
         fetch(apiUrl("/api/ipd/invoices"), { headers }),
         fetch(apiUrl("/api/ipd/admissions"), { headers }),
         fetch(apiUrl("/api/ipd/charge-types"), { headers }),
+        fetch(apiUrl("/api/doctors?type=IPD"), { headers }),
+        fetch(apiUrl("/api/medicines"), { headers }),
+        fetch(apiUrl("/api/lab-tests"), { headers }),
+        fetch(apiUrl("/api/ipd/wards"), { headers }),
       ]);
 
       if (invRes.ok) {
@@ -179,6 +201,22 @@ const IpdBillingsPage: React.FC = () => {
       if (ctRes.ok) {
         const data = await ctRes.json();
         setChargeTypes(Array.isArray(data) ? data : []);
+      }
+      if (docRes.ok) {
+        const data = await docRes.json();
+        setDoctorsList(Array.isArray(data) ? data : []);
+      }
+      if (medRes.ok) {
+        const data = await medRes.json();
+        setMedicinesList(Array.isArray(data) ? data : []);
+      }
+      if (labRes.ok) {
+        const data = await labRes.json();
+        setLabTestsList(Array.isArray(data) ? data : []);
+      }
+      if (wardRes.ok) {
+        const data = await wardRes.json();
+        setWardsList(Array.isArray(data) ? data : []);
       }
     } catch (err: any) {
       toast.error("Failed to load IPD billings data");
@@ -211,26 +249,116 @@ const IpdBillingsPage: React.FC = () => {
     };
   }, [invoices]);
 
+  const handlePatientChange = (admId: string) => {
+    if (!admId) return;
+    const admission = admissions.find((a) => a.id === admId);
+    if (!admission) return;
+
+    setCurrentType("Doctor Visit");
+    const primaryDocId = admission.doctorId || "";
+    setSelectedItemId(primaryDocId);
+    const doc = doctorsList.find((d) => d.id === primaryDocId);
+    const docName = doc ? doc.fullName : (admission.doctor?.fullName || "Assigned Doctor");
+    setCurrentItemName(`Doctor Visit: Dr. ${docName}`);
+    setCurrentUnitPrice(String(doc?.ipdVisitCharge || admission.doctorVisitCharge || doc?.consultationCharge || 500));
+    setCurrentQuantity("1");
+
+    if (admission.admissionDate) {
+      const admDateStr = admission.admissionDate.split("T")[0];
+      setInvoiceDate(admDateStr);
+    } else {
+      setInvoiceDate(new Date().toISOString().split("T")[0]);
+    }
+  };
+
   // Handle Type Change in Raise Modal
-  const handleTypeChange = (typeName: string) => {
-    setCurrentType(typeName);
-    const foundType = chargeTypes.find((ct) => ct.name === typeName);
-    if (foundType && foundType.items && foundType.items.length > 0) {
-      setCurrentItemName(foundType.items[0].itemName);
-      setCurrentUnitPrice(String(foundType.items[0].standardFee));
+  const handleTypeChange = (type: string) => {
+    setCurrentType(type);
+    setCurrentItemName("");
+    setCurrentUnitPrice("");
+    setCurrentQuantity("1");
+    setSelectedItemId("");
+
+    if (!selectedAdmissionId) return;
+    const admission = admissions.find((a) => a.id === selectedAdmissionId);
+    if (!admission) return;
+
+    if (type === "Doctor Visit") {
+      const primaryDocId = admission.doctorId || "";
+      setSelectedItemId(primaryDocId);
+      const doc = doctorsList.find((d) => d.id === primaryDocId);
+      const docName = doc ? doc.fullName : (admission.doctor?.fullName || "Assigned Doctor");
+      setCurrentItemName(`Doctor Visit: Dr. ${docName}`);
+      setCurrentUnitPrice(String(doc?.ipdVisitCharge || admission.doctorVisitCharge || doc?.consultationCharge || 500));
+    } else if (type === "Nurse Visit") {
+      setCurrentItemName("Daily Nursing Care Fee");
+      const wardNursingFee = admission.ward?.nursingChargePerNight || admission.nursingFee || 0;
+      setCurrentUnitPrice(String(wardNursingFee));
+    } else if (type === "Ward Stay") {
+      const primaryWardId = admission.wardId || "";
+      setSelectedItemId(primaryWardId);
+      const ward = wardsList.find((w) => w.id === primaryWardId);
+      const wardName = ward ? ward.wardName : (admission.ward?.wardName || "Assigned Ward");
+      setCurrentItemName(`Ward Stay: ${wardName}`);
+      setCurrentUnitPrice(String(admission.ward?.chargePerNight || ward?.chargePerNight || 0));
+    } else if (type === "Medicine") {
+      if (medicinesList.length > 0) {
+        const firstMed = medicinesList[0];
+        setSelectedItemId(firstMed.id);
+        setCurrentItemName(firstMed.medicineName);
+        setCurrentUnitPrice(String(firstMed.sellingPrice || firstMed.mrp || 0));
+      }
+    } else if (type === "Diagnostic") {
+      if (labTestsList.length > 0) {
+        const firstTest = labTestsList[0];
+        setSelectedItemId(firstTest.id);
+        setCurrentItemName(firstTest.name);
+        setCurrentUnitPrice(String(firstTest.price || 0));
+      }
     } else {
       setCurrentItemName("");
       setCurrentUnitPrice("");
     }
   };
 
-  // Handle Item Master selection inside current type
-  const handleMasterItemSelect = (itemName: string) => {
-    setCurrentItemName(itemName);
-    const foundType = chargeTypes.find((ct) => ct.name === currentType);
-    const foundItem = foundType?.items?.find((it) => it.itemName === itemName);
-    if (foundItem) {
-      setCurrentUnitPrice(String(foundItem.standardFee));
+  const handleDoctorChange = (docId: string) => {
+    setSelectedItemId(docId);
+    const doc = doctorsList.find((d) => d.id === docId);
+    if (doc) {
+      setCurrentItemName(`Doctor Visit: Dr. ${doc.fullName}`);
+      const admission = admissions.find((a) => a.id === selectedAdmissionId);
+      if (admission && admission.doctorId === docId) {
+        setCurrentUnitPrice(String(doc.ipdVisitCharge || admission.doctorVisitCharge || doc.consultationCharge || 500));
+      } else {
+        setCurrentUnitPrice(String(doc.ipdVisitCharge || doc.consultationCharge || 500));
+      }
+    }
+  };
+
+  const handleWardChange = (wardId: string) => {
+    setSelectedItemId(wardId);
+    const ward = wardsList.find((w) => w.id === wardId);
+    if (ward) {
+      setCurrentItemName(`Ward Stay: ${ward.wardName}`);
+      setCurrentUnitPrice(String(ward.chargePerNight || 0));
+    }
+  };
+
+  const handleMedicineChange = (medId: string) => {
+    setSelectedItemId(medId);
+    const med = medicinesList.find((m) => m.id === medId);
+    if (med) {
+      setCurrentItemName(med.medicineName);
+      setCurrentUnitPrice(String(med.sellingPrice || med.mrp || 0));
+    }
+  };
+
+  const handleLabTestChange = (testId: string) => {
+    setSelectedItemId(testId);
+    const test = labTestsList.find((t) => t.id === testId);
+    if (test) {
+      setCurrentItemName(test.name);
+      setCurrentUnitPrice(String(test.price || 0));
     }
   };
 
@@ -239,24 +367,16 @@ const IpdBillingsPage: React.FC = () => {
     const targetAdmId = admId || (admissions[0]?.id || "");
     setSelectedAdmissionId(targetAdmId);
 
-    const defaultType = chargeTypes[0]?.name || "Doctor Visit / Round Fee";
-    setCurrentType(defaultType);
-
-    const foundType = chargeTypes.find((ct) => ct.name === defaultType);
-    if (foundType && foundType.items && foundType.items.length > 0) {
-      setCurrentItemName(foundType.items[0].itemName);
-      setCurrentUnitPrice(String(foundType.items[0].standardFee));
-    } else {
-      setCurrentItemName("Doctor Daily Round Visit");
-      setCurrentUnitPrice("500");
-    }
-
-    setCurrentQuantity("1");
+    setCurrentType("Doctor Visit");
     setDraftItems([]);
     setRaisePaidAmount("");
     setRaisePaymentMethod("Cash");
     setRaiseNotes("");
     setShowRaiseModal(true);
+
+    setTimeout(() => {
+      handlePatientChange(targetAdmId);
+    }, 100);
   };
 
   // Add Item to Draft Table inside Raise Modal
@@ -348,6 +468,7 @@ const IpdBillingsPage: React.FC = () => {
       paidAmount: parseFloat(raisePaidAmount) || 0,
       paymentMethod: raisePaymentMethod,
       notes: raiseNotes.trim() || undefined,
+      invoiceDate,
     };
 
     try {
@@ -519,6 +640,76 @@ const IpdBillingsPage: React.FC = () => {
       toast.error(err.message || "Error submitting payment");
     } finally {
       setSubmittingPay(false);
+    }
+  };
+
+  const handleOpenAdmissionPayModal = (record: any) => {
+    setPayAdmissionRecord(record);
+    setAdmissionPaymentInput(String(record.totalDue || 0));
+    setAdmissionPaymentMethod("Cash");
+    setShowAdmissionPayModal(true);
+  };
+
+  const handleSubmitAdmissionPay = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!payAdmissionRecord) return;
+    const totalToPay = parseFloat(admissionPaymentInput) || 0;
+    if (totalToPay <= 0) {
+      toast.error("Please enter a valid payment amount.");
+      return;
+    }
+
+    setSubmittingAdmissionPay(true);
+    const token = localStorage.getItem("token");
+
+    try {
+      const admissionId = payAdmissionRecord.admissionId;
+      const fullAdmission = admissions.find((a) => a.id === admissionId);
+      if (!fullAdmission) {
+        throw new Error("Admission record not found");
+      }
+
+      const unpaidInvoices = [...(fullAdmission.invoices || [])]
+        .filter((inv) => (inv.dueAmount || 0) > 0)
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+      if (unpaidInvoices.length === 0) {
+        toast.info("No unpaid invoices found to allocate payment.");
+        setShowAdmissionPayModal(false);
+        return;
+      }
+
+      let remaining = totalToPay;
+      for (const inv of unpaidInvoices) {
+        if (remaining <= 0) break;
+        const absorb = Math.min(inv.dueAmount, remaining);
+        if (absorb <= 0) continue;
+
+        const res = await fetch(apiUrl(`/api/ipd/invoices/${inv.id}/pay`), {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            paymentAmount: absorb,
+            paymentMethod: admissionPaymentMethod,
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error(`Failed to pay invoice ${inv.invoiceNumber}`);
+        }
+        remaining -= absorb;
+      }
+
+      toast.success("Payment collected and allocated successfully!");
+      setShowAdmissionPayModal(false);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "Error collecting admission payment");
+    } finally {
+      setSubmittingAdmissionPay(false);
     }
   };
 
@@ -1017,6 +1208,16 @@ const IpdBillingsPage: React.FC = () => {
               >
                 <i className="ti ti-plus fs-18" />
               </button>
+              {record.totalDue > 0 && (
+                <button
+                  type="button"
+                  className="bg-transparent border-0 text-success p-1"
+                  title="Collect Due Payment"
+                  onClick={() => handleOpenAdmissionPayModal(record)}
+                >
+                  <i className="ti ti-wallet fs-18" />
+                </button>
+              )}
               {record.invoiceCount > 0 && (
                 <button
                   type="button"
@@ -1047,6 +1248,15 @@ const IpdBillingsPage: React.FC = () => {
     }),
     [expandedAdmissionIds, renderExpandedRow]
   );
+
+  const getMinInvoiceDate = () => {
+    if (!selectedAdmissionId) return "";
+    const adm = admissions.find((a) => a.id === selectedAdmissionId);
+    if (adm && adm.admissionDate) {
+      return adm.admissionDate.split("T")[0];
+    }
+    return "";
+  };
 
   return (
     <div className="page-wrapper ipd-billings-page">
@@ -1268,7 +1478,11 @@ const IpdBillingsPage: React.FC = () => {
                     <select
                       className="form-select fw-bold text-primary fs-15"
                       value={selectedAdmissionId}
-                      onChange={(e) => setSelectedAdmissionId(e.target.value)}
+                      onChange={(e) => {
+                        const admId = e.target.value;
+                        setSelectedAdmissionId(admId);
+                        handlePatientChange(admId);
+                      }}
                       required
                     >
                       <option value="">Choose Admitted Patient</option>
@@ -1287,13 +1501,6 @@ const IpdBillingsPage: React.FC = () => {
                         <span className="badge bg-primary rounded-circle p-1" style={{ width: "8px", height: "8px" }} />
                         Add Item / Service Charge
                       </h6>
-                      <button
-                        type="button"
-                        className="btn btn-outline-primary btn-sm fw-semibold"
-                        onClick={() => setShowAddTypeModal(true)}
-                      >
-                        <i className="ti ti-plus me-1" /> + Add New Charge Type Category
-                      </button>
                     </div>
 
                     <div className="row g-3">
@@ -1305,50 +1512,117 @@ const IpdBillingsPage: React.FC = () => {
                           value={currentType}
                           onChange={(e) => handleTypeChange(e.target.value)}
                         >
-                          {chargeTypes.map((ct) => (
-                            <option key={ct.id} value={ct.name}>
-                              {ct.name}
-                            </option>
-                          ))}
+                          <option value="Doctor Visit">Doctor Visit</option>
+                          <option value="Nurse Visit">Nurse Visit</option>
+                          <option value="Ward Stay">Ward Stay</option>
+                          <option value="Medicine">Medicine</option>
+                          <option value="Diagnostic">Diagnostic</option>
+                          <option value="Other">Other</option>
                         </select>
                       </div>
 
-                      {/* Standard Preset Item Selector or Custom Text */}
-                      <div className="col-md-4">
-                        <label className="form-label fw-semibold fs-13">
-                          Service / Item Description <span className="text-danger">*</span>
-                        </label>
-                        {(() => {
-                          const activeType = chargeTypes.find((ct) => ct.name === currentType);
-                          if (activeType && activeType.items && activeType.items.length > 0) {
-                            return (
-                              <div className="input-group">
-                                <select
-                                  className="form-select"
-                                  value={currentItemName}
-                                  onChange={(e) => handleMasterItemSelect(e.target.value)}
-                                >
-                                  {activeType.items.map((it) => (
-                                    <option key={it.id} value={it.itemName}>
-                                      {it.itemName} (₹{it.standardFee})
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            );
-                          }
-                          return (
-                            <IconFormControl
-                              fieldLabel="service"
-                              type="text"
-                              placeholder="e.g. Doctor Round Visit, Oxygen Cylinder"
-                              value={currentItemName}
-                              onChange={(e) => setCurrentItemName(e.target.value)}
-                            />
-                          );
-                        })()}
-                        <small className="text-muted fs-11">Or type custom name in input field</small>
-                      </div>
+                      {/* Doctor Select Dropdown */}
+                      {currentType === "Doctor Visit" && (
+                        <div className="col-md-4">
+                          <label className="form-label fw-semibold fs-13">Select Doctor *</label>
+                          <select
+                            className="form-select text-dark fw-bold"
+                            value={selectedItemId}
+                            onChange={(e) => handleDoctorChange(e.target.value)}
+                          >
+                            <option value="">Choose Doctor</option>
+                            {doctorsList.map((d) => (
+                              <option key={d.id} value={d.id}>
+                                Dr. {d.fullName}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Medicine Select Dropdown */}
+                      {currentType === "Medicine" && (
+                        <div className="col-md-4">
+                          <label className="form-label fw-semibold fs-13">Select Medicine *</label>
+                          <select
+                            className="form-select text-dark fw-bold"
+                            value={selectedItemId}
+                            onChange={(e) => handleMedicineChange(e.target.value)}
+                          >
+                            <option value="">Choose Medicine</option>
+                            {medicinesList.map((m) => (
+                              <option key={m.id} value={m.id}>
+                                {m.medicineName} {m.brandName ? `[${m.brandName}]` : ""}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Diagnostic Select Dropdown */}
+                      {currentType === "Diagnostic" && (
+                        <div className="col-md-4">
+                          <label className="form-label fw-semibold fs-13">Select Diagnostic Test *</label>
+                          <select
+                            className="form-select text-dark fw-bold"
+                            value={selectedItemId}
+                            onChange={(e) => handleLabTestChange(e.target.value)}
+                          >
+                            <option value="">Choose Diagnostic Test</option>
+                            {labTestsList.map((t) => (
+                              <option key={t.id} value={t.id}>
+                                {t.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Ward Stay Select Dropdown */}
+                      {currentType === "Ward Stay" && (
+                        <div className="col-md-4">
+                          <label className="form-label fw-semibold fs-13">Select Ward *</label>
+                          <select
+                            className="form-select text-dark fw-bold"
+                            value={selectedItemId}
+                            onChange={(e) => handleWardChange(e.target.value)}
+                          >
+                            <option value="">Choose Ward</option>
+                            {wardsList.map((w) => (
+                              <option key={w.id} value={w.id}>
+                                {w.wardName} - Room Rate: ₹{w.chargePerNight}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Nurse Visit (ReadOnly/Input Info) */}
+                      {currentType === "Nurse Visit" && (
+                        <div className="col-md-4">
+                          <label className="form-label fw-semibold fs-13">Service / Item Description *</label>
+                          <IconFormControl
+                            fieldLabel="service"
+                            type="text"
+                            value={currentItemName}
+                            onChange={(e) => setCurrentItemName(e.target.value)}
+                          />
+                        </div>
+                      )}
+
+                      {/* Other Custom Service Input */}
+                      {currentType === "Other" && (
+                        <div className="col-md-4">
+                          <label className="form-label fw-semibold fs-13">Service / Item Description *</label>
+                          <IconFormControl
+                            fieldLabel="service"
+                            type="text"
+                            placeholder="e.g. Oxygen Cylinder, Dressing"
+                            value={currentItemName}
+                            onChange={(e) => setCurrentItemName(e.target.value)}
+                          />
+                        </div>
+                      )}
 
                       {/* Unit Price */}
                       <div className="col-md-2">
@@ -1450,13 +1724,27 @@ const IpdBillingsPage: React.FC = () => {
                   {/* Total & Payment Section */}
                   <div className="p-3 bg-soft-primary border border-primary rounded-3 mb-3">
                     <div className="row align-items-center g-3">
-                      <div className="col-md-6">
+                      <div className="col-md-3">
                         <span className="fs-13 text-secondary fw-semibold d-block">
                           Total Invoice Amount:
                         </span>
                         <h3 className="fw-bold text-primary mb-0">
                           ₹{draftTotalAmount.toLocaleString("en-IN")}
                         </h3>
+                      </div>
+
+                      <div className="col-md-3">
+                        <label className="form-label fw-bold text-dark mb-1">
+                          Invoice Date <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          className="form-control fw-bold text-dark"
+                          value={invoiceDate}
+                          onChange={(e) => setInvoiceDate(e.target.value)}
+                          min={getMinInvoiceDate()}
+                          required
+                        />
                       </div>
 
                       <div className="col-md-3">
@@ -1865,6 +2153,111 @@ const IpdBillingsPage: React.FC = () => {
                       </>
                     ) : (
                       "Record Payment"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAdmissionPayModal && payAdmissionRecord && (
+        <div
+          className="modal fade show d-block"
+          tabIndex={-1}
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg">
+              <div className="modal-header bg-success text-white">
+                <h5 className="modal-title fw-bold text-white">
+                  <i className="ti ti-wallet me-2" />
+                  Collect IPD Admission Payment - {payAdmissionRecord.admissionCode}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowAdmissionPayModal(false)}
+                />
+              </div>
+
+              <form onSubmit={handleSubmitAdmissionPay}>
+                <div className="modal-body p-4">
+                  <div className="p-3 bg-soft-success border border-success rounded-3 mb-3">
+                    <div className="d-flex justify-content-between mb-1">
+                      <span className="text-muted fs-13">Patient Name:</span>
+                      <strong className="text-dark">{payAdmissionRecord.patientName}</strong>
+                    </div>
+                    <div className="d-flex justify-content-between mb-1">
+                      <span className="text-muted fs-13">Total Incurred Billed:</span>
+                      <span className="fw-semibold">₹{payAdmissionRecord.totalBilled.toLocaleString("en-IN")}</span>
+                    </div>
+                    <div className="d-flex justify-content-between mb-1">
+                      <span className="text-muted fs-13">Already Paid:</span>
+                      <span className="text-success fw-semibold">₹{payAdmissionRecord.totalPaid.toLocaleString("en-IN")}</span>
+                    </div>
+                    <div className="d-flex justify-content-between border-top pt-1 mt-1">
+                      <span className="fw-bold text-dark">Total Outstanding Due:</span>
+                      <h4 className="fw-bold text-danger mb-0">₹{payAdmissionRecord.totalDue.toLocaleString("en-IN")}</h4>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold">
+                      Payment Amount To Collect (₹) <span className="text-danger">*</span>
+                    </label>
+                    <IconFormControl
+                      fieldLabel="amount"
+                      type="number"
+                      className="fw-bold text-success fs-18"
+                      placeholder="Enter payment amount"
+                      value={admissionPaymentInput}
+                      onChange={(e) => setAdmissionPaymentInput(e.target.value)}
+                      max={payAdmissionRecord.totalDue}
+                      min={1}
+                      required
+                    />
+                    <small className="text-muted mt-1 d-block">
+                      Note: Collected payment will be distributed and allocated across the unpaid invoices automatically.
+                    </small>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold">Payment Method</label>
+                    <select
+                      className="form-select"
+                      value={admissionPaymentMethod}
+                      onChange={(e) => setAdmissionPaymentMethod(e.target.value)}
+                    >
+                      <option value="Cash">Cash</option>
+                      <option value="UPI">UPI / GPay / PhonePe</option>
+                      <option value="Card">Credit / Debit Card</option>
+                      <option value="Net Banking">Net Banking</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="modal-footer bg-light border-top">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowAdmissionPayModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-success px-4 fw-bold"
+                    disabled={submittingAdmissionPay}
+                  >
+                    {submittingAdmissionPay ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" />
+                        Collecting...
+                      </>
+                    ) : (
+                      "Collect Payment & Allocate"
                     )}
                   </button>
                 </div>

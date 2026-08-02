@@ -235,6 +235,7 @@ export const SidebarData = [
           { label: "Dashboard", link: routes.ipdDashboard, icon: "layout-dashboard" },
           { label: "Patient", link: routes.ipdPatients, icon: "users" },
           { label: "Admission", link: routes.ipdAdmissions, icon: "login" },
+          { label: "Inpatient", link: routes.ipdInpatients, icon: "bed" },
           { label: "Discharge", link: routes.ipdDischarge, icon: "logout" },
           { label: "Ward Management", link: routes.ipdWardManagement, icon: "building-hospital" },
           { label: "Billings & Invoices", link: routes.ipdBillings, icon: "file-invoice" },

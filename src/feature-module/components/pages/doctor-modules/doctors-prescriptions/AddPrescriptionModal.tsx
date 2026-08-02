@@ -6,6 +6,7 @@ import { useMedicines } from "../../../../../core/hooks/useMedicines";
 import { usePrescriptions } from "../../../../../core/hooks/usePrescriptions";
 import html2pdf from "html2pdf.js";
 import PrescriptionPadSlip from "../../clinic-modules/appointments/PrescriptionPadSlip";
+import RecommendIPDModal from "../../clinic-modules/appointments/RecommendIPDModal";
 import { useLabTests } from "../../../../../core/hooks/useLabTests";
 import { useClinicPatient } from "../../../../../core/hooks/useClinicPatient";
 import { apiPut } from "../../../../../core/utils/apiClient";
@@ -34,6 +35,7 @@ interface Props {
     linkedAppointments?: any[];
     initialPrescription?: any;
     appointment?: any;
+    onRecommendIPD?: () => void;
 }
 
 const FREQUENCY_OPTIONS = ["1-0-1", "1-1-1", "0-0-1", "1-0-0", "0-1-0", "1-1-0", "SOS", "As Directed"];
@@ -60,6 +62,7 @@ const AddPrescriptionModal = ({
     linkedAppointments = [],
     initialPrescription,
     appointment,
+    onRecommendIPD,
 }: Props) => {
     const { appointments } = useClinicAppointments();
     const { medicines: pharmacyMedicines } = useMedicines();
@@ -122,6 +125,16 @@ const AddPrescriptionModal = ({
 
     const { patient, refetch: refetchPatient } = useClinicPatient(patientId || undefined);
     const [isIPDRecommended, setIsIPDRecommended] = useState(false);
+    const [showRecommendIPDModal, setShowRecommendIPDModal] = useState(false);
+
+    const activeAppointment = useMemo(() => {
+        if (appointment) return appointment;
+        const currentAppId = appointmentId || selectedVisitTab || initialAppointmentId;
+        if (currentAppId) {
+            return appointments.find((a) => a.id === currentAppId);
+        }
+        return null;
+    }, [appointment, appointmentId, selectedVisitTab, initialAppointmentId, appointments]);
 
     useEffect(() => {
         if (patient) {
@@ -130,6 +143,18 @@ const AddPrescriptionModal = ({
     }, [patient]);
 
     const handleToggleIPD = async () => {
+        console.log("handleToggleIPD clicked! onRecommendIPD prop:", onRecommendIPD);
+        if (onRecommendIPD) {
+            console.log("Calling onRecommendIPD callback");
+            onRecommendIPD();
+            return;
+        }
+
+        if (activeAppointment) {
+            setShowRecommendIPDModal(true);
+            return;
+        }
+
         if (!patientId) return;
         const targetState = !isIPDRecommended;
         setIsIPDRecommended(targetState);
@@ -566,15 +591,17 @@ const AddPrescriptionModal = ({
 
     return (
         <>
-            {/* Backdrop */}
-            <div
-                className="modal-backdrop fade show"
-                style={{ zIndex: 1040 }}
-                onClick={onClose}
-            />
-            {/* Modal Container */}
-            <div className="modal fade show d-block prescription-modal-wrapper" style={{ zIndex: 1050 }} tabIndex={-1}>
-                <div className="modal-dialog modal-xl modal-dialog-centered">
+            {!showRecommendIPDModal && (
+                <>
+                    {/* Backdrop */}
+                    <div
+                        className="modal-backdrop fade show"
+                        style={{ zIndex: 1040 }}
+                        onClick={onClose}
+                    />
+                    {/* Modal Container */}
+                    <div className="modal fade show d-block prescription-modal-wrapper" style={{ zIndex: 1050 }} tabIndex={-1}>
+                        <div className="modal-dialog modal-xl modal-dialog-centered">
                     <div className="modal-content text-dark border-0 shadow-lg overflow-hidden" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column', borderRadius: '12px' }}>
 
                         {/* Header */}
@@ -1373,6 +1400,8 @@ const AddPrescriptionModal = ({
                     </div>
                 </div>
             </div>
+        </>
+    )}
 
             {/* Custom Premium Styles overriding default bootstrap variables locally */}
             <style>{`
@@ -1552,6 +1581,18 @@ const AddPrescriptionModal = ({
                     suggestIPD={isIPDRecommended}
                 />
             </div>
+
+            {showRecommendIPDModal && activeAppointment && (
+                <RecommendIPDModal
+                    onClose={() => setShowRecommendIPDModal(false)}
+                    appointment={activeAppointment}
+                    onSuccess={() => {
+                        setShowRecommendIPDModal(false);
+                        setIsIPDRecommended(true);
+                        if (refetchPatient) refetchPatient();
+                    }}
+                />
+            )}
         </>
     );
 };

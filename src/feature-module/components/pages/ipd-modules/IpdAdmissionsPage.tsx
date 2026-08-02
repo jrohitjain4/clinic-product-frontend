@@ -72,6 +72,8 @@ interface Admission {
   paymentStatus: string;
   createdAt: string;
   ipdPrescriptions?: any[];
+  treatmentReason?: string | null;
+  referralAppointmentCode?: string | null;
 }
 
 const IpdAdmissionsPage: React.FC = () => {
@@ -90,6 +92,7 @@ const IpdAdmissionsPage: React.FC = () => {
   // Admission Modal State
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [activeReferralId, setActiveReferralId] = useState<string | null>(null);
 
   // Modal Form Fields
   const [admissionType, setAdmissionType] = useState<"Direct" | "Refer to OPD" | "Emergency">("Direct");
@@ -98,8 +101,11 @@ const IpdAdmissionsPage: React.FC = () => {
   const [selectedWardId, setSelectedWardId] = useState("");
   const [selectedTreatmentId, setSelectedTreatmentId] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
+  const [referralAppointmentId, setReferralAppointmentId] = useState<string | null>(null);
+  const [referralAppointmentCode, setReferralAppointmentCode] = useState<string | null>(null);
 
   // Financial Breakdown Fields
+  const [defaultAdmissionFee, setDefaultAdmissionFee] = useState("500");
   const [admissionFee, setAdmissionFee] = useState("500");
   const [treatmentFee, setTreatmentFee] = useState("0");
   const [wardCharge, setWardCharge] = useState("0");
@@ -187,12 +193,13 @@ const IpdAdmissionsPage: React.FC = () => {
     const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
     try {
-      const [admRes, patRes, docRes, wrdRes, trtRes] = await Promise.all([
+      const [admRes, patRes, docRes, wrdRes, trtRes, feeRes] = await Promise.all([
         fetch(apiUrl("/api/ipd/admissions"), { headers }),
         fetch(apiUrl("/api/patients"), { headers }),
         fetch(apiUrl("/api/doctors?type=IPD"), { headers }),
         fetch(apiUrl("/api/ipd/wards"), { headers }),
         fetch(apiUrl("/api/ipd/treatments"), { headers }),
+        fetch(apiUrl("/api/settings/ipd/admission-fee"), { headers }),
       ]);
 
       if (admRes.ok) {
@@ -214,6 +221,12 @@ const IpdAdmissionsPage: React.FC = () => {
       if (trtRes.ok) {
         const data = await trtRes.json();
         setTreatments(Array.isArray(data) ? data : []);
+      }
+      if (feeRes.ok) {
+        const feeData = await feeRes.json();
+        const val = String(feeData.ipdAdmissionFee !== undefined ? feeData.ipdAdmissionFee : "500");
+        setDefaultAdmissionFee(val);
+        setAdmissionFee(val);
       }
     } catch (err: any) {
       toast.error("Failed to load IPD admission data");
@@ -263,13 +276,14 @@ const IpdAdmissionsPage: React.FC = () => {
 
   // Reset Form
   const resetForm = () => {
+    setActiveReferralId(null);
     setAdmissionType("Direct");
     setSelectedPatientId(patients[0]?.id || "");
     setSelectedDoctorId(doctors[0]?.id || "");
     setSelectedWardId(wards[0]?.id || "");
     setSelectedTreatmentId("");
     setDiagnosis("");
-    setAdmissionFee("500");
+    setAdmissionFee(defaultAdmissionFee);
     setTreatmentFee("0");
     setWardCharge("0");
     setDoctorVisitCharge("0");
@@ -277,6 +291,8 @@ const IpdAdmissionsPage: React.FC = () => {
     setOtherCharges("0");
     setAdvancePaid("");
     setPaymentMethod("Cash");
+    setReferralAppointmentId(null);
+    setReferralAppointmentCode(null);
   };
 
   const handleOpenModal = (type: "Direct" | "Refer to OPD" | "Emergency") => {
@@ -295,6 +311,59 @@ const IpdAdmissionsPage: React.FC = () => {
     }
 
     setShowModal(true);
+  };
+
+  const handleStartAdmission = (adm: any) => {
+    resetForm();
+    setActiveReferralId(adm.id);
+    setAdmissionType("Refer to OPD");
+    setReferralAppointmentId(adm.referralAppointmentId || null);
+    setReferralAppointmentCode(adm.referralAppointmentCode || null);
+
+    setSelectedPatientId(adm.patientId);
+    if (adm.doctorId) {
+      setSelectedDoctorId(adm.doctorId);
+      const foundDoc = doctors.find((d) => d.id === adm.doctorId);
+      if (foundDoc && foundDoc.ipdVisitCharge) {
+        setDoctorVisitCharge(String(foundDoc.ipdVisitCharge));
+      }
+    }
+    if (adm.treatmentId) {
+      setSelectedTreatmentId(adm.treatmentId);
+      const foundTrt = treatments.find((t) => t.id === adm.treatmentId);
+      if (foundTrt) {
+        setTreatmentFee(String(foundTrt.totalPrice || 0));
+      }
+    }
+    if (adm.diagnosis) {
+      setDiagnosis(adm.diagnosis);
+    } else if (adm.treatmentReason) {
+      setDiagnosis(`Referred for Treatment: ${adm.treatmentReason}`);
+    }
+
+    if (wards.length > 0) {
+      setSelectedWardId(wards[0].id);
+      setWardCharge(String(wards[0].chargePerNight || 0));
+      setNursingFee(String(wards[0].nursingChargePerNight || 0));
+    }
+
+    setShowModal(true);
+  };
+
+  const handleDeleteAdmission = async (id: string) => {
+    if (!window.confirm("Are you sure you want to cancel/delete this IPD recommendation?")) return;
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(apiUrl(`/api/ipd/admissions/${id}`), {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to delete record");
+      toast.success("Recommendation deleted successfully!");
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "Error deleting record");
+    }
   };
 
   const handleSubmitAdmission = async (e: React.FormEvent) => {
@@ -321,6 +390,8 @@ const IpdAdmissionsPage: React.FC = () => {
       otherCharges: parseFloat(otherCharges) || 0,
       advancePaid: parseFloat(advancePaid) || 0,
       paymentMethod,
+      referralAppointmentId: referralAppointmentId || undefined,
+      referralAppointmentCode: referralAppointmentCode || undefined,
     };
 
     try {
@@ -338,16 +409,25 @@ const IpdAdmissionsPage: React.FC = () => {
         throw new Error(errData.message || "Failed to admit patient");
       }
 
-        toast.success("Patient admitted successfully! Advance receipt generated.");
-        setShowModal(false);
-        resetForm();
-        fetchData();
-      } catch (err: any) {
-        toast.error(err.message || "Error admitting patient");
-      } finally {
-        setSubmitting(false);
+      if (activeReferralId) {
+        // Delete the incomplete recommendation record
+        await fetch(apiUrl(`/api/ipd/admissions/${activeReferralId}`), {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => {});
+        setActiveReferralId(null);
       }
-    };
+
+      toast.success("Patient admitted successfully! Advance receipt generated.");
+      setShowModal(false);
+      resetForm();
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "Error admitting patient");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleAddMedicineRow = () => {
     if (!newMedName.trim()) {
@@ -483,6 +563,8 @@ const IpdAdmissionsPage: React.FC = () => {
         wardName: adm.ward?.wardName || "Not Assigned",
         wardCharge: adm.wardCharge,
         treatmentName: adm.treatment?.procedureName || "Standard IPD Care",
+        treatmentReason: adm.treatmentReason || "",
+        referralAppointmentCode: adm.referralAppointmentCode || "",
         treatmentFee: adm.treatmentFee,
         totalEstimatedAmount: adm.totalEstimatedAmount,
         advancePaid: adm.advancePaid,
@@ -521,6 +603,31 @@ const IpdAdmissionsPage: React.FC = () => {
         ),
         sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
           a.admissionCode.localeCompare(b.admissionCode),
+      },
+      {
+        title: "Referral OPD",
+        dataIndex: "referralAppointmentCode",
+        render: (text: string) => (
+          text ? (
+            <span
+              className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+              style={{
+                backgroundColor: "#f5f3ff",
+                color: "#7c3aed",
+                fontWeight: 600,
+                fontSize: "12px",
+                border: "1px solid #ddd6fe"
+              }}
+            >
+              <i className="ti ti-link fs-14" />
+              {text}
+            </span>
+          ) : (
+            <span className="text-muted fs-12">—</span>
+          )
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          (a.referralAppointmentCode || "").localeCompare(b.referralAppointmentCode || ""),
       },
       {
         title: "Patient Details",
@@ -585,6 +692,11 @@ const IpdAdmissionsPage: React.FC = () => {
         render: (text: string, record: (typeof tableData)[0]) => (
           <>
             <span className="fw-medium text-dark d-block fs-13">{text}</span>
+            {record.treatmentReason && (
+              <small className="text-muted d-block mt-1 fs-11">
+                Reason: {record.treatmentReason}
+              </small>
+            )}
             {record.treatmentFee > 0 && (
               <small className="text-muted d-block mt-1">
                 Proc Fee: ₹{record.treatmentFee}
@@ -595,94 +707,40 @@ const IpdAdmissionsPage: React.FC = () => {
         sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
           a.treatmentName.localeCompare(b.treatmentName),
       },
-      {
-        title: "Est. Total",
-        dataIndex: "totalEstimatedAmount",
-        render: (val: number) => (
-          <span className="fw-bold text-dark fs-14">
-            {val > 0 ? `₹${val.toLocaleString("en-IN")}` : "₹0"}
-          </span>
-        ),
-        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
-          a.totalEstimatedAmount - b.totalEstimatedAmount,
-      },
-      {
-        title: "Advance Paid",
-        dataIndex: "advancePaid",
-        render: (val: number) => (
-          <span className="fw-bold text-success fs-14">
-            {val > 0 ? `₹${val.toLocaleString("en-IN")}` : "₹0"}
-          </span>
-        ),
-        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
-          a.advancePaid - b.advancePaid,
-      },
-      {
-        title: "Due Amount",
-        dataIndex: "dueAmount",
-        render: (val: number) => (
-          <span className={`fw-bold fs-14 ${val > 0 ? "text-danger" : "text-success"}`}>
-            {val > 0 ? `₹${val.toLocaleString("en-IN")}` : "₹0"}
-          </span>
-        ),
-        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
-          a.dueAmount - b.dueAmount,
-      },
-      {
-        title: "Payment Status",
-        dataIndex: "paymentStatus",
-        render: (text: string) => (
-          <span
-            className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
-            style={{
-              backgroundColor:
-                text === "Paid"
-                  ? "#e6f8ef"
-                  : text === "Partial"
-                    ? "#fff3cd"
-                    : "#fdeded",
-              color:
-                text === "Paid"
-                  ? "#198754"
-                  : text === "Partial"
-                    ? "#fd7e14"
-                    : "#dc3545",
-              fontWeight: 600,
-              fontSize: "12px",
-            }}
-          >
-            <i
-              className={`${
-                text === "Paid"
-                  ? "ti ti-circle-check"
-                  : text === "Partial"
-                    ? "ti ti-clock"
-                    : "ti ti-circle-x"
-              } fs-14`}
-            />
-            {text}
-          </span>
-        ),
-        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
-          a.paymentStatus.localeCompare(b.paymentStatus),
-      },
+
       {
         title: "Status",
         dataIndex: "status",
         render: (text: string) => {
           const isAdmitted = text === "Admitted";
+          const isIncomplete = text === "Incomplete";
+          
+          let bg = "#f1f5f9";
+          let color = "#64748b";
+          let icon = "ti ti-circle-dashed";
+          
+          if (isAdmitted) {
+            bg = "#e6f8ef";
+            color = "#198754";
+            icon = "ti ti-circle-check";
+          } else if (isIncomplete) {
+            bg = "#fef3c7";
+            color = "#d97706";
+            icon = "ti ti-alert-circle";
+          }
+          
           return (
             <span
               className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
               style={{
-                backgroundColor: isAdmitted ? "#e6f8ef" : "#f1f5f9",
-                color: isAdmitted ? "#198754" : "#64748b",
+                backgroundColor: bg,
+                color: color,
                 fontWeight: 600,
                 fontSize: "12px",
               }}
             >
-              <i className={`${isAdmitted ? "ti ti-circle-check" : "ti ti-circle-dashed"} fs-14`} />
-              {text}
+              <i className={`${icon} fs-14`} />
+              {text === "Admitted" ? "Inpatient" : text}
             </span>
           );
         },
@@ -696,43 +754,77 @@ const IpdAdmissionsPage: React.FC = () => {
         align: "center" as const,
         render: (_: unknown, record: (typeof tableData)[0]) => (
           <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
-            <button
-              type="button"
-              className="bg-transparent border-0 text-primary p-1"
-              title="View Full IPD Details"
-              onClick={() => {
-                setSelectedViewAdmission(record._raw);
-                setShowViewModal(true);
-              }}
-            >
-              <i className="ti ti-eye fs-18" />
-            </button>
-            <Link
-              to={all_routes.ipdDischarge}
-              className="text-success p-1"
-              title="Process Discharge & Settle"
-            >
-              <i className="ti ti-user-check fs-18" />
-            </Link>
-            <Link
-              to={all_routes.ipdBillings}
-              className="text-info p-1"
-              title="View Invoices & Receipts"
-            >
-              <i className="ti ti-file-invoice fs-18" />
-            </Link>
-            <Link
-              to={all_routes.ipdBillings}
-              className="text-primary p-1"
-              title="Raise IPD Charge"
-            >
-              <i className="ti ti-plus fs-18" />
-            </Link>
+            {record.status === "Incomplete" ? (
+              <>
+                <button
+                  type="button"
+                  className="bg-transparent border-0 text-primary p-1"
+                  title="View Full IPD Details"
+                  onClick={() => {
+                    setSelectedViewAdmission(record._raw);
+                    setShowViewModal(true);
+                  }}
+                >
+                  <i className="ti ti-eye fs-18" />
+                </button>
+                <button
+                  type="button"
+                  className="bg-transparent border-0 text-success p-1"
+                  title="Start Patient Admission"
+                  onClick={() => handleStartAdmission(record._raw)}
+                >
+                  <i className="ti ti-player-play-filled fs-18" style={{ color: "#10b981" }} />
+                </button>
+                <button
+                  type="button"
+                  className="bg-transparent border-0 text-danger p-1"
+                  title="Delete/Reject Recommendation"
+                  onClick={() => handleDeleteAdmission(record.key)}
+                >
+                  <i className="ti ti-trash fs-18" />
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="bg-transparent border-0 text-primary p-1"
+                  title="View Full IPD Details"
+                  onClick={() => {
+                    setSelectedViewAdmission(record._raw);
+                    setShowViewModal(true);
+                  }}
+                >
+                  <i className="ti ti-eye fs-18" />
+                </button>
+                <Link
+                  to={all_routes.ipdDischarge}
+                  className="text-success p-1"
+                  title="Process Discharge & Settle"
+                >
+                  <i className="ti ti-user-check fs-18" />
+                </Link>
+                <Link
+                  to={all_routes.ipdBillings}
+                  className="text-info p-1"
+                  title="View Invoices & Receipts"
+                >
+                  <i className="ti ti-file-invoice fs-18" />
+                </Link>
+                <Link
+                  to={all_routes.ipdBillings}
+                  className="text-primary p-1"
+                  title="Raise IPD Charge"
+                >
+                  <i className="ti ti-plus fs-18" />
+                </Link>
+              </>
+            )}
           </div>
         ),
       },
     ],
-    []
+    [doctors, treatments, wards]
   );
 
   const hasActiveFilters = filterWard || filterPatient || filterDoctor || filterDue;

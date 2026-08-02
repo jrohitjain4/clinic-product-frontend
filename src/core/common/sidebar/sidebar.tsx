@@ -11,6 +11,35 @@ import { all_routes } from "../../../feature-module/routes/all_routes";
 import { canSeeSection, canSeeMenuItem } from "../../utils/staffPermissions";
 
 
+const pathMatchesMenuItem = (item: any, pathname: string, fullPath: string) => {
+  if (!item) return false;
+  const link = item.link as string | undefined;
+  if (link?.includes("?")) {
+    return (
+      fullPath === link ||
+      (link.includes("tab=roles") && !fullPath.includes("?"))
+    );
+  }
+  if (link && link === pathname) return true;
+  const prefixes: string[] | undefined = item.activePrefixes;
+  if (Array.isArray(prefixes) && prefixes.length > 0) {
+    return prefixes.some(
+      (prefix) => pathname === prefix.replace(/\/$/, "") || pathname.startsWith(prefix)
+    );
+  }
+  return false;
+};
+
+const menuItemMatchesPath = (item: any, pathname: string, fullPath: string): boolean => {
+  if (pathMatchesMenuItem(item, pathname, fullPath)) return true;
+  if (item?.submenu && Array.isArray(item?.submenuItems)) {
+    return item.submenuItems.some((child: any) =>
+      menuItemMatchesPath(child, pathname, fullPath)
+    );
+  }
+  return false;
+};
+
 const Sidebar = () => {
   const Location = useLocation();
   const [subOpen, setSubopen] = useState<any>("");
@@ -254,6 +283,12 @@ const Sidebar = () => {
                           }
                           title.links = link_array;
 
+                          const currentFullPath = Location.pathname + Location.search;
+                          const isTitleActive =
+                            title?.links?.includes(Location.pathname) ||
+                            title?.link === Location.pathname ||
+                            menuItemMatchesPath(title, Location.pathname, currentFullPath);
+
                           return (
                             <li className="submenu" key={`title-${i}`}>
                               <Link
@@ -265,15 +300,10 @@ const Sidebar = () => {
                                     handleLayoutClick(title?.label);
                                   }
                                 }}
-                                className={`${subOpen === title?.label ||
-                                  title?.links?.includes(Location.pathname)
+                                className={`${subOpen === title?.label || isTitleActive
                                   ? "subdrop"
                                   : ""
-                                  } ${title?.links?.includes(Location.pathname) ||
-                                    title?.link === Location.pathname
-                                    ? "active"
-                                    : ""
-                                  }`}
+                                  } ${isTitleActive ? "active" : ""}`}
                               >
                                 <i className={`ti ti-${title.icon}`}></i>
                                 <span>{title?.label}</span>
@@ -292,8 +322,7 @@ const Sidebar = () => {
                                 <ul
                                   style={{
                                     display:
-                                      subOpen === title?.label ||
-                                        title?.links?.includes(Location.pathname)
+                                      subOpen === title?.label || isTitleActive
                                         ? "block"
                                         : "none",
                                   }}
@@ -312,20 +341,15 @@ const Sidebar = () => {
                                     return true;
                                   }).map(
                                     (item: any, j: any) => {
-                                      const currentFullPath = Location.pathname + Location.search;
                                       const hasNestedSubmenu =
                                         !!item?.submenu &&
                                         Array.isArray(item?.submenuItems) &&
                                         item.submenuItems.length > 0;
-                                      const isSubActive =
-                                        (hasNestedSubmenu &&
-                                          item.submenuItems
-                                            .map((link: any) => link?.link)
-                                            .includes(Location.pathname)) ||
-                                        (!hasNestedSubmenu &&
-                                          (item?.link?.includes("?")
-                                            ? (currentFullPath === item?.link || (item?.link?.includes("tab=roles") && !Location.search))
-                                            : item?.link === Location.pathname));
+                                      const isSubActive = menuItemMatchesPath(
+                                        item,
+                                        Location.pathname,
+                                        currentFullPath
+                                      );
 
                                       return (
                                         <li
@@ -369,16 +393,11 @@ const Sidebar = () => {
                                             >
                                               {item?.submenuItems?.map(
                                                 (items: any, k: any) => {
-                                                  const isSubSubActive =
-                                                    items?.submenuItems
-                                                      ?.map(
-                                                        (link: any) => link.link
-                                                      )
-                                                      .includes(
-                                                        Location.pathname
-                                                      ) ||
-                                                    items?.link ===
-                                                    Location.pathname;
+                                                  const isSubSubActive = menuItemMatchesPath(
+                                                    items,
+                                                    Location.pathname,
+                                                    currentFullPath
+                                                  );
 
                                                   return (
                                                     <li key={`submenu-item-${k}`}>

@@ -1,6 +1,6 @@
 import { Suspense, useMemo, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Html, ContactShadows } from "@react-three/drei";
+import { OrbitControls, Billboard, ContactShadows, Html } from "@react-three/drei";
 import * as THREE from "three";
 
 export type BodyPartDef = {
@@ -26,14 +26,20 @@ type Props = {
   interactive?: boolean;
   onPartClick?: (part: BodyPartDef) => void;
   severityColor: (s: number) => string;
+  /** Fixed height in px, or omit when fillParent is true */
   height?: number;
+  /** Stretch to fill parent card height */
+  fillParent?: boolean;
+  /** Part currently being edited — shows live severity color before Save */
+  previewPartId?: string | null;
+  previewSeverity?: number;
 };
 
-// Colors chosen to contrast against the light indigo/lavender body material,
-// so hotspots are always visible regardless of marked/unmarked state.
-const UNMARKED_COLOR = "#f97316"; // orange - pops against #a5b4fc body
-const UNMARKED_RING_COLOR = "#ea580c";
-const MARK_OUTLINE_COLOR = "#0f172a"; // dark slate ring around marked points
+const UNMARKED_BORDER = "#f97316";
+/** Same size for every hotspot so borders look identical */
+const CIRCLE_RADIUS = 0.078;
+/** Fixed stroke width in world units (not proportional to part.r) */
+const BORDER_WIDTH = 0.014;
 
 const svgTo3D = (part: BodyPartDef): [number, number, number] => {
   const x = ((part.x - 145) / 100) * 0.78;
@@ -79,18 +85,14 @@ function Humanoid() {
 
   return (
     <group>
-      {/* Head */}
       <mesh position={[0, 1.55, 0]} material={mat} castShadow>
         <sphereGeometry args={[0.24, 24, 24]} />
       </mesh>
-      {/* Neck */}
       <mesh position={[0, 1.32, 0]} material={mat}>
         <cylinderGeometry args={[0.08, 0.1, 0.14, 16]} />
       </mesh>
-      {/* Torso (tapered, human silhouette) */}
       <mesh position={[0, 0.68, 0]} material={mat} geometry={torsoGeo} castShadow />
 
-      {/* Shoulders */}
       <mesh position={[-0.42, 1.14, 0]} material={mat}>
         <sphereGeometry args={[0.11, 16, 16]} />
       </mesh>
@@ -98,24 +100,19 @@ function Humanoid() {
         <sphereGeometry args={[0.11, 16, 16]} />
       </mesh>
 
-      {/* Left arm (upper) */}
       <mesh position={[-0.46, 0.82, 0]} rotation={[0, 0, 0.05]} material={mat}>
         <capsuleGeometry args={[0.085, 0.42, 6, 12]} />
       </mesh>
-      {/* Left arm (forearm) */}
       <mesh position={[-0.5, 0.38, 0]} rotation={[0, 0, 0.03]} material={mat}>
         <capsuleGeometry args={[0.07, 0.38, 6, 12]} />
       </mesh>
-      {/* Right arm (upper) */}
       <mesh position={[0.46, 0.82, 0]} rotation={[0, 0, -0.05]} material={mat}>
         <capsuleGeometry args={[0.085, 0.42, 6, 12]} />
       </mesh>
-      {/* Right arm (forearm) */}
       <mesh position={[0.5, 0.38, 0]} rotation={[0, 0, -0.03]} material={mat}>
         <capsuleGeometry args={[0.07, 0.38, 6, 12]} />
       </mesh>
 
-      {/* Hands */}
       <mesh position={[-0.52, 0.1, 0]} material={mat}>
         <sphereGeometry args={[0.09, 12, 12]} />
       </mesh>
@@ -123,19 +120,16 @@ function Humanoid() {
         <sphereGeometry args={[0.09, 12, 12]} />
       </mesh>
 
-      {/* Pelvis blend */}
       <mesh position={[0, 0.08, 0]} material={mat}>
         <sphereGeometry args={[0.32, 20, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
       </mesh>
 
-      {/* Left leg (thigh + calf) */}
       <mesh position={[-0.16, -0.28, 0]} material={mat} castShadow>
         <capsuleGeometry args={[0.14, 0.5, 6, 12]} />
       </mesh>
       <mesh position={[-0.17, -0.85, 0]} material={mat} castShadow>
         <capsuleGeometry args={[0.1, 0.48, 6, 12]} />
       </mesh>
-      {/* Right leg (thigh + calf) */}
       <mesh position={[0.16, -0.28, 0]} material={mat} castShadow>
         <capsuleGeometry args={[0.14, 0.5, 6, 12]} />
       </mesh>
@@ -143,7 +137,6 @@ function Humanoid() {
         <capsuleGeometry args={[0.1, 0.48, 6, 12]} />
       </mesh>
 
-      {/* Feet */}
       <mesh position={[-0.17, -1.15, 0.09]} material={mat}>
         <boxGeometry args={[0.15, 0.08, 0.3]} />
       </mesh>
@@ -160,71 +153,108 @@ function Hotspot({
   interactive,
   onPartClick,
   severityColor,
+  isPreview,
+  previewSeverity,
 }: {
   part: BodyPartDef;
   mark?: BodyPointMark;
   interactive?: boolean;
   onPartClick?: (part: BodyPartDef) => void;
   severityColor: (s: number) => string;
+  isPreview?: boolean;
+  previewSeverity?: number;
 }) {
   const pos = useMemo(() => svgTo3D(part), [part]);
-  // Bumped up slightly so points read clearly at default zoom
-  const radius = Math.max(0.075, part.r * 0.006);
-  const color = mark ? severityColor(mark.severity) : UNMARKED_COLOR;
+  const radius = CIRCLE_RADIUS;
+  const ringInner = radius - BORDER_WIDTH;
+
+  const isFilled = Boolean(isPreview || mark);
+  let fillColor = UNMARKED_BORDER;
+  let severityNum: number | null = null;
+  if (isPreview && previewSeverity != null) {
+    fillColor = severityColor(previewSeverity);
+    severityNum = previewSeverity;
+  } else if (mark) {
+    fillColor = severityColor(mark.severity);
+    severityNum = mark.severity;
+  }
 
   const handleClick = (e: any) => {
     e.stopPropagation();
     if (interactive && onPartClick) onPartClick(part);
   };
 
+  const pointerHandlers = {
+    onClick: handleClick,
+    onPointerOver: () => {
+      document.body.style.cursor = interactive ? "pointer" : "default";
+    },
+    onPointerOut: () => {
+      document.body.style.cursor = "default";
+    },
+  };
+
   return (
     <group position={pos}>
-      {/* Core marker sphere - fully opaque so it never blends into the body */}
-      <mesh
-        onClick={handleClick}
-        onPointerOver={() => {
-          document.body.style.cursor = interactive ? "pointer" : "default";
-        }}
-        onPointerOut={() => {
-          document.body.style.cursor = "default";
-        }}
-      >
-        <sphereGeometry args={[radius, 16, 16]} />
-        <meshStandardMaterial
-          color={color}
-          transparent={false}
-          opacity={1}
-          emissive={color}
-          emissiveIntensity={mark ? 0.35 : 0.5}
-          roughness={0.3}
-        />
-      </mesh>
-
-      {/* Contrasting outline ring so the dot pops against any body color/angle */}
-      <mesh onClick={handleClick} rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[radius * 1.05, radius * 1.4, 24]} />
-        <meshBasicMaterial
-          color={mark ? MARK_OUTLINE_COLOR : UNMARKED_RING_COLOR}
-          transparent
-          opacity={0.9}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-
-      {mark && (
-        <Html center distanceFactor={6} style={{ pointerEvents: "none", userSelect: "none" }}>
-          <div
-            style={{
-              color: "#fff",
-              fontWeight: 800,
-              fontSize: 11,
-              textShadow: "0 1px 2px rgba(0,0,0,0.6)",
-            }}
-          >
-            {mark.severity}
-          </div>
-        </Html>
-      )}
+      <Billboard follow lockX={false} lockY={false} lockZ={false}>
+        {isFilled ? (
+          <>
+            <mesh {...pointerHandlers}>
+              <circleGeometry args={[radius, 32]} />
+              <meshBasicMaterial
+                color={fillColor}
+                toneMapped={false}
+                side={THREE.DoubleSide}
+                depthTest
+                depthWrite
+              />
+            </mesh>
+            {severityNum != null && (
+              <Html
+                center
+                distanceFactor={8}
+                style={{ pointerEvents: "none", userSelect: "none" }}
+                zIndexRange={[10, 0]}
+              >
+                <div
+                  style={{
+                    width: 14,
+                    height: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: 8,
+                    lineHeight: 1,
+                    textShadow: "0 1px 2px rgba(0,0,0,0.55)",
+                    fontFamily: "system-ui, sans-serif",
+                  }}
+                >
+                  {severityNum}
+                </div>
+              </Html>
+            )}
+          </>
+        ) : (
+          <>
+            <mesh {...pointerHandlers}>
+              <ringGeometry args={[ringInner, radius, 32]} />
+              <meshBasicMaterial
+                color={UNMARKED_BORDER}
+                toneMapped={false}
+                side={THREE.DoubleSide}
+                depthTest
+                depthWrite
+              />
+            </mesh>
+            <mesh {...pointerHandlers}>
+              <circleGeometry args={[radius, 32]} />
+              <meshBasicMaterial transparent opacity={0} depthWrite={false} side={THREE.DoubleSide} />
+            </mesh>
+          </>
+        )}
+      </Billboard>
     </group>
   );
 }
@@ -235,6 +265,8 @@ function Scene({
   interactive,
   onPartClick,
   severityColor,
+  previewPartId,
+  previewSeverity,
 }: Omit<Props, "height">) {
   const controlsRef = useRef<any>(null);
   const markMap = useMemo(() => {
@@ -257,17 +289,19 @@ function Scene({
           interactive={interactive}
           onPartClick={onPartClick}
           severityColor={severityColor}
+          isPreview={previewPartId === part.id}
+          previewSeverity={previewSeverity}
         />
       ))}
-      <ContactShadows position={[0, -1.2, 0]} opacity={0.35} scale={6} blur={2.5} far={3} />
+      <ContactShadows position={[0, -1.2, 0]} opacity={0.3} scale={7} blur={2.5} far={3} />
       <OrbitControls
         ref={controlsRef}
         enablePan={false}
         enableZoom
-        minDistance={2.2}
-        maxDistance={5.5}
+        minDistance={3.8}
+        maxDistance={7.5}
         minPolarAngle={Math.PI / 4}
-        maxPolarAngle={Math.PI / 1.7}
+        maxPolarAngle={Math.PI / 1.65}
         target={[0, 0.2, 0]}
         rotateSpeed={0.85}
       />
@@ -282,23 +316,39 @@ const BodyDiagram3D = ({
   onPartClick,
   severityColor,
   height = 380,
+  fillParent = false,
+  previewPartId = null,
+  previewSeverity,
 }: Props) => {
   return (
     <div
       className="body-diagram-3d position-relative w-100"
-      style={{
-        height,
-        borderRadius: 12,
-        overflow: "hidden",
-        background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)",
-      }}
+      style={
+        fillParent
+          ? {
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              borderRadius: 12,
+              overflow: "hidden",
+              background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)",
+            }
+          : {
+              height,
+              borderRadius: 12,
+              overflow: "hidden",
+              background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)",
+            }
+      }
     >
       <Canvas
         shadows
-        camera={{ position: [0, 0.4, 3.2], fov: 42 }}
+        // Zoomed-out default so full body fits like a standing figure
+        camera={{ position: [0, 0.25, 5.2], fov: 38 }}
         dpr={[1, 1.75]}
         gl={{ antialias: true, alpha: true }}
-        style={{ width: "100%", height: "100%", touchAction: "none" }}
+        style={{ width: "100%", height: "100%", touchAction: "none", display: "block" }}
       >
         <Suspense fallback={null}>
           <Scene
@@ -307,6 +357,8 @@ const BodyDiagram3D = ({
             interactive={interactive}
             onPartClick={onPartClick}
             severityColor={severityColor}
+            previewPartId={previewPartId}
+            previewSeverity={previewSeverity}
           />
         </Suspense>
       </Canvas>

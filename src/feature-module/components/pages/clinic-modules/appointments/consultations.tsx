@@ -253,7 +253,7 @@ const Consultations = () => {
   `;
 
   // Fetch appointments and prescriptions
-  const { appointments: rawAppointments, loading: loadingAppts } = useClinicAppointments();
+  const { appointments: rawAppointments, loading: loadingAppts, updateAppointmentStatus } = useClinicAppointments();
   const { prescriptions, refetch: refetchPres, createPrescription, updatePrescription } = usePrescriptions();
 
   // Exclude appointments with status "Schedule" or "Scheduled"
@@ -264,6 +264,21 @@ const Consultations = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<ClinicAppointment | null>(null);
   const [showPresModal, setShowPresModal] = useState(false);
   const [showViewPresModal, setShowViewPresModal] = useState(false);
+  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
+
+  const CONSULTATION_STATUSES = ["Confirmed", "Checked In", "Checked Out", "Cancelled"] as const;
+
+  const handleUpdateStatus = async (appointmentId: string, nextStatus: string) => {
+    setStatusUpdatingId(appointmentId);
+    try {
+      await updateAppointmentStatus(appointmentId, nextStatus);
+      toast.success(`Status updated to ${nextStatus}`);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update status");
+    } finally {
+      setStatusUpdatingId(null);
+    }
+  };
 
   const [searchText, setSearchText] = useState("");
   const [printAppointment, setPrintAppointment] = useState<any | null>(null);
@@ -631,11 +646,13 @@ const Consultations = () => {
     {
       title: "Action",
       className: "text-center text-nowrap",
-      width: 150,
+      width: 200,
       align: "center" as const,
       render: (_: any, record: any) => {
         const raw = record._raw;
         const hasPres = prescriptions.some(p => p.appointmentId === raw.id || p.appointmentCode === raw.appointmentCode);
+        const currentStatus = raw.status || "";
+        const isUpdating = statusUpdatingId === raw.id;
         return (
           <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
             {/* Add / View Prescription */}
@@ -662,6 +679,60 @@ const Consultations = () => {
                 />
               )}
             </button>
+
+            {/* Update Status */}
+            <div className="dropdown d-inline-block">
+              <button
+                className="btn btn-light border print-action-btn dropdown-toggle d-inline-flex align-items-center justify-content-center gap-1"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                title="Update Status"
+                disabled={isUpdating}
+              >
+                {isUpdating ? (
+                  <span className="spinner-border spinner-border-sm text-primary" style={{ width: 16, height: 16 }} />
+                ) : (
+                  <i className="ti ti-refresh fs-18 text-info" />
+                )}
+              </button>
+              <ul className="dropdown-menu dropdown-menu-end shadow border-0 py-2 fs-12" style={{ zIndex: 1050, minWidth: 160 }}>
+                <li className="px-3 pb-1 text-muted fw-semibold" style={{ fontSize: 10, letterSpacing: "0.04em" }}>
+                  UPDATE STATUS
+                </li>
+                {CONSULTATION_STATUSES.map((status) => {
+                  const isCurrent = currentStatus === status;
+                  return (
+                    <li key={status}>
+                      <button
+                        type="button"
+                        className={`dropdown-item py-2 fw-semibold d-flex align-items-center justify-content-between gap-2 ${
+                          isCurrent ? "active" : "text-dark"
+                        }`}
+                        disabled={isCurrent || isUpdating}
+                        onClick={() => handleUpdateStatus(raw.id, status)}
+                      >
+                        <span className="d-flex align-items-center gap-2">
+                          <i
+                            className={`ti ${
+                              status === "Confirmed"
+                                ? "ti-circle-check text-primary"
+                                : status === "Checked In"
+                                ? "ti-login text-warning"
+                                : status === "Checked Out"
+                                ? "ti-circle-check text-success"
+                                : "ti-ban text-danger"
+                            } fs-14`}
+                          />
+                          {status}
+                        </span>
+                        {isCurrent && <i className="ti ti-check text-success fs-14" />}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
 
             {/* Print/Download Dropdown Option Menu */}
             <div className="dropdown d-inline-block">

@@ -47,7 +47,7 @@ const BODY_PARTS: BodyPartDef[] = [
 ];
 
 const severityColor = (s: number) => {
-  if (s <= 3) return "#22c55e";
+  if (s <= 3) return "#2563eb"; // mild / selected → blue
   if (s <= 6) return "#f59e0b";
   return "#ef4444";
 };
@@ -439,9 +439,22 @@ const ConsultationForm = () => {
   else if (discountType === "fixed") discountAmt = discValue;
   const finalTotal = Math.max(0, subtotal - discountAmt);
 
-  // Body diagram
+  // Body diagram — click selects part and cycles severity color (live preview until Save)
+  const cycleSeverity = (current: number) => {
+    if (current <= 3) return 5; // mild → moderate (orange)
+    if (current <= 6) return 8; // moderate → severe (red)
+    return 2; // severe → mild (green)
+  };
+
   const handleBodyClick = (part: (typeof BODY_PARTS)[0]) => {
     const existing = bodyPoints.find((bp) => bp.part === part.id);
+
+    // Re-click same pending circle → cycle color bands (green / orange / red)
+    if (pendingPart?.id === part.id) {
+      setSeverityDraft((prev) => cycleSeverity(prev));
+      return;
+    }
+
     if (existing) {
       setPendingPart(part);
       setRemarkDraft(existing.remark);
@@ -450,7 +463,8 @@ const ConsultationForm = () => {
     } else {
       setPendingPart(part);
       setRemarkDraft("");
-      setSeverityDraft(5);
+      // Start on mild green so click visibly changes from unmarked orange
+      setSeverityDraft(2);
       setDaysSinceDraft(0);
     }
   };
@@ -603,12 +617,11 @@ const ConsultationForm = () => {
   const renderPrescriptionEditor = () => {
     if (isViewMode && !isEditing) {
       return (
-        <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-          <div className="card-header border-0 bg-white px-4 py-3" style={{ borderRadius: "16px 16px 0 0" }}>
+        <div className="card tc-card mb-3">
+          <div className="card-header tc-card-head px-3 px-md-4 py-3">
             <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-              <span className="rounded-2 d-flex align-items-center justify-content-center"
-                style={{ width: 28, height: 28, background: "#6366f118" }}>
-                <i className="ti ti-pill" style={{ color: "#6366f1", fontSize: 14 }} />
+              <span className="tc-section-icon" style={{ background: "#e8f1ff", color: "#4f46e5" }}>
+                <i className="ti ti-pill" />
               </span>
               Prescription & Advice
             </h6>
@@ -659,7 +672,7 @@ const ConsultationForm = () => {
                 <div className="row g-3">
                   {attachments.map((att, idx) => (
                     <div key={idx} className="col-md-6 col-lg-4">
-                      <div className="p-2 border rounded-3 bg-white h-100 shadow-sm d-flex flex-column gap-2">
+                      <div className="p-2 rounded-3 bg-white h-100 tc-soft-panel d-flex flex-column gap-2">
                         <img
                           src={att.url.startsWith("/") ? apiUrl(att.url) : att.url}
                           alt="Scan"
@@ -679,13 +692,11 @@ const ConsultationForm = () => {
     }
 
     return (
-      <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-        <div className="card-header border-0 bg-white px-4 py-3 d-flex align-items-center justify-content-between"
-          style={{ borderRadius: "16px 16px 0 0" }}>
+      <div className="card tc-card mb-3">
+        <div className="card-header tc-card-head px-3 px-md-4 py-3 d-flex align-items-center justify-content-between">
           <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-            <span className="rounded-2 d-flex align-items-center justify-content-center"
-              style={{ width: 28, height: 28, background: "#6366f118" }}>
-              <i className="ti ti-pill" style={{ color: "#6366f1", fontSize: 14 }} />
+            <span className="tc-section-icon" style={{ background: "#e8f1ff", color: "#4f46e5" }}>
+              <i className="ti ti-pill" />
             </span>
             Prescription & Advice
           </h6>
@@ -836,7 +847,7 @@ const ConsultationForm = () => {
               <div className="row g-3">
                 {attachments.map((att, idx) => (
                   <div key={idx} className="col-md-6 col-lg-4">
-                    <div className="p-2 border rounded-3 bg-white h-100 shadow-sm d-flex flex-column gap-2" style={{ position: "relative" }}>
+                    <div className="p-2 rounded-3 bg-white h-100 tc-soft-panel d-flex flex-column gap-2" style={{ position: "relative" }}>
                       <button
                         type="button"
                         className="btn btn-sm btn-danger rounded-circle p-1 d-flex align-items-center justify-content-center"
@@ -896,24 +907,23 @@ const ConsultationForm = () => {
 
     return (
       <div className="page-wrapper">
-        <div className="content">
+        <div className="content therapy-consult-page">
           {/* Header */}
-          <div className="page-header">
-            <div className="row align-items-center">
-              <div className="col">
-                <h3 className="page-title font-bold text-slate-800">Consultation Details</h3>
-                <ul className="breadcrumb">
-                  <li className="breadcrumb-item">
-                    <a href={routes.therapyConsultations}>Consultations</a>
-                  </li>
-                  <li className="breadcrumb-item active">{consultationData.consultationCode}</li>
-                </ul>
+          <div className="page-header d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 border-bottom pb-3 mb-3">
+            <div className="d-flex align-items-center gap-3 min-w-0">
+              <div className="tc-page-icon">
+                <i className="ti ti-file-description" />
               </div>
-              <div className="col-auto d-flex gap-2">
+              <div className="min-w-0">
+                <h4 className="fw-bold mb-0 text-dark">Consultation Details</h4>
+                <p className="text-muted fs-13 mb-0">{consultationData.consultationCode}</p>
+              </div>
+            </div>
+            <div className="d-flex flex-wrap gap-2">
                 {consultationData.status === "Confirmed" && (
                   <button
                     type="button"
-                    className="btn btn-warning text-white d-flex align-items-center gap-2 border shadow-sm"
+                    className="btn btn-warning text-white d-flex align-items-center gap-2"
                     onClick={() => {
                       setGeneralNotes(consultationData.examinationNotes || "");
                       setAdvice(consultationData.advice || "");
@@ -923,7 +933,7 @@ const ConsultationForm = () => {
                       setIsEditing(true);
                       setStep(1);
                     }}
-                    style={{ borderRadius: "10px", fontWeight: 600 }}
+                    style={{ borderRadius: "10px", fontWeight: 600, minHeight: 38 }}
                   >
                     <i className="ti ti-edit" />
                     Edit Details
@@ -931,26 +941,25 @@ const ConsultationForm = () => {
                 )}
                 <button
                   type="button"
-                  className="btn btn-light d-flex align-items-center gap-2 border shadow-sm"
+                  className="btn btn-light d-flex align-items-center gap-2"
                   onClick={() => window.print()}
-                  style={{ borderRadius: "10px", fontWeight: 600 }}
+                  style={{ borderRadius: "10px", fontWeight: 600, minHeight: 38 }}
                 >
                   <i className="ti ti-printer" /> Print Plan
                 </button>
                 <a
                   href={routes.therapyConsultations}
                   className="btn btn-primary d-flex align-items-center gap-2"
-                  style={{ borderRadius: "10px", fontWeight: 600 }}
+                  style={{ borderRadius: "10px", fontWeight: 600, minHeight: 38 }}
                 >
                   <i className="ti ti-arrow-left" /> Back to List
                 </a>
-              </div>
             </div>
           </div>
 
           {/* Top Info Card */}
-          <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-            <div className="card-body">
+          <div className="card tc-card mb-3">
+            <div className="card-body py-3">
               <div className="row g-3 align-items-center">
                 <div className="col-md-6 border-end">
                   <div className="d-flex align-items-center gap-3">
@@ -959,19 +968,19 @@ const ConsultationForm = () => {
                         src={consultationData.patient.profileImage}
                         alt=""
                         className="rounded-circle"
-                        style={{ width: 60, height: 60, objectFit: "cover" }}
+                        style={{ width: 52, height: 52, objectFit: "cover" }}
                       />
                     ) : (
                       <div
                         className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-primary"
-                        style={{ width: 60, height: 60, background: "#6366f118", fontSize: 20 }}
+                        style={{ width: 52, height: 52, background: "#6366f118", fontSize: 18 }}
                       >
                         {(consultationData.patient?.firstName?.[0] || "P").toUpperCase()}
                       </div>
                     )}
                     <div>
                       <span className="text-muted small d-block mb-1">PATIENT</span>
-                      <h5 className="mb-0 fw-bold">
+                      <h5 className="mb-0 fw-bold fs-16">
                         {consultationData.patient?.firstName} {consultationData.patient?.lastName}
                       </h5>
                       <div className="text-muted small">{consultationData.patient?.phone || "—"}</div>
@@ -994,37 +1003,37 @@ const ConsultationForm = () => {
             </div>
           </div>
 
-          <div className="row g-4">
+          <div className="row g-3">
             {/* Left Column: Editable Examination Details */}
-            <div className="col-lg-7">
-              <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-                <div className="card-header border-0 bg-white d-flex align-items-center justify-content-between px-4 py-3"
-                  style={{ borderRadius: "16px 16px 0 0" }}>
+            <div className="col-lg-6">
+              <div className="card tc-card mb-3 h-100">
+                <div className="card-header tc-card-head d-flex align-items-center justify-content-between px-3 px-md-4 py-3">
                   <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <span className="rounded-2 d-flex align-items-center justify-content-center"
-                      style={{ width: 28, height: 28, background: "#6366f118" }}>
-                      <i className="ti ti-body-scan" style={{ color: "#6366f1", fontSize: 14 }} />
+                    <span className="tc-section-icon" style={{ background: "#e8f1ff", color: "#4f46e5" }}>
+                      <i className="ti ti-body-scan" />
                     </span>
                     Body Diagram Findings {isEditing && "(Click to Edit Points)"}
                   </h6>
                 </div>
 
-                <div className="card-body px-4 py-3">
-                  <div className="row">
-                    <div className="col-md-6 d-flex justify-content-center mb-3">
+                <div className="card-body px-3 px-md-4 py-3">
+                  <div className="row g-3">
+                    <div className="col-12 d-flex justify-content-center">
                       <BodyDiagram3D
                         parts={BODY_PARTS}
                         marks={bodyPoints}
                         interactive={isEditing}
                         onPartClick={handleBodyClick}
                         severityColor={severityColor}
-                        height={340}
+                        height={300}
+                        previewPartId={isEditing ? pendingPart?.id : null}
+                        previewSeverity={severityDraft}
                       />
                     </div>
 
-                    <div className="col-md-6 d-flex flex-column gap-3">
+                    <div className="col-12 d-flex flex-column gap-3">
                       {isEditing && pendingPart && (
-                        <div className="p-3 border rounded-3 bg-light shadow-sm">
+                        <div className="p-3 rounded-3 bg-light tc-soft-panel">
                           <div className="fw-bold mb-2 text-primary">{pendingPart.label}</div>
                           <div className="mb-2">
                             <label className="form-label fw-semibold small mb-1">Remark</label>
@@ -1062,7 +1071,7 @@ const ConsultationForm = () => {
                           </div>
                           <div className="d-flex gap-2">
                             <button type="button" className="btn btn-sm btn-primary" onClick={saveBodyPoint}>Save</button>
-                            <button type="button" className="btn btn-sm btn-light" onClick={() => setPendingPart(null)}>Cancel</button>
+                            <button type="button" className="btn btn-sm btn-cancel-danger" onClick={() => setPendingPart(null)}>Cancel</button>
                           </div>
                         </div>
                       )}
@@ -1072,14 +1081,14 @@ const ConsultationForm = () => {
                         {isEditing ? (
                           <IconTextarea
                             fieldLabel="notes"
-                            rows={4}
+                            rows={3}
                             value={generalNotes}
                             onChange={(e) => setGeneralNotes(e.target.value)}
                             placeholder="General examination notes..."
                             style={{ borderRadius: 10, fontSize: 13 }}
                           />
                         ) : (
-                          <div className="p-3 bg-light rounded text-slate-700 fs-13" style={{ whiteSpace: "pre-wrap", borderLeft: "4px solid #6366f1" }}>
+                          <div className="p-3 bg-light rounded text-slate-700 fs-13" style={{ whiteSpace: "pre-wrap" }}>
                             {consultationData.examinationNotes || "No examination notes recorded."}
                           </div>
                         )}
@@ -1088,12 +1097,12 @@ const ConsultationForm = () => {
                   </div>
 
                   {bodyPoints.length > 0 && (
-                    <div className="mt-4">
-                      <h6 className="fw-bold mb-3 small">Marked Areas ({bodyPoints.length})</h6>
+                    <div className="mt-3">
+                      <h6 className="fw-bold mb-2 small">Marked Areas ({bodyPoints.length})</h6>
                       <div className="row g-2">
                         {bodyPoints.map((bp) => (
                           <div key={bp.part} className="col-md-6">
-                            <div className="p-3 border rounded-3 h-100" style={{ background: "#f8fafc" }}>
+                            <div className="p-3 rounded-3 h-100 tc-soft-panel">
                               <div className="fw-bold d-flex align-items-center justify-content-between small">
                                 <span className="d-flex align-items-center gap-2">
                                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: severityColor(bp.severity) }} />
@@ -1125,8 +1134,8 @@ const ConsultationForm = () => {
               </div>
 
               {/* Recommended Therapies Card */}
-              <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-                <div className="card-header border-0 bg-white px-4 py-3" style={{ borderRadius: "16px 16px 0 0" }}>
+              <div className="card tc-card mb-3">
+                <div className="card-header tc-card-head px-3 px-md-4 py-3">
                   <h6 className="fw-bold mb-0">Recommended Therapy Plan</h6>
                 </div>
                 <div className="card-body p-0">
@@ -1156,12 +1165,14 @@ const ConsultationForm = () => {
                   </div>
                 </div>
               </div>
+
+              {renderPrescriptionEditor()}
             </div>
 
             {/* Right Column: Invoicing, Payment Capture, and Child Appointments */}
-            <div className="col-lg-5">
+            <div className="col-lg-6">
               {/* Payment Summary & Record Payment */}
-              <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+              <div className="card tc-card mb-3">
                 <div className="card-body">
                   <h6 className="fw-bold mb-3">Billing & Payment Summary</h6>
                   <div className="d-flex flex-column gap-2 mb-3" style={{ fontSize: 13 }}>
@@ -1240,8 +1251,8 @@ const ConsultationForm = () => {
               </div>
 
               {/* Generated Appointments List */}
-              <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-                <div className="card-header border-0 bg-white px-4 py-3" style={{ borderRadius: "16px 16px 0 0" }}>
+              <div className="card tc-card mb-3">
+                <div className="card-header tc-card-head px-3 px-md-4 py-3">
                   <h6 className="fw-bold mb-0">Scheduled Therapy Sessions ({allChildAppts.length})</h6>
                 </div>
                 <div className="card-body p-0">
@@ -1301,6 +1312,57 @@ const ConsultationForm = () => {
               </div>
             </div>
           </div>
+
+        <style>{`
+          .therapy-consult-page .tc-page-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            background: rgba(79,70,229,0.12); color: #4f46e5;
+            display: inline-flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+          }
+          .therapy-consult-page .tc-card,
+          .therapy-consult-page .card {
+            border: none !important;
+            border-radius: 14px !important;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08) !important;
+            background: #fff;
+          }
+          .therapy-consult-page .tc-card-head,
+          .therapy-consult-page .card-header:not(.tc-gradient-head) {
+            border-bottom: 1px solid rgba(15,23,42,0.05) !important;
+            background: #f8fafc !important;
+            border-radius: 14px 14px 0 0 !important;
+          }
+          .therapy-consult-page .tc-section-icon {
+            width: 32px; height: 32px; border-radius: 9px;
+            display: inline-flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+          }
+          .therapy-consult-page .tc-soft-panel {
+            background: #f8fafc !important;
+            border: none !important;
+            box-shadow: 0 1px 4px rgba(15,23,42,0.05);
+          }
+          .therapy-consult-page .tc-pending-card {
+            box-shadow: 0 8px 24px rgba(79,70,229,0.14) !important;
+          }
+          .therapy-consult-page .tc-plan-block {
+            background: #f8fafc !important;
+            border: none !important;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(15,23,42,0.06);
+          }
+          .therapy-consult-page .btn-cancel-danger {
+            border: 1px solid #b91c1c !important;
+            color: #b91c1c !important;
+            background: #fff !important;
+          }
+          .therapy-consult-page .btn-cancel-danger:hover {
+            background: #fef2f2 !important;
+            color: #991b1b !important;
+            border-color: #991b1b !important;
+          }
+          .therapy-consult-page .row.g-4 { --bs-gutter-y: 0.85rem; --bs-gutter-x: 0.85rem; }
+          .therapy-consult-page .card-body { padding-top: 1rem; padding-bottom: 1rem; }
+        `}</style>
         </div>
       </div>
     );
@@ -1308,40 +1370,38 @@ const ConsultationForm = () => {
 
   return (
     <div className="page-wrapper">
-      <div className="content">
+      <div className="content therapy-consult-page">
         {/* Header */}
-        <div className="page-header">
-          <div className="row align-items-center">
-            <div className="col">
-              <h3 className="page-title">
-                {isEditing 
-                  ? `Edit Consultation - ${consultationData?.consultationCode}` 
-                  : "New Consultation"}
-              </h3>
-              <ul className="breadcrumb">
-                <li className="breadcrumb-item">
-                  <a href={routes.therapyConsultations}>Consultations</a>
-                </li>
-                <li className="breadcrumb-item active">{isEditing ? "Edit" : "Create"}</li>
-              </ul>
+        <div className="page-header d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 border-bottom pb-3 mb-3">
+          <div className="d-flex align-items-center gap-3 min-w-0">
+            <div className="tc-page-icon">
+              <i className="ti ti-stethoscope" />
             </div>
-            {isEditing && (
-              <div className="col-auto">
-                <button
-                  type="button"
-                  className="btn btn-light d-flex align-items-center gap-2 border shadow-sm"
-                  onClick={() => setIsEditing(false)}
-                  style={{ borderRadius: 10, fontWeight: 600 }}
-                >
-                  <i className="ti ti-x" /> Cancel Edit
-                </button>
-              </div>
-            )}
+            <div className="min-w-0">
+              <h4 className="fw-bold mb-0 text-dark">
+                {isEditing
+                  ? `Edit Consultation - ${consultationData?.consultationCode}`
+                  : "New Consultation"}
+              </h4>
+              <p className="text-muted fs-13 mb-0">
+                {isEditing ? "Update examination & therapy plan" : "Create examination & therapy plan"}
+              </p>
+            </div>
           </div>
+          {isEditing && (
+            <button
+              type="button"
+              className="btn btn-cancel-danger d-flex align-items-center gap-2"
+              onClick={() => setIsEditing(false)}
+              style={{ borderRadius: 10, fontWeight: 600, minHeight: 38 }}
+            >
+              <i className="ti ti-x" /> Cancel Edit
+            </button>
+          )}
         </div>
 
         {/* Step Indicator */}
-        <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+        <div className="card tc-card mb-3">
           <div className="card-body py-3 px-4">
             <div className="d-flex align-items-center gap-0">
               {[
@@ -1403,7 +1463,7 @@ const ConsultationForm = () => {
           <div className="row g-4">
             {/* Appointment Selection */}
             <div className="col-12">
-              <div className="card border-0" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+              <div className="card tc-card">
                 <div className="card-body">
                   <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
                     <span
@@ -1459,34 +1519,32 @@ const ConsultationForm = () => {
               </div>
             </div>
 
-            {/* Body Diagram */}
-            <div className="col-lg-7">
-              <div className="card border-0" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-                <div className="card-header border-0 bg-white d-flex align-items-center justify-content-between"
-                  style={{ borderRadius: "16px 16px 0 0", padding: "20px 24px 12px" }}>
+            {/* Body Diagram — fixed height (does not stretch with right panel) */}
+            <div className="col-lg-6">
+              <div className="card tc-card">
+                <div className="card-header tc-card-head d-flex align-items-center justify-content-between px-3 px-md-4 py-3">
                   <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <span className="rounded-2 d-flex align-items-center justify-content-center"
-                      style={{ width: 28, height: 28, background: "#6366f118" }}>
-                      <i className="ti ti-body-scan" style={{ color: "#6366f1", fontSize: 14 }} />
+                    <span className="tc-section-icon" style={{ background: "#e8f1ff", color: "#4f46e5" }}>
+                      <i className="ti ti-body-scan" />
                     </span>
                     Body Diagram – Click to Mark
                   </h6>
                 </div>
-                <div className="card-body" style={{ padding: "8px 16px 16px" }}>
+                <div className="card-body" style={{ padding: "8px 16px 12px" }}>
                   <BodyDiagram3D
                     parts={BODY_PARTS}
                     marks={bodyPoints}
                     interactive
                     onPartClick={handleBodyClick}
                     severityColor={severityColor}
-                    height={400}
+                    height={pendingPart ? 420 : 320}
+                    previewPartId={pendingPart?.id}
+                    previewSeverity={severityDraft}
                   />
-                </div>
-                <div className="px-4 pb-3">
-                  <div className="d-flex align-items-center gap-3 flex-wrap">
+                  <div className="d-flex align-items-center gap-3 flex-wrap pt-3">
                     <span style={{ fontSize: 12, color: "#64748b" }}>Severity Scale:</span>
                     {[
-                      { color: "#22c55e", label: "1–3 Mild" },
+                      { color: "#2563eb", label: "1–3 Mild" },
                       { color: "#f59e0b", label: "4–6 Moderate" },
                       { color: "#ef4444", label: "7–10 Severe" },
                     ].map((s) => (
@@ -1501,17 +1559,10 @@ const ConsultationForm = () => {
             </div>
 
             {/* Right side: Point Details + General Notes */}
-            <div className="col-lg-5 d-flex flex-column gap-3">
+            <div className="col-lg-6 d-flex flex-column gap-3">
               {/* Add Remark Modal/Panel */}
               {pendingPart && (
-                <div
-                  className="card border-0"
-                  style={{
-                    borderRadius: 16,
-                    boxShadow: "0 8px 32px rgba(99,102,241,0.15)",
-                    border: "2px solid #6366f1" as any,
-                  }}
-                >
+                <div className="card tc-card tc-pending-card">
                   <div className="card-body">
                     <div className="fw-bold mb-3" style={{ color: "#6366f1" }}>
                       <i className="ti ti-map-pin me-2" />
@@ -1579,7 +1630,7 @@ const ConsultationForm = () => {
                       )}
                       <button
                         type="button"
-                        className="btn btn-light btn-sm"
+                        className="btn btn-cancel-danger btn-sm"
                         style={{ borderRadius: 8 }}
                         onClick={() => setPendingPart(null)}
                       >
@@ -1592,7 +1643,7 @@ const ConsultationForm = () => {
 
               {/* Marked Points List */}
               {bodyPoints.length > 0 && (
-                <div className="card border-0" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+                <div className="card tc-card">
                   <div className="card-body">
                     <h6 className="fw-bold mb-3" style={{ fontSize: 14 }}>
                       <i className="ti ti-map-2 me-2 text-primary" />
@@ -1640,7 +1691,7 @@ const ConsultationForm = () => {
               )}
 
               {/* General Notes */}
-              <div className="card border-0" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+              <div className="card tc-card">
                 <div className="card-body">
                   <h6 className="fw-bold mb-3" style={{ fontSize: 14 }}>
                     <i className="ti ti-notes me-2 text-primary" />
@@ -1662,7 +1713,7 @@ const ConsultationForm = () => {
             <div className="col-12 d-flex justify-content-between">
               <button
                 type="button"
-                className="btn btn-light"
+                className="btn btn-cancel-danger"
                 style={{ borderRadius: 10, padding: "10px 28px" }}
                 onClick={() => navigate(routes.therapyConsultations)}
               >
@@ -1697,14 +1748,12 @@ const ConsultationForm = () => {
         {step === 2 && (
           <div className="row g-4">
             {/* Therapy Plans */}
-            <div className="col-12">
-              <div className="card border-0" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-                <div className="card-header border-0 bg-white d-flex align-items-center justify-content-between"
-                  style={{ padding: "20px 24px 16px", borderRadius: "16px 16px 0 0" }}>
+            <div className="col-lg-7">
+              <div className="card tc-card h-100">
+                <div className="card-header tc-card-head px-3 px-md-4 py-3 d-flex align-items-center justify-content-between">
                   <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <span className="rounded-2 d-flex align-items-center justify-content-center"
-                      style={{ width: 28, height: 28, background: "#6366f118" }}>
-                      <i className="ti ti-list-check" style={{ color: "#6366f1", fontSize: 14 }} />
+                    <span className="tc-section-icon" style={{ background: "#e8f1ff", color: "#4f46e5" }}>
+                      <i className="ti ti-list-check" />
                     </span>
                     Recommended Therapies
                   </h6>
@@ -1723,13 +1772,8 @@ const ConsultationForm = () => {
                     {therapyPlans.map((plan, idx) => (
                       <div
                         key={idx}
-                        className="p-4"
-                        style={{
-                          background: "#f8fafc",
-                          borderRadius: 14,
-                          border: "1px solid #e2e8f0",
-                          position: "relative",
-                        }}
+                        className="p-3 p-md-4 tc-plan-block"
+                        style={{ position: "relative" }}
                       >
                         {/* Remove btn */}
                         {therapyPlans.length > 1 && (
@@ -1896,13 +1940,12 @@ const ConsultationForm = () => {
 
 
             {/* Pricing */}
-            <div className="col-lg-5 offset-lg-7">
-              <div className="card border-0" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+            <div className="col-lg-5">
+              <div className="card tc-card h-100">
                 <div className="card-body">
                   <h6 className="fw-bold mb-4 d-flex align-items-center gap-2">
-                    <span className="rounded-2 d-flex align-items-center justify-content-center"
-                      style={{ width: 28, height: 28, background: "#6366f118" }}>
-                      <i className="ti ti-receipt" style={{ color: "#6366f1", fontSize: 14 }} />
+                    <span className="tc-section-icon" style={{ background: "#e8f1ff", color: "#4f46e5" }}>
+                      <i className="ti ti-receipt" />
                     </span>
                     Pricing Summary
                   </h6>
@@ -2035,6 +2078,10 @@ const ConsultationForm = () => {
               </div>
             </div>
 
+            <div className="col-12">
+              {renderPrescriptionEditor()}
+            </div>
+
             {/* Navigation */}
             <div className="col-12 d-flex justify-content-between">
               <button
@@ -2090,17 +2137,16 @@ const ConsultationForm = () => {
           <div className="row g-4">
             <div className="col-12">
               <div
-                className="card border-0"
+                className="card tc-card"
                 id="consultation-preview"
-                style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}
               >
                 {/* Header */}
                 <div
-                  className="card-header border-0 text-white"
+                  className="card-header tc-gradient-head text-white"
                   style={{
                     background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
-                    borderRadius: "16px 16px 0 0",
-                    padding: "28px 32px",
+                    borderRadius: "14px 14px 0 0",
+                    padding: "24px 28px",
                   }}
                 >
                   <div className="d-flex justify-content-between align-items-start">
@@ -2434,6 +2480,56 @@ const ConsultationForm = () => {
             </div>
           </div>
         )}
+        <style>{`
+          .therapy-consult-page .tc-page-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            background: rgba(79,70,229,0.12); color: #4f46e5;
+            display: inline-flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+          }
+          .therapy-consult-page .tc-card,
+          .therapy-consult-page .card {
+            border: none !important;
+            border-radius: 14px !important;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08) !important;
+            background: #fff;
+          }
+          .therapy-consult-page .tc-card-head,
+          .therapy-consult-page .card-header:not(.tc-gradient-head) {
+            border-bottom: 1px solid rgba(15,23,42,0.05) !important;
+            background: #f8fafc !important;
+            border-radius: 14px 14px 0 0 !important;
+          }
+          .therapy-consult-page .tc-section-icon {
+            width: 32px; height: 32px; border-radius: 9px;
+            display: inline-flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+          }
+          .therapy-consult-page .tc-soft-panel {
+            background: #f8fafc !important;
+            border: none !important;
+            box-shadow: 0 1px 4px rgba(15,23,42,0.05);
+          }
+          .therapy-consult-page .tc-pending-card {
+            box-shadow: 0 8px 24px rgba(79,70,229,0.14) !important;
+          }
+          .therapy-consult-page .tc-plan-block {
+            background: #f8fafc !important;
+            border: none !important;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(15,23,42,0.06);
+          }
+          .therapy-consult-page .btn-cancel-danger {
+            border: 1px solid #b91c1c !important;
+            color: #b91c1c !important;
+            background: #fff !important;
+          }
+          .therapy-consult-page .btn-cancel-danger:hover {
+            background: #fef2f2 !important;
+            color: #991b1b !important;
+            border-color: #991b1b !important;
+          }
+          .therapy-consult-page .row.g-4 { --bs-gutter-y: 0.85rem; --bs-gutter-x: 0.85rem; }
+          .therapy-consult-page .card-body { padding-top: 1rem; padding-bottom: 1rem; }
+        `}</style>
       </div>
     </div>
   );

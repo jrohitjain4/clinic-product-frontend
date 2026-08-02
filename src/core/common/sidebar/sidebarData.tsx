@@ -177,7 +177,12 @@ export const SidebarData = [
             icon: "stethoscope",
             base: "Doctors",
             submenuItems: [
-              { label: "Doctors", link: routes.doctors, icon: "user-heart" },
+              {
+                label: "Doctors",
+                link: routes.doctors,
+                icon: "user-heart",
+                activePrefixes: ["/edit-doctors/", "/doctor-details/"],
+              },
               { label: "Add Doctor", link: routes.addDoctors, icon: "user-plus" },
               { label: "Doctor Schedule", link: routes.doctorScheduleClini, icon: "calendar-event" },
             ],
@@ -381,7 +386,12 @@ export const SidebarData = [
         materialicons: "start",
         dot: true,
         submenuItems: [
-          { label: "Therapist List", link: routes.therapistList },
+          {
+            label: "Therapist List",
+            link: routes.therapistList,
+            // Keep list active on therapist view/edit pages
+            activePrefixes: ["/edit-doctors/", "/doctor-details/"],
+          },
           { label: "Add Therapist", link: routes.addTherapist },
         ],
       },

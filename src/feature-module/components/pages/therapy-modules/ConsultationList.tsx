@@ -22,6 +22,41 @@ const payStatusColors: Record<string, string> = {
   Unpaid: "danger",
 };
 
+const getInitial = (value?: string) =>
+  (value || "").trim().charAt(0).toUpperCase() || "?";
+
+const AVATAR_SIZE = 40;
+
+const paymentBadgeStyle = (status: string) => {
+  const s = (status || "").toLowerCase();
+  if (s.includes("paid") && !s.includes("partial") && !s.includes("unpaid")) {
+    return { bg: "#e6f8ef", color: "#198754", icon: "ti ti-circle-check" };
+  }
+  if (s.includes("partial")) {
+    return { bg: "#fff3cd", color: "#fd7e14", icon: "ti ti-clock" };
+  }
+  // Unpaid / Pending / default
+  return { bg: "#fdeded", color: "#dc3545", icon: "ti ti-alert-circle" };
+};
+
+const PaymentStatusBadge = ({ status }: { status: string }) => {
+  const style = paymentBadgeStyle(status);
+  return (
+    <span
+      className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+      style={{
+        backgroundColor: style.bg,
+        color: style.color,
+        fontWeight: 600,
+        fontSize: "12px",
+      }}
+    >
+      <i className={`${style.icon} fs-14`} />
+      {status}
+    </span>
+  );
+};
+
 const ConsultationList = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState<any[]>([]);
@@ -31,16 +66,9 @@ const ConsultationList = () => {
   const [startingId, setStartingId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState("All");
 
-  const getPatientImg = (patient: any) => {
-    if (!patient?.profileImage || patient.profileImage.trim() === "" || patient.profileImage.includes("placeholder")) {
-      return "assets/img/patient-placeholder.png";
-    }
-    return resolveMediaUrl(patient.profileImage);
-  };
-
   const getDoctorImg = (doctor: any) => {
     if (!doctor?.profileImage || doctor.profileImage.trim() === "" || doctor.profileImage.includes("placeholder")) {
-      return "assets/img/doctor-placeholder.png";
+      return null;
     }
     return resolveMediaUrl(doctor.profileImage);
   };
@@ -49,17 +77,19 @@ const ConsultationList = () => {
     .compact-table .ant-table-tbody > tr > td {
       padding: 8px 12px !important;
     }
-    .compact-table .avatar-md {
-      width: 38px !important;
-      height: 38px !important;
+    .compact-table .avatar-equal {
+      width: 40px !important;
+      height: 40px !important;
+      min-width: 40px !important;
+      flex-shrink: 0;
     }
-    .compact-table .avatar-xs {
-      width: 24px !important;
-      height: 24px !important;
+    .compact-table .avatar-equal img {
+      width: 40px !important;
+      height: 40px !important;
+      object-fit: cover;
     }
-    .compact-table .card {
-      margin-bottom: 0 !important;
-      border-radius: 8px !important;
+    .compact-table .datatable-table-shell {
+      margin-bottom: 12px !important;
     }
 
     .appointments-filter-line {
@@ -245,13 +275,23 @@ const ConsultationList = () => {
       render: (_: any, record: any) => {
         const app = record.appointment;
         const c = record.consultation;
+        const code = c ? c.consultationCode : (app?.appointmentCode || "—");
         return (
-          <div className="d-flex flex-column align-items-start">
-            <span className="text-primary fw-semibold">
-              {c ? c.consultationCode : (app?.appointmentCode || "—")}
+          <div className="d-flex flex-column align-items-start gap-1">
+            <span
+              className="badge px-2 py-1 fw-semibold"
+              style={{
+                backgroundColor: "transparent",
+                color: "#4f46e5",
+                border: "1px solid #4f46e5",
+                borderRadius: 8,
+                fontSize: 12,
+              }}
+            >
+              {code}
             </span>
             {!c && (
-              <span className="badge bg-secondary-subtle text-secondary mt-1 small" style={{ fontSize: 9, borderRadius: 4 }}>
+              <span className="badge bg-secondary-subtle text-secondary small" style={{ fontSize: 9, borderRadius: 4 }}>
                 Not Started
               </span>
             )}
@@ -270,16 +310,31 @@ const ConsultationList = () => {
       render: (_: any, record: any) => {
         const app = record.appointment;
         if (!app?.patient) return <span className="text-muted">—</span>;
-        const fullName = `${app.patient.firstName || ""} ${app.patient.lastName || ""}`;
-        const img = getPatientImg(app.patient);
+        const fullName = `${app.patient.firstName || ""} ${app.patient.lastName || ""}`.trim();
         return (
           <div className="d-flex align-items-center">
-            <Link to={all_routes.patientDetails.replace(":id", app.patient.id)} className="avatar avatar-md me-2">
-              <ImageWithBasePath src={img} alt="Patient" className="rounded-circle" />
+            <Link
+              to={all_routes.patientDetails.replace(":id", app.patient.id)}
+              className="avatar avatar-equal me-2"
+            >
+              <span
+                className="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white"
+                style={{
+                  width: AVATAR_SIZE,
+                  height: AVATAR_SIZE,
+                  background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                  fontSize: 16,
+                }}
+              >
+                {getInitial(fullName)}
+              </span>
             </Link>
             <div className="lh-1">
-              <Link to={all_routes.patientDetails.replace(":id", app.patient.id)} className="text-dark fw-bold d-block mb-1 fs-13 text-nowrap">
-                {fullName}
+              <Link
+                to={all_routes.patientDetails.replace(":id", app.patient.id)}
+                className="text-dark fw-bold d-block mb-1 fs-13 text-nowrap"
+              >
+                {fullName || "—"}
               </Link>
               <span className="text-muted fs-11">{app.patient.phone || "—"}</span>
             </div>
@@ -298,14 +353,40 @@ const ConsultationList = () => {
       render: (_: any, record: any) => {
         const app = record.appointment;
         if (!app?.doctor) return <span className="text-muted">—</span>;
+        const name = app.doctor.fullName || "—";
         const img = getDoctorImg(app.doctor);
         return (
           <div className="d-flex align-items-center">
-            <Link to={all_routes.doctorsDetails.replace(":id", app.doctor.id)} className="avatar avatar-xs me-2">
-              <ImageWithBasePath src={img} alt="Doctor" className="rounded-circle" />
+            <Link
+              to={all_routes.doctorsDetails.replace(":id", app.doctor.id)}
+              className="avatar avatar-equal me-2"
+            >
+              {img ? (
+                <ImageWithBasePath
+                  src={img}
+                  alt="Doctor"
+                  className="rounded-circle"
+                  style={{ width: AVATAR_SIZE, height: AVATAR_SIZE, objectFit: "cover" }}
+                />
+              ) : (
+                <span
+                  className="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white"
+                  style={{
+                    width: AVATAR_SIZE,
+                    height: AVATAR_SIZE,
+                    background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                    fontSize: 16,
+                  }}
+                >
+                  {getInitial(name)}
+                </span>
+              )}
             </Link>
-            <Link to={all_routes.doctorsDetails.replace(":id", app.doctor.id)} className="text-dark fw-medium fs-13 text-nowrap">
-              {app.doctor.fullName || "—"}
+            <Link
+              to={all_routes.doctorsDetails.replace(":id", app.doctor.id)}
+              className="text-dark fw-medium fs-13 text-nowrap"
+            >
+              {name}
             </Link>
           </div>
         );
@@ -321,7 +402,12 @@ const ConsultationList = () => {
       },
       render: (_: any, record: any) => {
         const app = record.appointment;
-        return <span className="text-dark fs-13">{formatDate(app?.scheduledAt)}</span>;
+        return (
+          <div className="d-flex align-items-center fw-semibold text-dark fs-13">
+            <i className="ti ti-calendar-event me-2 text-primary fs-16" />
+            {formatDate(app?.scheduledAt)}
+          </div>
+        );
       },
     },
     {
@@ -333,31 +419,22 @@ const ConsultationList = () => {
         if (!c || !inv) {
           return <span className="text-muted fs-12">—</span>;
         }
-        
+
         const total = inv.totalAmount || 0;
         const paid = inv.amountPaid || 0;
         const remaining = Math.max(0, total - paid);
         const status = inv.paymentStatus || "Unpaid";
-        
-        const isPaid = status === "Paid";
-        const isPartial = status === "Partial Paid";
-        
+
         return (
           <div className="d-flex flex-column align-items-start gap-1">
             <span className="fw-semibold text-dark fs-13">{inv.invoiceCode || "—"}</span>
-            <div className="text-muted fs-11" style={{ lineHeight: '1.2' }}>
-              <div>Total: ₹{total.toLocaleString()}</div>
-              <div className="fw-medium text-danger">Due: ₹{remaining.toLocaleString()}</div>
-            </div>
-            <span className={`badge border ${
-              isPaid 
-                ? "badge-soft-success border-success text-success" 
-                : isPartial 
-                ? "badge-soft-warning border-warning text-warning" 
-                : "badge-soft-danger border-danger text-danger"
-            } px-1.5 py-0.2 fs-10 mt-1`}>
-              {status}
-            </span>
+            {(total > 0 || remaining > 0) && (
+              <div className="text-muted fs-11" style={{ lineHeight: "1.2" }}>
+                {total > 0 && <div>Total: ₹{total.toLocaleString()}</div>}
+                {remaining > 0 && <div className="fw-medium text-danger">Due: ₹{remaining.toLocaleString()}</div>}
+              </div>
+            )}
+            <PaymentStatusBadge status={status} />
           </div>
         );
       },
@@ -373,25 +450,15 @@ const ConsultationList = () => {
       render: (_: any, record: any) => {
         const app = record.appointment;
         const c = record.consultation;
-        
+
         const amount = c ? (c.finalTotalAmount || 0) : (app?.finalFee || app?.consultationFee || 0);
         const status = c?.invoice ? c.invoice.paymentStatus : (app?.paymentStatus || "Unpaid");
-        
         const isPaid = status === "Paid";
-        const isPartial = status === "Partial Paid";
-        
+
         return (
           <div className="d-flex flex-column align-items-start gap-1">
             <span className="text-dark fw-bold">₹{amount.toLocaleString()}</span>
-            <span className={`badge border ${
-              isPaid 
-                ? "badge-soft-success border-success text-success" 
-                : isPartial 
-                ? "badge-soft-warning border-warning text-warning" 
-                : "badge-soft-danger border-danger text-danger"
-            } px-1 py-0.5 fs-11`}>
-              {status}
-            </span>
+            <PaymentStatusBadge status={status} />
             {!isPaid && !c && app && (
               <button
                 className="btn btn-xs btn-outline-success py-0 px-1 fs-10 fw-bold mt-1 text-uppercase"
@@ -500,7 +567,7 @@ const ConsultationList = () => {
               />
             </div>
           ) : (
-            <div className="table-responsive border rounded bg-white compact-table">
+            <div className="table-responsive compact-table">
               <Datatable
                 columns={columns}
                 dataSource={finalFiltered}

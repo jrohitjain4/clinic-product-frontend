@@ -178,7 +178,7 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
                       <div className="col-6 mt-2">
                         <span className="text-muted d-block fs-12">Doctor Visit Charge</span>
                         <span className="text-dark fw-semibold">
-                          {formatCurrency(admission.doctorFee || admission.doctor?.visitCharge || 500)}
+                          {formatCurrency(admission.doctorVisitCharge || admission.doctor?.ipdVisitCharge || 500)}
                         </span>
                       </div>
                       <div className="col-6 mt-2">
@@ -267,6 +267,129 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
                       >
                         {formatCurrency(admission.dueAmount)}
                       </h6>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Grid 2: Related Invoices and Timeline */}
+            <div className="row g-3 mt-3">
+              {/* Invoices List Card */}
+              <div className="col-md-6">
+                <div className="card border shadow-none h-100 mb-0">
+                  <div className="card-header bg-light py-2 px-3 border-bottom">
+                    <h6 className="mb-0 fw-bold fs-13 text-dark">
+                      <i className="ti ti-file-invoice me-1 text-primary" /> Invoice & Billings History
+                    </h6>
+                  </div>
+                  <div className="card-body p-3 fs-13" style={{ maxHeight: "350px", overflowY: "auto" }}>
+                    {!admission.invoices || admission.invoices.length === 0 ? (
+                      <span className="text-muted d-block py-4 text-center">No invoices generated yet for this admission.</span>
+                    ) : (
+                      <div className="d-flex flex-column gap-3">
+                        {admission.invoices.map((inv: any, idx: number) => (
+                          <div key={inv.id || idx} className="p-3 border rounded bg-white hover-shadow transition">
+                            <div className="d-flex align-items-center justify-content-between mb-2">
+                              <span className="badge bg-soft-dark text-dark fw-bold">{inv.invoiceNumber}</span>
+                              <span className={`badge py-0.5 px-2 fs-11 fw-semibold ${
+                                inv.paymentStatus === "Paid" ? "bg-soft-success text-success" : 
+                                inv.paymentStatus === "Partial" ? "bg-soft-warning text-warning" : 
+                                "bg-soft-danger text-danger"
+                              }`}>{inv.paymentStatus}</span>
+                            </div>
+                            <div className="d-flex align-items-center justify-content-between mb-2">
+                              <span className="text-muted fs-12">{formatDate(inv.createdAt)}</span>
+                              <strong className="text-success fs-14">{formatCurrency(inv.totalAmount)}</strong>
+                            </div>
+                            <div className="border-top pt-2 mt-2">
+                              <span className="text-muted d-block fs-11 fw-semibold mb-1">INVOICE CHARGES:</span>
+                              <ul className="list-unstyled mb-0 d-flex flex-column gap-1">
+                                {inv.items && inv.items.map((it: any, iIdx: number) => (
+                                  <li key={it.id || iIdx} className="fs-12 text-dark d-flex align-items-center justify-content-between">
+                                    <span>• {it.itemName} {it.quantity > 1 ? `(x${it.quantity})` : ""}</span>
+                                    <span className="fw-semibold">{formatCurrency(it.totalPrice)}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Stay Timeline Card */}
+              <div className="col-md-6">
+                <div className="card border shadow-none h-100 mb-0">
+                  <div className="card-header bg-light py-2 px-3 border-bottom">
+                    <h6 className="mb-0 fw-bold fs-13 text-dark">
+                      <i className="ti ti-history me-1 text-info" /> Inpatient Stay Timeline
+                    </h6>
+                  </div>
+                  <div className="card-body p-3 fs-13" style={{ maxHeight: "350px", overflowY: "auto" }}>
+                    <div className="timeline-container ps-3 position-relative border-start border-2 border-light ms-2 py-2">
+                      
+                      {/* Timeline Item: Admission */}
+                      <div className="timeline-item position-relative mb-4">
+                        <div className="position-absolute rounded-circle border border-2 border-white d-flex align-items-center justify-content-center"
+                             style={{ left: "-27px", top: "0", width: "20px", height: "20px", backgroundColor: "#3b82f6" }}>
+                          <i className="ti ti-login text-white fs-10" />
+                        </div>
+                        <div className="ps-2">
+                          <span className="text-muted fs-11 d-block fw-semibold">{formatDate(admission.admissionDate)}</span>
+                          <strong className="text-dark fs-13 d-block mt-0.5">Patient Admitted</strong>
+                          <span className="text-muted fs-12">Admitted under Dr. {admission.doctor?.fullName || "Primary Doctor"} in Ward {admission.ward?.wardName || "Hospital Ward"}.</span>
+                        </div>
+                      </div>
+
+                      {/* Timeline Item: Treatment */}
+                      {admission.treatment && (
+                        <div className="timeline-item position-relative mb-4">
+                          <div className="position-absolute rounded-circle border border-2 border-white d-flex align-items-center justify-content-center"
+                               style={{ left: "-27px", top: "0", width: "20px", height: "20px", backgroundColor: "#10b981" }}>
+                            <i className="ti ti-activity text-white fs-10" />
+                          </div>
+                          <div className="ps-2">
+                            <span className="text-muted fs-11 d-block fw-semibold">{formatDate(admission.admissionDate)}</span>
+                            <strong className="text-dark fs-13 d-block mt-0.5">Procedure Scheduled</strong>
+                            <span className="text-muted fs-12">{admission.treatment.procedureName || admission.treatment.name} (Procedure Charge: {formatCurrency(admission.treatment.totalPrice || admission.treatmentFee)}).</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Timeline Items: Invoices */}
+                      {admission.invoices && admission.invoices.map((inv: any, idx: number) => (
+                        <div key={inv.id || idx} className="timeline-item position-relative mb-4">
+                          <div className="position-absolute rounded-circle border border-2 border-white d-flex align-items-center justify-content-center"
+                               style={{ left: "-27px", top: "0", width: "20px", height: "20px", backgroundColor: "#eab308" }}>
+                            <i className="ti ti-receipt text-white fs-10" />
+                          </div>
+                          <div className="ps-2">
+                            <span className="text-muted fs-11 d-block fw-semibold">{formatDate(inv.createdAt)}</span>
+                            <strong className="text-dark fs-13 d-block mt-0.5">Invoice Generated: {inv.invoiceNumber}</strong>
+                            <span className="text-muted fs-12">Billed amount: <strong className="text-dark">{formatCurrency(inv.totalAmount)}</strong> (Paid: {formatCurrency(inv.paidAmount)}, Due: {formatCurrency(inv.dueAmount)}).</span>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Timeline Item: Discharge */}
+                      {admission.status === "Discharged" && (
+                        <div className="timeline-item position-relative">
+                          <div className="position-absolute rounded-circle border border-2 border-white d-flex align-items-center justify-content-center"
+                               style={{ left: "-27px", top: "0", width: "20px", height: "20px", backgroundColor: "#ef4444" }}>
+                            <i className="ti ti-logout text-white fs-10" />
+                          </div>
+                          <div className="ps-2">
+                            <span className="text-muted fs-11 d-block fw-semibold">{formatDate(admission.dischargeDate)}</span>
+                            <strong className="text-dark fs-13 d-block mt-0.5">Patient Discharged</strong>
+                            <span className="text-muted fs-12">Stay ended, billing records archived. Stay details: {admission.dischargeNotes || "Completed stay"}.</span>
+                          </div>
+                        </div>
+                      )}
+
                     </div>
                   </div>
                 </div>

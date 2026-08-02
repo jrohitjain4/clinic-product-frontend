@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Footer from "../../../../core/common/footer/footer";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
+import Datatable from "../../../../core/common/dataTable";
 import { useNavigate } from "react-router-dom";
 import IpdViewDetailsModal from "./IpdViewDetailsModal";
 import { IconFormControl } from "../../../../core/common/form-fields";
@@ -97,6 +98,174 @@ const IpdInpatientsPage: React.FC = () => {
       );
     });
   }, [admissions, searchQuery]);
+
+  const tableData = useMemo(() => {
+    return filteredInpatients.map((adm, idx) => {
+      const stayDays = Math.max(
+        1,
+        Math.ceil(
+          (new Date().getTime() - new Date(adm.admissionDate).getTime()) /
+            (1000 * 3600 * 24)
+        )
+      );
+
+      return {
+        key: adm.id,
+        sr: idx + 1,
+        admissionCode: adm.admissionCode,
+        patientName: getPatientName(adm.patient),
+        patientMeta: `UHID: ${adm.patient?.patientCode || "—"} | ${adm.patient?.phone || "—"}`,
+        doctorName: adm.doctor?.fullName || "Unassigned",
+        wardName: adm.ward?.wardName || "Not Assigned",
+        admissionDate: new Date(adm.admissionDate).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric"
+        }),
+        stayDuration: `${stayDays} ${stayDays === 1 ? "Day" : "Days"}`,
+        dueAmount: adm.dueAmount,
+        _raw: adm,
+      };
+    });
+  }, [filteredInpatients]);
+
+  const columns = useMemo(() => [
+    {
+      title: "Sr.",
+      dataIndex: "sr",
+      width: 60,
+      sorter: (a: any, b: any) => a.sr - b.sr,
+    },
+    {
+      title: "Admission Code",
+      dataIndex: "admissionCode",
+      render: (text: string) => (
+        <span
+          className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+          style={{
+            backgroundColor: "#e2e8f0",
+            color: "#1e293b",
+            fontWeight: 600,
+            fontSize: "12px",
+          }}
+        >
+          <i className="ti ti-hash fs-14" />
+          {text}
+        </span>
+      ),
+      sorter: (a: any, b: any) => a.admissionCode.localeCompare(b.admissionCode),
+    },
+    {
+      title: "Patient Details",
+      dataIndex: "patientName",
+      render: (text: string, record: any) => (
+        <div className="lh-1">
+          <h6 className="mb-1 fs-14 fw-semibold text-dark">{text}</h6>
+          <span className="text-muted fs-12 fw-normal d-block mt-1">
+            {record.patientMeta}
+          </span>
+        </div>
+      ),
+      sorter: (a: any, b: any) => a.patientName.localeCompare(b.patientName),
+    },
+    {
+      title: "Primary Doctor",
+      dataIndex: "doctorName",
+      render: (text: string) => (
+        <span className="fw-semibold text-primary fs-13">Dr. {text}</span>
+      ),
+      sorter: (a: any, b: any) => a.doctorName.localeCompare(b.doctorName),
+    },
+    {
+      title: "Assigned Ward",
+      dataIndex: "wardName",
+      render: (text: string) => (
+        <span
+          className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+          style={{
+            backgroundColor: "#e0f2fe",
+            color: "#2563eb",
+            fontWeight: 600,
+            fontSize: "12px",
+          }}
+        >
+          <i className="ti ti-bed fs-14" />
+          {text}
+        </span>
+      ),
+      sorter: (a: any, b: any) => a.wardName.localeCompare(b.wardName),
+    },
+    {
+      title: "Admission Date",
+      dataIndex: "admissionDate",
+      sorter: (a: any, b: any) => a.admissionDate.localeCompare(b.admissionDate),
+    },
+    {
+      title: "Stay Duration",
+      dataIndex: "stayDuration",
+      render: (text: string) => (
+        <span className="badge bg-soft-success text-success fw-bold px-2 py-1 fs-12">
+          <i className="ti ti-point me-1" /> {text}
+        </span>
+      ),
+      sorter: (a: any, b: any) => parseFloat(a.stayDuration) - parseFloat(b.stayDuration),
+    },
+    {
+      title: "Outstanding Balance",
+      dataIndex: "dueAmount",
+      render: (val: number) => (
+        <span className={`fw-bold fs-14 ${val > 0 ? "text-danger" : "text-success"}`}>
+          {val > 0 ? `₹${val.toLocaleString("en-IN")}` : "₹0"}
+        </span>
+      ),
+      sorter: (a: any, b: any) => a.dueAmount - b.dueAmount,
+    },
+    {
+      title: "Action",
+      className: "text-center text-nowrap",
+      width: 140,
+      align: "center" as const,
+      render: (_: unknown, record: any) => (
+        <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
+          <button
+            type="button"
+            className="bg-transparent border-0 text-primary p-1"
+            title="View Full IPD Details"
+            onClick={() => {
+              setSelectedViewAdmission(record._raw);
+              setShowViewModal(true);
+            }}
+          >
+            <i className="ti ti-eye fs-18" />
+          </button>
+          <button
+            type="button"
+            className="bg-transparent border-0 text-success p-1"
+            title="Process Discharge & Settle"
+            onClick={() => navigate("/ipd/discharge")}
+          >
+            <i className="ti ti-user-check fs-18" />
+          </button>
+          <button
+            type="button"
+            className="bg-transparent border-0 text-info p-1"
+            title="View Invoices & Receipts"
+            onClick={() => navigate("/ipd/billings")}
+          >
+            <i className="ti ti-file-invoice fs-18" />
+          </button>
+          <button
+            type="button"
+            className="bg-transparent border-0 text-primary p-1"
+            title="Raise IPD Charge"
+            onClick={() => navigate("/ipd/billings")}
+          >
+            <i className="ti ti-plus fs-18" />
+          </button>
+        </div>
+      ),
+    },
+  ], [navigate]);
 
   return (
     <div className="page-wrapper">
@@ -201,106 +370,39 @@ const IpdInpatientsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Inpatients Cards Grid */}
-        <div className="row g-3">
-          {loading ? (
-            <div className="col-12 text-center py-5">
-              <div className="spinner-border text-primary" role="status" />
-              <p className="text-muted mt-2">Loading active inpatients...</p>
-            </div>
-          ) : filteredInpatients.length === 0 ? (
-            <div className="col-12 text-center py-5">
-              <i className="ti ti-bed fs-40 text-muted mb-2 d-block" />
-              <h5 className="fw-bold">No Active Inpatients Currently Admitted</h5>
-              <p className="text-muted fs-13 mb-3">
-                All admitted patients have been discharged or no records match your search.
-              </p>
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={() => navigate("/ipd/admissions")}
-              >
-                + Admit New Patient
-              </button>
-            </div>
-          ) : (
-            filteredInpatients.map((adm) => {
-              const stayDays = Math.max(
-                1,
-                Math.ceil(
-                  (new Date().getTime() - new Date(adm.admissionDate).getTime()) /
-                    (1000 * 3600 * 24)
-                )
-              );
-
-              return (
-                <div className="col-xl-4 col-md-6" key={adm.id}>
-                  <div className="card border-0 shadow-sm h-100">
-                    <div className="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                      <span className="badge bg-primary fs-12 px-2 py-1">
-                        Code: {adm.admissionCode}
-                      </span>
-                      <span className="badge bg-soft-success text-success fw-bold">
-                        <i className="ti ti-point me-1" /> Admitted ({stayDays} {stayDays === 1 ? "Day" : "Days"})
-                      </span>
-                    </div>
-
-                    <div className="card-body">
-                      <h5 className="fw-bold text-dark mb-1">{getPatientName(adm.patient)}</h5>
-                      <small className="text-muted d-block mb-3">
-                        UHID: {adm.patient?.patientCode || "—"} | Phone: {adm.patient?.phone || "—"}
-                      </small>
-
-                      <div className="p-3 bg-light rounded mb-3 fs-13">
-                        <div className="d-flex justify-content-between mb-1">
-                          <span className="text-muted">Assigned Ward:</span>
-                          <strong className="text-info">{adm.ward?.wardName || "Ward"}</strong>
-                        </div>
-                        <div className="d-flex justify-content-between mb-1">
-                          <span className="text-muted">Primary Doctor:</span>
-                          <strong className="text-dark">{adm.doctor?.fullName || "Doctor"}</strong>
-                        </div>
-                        <div className="d-flex justify-content-between">
-                          <span className="text-muted">Admission Date:</span>
-                          <span className="text-dark">
-                            {new Date(adm.admissionDate).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="d-flex justify-content-between align-items-center pt-2 border-top">
-                        <div>
-                          <small className="text-muted d-block">Outstanding Balance</small>
-                          <strong className="text-danger fs-16">
-                            ₹{adm.dueAmount.toLocaleString("en-IN")}
-                          </strong>
-                        </div>
-
-                        <div className="d-flex align-items-center gap-2">
-                          <button
-                            className="btn btn-sm btn-outline-secondary p-0 d-flex align-items-center justify-content-center"
-                            style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                            title="View Full IPD Details"
-                            onClick={() => {
-                              setSelectedViewAdmission(adm);
-                              setShowViewModal(true);
-                            }}
-                          >
-                            <i className="ti ti-eye fs-16" />
-                          </button>
-                          <button
-                            className="btn btn-sm btn-primary fw-bold"
-                            onClick={() => navigate("/ipd/discharge")}
-                          >
-                            <i className="ti ti-user-check me-1" /> Settle & Discharge
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
+        {/* Inpatients Table */}
+        <div className="card border-0 shadow-sm rounded-3">
+          <div className="card-body p-0">
+            {loading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border text-primary" role="status" />
+                <p className="text-muted mt-2">Loading active inpatients...</p>
+              </div>
+            ) : filteredInpatients.length === 0 ? (
+              <div className="text-center py-5">
+                <i className="ti ti-bed fs-40 text-muted mb-2 d-block" />
+                <h5 className="fw-bold">No Active Inpatients Currently Admitted</h5>
+                <p className="text-muted fs-13 mb-3">
+                  All admitted patients have been discharged or no records match your search.
+                </p>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => navigate("/ipd/admissions")}
+                >
+                  + Admit New Patient
+                </button>
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <Datatable
+                  columns={columns}
+                  dataSource={tableData}
+                  Selection={false}
+                  searchText=""
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

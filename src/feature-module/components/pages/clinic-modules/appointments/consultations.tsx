@@ -18,6 +18,7 @@ import html2pdf from "html2pdf.js";
 import PrescriptionPadSlip from "./PrescriptionPadSlip";
 import PrescriptionPad from "./PrescriptionPad";
 import AddPrescriptionModal from "../../doctor-modules/doctors-prescriptions/AddPrescriptionModal";
+import RecommendIPDModal from "./RecommendIPDModal";
 
 const getInitial = (value?: string) =>
   (value || "").trim().charAt(0).toUpperCase() || "?";
@@ -264,6 +265,7 @@ const Consultations = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<ClinicAppointment | null>(null);
   const [showPresModal, setShowPresModal] = useState(false);
   const [showViewPresModal, setShowViewPresModal] = useState(false);
+  const [showRecommendIPDModal, setShowRecommendIPDModal] = useState(false);
 
   const [searchText, setSearchText] = useState("");
   const [printAppointment, setPrintAppointment] = useState<any | null>(null);
@@ -1100,9 +1102,30 @@ const Consultations = () => {
             linkedAppointments={[selectedAppointment]}
             initialPrescription={existingPrescription}
             appointment={selectedAppointment}
+            onRecommendIPD={() => {
+              console.log("onRecommendIPD triggered in consultations.tsx");
+              setShowPresModal(false);
+              setShowRecommendIPDModal(true);
+            }}
           />
         );
       })()}
+
+      {/* Recommend for IPD Modal */}
+      {showRecommendIPDModal && selectedAppointment && (
+        <RecommendIPDModal
+          onClose={() => {
+            setShowRecommendIPDModal(false);
+            setSelectedAppointment(null);
+          }}
+          appointment={selectedAppointment}
+          onSuccess={() => {
+            setShowRecommendIPDModal(false);
+            setSelectedAppointment(null);
+            refetchPres();
+          }}
+        />
+      )}
 
       {/* Printable Prescription Pad Slip (detailed with medicines) */}
       {printAppointment && printPrescription && (

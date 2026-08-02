@@ -59,7 +59,12 @@ const DURATIONS = [
 
 const IpdTreatmentsPage: React.FC = () => {
   // Navigation Tabs
-  const [activeTab, setActiveTab] = useState<"procedures" | "categories">("procedures");
+  const [activeTab, setActiveTab] = useState<"procedures" | "categories" | "admission-fee">("procedures");
+
+  // Admission Fee States
+  const [admissionFee, setAdmissionFee] = useState("500");
+  const [isEditingFee, setIsEditingFee] = useState(false);
+  const [savingFee, setSavingFee] = useState(false);
 
   // Data States
   const [treatments, setTreatments] = useState<Treatment[]>([]);
@@ -90,6 +95,17 @@ const IpdTreatmentsPage: React.FC = () => {
   const [isManualTotal, setIsManualTotal] = useState(false); // Track if user manually typed total
   const [estimatedDuration, setEstimatedDuration] = useState("1 Hour");
   const [description, setDescription] = useState("");
+
+  // Auto-calculate Total Procedure Charge as sum of breakdown fees
+  useEffect(() => {
+    const pFee = parseFloat(procedureFee) || 0;
+    const otFee = parseFloat(otCharges) || 0;
+    const aFee = parseFloat(anaesthesiaCharges) || 0;
+    const sFee = parseFloat(surgeonCharges) || 0;
+    const asFee = parseFloat(assistantSurgeonCharges) || 0;
+    const calculatedTotal = pFee + otFee + aFee + sFee + asFee;
+    setTotalChargeInput(calculatedTotal > 0 ? String(calculatedTotal) : "");
+  }, [procedureFee, otCharges, anaesthesiaCharges, surgeonCharges, assistantSurgeonCharges]);
 
   // Category Modal State
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -124,6 +140,12 @@ const IpdTreatmentsPage: React.FC = () => {
         const data = await deptRes.json();
         setDepartments(Array.isArray(data) ? data.filter((d: any) => d.status === "Active" || !d.status) : []);
       }
+      
+      const feeRes = await fetch(apiUrl("/api/settings/ipd/admission-fee"), { headers });
+      if (feeRes.ok) {
+        const feeData = await feeRes.json();
+        setAdmissionFee(String(feeData.ipdAdmissionFee !== undefined ? feeData.ipdAdmissionFee : "500"));
+      }
     } catch (err: any) {
       toast.error("Failed to load IPD treatment data");
     } finally {
@@ -134,6 +156,39 @@ const IpdTreatmentsPage: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleSaveAdmissionFee = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!admissionFee || isNaN(parseFloat(admissionFee)) || parseFloat(admissionFee) < 0) {
+      toast.error("Please enter a valid admission fee.");
+      return;
+    }
+
+    setSavingFee(true);
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(apiUrl("/api/settings/ipd/admission-fee"), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ipdAdmissionFee: parseFloat(admissionFee) }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || "Failed to update admission fee");
+      }
+
+      toast.success("Admission fee updated successfully!");
+      setIsEditingFee(false);
+    } catch (err: any) {
+      toast.error(err.message || "Error updating admission fee");
+    } finally {
+      setSavingFee(false);
+    }
+  };
 
   // Combine fetched categories with defaults for dropdown
   const categoryOptions = useMemo(() => {
@@ -736,6 +791,15 @@ const IpdTreatmentsPage: React.FC = () => {
               IPD Treatment Categories ({categories.length})
             </button>
           </li>
+          <li className="nav-item">
+            <button
+              className={`nav-link fw-semibold ${activeTab === "admission-fee" ? "active text-primary" : "text-muted"}`}
+              onClick={() => setActiveTab("admission-fee")}
+            >
+              <i className="ti ti-receipt-tax me-2" />
+              IPD Admission Fee Configuration
+            </button>
+          </li>
         </ul>
 
         {/* TAB 1: PROCEDURES TABLE */}
@@ -807,6 +871,88 @@ const IpdTreatmentsPage: React.FC = () => {
               </div>
             )}
           </>
+        )}
+
+        {/* TAB 3: ADMISSION FEE CONFIGURATION */}
+        {activeTab === "admission-fee" && (
+          <div className="card border-0 shadow-sm rounded-3 mt-3" style={{ maxWidth: "600px" }}>
+            <div className="card-body p-4">
+              <h5 className="fw-bold mb-3 text-dark d-flex align-items-center gap-2">
+                <i className="ti ti-receipt-tax text-primary fs-20" />
+                IPD Admission Fee Configuration
+              </h5>
+              <p className="text-muted fs-13 mb-4">
+                This is the default admission fee charged when creating a new IPD patient admission record. 
+                Doctors and admins can review or adjust this amount during the actual admission process.
+              </p>
+
+              <div className="mt-3">
+                <div className="mb-4">
+                  <label className="form-label fw-bold text-dark fs-13">Admission Fee (₹)</label>
+                  {isEditingFee ? (
+                    <div className="input-group" style={{ maxWidth: "300px" }}>
+                      <span className="input-group-text bg-light fw-bold">₹</span>
+                      <input
+                        type="number"
+                        className="form-control"
+                        placeholder="e.g. 500"
+                        value={admissionFee}
+                        onChange={(e) => setAdmissionFee(e.target.value)}
+                        disabled={savingFee}
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                  ) : (
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="fs-22 fw-extrabold text-primary">₹{parseFloat(admissionFee).toLocaleString('en-IN')}</span>
+                      <span className="badge bg-light-primary text-primary px-2.5 py-1 fs-11 fw-semibold">Default Charge</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="d-flex align-items-center gap-2 mt-4 pt-2 border-top">
+                  {isEditingFee ? (
+                    <>
+                      <button
+                        type="button"
+                        className="btn btn-primary d-inline-flex align-items-center gap-2"
+                        disabled={savingFee}
+                        onClick={() => handleSaveAdmissionFee()}
+                      >
+                        {savingFee ? (
+                          <div className="spinner-border spinner-border-sm" role="status" />
+                        ) : (
+                          <i className="ti ti-device-floppy fs-14" />
+                        )}
+                        Save Changes
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-light border"
+                        onClick={() => {
+                          setIsEditingFee(false);
+                          fetchData(); // reset value
+                        }}
+                        disabled={savingFee}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-primary d-inline-flex align-items-center gap-2"
+                      onClick={() => setIsEditingFee(true)}
+                    >
+                      <i className="ti ti-edit fs-14" />
+                      Edit Admission Fee
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
@@ -942,41 +1088,11 @@ const IpdTreatmentsPage: React.FC = () => {
                   <h6 className="fw-bold text-dark border-bottom pb-2 mb-3 d-flex align-items-center justify-content-between">
                     <span>
                       <span className="badge bg-success rounded-circle p-1 me-2" style={{ width: "8px", height: "8px" }} />
-                      Pricing Breakdown & Total Charge
+                      Pricing Breakdown
                     </span>
                   </h6>
 
-                  {/* DIRECT TOTAL CHARGE INPUT FIELD */}
-                  <div className="p-3 bg-soft-success border border-success rounded-3 mb-3">
-                    <div className="row align-items-center g-2">
-                      <div className="col-md-7">
-                        <label className="form-label fw-bold text-dark mb-0">
-                          <i className="ti ti-currency-rupee text-success me-1" />
-                          Total Procedure Charge (₹) <span className="text-danger">*</span>
-                        </label>
-                        <small className="text-muted d-block">
-                          Enter total procedure charge manually (Independent of breakdown fees below)
-                        </small>
-                      </div>
-                      <div className="col-md-5">
-                        <div className="input-group input-group-lg">
-                          <span className="input-group-text bg-success text-white fw-bold">₹</span>
-                          <IconFormControl
-                            fieldLabel="amount"
-                            type="number"
-                            className="fw-bold text-success fs-18"
-                            placeholder="e.g. 5000"
-                            value={totalChargeInput}
-                            onChange={(e) => setTotalChargeInput(e.target.value)}
-                            min={0}
-                            required
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="row g-3 mb-4">
+                  <div className="row g-3 mb-3">
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Procedure Fee (₹)</label>
                       <IconFormControl
@@ -1035,6 +1151,36 @@ const IpdTreatmentsPage: React.FC = () => {
                         onChange={(e) => setAssistantSurgeonCharges(e.target.value)}
                         min={0}
                       />
+                    </div>
+                  </div>
+
+                  {/* DIRECT TOTAL CHARGE INPUT FIELD (MOVED TO BOTTOM & AUTO-SUMMED) */}
+                  <div className="p-3 bg-soft-success border border-success rounded-3 mb-4">
+                    <div className="row align-items-center g-2">
+                      <div className="col-md-7">
+                        <label className="form-label fw-bold text-dark mb-0">
+                          <i className="ti ti-currency-rupee text-success me-1" />
+                          Total Procedure Charge (₹) <span className="text-danger">*</span>
+                        </label>
+                        <small className="text-muted d-block">
+                          Automatically summed from pricing breakdown above (or override manually)
+                        </small>
+                      </div>
+                      <div className="col-md-5">
+                        <div className="input-group input-group-lg">
+                          <span className="input-group-text bg-success text-white fw-bold">₹</span>
+                          <IconFormControl
+                            fieldLabel="amount"
+                            type="number"
+                            className="fw-bold text-success fs-18"
+                            placeholder="e.g. 5000"
+                            value={totalChargeInput}
+                            onChange={(e) => setTotalChargeInput(e.target.value)}
+                            min={0}
+                            required
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 

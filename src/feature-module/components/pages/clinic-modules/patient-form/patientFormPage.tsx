@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams, useLocation } from "react-router";
 import { DatePicker } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import PhoneInput from "react-phone-number-input";
@@ -37,7 +37,11 @@ interface PatientFormPageProps {
 
 const PatientFormPage = ({ mode }: PatientFormPageProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
+
+  const fromIpd = location.state?.fromIpd;
+  const backRoute = fromIpd ? all_routes.ipdPatients : all_routes.patients;
   const { patient, loading: loadingPatient } = useClinicPatient(
     mode === "edit" ? id : undefined
   );
@@ -207,7 +211,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Failed to save patient");
       }
-      navigate(all_routes.patients, { replace: true });
+      navigate(backRoute, { replace: true });
     } catch (err: unknown) {
       setFormError(err instanceof Error ? err.message : "Failed to save patient");
     } finally {
@@ -244,7 +248,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
           <div className="col-12">
             <div className="mb-4">
               <h6 className="fw-bold mb-0 d-flex align-items-center">
-                <Link to={all_routes.patients} className="text-dark">
+                <Link to={backRoute} className="text-dark">
                   <i className="ti ti-chevron-left me-1" />
                   Patients
                 </Link>
@@ -641,7 +645,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                 </div>
               </div>
               <div className="d-flex align-items-center justify-content-end mt-3">
-                <Link to={all_routes.patients} className="btn btn-light me-2">
+                <Link to={backRoute} className="btn btn-light me-2">
                   Cancel
                 </Link>
                 <button

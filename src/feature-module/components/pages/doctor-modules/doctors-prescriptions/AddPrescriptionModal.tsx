@@ -128,13 +128,18 @@ const AddPrescriptionModal = ({
     const [showRecommendIPDModal, setShowRecommendIPDModal] = useState(false);
 
     const activeAppointment = useMemo(() => {
-        if (appointment) return appointment;
-        const currentAppId = appointmentId || selectedVisitTab || initialAppointmentId;
-        const found = currentAppId ? appointments.find((a: any) => a.id === currentAppId) : null;
-        if (found) return found;
+        const base = appointment || (appointmentId || selectedVisitTab || initialAppointmentId ? appointments.find((a: any) => a.id === (appointmentId || selectedVisitTab || initialAppointmentId)) : null);
+        if (base) {
+            return {
+                ...base,
+                id: base.id || appointmentId || initialAppointmentId || `APT-${Date.now()}`,
+                patientId: base.patientId || base.patient?.id || patientId,
+                appointmentCode: base.appointmentCode || base.bookingCode || initialPrescription?.appointment?.appointmentCode || `APT-${Date.now().toString().slice(-6)}`,
+            };
+        }
         if (patientId) {
             return {
-                id: currentAppId || `APT-${Date.now()}`,
+                id: appointmentId || initialAppointmentId || `APT-${Date.now()}`,
                 appointmentCode: initialPrescription?.appointment?.appointmentCode || `APT-${Date.now().toString().slice(-6)}`,
                 patientId: patientId,
                 doctorId: doctorId || null,

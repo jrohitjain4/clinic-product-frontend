@@ -68,10 +68,16 @@ const RecommendIPDModal = ({ onClose, appointment, onSuccess }: Props) => {
       return;
     }
 
+    const targetPatientId = appointment?.patientId || appointment?.patient?.id || appointment?.patient?._id;
+    if (!targetPatientId) {
+      toast.error("Patient details missing from appointment.");
+      return;
+    }
+
     setLoading(true);
     const payload = {
       admissionType: "Refer to OPD",
-      patientId: appointment?.patientId || appointment?.patient?.id || appointment?.patient?._id,
+      patientId: targetPatientId,
       doctorId: selectedDoctorId,
       wardId: null,
       treatmentId: selectedTreatmentId || null,

@@ -9,6 +9,8 @@ import dayjs, { Dayjs } from "dayjs";
 import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
 import BodyDiagram3D from "./BodyDiagram3D";
 import type { BodyPartDef } from "./BodyDiagram3D";
+import ConsultationPrintPlan from "./ConsultationPrintPlan";
+import ConsultationPreviewPrint from "./ConsultationPreviewPrint";
 
 const routes = all_routes;
 
@@ -536,8 +538,36 @@ const ConsultationForm = () => {
     [bodyPoints]
   );
 
-  const handleConsultPrint = () => {
-    const root = document.getElementById("consultation-preview");
+  const getClinicForPrint = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const clinic = user?.clinic || {};
+      const address = [
+        clinic.addressLine1,
+        clinic.addressLine2,
+        clinic.city,
+        clinic.state,
+        clinic.country,
+        clinic.pincode ? `- ${clinic.pincode}` : "",
+      ]
+        .filter(Boolean)
+        .join(", ");
+      return {
+        name: clinic.name || clinic.clinicName || user?.clinicName || "Clinic",
+        phone: clinic.phone || clinic.mobile || "",
+        email: clinic.email || "",
+        address,
+        logo:
+          [clinic.landingPage?.logo, clinic.clinicLogo, clinic.logo, clinic.profileImage]
+            .map((v) => (typeof v === "string" ? v.trim() : ""))
+            .find((v) => v.length > 0 && v !== "null" && v !== "undefined") || "",
+      };
+    } catch {
+      return { name: "Clinic" };
+    }
+  };
+
+  const captureDiagramsForPrint = (root: HTMLElement | null) => {
     const created: HTMLImageElement[] = [];
     root?.querySelectorAll<HTMLCanvasElement>(".body-diagram-3d canvas").forEach((canvas) => {
       try {
@@ -567,9 +597,36 @@ const ConsultationForm = () => {
       window.removeEventListener("afterprint", cleanup);
     };
     window.addEventListener("afterprint", cleanup);
-    // Fallback cleanup if afterprint never fires
-    setTimeout(cleanup, 2000);
-    window.print();
+    setTimeout(cleanup, 2500);
+  };
+
+  const handlePrintConsultationPlan = () => {
+    const root = document.getElementById("consultation-print-plan");
+    if (!root) {
+      toast.error("Print layout not ready");
+      return;
+    }
+    // Allow off-screen WebGL diagrams a moment to paint before capture
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        captureDiagramsForPrint(root);
+        window.print();
+      }, 350);
+    });
+  };
+
+  const handleConsultPrint = () => {
+    const root = document.getElementById("consultation-preview-print");
+    if (!root) {
+      toast.error("Print layout not ready");
+      return;
+    }
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        captureDiagramsForPrint(root);
+        window.print();
+      }, 350);
+    });
   };
 
   // Therapy plan row update
@@ -1023,7 +1080,7 @@ const ConsultationForm = () => {
                 <button
                   type="button"
                   className="btn btn-light d-flex align-items-center gap-2"
-                  onClick={() => window.print()}
+                  onClick={handlePrintConsultationPlan}
                   style={{ borderRadius: "10px", fontWeight: 600, minHeight: 38 }}
                 >
                   <i className="ti ti-printer" /> Print Plan
@@ -1393,6 +1450,41 @@ const ConsultationForm = () => {
               </div>
             </div>
           </div>
+
+          <ConsultationPrintPlan
+            clinic={getClinicForPrint()}
+            consultationCode={consultationData.consultationCode}
+            status={consultationData.status}
+            createdAt={consultationData.createdAt || consultationData.confirmedAt}
+            patient={consultationData.patient}
+            doctor={consultationData.doctor}
+            appointment={consultationData.appointment}
+            bodyParts={BODY_PARTS}
+            bodyPoints={bodyPoints}
+            examHasFront={examHasFront}
+            examHasBack={examHasBack}
+            examinationNotes={consultationData.examinationNotes || generalNotes}
+            therapyPlans={consultationData.therapyPlans || []}
+            sessions={allChildAppts}
+            billing={{
+              consultationFee: consultationData.consultationFee,
+              therapyTotal: (consultationData.therapyPlans || []).reduce(
+                (sum: number, p: any) =>
+                  sum + (Number(p.totalSessions) || 0) * (Number(p.sessionFee) || 0),
+                0
+              ),
+              discountType: consultationData.discountType,
+              discountValue: consultationData.discountValue,
+              finalTotalAmount: consultationData.finalTotalAmount,
+              amountPaid: consultationData.amountPaid,
+              paymentStatus: consultationData.paymentStatus,
+              paymentMethod: consultationData.paymentMethod || consultationData.invoice?.paymentMethod,
+              invoiceCode: consultationData.invoice?.invoiceCode,
+            }}
+            medicines={consultationData.medicines || medicines}
+            advice={consultationData.advice || advice}
+            severityColor={severityColor}
+          />
 
         <style>{`
           .therapy-consult-page .tc-page-icon {
@@ -2056,31 +2148,24 @@ const ConsultationForm = () => {
                             {(() => {
                               const { clock, period } = parseSessionTimeParts(plan.sessionTime);
                               return (
-                                <div className="d-flex gap-2 align-items-stretch">
-                                  <div className="input-group flex-grow-1" style={{ flexWrap: "nowrap" }}>
-                                    <span
-                                      className="input-group-text bg-white"
-                                      style={{ borderRadius: "8px 0 0 8px", borderColor: "#dee2e6" }}
-                                    >
-                                      <i className="ti ti-clock" style={{ color: "#eab308" }} />
-                                    </span>
-                                    <input
-                                      type="text"
-                                      className="form-control"
-                                      placeholder="hh:mm"
-                                      inputMode="numeric"
-                                      value={clock}
-                                      onChange={(e) => {
-                                        let v = e.target.value.replace(/[^\d:]/g, "");
-                                        if (v.length === 2 && !v.includes(":") && clock.length < 2) {
-                                          v = `${v}:`;
-                                        }
-                                        v = v.slice(0, 5);
-                                        updatePlan(idx, "sessionTime", buildSessionTimeValue(v, period));
-                                      }}
-                                      style={{ borderRadius: "0 8px 8px 0", fontSize: 13, minWidth: 0 }}
-                                    />
-                                  </div>
+                                <div className="d-flex gap-2 align-items-center">
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="hh:mm"
+                                    inputMode="numeric"
+                                    autoComplete="off"
+                                    value={clock}
+                                    onChange={(e) => {
+                                      let v = e.target.value.replace(/[^\d:]/g, "");
+                                      if (v.length === 2 && !v.includes(":") && clock.length < 2) {
+                                        v = `${v}:`;
+                                      }
+                                      v = v.slice(0, 5);
+                                      updatePlan(idx, "sessionTime", buildSessionTimeValue(v, period));
+                                    }}
+                                    style={{ borderRadius: 8, fontSize: 13, flex: 1, minWidth: 0 }}
+                                  />
                                   <select
                                     className="form-select"
                                     value={period}
@@ -2091,7 +2176,7 @@ const ConsultationForm = () => {
                                         buildSessionTimeValue(clock, e.target.value as "AM" | "PM")
                                       )
                                     }
-                                    style={{ borderRadius: 8, fontSize: 13, width: 84, flexShrink: 0 }}
+                                    style={{ borderRadius: 8, fontSize: 13, width: 88, flexShrink: 0 }}
                                   >
                                     <option value="AM">AM</option>
                                     <option value="PM">PM</option>
@@ -2379,7 +2464,7 @@ const ConsultationForm = () => {
                     </div>
                     <button
                       type="button"
-                      className="btn btn-light btn-sm d-print-none"
+                      className="btn btn-light btn-sm"
                       style={{ borderRadius: 8 }}
                       onClick={handleConsultPrint}
                     >
@@ -2747,7 +2832,7 @@ const ConsultationForm = () => {
             </div>
 
             {/* Navigation */}
-            <div className="col-12 d-flex justify-content-between d-print-none">
+            <div className="col-12 d-flex justify-content-between">
               <button
                 type="button"
                 className="btn btn-light"
@@ -2776,6 +2861,28 @@ const ConsultationForm = () => {
                 )}
               </button>
             </div>
+
+            <ConsultationPreviewPrint
+              clinic={getClinicForPrint()}
+              patient={selectedAppointment?.patient}
+              doctor={selectedAppointment?.doctor}
+              appointmentCode={selectedAppointment?.appointmentCode}
+              bodyParts={BODY_PARTS}
+              bodyPoints={bodyPoints}
+              examHasFront={examHasFront}
+              examHasBack={examHasBack}
+              examinationNotes={generalNotes}
+              therapyPlans={therapyPlans}
+              consultationFee={consultationFee}
+              therapyTotal={therapyTotal}
+              discountType={discountType}
+              discountValue={discountValue}
+              discountAmt={discountAmt}
+              finalTotal={finalTotal}
+              medicines={medicines}
+              advice={advice}
+              severityColor={severityColor}
+            />
           </div>
         )}
         <style>{`
@@ -2845,84 +2952,6 @@ const ConsultationForm = () => {
             width: 100%;
             margin-left: auto;
             margin-right: auto;
-          }
-
-          @media print {
-            @page { size: A4; margin: 10mm; }
-            html, body {
-              height: auto !important;
-              overflow: visible !important;
-              background: #fff !important;
-            }
-            body * { visibility: hidden !important; }
-            #consultation-preview,
-            #consultation-preview * {
-              visibility: visible !important;
-            }
-            #consultation-preview {
-              position: absolute !important;
-              left: 0 !important;
-              top: 0 !important;
-              width: 100% !important;
-              margin: 0 !important;
-              box-shadow: none !important;
-              border: none !important;
-              border-radius: 0 !important;
-              background: #fff !important;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-            .consult-print-page {
-              break-after: page;
-              page-break-after: always;
-            }
-            .consult-print-page:last-child {
-              break-after: auto;
-              page-break-after: auto;
-            }
-            .d-print-none {
-              display: none !important;
-              visibility: hidden !important;
-            }
-            .consult-print-canvas-img {
-              visibility: visible !important;
-              max-height: 220px !important;
-              width: 100% !important;
-              object-fit: contain !important;
-            }
-            .body-diagram-3d canvas {
-              visibility: hidden !important;
-            }
-            .consult-body-diagrams-section {
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-            }
-            .consult-body-diagrams-pair {
-              display: flex !important;
-              flex-direction: row !important;
-              flex-wrap: nowrap !important;
-              gap: 10px !important;
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-            }
-            .consult-body-diagram-item {
-              flex: 1 1 0 !important;
-              max-width: 50% !important;
-              width: 50% !important;
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-            }
-            .consult-body-diagram-item .body-diagram-3d,
-            .consult-body-diagram-single .body-diagram-3d {
-              height: 220px !important;
-              max-height: 220px !important;
-            }
-            .consult-body-diagram-single {
-              max-width: 280px !important;
-              width: 100% !important;
-              margin-left: auto !important;
-              margin-right: auto !important;
-            }
           }
         `}</style>
       </div>

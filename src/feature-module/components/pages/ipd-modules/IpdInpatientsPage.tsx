@@ -308,7 +308,7 @@ const IpdInpatientsPage: React.FC = () => {
         {/* Stats Row */}
         <div className="row g-3 mb-4">
           <div className="col-md-4">
-            <div className="card border-0 shadow-sm border-start border-4 border-primary">
+            <div className="card border-0 shadow rounded-3">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -324,7 +324,7 @@ const IpdInpatientsPage: React.FC = () => {
           </div>
 
           <div className="col-md-4">
-            <div className="card border-0 shadow-sm border-start border-4 border-info">
+            <div className="card border-0 shadow rounded-3">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -345,7 +345,7 @@ const IpdInpatientsPage: React.FC = () => {
           </div>
 
           <div className="col-md-4">
-            <div className="card border-0 shadow-sm border-start border-4 border-warning">
+            <div className="card border-0 shadow rounded-3">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -367,7 +367,7 @@ const IpdInpatientsPage: React.FC = () => {
         </div>
 
         {/* Search */}
-        <div className="card border-0 shadow-sm mb-4">
+        <div className="card border-0 shadow rounded-3 mb-4">
           <div className="card-body p-3">
             <IconFormControl
               fieldLabel="search"
@@ -380,7 +380,7 @@ const IpdInpatientsPage: React.FC = () => {
         </div>
 
         {/* Inpatients Table */}
-        <div className="card border-0 shadow-sm rounded-3">
+        <div className="card border-0 shadow rounded-3">
           <div className="card-body p-0">
             {loading ? (
               <div className="text-center py-5">

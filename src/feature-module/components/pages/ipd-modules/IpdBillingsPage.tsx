@@ -226,6 +226,27 @@ const IpdBillingsPage: React.FC = () => {
     }
   }, []);
 
+  const [triggeringWardCharges, setTriggeringWardCharges] = useState(false);
+
+  const handleTriggerDailyWardCharges = async () => {
+    setTriggeringWardCharges(true);
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(apiUrl("/api/ipd/invoices/trigger-daily-ward-charges"), {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to run daily ward charges");
+      const data = await res.json();
+      toast.success(data.message || "Daily ward charges processed!");
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "Error processing daily ward charges");
+    } finally {
+      setTriggeringWardCharges(false);
+    }
+  };
+
   const location = useLocation();
 
   useEffect(() => {
@@ -1333,6 +1354,25 @@ const IpdBillingsPage: React.FC = () => {
               <i className="ti ti-x me-1" />Clear
             </button>
           )}
+
+          <button
+            className="btn btn-warning text-dark fw-bold d-inline-flex align-items-center me-1"
+            style={{ height: "46px", flexShrink: 0, borderRadius: "12px" }}
+            onClick={handleTriggerDailyWardCharges}
+            disabled={triggeringWardCharges}
+            title="Automatically generate daily 11 AM ward stay & nursing charges for active inpatients"
+          >
+            {triggeringWardCharges ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" />
+                Running...
+              </>
+            ) : (
+              <>
+                <i className="ti ti-clock-play me-1 fs-18" /> Run 11 AM Ward Charges
+              </>
+            )}
+          </button>
 
           <button
             className="btn btn-outline-secondary d-inline-flex align-items-center"

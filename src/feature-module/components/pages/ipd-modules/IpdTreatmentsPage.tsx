@@ -1167,19 +1167,16 @@ const IpdTreatmentsPage: React.FC = () => {
                         </small>
                       </div>
                       <div className="col-md-5">
-                        <div className="input-group input-group-lg">
-                          <span className="input-group-text bg-success text-white fw-bold">₹</span>
-                          <IconFormControl
-                            fieldLabel="amount"
-                            type="number"
-                            className="fw-bold text-success fs-18"
-                            placeholder="e.g. 5000"
-                            value={totalChargeInput}
-                            onChange={(e) => setTotalChargeInput(e.target.value)}
-                            min={0}
-                            required
-                          />
-                        </div>
+                        <IconFormControl
+                          fieldLabel="amount"
+                          type="number"
+                          className="fw-bold text-success fs-18"
+                          placeholder="e.g. 5000"
+                          value={totalChargeInput}
+                          onChange={(e) => setTotalChargeInput(e.target.value)}
+                          min={0}
+                          required
+                        />
                       </div>
                     </div>
                   </div>

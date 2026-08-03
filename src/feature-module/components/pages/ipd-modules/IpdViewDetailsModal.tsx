@@ -48,34 +48,39 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
       style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1060 }}
     >
       <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "12px" }}>
-          
-          {/* Header */}
-          <div className="modal-header bg-light border-bottom py-3 px-4">
+        <div
+          className="modal-content border-0 shadow-lg"
+          style={{ borderRadius: "12px", overflow: "hidden" }}
+        >
+          {/* Common modal header theme */}
+          <div className="modal-header bg-primary text-white py-3 px-4 d-flex align-items-center justify-content-between">
             <div className="d-flex align-items-center gap-2">
-              <div className="avatar avatar-md bg-soft-primary text-primary rounded-circle me-1">
-                <i className="ti ti-eye fs-20" />
+              <div
+                className="bg-white rounded-circle p-2 d-flex align-items-center justify-content-center"
+                style={{ width: 36, height: 36 }}
+              >
+                <i className="ti ti-eye text-primary fs-18" />
               </div>
               <div>
-                <h5 className="modal-title fw-bold mb-0 text-dark">
-                  IPD Admission Details — <span className="text-primary">{admission.admissionCode || "IPD"}</span>
+                <h5 className="modal-title fw-bold text-white mb-0">
+                  IPD Admission Details — {admission.admissionCode || "IPD"}
                 </h5>
-                <span className="text-muted fs-12">Complete Inpatient Stay & Billing Summary</span>
+                <p className="mb-0 text-white-50 fs-12">Complete Inpatient Stay & Billing Summary</p>
               </div>
             </div>
             <button
               type="button"
-              className="btn-close"
+              className="btn-close btn-close-white"
               onClick={onClose}
               aria-label="Close"
             />
           </div>
 
           {/* Body */}
-          <div className="modal-body p-4">
+          <div className="modal-body p-4 bg-light-subtle">
 
             {/* Top Status & Date Banner */}
-            <div className="p-3 bg-soft-light rounded-3 border mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div className="p-3 bg-white rounded-3 border mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2 shadow-sm">
               <div>
                 <span className="text-muted fs-12 d-block fw-semibold uppercase">ADMISSION STATUS</span>
                 {isDischarged ? (
@@ -121,8 +126,8 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
             <div className="row g-3 mb-4">
               {/* Patient Info Card */}
               <div className="col-md-6">
-                <div className="card border shadow-none h-100 mb-0">
-                  <div className="card-header bg-light py-2 px-3 border-bottom">
+                <div className="card border-0 shadow-sm h-100 mb-0" style={{ borderRadius: 10 }}>
+                  <div className="card-header bg-white py-2 px-3 border-bottom">
                     <h6 className="mb-0 fw-bold fs-13 text-dark">
                       <i className="ti ti-user me-1 text-primary" /> Patient Information
                     </h6>
@@ -158,8 +163,8 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
 
               {/* Doctor & Ward Info Card */}
               <div className="col-md-6">
-                <div className="card border shadow-none h-100 mb-0">
-                  <div className="card-header bg-light py-2 px-3 border-bottom">
+                <div className="card border-0 shadow-sm h-100 mb-0" style={{ borderRadius: 10 }}>
+                  <div className="card-header bg-white py-2 px-3 border-bottom">
                     <h6 className="mb-0 fw-bold fs-13 text-dark">
                       <i className="ti ti-stethoscope me-1 text-info" /> Doctor & Ward Assignment
                     </h6>
@@ -193,8 +198,8 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
 
             {/* Treatment / Surgery Details (If any) */}
             {admission.treatment && (
-              <div className="card border shadow-none mb-4">
-                <div className="card-header bg-light py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
+              <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: 10 }}>
+                <div className="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center justify-content-between">
                   <h6 className="mb-0 fw-bold fs-13 text-dark">
                     <i className="ti ti-activity me-1 text-success" /> Surgery & Treatment Procedure
                   </h6>
@@ -222,16 +227,16 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
             )}
 
             {/* Billing Summary Box */}
-            <div className="card border shadow-none bg-light mb-0">
+            <div className="card border-0 shadow-sm mb-0" style={{ borderRadius: 10 }}>
               <div className="card-header bg-white py-2 px-3 border-bottom">
                 <h6 className="mb-0 fw-bold fs-13 text-dark">
                   <i className="ti ti-receipt me-1 text-warning" /> Billing & Payment Summary
                 </h6>
               </div>
-              <div className="card-body p-3">
+              <div className="card-body p-3 bg-light">
                 <div className="row text-center g-3">
                   <div className="col-6 col-md-3">
-                    <div className="p-2 bg-white rounded border">
+                    <div className="p-2 bg-white rounded border-0 shadow-sm">
                       <span className="text-muted fs-11 d-block fw-semibold">ESTIMATED TOTAL</span>
                       <h6 className="fw-bold mb-0 text-dark mt-1">
                         {formatCurrency(admission.estimatedTotal || admission.totalBilled)}
@@ -240,7 +245,7 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
                   </div>
 
                   <div className="col-6 col-md-3">
-                    <div className="p-2 bg-white rounded border">
+                    <div className="p-2 bg-white rounded border-0 shadow-sm">
                       <span className="text-muted fs-11 d-block fw-semibold">ADVANCE DEPOSIT</span>
                       <h6 className="fw-bold mb-0 text-info mt-1">
                         {formatCurrency(admission.advancePaid)}
@@ -249,7 +254,7 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
                   </div>
 
                   <div className="col-6 col-md-3">
-                    <div className="p-2 bg-white rounded border">
+                    <div className="p-2 bg-white rounded border-0 shadow-sm">
                       <span className="text-muted fs-11 d-block fw-semibold">TOTAL PAID</span>
                       <h6 className="fw-bold mb-0 text-success mt-1">
                         {formatCurrency(admission.totalPaid)}
@@ -258,7 +263,7 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
                   </div>
 
                   <div className="col-6 col-md-3">
-                    <div className="p-2 bg-white rounded border">
+                    <div className="p-2 bg-white rounded border-0 shadow-sm">
                       <span className="text-muted fs-11 d-block fw-semibold">DUE BALANCE</span>
                       <h6
                         className={`fw-bold mb-0 mt-1 ${
@@ -277,8 +282,8 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
             <div className="row g-3 mt-3">
               {/* Invoices List Card */}
               <div className="col-md-6">
-                <div className="card border shadow-none h-100 mb-0">
-                  <div className="card-header bg-light py-2 px-3 border-bottom">
+                <div className="card border-0 shadow-sm h-100 mb-0" style={{ borderRadius: 10 }}>
+                  <div className="card-header bg-white py-2 px-3 border-bottom">
                     <h6 className="mb-0 fw-bold fs-13 text-dark">
                       <i className="ti ti-file-invoice me-1 text-primary" /> Invoice & Billings History
                     </h6>
@@ -289,7 +294,7 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
                     ) : (
                       <div className="d-flex flex-column gap-3">
                         {admission.invoices.map((inv: any, idx: number) => (
-                          <div key={inv.id || idx} className="p-3 border rounded bg-white hover-shadow transition">
+                          <div key={inv.id || idx} className="p-3 border-0 shadow-sm rounded bg-white">
                             <div className="d-flex align-items-center justify-content-between mb-2">
                               <span className="badge bg-soft-dark text-dark fw-bold">{inv.invoiceNumber}</span>
                               <span className={`badge py-0.5 px-2 fs-11 fw-semibold ${
@@ -323,8 +328,8 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
 
               {/* Stay Timeline Card */}
               <div className="col-md-6">
-                <div className="card border shadow-none h-100 mb-0">
-                  <div className="card-header bg-light py-2 px-3 border-bottom">
+                <div className="card border-0 shadow-sm h-100 mb-0" style={{ borderRadius: 10 }}>
+                  <div className="card-header bg-white py-2 px-3 border-bottom">
                     <h6 className="mb-0 fw-bold fs-13 text-dark">
                       <i className="ti ti-history me-1 text-info" /> Inpatient Stay Timeline
                     </h6>
@@ -335,7 +340,7 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
                       {/* Timeline Item: Admission */}
                       <div className="timeline-item position-relative mb-4">
                         <div className="position-absolute rounded-circle border border-2 border-white d-flex align-items-center justify-content-center"
-                             style={{ left: "-27px", top: "0", width: "20px", height: "20px", backgroundColor: "#3b82f6" }}>
+                             style={{ left: "-27px", top: "0", width: "20px", height: "20px", backgroundColor: "#6366f1" }}>
                           <i className="ti ti-login text-white fs-10" />
                         </div>
                         <div className="ps-2">
@@ -398,19 +403,19 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
 
           </div>
 
-          {/* Footer */}
-          <div className="modal-footer bg-light py-2 px-4 border-top d-flex align-items-center justify-content-between">
+          {/* Footer — common modal */}
+          <div className="modal-footer border-top px-4 py-3 bg-white d-flex align-items-center justify-content-between">
             <button
               type="button"
-              className="btn btn-outline-secondary btn-sm fw-semibold"
+              className="btn btn-light fw-medium border d-flex align-items-center"
               onClick={() => window.print()}
             >
-              <i className="ti ti-printer me-1" /> Print IPD Summary
+              <i className="ti ti-printer me-2" /> Print IPD Summary
             </button>
 
             <button
               type="button"
-              className="btn btn-primary btn-sm px-4 fw-semibold"
+              className="btn btn-primary fw-medium px-4"
               onClick={onClose}
             >
               Close

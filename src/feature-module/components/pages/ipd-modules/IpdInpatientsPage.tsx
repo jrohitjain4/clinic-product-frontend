@@ -277,7 +277,7 @@ const IpdInpatientsPage: React.FC = () => {
   ], [navigate]);
 
   return (
-    <div className="page-wrapper">
+    <div className="page-wrapper ipd-inpatients-page">
       <div className="content">
         {/* Header */}
         <div className="d-md-flex d-block align-items-center justify-content-between mb-4">
@@ -433,6 +433,30 @@ const IpdInpatientsPage: React.FC = () => {
       />
 
       <Footer />
+      <style>{`
+        .ipd-inpatients-page .card,
+        .page-wrapper.ipd-inpatients-page .card {
+          border: none !important;
+          box-shadow: 0 4px 18px rgba(15, 23, 42, 0.1) !important;
+          border-radius: 12px !important;
+          background: #fff;
+        }
+        .ipd-inpatients-page .card-body {
+          border: none !important;
+        }
+        .ipd-inpatients-page .table-responsive,
+        .ipd-inpatients-page .dataTables_wrapper,
+        .ipd-inpatients-page .datatable {
+          border: none !important;
+          box-shadow: none !important;
+        }
+        .ipd-inpatients-page .icon-field-shell {
+          border: none !important;
+          box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08) !important;
+          border-radius: 10px;
+          background: #fff;
+        }
+      `}</style>
     </div>
   );
 };

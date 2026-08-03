@@ -2414,25 +2414,41 @@ const IpdBillingsPage: React.FC = () => {
         <div
           className="modal fade show d-block"
           tabIndex={-1}
-          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+          style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1060 }}
         >
-          <div className="modal-dialog modal-xl modal-dialog-centered">
-            <div className="modal-content border-0 shadow-lg">
-              <div className="modal-header bg-dark text-white print-d-none">
-                <h5 className="modal-title fw-bold text-white">
-                  <i className="ti ti-receipt-tax me-2" />
-                  Full IPD Master Statement & Invoice ({masterStatementData.admissionCode})
-                </h5>
+          <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div
+              className="modal-content border-0 shadow-lg"
+              style={{ borderRadius: "12px", overflow: "hidden" }}
+            >
+              <div className="modal-header bg-primary text-white py-3 px-4 d-flex align-items-center justify-content-between print-d-none">
+                <div className="d-flex align-items-center gap-2">
+                  <div
+                    className="bg-white rounded-circle p-2 d-flex align-items-center justify-content-center"
+                    style={{ width: 36, height: 36 }}
+                  >
+                    <i className="ti ti-file-invoice text-primary fs-18" />
+                  </div>
+                  <div>
+                    <h5 className="modal-title fw-bold text-white mb-0">
+                      Full IPD Master Statement & Invoice
+                    </h5>
+                    <p className="mb-0 text-white-50 fs-12">
+                      {masterStatementData.admissionCode} · Complete inpatient bill summary
+                    </p>
+                  </div>
+                </div>
                 <button
                   type="button"
                   className="btn-close btn-close-white"
                   onClick={() => setShowMasterModal(false)}
+                  aria-label="Close"
                 />
               </div>
 
-              <div className="modal-body p-4" id="printableMasterInvoice">
+              <div className="modal-body p-4 bg-light-subtle" id="printableMasterInvoice">
                 {/* Hospital Header Banner */}
-                <div className="d-flex justify-content-between align-items-start pb-3 border-bottom mb-4">
+                <div className="d-flex justify-content-between align-items-start pb-3 mb-4 border-bottom">
                   <div>
                     <h3 className="fw-bold text-primary mb-1">DocYori Hospital</h3>
                     <p className="text-muted fs-13 mb-0">Complete IPD Inpatient Statement & Medical Bill</p>
@@ -2448,110 +2464,135 @@ const IpdBillingsPage: React.FC = () => {
                 </div>
 
                 {/* Patient & Admission Info Card */}
-                <div className="row g-3 p-3 bg-light rounded border mb-4">
-                  <div className="col-md-3 col-6">
-                    <span className="text-muted fs-12 fw-semibold d-block">PATIENT NAME</span>
-                    <strong className="text-dark fs-15">{masterStatementData.patientName}</strong>
-                    <small className="text-muted d-block">UHID: {masterStatementData.patientCode}</small>
-                  </div>
+                <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: 10 }}>
+                  <div className="card-body p-3">
+                    <div className="row g-3">
+                      <div className="col-md-3 col-6">
+                        <span className="text-muted fs-12 fw-semibold d-block">PATIENT NAME</span>
+                        <strong className="text-dark fs-15">{masterStatementData.patientName}</strong>
+                        <small className="text-muted d-block">UHID: {masterStatementData.patientCode}</small>
+                      </div>
 
-                  <div className="col-md-3 col-6">
-                    <span className="text-muted fs-12 fw-semibold d-block">PRIMARY DOCTOR</span>
-                    <strong className="text-primary fs-15">{masterStatementData.doctorName}</strong>
-                  </div>
+                      <div className="col-md-3 col-6">
+                        <span className="text-muted fs-12 fw-semibold d-block">PRIMARY DOCTOR</span>
+                        <strong className="text-primary fs-15">{masterStatementData.doctorName}</strong>
+                      </div>
 
-                  <div className="col-md-3 col-6">
-                    <span className="text-muted fs-12 fw-semibold d-block">ASSIGNED WARD</span>
-                    <span className="badge bg-soft-info text-info fw-bold fs-13">
-                      {masterStatementData.wardName}
-                    </span>
-                  </div>
+                      <div className="col-md-3 col-6">
+                        <span className="text-muted fs-12 fw-semibold d-block">ASSIGNED WARD</span>
+                        <span className="badge bg-soft-info text-info fw-bold fs-13">
+                          {masterStatementData.wardName}
+                        </span>
+                      </div>
 
-                  <div className="col-md-3 col-6 text-md-end">
-                    <span className="text-muted fs-12 fw-semibold d-block">TOTAL INVOICES</span>
-                    <strong className="text-dark fs-15">{masterStatementData.invoicesCount} Invoices Raised</strong>
+                      <div className="col-md-3 col-6 text-md-end">
+                        <span className="text-muted fs-12 fw-semibold d-block">TOTAL INVOICES</span>
+                        <strong className="text-dark fs-15">{masterStatementData.invoicesCount} Invoices Raised</strong>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {/* All Consolidated Items Table */}
-                <h6 className="fw-bold text-dark mb-2">Itemized Inpatient Charges Summary</h6>
-                <div className="table-responsive mb-4 border rounded">
-                  <table className="table table-bordered align-middle mb-0">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Category</th>
-                        <th>Service / Item Description</th>
-                        <th className="text-center">Invoice #</th>
-                        <th className="text-center">Unit Price (₹)</th>
-                        <th className="text-center">Qty</th>
-                        <th className="text-end">Total Amount (₹)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {masterStatementData.allItems.length === 0 ? (
-                        <tr>
-                          <td colSpan={6} className="text-center py-4 text-muted">
-                            No charges raised for this IPD admission yet.
-                          </td>
-                        </tr>
-                      ) : (
-                        masterStatementData.allItems.map((it, idx) => (
-                          <tr key={idx}>
-                            <td>
-                              <span className="badge bg-soft-info text-info">{it.itemType}</span>
-                            </td>
-                            <td className="fw-semibold text-dark">{it.itemName}</td>
-                            <td className="text-center text-muted fs-12">{it.invoiceNumber}</td>
-                            <td className="text-center">₹{it.unitPrice.toLocaleString("en-IN")}</td>
-                            <td className="text-center">{it.quantity}</td>
-                            <td className="text-end fw-bold text-dark">
-                              ₹{it.totalPrice.toLocaleString("en-IN")}
-                            </td>
+                <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: 10 }}>
+                  <div className="card-header bg-white py-2 px-3 border-bottom">
+                    <h6 className="mb-0 fw-bold fs-13 text-dark">
+                      <i className="ti ti-list-details me-1 text-primary" /> Itemized Inpatient Charges Summary
+                    </h6>
+                  </div>
+                  <div className="card-body p-0">
+                    <div className="table-responsive">
+                      <table className="table align-middle mb-0 fs-13">
+                        <thead style={{ background: "#EEF2FF" }}>
+                          <tr>
+                            <th className="ps-3 py-2 border-0 fw-semibold">Category</th>
+                            <th className="py-2 border-0 fw-semibold">Service / Item Description</th>
+                            <th className="text-center py-2 border-0 fw-semibold">Invoice #</th>
+                            <th className="text-center py-2 border-0 fw-semibold">Unit Price (₹)</th>
+                            <th className="text-center py-2 border-0 fw-semibold">Qty</th>
+                            <th className="text-end py-2 border-0 fw-semibold pe-3">Total Amount (₹)</th>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                        </thead>
+                        <tbody>
+                          {masterStatementData.allItems.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} className="text-center py-4 text-muted">
+                                No charges raised for this IPD admission yet.
+                              </td>
+                            </tr>
+                          ) : (
+                            masterStatementData.allItems.map((it, idx) => (
+                              <tr key={idx}>
+                                <td className="ps-3">
+                                  <span className="badge bg-soft-primary text-primary">{it.itemType}</span>
+                                </td>
+                                <td className="fw-semibold text-dark">{it.itemName}</td>
+                                <td className="text-center text-muted fs-12">{it.invoiceNumber}</td>
+                                <td className="text-center">₹{it.unitPrice.toLocaleString("en-IN")}</td>
+                                <td className="text-center">{it.quantity}</td>
+                                <td className="text-end fw-bold text-dark pe-3">
+                                  ₹{it.totalPrice.toLocaleString("en-IN")}
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Bottom Overall Financial Summary Box */}
-                <div className="p-4 bg-soft-primary border border-primary rounded-3">
-                  <div className="row g-3 align-items-center text-center text-md-start">
-                    <div className="col-md-4 border-end-md">
-                      <span className="text-muted fs-13 fw-semibold d-block">TOTAL BILLED AMOUNT</span>
-                      <h3 className="fw-bold text-dark mb-0">
-                        ₹{masterStatementData.totalBilled.toLocaleString("en-IN")}
-                      </h3>
-                    </div>
+                <div className="card border-0 shadow-sm mb-0" style={{ borderRadius: 10 }}>
+                  <div className="card-header bg-white py-2 px-3 border-bottom">
+                    <h6 className="mb-0 fw-bold fs-13 text-dark">
+                      <i className="ti ti-receipt me-1 text-warning" /> Financial Summary
+                    </h6>
+                  </div>
+                  <div className="card-body p-3 bg-light">
+                    <div className="row g-3 text-center text-md-start">
+                      <div className="col-md-4">
+                        <div className="p-3 bg-white rounded shadow-sm h-100">
+                          <span className="text-muted fs-12 fw-semibold d-block">TOTAL BILLED AMOUNT</span>
+                          <h4 className="fw-bold text-dark mb-0 mt-1">
+                            ₹{masterStatementData.totalBilled.toLocaleString("en-IN")}
+                          </h4>
+                        </div>
+                      </div>
 
-                    <div className="col-md-4 border-end-md">
-                      <span className="text-muted fs-13 fw-semibold d-block">TOTAL AMOUNT PAID</span>
-                      <h3 className="fw-bold text-success mb-0">
-                        ₹{masterStatementData.totalPaid.toLocaleString("en-IN")}
-                      </h3>
-                    </div>
+                      <div className="col-md-4">
+                        <div className="p-3 bg-white rounded shadow-sm h-100">
+                          <span className="text-muted fs-12 fw-semibold d-block">TOTAL AMOUNT PAID</span>
+                          <h4 className="fw-bold text-success mb-0 mt-1">
+                            ₹{masterStatementData.totalPaid.toLocaleString("en-IN")}
+                          </h4>
+                        </div>
+                      </div>
 
-                    <div className="col-md-4">
-                      <span className="text-muted fs-13 fw-semibold d-block">OUTSTANDING DUE BALANCE</span>
-                      <h3 className="fw-bold text-danger mb-0">
-                        ₹{masterStatementData.dueAmount.toLocaleString("en-IN")}
-                      </h3>
+                      <div className="col-md-4">
+                        <div className="p-3 bg-white rounded shadow-sm h-100">
+                          <span className="text-muted fs-12 fw-semibold d-block">OUTSTANDING DUE BALANCE</span>
+                          <h4 className="fw-bold text-danger mb-0 mt-1">
+                            ₹{masterStatementData.dueAmount.toLocaleString("en-IN")}
+                          </h4>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="modal-footer bg-light print-d-none">
+              <div className="modal-footer border-top px-4 py-3 bg-white d-flex align-items-center justify-content-between print-d-none">
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-light fw-medium border"
                   onClick={() => setShowMasterModal(false)}
                 >
                   Close
                 </button>
                 <button
                   type="button"
-                  className="btn btn-outline-primary"
+                  className="btn btn-primary fw-medium px-4"
                   onClick={() => window.print()}
                 >
                   <i className="ti ti-printer me-1" /> Print Statement

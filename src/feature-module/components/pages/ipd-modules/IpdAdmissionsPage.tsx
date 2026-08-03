@@ -6,6 +6,7 @@ import Datatable from "../../../../core/common/dataTable";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 import IpdViewDetailsModal from "./IpdViewDetailsModal";
+import IpdRaiseChargeModal from "./IpdRaiseChargeModal";
 import { IconFormControl } from "../../../../core/common/form-fields";
 
 interface Patient {
@@ -147,6 +148,8 @@ const IpdAdmissionsPage: React.FC = () => {
   const [viewAdmission, setViewAdmission] = useState<Admission | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedViewAdmission, setSelectedViewAdmission] = useState<any>(null);
+  const [showRaiseModal, setShowRaiseModal] = useState(false);
+  const [selectedChargeAdmissionId, setSelectedChargeAdmissionId] = useState("");
 
   // System medicines for autocomplete
   const [systemMedicines, setSystemMedicines] = useState<any[]>([]);
@@ -853,7 +856,10 @@ const IpdAdmissionsPage: React.FC = () => {
                   type="button"
                   className="bg-transparent border-0 text-info p-1"
                   title="View & Add Invoice Charges"
-                  onClick={() => navigate("/ipd/billings", { state: { admissionId: record.key, autoOpenInvoice: true } })}
+                  onClick={() => {
+                    setSelectedChargeAdmissionId(record.key);
+                    setShowRaiseModal(true);
+                  }}
                 >
                   <i className="ti ti-file-invoice fs-18" />
                 </button>
@@ -861,7 +867,10 @@ const IpdAdmissionsPage: React.FC = () => {
                   type="button"
                   className="bg-transparent border-0 text-primary p-1"
                   title="Raise IPD Charge & Add Invoice"
-                  onClick={() => navigate("/ipd/billings", { state: { admissionId: record.key, autoRaise: true } })}
+                  onClick={() => {
+                    setSelectedChargeAdmissionId(record.key);
+                    setShowRaiseModal(true);
+                  }}
                 >
                   <i className="ti ti-plus fs-18" />
                 </button>
@@ -1340,6 +1349,16 @@ const IpdAdmissionsPage: React.FC = () => {
         show={showViewModal}
         onClose={() => setShowViewModal(false)}
         admission={selectedViewAdmission}
+      />
+
+      {/* RAISE CHARGE / CREATE INVOICE MODAL */}
+      <IpdRaiseChargeModal
+        show={showRaiseModal}
+        onClose={() => setShowRaiseModal(false)}
+        onSuccess={() => {
+          fetchData();
+        }}
+        admissionId={selectedChargeAdmissionId}
       />
 
       <Footer />

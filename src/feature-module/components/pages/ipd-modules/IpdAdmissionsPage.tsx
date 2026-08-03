@@ -849,20 +849,22 @@ const IpdAdmissionsPage: React.FC = () => {
                 >
                   <i className="ti ti-user-check fs-18" />
                 </Link>
-                <Link
-                  to={all_routes.ipdBillings}
-                  className="text-info p-1"
-                  title="View Invoices & Receipts"
+                <button
+                  type="button"
+                  className="bg-transparent border-0 text-info p-1"
+                  title="View & Add Invoice Charges"
+                  onClick={() => navigate("/ipd/billings", { state: { admissionId: record.key, autoOpenInvoice: true } })}
                 >
                   <i className="ti ti-file-invoice fs-18" />
-                </Link>
-                <Link
-                  to={all_routes.ipdBillings}
-                  className="text-primary p-1"
-                  title="Raise IPD Charge"
+                </button>
+                <button
+                  type="button"
+                  className="bg-transparent border-0 text-primary p-1"
+                  title="Raise IPD Charge & Add Invoice"
+                  onClick={() => navigate("/ipd/billings", { state: { admissionId: record.key, autoRaise: true } })}
                 >
                   <i className="ti ti-plus fs-18" />
-                </Link>
+                </button>
               </>
             )}
           </div>

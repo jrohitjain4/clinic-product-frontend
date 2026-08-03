@@ -249,16 +249,16 @@ const IpdInpatientsPage: React.FC = () => {
           <button
             type="button"
             className="bg-transparent border-0 text-info p-1"
-            title="View Invoices & Receipts"
-            onClick={() => navigate("/ipd/billings")}
+            title="View & Add Invoice Charges"
+            onClick={() => navigate("/ipd/billings", { state: { admissionId: record.key, autoOpenInvoice: true } })}
           >
             <i className="ti ti-file-invoice fs-18" />
           </button>
           <button
             type="button"
             className="bg-transparent border-0 text-primary p-1"
-            title="Raise IPD Charge"
-            onClick={() => navigate("/ipd/billings")}
+            title="Raise IPD Charge & Add Invoice"
+            onClick={() => navigate("/ipd/billings", { state: { admissionId: record.key, autoRaise: true } })}
           >
             <i className="ti ti-plus fs-18" />
           </button>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import Footer from "../../../../core/common/footer/footer";
 import Datatable from "../../../../core/common/dataTable";
 import { apiUrl } from "../../../../core/config/api";
@@ -225,9 +226,20 @@ const IpdBillingsPage: React.FC = () => {
     }
   }, []);
 
+  const location = useLocation();
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (location.state && location.state.admissionId && admissions.length > 0) {
+      const targetId = location.state.admissionId;
+      if (location.state.autoRaise || location.state.autoOpenInvoice) {
+        handleOpenRaiseModal(targetId);
+      }
+    }
+  }, [location.state, admissions]);
 
   // Financial Metrics
   const metrics = useMemo(() => {

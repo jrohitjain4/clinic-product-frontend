@@ -6,6 +6,7 @@ import Datatable from "../../../../core/common/dataTable";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 import IpdViewDetailsModal from "./IpdViewDetailsModal";
+import IpdRaiseChargeModal from "./IpdRaiseChargeModal";
 import { IconFormControl } from "../../../../core/common/form-fields";
 
 interface Patient {
@@ -147,6 +148,8 @@ const IpdAdmissionsPage: React.FC = () => {
   const [viewAdmission, setViewAdmission] = useState<Admission | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedViewAdmission, setSelectedViewAdmission] = useState<any>(null);
+  const [showRaiseModal, setShowRaiseModal] = useState(false);
+  const [selectedChargeAdmissionId, setSelectedChargeAdmissionId] = useState("");
 
   // System medicines for autocomplete
   const [systemMedicines, setSystemMedicines] = useState<any[]>([]);
@@ -401,6 +404,53 @@ const IpdAdmissionsPage: React.FC = () => {
       referralAppointmentCode: refCode,
     };
 
+    if (activeReferralId) {
+      // UPDATE existing recommendation directly to Admitted (Inpatient) status
+      const updateUrl = apiUrl(`/api/ipd/admissions/${activeReferralId}`);
+      const updatePayload = {
+        status: "Admitted",
+        wardId: selectedWardId || undefined,
+        doctorId: selectedDoctorId || undefined,
+        treatmentId: selectedTreatmentId || undefined,
+        diagnosis: diagnosis.trim() || undefined,
+        admissionFee: parseFloat(admissionFee) || 0,
+        treatmentFee: parseFloat(treatmentFee) || 0,
+        wardCharge: parseFloat(wardCharge) || 0,
+        doctorVisitCharge: parseFloat(doctorVisitCharge) || 0,
+        nursingFee: parseFloat(nursingFee) || 0,
+        otherCharges: parseFloat(otherCharges) || 0,
+        advancePaid: parseFloat(advancePaid) || 0,
+        paymentMethod,
+      };
+
+      try {
+        const res = await fetch(updateUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updatePayload),
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || "Failed to update admission status");
+        }
+
+        toast.success("Patient admission started and status updated to Inpatient!");
+        setShowModal(false);
+        setActiveReferralId(null);
+        resetForm();
+        fetchData();
+        return;
+      } catch (err: any) {
+        toast.error(err.message || "Error updating admission");
+        setSubmitting(false);
+        return;
+      }
+    }
+
     try {
       const res = await fetch(apiUrl("/api/ipd/admissions"), {
         method: "POST",
@@ -414,15 +464,6 @@ const IpdAdmissionsPage: React.FC = () => {
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.message || "Failed to admit patient");
-      }
-
-      if (activeReferralId) {
-        // Delete the incomplete recommendation record
-        await fetch(apiUrl(`/api/ipd/admissions/${activeReferralId}`), {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        }).catch(() => {});
-        setActiveReferralId(null);
       }
 
       toast.success("Patient admitted successfully! Advance receipt generated.");
@@ -811,20 +852,28 @@ const IpdAdmissionsPage: React.FC = () => {
                 >
                   <i className="ti ti-user-check fs-18" />
                 </Link>
-                <Link
-                  to={all_routes.ipdBillings}
-                  className="text-info p-1"
-                  title="View Invoices & Receipts"
+                <button
+                  type="button"
+                  className="bg-transparent border-0 text-info p-1"
+                  title="View & Add Invoice Charges"
+                  onClick={() => {
+                    setSelectedChargeAdmissionId(record.key);
+                    setShowRaiseModal(true);
+                  }}
                 >
                   <i className="ti ti-file-invoice fs-18" />
-                </Link>
-                <Link
-                  to={all_routes.ipdBillings}
-                  className="text-primary p-1"
-                  title="Raise IPD Charge"
+                </button>
+                <button
+                  type="button"
+                  className="bg-transparent border-0 text-primary p-1"
+                  title="Raise IPD Charge & Add Invoice"
+                  onClick={() => {
+                    setSelectedChargeAdmissionId(record.key);
+                    setShowRaiseModal(true);
+                  }}
                 >
                   <i className="ti ti-plus fs-18" />
-                </Link>
+                </button>
               </>
             )}
           </div>
@@ -1300,6 +1349,16 @@ const IpdAdmissionsPage: React.FC = () => {
         show={showViewModal}
         onClose={() => setShowViewModal(false)}
         admission={selectedViewAdmission}
+      />
+
+      {/* RAISE CHARGE / CREATE INVOICE MODAL */}
+      <IpdRaiseChargeModal
+        show={showRaiseModal}
+        onClose={() => setShowRaiseModal(false)}
+        onSuccess={() => {
+          fetchData();
+        }}
+        admissionId={selectedChargeAdmissionId}
       />
 
       <Footer />

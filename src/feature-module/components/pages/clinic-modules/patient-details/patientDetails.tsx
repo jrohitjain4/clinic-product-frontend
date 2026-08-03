@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router";
+import { Link, useParams, useLocation } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
 import { useState, useMemo, useEffect } from "react";
@@ -105,6 +105,10 @@ const EmptyRow = ({ cols, text }: { cols: number; text: string }) => (
 
 const PatientDetails = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const fromIpd = location.state?.fromIpd;
+  const backRoute = fromIpd ? all_routes.ipdPatients : all_routes.patients;
+
   const { patient, loading, error } = useClinicPatient(id);
   const { appointments, loading: apptLoading } = useClinicAppointments(
     id ? { patientId: id } : undefined
@@ -991,7 +995,7 @@ const PatientDetails = () => {
         <div className="content">
           <div className="mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
             <h6 className="fw-bold mb-0 d-flex align-items-center">
-              <Link to={all_routes.patients} className="text-dark">
+              <Link to={backRoute} className="text-dark">
                 <i className="ti ti-chevron-left me-1" />
                 Patients
               </Link>
@@ -1204,7 +1208,7 @@ const PatientDetails = () => {
           <div className="card patient-profile-hero mb-3">
             <div className="hero-row">
               <div className="hero-info">
-                <Link to={all_routes.editPatient.replace(":id", patient.id)} className="flex-shrink-0">
+                <Link to={all_routes.editPatient.replace(":id", patient.id)} state={{ fromIpd }} className="flex-shrink-0">
                   <ImageWithBasePath
                     src={profileSrc}
                     alt={displayName}

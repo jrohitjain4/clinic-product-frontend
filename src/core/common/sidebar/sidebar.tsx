@@ -284,7 +284,9 @@ const Sidebar = () => {
                           title.links = link_array;
 
                           const currentFullPath = Location.pathname + Location.search;
+                          const isFromIpd = Location.state?.fromIpd;
                           const isTitleActive =
+                            (isFromIpd && title?.label === "IPD") ||
                             title?.links?.includes(Location.pathname) ||
                             title?.link === Location.pathname ||
                             menuItemMatchesPath(title, Location.pathname, currentFullPath);
@@ -345,11 +347,13 @@ const Sidebar = () => {
                                         !!item?.submenu &&
                                         Array.isArray(item?.submenuItems) &&
                                         item.submenuItems.length > 0;
-                                      const isSubActive = menuItemMatchesPath(
-                                        item,
-                                        Location.pathname,
-                                        currentFullPath
-                                      );
+                                       const isSubActive =
+                                         (isFromIpd && title?.label === "IPD" && item?.label === "Patient") ||
+                                         menuItemMatchesPath(
+                                           item,
+                                           Location.pathname,
+                                           currentFullPath
+                                         );
 
                                       return (
                                         <li

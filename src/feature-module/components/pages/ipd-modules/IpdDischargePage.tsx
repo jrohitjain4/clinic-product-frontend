@@ -244,9 +244,18 @@ const IpdDischargePage: React.FC = () => {
         throw new Error(errData.message || "Failed to process discharge");
       }
 
+      const dischargedAdm = {
+        ...targetAdmission,
+        status: "Discharged",
+        dischargeNotes: dischargeNotes.trim(),
+      };
+
       toast.success(`Patient ${getPatientName(targetAdmission.patient)} discharged & bill settled!`);
       setShowDischargeModal(false);
       fetchData();
+
+      // Immediately open Prescription / Discharge Summary Pad modal pre-filled with discharge summary notes
+      handleOpenPrescriptionModal(dischargedAdm, dischargeNotes.trim());
     } catch (err: any) {
       toast.error(err.message || "Error processing discharge");
     } finally {
@@ -255,11 +264,11 @@ const IpdDischargePage: React.FC = () => {
   };
 
   // ── Prescription helpers ──────────────────────────────────────────
-  const handleOpenPrescriptionModal = async (adm: Admission) => {
+  const handleOpenPrescriptionModal = async (adm: Admission, prefilledNotes?: string) => {
     setPrescriptionAdmission(adm);
     const existing = (adm as any).ipdPrescriptions && (adm as any).ipdPrescriptions.length > 0 ? (adm as any).ipdPrescriptions[0] : null;
     if (existing) {
-      setDischargeSummary(existing.dischargeSummary || "");
+      setDischargeSummary(existing.dischargeSummary || prefilledNotes || adm.dischargeNotes || adm.diagnosis || "");
       const meds: MedicineRow[] = Array.isArray(existing.medicineAdvice)
         ? existing.medicineAdvice.map((m: any) => ({
             name: m.name || "", dosage: m.dosage || "", strength: m.strength || "",
@@ -269,7 +278,7 @@ const IpdDischargePage: React.FC = () => {
       setMedicinesList(meds);
       setAttachedImages(Array.isArray(existing.images) ? existing.images : []);
     } else {
-      setDischargeSummary(adm.diagnosis || "");
+      setDischargeSummary(prefilledNotes || adm.dischargeNotes || adm.diagnosis || "");
       setMedicinesList([]);
       setAttachedImages([]);
     }

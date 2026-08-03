@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import Datatable from "../../../../core/common/dataTable";
 import { useNavigate } from "react-router-dom";
 import IpdViewDetailsModal from "./IpdViewDetailsModal";
+import IpdRaiseChargeModal from "./IpdRaiseChargeModal";
 import { IconFormControl } from "../../../../core/common/form-fields";
 
 interface Patient {
@@ -56,6 +57,8 @@ const IpdInpatientsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedViewAdmission, setSelectedViewAdmission] = useState<any>(null);
+  const [showRaiseModal, setShowRaiseModal] = useState(false);
+  const [selectedChargeAdmissionId, setSelectedChargeAdmissionId] = useState("");
   const navigate = useNavigate();
 
   // Fetch Inpatients
@@ -249,16 +252,22 @@ const IpdInpatientsPage: React.FC = () => {
           <button
             type="button"
             className="bg-transparent border-0 text-info p-1"
-            title="View Invoices & Receipts"
-            onClick={() => navigate("/ipd/billings")}
+            title="View & Add Invoice Charges"
+            onClick={() => {
+              setSelectedChargeAdmissionId(record.key);
+              setShowRaiseModal(true);
+            }}
           >
             <i className="ti ti-file-invoice fs-18" />
           </button>
           <button
             type="button"
             className="bg-transparent border-0 text-primary p-1"
-            title="Raise IPD Charge"
-            onClick={() => navigate("/ipd/billings")}
+            title="Raise IPD Charge & Add Invoice"
+            onClick={() => {
+              setSelectedChargeAdmissionId(record.key);
+              setShowRaiseModal(true);
+            }}
           >
             <i className="ti ti-plus fs-18" />
           </button>
@@ -411,6 +420,16 @@ const IpdInpatientsPage: React.FC = () => {
         show={showViewModal}
         onClose={() => setShowViewModal(false)}
         admission={selectedViewAdmission}
+      />
+
+      {/* RAISE CHARGE / CREATE INVOICE MODAL */}
+      <IpdRaiseChargeModal
+        show={showRaiseModal}
+        onClose={() => setShowRaiseModal(false)}
+        onSuccess={() => {
+          fetchData();
+        }}
+        admissionId={selectedChargeAdmissionId}
       />
 
       <Footer />

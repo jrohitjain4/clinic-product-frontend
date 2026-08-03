@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
 import Datatable from "../../../../../core/common/dataTable";
 import { useClinicPatients } from "../../../../../core/hooks/useClinicPatients";
@@ -13,6 +13,9 @@ const getInitial = (value?: string) =>
   (value || "").trim().charAt(0).toUpperCase() || "?";
 
 const Patients = () => {
+  const location = useLocation();
+  const isIpd = location.pathname.startsWith("/ipd") || location.state?.fromIpd;
+
   const { patients, loading, error, refetch, reload } = useClinicPatients();
   const [searchText, setSearchText] = useState("");
   const [selected, setSelected] = useState<ClinicPatient | null>(null);
@@ -36,6 +39,7 @@ const Patients = () => {
         <div className="d-flex align-items-center">
           <Link
             to={patientDetailsPath(record._raw.id)}
+            state={{ fromIpd: isIpd }}
             className="avatar me-2"
           >
             <span
@@ -54,6 +58,7 @@ const Patients = () => {
             <h6 className="mb-1 fs-14 fw-semibold">
               <Link
                 to={patientDetailsPath(record._raw.id)}
+                state={{ fromIpd: isIpd }}
                 className="text-dark"
               >
                 {text}
@@ -124,6 +129,7 @@ const Patients = () => {
         <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
           <Link
             to={patientDetailsPath(record._raw.id)}
+            state={{ fromIpd: isIpd }}
             className="text-primary p-1"
             title="View Details"
           >
@@ -132,6 +138,7 @@ const Patients = () => {
           <HasPermission module="Patients" action="EDIT">
             <Link
               to={editPatientPath(record._raw.id)}
+              state={{ fromIpd: isIpd }}
               className="text-info p-1"
               title="Update Patient"
             >
@@ -176,7 +183,7 @@ const Patients = () => {
             <div className="text-end d-flex align-items-center flex-wrap gap-2">
               <div className="d-flex align-items-center gap-2">
                 <Link
-                  to={all_routes.patients}
+                  to={isIpd ? all_routes.ipdPatients : all_routes.patients}
                   className="btn btn-icon btn-sm bg-primary-subtle text-primary border border-primary d-flex align-items-center justify-content-center"
                   style={{ width: "38px", height: "38px", borderRadius: "8px" }}
                 >
@@ -184,6 +191,7 @@ const Patients = () => {
                 </Link>
                 <Link
                   to={all_routes.patientsGrid}
+                  state={{ fromIpd: isIpd }}
                   className="btn btn-icon btn-sm bg-white text-dark border d-flex align-items-center justify-content-center"
                   style={{ width: "38px", height: "38px", borderRadius: "8px" }}
                 >
@@ -193,6 +201,7 @@ const Patients = () => {
               <HasPermission module="Patients" action="CREATE">
                 <Link
                   to={all_routes.createPatient}
+                  state={{ fromIpd: isIpd }}
                   className="btn btn-primary fs-13 btn-md"
                 >
                   <i className="ti ti-plus me-1" />
@@ -226,7 +235,7 @@ const Patients = () => {
               <h6 className="fw-bold">No patients yet</h6>
               <p className="text-muted mb-3">Add your first patient.</p>
               <HasPermission module="Patients" action="CREATE">
-                <Link to={all_routes.createPatient} className="btn btn-primary">
+                <Link to={all_routes.createPatient} state={{ fromIpd: isIpd }} className="btn btn-primary">
                   <i className="ti ti-plus me-1" />
                   New Patient
                 </Link>

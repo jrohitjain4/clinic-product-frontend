@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import Footer from "../../../../core/common/footer/footer";
 import Datatable from "../../../../core/common/dataTable";
 import { apiUrl } from "../../../../core/config/api";
@@ -225,9 +226,41 @@ const IpdBillingsPage: React.FC = () => {
     }
   }, []);
 
+  const [triggeringWardCharges, setTriggeringWardCharges] = useState(false);
+
+  const handleTriggerDailyWardCharges = async () => {
+    setTriggeringWardCharges(true);
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(apiUrl("/api/ipd/invoices/trigger-daily-ward-charges"), {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to run daily ward charges");
+      const data = await res.json();
+      toast.success(data.message || "Daily ward charges processed!");
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "Error processing daily ward charges");
+    } finally {
+      setTriggeringWardCharges(false);
+    }
+  };
+
+  const location = useLocation();
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (location.state && location.state.admissionId && admissions.length > 0) {
+      const targetId = location.state.admissionId;
+      if (location.state.autoRaise || location.state.autoOpenInvoice) {
+        handleOpenRaiseModal(targetId);
+      }
+    }
+  }, [location.state, admissions]);
 
   // Financial Metrics
   const metrics = useMemo(() => {
@@ -856,16 +889,16 @@ const IpdBillingsPage: React.FC = () => {
       groupedAdmissions.map((group) => ({
         key: group.admissionId,
         admissionId: group.admissionId,
-                                        admissionCode: group.admissionCode,
+        admissionCode: group.admissionCode,
         doctorName: group.doctorName,
         patientName: getPatientName(group.patient),
         patientCode: group.patient?.patientCode || "—",
         wardName: group.wardName,
         invoiceCount: group.invoices.length,
-                                        totalBilled: group.totalBilled,
-                                        totalPaid: group.totalPaid,
+        totalBilled: group.totalBilled,
+        totalPaid: group.totalPaid,
         totalDue: group.totalDue,
-                                        paymentStatus: group.paymentStatus,
+        paymentStatus: group.paymentStatus,
         admissionStatus: group.admissionStatus,
         patient: group.patient,
         invoices: group.invoices,
@@ -880,177 +913,177 @@ const IpdBillingsPage: React.FC = () => {
     return (
       <div className="ipd-billing-expanded p-2">
         <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-                                      <span className="fw-bold text-dark fs-13">
-                                        <i className="ti ti-file-invoice me-1 text-primary" />
-                                        Individual Invoices & Receipts for Admission: {group.admissionCode}
-                                      </span>
-                                      <button
+          <span className="fw-bold text-dark fs-13">
+            <i className="ti ti-file-invoice me-1 text-primary" />
+            Individual Invoices & Receipts for Admission: {group.admissionCode}
+          </span>
+          <button
             type="button"
-                                        className="btn btn-sm btn-primary py-0 px-2 fs-12"
-                                        onClick={() => handleOpenRaiseModal(group.admissionId)}
-                                      >
-                                        + Raise New Charge
-                                      </button>
-                                    </div>
+            className="btn btn-sm btn-primary py-0 px-2 fs-12"
+            onClick={() => handleOpenRaiseModal(group.admissionId)}
+          >
+            + Raise New Charge
+          </button>
+        </div>
 
-                                      {group.invoices.length === 0 ? (
-                                        <div className="text-center py-3 text-muted fs-13">
-                                          No individual invoices generated yet for this admission.
-                                        </div>
-                                      ) : (
+        {group.invoices.length === 0 ? (
+          <div className="text-center py-3 text-muted fs-13">
+            No individual invoices generated yet for this admission.
+          </div>
+        ) : (
           <div className="table-responsive border rounded mb-3">
-                                        <table className="table table-bordered table-sm align-middle mb-0 fs-13">
+            <table className="table table-bordered table-sm align-middle mb-0 fs-13">
               <thead style={{ background: "#E6E6FF" }}>
-                                            <tr>
-                                              <th>Invoice #</th>
-                                              <th>Date</th>
-                                              <th>Itemized Charges</th>
-                                              <th className="text-center">Total (₹)</th>
-                                              <th className="text-center">Paid (₹)</th>
-                                              <th className="text-center">Due (₹)</th>
-                                              <th className="text-center">Status</th>
-                                              <th className="text-end">Actions</th>
-                                            </tr>
-                                          </thead>
-                                          <tbody>
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Date</th>
+                  <th>Itemized Charges</th>
+                  <th className="text-center">Total (₹)</th>
+                  <th className="text-center">Paid (₹)</th>
+                  <th className="text-center">Due (₹)</th>
+                  <th className="text-center">Status</th>
+                  <th className="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
                 {group.invoices.map((inv: IPDInvoice) => (
-                                              <tr key={inv.id}>
-                                                <td className="fw-bold text-dark">{inv.invoiceNumber}</td>
-                                                <td className="text-muted">
-                                                  {new Date(inv.invoiceDate).toLocaleDateString()}
-                                                </td>
-                                                <td>
-                                                  {inv.items && inv.items.length > 0 ? (
-                                                    inv.items.map((it) => (
-                                                      <div key={it.id} className="text-dark">
+                  <tr key={inv.id}>
+                    <td className="fw-bold text-dark">{inv.invoiceNumber}</td>
+                    <td className="text-muted">
+                      {new Date(inv.invoiceDate).toLocaleDateString()}
+                    </td>
+                    <td>
+                      {inv.items && inv.items.length > 0 ? (
+                        inv.items.map((it) => (
+                          <div key={it.id} className="text-dark">
                             • <span className="text-muted">[{it.itemType}]</span> {it.itemName}{" "}
                             (₹{it.unitPrice} x {it.quantity})
-                                                      </div>
-                                                    ))
-                                                  ) : (
-                                                    <span className="text-muted">IPD General Charges</span>
-                                                  )}
-                                                </td>
-                                                <td className="text-center fw-bold">₹{inv.totalAmount}</td>
-                                                <td className="text-center text-success fw-bold">₹{inv.paidAmount}</td>
-                                                <td className="text-center text-danger fw-bold">₹{inv.dueAmount}</td>
-                                                <td className="text-center">
-                                                  <span
+                          </div>
+                        ))
+                      ) : (
+                        <span className="text-muted">IPD General Charges</span>
+                      )}
+                    </td>
+                    <td className="text-center fw-bold">₹{inv.totalAmount}</td>
+                    <td className="text-center text-success fw-bold">₹{inv.paidAmount}</td>
+                    <td className="text-center text-danger fw-bold">₹{inv.dueAmount}</td>
+                    <td className="text-center">
+                      <span
                         className={`badge rounded-pill px-2 py-1 ${
-                                                      inv.paymentStatus === "Paid"
-                                                        ? "bg-soft-success text-success"
-                                                        : inv.paymentStatus === "Partial"
-                                                        ? "bg-soft-warning text-warning"
-                                                        : "bg-soft-danger text-danger"
-                                                    }`}
-                                                  >
-                                                    {inv.paymentStatus}
-                                                  </span>
-                                                </td>
-                                                <td className="text-end">
-                                                  <div className="btn-group btn-group-sm">
-                                                    <button
+                          inv.paymentStatus === "Paid"
+                            ? "bg-soft-success text-success"
+                            : inv.paymentStatus === "Partial"
+                              ? "bg-soft-warning text-warning"
+                              : "bg-soft-danger text-danger"
+                        }`}
+                      >
+                        {inv.paymentStatus}
+                      </span>
+                    </td>
+                    <td className="text-end">
+                      <div className="btn-group btn-group-sm">
+                        <button
                           type="button"
-                                                      className="btn btn-outline-secondary"
-                                                      onClick={() => handleViewInvoice(inv)}
-                                                      title="View Invoice Items"
-                                                    >
-                                                      <i className="ti ti-eye" />
-                                                    </button>
-                                                    {inv.dueAmount > 0 && (
-                                                      <button
+                          className="btn btn-outline-secondary"
+                          onClick={() => handleViewInvoice(inv)}
+                          title="View Invoice Items"
+                        >
+                          <i className="ti ti-eye" />
+                        </button>
+                        {inv.dueAmount > 0 && (
+                          <button
                             type="button"
-                                                        className="btn btn-outline-success"
-                                                        onClick={() => handleOpenPayModal(inv)}
-                                                        title="Collect Payment"
-                                                      >
-                                                        <i className="ti ti-wallet" /> Pay
-                                                      </button>
-                                                    )}
-                                                  </div>
-                                                </td>
-                                              </tr>
-                                            ))}
-                                          </tbody>
-                                        </table>
-                                    </div>
+                            className="btn btn-outline-success"
+                            onClick={() => handleOpenPayModal(inv)}
+                            title="Collect Payment"
+                          >
+                            <i className="ti ti-wallet" /> Pay
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         {group.admissionStatus !== "Discharged" &&
           group.computed &&
           group.computed.daysStayed > 0 && (
-                                        <div
-                                          className="rounded-3 p-3 mb-3 border"
+            <div
+              className="rounded-3 p-3 mb-3 border"
               style={{
                 background: "linear-gradient(135deg,#fff3cd 0%,#ffeaa7 100%)",
                 borderColor: "#f0c040",
               }}
-                                        >
-                                          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                            <div className="d-flex align-items-center gap-2">
-                                              <i className="ti ti-building-hospital text-warning fs-20" />
-                                              <div>
-                                                <strong className="text-dark fs-13 d-block">
+            >
+              <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div className="d-flex align-items-center gap-2">
+                  <i className="ti ti-building-hospital text-warning fs-20" />
+                  <div>
+                    <strong className="text-dark fs-13 d-block">
                       Running Ward Stay Charges (Auto-calculated)
-                                                </strong>
-                                                <small className="text-muted">
+                    </strong>
+                    <small className="text-muted">
                       {group.wardName} — ₹
                       {group.computed.runningWardChargePerDay.toLocaleString("en-IN")}/day
-                                                </small>
-                                              </div>
-                                            </div>
-                                            <div className="d-flex align-items-center gap-4">
-                                              <div className="text-center">
-                                                <span className="text-muted fs-11 fw-bold d-block">DAYS STAYED</span>
-                                                <strong className="text-dark fs-16">{group.computed.daysStayed} Days</strong>
-                                              </div>
-                                              <div className="text-center">
-                                                <span className="text-muted fs-11 fw-bold d-block">WARD CHARGES</span>
+                    </small>
+                  </div>
+                </div>
+                <div className="d-flex align-items-center gap-4">
+                  <div className="text-center">
+                    <span className="text-muted fs-11 fw-bold d-block">DAYS STAYED</span>
+                    <strong className="text-dark fs-16">{group.computed.daysStayed} Days</strong>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-muted fs-11 fw-bold d-block">WARD CHARGES</span>
                     <strong className="text-warning fs-16">
                       ₹{group.computed.runningWardChargeTotal.toLocaleString("en-IN")}
                     </strong>
-                                              </div>
-                                              <div className="text-center">
-                                                <span className="text-muted fs-11 fw-bold d-block">TOTAL DUE (incl. Ward)</span>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-muted fs-11 fw-bold d-block">TOTAL DUE (incl. Ward)</span>
                     <strong className="text-danger fs-16">
                       ₹{group.computed.runningDueAmount.toLocaleString("en-IN")}
                     </strong>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
         <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-2">
-                                        <div className="d-flex align-items-center gap-4">
-                                          <div>
-                                            <span className="text-muted fs-12 fw-semibold d-block">TOTAL INVOICED</span>
+          <div className="d-flex align-items-center gap-4">
+            <div>
+              <span className="text-muted fs-12 fw-semibold d-block">TOTAL INVOICED</span>
               <strong className="text-dark fs-15">
                 ₹{group.totalBilled.toLocaleString("en-IN")}
               </strong>
-                                          </div>
-                                          <div>
-                                            <span className="text-muted fs-12 fw-semibold d-block">TOTAL PAID AMOUNT</span>
+            </div>
+            <div>
+              <span className="text-muted fs-12 fw-semibold d-block">TOTAL PAID AMOUNT</span>
               <strong className="text-success fs-15">
                 ₹{group.totalPaid.toLocaleString("en-IN")}
               </strong>
-                                          </div>
-                                          <div>
-                                            <span className="text-muted fs-12 fw-semibold d-block">REMAINING DUE BALANCE</span>
+            </div>
+            <div>
+              <span className="text-muted fs-12 fw-semibold d-block">REMAINING DUE BALANCE</span>
               <strong className="text-danger fs-15">
                 ₹{group.totalDue.toLocaleString("en-IN")}
               </strong>
-                                          </div>
-                                        </div>
-                                          <button
-                                            type="button"
-                                            className="btn btn-sm btn-primary fw-bold px-3"
-                                            onClick={() => handleViewMasterStatement(group.admissionId)}
-                                          >
-                                            <i className="ti ti-receipt-tax me-1" /> View Full Master IPD Statement
-                                          </button>
-                                        </div>
-                                      </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-sm btn-primary fw-bold px-3"
+            onClick={() => handleViewMasterStatement(group.admissionId)}
+          >
+            <i className="ti ti-receipt-tax me-1" /> View Full Master IPD Statement
+          </button>
+        </div>
+      </div>
     );
   }, []);
 
@@ -1079,7 +1112,7 @@ const IpdBillingsPage: React.FC = () => {
             <span className="text-muted fs-12 fw-normal d-block mt-1">
               UHID: {record.patientCode}
             </span>
-                                    </div>
+          </div>
         ),
         sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
           a.patientName.localeCompare(b.patientName),
@@ -1230,7 +1263,7 @@ const IpdBillingsPage: React.FC = () => {
                   <i className={`ti ti-${isExpanded ? "chevron-up" : "list-details"} fs-18`} />
                 </button>
               )}
-              </div>
+            </div>
           );
         },
       },
@@ -1323,6 +1356,25 @@ const IpdBillingsPage: React.FC = () => {
           )}
 
           <button
+            className="btn btn-warning text-dark fw-bold d-inline-flex align-items-center me-1"
+            style={{ height: "46px", flexShrink: 0, borderRadius: "12px" }}
+            onClick={handleTriggerDailyWardCharges}
+            disabled={triggeringWardCharges}
+            title="Automatically generate daily 11 AM ward stay & nursing charges for active inpatients"
+          >
+            {triggeringWardCharges ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" />
+                Running...
+              </>
+            ) : (
+              <>
+                <i className="ti ti-clock-play me-1 fs-18" /> Run 11 AM Ward Charges
+              </>
+            )}
+          </button>
+
+          <button
             className="btn btn-outline-secondary d-inline-flex align-items-center"
             style={{ height: "46px", flexShrink: 0, borderRadius: "12px" }}
             onClick={() => {
@@ -1340,7 +1392,7 @@ const IpdBillingsPage: React.FC = () => {
           >
             <i className="ti ti-plus me-1" /> Raise Charge
           </button>
-          </div>
+        </div>
         {/* Overview Metric Cards */}
         <div className="row g-3 mb-4">
           <div className="col-xl-3 col-sm-6">
@@ -1350,7 +1402,7 @@ const IpdBillingsPage: React.FC = () => {
                   <div>
                     <span className="text-muted fs-12 fw-semibold d-block">TOTAL INVOICES</span>
                     <h3 className="fw-bold mb-0 text-dark">{metrics.totalInvoices}</h3>
-        </div>
+                  </div>
                   <div className="avatar avatar-md bg-soft-primary text-primary rounded-circle">
                     <i className="ti ti-file-invoice fs-20" />
                   </div>
@@ -1470,28 +1522,44 @@ const IpdBillingsPage: React.FC = () => {
 
               <form onSubmit={handleSubmitRaiseInvoice}>
                 <div className="modal-body p-4">
-                  {/* Select Inpatient */}
-                  <div className="mb-4">
-                    <label className="form-label fw-semibold">
-                      Select Inpatient Admission <span className="text-danger">*</span>
-                    </label>
-                    <select
-                      className="form-select fw-bold text-primary fs-15"
-                      value={selectedAdmissionId}
-                      onChange={(e) => {
-                        const admId = e.target.value;
-                        setSelectedAdmissionId(admId);
-                        handlePatientChange(admId);
-                      }}
-                      required
-                    >
-                      <option value="">Choose Admitted Patient</option>
-                      {admissions.map((adm) => (
-                        <option key={adm.id} value={adm.id}>
-                          {adm.admissionCode} - {getPatientName(adm.patient)} ({adm.ward?.wardName || "Ward"})
-                        </option>
-                      ))}
-                    </select>
+                  {/* Select Inpatient & Invoice Date */}
+                  <div className="row g-3 mb-4">
+                    <div className="col-md-8">
+                      <label className="form-label fw-semibold">
+                        Select Inpatient Admission <span className="text-danger">*</span>
+                      </label>
+                      <select
+                        className="form-select fw-bold text-primary fs-15"
+                        value={selectedAdmissionId}
+                        onChange={(e) => {
+                          const admId = e.target.value;
+                          setSelectedAdmissionId(admId);
+                          handlePatientChange(admId);
+                        }}
+                        required
+                      >
+                        <option value="">Choose Admitted Patient</option>
+                        {admissions.map((adm) => (
+                          <option key={adm.id} value={adm.id}>
+                            {adm.admissionCode} - {getPatientName(adm.patient)} ({adm.ward?.wardName || "Ward"})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="col-md-4">
+                      <label className="form-label fw-bold text-dark mb-1">
+                        Invoice Date <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        className="form-control fw-bold text-dark"
+                        value={invoiceDate}
+                        onChange={(e) => setInvoiceDate(e.target.value)}
+                        min={getMinInvoiceDate()}
+                        required
+                      />
+                    </div>
                   </div>
 
                   {/* Add Charge Item Form Box */}
@@ -1534,17 +1602,17 @@ const IpdBillingsPage: React.FC = () => {
                             {doctorsList.map((d) => (
                               <option key={d.id} value={d.id}>
                                 Dr. {d.fullName}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       )}
 
                       {/* Medicine Select Dropdown */}
                       {currentType === "Medicine" && (
-                      <div className="col-md-4">
+                        <div className="col-md-4">
                           <label className="form-label fw-semibold fs-13">Select Medicine *</label>
-                                <select
+                          <select
                             className="form-select text-dark fw-bold"
                             value={selectedItemId}
                             onChange={(e) => handleMedicineChange(e.target.value)}
@@ -1553,10 +1621,10 @@ const IpdBillingsPage: React.FC = () => {
                             {medicinesList.map((m) => (
                               <option key={m.id} value={m.id}>
                                 {m.medicineName} {m.brandName ? `[${m.brandName}]` : ""}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       )}
 
                       {/* Diagnostic Select Dropdown */}
@@ -1601,13 +1669,13 @@ const IpdBillingsPage: React.FC = () => {
                       {currentType === "Nurse Visit" && (
                         <div className="col-md-4">
                           <label className="form-label fw-semibold fs-13">Service / Item Description *</label>
-                            <IconFormControl
-                              fieldLabel="service"
-                              type="text"
-                              value={currentItemName}
-                              onChange={(e) => setCurrentItemName(e.target.value)}
-                            />
-                      </div>
+                          <IconFormControl
+                            fieldLabel="service"
+                            type="text"
+                            value={currentItemName}
+                            onChange={(e) => setCurrentItemName(e.target.value)}
+                          />
+                        </div>
                       )}
 
                       {/* Other Custom Service Input */}
@@ -1724,7 +1792,7 @@ const IpdBillingsPage: React.FC = () => {
                   {/* Total & Payment Section */}
                   <div className="p-3 bg-soft-primary border border-primary rounded-3 mb-3">
                     <div className="row align-items-center g-3">
-                      <div className="col-md-3">
+                      <div className="col-md-4">
                         <span className="fs-13 text-secondary fw-semibold d-block">
                           Total Invoice Amount:
                         </span>
@@ -1733,21 +1801,7 @@ const IpdBillingsPage: React.FC = () => {
                         </h3>
                       </div>
 
-                      <div className="col-md-3">
-                        <label className="form-label fw-bold text-dark mb-1">
-                          Invoice Date <span className="text-danger">*</span>
-                        </label>
-                        <input
-                          type="date"
-                          className="form-control fw-bold text-dark"
-                          value={invoiceDate}
-                          onChange={(e) => setInvoiceDate(e.target.value)}
-                          min={getMinInvoiceDate()}
-                          required
-                        />
-                      </div>
-
-                      <div className="col-md-3">
+                      <div className="col-md-4">
                         <label className="form-label fw-bold text-dark mb-1">
                           Payment Paid Now (₹)
                         </label>
@@ -1762,7 +1816,7 @@ const IpdBillingsPage: React.FC = () => {
                         />
                       </div>
 
-                      <div className="col-md-3">
+                      <div className="col-md-4">
                         <label className="form-label fw-semibold mb-1">Payment Method</label>
                         <select
                           className="form-select"

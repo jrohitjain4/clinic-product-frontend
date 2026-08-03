@@ -415,24 +415,40 @@ const IpdRaiseChargeModal: React.FC<IpdRaiseChargeModalProps> = ({
 
           <form onSubmit={handleSubmitRaiseInvoice}>
             <div className="modal-body p-4" style={{ maxHeight: "78vh", overflowY: "auto" }}>
-              {/* Select Admission */}
-              <div className="mb-4">
-                <label className="form-label fw-bold text-dark mb-1">
-                  Select Inpatient Admission <span className="text-danger">*</span>
-                </label>
-                <select
-                  className="form-select form-select-lg fw-semibold"
-                  value={selectedAdmissionId}
-                  onChange={(e) => handlePatientChange(e.target.value)}
-                  required
-                >
-                  <option value="">-- Select Patient Admission --</option>
-                  {admissions.map((adm) => (
-                    <option key={adm.id} value={adm.id}>
-                      {adm.admissionCode} - {getPatientName(adm.patient)} ({adm.ward?.wardName || "No Ward"})
-                    </option>
-                  ))}
-                </select>
+              {/* Select Admission & Invoice Date */}
+              <div className="row g-3 mb-4">
+                <div className="col-md-8">
+                  <label className="form-label fw-bold text-dark mb-1">
+                    Select Inpatient Admission <span className="text-danger">*</span>
+                  </label>
+                  <select
+                    className="form-select form-select-lg fw-semibold"
+                    value={selectedAdmissionId}
+                    onChange={(e) => handlePatientChange(e.target.value)}
+                    required
+                  >
+                    <option value="">-- Select Patient Admission --</option>
+                    {admissions.map((adm) => (
+                      <option key={adm.id} value={adm.id}>
+                        {adm.admissionCode} - {getPatientName(adm.patient)} ({adm.ward?.wardName || "No Ward"})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-4">
+                  <label className="form-label fw-bold text-dark mb-1">
+                    Invoice Date <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    className="form-control form-control-lg fw-bold text-dark"
+                    value={invoiceDate}
+                    onChange={(e) => setInvoiceDate(e.target.value)}
+                    min={getMinInvoiceDate()}
+                    required
+                  />
+                </div>
               </div>
 
               {/* Add Item Row */}
@@ -640,26 +656,12 @@ const IpdRaiseChargeModal: React.FC<IpdRaiseChargeModalProps> = ({
               {/* Total & Payment Section */}
               <div className="p-3 bg-soft-primary border border-primary rounded-3 mb-3">
                 <div className="row align-items-center g-3">
-                  <div className="col-md-3">
+                  <div className="col-md-4">
                     <span className="fs-13 text-secondary fw-semibold d-block">Total Invoice Amount:</span>
                     <h3 className="fw-bold text-primary mb-0">₹{draftTotalAmount.toLocaleString("en-IN")}</h3>
                   </div>
 
-                  <div className="col-md-3">
-                    <label className="form-label fw-bold text-dark mb-1">
-                      Invoice Date <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      className="form-control fw-bold text-dark"
-                      value={invoiceDate}
-                      onChange={(e) => setInvoiceDate(e.target.value)}
-                      min={getMinInvoiceDate()}
-                      required
-                    />
-                  </div>
-
-                  <div className="col-md-3">
+                  <div className="col-md-4">
                     <label className="form-label fw-bold text-dark mb-1">Payment Paid Now (₹)</label>
                     <IconFormControl
                       fieldLabel="amount"
@@ -672,7 +674,7 @@ const IpdRaiseChargeModal: React.FC<IpdRaiseChargeModalProps> = ({
                     />
                   </div>
 
-                  <div className="col-md-3">
+                  <div className="col-md-4">
                     <label className="form-label fw-semibold mb-1">Payment Method</label>
                     <select
                       className="form-select"

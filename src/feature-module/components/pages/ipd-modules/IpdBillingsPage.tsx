@@ -1482,28 +1482,44 @@ const IpdBillingsPage: React.FC = () => {
 
               <form onSubmit={handleSubmitRaiseInvoice}>
                 <div className="modal-body p-4">
-                  {/* Select Inpatient */}
-                  <div className="mb-4">
-                    <label className="form-label fw-semibold">
-                      Select Inpatient Admission <span className="text-danger">*</span>
-                    </label>
-                    <select
-                      className="form-select fw-bold text-primary fs-15"
-                      value={selectedAdmissionId}
-                      onChange={(e) => {
-                        const admId = e.target.value;
-                        setSelectedAdmissionId(admId);
-                        handlePatientChange(admId);
-                      }}
-                      required
-                    >
-                      <option value="">Choose Admitted Patient</option>
-                      {admissions.map((adm) => (
-                        <option key={adm.id} value={adm.id}>
-                          {adm.admissionCode} - {getPatientName(adm.patient)} ({adm.ward?.wardName || "Ward"})
-                        </option>
-                      ))}
-                    </select>
+                  {/* Select Inpatient & Invoice Date */}
+                  <div className="row g-3 mb-4">
+                    <div className="col-md-8">
+                      <label className="form-label fw-semibold">
+                        Select Inpatient Admission <span className="text-danger">*</span>
+                      </label>
+                      <select
+                        className="form-select fw-bold text-primary fs-15"
+                        value={selectedAdmissionId}
+                        onChange={(e) => {
+                          const admId = e.target.value;
+                          setSelectedAdmissionId(admId);
+                          handlePatientChange(admId);
+                        }}
+                        required
+                      >
+                        <option value="">Choose Admitted Patient</option>
+                        {admissions.map((adm) => (
+                          <option key={adm.id} value={adm.id}>
+                            {adm.admissionCode} - {getPatientName(adm.patient)} ({adm.ward?.wardName || "Ward"})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="col-md-4">
+                      <label className="form-label fw-bold text-dark mb-1">
+                        Invoice Date <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        className="form-control fw-bold text-dark"
+                        value={invoiceDate}
+                        onChange={(e) => setInvoiceDate(e.target.value)}
+                        min={getMinInvoiceDate()}
+                        required
+                      />
+                    </div>
                   </div>
 
                   {/* Add Charge Item Form Box */}
@@ -1736,7 +1752,7 @@ const IpdBillingsPage: React.FC = () => {
                   {/* Total & Payment Section */}
                   <div className="p-3 bg-soft-primary border border-primary rounded-3 mb-3">
                     <div className="row align-items-center g-3">
-                      <div className="col-md-3">
+                      <div className="col-md-4">
                         <span className="fs-13 text-secondary fw-semibold d-block">
                           Total Invoice Amount:
                         </span>
@@ -1745,21 +1761,7 @@ const IpdBillingsPage: React.FC = () => {
                         </h3>
                       </div>
 
-                      <div className="col-md-3">
-                        <label className="form-label fw-bold text-dark mb-1">
-                          Invoice Date <span className="text-danger">*</span>
-                        </label>
-                        <input
-                          type="date"
-                          className="form-control fw-bold text-dark"
-                          value={invoiceDate}
-                          onChange={(e) => setInvoiceDate(e.target.value)}
-                          min={getMinInvoiceDate()}
-                          required
-                        />
-                      </div>
-
-                      <div className="col-md-3">
+                      <div className="col-md-4">
                         <label className="form-label fw-bold text-dark mb-1">
                           Payment Paid Now (₹)
                         </label>
@@ -1774,7 +1776,7 @@ const IpdBillingsPage: React.FC = () => {
                         />
                       </div>
 
-                      <div className="col-md-3">
+                      <div className="col-md-4">
                         <label className="form-label fw-semibold mb-1">Payment Method</label>
                         <select
                           className="form-select"

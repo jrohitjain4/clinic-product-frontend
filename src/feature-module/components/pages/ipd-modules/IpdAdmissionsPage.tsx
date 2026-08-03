@@ -375,6 +375,12 @@ const IpdAdmissionsPage: React.FC = () => {
 
     setSubmitting(true);
     const token = localStorage.getItem("token");
+    const isRecommendation = !activeReferralId && (admissionType === "Refer to OPD" || !selectedWardId);
+    const targetStatus = isRecommendation ? "Incomplete" : "Admitted";
+    const refCode = isRecommendation
+      ? (referralAppointmentCode || `APT-REF-${Math.floor(1000 + Math.random() * 9000)}`)
+      : (referralAppointmentCode || undefined);
+
     const payload = {
       admissionType,
       patientId: selectedPatientId,
@@ -382,6 +388,7 @@ const IpdAdmissionsPage: React.FC = () => {
       wardId: selectedWardId || undefined,
       treatmentId: selectedTreatmentId || undefined,
       diagnosis: diagnosis.trim() || undefined,
+      status: targetStatus,
       admissionFee: parseFloat(admissionFee) || 0,
       treatmentFee: parseFloat(treatmentFee) || 0,
       wardCharge: parseFloat(wardCharge) || 0,
@@ -391,7 +398,7 @@ const IpdAdmissionsPage: React.FC = () => {
       advancePaid: parseFloat(advancePaid) || 0,
       paymentMethod,
       referralAppointmentId: referralAppointmentId || undefined,
-      referralAppointmentCode: referralAppointmentCode || undefined,
+      referralAppointmentCode: refCode,
     };
 
     try {

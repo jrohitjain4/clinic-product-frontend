@@ -401,6 +401,53 @@ const IpdAdmissionsPage: React.FC = () => {
       referralAppointmentCode: refCode,
     };
 
+    if (activeReferralId) {
+      // UPDATE existing recommendation directly to Admitted (Inpatient) status
+      const updateUrl = apiUrl(`/api/ipd/admissions/${activeReferralId}`);
+      const updatePayload = {
+        status: "Admitted",
+        wardId: selectedWardId || undefined,
+        doctorId: selectedDoctorId || undefined,
+        treatmentId: selectedTreatmentId || undefined,
+        diagnosis: diagnosis.trim() || undefined,
+        admissionFee: parseFloat(admissionFee) || 0,
+        treatmentFee: parseFloat(treatmentFee) || 0,
+        wardCharge: parseFloat(wardCharge) || 0,
+        doctorVisitCharge: parseFloat(doctorVisitCharge) || 0,
+        nursingFee: parseFloat(nursingFee) || 0,
+        otherCharges: parseFloat(otherCharges) || 0,
+        advancePaid: parseFloat(advancePaid) || 0,
+        paymentMethod,
+      };
+
+      try {
+        const res = await fetch(updateUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updatePayload),
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || "Failed to update admission status");
+        }
+
+        toast.success("Patient admission started and status updated to Inpatient!");
+        setShowModal(false);
+        setActiveReferralId(null);
+        resetForm();
+        fetchData();
+        return;
+      } catch (err: any) {
+        toast.error(err.message || "Error updating admission");
+        setSubmitting(false);
+        return;
+      }
+    }
+
     try {
       const res = await fetch(apiUrl("/api/ipd/admissions"), {
         method: "POST",
@@ -414,15 +461,6 @@ const IpdAdmissionsPage: React.FC = () => {
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.message || "Failed to admit patient");
-      }
-
-      if (activeReferralId) {
-        // Delete the incomplete recommendation record
-        await fetch(apiUrl(`/api/ipd/admissions/${activeReferralId}`), {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        }).catch(() => {});
-        setActiveReferralId(null);
       }
 
       toast.success("Patient admitted successfully! Advance receipt generated.");

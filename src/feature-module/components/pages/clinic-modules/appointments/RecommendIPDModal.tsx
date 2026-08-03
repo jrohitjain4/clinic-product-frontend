@@ -71,15 +71,15 @@ const RecommendIPDModal = ({ onClose, appointment, onSuccess }: Props) => {
     setLoading(true);
     const payload = {
       admissionType: "Refer to OPD",
-      patientId: appointment.patientId,
+      patientId: appointment?.patientId || appointment?.patient?.id || appointment?.patient?._id,
       doctorId: selectedDoctorId,
       wardId: null,
       treatmentId: selectedTreatmentId || null,
       treatmentReason: treatmentReason.trim() || null,
       diagnosis: provisionalDiagnosis.trim() || null,
       status: "Incomplete",
-      referralAppointmentId: appointment.id,
-      referralAppointmentCode: appointment.appointmentCode,
+      referralAppointmentId: appointment?.id || appointment?.appointmentId || appointment?._id || null,
+      referralAppointmentCode: appointment?.appointmentCode || appointment?.bookingCode || appointment?.code || appointment?.appointmentNo || (appointment?.id ? `APT-${String(appointment.id).slice(-6).toUpperCase()}` : `APT-${Date.now().toString().slice(-6)}`),
       // Pass zeros for financial charges as this is just a recommendation
       admissionFee: 0,
       treatmentFee: 0,

@@ -130,11 +130,20 @@ const AddPrescriptionModal = ({
     const activeAppointment = useMemo(() => {
         if (appointment) return appointment;
         const currentAppId = appointmentId || selectedVisitTab || initialAppointmentId;
-        if (currentAppId) {
-            return appointments.find((a) => a.id === currentAppId);
+        const found = currentAppId ? appointments.find((a: any) => a.id === currentAppId) : null;
+        if (found) return found;
+        if (patientId) {
+            return {
+                id: currentAppId || `APT-${Date.now()}`,
+                appointmentCode: initialPrescription?.appointment?.appointmentCode || `APT-${Date.now().toString().slice(-6)}`,
+                patientId: patientId,
+                doctorId: doctorId || null,
+                patient: patient || initialPrescription?.patient || null,
+                doctor: appointments.find((a: any) => a.doctorId === doctorId || a.doctor?.id === doctorId)?.doctor || initialPrescription?.doctor || null,
+            };
         }
         return null;
-    }, [appointment, appointmentId, selectedVisitTab, initialAppointmentId, appointments]);
+    }, [appointment, appointmentId, selectedVisitTab, initialAppointmentId, appointments, patientId, doctorId, patient, initialPrescription]);
 
     useEffect(() => {
         if (patient) {
@@ -143,36 +152,11 @@ const AddPrescriptionModal = ({
     }, [patient]);
 
     const handleToggleIPD = async () => {
-        console.log("handleToggleIPD clicked! onRecommendIPD prop:", onRecommendIPD);
         if (onRecommendIPD) {
-            console.log("Calling onRecommendIPD callback");
             onRecommendIPD();
             return;
         }
-
-        if (activeAppointment) {
-            setShowRecommendIPDModal(true);
-            return;
-        }
-
-        if (!patientId) return;
-        const targetState = !isIPDRecommended;
-        setIsIPDRecommended(targetState);
-        try {
-            await apiPut(`/api/patients/${patientId}`, {
-                suggestIPD: targetState
-            });
-            if (targetState) {
-                toast.success("Patient recommended for IPD admission successfully.");
-            } else {
-                toast.info("IPD admission recommendation removed.");
-            }
-            refetchPatient();
-        } catch (error) {
-            console.error("Failed to update IPD recommendation:", error);
-            toast.error("Failed to update IPD recommendation.");
-            setIsIPDRecommended(!targetState); // revert on error
-        }
+        setShowRecommendIPDModal(true);
     };
 
     // State to hold the current visit's draft

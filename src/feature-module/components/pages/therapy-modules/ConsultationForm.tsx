@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiGet, apiPost, apiPut, authHeaders } from "../../../../core/utils/apiClient";
 import { apiUrl } from "../../../../core/config/api";
@@ -146,6 +146,40 @@ const emptyPlan = (): TherapyPlanRow => ({
   scheduleType: "daily",
   notes: "",
 });
+
+/** Parse stored sessionTime ("14:30" or "02:30 PM") → clock + period for inputs */
+const parseSessionTimeParts = (value: string): { clock: string; period: "AM" | "PM" } => {
+  if (!value?.trim()) return { clock: "", period: "AM" };
+  const upper = value.trim().toUpperCase();
+  const hasAm = /\bAM\b/.test(upper);
+  const hasPm = /\bPM\b/.test(upper);
+  let clock = upper.replace(/\s*(AM|PM)\s*/g, "").trim();
+
+  // Legacy 24h "HH:mm" → 12h display
+  if (!hasAm && !hasPm && /^\d{1,2}:\d{2}$/.test(clock)) {
+    const [hStr, mStr] = clock.split(":");
+    let h = parseInt(hStr, 10);
+    let period: "AM" | "PM" = "AM";
+    if (h === 0) {
+      h = 12;
+      period = "AM";
+    } else if (h === 12) {
+      period = "PM";
+    } else if (h > 12) {
+      h -= 12;
+      period = "PM";
+    }
+    return { clock: `${h}:${mStr}`, period };
+  }
+
+  return { clock, period: hasPm ? "PM" : "AM" };
+};
+
+const buildSessionTimeValue = (clock: string, period: "AM" | "PM"): string => {
+  const cleaned = clock.replace(/[^\d:]/g, "").slice(0, 5);
+  if (!cleaned) return "";
+  return `${cleaned} ${period}`;
+};
 
 // ─── Main Component ───────────────────────────────────────────
 const ConsultationForm = () => {
@@ -489,6 +523,53 @@ const ConsultationForm = () => {
 
   const removeBodyPoint = (partId: string) => {
     setBodyPoints((prev) => prev.filter((bp) => bp.part !== partId));
+  };
+
+  const examHasFront = useMemo(
+    () =>
+      bodyPoints.some((bp) => BODY_PARTS.find((p) => p.id === bp.part)?.view === "front"),
+    [bodyPoints]
+  );
+  const examHasBack = useMemo(
+    () =>
+      bodyPoints.some((bp) => BODY_PARTS.find((p) => p.id === bp.part)?.view === "back"),
+    [bodyPoints]
+  );
+
+  const handleConsultPrint = () => {
+    const root = document.getElementById("consultation-preview");
+    const created: HTMLImageElement[] = [];
+    root?.querySelectorAll<HTMLCanvasElement>(".body-diagram-3d canvas").forEach((canvas) => {
+      try {
+        const dataUrl = canvas.toDataURL("image/png");
+        const img = document.createElement("img");
+        img.src = dataUrl;
+        img.className = "consult-print-canvas-img";
+        img.alt = "Body diagram";
+        Object.assign(img.style, {
+          width: "100%",
+          height: "auto",
+          display: "block",
+          borderRadius: "12px",
+        });
+        canvas.style.visibility = "hidden";
+        canvas.parentElement?.appendChild(img);
+        created.push(img);
+      } catch {
+        /* canvas may be tainted; skip */
+      }
+    });
+    const cleanup = () => {
+      created.forEach((img) => img.remove());
+      root?.querySelectorAll<HTMLCanvasElement>(".body-diagram-3d canvas").forEach((c) => {
+        c.style.visibility = "";
+      });
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    // Fallback cleanup if afterprint never fires
+    setTimeout(cleanup, 2000);
+    window.print();
   };
 
   // Therapy plan row update
@@ -1747,6 +1828,99 @@ const ConsultationForm = () => {
         {/* ─── STEP 2: THERAPY PLAN & PRICING ─────────────────── */}
         {step === 2 && (
           <div className="row g-4">
+            {/* Examination body parts — reference for recommending therapies */}
+            <div className="col-12">
+              <div className="card tc-card">
+                <div className="card-header tc-card-head px-3 px-md-4 py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                  <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <span className="tc-section-icon" style={{ background: "#fef3c7", color: "#d97706" }}>
+                      <i className="ti ti-map-pin" />
+                    </span>
+                    Examination Findings — Body Parts for Therapy
+                    <span
+                      className="badge ms-1"
+                      style={{
+                        background: "#fff7ed",
+                        color: "#c2410c",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        borderRadius: 8,
+                      }}
+                    >
+                      {bodyPoints.length}
+                    </span>
+                  </h6>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary"
+                    style={{ borderRadius: 8 }}
+                    onClick={() => setStep(1)}
+                  >
+                    <i className="ti ti-edit me-1" />
+                    Edit on Examination
+                  </button>
+                </div>
+                <div className="card-body px-3 px-md-4 py-3">
+                  {bodyPoints.length === 0 ? (
+                    <div
+                      className="d-flex align-items-center gap-2 px-3 py-2"
+                      style={{ background: "#f8fafc", borderRadius: 10, color: "#64748b", fontSize: 13 }}
+                    >
+                      <i className="ti ti-info-circle" />
+                      No body parts marked in Step 1. Go back to Examination to mark areas that need therapy.
+                    </div>
+                  ) : (
+                    <div className="d-flex flex-wrap gap-2">
+                      {bodyPoints.map((bp) => (
+                        <div
+                          key={bp.part}
+                          className="d-flex flex-column gap-1 px-3 py-2"
+                          style={{
+                            background: "#f8fafc",
+                            borderRadius: 10,
+                            borderLeft: `3px solid ${severityColor(bp.severity)}`,
+                            minWidth: 160,
+                            maxWidth: 280,
+                          }}
+                        >
+                          <div className="d-flex align-items-center gap-2">
+                            <span
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: "50%",
+                                background: severityColor(bp.severity),
+                                flexShrink: 0,
+                              }}
+                            />
+                            <span className="fw-semibold text-dark" style={{ fontSize: 13 }}>
+                              {bp.label}
+                            </span>
+                            <span
+                              className="badge border ms-auto"
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 600,
+                                color: severityColor(bp.severity),
+                                borderColor: severityColor(bp.severity),
+                                background: `${severityColor(bp.severity)}14`,
+                              }}
+                            >
+                              {bp.severity}/10
+                            </span>
+                          </div>
+                          <div className="text-muted" style={{ fontSize: 11 }}>
+                            {bp.daysSince > 0 ? `${bp.daysSince} day(s)` : "Duration not set"}
+                            {bp.remark ? ` · ${bp.remark}` : ""}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Therapy Plans */}
             <div className="col-lg-7">
               <div className="card tc-card h-100">
@@ -1853,7 +2027,7 @@ const ConsultationForm = () => {
                             />
                           </div>
 
-                          <div className="col-md-3">
+                          <div className="col-md-4">
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                               Start Date *
                             </label>
@@ -1875,20 +2049,58 @@ const ConsultationForm = () => {
                               </span>
                             </div>
                           </div>
-                          <div className="col-md-3">
+                          <div className="col-md-4">
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                               Session Time (Optional)
                             </label>
-                            <IconFormControl
-                              type="time"
-                              fieldLabel="time"
-                              placeholder="Session Time (Optional)"
-                              value={plan.sessionTime}
-                              onChange={(e) => updatePlan(idx, "sessionTime", e.target.value)}
-                              style={{ borderRadius: 8, fontSize: 13 }}
-                            />
+                            {(() => {
+                              const { clock, period } = parseSessionTimeParts(plan.sessionTime);
+                              return (
+                                <div className="d-flex gap-2 align-items-stretch">
+                                  <div className="input-group flex-grow-1" style={{ flexWrap: "nowrap" }}>
+                                    <span
+                                      className="input-group-text bg-white"
+                                      style={{ borderRadius: "8px 0 0 8px", borderColor: "#dee2e6" }}
+                                    >
+                                      <i className="ti ti-clock" style={{ color: "#eab308" }} />
+                                    </span>
+                                    <input
+                                      type="text"
+                                      className="form-control"
+                                      placeholder="hh:mm"
+                                      inputMode="numeric"
+                                      value={clock}
+                                      onChange={(e) => {
+                                        let v = e.target.value.replace(/[^\d:]/g, "");
+                                        if (v.length === 2 && !v.includes(":") && clock.length < 2) {
+                                          v = `${v}:`;
+                                        }
+                                        v = v.slice(0, 5);
+                                        updatePlan(idx, "sessionTime", buildSessionTimeValue(v, period));
+                                      }}
+                                      style={{ borderRadius: "0 8px 8px 0", fontSize: 13, minWidth: 0 }}
+                                    />
+                                  </div>
+                                  <select
+                                    className="form-select"
+                                    value={period}
+                                    onChange={(e) =>
+                                      updatePlan(
+                                        idx,
+                                        "sessionTime",
+                                        buildSessionTimeValue(clock, e.target.value as "AM" | "PM")
+                                      )
+                                    }
+                                    style={{ borderRadius: 8, fontSize: 13, width: 84, flexShrink: 0 }}
+                                  >
+                                    <option value="AM">AM</option>
+                                    <option value="PM">PM</option>
+                                  </select>
+                                </div>
+                              );
+                            })()}
                           </div>
-                          <div className="col-md-3">
+                          <div className="col-md-4">
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                               Schedule Type
                             </label>
@@ -1903,7 +2115,7 @@ const ConsultationForm = () => {
                               <option value="weekly">Weekly</option>
                             </select>
                           </div>
-                          <div className="col-md-3">
+                          <div className="col-12">
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                               Notes (Optional)
                             </label>
@@ -2140,6 +2352,8 @@ const ConsultationForm = () => {
                 className="card tc-card"
                 id="consultation-preview"
               >
+                {/* ═══ PRINT PAGE 1: Patient + Examination + Body diagrams ═══ */}
+                <div className="consult-print-page">
                 {/* Header */}
                 <div
                   className="card-header tc-gradient-head text-white"
@@ -2157,14 +2371,17 @@ const ConsultationForm = () => {
                         {selectedAppointment?.doctor?.fullName}
                       </div>
                       <div style={{ opacity: 0.7, fontSize: 12, marginTop: 4 }}>
+                        {selectedAppointment?.appointmentCode && (
+                          <span className="me-2">Appt: {selectedAppointment.appointmentCode}</span>
+                        )}
                         {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
                       </div>
                     </div>
                     <button
                       type="button"
-                      className="btn btn-light btn-sm"
+                      className="btn btn-light btn-sm d-print-none"
                       style={{ borderRadius: 8 }}
-                      onClick={() => window.print()}
+                      onClick={handleConsultPrint}
                     >
                       <i className="ti ti-printer me-1" />Print / Download
                     </button>
@@ -2173,13 +2390,12 @@ const ConsultationForm = () => {
 
                 <div className="card-body p-4">
                   {/* Examination Summary */}
-                  {(bodyPoints.length > 0 || generalNotes) && (
-                    <div className="mb-5">
+                  <div className="mb-4">
                       <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
                         <i className="ti ti-stethoscope text-primary" />
                         Examination Findings
                       </h6>
-                      {bodyPoints.length > 0 && (
+                      {bodyPoints.length > 0 ? (
                         <div className="row g-2 mb-3">
                           {bodyPoints.map((bp) => (
                             <div key={bp.part} className="col-md-6 col-lg-4">
@@ -2223,18 +2439,90 @@ const ConsultationForm = () => {
                             </div>
                           ))}
                         </div>
+                      ) : (
+                        <div className="text-muted mb-3" style={{ fontSize: 13 }}>
+                          No body parts marked during examination.
+                        </div>
                       )}
                       {generalNotes && (
                         <div
-                          className="p-3"
+                          className="p-3 mb-3"
                           style={{ background: "#f8fafc", borderRadius: 10, fontSize: 13 }}
                         >
                           <strong>General Notes:</strong> {generalNotes}
                         </div>
                       )}
-                    </div>
-                  )}
 
+                      {/* Body diagrams — front / back based on selected parts */}
+                      {bodyPoints.length > 0 && (examHasFront || examHasBack) && (
+                        <div className="mt-3 consult-body-diagrams-section">
+                          <h6 className="fw-bold mb-2 d-flex align-items-center gap-2" style={{ fontSize: 14 }}>
+                            <i className="ti ti-body-scan text-primary" />
+                            Body Diagram
+                          </h6>
+                          <div
+                            className={
+                              examHasFront && examHasBack
+                                ? "consult-body-diagrams-pair"
+                                : "d-flex justify-content-center"
+                            }
+                          >
+                            {examHasFront && (
+                              <div
+                                className={
+                                  examHasBack
+                                    ? "consult-body-diagram-item"
+                                    : "consult-body-diagram-single"
+                                }
+                                style={
+                                  examHasBack
+                                    ? undefined
+                                    : { width: "100%", maxWidth: 320 }
+                                }
+                              >
+                                <BodyDiagram3D
+                                  parts={BODY_PARTS}
+                                  marks={bodyPoints}
+                                  interactive={false}
+                                  severityColor={severityColor}
+                                  height={examHasBack ? 240 : 280}
+                                  lockedView="front"
+                                />
+                              </div>
+                            )}
+                            {examHasBack && (
+                              <div
+                                className={
+                                  examHasFront
+                                    ? "consult-body-diagram-item"
+                                    : "consult-body-diagram-single"
+                                }
+                                style={
+                                  examHasFront
+                                    ? undefined
+                                    : { width: "100%", maxWidth: 320 }
+                                }
+                              >
+                                <BodyDiagram3D
+                                  parts={BODY_PARTS}
+                                  marks={bodyPoints}
+                                  interactive={false}
+                                  severityColor={severityColor}
+                                  height={examHasFront ? 240 : 280}
+                                  lockedView="back"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                </div>
+                </div>{/* end print page 1 */}
+
+                {/* ═══ PRINT PAGE 2: Therapy plan & sessions ═══ */}
+                <div className="consult-print-page">
+                <div className="card-body p-4 pt-4">
                   {/* Therapy Plans Table */}
                   <div className="mb-5">
                     <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
@@ -2279,7 +2567,7 @@ const ConsultationForm = () => {
 
                   {/* Session Schedule Details */}
                   {therapyPlans.length > 0 && (
-                    <div className="mb-5">
+                    <div className="mb-2">
                       <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
                         <i className="ti ti-calendar-event text-primary" />
                         Daily Session Schedule
@@ -2357,10 +2645,19 @@ const ConsultationForm = () => {
                       })}
                     </div>
                   )}
+                </div>
+                </div>{/* end print page 2 */}
 
+                {/* ═══ PRINT PAGE 3: Payments ═══ */}
+                <div className="consult-print-page">
+                <div className="card-body p-4 pt-4">
+                  <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i className="ti ti-receipt text-primary" />
+                    Payment Details
+                  </h6>
                   {/* Pricing Summary */}
-                  <div className="row justify-content-end">
-                    <div className="col-md-5">
+                  <div className="row">
+                    <div className="col-md-7 col-lg-5">
                       <div
                         className="p-4"
                         style={{ background: "#f8fafc", borderRadius: 14, border: "1px solid #e2e8f0" }}
@@ -2387,8 +2684,8 @@ const ConsultationForm = () => {
                             <span style={{ color: "#6366f1" }}>₹{finalTotal.toLocaleString()}</span>
                           </div>
                           <div className="d-flex justify-content-between">
-                            <span className="text-muted">Amount Paid</span>
-                            <span className="text-success fw-semibold">₹{amountPaid.toLocaleString()}</span>
+                            <span className="text-muted">Amount Paid ({paymentMethod})</span>
+                            <span className="text-success fw-semibold">₹{Number(amountPaid).toLocaleString()}</span>
                           </div>
                           <div className="d-flex justify-content-between">
                             <span className="text-muted">Balance Due</span>
@@ -2445,11 +2742,12 @@ const ConsultationForm = () => {
                     </div>
                   )}
                 </div>
+                </div>{/* end print page 3 */}
               </div>
             </div>
 
             {/* Navigation */}
-            <div className="col-12 d-flex justify-content-between">
+            <div className="col-12 d-flex justify-content-between d-print-none">
               <button
                 type="button"
                 className="btn btn-light"
@@ -2529,6 +2827,103 @@ const ConsultationForm = () => {
           }
           .therapy-consult-page .row.g-4 { --bs-gutter-y: 0.85rem; --bs-gutter-x: 0.85rem; }
           .therapy-consult-page .card-body { padding-top: 1rem; padding-bottom: 1rem; }
+
+          .consult-body-diagrams-pair {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 12px;
+            align-items: stretch;
+          }
+          .consult-body-diagram-item {
+            flex: 1 1 0;
+            min-width: 0;
+            max-width: 50%;
+          }
+          .consult-body-diagram-single {
+            max-width: 320px;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+          }
+
+          @media print {
+            @page { size: A4; margin: 10mm; }
+            html, body {
+              height: auto !important;
+              overflow: visible !important;
+              background: #fff !important;
+            }
+            body * { visibility: hidden !important; }
+            #consultation-preview,
+            #consultation-preview * {
+              visibility: visible !important;
+            }
+            #consultation-preview {
+              position: absolute !important;
+              left: 0 !important;
+              top: 0 !important;
+              width: 100% !important;
+              margin: 0 !important;
+              box-shadow: none !important;
+              border: none !important;
+              border-radius: 0 !important;
+              background: #fff !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            .consult-print-page {
+              break-after: page;
+              page-break-after: always;
+            }
+            .consult-print-page:last-child {
+              break-after: auto;
+              page-break-after: auto;
+            }
+            .d-print-none {
+              display: none !important;
+              visibility: hidden !important;
+            }
+            .consult-print-canvas-img {
+              visibility: visible !important;
+              max-height: 220px !important;
+              width: 100% !important;
+              object-fit: contain !important;
+            }
+            .body-diagram-3d canvas {
+              visibility: hidden !important;
+            }
+            .consult-body-diagrams-section {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+            .consult-body-diagrams-pair {
+              display: flex !important;
+              flex-direction: row !important;
+              flex-wrap: nowrap !important;
+              gap: 10px !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+            .consult-body-diagram-item {
+              flex: 1 1 0 !important;
+              max-width: 50% !important;
+              width: 50% !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+            .consult-body-diagram-item .body-diagram-3d,
+            .consult-body-diagram-single .body-diagram-3d {
+              height: 220px !important;
+              max-height: 220px !important;
+            }
+            .consult-body-diagram-single {
+              max-width: 280px !important;
+              width: 100% !important;
+              margin-left: auto !important;
+              margin-right: auto !important;
+            }
+          }
         `}</style>
       </div>
     </div>

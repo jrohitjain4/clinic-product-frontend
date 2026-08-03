@@ -33,6 +33,10 @@ type Props = {
   /** Part currently being edited — shows live severity color before Save */
   previewPartId?: string | null;
   previewSeverity?: number;
+  /** Lock camera to front or back (no rotate) — used in preview/print */
+  lockedView?: "front" | "back" | null;
+  /** Show “Drag to rotate” hint (default true when not locked) */
+  showHint?: boolean;
 };
 
 const UNMARKED_BORDER = "#f97316";
@@ -267,7 +271,8 @@ function Scene({
   severityColor,
   previewPartId,
   previewSeverity,
-}: Omit<Props, "height">) {
+  lockedView,
+}: Omit<Props, "height" | "fillParent" | "showHint">) {
   const controlsRef = useRef<any>(null);
   const markMap = useMemo(() => {
     const m = new Map<string, BodyPointMark>();
@@ -275,18 +280,25 @@ function Scene({
     return m;
   }, [marks]);
 
+  const visibleParts = useMemo(() => {
+    if (!lockedView) return parts;
+    return parts.filter((p) => p.view === lockedView);
+  }, [parts, lockedView]);
+
+  const isLocked = Boolean(lockedView);
+
   return (
     <>
       <ambientLight intensity={0.75} />
       <directionalLight position={[4, 6, 3]} intensity={1.1} castShadow />
       <directionalLight position={[-3, 2, -4]} intensity={0.35} />
       <Humanoid />
-      {parts.map((part) => (
+      {visibleParts.map((part) => (
         <Hotspot
           key={part.id}
           part={part}
           mark={markMap.get(part.id)}
-          interactive={interactive}
+          interactive={interactive && !isLocked}
           onPartClick={onPartClick}
           severityColor={severityColor}
           isPreview={previewPartId === part.id}
@@ -297,7 +309,8 @@ function Scene({
       <OrbitControls
         ref={controlsRef}
         enablePan={false}
-        enableZoom
+        enableZoom={!isLocked}
+        enableRotate={!isLocked}
         minDistance={3.8}
         maxDistance={7.5}
         minPolarAngle={Math.PI / 4}
@@ -319,10 +332,16 @@ const BodyDiagram3D = ({
   fillParent = false,
   previewPartId = null,
   previewSeverity,
+  lockedView = null,
+  showHint,
 }: Props) => {
+  const cameraZ = lockedView === "back" ? -5.2 : 5.2;
+  const hintVisible = showHint ?? !lockedView;
+
   return (
     <div
       className="body-diagram-3d position-relative w-100"
+      data-locked-view={lockedView || undefined}
       style={
         fillParent
           ? {
@@ -344,10 +363,9 @@ const BodyDiagram3D = ({
     >
       <Canvas
         shadows
-        // Zoomed-out default so full body fits like a standing figure
-        camera={{ position: [0, 0.25, 5.2], fov: 38 }}
+        camera={{ position: [0, 0.25, cameraZ], fov: 38 }}
         dpr={[1, 1.75]}
-        gl={{ antialias: true, alpha: true }}
+        gl={{ antialias: true, alpha: true, preserveDrawingBuffer: true }}
         style={{ width: "100%", height: "100%", touchAction: "none", display: "block" }}
       >
         <Suspense fallback={null}>
@@ -359,23 +377,43 @@ const BodyDiagram3D = ({
             severityColor={severityColor}
             previewPartId={previewPartId}
             previewSeverity={previewSeverity}
+            lockedView={lockedView}
           />
         </Suspense>
       </Canvas>
-      <div
-        className="position-absolute top-0 start-0 m-2 px-2 py-1 rounded-pill"
-        style={{
-          background: "rgba(255,255,255,0.9)",
-          border: "1px solid #e2e8f0",
-          fontSize: 11,
-          fontWeight: 600,
-          color: "#64748b",
-          pointerEvents: "none",
-        }}
-      >
-        <i className="ti ti-rotate me-1" />
-        Drag to rotate 360°
-      </div>
+      {hintVisible && (
+        <div
+          className="position-absolute top-0 start-0 m-2 px-2 py-1 rounded-pill d-print-none"
+          style={{
+            background: "rgba(255,255,255,0.9)",
+            border: "1px solid #e2e8f0",
+            fontSize: 11,
+            fontWeight: 600,
+            color: "#64748b",
+            pointerEvents: "none",
+          }}
+        >
+          <i className="ti ti-rotate me-1" />
+          Drag to rotate 360°
+        </div>
+      )}
+      {lockedView && (
+        <div
+          className="position-absolute top-0 start-0 m-2 px-2 py-1 rounded-pill"
+          style={{
+            background: "rgba(255,255,255,0.95)",
+            border: "1px solid #e2e8f0",
+            fontSize: 11,
+            fontWeight: 700,
+            color: "#4f46e5",
+            pointerEvents: "none",
+            textTransform: "uppercase",
+            letterSpacing: "0.04em",
+          }}
+        >
+          {lockedView === "front" ? "Front" : "Back"}
+        </div>
+      )}
     </div>
   );
 };

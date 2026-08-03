@@ -268,7 +268,7 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
       <span className="rx-kv-label">{label}</span>
       <span className="rx-kv-colon">:</span>
       <span className="rx-kv-value">{value}</span>
-    </div>
+              </div>
   );
 
   return (
@@ -279,12 +279,12 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
           <div className="rx-title-ornament" aria-hidden>
             <span className="rx-title-line" />
             <i className="ti ti-heartbeat" />
-          </div>
+              </div>
           <h1>PRESCRIPTION</h1>
           <div className="rx-title-ornament" aria-hidden>
             <i className="ti ti-heartbeat" />
             <span className="rx-title-line" />
-          </div>
+            </div>
         </div>
         <div className="rx-tagline-wrap">
           <span className="rx-tagline-badge">✧ Better Care, Every Time ✧</span>
@@ -296,19 +296,19 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
             <div className="rx-patient-row">
               <div className="rx-patient-avatar" aria-hidden>
                 {patientInitial}
-              </div>
+          </div>
               <div className="rx-patient-fields">
                 <div className="rx-col-head">
                   <i className="ti ti-user-heart" /> PATIENT DETAILS
-                </div>
+        </div>
                 {kv("Patient ID", patientIdVal)}
                 {kv("Name", patientName)}
                 {kv("Age / Gender", `${patientAgeDisplay} / ${patientGender}`)}
                 {kv("Phone", patientPhone)}
                 {kv("Address", patientAddress)}
-              </div>
-            </div>
           </div>
+          </div>
+        </div>
 
           <div className="rx-col">
             <div className="rx-col-head">
@@ -321,12 +321,12 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
             {kv("Department", doctorDept)}
             {kv("Consulting Mode", visitMode)}
             {kv("Duration", duration)}
-          </div>
+      </div>
 
           <div className="rx-col">
             <div className="rx-col-head">
               <i className="ti ti-prescription" /> PRESCRIPTION DETAILS
-            </div>
+        </div>
             {kv("Prescription No", prescriptionId)}
             {kv(
               "Date & Time",
@@ -343,8 +343,8 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
               </span>
             )}
             {kv("Consultation Fee", doctorFee)}
-          </div>
         </div>
+      </div>
 
         {/* Doctor + Clinic + Medicines — one unified block */}
         <div className="rx-rx-block">
@@ -370,7 +370,7 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
                 </div>
                 <span className="rx-dept-pill">{doctorDept}</span>
               </div>
-            </div>
+        </div>
 
             <div className="rx-dc-meta">
               <div className="rx-doc-meta-row">
@@ -397,7 +397,7 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
                 <span className="rx-doc-meta-colon">:</span>
                 <span className="rx-doc-meta-value">{doctorEmail}</span>
               </div>
-            </div>
+        </div>
 
             <div className="rx-dc-clinic">
               <div className="rx-clinic-brand">
@@ -431,8 +431,8 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
                   <span>{clinicPhone}</span>
                 </div>
               )}
-            </div>
-          </div>
+        </div>
+      </div>
 
           <div className="rx-meds">
             <div className="rx-section-title">
@@ -449,9 +449,9 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
                   <th style={{ width: 72 }}>Duration</th>
                   <th style={{ width: 88 }}>When to Take</th>
                   <th style={{ width: 120 }}>Instructions</th>
-                </tr>
-              </thead>
-              <tbody>
+              </tr>
+            </thead>
+            <tbody>
                 {medicines.length > 0 ? (
                   medicines.map((med: any, idx: number) => {
                     const composition =
@@ -467,7 +467,7 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
                         <td>
                           <div className="rx-med-name">{med.medicineName}</div>
                           <div className="rx-med-comp">({composition})</div>
-                        </td>
+                    </td>
                         <td className="rx-td-center">{doseStrength}</td>
                         <td className="rx-td-center">{med.frequency || "—"}</td>
                         <td className="rx-td-center">{med.duration || "—"}</td>
@@ -475,26 +475,26 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
                         <td>
                           {med.instructions || med.notes || "As directed"}
                         </td>
-                      </tr>
+                  </tr>
                     );
                   })
-                ) : (
-                  <tr>
+              ) : (
+                <tr>
                     <td colSpan={7} className="rx-td-empty">
                       No medicines prescribed
                     </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                </tr>
+              )}
+            </tbody>
+          </table>
             <div className="rx-note">
               <i className="ti ti-info-circle" />
               <span>
                 <strong>Note:</strong> Take medicines as advised by the doctor. Do not self medicate.
               </span>
-            </div>
-          </div>
         </div>
+        </div>
+      </div>
 
         {/* Advice | Diagnostics | Follow-up — 3 separate cards */}
         <div className="rx-cards-row">
@@ -503,7 +503,7 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
               <i className="ti ti-message-dots" />
               <span>ADVICE</span>
             </div>
-            {adviceList.length > 0 ? (
+              {adviceList.length > 0 ? (
               <ul className="rx-card-bullets">
                 {adviceList.map((item: string, idx: number) => (
                   <li key={idx}>{item}</li>
@@ -512,13 +512,13 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
             ) : (
               <div className="rx-card-muted">No advice recorded</div>
             )}
-          </div>
+        </div>
 
           <div className="rx-card">
             <div className="rx-card-head">
               <i className="ti ti-flask" />
               <span>DIAGNOSTIC TESTS</span>
-            </div>
+                  </div>
             {diagnosticTestsList.length > 0 ? (
               <ul className="rx-card-bullets">
                 {diagnosticTestsList.map((item: string, idx: number) => (
@@ -530,23 +530,23 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
                 <p>No diagnostic tests recommended at this visit.</p>
                 <div className="rx-diag-watermark" aria-hidden>
                   <i className="ti ti-clipboard-check" />
-                </div>
-              </div>
-            )}
+            </div>
           </div>
+            )}
+        </div>
 
           <div className="rx-card">
             <div className="rx-card-head">
               <i className="ti ti-calendar-time" />
               <span>NEXT FOLLOW-UP</span>
-            </div>
+                </div>
             <div className="rx-fu-row">
               <span className="rx-fu-label">Date</span>
               <span className="rx-fu-colon">:</span>
               <span className="rx-fu-value">
                 {followUpDate ? dayjs(followUpDate).format("DD MMM, YYYY") : "—"}
               </span>
-            </div>
+              </div>
             <div className="rx-fu-row">
               <span className="rx-fu-label">Time</span>
               <span className="rx-fu-colon">:</span>
@@ -569,14 +569,14 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
                 ) : null}
               </span>
             </div>
-          </div>
-        </div>
+              </div>
+            </div>
 
         {(suggestIPD || patient.suggestIPD) && (
           <div className="rx-ipd">
             <i className="ti ti-bed" />
             ADMIT RECOMMENDATION: Recommended for IPD Admission
-          </div>
+              </div>
         )}
 
         {/* Additional + Signature */}
@@ -591,7 +591,7 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
                 {additionalLines.map((line, idx) => (
                   <p key={idx}>{line}</p>
                 ))}
-              </div>
+          </div>
             ) : (
               <p className="rx-additional-empty">—</p>
             )}
@@ -619,8 +619,8 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
             {doctorRegNo !== "—" ? (
               <div className="rx-sig-meta">Reg. No. {doctorRegNo}</div>
             ) : null}
-          </div>
         </div>
+      </div>
 
         <div className="rx-thanks">
           <span className="rx-thanks-line" />

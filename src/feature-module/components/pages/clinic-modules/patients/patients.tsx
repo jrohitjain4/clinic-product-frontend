@@ -160,13 +160,18 @@ const Patients = () => {
       <div className="page-wrapper">
         <div className="content">
           <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 pb-3 mb-3 border-1 border-bottom">
-            <div className="flex-grow-1">
-              <h4 className="fw-bold mb-0">
+            <div className="d-flex align-items-center flex-wrap gap-2 flex-grow-1 min-w-0">
+              <h4 className="fw-bold mb-0 text-nowrap">
                 Patients List
                 <span className="badge badge-soft-primary fw-medium border py-1 px-2 border-primary fs-13 ms-1">
                   Total Patients : {loading ? "…" : patients.length}
                 </span>
               </h4>
+              <div className="table-search mb-0" style={{ maxWidth: 280, width: "100%" }}>
+                <div className="search-input w-100">
+                  <SearchInput value={searchText} onChange={setSearchText} />
+                </div>
+              </div>
             </div>
             <div className="text-end d-flex align-items-center flex-wrap gap-2">
               <div className="d-flex align-items-center gap-2">
@@ -209,14 +214,6 @@ const Patients = () => {
               </button>
             </div>
           )}
-
-          <div className="search-set mb-3">
-            <div className="table-search d-flex align-items-center mb-0">
-              <div className="search-input">
-                <SearchInput value={searchText} onChange={setSearchText} />
-              </div>
-            </div>
-          </div>
 
           {loading ? (
             <div className="text-center py-5">

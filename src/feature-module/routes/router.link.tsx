@@ -90,7 +90,6 @@ const RefsPage = lazy(() => import("../components/pages/clinic-modules/refers/re
 
 // Therapy Imports
 const TherapistsList = lazy(() => import("../components/pages/therapy-modules/TherapistsList"));
-const TherapyCategories = lazy(() => import("../components/pages/therapy-modules/TherapyCategories"));
 const TherapyServices = lazy(() => import("../components/pages/therapy-modules/TherapyServices"));
 const TherapyAppointments = lazy(() => import("../components/pages/therapy-modules/TherapyAppointments"));
 const BookTherapyAppointment = lazy(() => import("../components/pages/therapy-modules/BookTherapyAppointment"));
@@ -289,7 +288,7 @@ const UiRangeSlides = lazy(() => import("../components/pages/ui-modules/ui-inter
 const UiRating = lazy(() => import("../components/pages/ui-modules/ui-interface/ui-advance/uiRating"));
 const UiScrollbar = lazy(() => import("../components/pages/ui-modules/ui-interface/ui-advance/uiScrollbar"));
 import { all_routes } from "./all_routes";
-import { Route } from "react-router";
+import { Navigate, Route } from "react-router";
 
 const AppointmentDetails = lazy(() => import("../components/pages/clinic-modules/appointments/appointmentDetails"));
 const SuperAdminDashboard = lazy(() => import("../components/pages/super-admin/super-admin-dashboard/superAdminDashboard"));
@@ -1400,7 +1399,7 @@ export const publicRoutes = [
   },
   {
     path: routes.therapyCategories,
-    element: <TherapyCategories />,
+    element: <Navigate to={`${routes.therapyServices}?tab=categories`} replace />,
     route: Route,
   },
   {

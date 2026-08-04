@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import dayjs from "dayjs";
 import { resolveMediaUrl } from "../../../../core/config/api";
 
@@ -192,7 +193,7 @@ const IpdMasterStatementPrint: React.FC<IpdMasterStatementPrintProps> = ({ data 
   const genDate = dayjs().format("DD MMM YYYY");
   const genTime = dayjs().format("hh:mm A");
 
-  return (
+  const printNode = (
     <div id="ipd-master-statement-print" className="ipd-ms-print-root">
       <div className="as-slip ipd-ms-print-page">
         <div className="as-slip-body">
@@ -418,8 +419,8 @@ const IpdMasterStatementPrint: React.FC<IpdMasterStatementPrintProps> = ({ data 
             </table>
           </div>
 
-          {/* Payment summary */}
-          <div className="as-mid-row">
+          {/* Payment summary — keep whole block together across page breaks */}
+          <div className="as-mid-row ipd-ms-avoid-break">
             <div className="as-instructions">
               <div className="as-col-head">STATEMENT NOTES</div>
               <ul>
@@ -449,7 +450,7 @@ const IpdMasterStatementPrint: React.FC<IpdMasterStatementPrintProps> = ({ data 
             </div>
           </div>
 
-          <div className="as-footer">
+          <div className="as-footer ipd-ms-avoid-break">
             <div className="as-footer-left">
               <i className="ti ti-heartbeat" /> Thank you for choosing {clinicName}. We wish you good health!
             </div>
@@ -476,12 +477,10 @@ const IpdMasterStatementPrint: React.FC<IpdMasterStatementPrintProps> = ({ data 
         }
         .ipd-ms-print-page {
           width: 210mm;
-          min-height: 297mm;
           background: #fff;
         }
         .as-slip {
           width: 210mm;
-          min-height: 297mm;
           margin: 0 auto;
           background: #fff;
           color: #0f172a;
@@ -497,7 +496,6 @@ const IpdMasterStatementPrint: React.FC<IpdMasterStatementPrintProps> = ({ data 
           display: flex;
           flex-direction: column;
           gap: 8px;
-          flex: 1 1 auto;
         }
         .as-slip * { box-sizing: border-box; }
         .as-title-bar {
@@ -653,7 +651,6 @@ const IpdMasterStatementPrint: React.FC<IpdMasterStatementPrintProps> = ({ data 
           padding: 10px 12px;
         }
         .as-footer {
-          margin-top: auto;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -669,32 +666,75 @@ const IpdMasterStatementPrint: React.FC<IpdMasterStatementPrintProps> = ({ data 
         .as-footer-right { text-align: right; opacity: 0.95; }
 
         @media print {
-          @page { size: A4; margin: 0; }
+          @page { size: A4; margin: 8mm; }
           html, body {
             height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
             overflow: visible !important;
             background: #fff !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
-          body * { visibility: hidden !important; }
+          /* Hide app chrome so content is not laid out / printed twice */
+          body > *:not(#ipd-master-statement-print) {
+            display: none !important;
+          }
+          #ipd-master-statement-print.ipd-ms-print-root {
+            display: block !important;
+            position: static !important;
+            left: auto !important;
+            top: auto !important;
+            width: 100% !important;
+            max-width: 210mm !important;
+            margin: 0 auto !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            z-index: auto !important;
+            visibility: visible !important;
+          }
           #ipd-master-statement-print,
           #ipd-master-statement-print * {
             visibility: visible !important;
           }
-          #ipd-master-statement-print.ipd-ms-print-root {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 210mm !important;
-            opacity: 1 !important;
-            pointer-events: auto !important;
-            z-index: 99999 !important;
+          .ipd-ms-print-page,
+          .as-slip {
+            width: 100% !important;
+            min-height: 0 !important;
+            height: auto !important;
+          }
+          .as-slip-body {
+            gap: 6px;
+          }
+          /* Invoice table may span pages; keep rows intact */
+          .ipd-ms-card-block {
+            break-inside: auto;
+            page-break-inside: auto;
+          }
+          .ipd-ms-table thead {
+            display: table-header-group;
+          }
+          .ipd-ms-table tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+          /* Payment summary + footer move whole to next page if they don't fit */
+          .ipd-ms-avoid-break,
+          .as-mid-row,
+          .as-payment,
+          .as-footer,
+          .as-main-grid,
+          .as-patient-bar {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
           }
         }
       `}</style>
     </div>
   );
+
+  if (typeof document === "undefined") return null;
+  return createPortal(printNode, document.body);
 };
 
 export default IpdMasterStatementPrint;

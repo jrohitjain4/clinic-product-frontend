@@ -515,11 +515,14 @@ const InvoiceSlip: React.FC<InvoiceSlipProps> = ({ invoice }) => {
 
         @media print {
           @page { size: A4; margin: 0; }
-          body * { visibility: hidden !important; }
+          /* Do not fight IPD multi-page summary print */
+          body:not(:has(#ipd-admission-print-summary)) * { visibility: hidden !important; }
           #print-invoice-slip, #print-invoice-slip *,
           #print-pharmacy-invoice-slip, #print-pharmacy-invoice-slip *,
           #print-diagnostic-invoice-slip, #print-diagnostic-invoice-slip * { visibility: visible !important; }
-          #print-invoice-slip, #print-pharmacy-invoice-slip, #print-diagnostic-invoice-slip {
+          body:not(:has(#ipd-admission-print-summary)) #print-invoice-slip,
+          body:not(:has(#ipd-admission-print-summary)) #print-pharmacy-invoice-slip,
+          body:not(:has(#ipd-admission-print-summary)) #print-diagnostic-invoice-slip {
             position: fixed !important;
             left: 0 !important;
             top: 0 !important;

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import dayjs from "dayjs";
 import { resolveMediaUrl } from "../../../../core/config/api";
 import PrescriptionPad from "../clinic-modules/appointments/PrescriptionPad";
@@ -300,7 +301,7 @@ const IpdAdmissionPrintSummary: React.FC<IpdAdmissionPrintSummaryProps> = ({ adm
   const showPrintLogo = Boolean(printLogoUrl) && !logoFailed;
   const printClinicInitial = (printClinicName.trim()?.[0] || "C").toUpperCase();
 
-  return (
+  const printNode = (
     <div id="ipd-admission-print-summary" className="ipd-print-root">
       {/* ═══ 1. ADMISSION SLIP ═══ */}
       <div className="as-slip ipd-print-page">
@@ -721,12 +722,11 @@ const IpdAdmissionPrintSummary: React.FC<IpdAdmissionPrintSummaryProps> = ({ adm
         }
         .ipd-print-page {
           width: 210mm;
-          min-height: 297mm;
           background: #fff;
           page-break-after: always;
           break-after: page;
         }
-        .ipd-print-page:last-child {
+        .ipd-print-page:last-of-type {
           page-break-after: auto;
           break-after: auto;
         }
@@ -738,7 +738,6 @@ const IpdAdmissionPrintSummary: React.FC<IpdAdmissionPrintSummaryProps> = ({ adm
 
         .as-slip {
           width: 210mm;
-          min-height: 297mm;
           margin: 0 auto;
           background: #fff;
           color: #0f172a;
@@ -754,8 +753,6 @@ const IpdAdmissionPrintSummary: React.FC<IpdAdmissionPrintSummaryProps> = ({ adm
           display: flex;
           flex-direction: column;
           gap: 8px;
-          flex: 1 1 auto;
-          min-height: 0;
         }
         .as-slip * {
           box-sizing: border-box;
@@ -971,40 +968,66 @@ const IpdAdmissionPrintSummary: React.FC<IpdAdmissionPrintSummaryProps> = ({ adm
         .as-footer-right { text-align: right; opacity: 0.95; }
 
         @media print {
-          @page { size: A4; margin: 0; }
+          @page { size: A4; margin: 8mm; }
           html, body {
             height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
             overflow: visible !important;
             background: #fff !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
-          body * { visibility: hidden !important; }
+          /* Hide app chrome — prevents duplicate pages in print preview */
+          body > *:not(#ipd-admission-print-summary) {
+            display: none !important;
+          }
+          #ipd-admission-print-summary.ipd-print-root {
+            display: block !important;
+            position: static !important;
+            left: auto !important;
+            top: auto !important;
+            width: 100% !important;
+            max-width: 210mm !important;
+            margin: 0 auto !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            z-index: auto !important;
+            visibility: visible !important;
+          }
           #ipd-admission-print-summary,
           #ipd-admission-print-summary * {
             visibility: visible !important;
           }
-          #ipd-admission-print-summary.ipd-print-root {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 210mm !important;
-            opacity: 1 !important;
-            pointer-events: auto !important;
-            z-index: 99999 !important;
+          .ipd-print-page,
+          .as-slip {
+            width: 100% !important;
+            min-height: 0 !important;
+            height: auto !important;
           }
           .ipd-print-page {
             page-break-after: always !important;
             break-after: page !important;
           }
-          .ipd-print-page:last-child {
+          .ipd-print-page:last-of-type {
             page-break-after: auto !important;
             break-after: auto !important;
+          }
+          .as-mid-row,
+          .as-payment,
+          .as-footer,
+          .as-main-grid,
+          .as-patient-bar {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
           }
         }
       `}</style>
     </div>
   );
+
+  if (typeof document === "undefined") return null;
+  return createPortal(printNode, document.body);
 };
 
 export default IpdAdmissionPrintSummary;

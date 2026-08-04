@@ -251,6 +251,17 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
     return list.filter((m: any) => m?.medicineName && String(m.medicineName).trim() !== "");
   }, [prescription?.medicines]);
 
+  const attachmentList = useMemo(() => {
+    const list = prescription?.attachments;
+    if (!Array.isArray(list)) return [];
+    return list
+      .filter((att: any) => att?.url)
+      .map((att: any) => ({
+        ...att,
+        resolvedUrl: resolveMediaUrl(att.url),
+      }));
+  }, [prescription?.attachments]);
+
   const additionalNotes =
     prescription?.additionalInstructions ||
     prescription?.clinicalNotes ||
@@ -272,7 +283,7 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
   );
 
   return (
-    <div className="rx-slip">
+    <div className={`rx-slip${attachmentList.length > 0 ? " rx-slip--with-attachments" : ""}`}>
       <div className="rx-slip-body">
         {/* Title — no DocYori logo / QR */}
         <div className="rx-title-bar">
@@ -572,6 +583,33 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
               </div>
             </div>
 
+        {attachmentList.length > 0 && (
+          <div className="rx-attachments-card">
+            <div className="rx-card-head">
+              <i className="ti ti-photo-plus" />
+              <span>PRESCRIPTION SCANS & ATTACHMENTS</span>
+            </div>
+            <div className="rx-attachments-grid">
+              {attachmentList.map((att: any, idx: number) => (
+                <div key={idx} className="rx-attachment-item">
+                  <div className="rx-attachment-image-wrap">
+                    <img
+                      src={att.resolvedUrl}
+                      alt={att.remark || `Attachment ${idx + 1}`}
+                      className="rx-attachment-image"
+                      crossOrigin="anonymous"
+                      loading="eager"
+                    />
+                  </div>
+                  <div className="rx-attachment-caption">
+                    {att.remark?.trim() || `Attachment ${idx + 1}`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {(suggestIPD || patient.suggestIPD) && (
           <div className="rx-ipd">
             <i className="ti ti-bed" />
@@ -672,6 +710,12 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
           page-break-inside: avoid;
           break-after: avoid;
           break-inside: avoid;
+        }
+        .rx-slip.rx-slip--with-attachments {
+          max-height: none;
+          overflow: visible;
+          page-break-inside: auto;
+          break-inside: auto;
         }
         .rx-slip * { box-sizing: border-box; }
         .rx-slip-body {
@@ -1282,6 +1326,47 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
           font-weight: 600;
         }
 
+        .rx-attachments-card {
+          margin-top: 10px;
+          background: #fff !important;
+          border: 1px solid #e2e5ee;
+          border-radius: 8px;
+          padding: 14px 16px;
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+        .rx-attachments-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 12px;
+        }
+        .rx-attachment-item {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+        .rx-attachment-image-wrap {
+          background: #fff;
+          padding: 8px;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .rx-attachment-image {
+          width: 100%;
+          height: 150px;
+          object-fit: cover;
+          display: block;
+          border-radius: 6px;
+        }
+        .rx-attachment-caption {
+          padding: 8px 10px;
+          font-size: 10.5px;
+          font-weight: 600;
+          color: #334155 !important;
+          line-height: 1.4;
+          word-break: break-word;
+        }
+
         .rx-bottom-row {
           display: grid;
           grid-template-columns: 1.55fr 1fr;
@@ -1435,9 +1520,24 @@ const PrescriptionPadSlip: React.FC<PrescriptionPadSlipProps> = ({
             page-break-inside: avoid !important;
             break-inside: avoid !important;
           }
+          .rx-slip.rx-slip--with-attachments {
+            max-height: none !important;
+            overflow: visible !important;
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+            page-break-after: auto !important;
+          }
+          .rx-slip.rx-slip--with-attachments .rx-attachment-image {
+            height: 110px !important;
+            object-fit: contain !important;
+          }
           html, body {
             height: auto !important;
             overflow: hidden !important;
+          }
+          html:has(.rx-slip--with-attachments),
+          body:has(.rx-slip--with-attachments) {
+            overflow: visible !important;
           }
           * {
             -webkit-print-color-adjust: exact !important;

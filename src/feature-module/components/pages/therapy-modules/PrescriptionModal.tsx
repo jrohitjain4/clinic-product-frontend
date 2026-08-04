@@ -304,12 +304,30 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
       followUpDate: selectedConsultation?.followUpDate || null,
       followUpNotes: selectedConsultation?.followUpNotes || "",
       diagnosticTests: selectedConsultation?.diagnosticTests || [],
+      attachments: selectedConsultation?.attachments || [],
       patient: printAppointment?.patient,
       doctor: printAppointment?.doctor,
       clinic: printAppointment?.clinic,
       department: printAppointment?.department,
     };
   }, [selectedConsultation, printAppointment]);
+
+  const waitForPadImages = (pad: HTMLElement) =>
+    Promise.all(
+      Array.from(pad.querySelectorAll("img")).map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            if (img.complete && img.naturalWidth > 0) {
+              resolve();
+              return;
+            }
+            const done = () => resolve();
+            img.addEventListener("load", done, { once: true });
+            img.addEventListener("error", done, { once: true });
+            setTimeout(done, 2500);
+          })
+      )
+    );
 
   const handlePrintPrescription = () => {
     const pad = document.getElementById("therapy-modal-print-prescription-pad");
@@ -332,17 +350,19 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
     });
     const originalDisplay = pad.style.display;
     pad.style.display = "block";
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        window.print();
+    waitForPadImages(pad).then(() => {
+      requestAnimationFrame(() => {
         setTimeout(() => {
-          pad.style.display = originalDisplay;
-          hiddenEls.forEach((el) => {
-            el.removeAttribute("data-hidden-for-print");
-            el.style.removeProperty("display");
-          });
-        }, 1500);
-      }, 50);
+          window.print();
+          setTimeout(() => {
+            pad.style.display = originalDisplay;
+            hiddenEls.forEach((el) => {
+              el.removeAttribute("data-hidden-for-print");
+              el.style.removeProperty("display");
+            });
+          }, 1500);
+        }, 50);
+      });
     });
   };
 
@@ -361,12 +381,15 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
       image: { type: "jpeg" as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, windowY: 0 },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
-      pagebreak: { mode: ["avoid-all"] as const },
+      pagebreak: { mode: ["css", "legacy"] as const },
     };
-    html2pdf()
-      .from(element)
-      .set(opt)
-      .save()
+    waitForPadImages(element)
+      .then(() =>
+        html2pdf()
+          .from(element)
+          .set(opt)
+          .save()
+      )
       .then(() => {
         element.style.display = originalDisplay;
       })
@@ -959,6 +982,10 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
             height: auto !important; overflow: hidden !important;
             margin: 0 !important; padding: 0 !important;
           }
+          html:has(#therapy-modal-print-prescription-pad .rx-slip--with-attachments),
+          body:has(#therapy-modal-print-prescription-pad .rx-slip--with-attachments) {
+            overflow: visible !important;
+          }
           body * { visibility: hidden !important; }
           #print-prescription-pad,
           #print-prescription-slip,
@@ -986,6 +1013,13 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
             page-break-after: avoid !important;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
+          }
+          #therapy-modal-print-prescription-pad:has(.rx-slip--with-attachments) {
+            max-height: none !important;
+            overflow: visible !important;
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+            page-break-after: auto !important;
           }
         }
       `}</style>

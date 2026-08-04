@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import BodyDiagram3D from "./BodyDiagram3D";
 import type { BodyPartDef } from "./BodyDiagram3D";
+import { buildTherapyScheduleBlocks } from "./therapySchedule";
 
 export interface PreviewPrintClinic {
   name?: string;
@@ -63,6 +64,8 @@ export interface ConsultationPreviewPrintProps {
   }>;
   advice?: string;
   severityColor: (s: number) => string;
+  /** Doctor/clinic availability used to generate session dates */
+  availability?: any;
 }
 
 const money = (n?: number) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
@@ -95,6 +98,7 @@ const ConsultationPreviewPrint = ({
   medicines = [],
   advice,
   severityColor,
+  availability,
 }: ConsultationPreviewPrintProps) => {
   const [logoFailed, setLogoFailed] = useState(false);
   const patientName = `${patient?.firstName || ""} ${patient?.lastName || ""}`.trim() || "—";
@@ -102,39 +106,64 @@ const ConsultationPreviewPrint = ({
   const logoSrc = typeof clinic.logo === "string" ? clinic.logo.trim() : "";
   const showLogo = Boolean(logoSrc) && !logoFailed;
   const bothViews = examHasFront && examHasBack;
+  const scheduleBlocks = useMemo(
+    () => buildTherapyScheduleBlocks(therapyPlans, availability),
+    [therapyPlans, availability]
+  );
 
   return (
     <div id="consultation-preview-print" className="cprev-root">
       <header className="cprev-header">
-        <div className="cprev-brand">
+        <div className="cprev-header-left">
           {showLogo ? (
             <img
               src={logoSrc}
               alt={clinic.name || "Clinic"}
-              className="cprev-logo"
+              className="cprev-avatar"
               onError={() => setLogoFailed(true)}
             />
           ) : (
-            <div className="cprev-logo-fallback">{clinicInitial}</div>
+            <div className="cprev-avatar cprev-avatar-fallback">{clinicInitial}</div>
           )}
-          <div>
-            <div className="cprev-clinic-name">{clinic.name || "Clinic"}</div>
-            {clinic.address && <div className="cprev-meta">{clinic.address}</div>}
-            <div className="cprev-meta">
-              {[clinic.phone, clinic.email].filter(Boolean).join(" · ") || "—"}
+          <div className="cprev-brand-text">
+            <div className="cprev-name-row">
+              <h2 className="cprev-clinic-name">{clinic.name || "Clinic"}</h2>
+              <span className="cprev-status-pill">Preview</span>
             </div>
+            <div className="cprev-info-line">
+              {clinic.phone && (
+                <span>
+                  <i className="ti ti-phone" /> {clinic.phone}
+                </span>
+              )}
+              {clinic.email && (
+                <span>
+                  <i className="ti ti-mail" /> {clinic.email}
+                </span>
+              )}
+              <span>
+                <i className="ti ti-calendar" />{" "}
+                {new Date().toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </span>
+            </div>
+            {clinic.address && (
+              <div className="cprev-info-line">
+                <span>
+                  <i className="ti ti-map-pin" /> {clinic.address}
+                </span>
+              </div>
+            )}
           </div>
         </div>
-        <div className="cprev-head-right">
-          <div className="cprev-doc-title">Consultation Plan</div>
-          <div className="cprev-sub">Preview & Confirm</div>
-          <div className="cprev-meta">
-            {new Date().toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })}
-          </div>
+        <div className="cprev-id-box">
+          <div className="cprev-id-label">APPOINTMENT ID</div>
+          <div className="cprev-id-value">#{appointmentCode || "—"}</div>
+          <div className="cprev-id-label cprev-id-label-gap">DOCUMENT TYPE</div>
+          <div className="cprev-id-type">Consultation Plan</div>
         </div>
       </header>
 
@@ -274,6 +303,63 @@ const ConsultationPreviewPrint = ({
         )}
       </section>
 
+      {/* Daily session schedule — one block per therapy */}
+      {therapyPlans.length > 0 && (
+        <section className="cprev-card">
+          <div className="cprev-card-title">
+            Daily Session Schedule
+            {scheduleBlocks.reduce((n, b) => n + b.entries.length, 0) > 0
+              ? ` (${scheduleBlocks.reduce((n, b) => n + b.entries.length, 0)})`
+              : ""}
+          </div>
+          {scheduleBlocks.map((block, pIdx) => (
+            <div key={pIdx} className="cprev-schedule-block">
+              <div className="cprev-schedule-head">
+                <span className="cprev-schedule-badge">{block.therapyName}</span>
+                <span className="cprev-muted">
+                  {block.sessionCount} session{block.sessionCount === 1 ? "" : "s"} over{" "}
+                  {block.totalDays} day{block.totalDays === 1 ? "" : "s"} ({block.scheduleType})
+                </span>
+              </div>
+              {block.entries.length > 0 ? (
+                <table className="cprev-table cprev-schedule-table">
+                  <thead>
+                    <tr>
+                      <th>Day</th>
+                      <th>Date</th>
+                      <th>Day of Week</th>
+                      <th>Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {block.entries.map((entry) => (
+                      <tr key={`${pIdx}-${entry.day}`}>
+                        <td>
+                          <span className="cprev-day-pill">Day {entry.day}</span>
+                        </td>
+                        <td className="cprev-strong">
+                          {entry.date.toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </td>
+                        <td>{entry.date.toLocaleDateString("en-US", { weekday: "long" })}</td>
+                        <td>{block.sessionTime}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="cprev-empty">
+                  Start date not set — schedule will be generated upon confirmation.
+                </div>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
+
       {/* Pricing summary — no paid/unpaid */}
       <section className="cprev-card">
         <div className="cprev-card-title">Pricing Summary</div>
@@ -366,30 +452,99 @@ const ConsultationPreviewPrint = ({
         .cprev-header {
           display: flex;
           justify-content: space-between;
-          gap: 16px;
-          align-items: flex-start;
-          padding: 18px 20px;
-          border-radius: 14px;
-          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-          color: #fff;
+          gap: 12px;
+          align-items: center;
+          padding: 12px 0;
           margin-bottom: 14px;
+          background: #fff;
+          border: none;
         }
-        .cprev-brand { display: flex; gap: 12px; align-items: center; min-width: 0; }
-        .cprev-logo {
-          width: 52px; height: 52px; border-radius: 12px; object-fit: cover;
-          background: #fff; flex-shrink: 0;
+        .cprev-header-left {
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+          min-width: 0;
+          flex: 1;
         }
-        .cprev-logo-fallback {
-          width: 52px; height: 52px; border-radius: 12px;
-          background: #fff; color: #4f46e5;
-          display: flex; align-items: center; justify-content: center;
-          font-weight: 800; font-size: 22px; flex-shrink: 0;
+        .cprev-avatar {
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
+          object-fit: cover;
+          flex-shrink: 0;
+          background: #eef2ff;
         }
-        .cprev-clinic-name { font-size: 18px; font-weight: 700; }
-        .cprev-meta { font-size: 11px; opacity: 0.9; margin-top: 2px; line-height: 1.35; }
-        .cprev-head-right { text-align: right; flex-shrink: 0; }
-        .cprev-doc-title { font-size: 15px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; }
-        .cprev-sub { font-size: 12px; opacity: 0.9; margin-top: 2px; }
+        .cprev-avatar-fallback {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          color: #fff;
+          font-weight: 700;
+          font-size: 22px;
+        }
+        .cprev-brand-text { min-width: 0; }
+        .cprev-name-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 6px;
+        }
+        .cprev-clinic-name {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 800;
+          color: #0f172a;
+        }
+        .cprev-status-pill {
+          display: inline-block;
+          padding: 2px 10px;
+          border-radius: 999px;
+          background: #e8f5e9;
+          color: #2e7d32;
+          font-size: 11px;
+          font-weight: 600;
+        }
+        .cprev-info-line {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px 14px;
+          font-size: 11px;
+          color: #334155;
+          margin-bottom: 4px;
+        }
+        .cprev-info-line i {
+          color: #6366f1;
+          margin-right: 3px;
+        }
+        .cprev-id-box {
+          border: 1.5px dashed #93c5fd;
+          border-radius: 10px;
+          padding: 10px 14px;
+          min-width: 150px;
+          text-align: center;
+          background: #f8fbff;
+          flex-shrink: 0;
+        }
+        .cprev-id-label {
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: 0.6px;
+          color: #2563eb;
+          text-transform: uppercase;
+        }
+        .cprev-id-label-gap { margin-top: 8px; }
+        .cprev-id-value {
+          font-size: 18px;
+          font-weight: 800;
+          color: #0f172a;
+          line-height: 1.2;
+        }
+        .cprev-id-type {
+          font-size: 12px;
+          font-weight: 700;
+          color: #2563eb;
+        }
 
         .cprev-card {
           border-radius: 12px;
@@ -397,8 +552,8 @@ const ConsultationPreviewPrint = ({
           padding: 14px 16px;
           margin-bottom: 12px;
           border: 1px solid #e2e8f0;
-          break-inside: avoid;
-          page-break-inside: avoid;
+          break-inside: auto;
+          page-break-inside: auto;
         }
         .cprev-card-title {
           font-size: 12px;
@@ -494,6 +649,35 @@ const ConsultationPreviewPrint = ({
         }
         .cprev-table tr:last-child td { border-bottom: none; }
 
+        .cprev-schedule-block { margin-bottom: 14px; }
+        .cprev-schedule-block:last-child { margin-bottom: 0; }
+        .cprev-schedule-head {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 8px 12px;
+          margin-bottom: 8px;
+        }
+        .cprev-schedule-badge {
+          display: inline-block;
+          padding: 4px 10px;
+          border-radius: 6px;
+          background: #eef2ff;
+          color: #4f46e5;
+          font-size: 12px;
+          font-weight: 700;
+        }
+        .cprev-schedule-table { margin-top: 4px; }
+        .cprev-day-pill {
+          display: inline-block;
+          padding: 2px 8px;
+          border-radius: 6px;
+          background: #f1f5f9;
+          color: #0f172a;
+          font-size: 11px;
+          font-weight: 600;
+        }
+
         .cprev-pricing {
           background: #fff;
           border-radius: 10px;
@@ -524,9 +708,11 @@ const ConsultationPreviewPrint = ({
         }
 
         @media print {
-          @page { size: A4; margin: 10mm; }
+          @page { size: A4; margin: 8mm; }
           html, body {
             background: #fff !important;
+            height: auto !important;
+            overflow: visible !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
@@ -540,21 +726,49 @@ const ConsultationPreviewPrint = ({
             left: 0 !important;
             top: 0 !important;
             width: 100% !important;
+            height: auto !important;
             margin: 0 !important;
             padding: 0 !important;
             opacity: 1 !important;
             pointer-events: auto !important;
             z-index: 1 !important;
           }
+          .cprev-header,
+          .cprev-card,
+          .cprev-schedule-block,
+          .cprev-footer {
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+            break-after: auto !important;
+            page-break-after: auto !important;
+            break-before: auto !important;
+            page-break-before: auto !important;
+          }
+          .cprev-card {
+            margin-bottom: 8px !important;
+            padding: 10px 12px !important;
+            box-shadow: none !important;
+          }
+          .cprev-table tr,
+          .cprev-mark,
+          .cprev-schedule-head {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
           .consult-print-canvas-img {
             visibility: visible !important;
             width: 100% !important;
-            max-height: 200px !important;
+            max-height: 160px !important;
             object-fit: contain !important;
             display: block !important;
           }
           .body-diagram-3d canvas {
             visibility: hidden !important;
+          }
+          .cprev-diagrams-pair,
+          .cprev-diagrams-single {
+            break-inside: auto !important;
+            page-break-inside: auto !important;
           }
         }
       `}</style>

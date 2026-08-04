@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import BodyDiagram3D from "./BodyDiagram3D";
 import type { BodyPartDef } from "./BodyDiagram3D";
+import { buildTherapyScheduleBlocks } from "./therapySchedule";
 
 export interface ConsultationPrintClinic {
   name?: string;
@@ -79,6 +80,7 @@ export interface ConsultationPrintPlanProps {
   }>;
   advice?: string;
   severityColor: (s: number) => string;
+  availability?: any;
 }
 
 const fmtDate = (value?: string) => {
@@ -120,6 +122,7 @@ const ConsultationPrintPlan = ({
   medicines = [],
   advice,
   severityColor,
+  availability,
 }: ConsultationPrintPlanProps) => {
   const [logoFailed, setLogoFailed] = useState(false);
   const patientName = `${patient?.firstName || ""} ${patient?.lastName || ""}`.trim() || "—";
@@ -128,39 +131,64 @@ const ConsultationPrintPlan = ({
   const clinicInitial = (clinic.name || "C").trim().charAt(0).toUpperCase() || "C";
   const logoSrc = typeof clinic.logo === "string" ? clinic.logo.trim() : "";
   const showLogo = Boolean(logoSrc) && !logoFailed;
+  const generatedSchedules = useMemo(
+    () => buildTherapyScheduleBlocks(therapyPlans || [], availability),
+    [therapyPlans, availability]
+  );
 
   return (
     <div id="consultation-print-plan" className="cpp-root">
-      {/* Clinic header */}
+      {/* Clinic header — patient-bar style with dashed ID card */}
       <header className="cpp-header">
-        <div className="cpp-header-brand">
+        <div className="cpp-header-left">
           {showLogo ? (
             <img
               src={logoSrc}
               alt={clinic.name || "Clinic"}
-              className="cpp-logo"
+              className="cpp-avatar"
               onError={() => setLogoFailed(true)}
             />
           ) : (
-            <div className="cpp-logo-fallback" aria-hidden="true">
+            <div className="cpp-avatar cpp-avatar-fallback" aria-hidden="true">
               {clinicInitial}
             </div>
           )}
           <div className="cpp-brand-text">
-            <div className="cpp-clinic-name">{clinic.name || "Clinic"}</div>
-            {clinic.address && <div className="cpp-clinic-meta">{clinic.address}</div>}
-            <div className="cpp-clinic-meta">
-              {[clinic.phone, clinic.email].filter(Boolean).join(" · ") || "—"}
+            <div className="cpp-name-row">
+              <h2 className="cpp-clinic-name">{clinic.name || "Clinic"}</h2>
+              {status && <span className="cpp-status-pill">{status}</span>}
             </div>
+            <div className="cpp-info-line">
+              {clinic.phone && (
+                <span>
+                  <i className="ti ti-phone" /> {clinic.phone}
+                </span>
+              )}
+              {clinic.email && (
+                <span>
+                  <i className="ti ti-mail" /> {clinic.email}
+                </span>
+              )}
+              {createdAt && (
+                <span>
+                  <i className="ti ti-calendar" /> {fmtDate(createdAt)}
+                </span>
+              )}
+            </div>
+            {clinic.address && (
+              <div className="cpp-info-line">
+                <span>
+                  <i className="ti ti-map-pin" /> {clinic.address}
+                </span>
+              </div>
+            )}
           </div>
         </div>
-        <div className="cpp-header-meta">
-          <div className="cpp-doc-title">Consultation Details</div>
-          <div className="cpp-code">{consultationCode || "—"}</div>
-          <div className="cpp-meta-row">
-            <span>{fmtDate(createdAt)}</span>
-            {status && <span className="cpp-pill">{status}</span>}
-          </div>
+        <div className="cpp-id-box">
+          <div className="cpp-id-label">CONSULTATION ID</div>
+          <div className="cpp-id-value">#{consultationCode || "—"}</div>
+          <div className="cpp-id-label cpp-id-label-gap">DOCUMENT TYPE</div>
+          <div className="cpp-id-type">Consultation Details</div>
         </div>
       </header>
 
@@ -305,14 +333,17 @@ const ConsultationPrintPlan = ({
         )}
       </section>
 
-      {/* Sessions */}
+      {/* Sessions — saved appointments, or generated schedule when not yet confirmed */}
       <section className="cpp-card">
         <div className="cpp-card-title">
-          Scheduled Therapy Sessions{sessions.length ? ` (${sessions.length})` : ""}
+          Scheduled Therapy Sessions
+          {sessions.length
+            ? ` (${sessions.length})`
+            : generatedSchedules.reduce((n, b) => n + b.entries.length, 0) > 0
+            ? ` (${generatedSchedules.reduce((n, b) => n + b.entries.length, 0)})`
+            : ""}
         </div>
-        {sessions.length === 0 ? (
-          <div className="cpp-empty">No sessions scheduled yet.</div>
-        ) : (
+        {sessions.length > 0 ? (
           <table className="cpp-table">
             <thead>
               <tr>
@@ -337,6 +368,54 @@ const ConsultationPrintPlan = ({
               ))}
             </tbody>
           </table>
+        ) : therapyPlans.length > 0 ? (
+          generatedSchedules.map((block, pIdx) => (
+            <div key={pIdx} className="cpp-schedule-block">
+              <div className="cpp-schedule-head">
+                <span className="cpp-schedule-badge">{block.therapyName}</span>
+                <span className="cpp-schedule-meta">
+                  {block.sessionCount} session{block.sessionCount === 1 ? "" : "s"} over{" "}
+                  {block.totalDays} day{block.totalDays === 1 ? "" : "s"} ({block.scheduleType})
+                </span>
+              </div>
+              {block.entries.length > 0 ? (
+                <table className="cpp-table">
+                  <thead>
+                    <tr>
+                      <th>Day</th>
+                      <th>Date</th>
+                      <th>Day of Week</th>
+                      <th>Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {block.entries.map((entry) => (
+                      <tr key={`${pIdx}-${entry.day}`}>
+                        <td>
+                          <span className="cpp-day-pill">Day {entry.day}</span>
+                        </td>
+                        <td className="cpp-strong">
+                          {entry.date.toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </td>
+                        <td>{entry.date.toLocaleDateString("en-US", { weekday: "long" })}</td>
+                        <td>{block.sessionTime}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="cpp-empty">
+                  Start date not set — schedule will be generated upon confirmation.
+                </div>
+              )}
+            </div>
+          ))
+        ) : (
+          <div className="cpp-empty">No sessions scheduled yet.</div>
         )}
       </section>
 
@@ -463,35 +542,130 @@ const ConsultationPrintPlan = ({
         .cpp-header {
           display: flex;
           justify-content: space-between;
-          gap: 16px;
-          align-items: flex-start;
-          padding: 18px 20px;
-          border-radius: 14px;
-          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-          color: #fff;
+          gap: 12px;
+          align-items: center;
+          padding: 12px 0;
           margin-bottom: 14px;
+          background: #fff;
+          border: none;
         }
-        .cpp-header-brand { display: flex; gap: 12px; align-items: center; min-width: 0; }
-        .cpp-logo {
-          width: 52px; height: 52px; border-radius: 12px; object-fit: cover;
-          background: #fff; flex-shrink: 0;
+        .cpp-header-left {
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+          min-width: 0;
+          flex: 1;
         }
-        .cpp-logo-fallback {
-          width: 52px; height: 52px; border-radius: 12px;
-          background: #fff; color: #4f46e5;
-          display: flex; align-items: center; justify-content: center;
-          font-weight: 800; font-size: 22px; flex-shrink: 0;
-          letter-spacing: 0;
+        .cpp-avatar {
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
+          object-fit: cover;
+          flex-shrink: 0;
+          background: #eef2ff;
         }
-        .cpp-clinic-name { font-size: 18px; font-weight: 700; letter-spacing: 0.2px; }
-        .cpp-clinic-meta { font-size: 11px; opacity: 0.88; margin-top: 2px; line-height: 1.35; }
-        .cpp-header-meta { text-align: right; flex-shrink: 0; }
-        .cpp-doc-title { font-size: 15px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; }
-        .cpp-code { font-size: 13px; font-weight: 600; margin-top: 4px; opacity: 0.95; }
-        .cpp-meta-row { display: flex; gap: 8px; justify-content: flex-end; align-items: center; margin-top: 6px; font-size: 11px; opacity: 0.9; }
+        .cpp-avatar-fallback {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          color: #fff;
+          font-weight: 700;
+          font-size: 22px;
+        }
+        .cpp-brand-text { min-width: 0; }
+        .cpp-name-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 6px;
+        }
+        .cpp-clinic-name {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 800;
+          color: #0f172a;
+        }
+        .cpp-status-pill {
+          display: inline-block;
+          padding: 2px 10px;
+          border-radius: 999px;
+          background: #e8f5e9;
+          color: #2e7d32;
+          font-size: 11px;
+          font-weight: 600;
+        }
+        .cpp-info-line {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px 14px;
+          font-size: 11px;
+          color: #334155;
+          margin-bottom: 4px;
+        }
+        .cpp-info-line i {
+          color: #6366f1;
+          margin-right: 3px;
+        }
+        .cpp-id-box {
+          border: 1.5px dashed #93c5fd;
+          border-radius: 10px;
+          padding: 10px 14px;
+          min-width: 150px;
+          text-align: center;
+          background: #f8fbff;
+          flex-shrink: 0;
+        }
+        .cpp-id-label {
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: 0.6px;
+          color: #2563eb;
+          text-transform: uppercase;
+        }
+        .cpp-id-label-gap { margin-top: 8px; }
+        .cpp-id-value {
+          font-size: 18px;
+          font-weight: 800;
+          color: #0f172a;
+          line-height: 1.2;
+        }
+        .cpp-id-type {
+          font-size: 12px;
+          font-weight: 700;
+          color: #2563eb;
+        }
         .cpp-pill {
           display: inline-block; padding: 2px 8px; border-radius: 999px;
-          background: rgba(255,255,255,0.18); font-weight: 600; font-size: 10px;
+          background: #e0e7ff; color: #3730a3; font-weight: 600; font-size: 10px;
+        }
+        .cpp-schedule-block { margin-bottom: 14px; }
+        .cpp-schedule-block:last-child { margin-bottom: 0; }
+        .cpp-schedule-head {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 8px 12px;
+          margin-bottom: 8px;
+        }
+        .cpp-schedule-badge {
+          display: inline-block;
+          padding: 4px 10px;
+          border-radius: 6px;
+          background: #eef2ff;
+          color: #4f46e5;
+          font-size: 12px;
+          font-weight: 700;
+        }
+        .cpp-schedule-meta { font-size: 11px; color: #64748b; }
+        .cpp-day-pill {
+          display: inline-block;
+          padding: 2px 8px;
+          border-radius: 6px;
+          background: #f1f5f9;
+          color: #0f172a;
+          font-size: 11px;
+          font-weight: 600;
         }
 
         .cpp-card {
@@ -501,8 +675,8 @@ const ConsultationPrintPlan = ({
           margin-bottom: 12px;
           box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
           border: 1px solid #e2e8f0;
-          break-inside: avoid;
-          page-break-inside: avoid;
+          break-inside: auto;
+          page-break-inside: auto;
         }
         .cpp-card-title {
           font-size: 12px;
@@ -653,9 +827,11 @@ const ConsultationPrintPlan = ({
         }
 
         @media print {
-          @page { size: A4; margin: 10mm; }
+          @page { size: A4; margin: 8mm; }
           html, body {
             background: #fff !important;
+            height: auto !important;
+            overflow: visible !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
@@ -670,25 +846,50 @@ const ConsultationPrintPlan = ({
             left: 0 !important;
             top: 0 !important;
             width: 100% !important;
+            height: auto !important;
             margin: 0 !important;
             padding: 0 !important;
             opacity: 1 !important;
             pointer-events: auto !important;
             z-index: 1 !important;
           }
+          .cpp-header,
+          .cpp-card,
+          .cpp-schedule-block,
+          .cpp-footer {
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+            break-after: auto !important;
+            page-break-after: auto !important;
+            break-before: auto !important;
+            page-break-before: auto !important;
+          }
           .cpp-card {
+            margin-bottom: 8px !important;
+            padding: 10px 12px !important;
             box-shadow: none !important;
             background: #f8fafc !important;
+          }
+          .cpp-table tr,
+          .cpp-mark-item,
+          .cpp-schedule-head {
+            break-inside: avoid;
+            page-break-inside: avoid;
           }
           .consult-print-canvas-img {
             visibility: visible !important;
             width: 100% !important;
-            max-height: 200px !important;
+            max-height: 160px !important;
             object-fit: contain !important;
             display: block !important;
           }
           .body-diagram-3d canvas {
             visibility: hidden !important;
+          }
+          .cpp-diagrams-pair,
+          .cpp-diagrams-single {
+            break-inside: auto !important;
+            page-break-inside: auto !important;
           }
         }
       `}</style>

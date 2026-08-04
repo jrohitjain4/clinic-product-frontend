@@ -1484,6 +1484,7 @@ const ConsultationForm = () => {
             medicines={consultationData.medicines || medicines}
             advice={consultationData.advice || advice}
             severityColor={severityColor}
+            availability={availability}
           />
 
         <style>{`
@@ -2882,6 +2883,7 @@ const ConsultationForm = () => {
               medicines={medicines}
               advice={advice}
               severityColor={severityColor}
+              availability={availability}
             />
           </div>
         )}

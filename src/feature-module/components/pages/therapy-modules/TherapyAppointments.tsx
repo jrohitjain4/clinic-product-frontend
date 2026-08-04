@@ -296,7 +296,13 @@ const TherapyAppointments = () => {
   const addModalMedicineRow = () => {
     if (!selectedConsultation) return;
     const currentMeds = [...(selectedConsultation.medicines || [])];
-    currentMeds.push({ name: "", dosage: "1-0-1", duration: "5 Days", instructions: "After Food" });
+    currentMeds.push({
+      name: "",
+      dosage: "1 Tablet",
+      frequency: "1-0-1",
+      duration: "5 Days",
+      instructions: "After Food",
+    });
     setSelectedConsultation({
       ...selectedConsultation,
       medicines: currentMeds,
@@ -358,12 +364,30 @@ const TherapyAppointments = () => {
       followUpDate: selectedConsultation?.followUpDate || null,
       followUpNotes: selectedConsultation?.followUpNotes || "",
       diagnosticTests: selectedConsultation?.diagnosticTests || [],
+      attachments: selectedConsultation?.attachments || [],
       patient: printAppointment?.patient,
       doctor: printAppointment?.doctor,
       clinic: printAppointment?.clinic,
       department: printAppointment?.department,
     };
   }, [selectedConsultation, printAppointment]);
+
+  const waitForPadImages = (pad: HTMLElement) =>
+    Promise.all(
+      Array.from(pad.querySelectorAll("img")).map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            if (img.complete && img.naturalWidth > 0) {
+              resolve();
+              return;
+            }
+            const done = () => resolve();
+            img.addEventListener("load", done, { once: true });
+            img.addEventListener("error", done, { once: true });
+            setTimeout(done, 2500);
+          })
+      )
+    );
 
   const handlePrintPrescription = () => {
     const pad = document.getElementById("therapy-modal-print-prescription-pad");
@@ -386,17 +410,19 @@ const TherapyAppointments = () => {
     });
     const originalDisplay = pad.style.display;
     pad.style.display = "block";
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        window.print();
+    waitForPadImages(pad).then(() => {
+      requestAnimationFrame(() => {
         setTimeout(() => {
-          pad.style.display = originalDisplay;
-          hiddenEls.forEach((el) => {
-            el.removeAttribute("data-hidden-for-print");
-            el.style.removeProperty("display");
-          });
-        }, 1500);
-      }, 50);
+          window.print();
+          setTimeout(() => {
+            pad.style.display = originalDisplay;
+            hiddenEls.forEach((el) => {
+              el.removeAttribute("data-hidden-for-print");
+              el.style.removeProperty("display");
+            });
+          }, 1500);
+        }, 50);
+      });
     });
   };
 
@@ -415,12 +441,15 @@ const TherapyAppointments = () => {
       image: { type: "jpeg" as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, windowY: 0 },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
-      pagebreak: { mode: ["avoid-all"] as const },
+      pagebreak: { mode: ["css", "legacy"] as const },
     };
-    html2pdf()
-      .from(element)
-      .set(opt)
-      .save()
+    waitForPadImages(element)
+      .then(() =>
+        html2pdf()
+          .from(element)
+          .set(opt)
+          .save()
+      )
       .then(() => {
         element.style.display = originalDisplay;
       })
@@ -461,7 +490,8 @@ const TherapyAppointments = () => {
     } else if (type === "clinic") {
       medicinesToCopy = (prevConsult.medicines || []).map((m: any) => ({
         name: m.medicineName || "",
-        dosage: m.frequency || m.dosage || "1-0-1",
+        dosage: m.dosage || "1 Tablet",
+        frequency: m.frequency || "1-0-1",
         duration: m.duration || "5 Days",
         instructions: m.timings || "After Food",
       }));
@@ -1560,158 +1590,180 @@ const TherapyAppointments = () => {
                               <span className="text-muted small">No medicines prescribed yet. Click "+ Add Medicine" to prescribe.</span>
                             </div>
                           ) : (
-                            <div style={{ overflow: "visible" }}>
-                              <table className="table table-hover align-middle mb-0" style={{ fontSize: 12 }}>
-                                <thead>
-                                  <tr className="bg-light">
-                                    <th className="border-0 py-2">Medicine Name *</th>
-                                    <th className="border-0 py-2" style={{ width: 120 }}>Dose</th>
-                                    <th className="border-0 py-2" style={{ width: 120 }}>Frequency</th>
-                                    <th className="border-0 py-2" style={{ width: 110 }}>Duration</th>
-                                    <th className="border-0 py-2" style={{ width: 130 }}>Timing</th>
-                                    <th className="border-0 py-2 text-end" style={{ width: 40 }}>Action</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {selectedConsultation.medicines.map((m: any, idx: number) => (
-                                    <tr key={idx}>
-                                      <td 
-                                        className="border-0 py-1 position-relative"
-                                        style={{ zIndex: activeSearchIndex === idx ? 1000 : 1 }}
+                            <div className="d-flex flex-column gap-3" style={{ overflow: "visible" }}>
+                              {selectedConsultation.medicines.map((m: any, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="border rounded-3 p-3 bg-light-subtle position-relative"
+                                  style={{ overflow: "visible", zIndex: activeSearchIndex === idx ? 1000 : 1 }}
+                                >
+                                  <div className="d-flex align-items-center justify-content-between gap-2 mb-3">
+                                    <div className="d-flex align-items-center gap-2">
+                                      <span
+                                        className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary fw-bold"
+                                        style={{ width: 30, height: 30, fontSize: 12 }}
                                       >
-                                        <IconFormControl
-                                          type="text"
-                                          fieldLabel="medicine"
-                                          className="form-control-sm"
-                                          placeholder="Medicine Name"
-                                          value={m.name}
-                                          onChange={(e) => updateModalMedicineRow(idx, "name", e.target.value)}
-                                          onFocus={() => setActiveSearchIndex(idx)}
-                                          onBlur={() => {
-                                            setTimeout(() => {
-                                              setActiveSearchIndex(null);
-                                            }, 250);
+                                        {idx + 1}
+                                      </span>
+                                      <div>
+                                        <div className="fw-bold text-dark fs-13">Medicine {idx + 1}</div>
+                                        <div className="text-muted" style={{ fontSize: 11 }}>
+                                          Add medicine details and schedule
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="btn btn-sm btn-link text-danger p-0 d-flex align-items-center gap-1"
+                                      onClick={() => removeModalMedicineRow(idx)}
+                                    >
+                                      <i className="ti ti-trash fs-5" />
+                                    </button>
+                                  </div>
+
+                                  <div className="row g-3">
+                                    <div
+                                      className="col-12 position-relative"
+                                      style={{ zIndex: activeSearchIndex === idx ? 1001 : 1 }}
+                                    >
+                                      <label className="form-label fw-semibold small text-muted mb-1">
+                                        Medicine Name *
+                                      </label>
+                                      <IconFormControl
+                                        type="text"
+                                        fieldLabel="medicine"
+                                        className="form-control-sm"
+                                        placeholder="Search or enter medicine name"
+                                        value={m.name}
+                                        onChange={(e) => updateModalMedicineRow(idx, "name", e.target.value)}
+                                        onFocus={() => setActiveSearchIndex(idx)}
+                                        onBlur={() => {
+                                          setTimeout(() => {
+                                            setActiveSearchIndex(null);
+                                          }, 250);
+                                        }}
+                                        style={{ borderRadius: 8 }}
+                                        autoComplete="off"
+                                      />
+                                      {activeSearchIndex === idx && (
+                                        <div
+                                          className="position-absolute bg-white border rounded-3 shadow-lg mt-1 w-100"
+                                          style={{
+                                            zIndex: 1002,
+                                            maxHeight: "180px",
+                                            overflowY: "auto",
+                                            top: "100%",
+                                            left: 0,
                                           }}
-                                          style={{ borderRadius: 6 }}
-                                          autoComplete="off"
-                                        />
-                                        {activeSearchIndex === idx && (
-                                          <div
-                                            className="position-absolute bg-white border rounded shadow-lg mb-1"
-                                            style={{
-                                              zIndex: 1000,
-                                              maxHeight: '180px',
-                                              overflowY: 'auto',
-                                              bottom: '100%',
-                                              left: 0,
-                                              minWidth: '280px'
-                                            }}
-                                          >
-                                            {medicineOptions
-                                              .filter((opt: any) => {
-                                                const search = (m.name || "").toLowerCase();
-                                                return (opt.name || "").toLowerCase().includes(search) ||
-                                                       (opt.category || "").toLowerCase().includes(search);
-                                              })
-                                              .slice(0, 50)
-                                              .map((opt: any, itemIdx: number) => (
-                                                <div
-                                                   key={itemIdx}
-                                                   className="px-3 py-2 text-dark border-bottom text-start"
-                                                   onMouseDown={() => handleSelectMedicine(idx, opt)}
-                                                   style={{ cursor: "pointer", transition: "background 0.1s" }}
-                                                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f8fafc"}
-                                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
-                                                 >
-                                                   <span className="fw-semibold text-dark" style={{ fontSize: 13 }}>{opt.name} - {opt.category}</span>
-                                                 </div>
-                                              ))}
-                                            {medicineOptions.filter((opt: any) => {
+                                        >
+                                          {medicineOptions
+                                            .filter((opt: any) => {
                                               const search = (m.name || "").toLowerCase();
                                               return (opt.name || "").toLowerCase().includes(search) ||
                                                      (opt.category || "").toLowerCase().includes(search);
-                                            }).length === 0 && (
-                                              <div className="px-3 py-2 text-muted text-start" style={{ fontSize: 11 }}>
-                                                No matching medicines found
+                                            })
+                                            .slice(0, 50)
+                                            .map((opt: any, itemIdx: number) => (
+                                              <div
+                                                key={itemIdx}
+                                                className="px-3 py-2 text-dark border-bottom text-start"
+                                                onMouseDown={() => handleSelectMedicine(idx, opt)}
+                                                style={{ cursor: "pointer", transition: "background 0.1s" }}
+                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f8fafc"}
+                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                                              >
+                                                <div className="fw-semibold text-dark" style={{ fontSize: 13 }}>
+                                                  {opt.name}
+                                                </div>
+                                                <div className="text-muted" style={{ fontSize: 11 }}>
+                                                  {opt.category}
+                                                </div>
                                               </div>
-                                            )}
-                                          </div>
-                                        )}
-                                      </td>
-                                      <td className="border-0 py-1">
-                                        <select
-                                          className="form-select form-select-sm"
-                                          value={m.dosage || "1 Tablet"}
-                                          onChange={(e) => updateModalMedicineRow(idx, "dosage", e.target.value)}
-                                          style={{ borderRadius: 6 }}
-                                        >
-                                          <option value="1 Tablet">1 Tablet</option>
-                                          <option value="2 Tablets">2 Tablets</option>
-                                          <option value="1 Spoon">1 Spoon</option>
-                                          <option value="0.5 Tablet">0.5 Tablet</option>
-                                          <option value="1 Capsule">1 Capsule</option>
-                                          <option value="2 Capsules">2 Capsules</option>
-                                          <option value="As Directed">As Directed</option>
-                                        </select>
-                                      </td>
-                                      <td className="border-0 py-1">
-                                        <select
-                                          className="form-select form-select-sm"
-                                          value={m.dosage === "1 Tablet" || m.dosage === "2 Tablets" || m.dosage === "1 Spoon" || m.dosage === "0.5 Tablet" || m.dosage === "1 Capsule" || m.dosage === "2 Capsules" || m.dosage === "As Directed" ? (m.dosage || "1-0-1") : m.dosage}
-                                          onChange={(e) => updateModalMedicineRow(idx, "dosage", e.target.value)}
-                                          style={{ borderRadius: 6 }}
-                                        >
-                                          <option value="1-0-1">1-0-1 (Twice)</option>
-                                          <option value="1-1-1">1-1-1 (Thrice)</option>
-                                          <option value="1-0-0">1-0-0 (Morning)</option>
-                                          <option value="0-1-0">0-1-0 (Afternoon)</option>
-                                          <option value="0-0-1">0-0-1 (Night)</option>
-                                          <option value="1-1-1-1">1-1-1-1 (Four times)</option>
-                                          <option value="SOS">SOS (As needed)</option>
-                                          <option value="As Directed">As Directed</option>
-                                        </select>
-                                      </td>
-                                      <td className="border-0 py-1">
-                                        <select
-                                          className="form-select form-select-sm"
-                                          value={m.duration || "5 Days"}
-                                          onChange={(e) => updateModalMedicineRow(idx, "duration", e.target.value)}
-                                          style={{ borderRadius: 6 }}
-                                        >
-                                          <option value="3 Days">3 Days</option>
-                                          <option value="5 Days">5 Days</option>
-                                          <option value="7 Days">7 Days</option>
-                                          <option value="10 Days">10 Days</option>
-                                          <option value="2 Weeks">2 Weeks</option>
-                                          <option value="1 Month">1 Month</option>
-                                        </select>
-                                      </td>
-                                      <td className="border-0 py-1">
-                                        <select
-                                          className="form-select form-select-sm"
-                                          value={m.instructions || "After Food"}
-                                          onChange={(e) => updateModalMedicineRow(idx, "instructions", e.target.value)}
-                                          style={{ borderRadius: 6 }}
-                                        >
-                                          <option value="After Food">After Food</option>
-                                          <option value="Before Food">Before Food</option>
-                                          <option value="With Food">With Food</option>
-                                          <option value="Empty Stomach">Empty Stomach</option>
-                                        </select>
-                                      </td>
-                                      <td className="border-0 py-1 text-end">
-                                        <button
-                                          type="button"
-                                          className="btn btn-sm btn-link text-danger p-0"
-                                          onClick={() => removeModalMedicineRow(idx)}
-                                        >
-                                          <i className="ti ti-trash fs-5" />
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
+                                            ))}
+                                          {medicineOptions.filter((opt: any) => {
+                                            const search = (m.name || "").toLowerCase();
+                                            return (opt.name || "").toLowerCase().includes(search) ||
+                                                   (opt.category || "").toLowerCase().includes(search);
+                                          }).length === 0 && (
+                                            <div className="px-3 py-2 text-muted text-start" style={{ fontSize: 11 }}>
+                                              No matching medicines found
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    <div className="col-md-3 col-sm-6">
+                                      <label className="form-label fw-semibold small text-muted mb-1">Dose</label>
+                                      <select
+                                        className="form-select form-select-sm"
+                                        value={m.dosage || "1 Tablet"}
+                                        onChange={(e) => updateModalMedicineRow(idx, "dosage", e.target.value)}
+                                        style={{ borderRadius: 8 }}
+                                      >
+                                        <option value="1 Tablet">1 Tablet</option>
+                                        <option value="2 Tablets">2 Tablets</option>
+                                        <option value="1 Spoon">1 Spoon</option>
+                                        <option value="0.5 Tablet">0.5 Tablet</option>
+                                        <option value="1 Capsule">1 Capsule</option>
+                                        <option value="2 Capsules">2 Capsules</option>
+                                        <option value="As Directed">As Directed</option>
+                                      </select>
+                                    </div>
+
+                                    <div className="col-md-3 col-sm-6">
+                                      <label className="form-label fw-semibold small text-muted mb-1">Frequency</label>
+                                      <select
+                                        className="form-select form-select-sm"
+                                        value={m.frequency || "1-0-1"}
+                                        onChange={(e) => updateModalMedicineRow(idx, "frequency", e.target.value)}
+                                        style={{ borderRadius: 8 }}
+                                      >
+                                        <option value="1-0-1">1-0-1 (Twice)</option>
+                                        <option value="1-1-1">1-1-1 (Thrice)</option>
+                                        <option value="1-0-0">1-0-0 (Morning)</option>
+                                        <option value="0-1-0">0-1-0 (Afternoon)</option>
+                                        <option value="0-0-1">0-0-1 (Night)</option>
+                                        <option value="1-1-1-1">1-1-1-1 (Four times)</option>
+                                        <option value="SOS">SOS (As needed)</option>
+                                        <option value="As Directed">As Directed</option>
+                                      </select>
+                                    </div>
+
+                                    <div className="col-md-3 col-sm-6">
+                                      <label className="form-label fw-semibold small text-muted mb-1">Duration</label>
+                                      <select
+                                        className="form-select form-select-sm"
+                                        value={m.duration || "5 Days"}
+                                        onChange={(e) => updateModalMedicineRow(idx, "duration", e.target.value)}
+                                        style={{ borderRadius: 8 }}
+                                      >
+                                        <option value="3 Days">3 Days</option>
+                                        <option value="5 Days">5 Days</option>
+                                        <option value="7 Days">7 Days</option>
+                                        <option value="10 Days">10 Days</option>
+                                        <option value="2 Weeks">2 Weeks</option>
+                                        <option value="1 Month">1 Month</option>
+                                      </select>
+                                    </div>
+
+                                    <div className="col-md-3 col-sm-6">
+                                      <label className="form-label fw-semibold small text-muted mb-1">Timing</label>
+                                      <select
+                                        className="form-select form-select-sm"
+                                        value={m.instructions || "After Food"}
+                                        onChange={(e) => updateModalMedicineRow(idx, "instructions", e.target.value)}
+                                        style={{ borderRadius: 8 }}
+                                      >
+                                        <option value="After Food">After Food</option>
+                                        <option value="Before Food">Before Food</option>
+                                        <option value="With Food">With Food</option>
+                                        <option value="Empty Stomach">Empty Stomach</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           )}
                         </div>
@@ -2000,6 +2052,10 @@ const TherapyAppointments = () => {
             margin: 0 !important;
             padding: 0 !important;
           }
+          html:has(#therapy-modal-print-prescription-pad .rx-slip--with-attachments),
+          body:has(#therapy-modal-print-prescription-pad .rx-slip--with-attachments) {
+            overflow: visible !important;
+          }
           body * { visibility: hidden !important; }
           #print-prescription-pad,
           #print-prescription-slip,
@@ -2034,6 +2090,13 @@ const TherapyAppointments = () => {
             page-break-after: avoid !important;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
+          }
+          #therapy-modal-print-prescription-pad:has(.rx-slip--with-attachments) {
+            max-height: none !important;
+            overflow: visible !important;
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+            page-break-after: auto !important;
           }
         }
       `}</style>

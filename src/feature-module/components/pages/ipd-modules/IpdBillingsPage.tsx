@@ -284,7 +284,6 @@ const IpdBillingsPage: React.FC = () => {
 
       // Refresh charge types & set as selected
       fetchData();
-      setCurrentType(created.name);
     } catch (err: any) {
       toast.error(err.message || "Error creating charge type");
     } finally {

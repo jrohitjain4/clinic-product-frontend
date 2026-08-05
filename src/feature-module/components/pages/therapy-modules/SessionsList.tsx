@@ -484,17 +484,25 @@ const SessionsList = () => {
           .sessions-list-page .sessions-filters-row {
             display: flex;
             align-items: center;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
             gap: 8px;
-            overflow-x: auto;
+            overflow: visible;
           }
           .sessions-list-page .appointments-filter-actions {
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-wrap: nowrap;
-            flex: 0 0 auto;
+            flex-wrap: wrap;
+            flex: 1 1 auto;
             min-width: 0;
+            overflow: visible;
+          }
+          .sessions-list-page .sessions-filters-row .dropdown {
+            position: relative;
+          }
+          .sessions-list-page .sessions-filters-row .dropdown-menu.show {
+            display: block !important;
+            z-index: 1055 !important;
           }
           .sessions-list-page .sessions-filter-select {
             height: 38px !important;

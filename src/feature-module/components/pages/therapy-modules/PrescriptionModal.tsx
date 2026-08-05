@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { apiGet, apiPut, apiPost } from "../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
 import { useMedicines } from "../../../../core/hooks/useMedicines";
+import { useLabTests } from "../../../../core/hooks/useLabTests";
 import { apiUrl } from "../../../../core/config/api";
 import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
 import html2pdf from "html2pdf.js";
@@ -34,6 +35,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
   onClose,
 }) => {
   const { medicines: pharmacyMedicines } = useMedicines();
+  const { tests: labTests } = useLabTests();
   const modalRef = useRef<HTMLDivElement>(null);
 
   const [selectedConsultation, setSelectedConsultation] = useState<any | null>(null);
@@ -43,6 +45,8 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
   const [activeSearchIndex, setActiveSearchIndex] = useState<number | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [testSearchText, setTestSearchText] = useState("");
+  const [showTestDropdown, setShowTestDropdown] = useState(false);
 
   // Initialize consultation data when appointment is set
   useEffect(() => {
@@ -160,6 +164,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
         painLevel: selectedConsultation.painLevel,
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updatedConsult);
       toast.success("Prescription file(s) uploaded successfully!");
@@ -189,6 +194,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
         painLevel: selectedConsultation.painLevel,
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updated);
     } catch (err: any) {
@@ -205,6 +211,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
         painLevel: selectedConsultation.painLevel,
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updatedConsult);
       toast.success("Attachment removed successfully");
@@ -258,6 +265,36 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
     });
   };
 
+  const diagnosticTestsList: string[] = Array.isArray(selectedConsultation?.diagnosticTests)
+    ? selectedConsultation.diagnosticTests
+    : [];
+
+  const addDiagnosticTest = (name: string) => {
+    const val = name.trim();
+    if (!selectedConsultation || !val) return;
+    const current = Array.isArray(selectedConsultation.diagnosticTests)
+      ? selectedConsultation.diagnosticTests
+      : [];
+    if (current.includes(val)) return;
+    setSelectedConsultation({
+      ...selectedConsultation,
+      diagnosticTests: [...current, val],
+    });
+    setTestSearchText("");
+    setShowTestDropdown(false);
+  };
+
+  const removeDiagnosticTest = (idx: number) => {
+    if (!selectedConsultation) return;
+    const current = Array.isArray(selectedConsultation.diagnosticTests)
+      ? selectedConsultation.diagnosticTests
+      : [];
+    setSelectedConsultation({
+      ...selectedConsultation,
+      diagnosticTests: current.filter((_: string, i: number) => i !== idx),
+    });
+  };
+
   const handleSaveModalConsultation = async () => {
     if (!selectedConsultation) return;
     try {
@@ -266,6 +303,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         advice: selectedConsultation.advice || "",
         attachments: selectedConsultation.attachments || [],
         painLevel: selectedConsultation.painLevel,
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updated);
       onSaveSuccess();
@@ -424,6 +462,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
       medicines: medicinesToCopy,
       advice: adviceToCopy,
       painLevel: prevConsult.painLevel || null,
+      diagnosticTests: Array.isArray(prevConsult.diagnosticTests) ? [...prevConsult.diagnosticTests] : [],
       attachments: attachmentsToCopy,
     });
     toast.info("Copied medicines, advice, pain level & images from past prescription.");
@@ -436,6 +475,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
       medicines: [],
       advice: "",
       painLevel: null,
+      diagnosticTests: [],
       attachments: [],
     });
     toast.info("Cleared prescription inputs.");
@@ -659,62 +699,176 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                         </div>
                       </div>
 
-                      {/* Pain Level Scale (1 to 10) */}
-                      <div className="card border-0 mb-4" style={{ borderRadius: 12, backgroundColor: "#fdf8f8", border: "1px solid #fce8e8 !important" }}>
-                        <div className="card-body p-3">
-                          <div className="d-flex align-items-center justify-content-between mb-2">
-                            <h6 className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: "#d946ef" }}>
-                              <i className="ti ti-activity text-danger fs-5"></i> How much pain left? (Pain Scale: 1 to 10)
-                            </h6>
-                            {selectedConsultation.painLevel ? (
-                              <span className={`badge px-3 py-2 fs-13 ${
-                                selectedConsultation.painLevel <= 3 ? "bg-success" :
-                                selectedConsultation.painLevel <= 7 ? "bg-warning text-dark" : "bg-danger"
-                              }`}>
-                                Current Pain: <strong>{selectedConsultation.painLevel} / 10</strong>
-                              </span>
-                            ) : (
-                              <span className="badge bg-secondary px-3 py-2 fs-13">Not Rated</span>
-                            )}
+                      {/* Pain Level Scale (1 to 10) — common theme */}
+                      <div
+                        className="mb-4 p-3 p-md-4"
+                        style={{
+                          borderRadius: 12,
+                          background: "#fff",
+                          boxShadow: "0 4px 14px rgba(15, 23, 42, 0.08)",
+                          border: "none",
+                        }}
+                      >
+                        <div className="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
+                          <div className="d-flex align-items-center gap-2">
+                            <span
+                              className="d-inline-flex align-items-center justify-content-center flex-shrink-0"
+                              style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 10,
+                                background: "#eff6ff",
+                                color: "#2563eb",
+                              }}
+                            >
+                              <i className="ti ti-activity-heartbeat" style={{ fontSize: 18 }} />
+                            </span>
+                            <div>
+                              <h6 className="fw-bold text-dark mb-0" style={{ fontSize: 14 }}>
+                                Pain Scale
+                              </h6>
+                              <p className="text-muted mb-0" style={{ fontSize: 12 }}>
+                                How much pain is left? Rate from 1 (mild) to 10 (severe)
+                              </p>
+                            </div>
                           </div>
-                          
-                          <div className="d-flex justify-content-between gap-1 mt-2 flex-wrap flex-md-nowrap">
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
-                              const isSelected = selectedConsultation.painLevel === num;
-                              let btnClass = "btn btn-outline-secondary";
-                              if (isSelected) {
-                                if (num <= 3) {
-                                  btnClass = "btn btn-success text-white border-success";
-                                } else if (num <= 7) {
-                                  btnClass = "btn btn-warning text-dark border-warning fw-bold";
-                                } else {
-                                  btnClass = "btn btn-danger text-white border-danger";
-                                }
-                              }
-                              return (
-                                <button
-                                  key={num}
-                                  type="button"
-                                  className={`flex-fill py-2 text-center fw-bold ${btnClass}`}
-                                  onClick={() => updateModalPainLevel(num)}
-                                  style={{
-                                    borderRadius: 8,
-                                    fontSize: 14,
-                                    minWidth: "35px",
-                                    transition: "all 0.2s",
-                                    ...(isSelected ? { transform: "scale(1.05)", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" } : {})
-                                  }}
-                                >
-                                  {num}
-                                </button>
-                              );
-                            })}
-                          </div>
-                          <div className="d-flex justify-content-between mt-2 text-muted small px-1" style={{ fontSize: 11 }}>
-                            <span className="text-success"><i className="ti ti-circle-check"></i> 1-3 Mild / Recovering</span>
-                            <span className="text-warning"><i className="ti ti-alert-triangle"></i> 4-7 Moderate</span>
-                            <span className="text-danger"><i className="ti ti-bolt"></i> 8-10 Severe Pain</span>
-                          </div>
+                          {selectedConsultation.painLevel ? (
+                            <span
+                              className="badge fw-semibold px-3 py-2"
+                              style={{
+                                fontSize: 12,
+                                borderRadius: 8,
+                                background:
+                                  selectedConsultation.painLevel <= 3
+                                    ? "#ecfdf5"
+                                    : selectedConsultation.painLevel <= 7
+                                    ? "#fffbeb"
+                                    : "#fef2f2",
+                                color:
+                                  selectedConsultation.painLevel <= 3
+                                    ? "#047857"
+                                    : selectedConsultation.painLevel <= 7
+                                    ? "#b45309"
+                                    : "#b91c1c",
+                                border: `1px solid ${
+                                  selectedConsultation.painLevel <= 3
+                                    ? "#6ee7b7"
+                                    : selectedConsultation.painLevel <= 7
+                                    ? "#fcd34d"
+                                    : "#fca5a5"
+                                }`,
+                              }}
+                            >
+                              Selected: {selectedConsultation.painLevel} / 10
+                            </span>
+                          ) : (
+                            <span
+                              className="badge fw-semibold px-3 py-2"
+                              style={{
+                                fontSize: 12,
+                                borderRadius: 8,
+                                background: "#f1f5f9",
+                                color: "#64748b",
+                                border: "1px solid #e2e8f0",
+                              }}
+                            >
+                              Not rated
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="d-flex gap-1 gap-md-2 flex-wrap">
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
+                            const isSelected = selectedConsultation.painLevel === num;
+                            const tone =
+                              num <= 3 ? "mild" : num <= 7 ? "moderate" : "severe";
+                            const palette = {
+                              mild: { bg: "#10b981", border: "#059669", soft: "#ecfdf5", text: "#047857" },
+                              moderate: { bg: "#f59e0b", border: "#d97706", soft: "#fffbeb", text: "#b45309" },
+                              severe: { bg: "#ef4444", border: "#dc2626", soft: "#fef2f2", text: "#b91c1c" },
+                            }[tone];
+
+                            return (
+                              <button
+                                key={num}
+                                type="button"
+                                onClick={() => updateModalPainLevel(num)}
+                                className="flex-fill d-flex align-items-center justify-content-center fw-bold"
+                                style={{
+                                  minWidth: 36,
+                                  height: 40,
+                                  borderRadius: 10,
+                                  fontSize: 14,
+                                  transition: "all 0.15s ease",
+                                  border: `1.5px solid ${isSelected ? palette.border : "#e2e8f0"}`,
+                                  background: isSelected ? palette.bg : "#fff",
+                                  color: isSelected ? "#fff" : "#334155",
+                                  boxShadow: isSelected
+                                    ? "0 4px 12px rgba(15, 23, 42, 0.15)"
+                                    : "none",
+                                  transform: isSelected ? "translateY(-1px)" : "none",
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!isSelected) {
+                                    e.currentTarget.style.background = palette.soft;
+                                    e.currentTarget.style.borderColor = palette.border;
+                                    e.currentTarget.style.color = palette.text;
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!isSelected) {
+                                    e.currentTarget.style.background = "#fff";
+                                    e.currentTarget.style.borderColor = "#e2e8f0";
+                                    e.currentTarget.style.color = "#334155";
+                                  }
+                                }}
+                              >
+                                {num}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <div className="d-flex flex-wrap gap-2 gap-md-3 mt-3 pt-3" style={{ borderTop: "1px solid #f1f5f9" }}>
+                          <span
+                            className="d-inline-flex align-items-center gap-1 px-2 py-1"
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              color: "#047857",
+                              background: "#ecfdf5",
+                              borderRadius: 999,
+                              border: "1px solid #a7f3d0",
+                            }}
+                          >
+                            <i className="ti ti-circle-check" /> 1–3 Mild
+                          </span>
+                          <span
+                            className="d-inline-flex align-items-center gap-1 px-2 py-1"
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              color: "#b45309",
+                              background: "#fffbeb",
+                              borderRadius: 999,
+                              border: "1px solid #fde68a",
+                            }}
+                          >
+                            <i className="ti ti-alert-triangle" /> 4–7 Moderate
+                          </span>
+                          <span
+                            className="d-inline-flex align-items-center gap-1 px-2 py-1"
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              color: "#b91c1c",
+                              background: "#fef2f2",
+                              borderRadius: 999,
+                              border: "1px solid #fecaca",
+                            }}
+                          >
+                            <i className="ti ti-bolt" /> 8–10 Severe
+                          </span>
                         </div>
                       </div>
 
@@ -737,16 +891,124 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                           <h6 className="fw-bold mb-2 d-flex align-items-center gap-2">
                             <i className="ti ti-stethoscope text-primary"></i> Diagnostic Tests
                           </h6>
-                          <IconFormControl
-                            type="text"
-                            fieldLabel="search"
-                            className="form-control-sm mb-2"
-                            placeholder="Search/Add Diagnostic Test..."
-                            disabled
-                            style={{ borderRadius: 8 }}
-                          />
-                          <div className="text-center py-4 border rounded-3 bg-light text-muted small" style={{ borderStyle: "dashed" }}>
-                            No diagnostic tests prescribed.
+
+                          <div className="position-relative mb-2" style={{ zIndex: 5 }}>
+                            <div className="input-group input-group-sm border rounded-3 bg-white px-2 align-items-center">
+                              <i className="ti ti-search text-muted fs-14 me-1" />
+                              <input
+                                type="text"
+                                className="form-control form-control-sm text-dark fw-semibold border-0 p-1"
+                                placeholder="Search/Add Diagnostic Test..."
+                                value={testSearchText}
+                                onChange={(e) => {
+                                  setTestSearchText(e.target.value);
+                                  setShowTestDropdown(true);
+                                }}
+                                onFocus={() => setShowTestDropdown(true)}
+                                onBlur={() => setTimeout(() => setShowTestDropdown(false), 250)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    addDiagnosticTest(testSearchText);
+                                  }
+                                }}
+                              />
+                              {testSearchText && (
+                                <button
+                                  type="button"
+                                  className="btn btn-link btn-sm text-muted p-0 border-0"
+                                  onClick={() => setTestSearchText("")}
+                                >
+                                  <i className="ti ti-x fs-13" />
+                                </button>
+                              )}
+                            </div>
+
+                            {showTestDropdown && (
+                              <div
+                                className="position-absolute w-100 bg-white border rounded shadow-lg mt-1"
+                                style={{
+                                  zIndex: 1000,
+                                  maxHeight: 180,
+                                  overflowY: "auto",
+                                  top: "100%",
+                                  left: 0,
+                                }}
+                              >
+                                {labTests
+                                  .filter((t: any) =>
+                                    t.name.toLowerCase().includes(testSearchText.toLowerCase())
+                                  )
+                                  .map((t: any) => (
+                                    <div
+                                      key={t.id}
+                                      className="px-3 py-2 d-flex align-items-center justify-content-between text-dark"
+                                      style={{ cursor: "pointer", borderBottom: "1px solid #f8fafc", fontSize: 13 }}
+                                      onMouseDown={() => addDiagnosticTest(t.name)}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.background = "#f1f5f9";
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = "#fff";
+                                      }}
+                                    >
+                                      <span className="fw-bold">{t.name}</span>
+                                      {t.testCode && (
+                                        <span className="badge bg-light text-muted" style={{ fontSize: 10 }}>
+                                          {t.testCode}
+                                        </span>
+                                      )}
+                                    </div>
+                                  ))}
+                                {testSearchText.trim() &&
+                                  !labTests.some(
+                                    (t: any) =>
+                                      t.name.toLowerCase() === testSearchText.toLowerCase().trim()
+                                  ) && (
+                                    <div
+                                      className="px-3 py-2 text-primary fw-bold text-center border-top"
+                                      style={{ cursor: "pointer", fontSize: 13 }}
+                                      onMouseDown={() => addDiagnosticTest(testSearchText)}
+                                    >
+                                      <i className="ti ti-plus me-1" /> Add Custom: &quot;
+                                      {testSearchText.trim()}&quot;
+                                    </div>
+                                  )}
+                                {labTests.length === 0 && !testSearchText.trim() && (
+                                  <div className="px-3 py-2 text-muted text-center" style={{ fontSize: 12 }}>
+                                    No lab tests found. Type to add a custom test.
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          <div
+                            className="border rounded-3 p-2 bg-light d-flex flex-wrap gap-2 align-content-start"
+                            style={{ minHeight: 72 }}
+                          >
+                            {diagnosticTestsList.length > 0 ? (
+                              diagnosticTestsList.map((testName: string, idx: number) => (
+                                <span
+                                  key={`${testName}-${idx}`}
+                                  className="badge bg-soft-primary text-primary px-2 py-2 rounded-3 fw-bold d-inline-flex align-items-center gap-1"
+                                  style={{ fontSize: 12 }}
+                                >
+                                  {testName}
+                                  <button
+                                    type="button"
+                                    className="btn-close p-0 border-0 ms-1"
+                                    style={{ fontSize: 8, width: 10, height: 10 }}
+                                    onClick={() => removeDiagnosticTest(idx)}
+                                    aria-label={`Remove ${testName}`}
+                                  />
+                                </span>
+                              ))
+                            ) : (
+                              <div className="text-center w-100 my-auto text-muted" style={{ fontSize: 12 }}>
+                                No diagnostic tests prescribed.
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

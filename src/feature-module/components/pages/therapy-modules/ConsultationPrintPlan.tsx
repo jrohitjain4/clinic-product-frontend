@@ -119,8 +119,6 @@ const ConsultationPrintPlan = ({
   therapyPlans = [],
   sessions = [],
   billing = {},
-  medicines = [],
-  advice,
   severityColor,
   availability,
 }: ConsultationPrintPlanProps) => {
@@ -478,42 +476,6 @@ const ConsultationPrintPlan = ({
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Prescription */}
-      <section className="cpp-card">
-        <div className="cpp-card-title">Prescription & Advice</div>
-        <div className="cpp-advice">
-          <div className="cpp-label">Doctor Advice / Instruction</div>
-          <div className="cpp-notes">{advice?.trim() || "No advice recorded."}</div>
-        </div>
-        <div className="cpp-label" style={{ marginTop: 12, marginBottom: 6 }}>
-          Prescribed Medicines
-        </div>
-        {medicines.length === 0 ? (
-          <div className="cpp-empty">No medicines prescribed.</div>
-        ) : (
-          <table className="cpp-table">
-            <thead>
-              <tr>
-                <th>Medicine</th>
-                <th>Dosage</th>
-                <th>Duration</th>
-                <th>Instructions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {medicines.map((m, i) => (
-                <tr key={i}>
-                  <td className="cpp-strong">{m.name || m.medicineName || "—"}</td>
-                  <td>{m.dosage || m.frequency || "—"}</td>
-                  <td>{m.duration || "—"}</td>
-                  <td>{m.instructions || m.timings || "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
       </section>
 
       <footer className="cpp-footer">

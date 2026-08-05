@@ -448,12 +448,27 @@ const SessionsList = () => {
         `}</style>
         <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
           <div className="flex-grow-1">
-            <h4 className="fw-bold mb-0">
-              Therapy Sessions
-              <span className="badge badge-soft-primary fw-medium border py-1 px-2 border-primary fs-13 ms-1">
-                Total Sessions : {loading ? "…" : sessions.length}
-              </span>
-            </h4>
+            <div className="d-flex align-items-center flex-wrap gap-3">
+              <h4 className="fw-bold mb-0">
+                Therapy Sessions
+                <span className="badge badge-soft-primary fw-medium border py-1 px-2 border-primary fs-13 ms-1">
+                  Total Sessions : {loading ? "…" : sessions.length}
+                </span>
+              </h4>
+              <div className="table-search mb-0" style={{ minWidth: 220, maxWidth: 320, flex: "1 1 240px" }}>
+                <div className="search-input w-100">
+                  <IconFormControl
+                    type="text"
+                    fieldLabel="search"
+                    className="form-control-sm"
+                    placeholder="Search code, patient, therapist..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{ borderRadius: 8 }}
+                  />
+                </div>
+              </div>
+            </div>
             <p className="text-muted mb-0 fs-13 mt-1">
               Track, manage and review scheduled client sessions.
             </p>
@@ -461,9 +476,10 @@ const SessionsList = () => {
           <div className="text-end d-flex">
             <Link
               to="/book-therapy-appointment"
-              className="btn btn-primary ms-2 fs-13 btn-md"
+              className="btn btn-primary d-flex align-items-center gap-2 ms-2"
+              style={{ minHeight: "38px", borderRadius: 8 }}
             >
-              <i className="ti ti-plus me-1" /> Book Therapy Session
+              <i className="ti ti-plus" /> Book Therapy Session
             </Link>
           </div>
         </div>
@@ -584,22 +600,7 @@ const SessionsList = () => {
               </div>
             </div>
 
-            <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 pt-3 border-top">
-              <div className="flex-grow-1" style={{ maxWidth: "350px" }}>
-                <div className="table-search mb-0 w-100">
-                  <div className="search-input w-100">
-                    <IconFormControl
-                      type="text"
-                      fieldLabel="search"
-                      className="form-control-sm"
-                      placeholder="Search code, patient, therapist..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      style={{ borderRadius: 8 }}
-                    />
-                  </div>
-                </div>
-              </div>
+            <div className="d-flex align-items-center justify-content-end flex-wrap gap-2 mt-3 pt-3 border-top">
               <div className="d-flex align-items-center gap-2">
                 <span className="fs-13 text-muted">
                   Showing <strong>{filteredSessions.length}</strong> of <strong>{sessions.length}</strong> Sessions

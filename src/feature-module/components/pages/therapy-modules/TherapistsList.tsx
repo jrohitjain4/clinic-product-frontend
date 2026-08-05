@@ -180,7 +180,6 @@ const TherapistsList = () => {
         <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
           <Link to={doctorDetailsPath(record.key)} className="text-info p-1" title="View"><i className="ti ti-eye fs-18" /></Link>
           <Link to={editDoctorPath(record.key)} className="text-primary p-1" title="Edit"><i className="ti ti-edit fs-18" /></Link>
-          <button className="bg-transparent border-0 text-secondary p-1" title="Print" onClick={() => { /* print */ }}><i className="ti ti-printer fs-18" /></button>
           <button className="bg-transparent border-0 text-danger p-1" title="Delete" data-bs-toggle="modal" data-bs-target="#delete_modal" onClick={() => setDoctorToDelete(record.key)}><i className="ti ti-trash fs-18" /></button>
         </div>
       ),

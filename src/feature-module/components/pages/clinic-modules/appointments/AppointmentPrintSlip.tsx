@@ -158,7 +158,12 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
   const doctorCreds = [doctorDesignation, doctorDept].filter(Boolean).join(" - ") || doctorDept;
   const doctorPhone = doctor.phone || "—";
   const doctorEmail = doctor.email || "—";
-  const doctorFee = doctor.consultationCharge != null ? `₹${doctor.consultationCharge}` : "—";
+  const doctorFee =
+    appointment.consultationFee != null
+      ? `₹${appointment.consultationFee}`
+      : doctor.consultationCharge != null
+        ? `₹${doctor.consultationCharge}`
+        : "—";
   const doctorExp = doctor.yearOfExperience ? `${doctor.yearOfExperience}+ Years` : "—";
   const doctorHasPhoto =
     doctor.profileImage &&
@@ -167,24 +172,51 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
 
   const apptCode = appointment.appointmentCode || appointment.bookingCode || "—";
   const visitType =
-    appointment.appointmentType ||
-    (isDiagnostic ? "Diagnostic" : appointment.isFollowUp ? "Follow-up" : "Consultation");
+    appointment.appointmentType === "therapy" || appointment.appointmentType === "Therapy"
+      ? "Therapy"
+      : appointment.appointmentType ||
+        (isDiagnostic ? "Diagnostic" : appointment.isFollowUp ? "Follow-up" : "Consultation");
   const visitDate = appointment.scheduledAt
     ? dayjs(appointment.scheduledAt).format("DD MMMM YYYY")
-    : "—";
+    : appointment.dateTimeLabel
+      ? String(appointment.dateTimeLabel).split(/[-–|]/)[0]?.trim() || "—"
+      : "—";
   const visitTime = appointment.scheduledAt
     ? dayjs(appointment.scheduledAt).format("hh:mm A")
-    : "—";
-  const scheduledSlot = formatAppointmentTimeRange(appointment.scheduledAt, appointment.endAt);
+    : appointment.dateTimeLabel
+      ? String(appointment.dateTimeLabel).split(/[-–|]/).slice(1).join("-").trim() || "—"
+      : "—";
+  const scheduledSlot = formatAppointmentTimeRange(appointment.scheduledAt, appointment.endAt) ||
+    appointment.dateTimeLabel ||
+    "—";
   const duration = `${doctor.appointmentDuration || 30} Minutes`;
   const paymentStatus = appointment.paymentStatus || "Unpaid";
   const paymentAmount =
-    appointment.amount != null
-      ? `₹${appointment.amount}`
-      : doctor.consultationCharge != null
-        ? `₹${doctor.consultationCharge}`
-        : "—";
+    appointment.finalFee != null
+      ? `₹${appointment.finalFee}`
+      : appointment.amount != null
+        ? `₹${appointment.amount}`
+        : appointment.consultationFee != null
+          ? `₹${appointment.consultationFee}`
+          : doctor.consultationCharge != null
+            ? `₹${doctor.consultationCharge}`
+            : "—";
   const paymentMode = appointment.paymentMode || appointment.paymentMethod || "—";
+  const discountLabel = appointment.discountAmount
+    ? `₹${appointment.discountAmount}${
+        appointment.discountType === "percentage" && appointment.discountValue != null
+          ? ` (${appointment.discountValue}%)`
+          : appointment.discountType === "fixed"
+          ? " (Fixed)"
+          : ""
+      }`
+    : null;
+  const whatsappLabel =
+    appointment.whatsappNotification === true
+      ? "Enabled"
+      : appointment.whatsappNotification === false
+      ? "Disabled"
+      : null;
 
   const genDate = dayjs().format("DD MMM YYYY");
   const genTime = dayjs().format("hh:mm A");
@@ -361,8 +393,17 @@ const AppointmentPrintSlip: React.FC<AppointmentPrintSlipProps> = ({
               "Payment Status",
               <span className={`as-pill ${isPaid ? "as-pill-green" : "as-pill-orange"}`}>{paymentStatus}</span>
             )}
+            {kv("Base Fee", appointment.consultationFee != null ? `₹${appointment.consultationFee}` : doctorFee)}
+            {discountLabel ? kv("Discount Applied", discountLabel) : null}
             {kv("Amount", paymentAmount)}
             {kv("Payment Mode", paymentMode === "—" ? "–" : paymentMode)}
+            {whatsappLabel ? kv("WhatsApp Alerts", whatsappLabel) : null}
+            {appointment.mode?.toLowerCase() === "online" && appointment.onlineLink
+              ? kv("Online Link", appointment.onlineLink)
+              : null}
+            {String(appointment.mode || "").toLowerCase().includes("home") && appointment.homeAddress
+              ? kv("Home Address", appointment.homeAddress)
+              : null}
           </div>
         </div>
 

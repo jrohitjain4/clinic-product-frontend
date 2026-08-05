@@ -95,8 +95,6 @@ const ConsultationPreviewPrint = ({
   discountValue,
   discountAmt,
   finalTotal,
-  medicines = [],
-  advice,
   severityColor,
   availability,
 }: ConsultationPreviewPrintProps) => {
@@ -390,42 +388,6 @@ const ConsultationPreviewPrint = ({
             <span>{money(finalTotal)}</span>
           </div>
         </div>
-      </section>
-
-      {/* Prescription */}
-      <section className="cprev-card">
-        <div className="cprev-card-title">Prescription & Advice</div>
-        <div className="cprev-label" style={{ marginBottom: 4 }}>
-          Doctor Advice
-        </div>
-        <div className="cprev-notes">{advice?.trim() || "No advice recorded."}</div>
-        <div className="cprev-label" style={{ marginTop: 12, marginBottom: 6 }}>
-          Prescribed Medicines
-        </div>
-        {medicines.length === 0 ? (
-          <div className="cprev-empty">No medicines prescribed.</div>
-        ) : (
-          <table className="cprev-table">
-            <thead>
-              <tr>
-                <th>Medicine</th>
-                <th>Dosage</th>
-                <th>Duration</th>
-                <th>Instructions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {medicines.map((m, i) => (
-                <tr key={i}>
-                  <td className="cprev-strong">{m.name || m.medicineName || "—"}</td>
-                  <td>{m.dosage || m.frequency || "—"}</td>
-                  <td>{m.duration || "—"}</td>
-                  <td>{m.instructions || m.timings || "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
       </section>
 
       <footer className="cprev-footer">

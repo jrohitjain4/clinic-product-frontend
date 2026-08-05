@@ -325,7 +325,7 @@ const ConsultationForm = () => {
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [whatsappNotification, setWhatsappNotification] = useState(false);
 
-  // Step 2 – Prescription & Advice
+  // Step 2 – Therapy plans & pricing
   const [advice, setAdvice] = useState("");
   const [medicines, setMedicines] = useState<any[]>([]);
   const [attachments, setAttachments] = useState<any[]>([]);
@@ -752,273 +752,6 @@ const ConsultationForm = () => {
     setAttachments((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const renderPrescriptionEditor = () => {
-    if (isViewMode && !isEditing) {
-      return (
-        <div className="card tc-card mb-3">
-          <div className="card-header tc-card-head px-3 px-md-4 py-3">
-            <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-              <span className="tc-section-icon" style={{ background: "#e8f1ff", color: "#4f46e5" }}>
-                <i className="ti ti-pill" />
-              </span>
-              Prescription & Advice
-            </h6>
-          </div>
-          <div className="card-body px-4 py-3">
-            <div className="mb-4">
-              <label className="form-label fw-bold small text-muted">Doctor Advice / Instruction</label>
-              <div className="p-3 bg-light rounded text-slate-700 fs-13" style={{ whiteSpace: "pre-wrap", borderLeft: "4px solid #6366f1" }}>
-                {advice || "No advice recorded."}
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <label className="form-label fw-bold small text-muted mb-2 d-block">Prescribed Medicines</label>
-              {medicines.length === 0 ? (
-                <div className="text-center py-4 border rounded-3 bg-light" style={{ borderStyle: "dashed" }}>
-                  <span className="text-muted small">No medicines prescribed.</span>
-                </div>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-hover align-middle mb-0" style={{ fontSize: 13 }}>
-                    <thead>
-                      <tr style={{ background: "#f8fafc" }}>
-                        <th className="border-0 py-2">Medicine Name</th>
-                        <th className="border-0 py-2" style={{ width: 140 }}>Dosage</th>
-                        <th className="border-0 py-2" style={{ width: 120 }}>Duration</th>
-                        <th className="border-0 py-2" style={{ width: 160 }}>Instructions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {medicines.map((m, idx) => (
-                        <tr key={idx}>
-                          <td className="border-0 py-2 fw-semibold text-dark">{m.name || m.medicineName}</td>
-                          <td className="border-0 py-2">{m.dosage || m.frequency}</td>
-                          <td className="border-0 py-2">{m.duration}</td>
-                          <td className="border-0 py-2">{m.instructions || m.timings}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {attachments.length > 0 && (
-              <div>
-                <label className="form-label fw-bold small text-muted mb-2 d-block">Diagnostic Scans & Attachments</label>
-                <div className="row g-3">
-                  {attachments.map((att, idx) => (
-                    <div key={idx} className="col-md-6 col-lg-4">
-                      <div className="p-2 rounded-3 bg-white h-100 tc-soft-panel d-flex flex-column gap-2">
-                        <img
-                          src={att.url.startsWith("/") ? apiUrl(att.url) : att.url}
-                          alt="Scan"
-                          className="rounded-2"
-                          style={{ width: "100%", height: 120, objectFit: "cover" }}
-                        />
-                        <div className="small text-dark fw-medium mt-1 px-1">{att.remark || "No remark"}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="card tc-card mb-3">
-        <div className="card-header tc-card-head px-3 px-md-4 py-3 d-flex align-items-center justify-content-between">
-          <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-            <span className="tc-section-icon" style={{ background: "#e8f1ff", color: "#4f46e5" }}>
-              <i className="ti ti-pill" />
-            </span>
-            Prescription & Advice
-          </h6>
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
-            style={{ borderRadius: 8 }}
-            onClick={addMedicineRow}
-          >
-            <i className="ti ti-plus" /> Add Medicine
-          </button>
-        </div>
-        <div className="card-body px-4 py-3">
-          {/* General Advice */}
-          <div className="mb-4">
-            <label className="form-label fw-bold small">Doctor Advice / Instruction</label>
-            <IconTextarea
-              fieldLabel="notes"
-              rows={3}
-              value={advice}
-              onChange={(e) => setAdvice(e.target.value)}
-              placeholder="Enter dietary, resting or general exercise instructions..."
-              style={{ borderRadius: 10, fontSize: 13 }}
-            />
-          </div>
-
-          {/* Medicines List */}
-          <div className="mb-4">
-            <label className="form-label fw-bold small mb-2 d-block">Prescribed Medicines</label>
-            {medicines.length === 0 ? (
-              <div className="text-center py-4 border rounded-3 bg-light" style={{ borderStyle: "dashed" }}>
-                <span className="text-muted small">No medicines prescribed yet. Click "+ Add Medicine" to prescribe.</span>
-              </div>
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-hover align-middle mb-0" style={{ fontSize: 13 }}>
-                  <thead>
-                    <tr style={{ background: "#f8fafc" }}>
-                      <th className="border-0 py-2">Medicine Name *</th>
-                      <th className="border-0 py-2" style={{ width: 140 }}>Dosage</th>
-                      <th className="border-0 py-2" style={{ width: 120 }}>Duration</th>
-                      <th className="border-0 py-2" style={{ width: 160 }}>Instructions</th>
-                      <th className="border-0 py-2 text-end" style={{ width: 60 }}>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {medicines.map((m, idx) => (
-                      <tr key={idx}>
-                        <td className="border-0 py-1">
-                          <IconFormControl
-                            type="text"
-                            fieldLabel="medicine"
-                            className="form-control-sm"
-                            placeholder="Medicine Name"
-                            value={m.name}
-                            onChange={(e) => updateMedicineRow(idx, "name", e.target.value)}
-                            style={{ borderRadius: 6 }}
-                          />
-                        </td>
-                        <td className="border-0 py-1">
-                          <select
-                            className="form-select form-select-sm"
-                            value={m.dosage}
-                            onChange={(e) => updateMedicineRow(idx, "dosage", e.target.value)}
-                            style={{ borderRadius: 6 }}
-                          >
-                            <option value="1-0-1">1-0-1 (Morning & Night)</option>
-                            <option value="1-1-1">1-1-1 (Thrice a day)</option>
-                            <option value="1-0-0">1-0-0 (Morning only)</option>
-                            <option value="0-1-0">0-1-0 (Afternoon only)</option>
-                            <option value="0-0-1">0-0-1 (Night only)</option>
-                            <option value="1-1-1-1">1-1-1-1 (Four times)</option>
-                          </select>
-                        </td>
-                        <td className="border-0 py-1">
-                          <IconFormControl
-                            type="text"
-                            fieldLabel="time"
-                            className="form-control-sm"
-                            placeholder="Duration"
-                            value={m.duration}
-                            onChange={(e) => updateMedicineRow(idx, "duration", e.target.value)}
-                            style={{ borderRadius: 6 }}
-                          />
-                        </td>
-                        <td className="border-0 py-1">
-                          <select
-                            className="form-select form-select-sm"
-                            value={m.instructions}
-                            onChange={(e) => updateMedicineRow(idx, "instructions", e.target.value)}
-                            style={{ borderRadius: 6 }}
-                          >
-                            <option value="After Food">After Food</option>
-                            <option value="Before Food">Before Food</option>
-                            <option value="With Food">With Food</option>
-                            <option value="Empty Stomach">Empty Stomach</option>
-                          </select>
-                        </td>
-                        <td className="border-0 py-1 text-end">
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-link text-danger p-0"
-                            onClick={() => removeMedicineRow(idx)}
-                          >
-                            <i className="ti ti-trash fs-5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {/* Diagnostic Scans / Attachments */}
-          <div>
-            <label className="form-label fw-bold small mb-2 d-block">Diagnostic Scans & Attachments (Multiple)</label>
-            <div className="d-flex align-items-center gap-3 mb-3">
-              <input
-                type="file"
-                id="consultation-file-input"
-                className="d-none"
-                accept="image/*"
-                onChange={handleFileChange}
-              />
-              <button
-                type="button"
-                className="btn btn-outline-secondary d-flex align-items-center gap-2"
-                onClick={() => document.getElementById("consultation-file-input")?.click()}
-                disabled={uploadingAttachment}
-                style={{ borderRadius: 10, padding: "8px 16px" }}
-              >
-                {uploadingAttachment ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm" /> Uploading...
-                  </>
-                ) : (
-                  <>
-                    <i className="ti ti-upload" /> Upload Image Scan
-                  </>
-                )}
-              </button>
-              <span className="text-muted small">Supports JPG, PNG images.</span>
-            </div>
-
-            {attachments.length > 0 && (
-              <div className="row g-3">
-                {attachments.map((att, idx) => (
-                  <div key={idx} className="col-md-6 col-lg-4">
-                    <div className="p-2 rounded-3 bg-white h-100 tc-soft-panel d-flex flex-column gap-2" style={{ position: "relative" }}>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-danger rounded-circle p-1 d-flex align-items-center justify-content-center"
-                        onClick={() => removeAttachment(idx)}
-                        style={{ position: "absolute", top: 6, right: 6, width: 22, height: 22, zIndex: 10 }}
-                      >
-                        <i className="ti ti-x" style={{ fontSize: 10 }} />
-                      </button>
-                      <img
-                        src={att.url.startsWith("/") ? apiUrl(att.url) : att.url}
-                        alt="Scan"
-                        className="rounded-2"
-                        style={{ width: "100%", height: 120, objectFit: "cover" }}
-                      />
-                      <IconFormControl
-                        type="text"
-                        fieldLabel="notes"
-                        className="form-control-sm"
-                        placeholder="Add caption / remark..."
-                        value={att.remark}
-                        onChange={(e) => updateAttachmentRemark(idx, e.target.value)}
-                        style={{ borderRadius: 6, fontSize: 12 }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   if (loadingConsultation) {
     return (
@@ -1304,7 +1037,6 @@ const ConsultationForm = () => {
                 </div>
               </div>
 
-              {renderPrescriptionEditor()}
             </div>
 
             {/* Right Column: Invoicing, Payment Capture, and Child Appointments */}
@@ -2017,22 +1749,13 @@ const ConsultationForm = () => {
             {/* Therapy Plans */}
             <div className="col-lg-7">
               <div className="card tc-card h-100">
-                <div className="card-header tc-card-head px-3 px-md-4 py-3 d-flex align-items-center justify-content-between">
+                <div className="card-header tc-card-head px-3 px-md-4 py-3">
                   <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
                     <span className="tc-section-icon" style={{ background: "#e8f1ff", color: "#4f46e5" }}>
                       <i className="ti ti-list-check" />
                     </span>
                     Recommended Therapies
                   </h6>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-primary"
-                    style={{ borderRadius: 8 }}
-                    onClick={() => setTherapyPlans((prev) => [...prev, emptyPlan()])}
-                  >
-                    <i className="ti ti-plus me-1" />
-                    Add Therapy
-                  </button>
                 </div>
                 <div className="card-body">
                   <div className="d-flex flex-column gap-4">
@@ -2231,6 +1954,17 @@ const ConsultationForm = () => {
                         </div>
                       </div>
                     ))}
+                    <div className="d-flex justify-content-end">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary"
+                        style={{ borderRadius: 8 }}
+                        onClick={() => setTherapyPlans((prev) => [...prev, emptyPlan()])}
+                      >
+                        <i className="ti ti-plus me-1" />
+                        Add Therapy
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2374,10 +2108,6 @@ const ConsultationForm = () => {
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div className="col-12">
-              {renderPrescriptionEditor()}
             </div>
 
             {/* Navigation */}

@@ -7,9 +7,11 @@ import { ViewModal } from "../../../../core/common/modal/ViewModal";
 import EmptyState from "../../../../core/common/emptyState";
 import { apiUrl } from "../../../../core/config/api";
 import { useMedicines } from "../../../../core/hooks/useMedicines";
+import { useLabTests } from "../../../../core/hooks/useLabTests";
 import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
 import html2pdf from "html2pdf.js";
 import PrescriptionPadSlip from "../clinic-modules/appointments/PrescriptionPadSlip";
+import AppointmentPrintSlip from "../clinic-modules/appointments/AppointmentPrintSlip";
 
 const mapTherapyMedToPad = (m: any) => {
   const raw = String(m?.dosage || "").trim();
@@ -31,7 +33,10 @@ const TherapyAppointments = () => {
   const navigate = useNavigate();
   const isConsultancy = location.pathname.includes("consultations");
   const { medicines: pharmacyMedicines } = useMedicines();
+  const { tests: labTests } = useLabTests();
   const [activeSearchIndex, setActiveSearchIndex] = useState<number | null>(null);
+  const [testSearchText, setTestSearchText] = useState("");
+  const [showTestDropdown, setShowTestDropdown] = useState(false);
 
   const medicineOptions = useMemo(() => {
     return (pharmacyMedicines || []).map((m: any) => ({
@@ -75,6 +80,7 @@ const TherapyAppointments = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedAppt, setSelectedAppt] = useState<any>(null);
   const [viewAppt, setViewAppt] = useState<any>(null);
+  const [slipPrintAppointment, setSlipPrintAppointment] = useState<any | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
@@ -107,6 +113,75 @@ const TherapyAppointments = () => {
   useEffect(() => {
     fetchAppointments();
   }, []);
+
+  useEffect(() => {
+    if (!slipPrintAppointment) return;
+
+    document.body.classList.add("printing-therapy-appt-slip");
+    const pad = document.getElementById("therapy-modal-print-prescription-pad");
+    pad?.setAttribute("data-hidden-for-print", "true");
+
+    const handleAfterPrint = () => {
+      document.body.classList.remove("printing-therapy-appt-slip");
+      pad?.removeAttribute("data-hidden-for-print");
+      setSlipPrintAppointment(null);
+      window.removeEventListener("afterprint", handleAfterPrint);
+    };
+    window.addEventListener("afterprint", handleAfterPrint);
+
+    const timer = setTimeout(() => {
+      window.print();
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("afterprint", handleAfterPrint);
+      document.body.classList.remove("printing-therapy-appt-slip");
+      pad?.removeAttribute("data-hidden-for-print");
+    };
+  }, [slipPrintAppointment]);
+
+  const handlePrintAppointmentSlip = async (raw: any) => {
+    const normalizeForSlip = (src: any) => {
+      const patient = src.patient || {};
+      const doctor = src.doctor || {};
+      const nameFromFlat = String(src.patientName || "").trim();
+      const nameParts = nameFromFlat ? nameFromFlat.split(/\s+/) : [];
+      const baseFee = src.consultationFee ?? doctor.consultationCharge ?? 0;
+      const finalFee = src.finalFee ?? src.amount ?? baseFee;
+      return {
+        ...src,
+        appointmentType: src.appointmentType || "Therapy",
+        amount: finalFee,
+        consultationFee: baseFee,
+        finalFee,
+        paymentMode: src.paymentMethod || src.paymentMode || "—",
+        paymentMethod: src.paymentMethod || src.paymentMode || "—",
+        paymentStatus: src.paymentStatus || "Unpaid",
+        patient: {
+          ...patient,
+          firstName: patient.firstName || nameParts[0] || "",
+          lastName: patient.lastName || nameParts.slice(1).join(" ") || "",
+          phone: patient.phone || src.patientPhone || "",
+          email: patient.email || src.patientEmail || "",
+        },
+        doctor: {
+          ...doctor,
+          fullName: doctor.fullName || src.doctorName || "",
+          consultationCharge: doctor.consultationCharge ?? baseFee,
+          phone: doctor.phone || src.doctorPhone || "",
+          email: doctor.email || src.doctorEmail || "",
+        },
+      };
+    };
+
+    try {
+      const full = await apiGet<any>(`/api/appointments/${raw.id}`);
+      setSlipPrintAppointment(normalizeForSlip({ ...raw, ...(full || {}) }));
+    } catch {
+      setSlipPrintAppointment(normalizeForSlip(raw));
+    }
+  };
 
   const handleDelete = async (id: string) => {
     try {
@@ -242,6 +317,7 @@ const TherapyAppointments = () => {
         attachments: updatedAttachments,
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updatedConsult);
       toast.success("Prescription file(s) uploaded successfully!");
@@ -270,6 +346,7 @@ const TherapyAppointments = () => {
         attachments: selectedConsultation.attachments,
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updated);
     } catch (err: any) {
@@ -285,6 +362,7 @@ const TherapyAppointments = () => {
         attachments: currentAttachments,
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updatedConsult);
       toast.success("Attachment removed successfully");
@@ -333,6 +411,36 @@ const TherapyAppointments = () => {
     setSelectedConsultation({
       ...selectedConsultation,
       advice: value,
+    });
+  };
+
+  const diagnosticTestsList: string[] = Array.isArray(selectedConsultation?.diagnosticTests)
+    ? selectedConsultation.diagnosticTests
+    : [];
+
+  const addDiagnosticTest = (name: string) => {
+    const val = name.trim();
+    if (!selectedConsultation || !val) return;
+    const current = Array.isArray(selectedConsultation.diagnosticTests)
+      ? selectedConsultation.diagnosticTests
+      : [];
+    if (current.includes(val)) return;
+    setSelectedConsultation({
+      ...selectedConsultation,
+      diagnosticTests: [...current, val],
+    });
+    setTestSearchText("");
+    setShowTestDropdown(false);
+  };
+
+  const removeDiagnosticTest = (idx: number) => {
+    if (!selectedConsultation) return;
+    const current = Array.isArray(selectedConsultation.diagnosticTests)
+      ? selectedConsultation.diagnosticTests
+      : [];
+    setSelectedConsultation({
+      ...selectedConsultation,
+      diagnosticTests: current.filter((_: string, i: number) => i !== idx),
     });
   };
 
@@ -467,6 +575,7 @@ const TherapyAppointments = () => {
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
         attachments: selectedConsultation.attachments || [],
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updated);
       await fetchAppointments();
@@ -501,6 +610,7 @@ const TherapyAppointments = () => {
       ...selectedConsultation,
       medicines: medicinesToCopy,
       advice: adviceToCopy,
+      diagnosticTests: Array.isArray(prevConsult.diagnosticTests) ? [...prevConsult.diagnosticTests] : [],
       attachments: attachmentsToCopy,
     });
     toast.info("Copied medicines, advice & images from past prescription.");
@@ -512,6 +622,7 @@ const TherapyAppointments = () => {
       ...selectedConsultation,
       medicines: [],
       advice: "",
+      diagnosticTests: [],
       attachments: [],
     });
     toast.info("Cleared prescription inputs.");
@@ -659,13 +770,11 @@ const TherapyAppointments = () => {
                       <div className="d-flex align-items-center justify-content-end gap-1">
                         <button
                           type="button"
-                          className={`ta-action-btn ${child.consultation ? "success" : "primary"}`}
-                          title={child.consultation ? "View / Upload Prescription Scan" : "Create Prescription Upload"}
-                          data-bs-toggle="modal"
-                          data-bs-target="#prescription_modal"
-                          onClick={() => handleOpenPrescriptionModal(child)}
+                          className="ta-action-btn primary"
+                          title="Print Appointment Slip"
+                          onClick={() => handlePrintAppointmentSlip(child)}
                         >
-                          <i className="ti ti-pill" />
+                          <i className="ti ti-printer" />
                         </button>
                         <button
                           type="button"
@@ -879,7 +988,6 @@ const TherapyAppointments = () => {
       render: (_text: string, record: any) => {
         const raw = record.raw;
         const isChildAppt = !!raw.parentAppointmentId;
-        const hasConsult = !!raw.consultation;
         const children = appointments.filter((a: any) => a.parentAppointmentId === raw.id);
         const hasChildren = children.length > 0;
         const isExpanded = expandedRowKeys.includes(raw.id);
@@ -900,13 +1008,11 @@ const TherapyAppointments = () => {
             {!isChildAppt && (
               <button
                 type="button"
-                className={`ta-action-btn ${hasConsult ? "success" : "primary"}`}
-                title={hasConsult ? "View / Upload Prescription Scan" : "Create Prescription Upload"}
-                data-bs-toggle="modal"
-                data-bs-target="#prescription_modal"
-                onClick={() => handleOpenPrescriptionModal(raw)}
+                className="ta-action-btn primary"
+                title="Print Appointment Slip"
+                onClick={() => handlePrintAppointmentSlip(raw)}
               >
-                <i className="ti ti-pill" />
+                <i className="ti ti-printer" />
               </button>
             )}
 
@@ -1296,7 +1402,7 @@ const TherapyAppointments = () => {
             {viewAppt?.status || "Schedule"}
           </span>
         }
-        highlightColor="#e0e7ff"
+        highlightColor="#dbeafe"
         details={[
           { icon: <i className="ti ti-user" />, label: "Patient", value: viewAppt?.patientName || "N/A" },
           { icon: <i className="ti ti-id" />, label: "Therapist / Doctor", value: viewAppt?.doctorName || "N/A" },
@@ -1308,13 +1414,41 @@ const TherapyAppointments = () => {
           { icon: <i className="ti ti-credit-card" />, label: "Payment Status", value: viewAppt?.paymentStatus || "Unpaid" },
           { icon: <i className="ti ti-brand-whatsapp" />, label: "WhatsApp Alerts", value: viewAppt?.whatsappNotification ? "Enabled" : "Disabled" }
         ]}
+        footerStart={
+          viewAppt && !viewAppt.parentAppointmentId ? (
+            <button
+              type="button"
+              className="btn btn-outline-primary fw-medium d-flex align-items-center gap-2"
+              onClick={() => {
+                const raw = viewAppt;
+                const viewEl = document.getElementById("view_therapy_appt");
+                const bootstrap = (window as any).bootstrap;
+                if (viewEl && bootstrap?.Modal) {
+                  const viewInstance = bootstrap.Modal.getInstance(viewEl) || new bootstrap.Modal(viewEl);
+                  viewInstance.hide();
+                }
+                void handleOpenPrescriptionModal(raw);
+                setTimeout(() => {
+                  const rxEl = document.getElementById("prescription_modal");
+                  if (rxEl && bootstrap?.Modal) {
+                    const rxInstance = bootstrap.Modal.getInstance(rxEl) || new bootstrap.Modal(rxEl);
+                    rxInstance.show();
+                  }
+                }, 250);
+              }}
+            >
+              <i className="ti ti-prescription" />
+              Generate Prescription
+            </button>
+          ) : null
+        }
       >
         {viewAppt?.mode?.toLowerCase() === "online" && viewAppt?.onlineLink && (
-          <div className="px-4 pb-3">
-            <label className="text-muted fs-12 mb-1 uppercase tracking-wider block fw-semibold">
+          <div className="mt-3 p-3 bg-white rounded-3 view-modal-card">
+            <label className="text-muted fs-12 mb-1 text-uppercase fw-semibold d-block">
               Online Meeting Link
             </label>
-            <div className="fs-14 text-primary leading-relaxed bg-light p-2 rounded">
+            <div className="fs-14 text-primary leading-relaxed">
               <a href={viewAppt.onlineLink} target="_blank" rel="noreferrer" className="text-break">
                 {viewAppt.onlineLink}
               </a>
@@ -1323,29 +1457,29 @@ const TherapyAppointments = () => {
         )}
 
         {viewAppt?.mode?.toLowerCase().includes("home") && viewAppt?.homeAddress && (
-          <div className="px-4 pb-3">
-            <label className="text-muted fs-12 mb-1 uppercase tracking-wider block fw-semibold">
+          <div className="mt-3 p-3 bg-white rounded-3 view-modal-card">
+            <label className="text-muted fs-12 mb-1 text-uppercase fw-semibold d-block">
               Home Visit Address
             </label>
-            <div className="fs-14 text-secondary leading-relaxed bg-light p-2 rounded">
+            <div className="fs-14 text-secondary leading-relaxed">
               {viewAppt.homeAddress}
             </div>
           </div>
         )}
 
         {viewAppt?.reason && (
-          <div className="px-4 pb-3">
-            <label className="text-muted fs-12 mb-1 uppercase tracking-wider block fw-semibold">
+          <div className="mt-3 p-3 bg-white rounded-3 view-modal-card">
+            <label className="text-muted fs-12 mb-1 text-uppercase fw-semibold d-block">
               Reason / Remarks
             </label>
-            <div className="fs-14 text-secondary leading-relaxed bg-light p-2 rounded">
+            <div className="fs-14 text-secondary leading-relaxed">
               {viewAppt.reason}
             </div>
           </div>
         )}
 
         {viewConsultation && (
-          <div className="px-4 pb-3 border-top pt-3">
+          <div className="mt-3 p-3 bg-white rounded-3 view-modal-card">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h5 className="fw-bold mb-0 text-dark d-flex align-items-center gap-2" style={{ fontSize: 14 }}>
                 <i className="ti ti-report-medical text-primary fs-18"></i> Examination & Consultation Report
@@ -1794,16 +1928,116 @@ const TherapyAppointments = () => {
                               <i className="ti ti-activity text-primary fs-18" />
                               <h6 className="fw-bold text-dark mb-0 fs-14">Diagnostic Tests</h6>
                             </div>
-                            <IconFormControl
-                              type="text"
-                              fieldLabel="search"
-                              className="form-control-sm mb-2"
-                              placeholder="Search/Add Diagnostic Test..."
-                              disabled
-                              style={{ borderRadius: 8 }}
-                            />
-                            <div className="flex-grow-1 border rounded-3 p-2 bg-light-subtle text-center text-muted small d-flex align-items-center justify-content-center" style={{ minHeight: 72 }}>
-                              No diagnostic tests prescribed.
+                            <div className="position-relative mb-2" style={{ zIndex: 5 }}>
+                              <div className="input-group input-group-sm border rounded-3 bg-white px-2 align-items-center">
+                                <i className="ti ti-search text-muted fs-14 me-1" />
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm text-dark fw-semibold border-0 p-1"
+                                  placeholder="Search/Add Diagnostic Test..."
+                                  value={testSearchText}
+                                  onChange={(e) => {
+                                    setTestSearchText(e.target.value);
+                                    setShowTestDropdown(true);
+                                  }}
+                                  onFocus={() => setShowTestDropdown(true)}
+                                  onBlur={() => setTimeout(() => setShowTestDropdown(false), 250)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault();
+                                      addDiagnosticTest(testSearchText);
+                                    }
+                                  }}
+                                />
+                                {testSearchText && (
+                                  <button
+                                    type="button"
+                                    className="btn btn-link btn-sm text-muted p-0 border-0"
+                                    onClick={() => setTestSearchText("")}
+                                  >
+                                    <i className="ti ti-x fs-13" />
+                                  </button>
+                                )}
+                              </div>
+
+                              {showTestDropdown && (
+                                <div
+                                  className="position-absolute w-100 bg-white border rounded shadow-lg mt-1"
+                                  style={{
+                                    zIndex: 1000,
+                                    maxHeight: 180,
+                                    overflowY: "auto",
+                                    top: "100%",
+                                    left: 0,
+                                  }}
+                                >
+                                  {labTests
+                                    .filter((t: any) =>
+                                      t.name.toLowerCase().includes(testSearchText.toLowerCase())
+                                    )
+                                    .map((t: any) => (
+                                      <div
+                                        key={t.id}
+                                        className="px-3 py-2 d-flex align-items-center justify-content-between text-dark medicine-dropdown-item"
+                                        style={{ cursor: "pointer", borderBottom: "1px solid #f8fafc", fontSize: 13 }}
+                                        onMouseDown={() => addDiagnosticTest(t.name)}
+                                      >
+                                        <span className="fw-bold">{t.name}</span>
+                                        {t.testCode && (
+                                          <span className="badge bg-light text-muted" style={{ fontSize: 10 }}>
+                                            {t.testCode}
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  {testSearchText.trim() &&
+                                    !labTests.some(
+                                      (t: any) =>
+                                        t.name.toLowerCase() === testSearchText.toLowerCase().trim()
+                                    ) && (
+                                      <div
+                                        className="px-3 py-2 text-primary fw-bold text-center border-top"
+                                        style={{ cursor: "pointer", fontSize: 13 }}
+                                        onMouseDown={() => addDiagnosticTest(testSearchText)}
+                                      >
+                                        <i className="ti ti-plus me-1" /> Add Custom: &quot;
+                                        {testSearchText.trim()}&quot;
+                                      </div>
+                                    )}
+                                  {labTests.length === 0 && !testSearchText.trim() && (
+                                    <div className="px-3 py-2 text-muted text-center" style={{ fontSize: 12 }}>
+                                      No lab tests found. Type to add a custom test.
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <div
+                              className="flex-grow-1 border rounded-3 p-2 bg-light-subtle d-flex flex-wrap gap-2 align-content-start"
+                              style={{ minHeight: 72 }}
+                            >
+                              {diagnosticTestsList.length > 0 ? (
+                                diagnosticTestsList.map((testName: string, idx: number) => (
+                                  <span
+                                    key={`${testName}-${idx}`}
+                                    className="badge bg-soft-primary text-primary px-2 py-2 rounded-3 fw-bold d-inline-flex align-items-center gap-1"
+                                    style={{ fontSize: 12 }}
+                                  >
+                                    {testName}
+                                    <button
+                                      type="button"
+                                      className="btn-close p-0 border-0 ms-1"
+                                      style={{ fontSize: 8, width: 10, height: 10 }}
+                                      onClick={() => removeDiagnosticTest(idx)}
+                                      aria-label={`Remove ${testName}`}
+                                    />
+                                  </span>
+                                ))
+                              ) : (
+                                <div className="text-center w-100 my-auto text-muted small d-flex align-items-center justify-content-center">
+                                  No diagnostic tests prescribed.
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -2021,6 +2255,11 @@ const TherapyAppointments = () => {
           prescription={printPrescription}
         />
       </div>
+      {slipPrintAppointment && (
+        <div id="print-therapy-appointment-slip" style={{ display: "none" }}>
+          <AppointmentPrintSlip appointment={slipPrintAppointment} />
+        </div>
+      )}
       <style>{`
         .prescription-modal-wrapper .modal-xl { max-width: 1080px; width: 92%; }
         .prescription-modal-wrapper .visit-tab-card {
@@ -2062,6 +2301,7 @@ const TherapyAppointments = () => {
           #print-appointment,
           #print-prescription,
           #modal-print-prescription-pad,
+          #print-therapy-appointment-slip,
           [data-hidden-for-print],
           [data-hidden-for-print] * {
             display: none !important;
@@ -2097,6 +2337,33 @@ const TherapyAppointments = () => {
             page-break-inside: auto !important;
             break-inside: auto !important;
             page-break-after: auto !important;
+          }
+        }
+
+        /* Appointment slip print (same design as /appointments) */
+        @media print {
+          body.printing-therapy-appt-slip * {
+            visibility: hidden !important;
+          }
+          body.printing-therapy-appt-slip #therapy-modal-print-prescription-pad,
+          body.printing-therapy-appt-slip #therapy-modal-print-prescription-pad * {
+            display: none !important;
+            visibility: hidden !important;
+          }
+          body.printing-therapy-appt-slip #print-therapy-appointment-slip,
+          body.printing-therapy-appt-slip #print-therapy-appointment-slip * {
+            visibility: visible !important;
+          }
+          body.printing-therapy-appt-slip #print-therapy-appointment-slip {
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 210mm !important;
+            background: #fff !important;
+            z-index: 99999 !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
         }
       `}</style>

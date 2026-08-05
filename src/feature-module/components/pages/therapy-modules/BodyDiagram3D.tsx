@@ -1,4 +1,4 @@
-import { Suspense, useMemo, useRef } from "react";
+import { Suspense, useMemo, useRef, type CSSProperties, type MutableRefObject } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Billboard, ContactShadows, Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -272,7 +272,10 @@ function Scene({
   previewPartId,
   previewSeverity,
   lockedView,
-}: Omit<Props, "height" | "fillParent" | "showHint">) {
+  controlsApiRef,
+}: Omit<Props, "height" | "fillParent" | "showHint"> & {
+  controlsApiRef?: MutableRefObject<any>;
+}) {
   const controlsRef = useRef<any>(null);
   const markMap = useMemo(() => {
     const m = new Map<string, BodyPointMark>();
@@ -307,16 +310,20 @@ function Scene({
       ))}
       <ContactShadows position={[0, -1.2, 0]} opacity={0.3} scale={7} blur={2.5} far={3} />
       <OrbitControls
-        ref={controlsRef}
+        ref={(r) => {
+          controlsRef.current = r;
+          if (controlsApiRef) controlsApiRef.current = r;
+        }}
         enablePan={false}
         enableZoom={!isLocked}
         enableRotate={!isLocked}
-        minDistance={3.8}
-        maxDistance={7.5}
+        minDistance={3.2}
+        maxDistance={8.5}
         minPolarAngle={Math.PI / 4}
         maxPolarAngle={Math.PI / 1.65}
         target={[0, 0.2, 0]}
         rotateSpeed={0.85}
+        zoomSpeed={0.9}
       />
     </>
   );
@@ -337,29 +344,43 @@ const BodyDiagram3D = ({
 }: Props) => {
   const cameraZ = lockedView === "back" ? -5.2 : 5.2;
   const hintVisible = showHint ?? !lockedView;
+  const controlsApiRef = useRef<any>(null);
+  const canZoom = !lockedView;
+
+  const handleZoom = (dir: "in" | "out") => {
+    const controls = controlsApiRef.current;
+    if (!controls) return;
+    if (dir === "in") controls.dollyIn(1.22);
+    else controls.dollyOut(1.22);
+    controls.update();
+  };
+
+  const shellStyle: CSSProperties = fillParent
+    ? {
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        borderRadius: 12,
+        overflow: "hidden",
+        background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)",
+        border: "2px solid #334155",
+        boxSizing: "border-box",
+      }
+    : {
+        height,
+        borderRadius: 12,
+        overflow: "hidden",
+        background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)",
+        border: "2px solid #334155",
+        boxSizing: "border-box",
+      };
 
   return (
     <div
       className="body-diagram-3d position-relative w-100"
       data-locked-view={lockedView || undefined}
-      style={
-        fillParent
-          ? {
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              borderRadius: 12,
-              overflow: "hidden",
-              background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)",
-            }
-          : {
-              height,
-              borderRadius: 12,
-              overflow: "hidden",
-              background: "linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)",
-            }
-      }
+      style={shellStyle}
     >
       <Canvas
         shadows
@@ -378,25 +399,90 @@ const BodyDiagram3D = ({
             previewPartId={previewPartId}
             previewSeverity={previewSeverity}
             lockedView={lockedView}
+            controlsApiRef={controlsApiRef}
           />
         </Suspense>
       </Canvas>
+
       {hintVisible && (
         <div
-          className="position-absolute top-0 start-0 m-2 px-2 py-1 rounded-pill d-print-none"
+          className="position-absolute top-0 start-0 m-2 d-print-none d-flex align-items-center gap-2 px-3 py-2"
           style={{
-            background: "rgba(255,255,255,0.9)",
-            border: "1px solid #e2e8f0",
-            fontSize: 11,
-            fontWeight: 600,
-            color: "#64748b",
+            background: "#4f46e5",
+            border: "2px solid #312e81",
+            borderRadius: 10,
+            fontSize: 12,
+            fontWeight: 700,
+            color: "#fff",
             pointerEvents: "none",
+            boxShadow: "0 4px 14px rgba(79, 70, 229, 0.35)",
+            letterSpacing: "0.01em",
           }}
         >
-          <i className="ti ti-rotate me-1" />
+          <span
+            className="d-inline-flex align-items-center justify-content-center"
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 8,
+              background: "rgba(255,255,255,0.2)",
+              flexShrink: 0,
+            }}
+          >
+            <i className="ti ti-rotate" style={{ fontSize: 16 }} />
+          </span>
           Drag to rotate 360°
         </div>
       )}
+
+      {canZoom && (
+        <div
+          className="position-absolute bottom-0 end-0 m-2 d-print-none d-flex flex-column gap-2"
+          style={{ zIndex: 5 }}
+        >
+          <button
+            type="button"
+            className="btn d-flex align-items-center justify-content-center p-0"
+            title="Zoom in"
+            onClick={() => handleZoom("in")}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              background: "#fff",
+              border: "2px solid #334155",
+              color: "#0f172a",
+              boxShadow: "0 2px 8px rgba(15, 23, 42, 0.12)",
+              fontWeight: 700,
+              fontSize: 18,
+              lineHeight: 1,
+            }}
+          >
+            <i className="ti ti-plus" />
+          </button>
+          <button
+            type="button"
+            className="btn d-flex align-items-center justify-content-center p-0"
+            title="Zoom out"
+            onClick={() => handleZoom("out")}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              background: "#fff",
+              border: "2px solid #334155",
+              color: "#0f172a",
+              boxShadow: "0 2px 8px rgba(15, 23, 42, 0.12)",
+              fontWeight: 700,
+              fontSize: 18,
+              lineHeight: 1,
+            }}
+          >
+            <i className="ti ti-minus" />
+          </button>
+        </div>
+      )}
+
       {lockedView && (
         <div
           className="position-absolute top-0 start-0 m-2 px-2 py-1 rounded-pill"

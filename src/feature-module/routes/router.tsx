@@ -34,7 +34,7 @@ const ALLRoutes: React.FC = () => {
         </Route>
 
         {/* Catch-all global redirect */}
-        <Route path="*" element={<Navigate to={all_routes.dashboard} replace />} />
+        <Route path="*" element={<Navigate to={all_routes.aboutDocYori} replace />} />
       </Routes>
     </>
   );

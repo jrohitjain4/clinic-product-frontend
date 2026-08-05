@@ -60,6 +60,7 @@ export const all_routes = {
   successBasic: "/success-basic",
 
   //Dashboard routes
+  aboutDocYori: "/about-docyori",
   dashboard: "/dashboard",
   doctordashboard: "/doctor/doctor-dashboard",
   patientdashboard: "/patient/patient-dashboard",

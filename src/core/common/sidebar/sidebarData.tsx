@@ -151,6 +151,17 @@ export const SidebarData = [
     hideHeader: true,
     submenuItems: [
       {
+        label: "Dashboard",
+        link: routes.aboutDocYori,
+        submenu: false,
+        showSubRoute: false,
+        icon: "layout-dashboard",
+        base: "about-docyori",
+        materialicons: "start",
+        dot: false,
+        submenuItems: [],
+      },
+      {
         label: "OPD",
         link: "index",
         submenu: true,

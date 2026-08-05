@@ -115,6 +115,7 @@ const Pages = lazy(() => import("../components/pages/content-modules/page/pages"
 const States = lazy(() => import("../components/pages/content-modules/states/states"));
 const Testimonials = lazy(() => import("../components/pages/content-modules/testimonials/testimonials"));
 const Dashboard = lazy(() => import("../components/pages/dashboard/dashboard"));
+const AboutDocYoriPage = lazy(() => import("../components/pages/dashboard/aboutDocYori"));
 const DoctorDahboard = lazy(() => import("../components/pages/dashboard/doctor-dashboard/doctorDahboard"));
 const PatientDashboard = lazy(() => import("../components/pages/dashboard/patient-dashboard/patientDashboard"));
 const PathlabDashboard = lazy(() => import("../components/pages/dashboard/pathlab-dashboard/pathlabDashboard"));
@@ -383,6 +384,11 @@ export const publicRoutes = [
   {
     path: routes.tenants,
     element: <TenantsAdmin />,
+    route: Route,
+  },
+  {
+    path: routes.aboutDocYori,
+    element: <AboutDocYoriPage />,
     route: Route,
   },
   {

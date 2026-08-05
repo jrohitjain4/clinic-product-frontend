@@ -262,7 +262,11 @@ const ConsultationList = () => {
       dataIndex: "sr_no",
       render: (text: number) => <span className="fs-13 fw-medium text-dark">{text}</span>,
       sorter: (a: any, b: any) => a.sr_no - b.sr_no,
-      width: 70,
+      width: 90,
+      className: "text-nowrap",
+      onHeaderCell: () => ({
+        style: { whiteSpace: "nowrap", minWidth: 90 },
+      }),
     },
     {
       title: "Consultation Code",

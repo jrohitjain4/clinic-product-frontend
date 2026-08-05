@@ -652,26 +652,6 @@ const TherapyAppointments = () => {
     return { cls: "ta-badge ta-badge-danger", icon: "ti ti-alert-circle", label: status || "Unpaid" };
   };
 
-  // Auto-expand parents if they have a child appointment scheduled for today
-  useEffect(() => {
-    if (appointments.length > 0) {
-      const todayStr = new Date().toDateString();
-      const todayParentIds = appointments
-        .filter((a: any) => {
-          if (!a.parentAppointmentId || !a.scheduledAt) return false;
-          return new Date(a.scheduledAt).toDateString() === todayStr;
-        })
-        .map((a: any) => a.parentAppointmentId);
-      
-      if (todayParentIds.length > 0) {
-        setExpandedRowKeys((prev) => {
-          const merged = [...prev, ...todayParentIds];
-          return Array.from(new Set(merged)) as string[];
-        });
-      }
-    }
-  }, [appointments]);
-
   const expandedRowRender = (record: any) => {
     const children = appointments.filter((a: any) => a.parentAppointmentId === record.id);
     const sortedChildren = [...children].sort((a: any, b: any) => {
@@ -845,13 +825,16 @@ const TherapyAppointments = () => {
         <span className="ta-sr">{text}</span>
       ),
       sorter: (a: any, b: any) => a.sr_no - b.sr_no,
-      width: 70,
+      width: 90,
+      className: "ta-col-sr",
     },
     {
       title: "Appointment ID",
       dataIndex: "code",
       render: (text: string) => <span className="ta-code">{text}</span>,
       sorter: (a: any, b: any) => a.code.localeCompare(b.code),
+      width: 150,
+      className: "ta-col-code",
     },
     {
       title: "Patient Name",
@@ -1089,7 +1072,16 @@ const TherapyAppointments = () => {
               <Link
                 to="/book-therapy-appointment"
                 className="btn btn-primary d-flex align-items-center gap-2"
-                style={{ minHeight: "38px", borderRadius: 8 }}
+                style={{
+                  height: 48,
+                  minHeight: 48,
+                  maxHeight: 48,
+                  padding: "0 20px",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  borderRadius: 8,
+                  lineHeight: 1,
+                }}
               >
                 <i className="ti ti-plus" /> Book Appointment
               </Link>
@@ -1201,6 +1193,23 @@ const TherapyAppointments = () => {
               border-radius: 12px;
               overflow: hidden;
               box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            }
+            .therapy-appt-page .ta-table-wrap .ant-table-thead > tr > th {
+              white-space: nowrap !important;
+            }
+            .therapy-appt-page .ta-table-wrap .ant-table-thead > tr > th .ant-table-column-title {
+              white-space: nowrap !important;
+            }
+            .therapy-appt-page .ta-table-wrap .ant-table-thead > tr > th.ta-col-sr,
+            .therapy-appt-page .ta-table-wrap .ant-table-tbody > tr > td.ta-col-sr {
+              width: 90px;
+              min-width: 90px;
+              max-width: 90px;
+            }
+            .therapy-appt-page .ta-table-wrap .ant-table-thead > tr > th.ta-col-code,
+            .therapy-appt-page .ta-table-wrap .ant-table-tbody > tr > td.ta-col-code {
+              width: 150px;
+              min-width: 150px;
             }
             .therapy-appt-page .ta-table-wrap .ant-table-tbody > tr > td {
               border-bottom: 1px solid #f1f5f9 !important;
@@ -1929,11 +1938,18 @@ const TherapyAppointments = () => {
                               <h6 className="fw-bold text-dark mb-0 fs-14">Diagnostic Tests</h6>
                             </div>
                             <div className="position-relative mb-2" style={{ zIndex: 5 }}>
-                              <div className="input-group input-group-sm border rounded-3 bg-white px-2 align-items-center">
-                                <i className="ti ti-search text-muted fs-14 me-1" />
+                              <div
+                                className="d-flex align-items-center gap-2 bg-white px-2 py-1"
+                                style={{
+                                  border: "1px solid #d8dbe5",
+                                  borderRadius: 10,
+                                  minHeight: 36,
+                                }}
+                              >
+                                <i className="ti ti-search text-muted fs-14 flex-shrink-0" />
                                 <input
                                   type="text"
-                                  className="form-control form-control-sm text-dark fw-semibold border-0 p-1"
+                                  className="form-control form-control-sm text-dark fw-semibold border-0 shadow-none p-0"
                                   placeholder="Search/Add Diagnostic Test..."
                                   value={testSearchText}
                                   onChange={(e) => {
@@ -1948,11 +1964,12 @@ const TherapyAppointments = () => {
                                       addDiagnosticTest(testSearchText);
                                     }
                                   }}
+                                  style={{ boxShadow: "none", outline: "none", background: "transparent" }}
                                 />
                                 {testSearchText && (
                                   <button
                                     type="button"
-                                    className="btn btn-link btn-sm text-muted p-0 border-0"
+                                    className="btn btn-link btn-sm text-muted p-0 border-0 flex-shrink-0"
                                     onClick={() => setTestSearchText("")}
                                   >
                                     <i className="ti ti-x fs-13" />

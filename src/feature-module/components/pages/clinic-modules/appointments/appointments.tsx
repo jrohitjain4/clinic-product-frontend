@@ -110,7 +110,7 @@ const Appointments = () => {
       width: 125px;
       flex-shrink: 0;
     }
-    .follow-up-select {
+    .clinic-appointments-page .follow-up-select {
       height: 32px !important;
       font-size: 11px !important;
       font-weight: bold !important;
@@ -123,7 +123,7 @@ const Appointments = () => {
       background-position: right 10px center !important;
       background-size: 12px 10px !important;
     }
-    .follow-up-select > span {
+    .clinic-appointments-page .follow-up-select > span {
       display: block;
       max-width: 100%;
       overflow: hidden;
@@ -156,7 +156,7 @@ const Appointments = () => {
       align-items: center;
       gap: 2px;
     }
-    .new-appointment-btn {
+    .clinic-appointments-page .new-appointment-btn {
       height: 32px !important;
       border-radius: 6px !important;
       font-size: 11px !important;
@@ -195,7 +195,7 @@ const Appointments = () => {
       .follow-up-select-wrapper {
         width: 165px;
       }
-      .follow-up-select {
+      .clinic-appointments-page .follow-up-select {
         height: 36px !important;
         font-size: 13px !important;
         padding: 0 36px 0 12px !important;
@@ -216,7 +216,7 @@ const Appointments = () => {
         font-size: 12px !important;
         padding: 0 12px !important;
       }
-      .new-appointment-btn {
+      .clinic-appointments-page .new-appointment-btn {
         height: 36px !important;
         font-size: 12px !important;
         padding: 0 12px !important;
@@ -840,7 +840,7 @@ const Appointments = () => {
     <>
       <style>{customSelectStyles}</style>
       <div className="page-wrapper">
-        <div className="content">
+        <div className="content clinic-appointments-page">
           <div className="appointments-filter-line pb-3 mb-3 border-bottom">
             <h4 className="fw-bold mb-0 text-dark flex-shrink-0">Appointment</h4>
             <div className="appointments-filter-actions">

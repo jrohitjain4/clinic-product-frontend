@@ -204,6 +204,11 @@ export const canSeeMenuItem = (label: string, sectionTitle?: string): boolean =>
     const perms = getStoredPermissions();
     if (perms === null) return true;
 
+    // Top Level Dashboard (above OPD in Main Menu) is visible to all roles
+    if (label === "Dashboard" && (!sectionTitle || sectionTitle === "Main Menu")) {
+        return true;
+    }
+
     // Parent dropdown modules (Dashboard-style expandable items)
     const parentModules: Record<string, string[]> = {
         OPD: ["Dashboard", "Doctors", "Patients", "Appointments", "Consultations"],
@@ -285,6 +290,11 @@ export const canAccessRoute = (pathname: string): boolean => {
     const perms = getStoredPermissions();
     if (perms === null) return true;
     
+    // Top level dashboard route (/about-docyori) is always accessible for all staff
+    if (pathname === "/about-docyori" || pathname === "/about-docyori/") {
+        return true;
+    }
+
     let mod = PATH_TO_MODULE[pathname];
     if (!mod) {
         const parts = pathname.split("/").filter(Boolean);

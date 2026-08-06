@@ -696,6 +696,163 @@ const IpdDischargePage: React.FC = () => {
           box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
           border-radius: 12px !important;
         }
+
+        .ipd-med-advice-card {
+          border: 1px solid #e2e8f0 !important;
+          border-radius: 12px !important;
+          background: #fff !important;
+          overflow: visible !important;
+        }
+
+        .ipd-med-advice-card .ipd-med-advice-icon {
+          width: 34px;
+          height: 34px;
+          border-radius: 8px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: #ecfdf5;
+          color: #059669;
+          flex-shrink: 0;
+        }
+
+        .ipd-med-advice-card .ipd-med-field-label {
+          display: block;
+          font-size: 12px;
+          font-weight: 600;
+          color: #64748b;
+          margin-bottom: 6px;
+        }
+
+        .ipd-med-advice-card .ipd-med-search-wrap {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          width: 100%;
+          min-height: 42px;
+          padding: 0 12px;
+          border: 1.5px solid #6366f1;
+          border-radius: 10px;
+          background: #fff;
+          box-sizing: border-box;
+        }
+
+        .ipd-med-advice-card .ipd-med-search-wrap:focus-within {
+          border-color: #4f46e5;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+        }
+
+        .ipd-med-advice-card .ipd-med-search-input {
+          flex: 1;
+          min-width: 0;
+          border: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+          background: transparent !important;
+          padding: 10px 0 !important;
+          min-height: 0 !important;
+          height: auto !important;
+          font-size: 14px !important;
+          font-weight: 500 !important;
+          color: #1e293b !important;
+        }
+
+        .ipd-med-advice-card .ipd-med-field-input,
+        .ipd-med-advice-card .ipd-med-field-select {
+          display: block;
+          width: 100%;
+          height: 42px !important;
+          min-height: 42px !important;
+          max-height: 42px !important;
+          padding: 0 12px !important;
+          border: 1.5px solid #6366f1 !important;
+          border-radius: 10px !important;
+          background: #fff !important;
+          font-size: 13px !important;
+          font-weight: 500 !important;
+          line-height: 1.2 !important;
+          color: #1e293b !important;
+          box-sizing: border-box !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+
+        .ipd-med-advice-card .ipd-med-field-select {
+          padding-right: 32px !important;
+          appearance: none;
+          -webkit-appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 12px center !important;
+          background-size: 12px 8px !important;
+          cursor: pointer;
+        }
+
+        .ipd-med-advice-card .ipd-med-field-input:focus,
+        .ipd-med-advice-card .ipd-med-field-select:focus {
+          border-color: #4f46e5 !important;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+        }
+
+        .ipd-med-advice-card .ipd-med-field-input::placeholder {
+          color: #94a3b8 !important;
+          font-weight: 400 !important;
+        }
+
+        .ipd-med-advice-card .ipd-med-add-btn {
+          height: 42px !important;
+          min-height: 42px !important;
+          border-radius: 10px !important;
+          font-size: 13px !important;
+          font-weight: 700 !important;
+        }
+
+        .ipd-med-advice-card .ipd-med-dropdown {
+          position: absolute;
+          top: calc(100% + 4px);
+          left: 0;
+          right: 0;
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+          z-index: 9999;
+          max-height: 220px;
+          overflow-y: auto;
+        }
+
+        .ipd-med-advice-card .ipd-med-dropdown-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          padding: 10px 12px;
+          font-size: 13px;
+          cursor: pointer;
+          border-bottom: 1px solid #f1f5f9;
+        }
+
+        .ipd-med-advice-card .ipd-med-dropdown-item:last-child {
+          border-bottom: none;
+        }
+
+        .ipd-med-advice-card .ipd-med-dropdown-item:hover {
+          background: #f8fafc;
+        }
+
+        .ipd-med-advice-card .ipd-med-list-table {
+          font-size: 13px;
+        }
+
+        .ipd-med-advice-card .ipd-med-list-table thead th {
+          background: #f8fafc;
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.4px;
+          color: #64748b;
+          white-space: nowrap;
+        }
       `}</style>
       <div className="content">
         {/* Header */}
@@ -874,213 +1031,292 @@ const IpdDischargePage: React.FC = () => {
 
       {/* MODAL: DISCHARGE & FINAL BILL SETTLEMENT */}
       {showDischargeModal && targetAdmission && (
-        <div
-          className="modal fade show d-block"
-          tabIndex={-1}
-          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
-        >
-          <div className="modal-dialog modal-lg modal-dialog-centered">
-            <div className="modal-content border-0 shadow-lg">
-              <div className="modal-header bg-dark text-white">
-                <h5 className="modal-title fw-bold text-white">
-                  <i className="ti ti-user-check me-2" />
-                  Process Patient Discharge & Final Bill Settlement
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white"
-                  onClick={() => setShowDischargeModal(false)}
-                />
-              </div>
-
-              <form onSubmit={handleSubmitDischarge}>
-                <div className="modal-body p-4">
-                  {/* Patient Banner */}
-                  <div className="p-3 bg-light rounded border mb-4 d-flex justify-content-between align-items-center">
+        <>
+          <div className="modal-backdrop fade show" style={{ zIndex: 1040 }} onClick={() => setShowDischargeModal(false)} />
+          <div className="modal fade show d-block text-dark" style={{ zIndex: 1050 }} tabIndex={-1}>
+            <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+              <form
+                onSubmit={handleSubmitDischarge}
+                className="modal-content border-0 shadow-lg"
+                style={{
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  maxHeight: "90vh",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <div
+                  className="modal-header bg-primary text-white py-3 px-4 d-flex align-items-center justify-content-between border-0"
+                  style={{ flexShrink: 0 }}
+                >
+                  <div className="d-flex align-items-center gap-2">
+                    <div
+                      className="bg-white rounded-circle p-2 d-flex align-items-center justify-content-center"
+                      style={{ width: 36, height: 36 }}
+                    >
+                      <i className="ti ti-user-check text-primary fs-18" />
+                    </div>
                     <div>
-                      <span className="text-muted fs-12 d-block">Inpatient Details:</span>
-                      <h5 className="fw-bold text-dark mb-0">{getPatientName(targetAdmission.patient)}</h5>
-                      <small className="text-muted">
-                        Code: {targetAdmission.admissionCode} | UHID: {targetAdmission.patient?.patientCode || "—"}
-                      </small>
-                    </div>
-
-                    <div className="text-end">
-                      <span className="badge bg-soft-primary text-primary fw-bold fs-13 d-block mb-1">
-                        {targetAdmission.ward?.wardName || "Ward"}
-                      </span>
-                      <small className="text-muted">Doctor: {targetAdmission.doctor?.fullName || "Doctor"}</small>
+                      <h5 className="modal-title fw-bold text-white mb-0">
+                        Process Patient Discharge & Final Bill Settlement
+                      </h5>
+                      <p className="mb-0 text-white-50 fs-12">Settle outstanding dues and complete discharge</p>
                     </div>
                   </div>
-
-                  {/* Financial Due Summary */}
-                  <div className="p-3 bg-soft-danger border border-danger rounded-3 mb-4">
-                    <div className="row text-center text-md-start align-items-center">
-                      <div className="col-md-4">
-                        <span className="text-muted fs-12 d-block">TOTAL BILLED AMOUNT</span>
-                        <h4 className="fw-bold text-dark mb-0">₹{targetAdmission.totalAmount}</h4>
-                      </div>
-                      <div className="col-md-4">
-                        <span className="text-muted fs-12 d-block">ADVANCE / PAID AMOUNT</span>
-                        <h4 className="fw-bold text-success mb-0">₹{targetAdmission.totalPaid}</h4>
-                      </div>
-                      <div className="col-md-4">
-                        <span className="text-muted fs-12 d-block">CURRENT OUTSTANDING DUE</span>
-                        <h3 className="fw-bold text-danger mb-0">₹{targetAdmission.dueAmount}</h3>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Discount / Concession Section */}
-                  <div className="p-3 bg-light rounded border mb-4">
-                    <h6 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
-                      <i className="ti ti-discount me-1 text-warning fs-18" />
-                      Apply Discharge Discount / Concession (Optional)
-                    </h6>
-
-                    <div className="row g-3">
-                      <div className="col-md-4">
-                        <label className="form-label fs-13 fw-semibold">Discount Type</label>
-                        <div className="d-flex gap-3 pt-1">
-                          <label className="form-check-label fw-medium cursor-pointer">
-                            <input
-                              type="radio"
-                              className="form-check-input me-1"
-                              name="discType"
-                              value="Fixed"
-                              checked={discountType === "Fixed"}
-                              onChange={() => setDiscountType("Fixed")}
-                            />
-                            Fixed Amount (₹)
-                          </label>
-                          <label className="form-check-label fw-medium cursor-pointer">
-                            <input
-                              type="radio"
-                              className="form-check-input me-1"
-                              name="discType"
-                              value="Percentage"
-                              checked={discountType === "Percentage"}
-                              onChange={() => setDiscountType("Percentage")}
-                            />
-                            Percentage (%)
-                          </label>
-                        </div>
-                      </div>
-
-                      <div className="col-md-4">
-                        <label className="form-label fs-13 fw-semibold">
-                          Discount Value {discountType === "Percentage" ? "(%)" : "(₹)"}
-                        </label>
-                        <IconFormControl
-                          fieldLabel="amount"
-                          type="number"
-                          className="fw-bold text-warning"
-                          placeholder={discountType === "Percentage" ? "e.g. 10" : "e.g. 500"}
-                          value={discountValue}
-                          onChange={(e) => setDiscountValue(e.target.value)}
-                          min={0}
-                        />
-                      </div>
-
-                      <div className="col-md-4">
-                        <label className="form-label fs-13 fw-semibold">Discount Deduction</label>
-                        <div className="form-control bg-white fw-bold text-danger">
-                          - ₹{computedDiscount.toLocaleString("en-IN")}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Final Settle Calculation */}
-                  <div className="p-3 bg-soft-success border border-success rounded-3 mb-4">
-                    <div className="d-flex align-items-center justify-content-between mb-3">
-                      <div>
-                        <span className="text-muted fs-13 d-block">NET FINAL PAYABLE BALANCE:</span>
-                        <h2 className="fw-bold text-success mb-0">
-                          ₹{netPayable.toLocaleString("en-IN")}
-                        </h2>
-                      </div>
-                      <button
-                        type="button"
-                        className="btn btn-outline-success btn-sm fw-bold"
-                        onClick={() => setPaymentAmount(String(netPayable))}
-                      >
-                        Auto-Fill Full Pay (₹{netPayable})
-                      </button>
-                    </div>
-
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label fs-13 fw-semibold">
-                          Final Payment Collecting (₹) <span className="text-danger">*</span>
-                        </label>
-                        <IconFormControl
-                          fieldLabel="amount"
-                          type="number"
-                          className="fw-bold text-success fs-18"
-                          placeholder="Enter final payment amount"
-                          value={paymentAmount}
-                          onChange={(e) => setPaymentAmount(e.target.value)}
-                          min={0}
-                          required
-                        />
-                      </div>
-
-                      <div className="col-md-6">
-                        <label className="form-label fs-13 fw-semibold">Payment Method</label>
-                        <select
-                          className="form-select"
-                          value={paymentMethod}
-                          onChange={(e) => setPaymentMethod(e.target.value)}
-                        >
-                          <option value="Cash">Cash</option>
-                          <option value="UPI">UPI / GPay / PhonePe</option>
-                          <option value="Card">Credit / Debit Card</option>
-                          <option value="Net Banking">Net Banking</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="form-label fw-semibold">Discharge Summary / Notes</label>
-                    <IconTextarea
-                      fieldLabel="notes"
-                      rows={2}
-                      placeholder="e.g. Patient fully recovered. Prescribed post-op medications for 7 days."
-                      value={dischargeNotes}
-                      onChange={(e) => setDischargeNotes(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="modal-footer bg-light">
                   <button
                     type="button"
-                    className="btn btn-secondary"
+                    className="btn-close btn-close-white"
+                    onClick={() => setShowDischargeModal(false)}
+                    aria-label="Close"
+                  />
+                </div>
+
+                <div className="modal-body p-4 bg-light-subtle" style={{ overflowY: "auto", flex: 1, minHeight: 0 }}>
+                    {/* Patient Banner */}
+                    <div
+                      className="card border-0 bg-white shadow-sm mb-4"
+                      style={{ borderRadius: "12px" }}
+                    >
+                      <div className="card-body p-3">
+                        <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                          <div className="d-flex align-items-center gap-3">
+                            <div
+                              className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 fw-bold fs-18"
+                              style={{
+                                width: 52,
+                                height: 52,
+                                background: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)",
+                                color: "#4f46e5",
+                              }}
+                            >
+                              {getPatientName(targetAdmission.patient).charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <span className="text-muted fs-12 d-block">Inpatient Details</span>
+                              <h5 className="fw-bold text-dark mb-1">{getPatientName(targetAdmission.patient)}</h5>
+                              <small className="text-muted">
+                                Code: {targetAdmission.admissionCode} | UHID: {targetAdmission.patient?.patientCode || "—"}
+                              </small>
+                            </div>
+                          </div>
+                          <div className="text-md-end">
+                            <span className="badge bg-soft-primary text-primary fw-bold fs-13 d-inline-block mb-1">
+                              {targetAdmission.ward?.wardName || "Ward"}
+                            </span>
+                            <div>
+                              <small className="text-muted">
+                                Doctor: {targetAdmission.doctor?.fullName || "Doctor"}
+                              </small>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Financial Due Summary */}
+                    <div
+                      className="card border-0 bg-white shadow-sm mb-4"
+                      style={{ borderRadius: "12px" }}
+                    >
+                      <div className="card-body p-3">
+                        <h6 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                          <span
+                            className="d-inline-flex align-items-center justify-content-center rounded-2"
+                            style={{ width: 32, height: 32, background: "#eff6ff", color: "#2563eb" }}
+                          >
+                            <i className="ti ti-receipt fs-16" />
+                          </span>
+                          Bill Summary
+                        </h6>
+                        <div className="row g-3 text-center text-md-start">
+                          <div className="col-md-4">
+                            <span className="text-muted fs-12 d-block text-uppercase fw-semibold">Total Billed</span>
+                            <h4 className="fw-bold text-dark mb-0">₹{targetAdmission.totalAmount.toLocaleString("en-IN")}</h4>
+                          </div>
+                          <div className="col-md-4">
+                            <span className="text-muted fs-12 d-block text-uppercase fw-semibold">Advance / Paid</span>
+                            <h4 className="fw-bold text-success mb-0">₹{targetAdmission.totalPaid.toLocaleString("en-IN")}</h4>
+                          </div>
+                          <div className="col-md-4">
+                            <span className="text-muted fs-12 d-block text-uppercase fw-semibold">Outstanding Due</span>
+                            <h3 className="fw-bold text-danger mb-0">₹{targetAdmission.dueAmount.toLocaleString("en-IN")}</h3>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Discount / Concession Section */}
+                    <div
+                      className="card border-0 bg-white shadow-sm mb-4"
+                      style={{ borderRadius: "12px" }}
+                    >
+                      <div className="card-body p-3">
+                        <h6 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                          <span
+                            className="d-inline-flex align-items-center justify-content-center rounded-2"
+                            style={{ width: 32, height: 32, background: "#fef3c7", color: "#d97706" }}
+                          >
+                            <i className="ti ti-discount fs-16" />
+                          </span>
+                          Apply Discharge Discount / Concession (Optional)
+                        </h6>
+
+                        <div className="row g-3">
+                          <div className="col-md-4">
+                            <label className="form-label fs-13 fw-semibold text-secondary">Discount Type</label>
+                            <div className="d-flex flex-wrap gap-3 pt-1">
+                              <label className="form-check-label fw-medium cursor-pointer">
+                                <input
+                                  type="radio"
+                                  className="form-check-input me-1"
+                                  name="discType"
+                                  value="Fixed"
+                                  checked={discountType === "Fixed"}
+                                  onChange={() => setDiscountType("Fixed")}
+                                />
+                                Fixed Amount (₹)
+                              </label>
+                              <label className="form-check-label fw-medium cursor-pointer">
+                                <input
+                                  type="radio"
+                                  className="form-check-input me-1"
+                                  name="discType"
+                                  value="Percentage"
+                                  checked={discountType === "Percentage"}
+                                  onChange={() => setDiscountType("Percentage")}
+                                />
+                                Percentage (%)
+                              </label>
+                            </div>
+                          </div>
+
+                          <div className="col-md-4">
+                            <label className="form-label fs-13 fw-semibold text-secondary">
+                              Discount Value {discountType === "Percentage" ? "(%)" : "(₹)"}
+                            </label>
+                            <IconFormControl
+                              fieldLabel="amount"
+                              type="number"
+                              className="fw-bold text-warning"
+                              placeholder={discountType === "Percentage" ? "e.g. 10" : "e.g. 500"}
+                              value={discountValue}
+                              onChange={(e) => setDiscountValue(e.target.value)}
+                              min={0}
+                            />
+                          </div>
+
+                          <div className="col-md-4">
+                            <label className="form-label fs-13 fw-semibold text-secondary">Discount Deduction</label>
+                            <div className="form-control bg-white fw-bold text-danger border-secondary-subtle">
+                              - ₹{computedDiscount.toLocaleString("en-IN")}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Final Settle Calculation */}
+                    <div
+                      className="card border-0 bg-white shadow-sm mb-4"
+                      style={{ borderRadius: "12px", borderLeft: "4px solid #22c55e" }}
+                    >
+                      <div className="card-body p-3">
+                        <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                          <div>
+                            <span className="text-muted fs-13 d-block">Net Final Payable Balance</span>
+                            <h2 className="fw-bold text-success mb-0">
+                              ₹{netPayable.toLocaleString("en-IN")}
+                            </h2>
+                          </div>
+                          <button
+                            type="button"
+                            className="btn btn-outline-primary btn-sm fw-bold"
+                            onClick={() => setPaymentAmount(String(netPayable))}
+                          >
+                            Auto-Fill Full Pay (₹{netPayable.toLocaleString("en-IN")})
+                          </button>
+                        </div>
+
+                        <div className="row g-3">
+                          <div className="col-md-6">
+                            <label className="form-label fs-13 fw-semibold text-secondary">
+                              Final Payment Collecting (₹) <span className="text-danger">*</span>
+                            </label>
+                            <IconFormControl
+                              fieldLabel="amount"
+                              type="number"
+                              className="fw-bold text-success fs-18"
+                              placeholder="Enter final payment amount"
+                              value={paymentAmount}
+                              onChange={(e) => setPaymentAmount(e.target.value)}
+                              min={0}
+                              required
+                            />
+                          </div>
+
+                          <div className="col-md-6">
+                            <label className="form-label fs-13 fw-semibold text-secondary">Payment Method</label>
+                            <select
+                              className="form-select border-secondary-subtle text-dark"
+                              value={paymentMethod}
+                              onChange={(e) => setPaymentMethod(e.target.value)}
+                            >
+                              <option value="Cash">Cash</option>
+                              <option value="UPI">UPI / GPay / PhonePe</option>
+                              <option value="Card">Credit / Debit Card</option>
+                              <option value="Net Banking">Net Banking</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="form-label fw-semibold text-secondary fs-12">Discharge Summary / Notes</label>
+                      <IconTextarea
+                        fieldLabel="notes"
+                        rows={2}
+                        placeholder="e.g. Patient fully recovered. Prescribed post-op medications for 7 days."
+                        value={dischargeNotes}
+                        onChange={(e) => setDischargeNotes(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                <div
+                  className="modal-footer border-0 px-4 py-3 bg-white d-flex align-items-center justify-content-end gap-2"
+                  style={{ flexShrink: 0 }}
+                >
+                  <button
+                    type="button"
+                    className="btn btn-light border fw-medium px-4"
                     onClick={() => setShowDischargeModal(false)}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="btn btn-success px-4 fw-bold"
+                    className="btn btn-primary px-4 fw-bold d-flex align-items-center gap-1"
                     disabled={submittingDischarge}
                   >
                     {submittingDischarge ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" />
+                        <span className="spinner-border spinner-border-sm" role="status" />
                         Discharging...
                       </>
                     ) : (
-                      "Settle Bill & Discharge Inpatient"
+                      <>
+                        <i className="ti ti-user-check" />
+                        Settle Bill & Discharge Inpatient
+                      </>
                     )}
                   </button>
                 </div>
               </form>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* MODAL: DISCHARGED PATIENT SETTLED RECEIPT & SUMMARY */}
@@ -1263,59 +1499,67 @@ const IpdDischargePage: React.FC = () => {
 
                       {/* Medicine advice */}
                       <div className="mb-3">
-                        <label className="form-label fw-semibold"><i className="ti ti-pill me-1 text-success" />Add Medicine Advice</label>
-                        <div className="card border bg-light p-3 mb-2">
-                          <div className="row g-2 align-items-end mb-2">
-                            <div className="col-md-3" style={{ position: 'relative' }}>
-                              <label className="form-label fs-11 fw-semibold mb-1">Medicine Name</label>
-                              <IconFormControl
-                                fieldLabel="medicine"
-                                ref={medInputRef}
-                                type="text"
-                                className="form-control-sm"
-                                placeholder="Search medicine..."
-                                value={medSearch || newMedName}
-                                autoComplete="off"
-                                onChange={(e) => {
-                                  setMedSearch(e.target.value);
-                                  setNewMedName(e.target.value);
-                                  setMedDropdownOpen(true);
-                                }}
-                                onFocus={() => setMedDropdownOpen(true)}
-                                onBlur={() => setTimeout(() => setMedDropdownOpen(false), 180)}
-                              />
-                              {medDropdownOpen && filteredSysMeds.length > 0 && (
-                                <div
-                                  style={{
-                                    position: 'absolute', top: '100%', left: 0, right: 0,
-                                    background: '#fff', border: '1px solid #d1d5db',
-                                    borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                                    zIndex: 9999, maxHeight: '200px', overflowY: 'auto',
+                        <div className="ipd-med-advice-card p-3 mb-2">
+                          <div className="d-flex align-items-center gap-2 mb-3">
+                            <span className="ipd-med-advice-icon">
+                              <i className="ti ti-pill fs-18" />
+                            </span>
+                            <h6 className="fw-bold text-dark mb-0 fs-14">Add Medicine Advice</h6>
+                          </div>
+
+                          <div className="row g-3">
+                            <div className="col-12 position-relative">
+                              <label className="ipd-med-field-label">Medicine Name</label>
+                              <div className="ipd-med-search-wrap">
+                                <i className="ti ti-search text-muted fs-16" />
+                                <input
+                                  ref={medInputRef}
+                                  type="text"
+                                  className="ipd-med-search-input"
+                                  placeholder="Search medicine..."
+                                  value={medSearch || newMedName}
+                                  autoComplete="off"
+                                  onChange={(e) => {
+                                    setMedSearch(e.target.value);
+                                    setNewMedName(e.target.value);
+                                    setMedDropdownOpen(true);
                                   }}
-                                >
+                                  onFocus={() => setMedDropdownOpen(true)}
+                                  onBlur={() => setTimeout(() => setMedDropdownOpen(false), 180)}
+                                />
+                              </div>
+                              {medDropdownOpen && filteredSysMeds.length > 0 && (
+                                <div className="ipd-med-dropdown">
                                   {filteredSysMeds.map((med) => {
                                     const name = getMedName(med);
                                     return (
                                       <div
                                         key={med.id}
-                                        className="d-flex align-items-center justify-content-between px-3 py-2"
-                                        style={{ cursor: 'pointer', borderBottom: '1px solid #f1f5f9', fontSize: '12px' }}
+                                        className="ipd-med-dropdown-item"
                                         onMouseDown={() => {
                                           setNewMedName(name);
                                           setMedSearch(name);
                                           if (med.unit) setNewMedStrength(med.unit);
                                           setMedDropdownOpen(false);
                                         }}
-                                        onMouseEnter={(e) => (e.currentTarget.style.background = '#f0f4ff')}
-                                        onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                                       >
-                                        <div>
-                                          <span className="fw-semibold text-dark">{name}</span>
-                                          {med.genericName && <small className="text-muted ms-1">({med.genericName})</small>}
+                                        <div className="min-w-0">
+                                          <span className="fw-semibold text-dark d-block text-truncate">{name}</span>
+                                          {med.genericName && (
+                                            <small className="text-muted">{med.genericName}</small>
+                                          )}
                                         </div>
-                                        <div className="d-flex gap-1 align-items-center">
-                                          {med.unit && <span className="badge bg-soft-primary text-primary" style={{ fontSize: '10px' }}>{med.unit}</span>}
-                                          {med.category?.name && <span className="badge bg-soft-success text-success" style={{ fontSize: '10px' }}>{med.category.name}</span>}
+                                        <div className="d-flex gap-1 align-items-center flex-shrink-0">
+                                          {med.unit && (
+                                            <span className="badge bg-soft-primary text-primary" style={{ fontSize: "10px" }}>
+                                              {med.unit}
+                                            </span>
+                                          )}
+                                          {med.category?.name && (
+                                            <span className="badge bg-soft-success text-success" style={{ fontSize: "10px" }}>
+                                              {med.category.name}
+                                            </span>
+                                          )}
                                         </div>
                                       </div>
                                     );
@@ -1323,47 +1567,120 @@ const IpdDischargePage: React.FC = () => {
                                 </div>
                               )}
                             </div>
-                            <div className="col-md-2">
-                              <label className="form-label fs-11 fw-semibold mb-1">Dosage</label>
-                              <IconFormControl fieldLabel="dosage" type="text" className="form-control-sm" placeholder="Dosage" value={newMedDosage} onChange={(e) => setNewMedDosage(e.target.value)} />
+
+                            <div className="col-sm-6 col-lg-3">
+                              <label className="ipd-med-field-label">Dosage</label>
+                              <input
+                                type="text"
+                                className="ipd-med-field-input"
+                                placeholder="e.g. 1 tablet"
+                                value={newMedDosage}
+                                onChange={(e) => setNewMedDosage(e.target.value)}
+                              />
                             </div>
-                            <div className="col-md-2">
-                              <label className="form-label fs-11 fw-semibold mb-1">Strength</label>
-                              <IconFormControl fieldLabel="medicine" type="text" className="form-control-sm" placeholder="Enter strength" value={newMedStrength} onChange={(e) => setNewMedStrength(e.target.value)} />
+
+                            <div className="col-sm-6 col-lg-3">
+                              <label className="ipd-med-field-label">Strength</label>
+                              <input
+                                type="text"
+                                className="ipd-med-field-input"
+                                placeholder="e.g. 500mg"
+                                value={newMedStrength}
+                                onChange={(e) => setNewMedStrength(e.target.value)}
+                              />
                             </div>
-                            <div className="col-md-2">
-                              <label className="form-label fs-11 fw-semibold mb-1">Frequency</label>
-                              <select className="form-select form-select-sm" value={newMedFrequency} onChange={(e) => setNewMedFrequency(e.target.value)}>
-                                {["Once daily","Twice daily","Thrice daily","Four times daily","Every 6 hours","Every 8 hours","As needed","At bedtime"].map(f => <option key={f}>{f}</option>)}
+
+                            <div className="col-sm-6 col-lg-3">
+                              <label className="ipd-med-field-label">Frequency</label>
+                              <select
+                                className="ipd-med-field-select"
+                                value={newMedFrequency}
+                                onChange={(e) => setNewMedFrequency(e.target.value)}
+                              >
+                                {[
+                                  "Once daily",
+                                  "Twice daily",
+                                  "Thrice daily",
+                                  "Four times daily",
+                                  "Every 6 hours",
+                                  "Every 8 hours",
+                                  "As needed",
+                                  "At bedtime",
+                                ].map((f) => (
+                                  <option key={f} value={f}>
+                                    {f}
+                                  </option>
+                                ))}
                               </select>
                             </div>
-                            <div className="col-md-3">
-                              <label className="form-label fs-11 fw-semibold mb-1">Duration</label>
-                              <IconFormControl fieldLabel="Date" type="text" className="form-control-sm" placeholder="Enter duration" value={newMedDuration} onChange={(e) => setNewMedDuration(e.target.value)} />
+
+                            <div className="col-sm-6 col-lg-3">
+                              <label className="ipd-med-field-label">Duration</label>
+                              <input
+                                type="text"
+                                className="ipd-med-field-input"
+                                placeholder="e.g. 7 days"
+                                value={newMedDuration}
+                                onChange={(e) => setNewMedDuration(e.target.value)}
+                              />
                             </div>
-                            <div className="col-md-8 mt-2">
-                              <IconFormControl fieldLabel="Notes" type="text" className="form-control-sm" placeholder="Enter instructions" value={newMedInstructions} onChange={(e) => setNewMedInstructions(e.target.value)} />
+
+                            <div className="col-lg-8">
+                              <label className="ipd-med-field-label">Instructions</label>
+                              <input
+                                type="text"
+                                className="ipd-med-field-input"
+                                placeholder="Enter instructions (before food, after meals, etc.)"
+                                value={newMedInstructions}
+                                onChange={(e) => setNewMedInstructions(e.target.value)}
+                              />
                             </div>
-                            <div className="col-md-4 mt-2">
-                              <button type="button" className="btn btn-success btn-sm w-100 fw-bold d-flex align-items-center justify-content-center shadow-sm" onClick={handleAddMedicineRow}>
-                                <i className="ti ti-plus me-1" /> Add Medicine
+
+                            <div className="col-lg-4 d-flex align-items-end">
+                              <button
+                                type="button"
+                                className="btn btn-success w-100 ipd-med-add-btn d-flex align-items-center justify-content-center gap-1 shadow-sm"
+                                onClick={handleAddMedicineRow}
+                              >
+                                <i className="ti ti-plus" /> Add Medicine
                               </button>
                             </div>
                           </div>
                         </div>
 
                         {medicinesList.length > 0 && (
-                          <div className="table-responsive">
-                            <table className="table table-sm table-bordered align-middle mb-0">
-                              <thead className="table-light"><tr><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th></th></tr></thead>
+                          <div className="table-responsive border rounded-3">
+                            <table className="table table-sm align-middle mb-0 ipd-med-list-table">
+                              <thead>
+                                <tr>
+                                  <th>Medicine</th>
+                                  <th>Dosage</th>
+                                  <th>Frequency</th>
+                                  <th>Duration</th>
+                                  <th>Instructions</th>
+                                  <th style={{ width: 48 }} />
+                                </tr>
+                              </thead>
                               <tbody>
                                 {medicinesList.map((med, idx) => (
                                   <tr key={idx}>
-                                    <td className="fw-semibold">{med.name} {med.strength && <small className="text-muted">({med.strength})</small>}</td>
+                                    <td className="fw-semibold">
+                                      {med.name}
+                                      {med.strength && <small className="text-muted ms-1">({med.strength})</small>}
+                                    </td>
                                     <td>{med.dosage || "—"}</td>
                                     <td>{med.frequency}</td>
                                     <td>{med.duration || "—"}</td>
-                                    <td><button type="button" className="btn btn-xs btn-outline-danger py-0 px-1" onClick={() => handleRemoveMedicineRow(idx)}><i className="ti ti-trash fs-12" /></button></td>
+                                    <td className="text-muted">{med.instructions || "—"}</td>
+                                    <td>
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger py-0 px-2"
+                                        onClick={() => handleRemoveMedicineRow(idx)}
+                                      >
+                                        <i className="ti ti-trash fs-12" />
+                                      </button>
+                                    </td>
                                   </tr>
                                 ))}
                               </tbody>

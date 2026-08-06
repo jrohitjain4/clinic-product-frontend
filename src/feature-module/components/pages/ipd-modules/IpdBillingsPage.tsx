@@ -1720,90 +1720,156 @@ const IpdBillingsPage: React.FC = () => {
 
       {/* MODAL: VIEW INVOICE DETAILS */}
       {showViewModal && selectedInvoice && (
-        <div
-          className="modal fade show d-block"
-          tabIndex={-1}
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
-          <div className="modal-dialog modal-lg modal-dialog-centered">
-            <div className="modal-content border-0 shadow-lg">
-              <div className="modal-header bg-dark text-white">
-                <h5 className="modal-title fw-bold text-white">
-                  <i className="ti ti-file-invoice me-2" />
-                  Invoice Breakdown - {selectedInvoice.invoiceNumber}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white"
-                  onClick={() => setShowViewModal(false)}
-                />
-              </div>
+        <>
+          <div className="modal-backdrop fade show" style={{ zIndex: 1040 }} onClick={() => setShowViewModal(false)} />
+          <div className="modal fade show d-block text-dark" style={{ zIndex: 1050 }} tabIndex={-1}>
+            <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+              <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "12px", overflow: "hidden" }}>
+                <div className="modal-header bg-primary text-white py-3 px-4 d-flex align-items-center justify-content-between border-0">
+                  <div className="d-flex align-items-center gap-2">
+                    <div
+                      className="bg-white rounded-circle p-2 d-flex align-items-center justify-content-center"
+                      style={{ width: 36, height: 36 }}
+                    >
+                      <i className="ti ti-file-invoice text-primary fs-18" />
+                    </div>
+                    <div>
+                      <h5 className="modal-title fw-bold text-white mb-0">
+                        Invoice Breakdown
+                      </h5>
+                      <p className="mb-0 text-white-50 fs-12">{selectedInvoice.invoiceNumber}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-close btn-close-white"
+                    onClick={() => setShowViewModal(false)}
+                    aria-label="Close"
+                  />
+                </div>
 
-              <div className="modal-body p-4">
-                <div className="row g-3 mb-4 p-3 bg-light rounded border">
-                  <div className="col-md-6">
-                    <span className="text-muted fs-12 d-block">Patient Name:</span>
-                    <h5 className="fw-bold text-dark mb-0">{getPatientName(selectedInvoice.patient)}</h5>
-                    <small className="text-muted">UHID: {selectedInvoice.patient?.patientCode || "—"}</small>
+                <div className="modal-body p-4 bg-light-subtle">
+                  <div
+                    className="card border-0 bg-white shadow-sm mb-4"
+                    style={{ borderRadius: "12px" }}
+                  >
+                    <div className="card-body p-3">
+                      <div className="row g-3 align-items-center">
+                        <div className="col-md-6">
+                          <div className="d-flex align-items-center gap-3">
+                            <div
+                              className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 fw-bold fs-18"
+                              style={{
+                                width: 48,
+                                height: 48,
+                                background: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)",
+                                color: "#4f46e5",
+                              }}
+                            >
+                              {getPatientName(selectedInvoice.patient).charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <span className="text-muted fs-12 d-block">Patient Name</span>
+                              <h5 className="fw-bold text-dark mb-1">{getPatientName(selectedInvoice.patient)}</h5>
+                              <small className="text-muted">UHID: {selectedInvoice.patient?.patientCode || "—"}</small>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="col-md-6 text-md-end">
+                          <span className="text-muted fs-12 d-block">Admission Code</span>
+                          <h6 className="fw-bold text-primary mb-1">{selectedInvoice.admission?.admissionCode}</h6>
+                          <small className="text-muted">
+                            Date: {new Date(selectedInvoice.invoiceDate).toLocaleString()}
+                          </small>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="col-md-6 text-md-end">
-                    <span className="text-muted fs-12 d-block">Admission Code:</span>
-                    <h6 className="fw-bold text-primary mb-0">{selectedInvoice.admission?.admissionCode}</h6>
-                    <small className="text-muted">Date: {new Date(selectedInvoice.invoiceDate).toLocaleString()}</small>
+                  <div
+                    className="card border-0 bg-white shadow-sm mb-3"
+                    style={{ borderRadius: "12px" }}
+                  >
+                    <div className="card-body p-3">
+                      <h6 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                        <span
+                          className="d-inline-flex align-items-center justify-content-center rounded-2"
+                          style={{ width: 32, height: 32, background: "#eff6ff", color: "#2563eb" }}
+                        >
+                          <i className="ti ti-list-details fs-16" />
+                        </span>
+                        Itemized Services & Charges
+                      </h6>
+                      <div className="table-responsive">
+                        <table className="table table-hover align-middle mb-0">
+                          <thead className="table-light">
+                            <tr>
+                              <th className="fs-12 text-uppercase text-secondary">Category Type</th>
+                              <th className="fs-12 text-uppercase text-secondary">Item Description</th>
+                              <th className="text-center fs-12 text-uppercase text-secondary">Rate</th>
+                              <th className="text-center fs-12 text-uppercase text-secondary">Qty</th>
+                              <th className="text-end fs-12 text-uppercase text-secondary">Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedInvoice.items.map((it) => (
+                              <tr key={it.id}>
+                                <td>
+                                  <span className="badge bg-soft-info text-info">{it.itemType}</span>
+                                </td>
+                                <td className="fw-semibold text-dark">{it.itemName}</td>
+                                <td className="text-center">₹{it.unitPrice.toLocaleString("en-IN")}</td>
+                                <td className="text-center">{it.quantity}</td>
+                                <td className="text-end fw-bold text-success">
+                                  ₹{it.totalPrice.toLocaleString("en-IN")}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    className="card border-0 bg-white shadow-sm"
+                    style={{ borderRadius: "12px", borderLeft: "4px solid #6366f1" }}
+                  >
+                    <div className="card-body p-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                      <div>
+                        <span className="fs-12 text-muted d-block fw-semibold text-uppercase">Payment Summary</span>
+                        <small className="text-muted">
+                          Method: {selectedInvoice.paymentMethod || "Cash"}
+                        </small>
+                      </div>
+                      <div className="text-end">
+                        <div className="text-dark">
+                          Total Billed: <strong>₹{selectedInvoice.totalAmount.toLocaleString("en-IN")}</strong>
+                        </div>
+                        <div className="text-success">
+                          Paid Amount: <strong>₹{selectedInvoice.paidAmount.toLocaleString("en-IN")}</strong>
+                        </div>
+                        <div className="text-danger">
+                          Due Balance: <strong>₹{selectedInvoice.dueAmount.toLocaleString("en-IN")}</strong>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <h6 className="fw-bold text-dark mb-2">Itemized Services & Charges</h6>
-                <div className="table-responsive mb-3">
-                  <table className="table table-bordered align-middle">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Category Type</th>
-                        <th>Item Description</th>
-                        <th className="text-center">Rate</th>
-                        <th className="text-center">Qty</th>
-                        <th className="text-end">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedInvoice.items.map((it) => (
-                        <tr key={it.id}>
-                          <td>
-                            <span className="badge bg-soft-info text-info">{it.itemType}</span>
-                          </td>
-                          <td className="fw-semibold text-dark">{it.itemName}</td>
-                          <td className="text-center">₹{it.unitPrice}</td>
-                          <td className="text-center">{it.quantity}</td>
-                          <td className="text-end fw-bold text-success">₹{it.totalPrice}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="modal-footer border-0 px-4 py-3 bg-white d-flex align-items-center justify-content-end">
+                  <button
+                    type="button"
+                    className="btn btn-primary fw-medium px-4"
+                    onClick={() => setShowViewModal(false)}
+                  >
+                    Close
+                  </button>
                 </div>
-
-                <div className="p-3 bg-soft-success border border-success rounded-3 d-flex align-items-center justify-content-between">
-                  <div>
-                    <span className="fs-12 text-muted d-block">Payment Summary:</span>
-                    <small className="text-muted">Method: {selectedInvoice.paymentMethod || "Cash"}</small>
-                  </div>
-
-                  <div className="text-end">
-                    <div>Total Billed: <strong>₹{selectedInvoice.totalAmount}</strong></div>
-                    <div>Paid Amount: <strong className="text-success">₹{selectedInvoice.paidAmount}</strong></div>
-                    <div>Due Balance: <strong className="text-danger">₹{selectedInvoice.dueAmount}</strong></div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="modal-footer bg-light">
-                <button className="btn btn-secondary" onClick={() => setShowViewModal(false)}>
-                  Close
-                </button>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* MODAL: FULL IPD MASTER STATEMENT & SUMMARY INVOICE */}

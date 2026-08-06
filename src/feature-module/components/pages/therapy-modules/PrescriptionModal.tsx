@@ -893,11 +893,18 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                           </h6>
 
                           <div className="position-relative mb-2" style={{ zIndex: 5 }}>
-                            <div className="input-group input-group-sm border rounded-3 bg-white px-2 align-items-center">
-                              <i className="ti ti-search text-muted fs-14 me-1" />
+                            <div
+                              className="d-flex align-items-center gap-2 bg-white px-2 py-1"
+                              style={{
+                                border: "1px solid #d8dbe5",
+                                borderRadius: 10,
+                                minHeight: 36,
+                              }}
+                            >
+                              <i className="ti ti-search text-muted fs-14 flex-shrink-0" />
                               <input
                                 type="text"
-                                className="form-control form-control-sm text-dark fw-semibold border-0 p-1"
+                                className="form-control form-control-sm text-dark fw-semibold border-0 shadow-none p-0"
                                 placeholder="Search/Add Diagnostic Test..."
                                 value={testSearchText}
                                 onChange={(e) => {
@@ -912,11 +919,12 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                                     addDiagnosticTest(testSearchText);
                                   }
                                 }}
+                                style={{ boxShadow: "none", outline: "none", background: "transparent" }}
                               />
                               {testSearchText && (
                                 <button
                                   type="button"
-                                  className="btn btn-link btn-sm text-muted p-0 border-0"
+                                  className="btn btn-link btn-sm text-muted p-0 border-0 flex-shrink-0"
                                   onClick={() => setTestSearchText("")}
                                 >
                                   <i className="ti ti-x fs-13" />

@@ -3,12 +3,26 @@ import { useState, useMemo, useEffect } from "react";
 import Datatable from "../../../../core/common/dataTable";
 import { useClinicServices } from "../../../../core/hooks/useClinicServices";
 import { useClinicSpecializations } from "../../../../core/hooks/useClinicSpecializations";
-import { apiDelete } from "../../../../core/utils/apiClient";
+import { apiDelete, apiPut } from "../../../../core/utils/apiClient";
 import { resolveMediaUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 import { ViewModal } from "../../../../core/common/modal/ViewModal";
 import EmptyState from "../../../../core/common/emptyState";
 import Modals from "../clinic-modules/specializations/modals/modals";
+import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
+
+const SCHEDULE_OPTIONS = [
+  { value: "daily", label: "Daily", icon: "ti ti-calendar-event" },
+  { value: "alternate", label: "Alternate Day", icon: "ti ti-calendar-stats" },
+  { value: "weekly", label: "Weekly", icon: "ti ti-calendar-week" },
+  { value: "custom", label: "Custom", icon: "ti ti-adjustments" },
+];
+
+const parseDurationMinutes = (duration?: string | null) => {
+  if (!duration) return "";
+  const match = String(duration).match(/(\d+)/);
+  return match ? match[1] : "";
+};
 
 const TherapyServices = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -29,8 +43,95 @@ const TherapyServices = () => {
 
   // ── Therapy List ──────────────────────────────────────────
   const { services, refetch, loading, error } = useClinicServices("therapy");
+  const {
+    specializations,
+    refetch: refetchCats,
+    loading: loadingCats,
+    error: errorCats,
+  } = useClinicSpecializations("therapy");
   const [selectedService, setSelectedService] = useState<any>(null);
   const [viewService, setViewService] = useState<any>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  // Edit form state
+  const [editName, setEditName] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editCode, setEditCode] = useState("");
+  const [editDuration, setEditDuration] = useState("");
+  const [editPrice, setEditPrice] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editStatus, setEditStatus] = useState("Active");
+  const [editMinSessions, setEditMinSessions] = useState("1");
+  const [editMaxSessions, setEditMaxSessions] = useState("10");
+  const [editSessionGap, setEditSessionGap] = useState("0");
+  const [editScheduleType, setEditScheduleType] = useState("daily");
+
+  const openEditTherapy = (service: any) => {
+    setSelectedService(service);
+    setEditName(service?.serviceName || "");
+    setEditCategory(service?.specializationId || service?.specialization?.id || "");
+    setEditCode(service?.serviceCode || "");
+    setEditDuration(parseDurationMinutes(service?.duration));
+    setEditPrice(service?.price != null ? String(service.price) : "");
+    setEditDescription(service?.description || "");
+    setEditStatus(service?.status || "Active");
+    setEditMinSessions(String(service?.minSessions ?? 1));
+    setEditMaxSessions(String(service?.maxSessions ?? 10));
+    setEditSessionGap(String(service?.sessionGap ?? 0));
+    setEditScheduleType(service?.scheduleType || "daily");
+  };
+
+  const getRelativeScheduledDays = () => {
+    const days: number[] = [];
+    const count = editMinSessions ? parseInt(editMinSessions, 10) : 1;
+    let increment = 1;
+    if (editScheduleType === "daily") increment = 1;
+    else if (editScheduleType === "alternate") increment = 2;
+    else if (editScheduleType === "weekly") increment = 7;
+    else if (editScheduleType === "custom") {
+      increment = editSessionGap ? parseInt(editSessionGap, 10) : 1;
+    }
+    for (let i = 0; i < (Number.isFinite(count) ? count : 1); i++) {
+      days.push(1 + i * (Number.isFinite(increment) && increment > 0 ? increment : 1));
+    }
+    return days;
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedService) return;
+    if (!editName || !editCategory || !editDuration || !editPrice || !editMinSessions || !editMaxSessions) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      const relativeDays = getRelativeScheduledDays();
+      await apiPut(`/api/services/${selectedService.id}`, {
+        serviceName: editName.trim(),
+        serviceCode: editCode || selectedService.serviceCode,
+        serviceType: "therapy",
+        specializationId: editCategory,
+        price: parseFloat(editPrice),
+        duration: `${editDuration} mins`,
+        description: editDescription,
+        gallery: Array.isArray(selectedService.gallery) ? selectedService.gallery : [],
+        minSessions: parseInt(editMinSessions, 10),
+        maxSessions: parseInt(editMaxSessions, 10),
+        sessionGap: editSessionGap ? parseInt(editSessionGap, 10) : 0,
+        scheduleType: editScheduleType,
+        customDates: relativeDays.map((d) => `Day ${d}`),
+        status: editStatus,
+      });
+      toast.success("Therapy updated successfully");
+      refetch();
+      document.getElementById("close-edit-therapy-modal")?.click();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update therapy");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
 
   const handleDelete = async (id: string) => {
     try {
@@ -64,7 +165,11 @@ const TherapyServices = () => {
       dataIndex: "sr_no",
       render: (text: number) => <span className="fs-13 fw-medium text-dark">{text}</span>,
       sorter: (a: any, b: any) => a.sr_no - b.sr_no,
-      width: 60,
+      width: 90,
+      className: "text-nowrap",
+      onHeaderCell: () => ({
+        style: { whiteSpace: "nowrap", minWidth: 90 },
+      }),
     },
     {
       title: "Therapy Name",
@@ -121,6 +226,15 @@ const TherapyServices = () => {
             <i className="ti ti-eye fs-18"></i>
           </button>
           <button
+            className="bg-transparent border-0 text-primary p-1"
+            title="Edit"
+            data-bs-toggle="modal"
+            data-bs-target="#edit_therapy"
+            onClick={() => openEditTherapy(record.raw)}
+          >
+            <i className="ti ti-edit fs-18"></i>
+          </button>
+          <button
             className="bg-transparent border-0 text-danger p-1"
             data-bs-toggle="modal"
             data-bs-target="#delete_therapy"
@@ -131,17 +245,11 @@ const TherapyServices = () => {
           </button>
         </div>
       ),
-      width: 100,
+      width: 120,
     },
   ];
 
   // ── Categories ────────────────────────────────────────────
-  const {
-    specializations,
-    refetch: refetchCats,
-    loading: loadingCats,
-    error: errorCats,
-  } = useClinicSpecializations("therapy");
   const [selectedSpecialization, setSelectedSpecialization] = useState<any>(null);
   const [viewSpec, setViewSpec] = useState<any>(null);
 
@@ -168,7 +276,11 @@ const TherapyServices = () => {
       dataIndex: "S_No",
       render: (text: number) => <span className="text-dark fw-medium">{text}</span>,
       sorter: (a: any, b: any) => a.S_No - b.S_No,
-      width: 60,
+      width: 90,
+      className: "text-nowrap",
+      onHeaderCell: () => ({
+        style: { whiteSpace: "nowrap", minWidth: 90 },
+      }),
     },
     {
       title: "Category Name",
@@ -437,6 +549,11 @@ const TherapyServices = () => {
           },
           { icon: <i className="ti ti-separator" />, label: "Session Gap", value: `${viewService?.sessionGap || 1} day(s)` },
         ]}
+        onEdit={() => {
+          if (viewService) openEditTherapy(viewService);
+        }}
+        editLabel="Edit Therapy"
+        editModalTarget="#edit_therapy"
       >
         {viewService?.description && (
           <div className="px-4 pb-3">
@@ -473,6 +590,196 @@ const TherapyServices = () => {
           </div>
         )}
       </ViewModal>
+
+      {/* Edit Therapy Modal */}
+      <div className="modal fade" id="edit_therapy" tabIndex={-1} aria-hidden="true">
+        <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: 12, overflow: "hidden" }}>
+            <div className="modal-header bg-primary text-white">
+              <h4 className="modal-title fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                <i className="ti ti-edit" /> Edit Therapy
+              </h4>
+              <button
+                type="button"
+                className="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+                id="close-edit-therapy-modal"
+              />
+            </div>
+            <form onSubmit={handleEditSubmit}>
+              <div className="modal-body">
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label fw-semibold text-dark">
+                      Therapy Name <span className="text-danger">*</span>
+                    </label>
+                    <IconFormControl
+                      fieldLabel="service"
+                      type="text"
+                      placeholder="Therapy name"
+                      required
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-semibold text-dark">
+                      Category <span className="text-danger">*</span>
+                    </label>
+                    <select
+                      className="form-select"
+                      required
+                      value={editCategory}
+                      onChange={(e) => setEditCategory(e.target.value)}
+                    >
+                      <option value="">Select Category</option>
+                      {specializations.map((cat: any) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-semibold text-dark">Therapy Code</label>
+                    <IconFormControl
+                      type="text"
+                      fieldLabel="service"
+                      className="bg-light"
+                      readOnly
+                      value={editCode}
+                      placeholder="Therapy Code"
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-semibold text-dark">
+                      Duration (Minutes) <span className="text-danger">*</span>
+                    </label>
+                    <IconFormControl
+                      type="number"
+                      fieldLabel="time"
+                      placeholder="e.g. 50"
+                      required
+                      min="1"
+                      value={editDuration}
+                      onChange={(e) => setEditDuration(e.target.value)}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-semibold text-dark">
+                      Price / Session (₹) <span className="text-danger">*</span>
+                    </label>
+                    <IconFormControl
+                      fieldLabel="price"
+                      type="number"
+                      placeholder="e.g. 1500"
+                      required
+                      min="0"
+                      value={editPrice}
+                      onChange={(e) => setEditPrice(e.target.value)}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-semibold text-dark">
+                      Min Sessions <span className="text-danger">*</span>
+                    </label>
+                    <IconFormControl
+                      type="number"
+                      fieldLabel="quantity"
+                      min="1"
+                      required
+                      value={editMinSessions}
+                      onChange={(e) => setEditMinSessions(e.target.value)}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-semibold text-dark">
+                      Max Sessions <span className="text-danger">*</span>
+                    </label>
+                    <IconFormControl
+                      type="number"
+                      fieldLabel="quantity"
+                      min="1"
+                      required
+                      value={editMaxSessions}
+                      onChange={(e) => setEditMaxSessions(e.target.value)}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-semibold text-dark">Status</label>
+                    <select
+                      className="form-select"
+                      value={editStatus}
+                      onChange={(e) => setEditStatus(e.target.value)}
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-semibold text-dark">Schedule Type</label>
+                    <div className="d-flex flex-wrap gap-2">
+                      {SCHEDULE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          className={`btn btn-sm d-inline-flex align-items-center gap-1 ${
+                            editScheduleType === opt.value ? "btn-primary" : "btn-outline-primary"
+                          }`}
+                          onClick={() => {
+                            setEditScheduleType(opt.value);
+                            if (opt.value === "daily") setEditSessionGap("0");
+                            else if (opt.value === "alternate") setEditSessionGap("1");
+                            else if (opt.value === "weekly") setEditSessionGap("7");
+                            else setEditSessionGap("");
+                          }}
+                        >
+                          <i className={opt.icon} />
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label fw-semibold text-dark">Session Gap (Days)</label>
+                    <IconFormControl
+                      type="number"
+                      fieldLabel="time"
+                      min="0"
+                      disabled={editScheduleType !== "custom"}
+                      value={editSessionGap}
+                      onChange={(e) => setEditSessionGap(e.target.value)}
+                    />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label fw-semibold text-dark">Description</label>
+                    <IconTextarea
+                      fieldLabel="description"
+                      rows={3}
+                      placeholder="Therapy details (optional)"
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer border-top">
+                <button
+                  type="button"
+                  className="btn btn-light px-4"
+                  data-bs-dismiss="modal"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary px-4" disabled={savingEdit}>
+                  {savingEdit ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
 
       <div className="modal fade" id="delete_therapy">
         <div className="modal-dialog modal-dialog-centered modal-sm">

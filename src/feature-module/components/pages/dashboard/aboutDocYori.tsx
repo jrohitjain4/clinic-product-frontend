@@ -804,7 +804,7 @@ const AboutDocYori = () => {
               </div>
               <div className="about-dy-updated-info">
                 <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 2px', fontWeight: 500 }}>Last Updated</p>
-                <h4>26 June 2026</h4>
+                <h4>07 August 2026</h4>
                 <p>10:30 AM</p>
                 <div className="about-dy-updated-badge">
                   <i className="ti ti-check" style={{ fontSize: '10px', marginRight: '3px' }}></i> System is up to date

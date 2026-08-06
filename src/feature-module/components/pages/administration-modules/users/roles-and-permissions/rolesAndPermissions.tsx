@@ -15,7 +15,21 @@ const SIDEBAR_SECTIONS = [
       { key: "Doctors", label: "Doctors" },
       { key: "Patients", label: "Patients" },
       { key: "Appointments", label: "Appointments" },
-      { key: "Services", label: "Services" }
+      { key: "Consultations", label: "Consultations" }
+    ]
+  },
+  {
+    section: "IPD",
+    items: [
+      { key: "IPD Dashboard", label: "Dashboard" },
+      { key: "IPD Patient", label: "Patient" },
+      { key: "Admission", label: "Admission" },
+      { key: "Inpatient", label: "Inpatient" },
+      { key: "Discharge", label: "Discharge" },
+      { key: "Ward Management", label: "Ward Management" },
+      { key: "IPD Billings & Invoices", label: "Billings & Invoices" },
+      { key: "IPD Doctor", label: "Doctor" },
+      { key: "Treatment & Packages", label: "Treatment & Packages" }
     ]
   },
   {
@@ -44,12 +58,11 @@ const SIDEBAR_SECTIONS = [
     items: [
       { key: "Staffs", label: "Staffs" },
       { key: "Departments", label: "Departments" },
-      { key: "Designation", label: "Designations" },
+      { key: "Designation", label: "Designation" },
       { key: "Attendance", label: "Attendance" },
       { key: "Leaves", label: "Leaves" },
       { key: "Holidays", label: "Holidays" },
-      { key: "Payroll", label: "Payroll" },
-      { key: "Specializations", label: "Specializations" }
+      { key: "Payroll", label: "Payroll" }
     ]
   },
   {
@@ -61,9 +74,36 @@ const SIDEBAR_SECTIONS = [
     ]
   },
   {
+    section: "Therapy",
+    items: [
+      { key: "Therapy Dashboard", label: "Dashboard" },
+      { key: "Therapy Patients", label: "Patients" },
+      { key: "Therapists", label: "Therapists" },
+      { key: "Therapies", label: "Therapies" },
+      { key: "Therapy Appointments", label: "Appointments" },
+      { key: "Therapy Consultancy", label: "Consultancy" },
+      { key: "Therapy Sessions", label: "Sessions" },
+      { key: "Therapy Invoices", label: "Invoices" }
+    ]
+  },
+  {
+    section: "Application",
+    items: [
+      { key: "To Do", label: "To Do" },
+      { key: "Notes", label: "Notes" }
+    ]
+  },
+  {
+    section: "Support",
+    items: [
+      { key: "Support", label: "Support" }
+    ]
+  },
+  {
     section: "Administration",
     items: [
-      { key: "Roles & Permissions", label: "Roles & Permissions" }
+      { key: "Roles & Permissions", label: "Roles & Permissions" },
+      { key: "Refer Sources", label: "Refer Sources" }
     ]
   }
 ];
@@ -71,12 +111,16 @@ const SIDEBAR_SECTIONS = [
 const ACTIONS = ["CREATE", "EDIT", "DELETE", "VIEW"];
 
 const SECTION_ICONS: Record<string, string> = {
-  OPD: "ti ti-building-hospital",
+  OPD: "ti ti-stethoscope",
+  IPD: "ti ti-bed",
   Diagnostic: "ti ti-microscope",
   Pharmacy: "ti ti-pill",
   HRM: "ti ti-users-group",
-  "Finance & Accounts": "ti ti-cash",
-  Administration: "ti ti-settings",
+  "Finance & Accounts": "ti ti-report-money",
+  Therapy: "ti ti-heart-handshake",
+  Application: "ti ti-apps",
+  Support: "ti ti-headset",
+  Administration: "ti ti-user-cog",
 };
 
 const TOTAL_MODULES = SIDEBAR_SECTIONS.reduce((n, s) => n + s.items.length, 0);

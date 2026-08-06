@@ -18,33 +18,73 @@ const LABEL_TO_MODULE: Record<string, string> = {
     Doctors: "Doctors",
     Patients: "Patients",
     Appointments: "Appointments",
+    Consultations: "Consultations",
     "Services and Medicines": "Services",
     Services: "Services",
     specializations: "Services",
+
+    // IPD
+    "IPD Dashboard": "IPD Dashboard",
+    "IPD Patient": "IPD Patient",
+    Admission: "Admission",
+    Inpatient: "Inpatient",
+    Discharge: "Discharge",
+    "Ward Management": "Ward Management",
+    "Billings & Invoices": "IPD Billings & Invoices",
+    "IPD Doctor": "IPD Doctor",
+    "Treatment & Packages": "Treatment & Packages",
+
+    // Diagnostic
     "Diagnostic Dashboard": "Diagnostic Dashboard",
     Category: "Category",
     "Diagnostic Test": "Diagnostic Test",
     "Diagnostic Booking": "Diagnostic Booking",
     "Invoice (Diagnostic)": "Invoice (Diagnostic)",
+
+    // Pharmacy
     "Pharmacy Dashboard": "Pharmacy Dashboard",
     "Pharmacy Category": "Pharmacy Category",
     Medicine: "Medicine",
     Inventory: "Inventory",
     "Pharmacy Billing": "Pharmacy Billing",
     "Sales History": "Sales History",
+
+    // HRM
     Staffs: "Staffs",
     Departments: "Departments",
     Designation: "Designation",
     Designations: "Designation",
     Attendance: "Attendance",
     Leaves: "Leaves",
+    "Leave Type": "Leaves",
     Holidays: "Holidays",
     Payroll: "Payroll",
     Specializations: "Specializations",
+
+    // Finance & Accounts
     Expenses: "Expenses",
+    "Expense Category": "Expenses",
     Invoices: "Invoices",
     Transactions: "Transactions",
-    "Roles & Permissions": "Roles & Permissions"
+
+    // Therapy
+    "Therapy Dashboard": "Therapy Dashboard",
+    "Therapy Patients": "Therapy Patients",
+    Therapists: "Therapists",
+    Therapies: "Therapies",
+    "Therapy Appointments": "Therapy Appointments",
+    Consultancy: "Therapy Consultancy",
+    "Therapy Consultancy": "Therapy Consultancy",
+    Sessions: "Therapy Sessions",
+    "Therapy Sessions": "Therapy Sessions",
+    "Therapy Invoices": "Therapy Invoices",
+
+    // Application & Support & Admin
+    "To Do": "To Do",
+    Notes: "Notes",
+    Support: "Support",
+    "Roles & Permissions": "Roles & Permissions",
+    "Refer Sources": "Refer Sources",
 };
 
 // ── Map route pathnames to permission modules ──────────────────────────
@@ -60,9 +100,39 @@ const PATH_TO_MODULE: Record<string, string> = {
     "/appointments": "Appointments",
     "/new-appointment": "Appointments",
     "/appointment-calendar": "Appointments",
+    "/consultations": "Consultations",
     "/locations": "Locations",
     "/services": "Services",
     "/specializations": "Services",
+
+    // IPD
+    "/ipd/dashboard": "IPD Dashboard",
+    "/ipd/patients": "IPD Patient",
+    "/ipd/admissions": "Admission",
+    "/ipd/inpatients": "Inpatient",
+    "/ipd/discharge": "Discharge",
+    "/ipd/ward-management": "Ward Management",
+    "/ipd/billings": "IPD Billings & Invoices",
+    "/ipd/doctors": "IPD Doctor",
+    "/ipd/treatments": "Treatment & Packages",
+
+    // Diagnostic
+    "/diagnostic/dashboard": "Diagnostic Dashboard",
+    "/pathlab/dashboard": "Diagnostic Dashboard",
+    "/pathlab/categories": "Category",
+    "/pathlab/tests": "Diagnostic Test",
+    "/pathlab/bookings": "Diagnostic Booking",
+    "/pathlab/invoices": "Invoice (Diagnostic)",
+
+    // Pharmacy
+    "/pharmacy/dashboard": "Pharmacy Dashboard",
+    "/pharmacy/categories": "Pharmacy Category",
+    "/pharmacy/medicines": "Medicine",
+    "/pharmacy/inventory": "Inventory",
+    "/pharmacy/billing": "Pharmacy Billing",
+    "/pharmacy/sales-history": "Sales History",
+
+    // HRM
     "/staffs": "Staffs",
     "/hrm-departments": "Departments",
     "/designation": "Designation",
@@ -72,6 +142,8 @@ const PATH_TO_MODULE: Record<string, string> = {
     "/holidays": "Holidays",
     "/payroll": "Payroll",
     "/payroll-2": "Payroll",
+
+    // Finance & Accounts
     "/expenses": "Expenses",
     "/expense-category": "Expenses",
     "/income": "Income",
@@ -81,20 +153,22 @@ const PATH_TO_MODULE: Record<string, string> = {
     "/edit-invoices": "Invoices",
     "/payments": "Payments",
     "/transactions": "Transactions",
-    "/diagnostic/dashboard": "Diagnostic Dashboard",
-    "/pathlab/dashboard": "Diagnostic Dashboard",
-    "/pathlab/categories": "Category",
-    "/pathlab/tests": "Diagnostic Test",
-    "/pathlab/bookings": "Diagnostic Booking",
-    "/pathlab/invoices": "Invoice (Diagnostic)",
-    "/pharmacy/dashboard": "Pharmacy Dashboard",
-    "/pharmacy/categories": "Pharmacy Category",
-    "/pharmacy/medicines": "Medicine",
-    "/pharmacy/inventory": "Inventory",
-    "/pharmacy/billing": "Pharmacy Billing",
-    "/pharmacy/sales-history": "Sales History",
+
+    // Therapy
+    "/therapy-patients": "Therapy Patients",
+    "/therapists": "Therapists",
+    "/therapy-services": "Therapies",
+    "/therapy-appointments": "Therapy Appointments",
+    "/therapy-consultations": "Therapy Consultancy",
+    "/all-sessions": "Therapy Sessions",
+
+    // App & Admin
+    "/todo": "To Do",
+    "/notes": "Notes",
+    "/tickets": "Support",
     "/roles-permissions": "Roles & Permissions",
-    "/roles-and-permissions": "Roles & Permissions"
+    "/roles-and-permissions": "Roles & Permissions",
+    "/refers": "Refer Sources"
 };
 
 export type PermissionsMap = Record<string, Record<string, boolean>>;
@@ -132,9 +206,19 @@ export const canSeeMenuItem = (label: string, sectionTitle?: string): boolean =>
 
     // Parent dropdown modules (Dashboard-style expandable items)
     const parentModules: Record<string, string[]> = {
-        OPD: ["Dashboard", "Doctors", "Patients", "Appointments", "Services"],
-        Clinic: ["Dashboard", "Doctors", "Patients", "Appointments", "Services"],
-        IPD: [], // no staff permission modules yet — show to all staff
+        OPD: ["Dashboard", "Doctors", "Patients", "Appointments", "Consultations"],
+        Clinic: ["Dashboard", "Doctors", "Patients", "Appointments", "Consultations"],
+        IPD: [
+            "IPD Dashboard",
+            "IPD Patient",
+            "Admission",
+            "Inpatient",
+            "Discharge",
+            "Ward Management",
+            "IPD Billings & Invoices",
+            "IPD Doctor",
+            "Treatment & Packages"
+        ],
         Diagnostic: [
             "Diagnostic Dashboard",
             "Category",
@@ -158,10 +242,21 @@ export const canSeeMenuItem = (label: string, sectionTitle?: string): boolean =>
             "Leaves",
             "Holidays",
             "Payroll",
-            "Specializations",
         ],
         "Finance & Accounts": ["Expenses", "Invoices", "Transactions"],
-        Application: [],
+        Therapy: [
+            "Therapy Dashboard",
+            "Therapy Patients",
+            "Therapists",
+            "Therapies",
+            "Therapy Appointments",
+            "Therapy Consultancy",
+            "Therapy Sessions",
+            "Therapy Invoices"
+        ],
+        Application: ["To Do", "Notes"],
+        Support: ["Support"],
+        Administration: ["Roles & Permissions", "Refer Sources"]
     };
 
     if (label in parentModules) {
@@ -218,7 +313,16 @@ export const canSeeSection = (sectionTitle: string): boolean => {
             "Doctors",
             "Patients",
             "Appointments",
-            "Services",
+            "Consultations",
+            "IPD Dashboard",
+            "IPD Patient",
+            "Admission",
+            "Inpatient",
+            "Discharge",
+            "Ward Management",
+            "IPD Billings & Invoices",
+            "IPD Doctor",
+            "Treatment & Packages",
             "Diagnostic Dashboard",
             "Category",
             "Diagnostic Test",
@@ -237,17 +341,42 @@ export const canSeeSection = (sectionTitle: string): boolean => {
             "Leaves",
             "Holidays",
             "Payroll",
-            "Specializations",
             "Expenses",
             "Invoices",
             "Transactions",
+            "To Do",
+            "Notes"
         ],
-        OPD: ["Dashboard", "Doctors", "Patients", "Appointments", "Services"],
-        Clinic: ["Dashboard", "Doctors", "Patients", "Appointments", "Services"],
-        HRM: ["Staffs", "Departments", "Designation", "Attendance", "Leaves", "Holidays", "Payroll", "Specializations"],
+        OPD: ["Dashboard", "Doctors", "Patients", "Appointments", "Consultations"],
+        Clinic: ["Dashboard", "Doctors", "Patients", "Appointments", "Consultations"],
+        IPD: [
+            "IPD Dashboard",
+            "IPD Patient",
+            "Admission",
+            "Inpatient",
+            "Discharge",
+            "Ward Management",
+            "IPD Billings & Invoices",
+            "IPD Doctor",
+            "Treatment & Packages"
+        ],
+        HRM: ["Staffs", "Departments", "Designation", "Attendance", "Leaves", "Holidays", "Payroll"],
         "Finance & Accounts": ["Expenses", "Invoices", "Transactions"],
         Diagnostic: ["Diagnostic Dashboard", "Category", "Diagnostic Test", "Diagnostic Booking", "Invoice (Diagnostic)"],
         Pharmacy: ["Pharmacy Dashboard", "Pharmacy Category", "Medicine", "Inventory", "Pharmacy Billing", "Sales History"],
+        Therapy: [
+            "Therapy Dashboard",
+            "Therapy Patients",
+            "Therapists",
+            "Therapies",
+            "Therapy Appointments",
+            "Therapy Consultancy",
+            "Therapy Sessions",
+            "Therapy Invoices"
+        ],
+        Application: ["To Do", "Notes"],
+        Support: ["Support"],
+        Administration: ["Roles & Permissions", "Refer Sources"]
     };
 
     const modules = sectionModules[sectionTitle];

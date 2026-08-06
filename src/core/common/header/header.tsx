@@ -12,6 +12,7 @@ import { useNotifications } from "../../hooks/useNotifications";
 import moment from "moment";
 import { Button } from "../button/Button";
 import { Input } from "../input/Input";
+import { Search } from "react-feather";
 import { canSeeSection } from "../../utils/staffPermissions";
 
 const Header = () => {

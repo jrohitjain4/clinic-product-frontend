@@ -217,9 +217,7 @@ const ConsultationList = () => {
   const counts = useMemo(() => {
     return {
       all: items.length,
-      checkedOut: items.filter(item => item.appointment?.status === "Check Out").length,
-      checkedIn: items.filter(item => item.appointment?.status === "Check In").length,
-      confirmed: items.filter(item => item.appointment?.status === "Confirmed").length,
+      started: items.filter(item => !!item.consultation).length,
       notStarted: items.filter(item => !item.consultation).length,
     };
   }, [items]);
@@ -228,10 +226,10 @@ const ConsultationList = () => {
     return items.filter((item) => {
       // 1. Status Filter
       if (filterStatus !== "All") {
-        if (filterStatus === "Not Started") {
+        if (filterStatus === "Started") {
+          if (!item.consultation) return false;
+        } else if (filterStatus === "Not Started") {
           if (item.consultation) return false;
-        } else {
-          if (item.appointment?.status !== filterStatus) return false;
         }
       }
 
@@ -532,13 +530,11 @@ const ConsultationList = () => {
           <div className="appointments-filter-line pb-3 mb-3 border-bottom">
             <h4 className="fw-bold mb-0 text-dark flex-shrink-0">Therapy Consultations</h4>
             
-            {/* Tab Filters: All, Checked Out, Checked In, Confirmed, Not Started */}
+            {/* Tab Filters: All, Started, Not Started */}
             <div className="status-buttons-group ms-auto">
               {[
                 { key: "All", label: "All", count: counts.all },
-                { key: "Check Out", label: "Checked Out", count: counts.checkedOut },
-                { key: "Check In", label: "Checked In", count: counts.checkedIn },
-                { key: "Confirmed", label: "Confirmed", count: counts.confirmed },
+                { key: "Started", label: "Started", count: counts.started },
                 { key: "Not Started", label: "Not Started", count: counts.notStarted }
               ].map((s) => (
                 <button

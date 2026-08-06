@@ -20,7 +20,7 @@ const getDashboardPath = (role: string): string => {
     case "PORTER":
     case "STAFF":
     default:
-      return all_routes.dashboard;
+      return all_routes.aboutDocYori;
   }
 };
 

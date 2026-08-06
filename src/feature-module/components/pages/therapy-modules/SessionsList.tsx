@@ -75,7 +75,7 @@ const SessionsList = () => {
   const [error, setError] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const [datePreset, setDatePreset] = useState("All");
+  const [datePreset, setDatePreset] = useState("Today");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedPatientId, setSelectedPatientId] = useState("");

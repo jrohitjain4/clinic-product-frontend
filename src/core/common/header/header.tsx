@@ -91,9 +91,9 @@ const Header = () => {
     window.dispatchEvent(new Event("activeModuleModeChange"));
     
     if (newMode === "therapy") {
-      navigate(all_routes.dashboard);
+      navigate(all_routes.aboutDocYori);
     } else {
-      navigate(all_routes.dashboard);
+      navigate(all_routes.aboutDocYori);
     }
   };
 
@@ -165,7 +165,7 @@ const Header = () => {
         <div className="page-container topbar-menu">
           <div className="d-flex align-items-center gap-2">
             {/* Logo */}
-            <Link to={all_routes.dashboard} className="logo">
+            <Link to={all_routes.aboutDocYori} className="logo">
               {/* Logo Normal */}
               <span className="logo-light">
                 <span className="logo-lg">

@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
+import dayjs from "dayjs";
 import Datatable from "../../../../core/common/dataTable";
 import { apiGet, apiDelete, apiPost, apiPut } from "../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
@@ -82,6 +83,13 @@ const TherapyAppointments = () => {
   const [viewAppt, setViewAppt] = useState<any>(null);
   const [slipPrintAppointment, setSlipPrintAppointment] = useState<any | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  // Filter States (Same as OPD Appointments)
+  const [filterDoctor, setFilterDoctor] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [datePreset, setDatePreset] = useState("All");
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
 
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -819,23 +827,97 @@ const TherapyAppointments = () => {
     );
   };
 
+  const therapistsList = useMemo(() => {
+    const names = Array.from(new Set(appointments.map(a => a.doctorName || a.doctor?.fullName)));
+    return names.filter(n => n && n !== "—").sort();
+  }, [appointments]);
+
+  const filteredSubData = useMemo(() => {
+    return appointments.filter((a: any) => {
+      if (a.parentAppointmentId) return false;
+
+      const doctorName = a.doctorName || a.doctor?.fullName || "";
+      const matchDoctor = filterDoctor
+        ? doctorName.toLowerCase() === filterDoctor.toLowerCase()
+        : true;
+
+      let matchDate = true;
+      if (a.scheduledAt) {
+        const rowDate = dayjs(a.scheduledAt);
+        if (datePreset === "Today") {
+          matchDate = rowDate.isSame(dayjs(), 'day');
+        } else if (datePreset === "Yesterday") {
+          matchDate = rowDate.isSame(dayjs().subtract(1, 'day'), 'day');
+        } else if (datePreset === "Last 7 Days") {
+          matchDate = rowDate.isAfter(dayjs().subtract(7, 'day'));
+        } else if (datePreset === "Custom") {
+          const rowDateStr = rowDate.format("YYYY-MM-DD");
+          if (filterStartDate && filterEndDate) {
+            matchDate = rowDateStr >= filterStartDate && rowDateStr <= filterEndDate;
+          } else if (filterStartDate) {
+            matchDate = rowDateStr >= filterStartDate;
+          } else if (filterEndDate) {
+            matchDate = rowDateStr <= filterEndDate;
+          }
+        }
+      }
+
+      return matchDoctor && matchDate;
+    });
+  }, [appointments, filterDoctor, datePreset, filterStartDate, filterEndDate]);
+
+  const filteredData = useMemo(() => {
+    return filteredSubData.filter((a: any) => {
+      const matchStatus = filterStatus === "All" || !filterStatus
+        ? true
+        : (a.status || "").toLowerCase() === filterStatus.toLowerCase();
+      return matchStatus;
+    });
+  }, [filteredSubData, filterStatus]);
+
+  const counts = useMemo(() => {
+    return {
+      all: filteredSubData.length,
+      schedule: filteredSubData.filter((a: any) => a.status === "Schedule").length,
+      confirmed: filteredSubData.filter((a: any) => a.status === "Confirmed").length,
+      checkedIn: filteredSubData.filter((a: any) => a.status === "Checked In").length,
+      checkedOut: filteredSubData.filter((a: any) => a.status === "Checked Out").length,
+    };
+  }, [filteredSubData]);
+
+  const isAnyFilterActive = useMemo(() => {
+    return (
+      (filterStatus !== "All" && filterStatus !== "") ||
+      datePreset !== "All" ||
+      filterStartDate !== "" ||
+      filterEndDate !== "" ||
+      filterDoctor !== ""
+    );
+  }, [filterStatus, datePreset, filterStartDate, filterEndDate, filterDoctor]);
+
+  const handleClearFilters = () => {
+    setFilterStatus("All");
+    setDatePreset("All");
+    setFilterStartDate("");
+    setFilterEndDate("");
+    setFilterDoctor("");
+  };
+
   const data = useMemo(() => {
-    // Only show top-level (parent) appointments in the main list
-    const parents = appointments.filter((a: any) => !a.parentAppointmentId);
-    return parents.map((a, index) => ({
+    return filteredData.map((a: any, index: number) => ({
       key: a.id,
       id: a.id,
       sr_no: index + 1,
       code: a.appointmentCode || "N/A",
       patientName: a.patientName || "N/A",
-      therapist: a.doctorName || "N/A",
-      date: a.dateTimeLabel || "N/A",
+      therapist: a.doctorName || a.doctor?.fullName || "N/A",
+      date: a.dateTimeLabel || (a.scheduledAt ? dayjs(a.scheduledAt).format("DD MMM YYYY · hh:mm A") : "N/A"),
       mode: a.mode || "Offline",
       fee: a.finalFee || a.consultationFee || 0,
       status: a.status || "Schedule",
       raw: a,
     }));
-  }, [appointments]);
+  }, [filteredData]);
 
   const columns = [
     {
@@ -1070,28 +1152,236 @@ const TherapyAppointments = () => {
     },
   ];
 
+  const customSelectStyles = `
+    .appointments-filter-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      width: 100%;
+      overflow: visible;
+    }
+    .appointments-filter-line h4 {
+      font-size: 16px !important;
+      flex-shrink: 0;
+      margin: 0 !important;
+    }
+    .appointments-filter-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .status-buttons-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-left: 0 !important;
+    }
+    .status-btn {
+      padding: 0 8px !important;
+      font-weight: 700 !important;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 1px;
+      text-wrap: nowrap;
+      border-radius: 6px !important;
+      height: 32px !important;
+      font-size: 11px !important;
+    }
+    .count-badge {
+      font-size: 10px !important;
+      padding: 2px 4px !important;
+    }
+    .follow-up-select {
+      height: 32px !important;
+      font-size: 11px !important;
+      font-weight: bold !important;
+      padding: 0 24px 0 10px !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      min-width: 130px !important;
+      max-width: 190px !important;
+    }
+    .clear-filter-btn {
+      height: 32px !important;
+      border-radius: 6px !important;
+      font-size: 11px !important;
+      padding: 0 8px !important;
+      font-weight: 700 !important;
+      background-color: #dc3545 !important;
+      color: #fff !important;
+      border-color: #dc3545 !important;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .new-appointment-btn {
+      height: 32px !important;
+      border-radius: 6px !important;
+      font-size: 11px !important;
+      padding: 0 12px !important;
+      font-weight: 700 !important;
+      white-space: nowrap !important;
+      display: inline-flex !important;
+      align-items: center;
+      flex-shrink: 0 !important;
+    }
+  `;
+
   return (
     <>
+      <style>{customSelectStyles}</style>
       <div className="page-wrapper">
         <div className="content therapy-appt-page">
-          {/* Page Header */}
-          <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
-            <div className="flex-grow-1">
-              <h4 className="page-title fw-bold mb-0 d-flex align-items-center flex-wrap gap-2">
-                {isConsultancy ? "Therapy Consultancy" : "Therapy Appointments"}
-                <span className="ta-badge ta-badge-primary">
-                  <i className="ti ti-calendar-check" />
-                  {isConsultancy ? "Total Consultations" : "Total Bookings"}: {loading ? "" : data.length}
-                </span>
-              </h4>
-            </div>
-            <div className="d-flex align-items-center gap-2">
+          {/* Page Header Filter Bar */}
+          <div className="appointments-filter-line pb-3 mb-3 border-bottom">
+            <h4 className="fw-bold mb-0 text-dark flex-shrink-0">
+              {isConsultancy ? "Therapy Consultancy" : "Therapy Appointments"}
+            </h4>
+
+            <div className="appointments-filter-actions">
+              {/* Status Buttons Group: All, Schedule, Confirmed, Checked In */}
+              <div className="status-buttons-group">
+                {["All", "Schedule", "Confirmed", "Checked In"].map((s) => (
+                  <button
+                    key={s}
+                    className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} status-btn`}
+                    onClick={() => setFilterStatus(s)}
+                  >
+                    {s}
+                    <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1 count-badge`}>
+                      {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : filteredSubData.filter((a: any) => a.status === s).length}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Therapist Filter Dropdown */}
+              <div className="dropdown flex-shrink-0">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center text-nowrap follow-up-select"
+                  style={{ height: "32px", fontSize: "11px", display: "flex", alignItems: "center", minWidth: "150px" }}
+                  data-bs-toggle="dropdown"
+                >
+                  <span className="text-truncate pe-1">
+                    <span className="text-muted"><i className="ti ti-user-heart me-1"></i></span>{" "}
+                    {filterDoctor || "Filter Therapist"}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2 animate__animated animate__fadeIn" style={{ minWidth: "200px", maxHeight: "280px", overflowY: "auto", zIndex: 1050 }}>
+                  <li>
+                    <Link
+                      to="#"
+                      className={`dropdown-item rounded-1 fs-12 py-2 ${!filterDoctor ? "active" : ""}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterDoctor("");
+                      }}
+                    >
+                      All Therapists
+                    </Link>
+                  </li>
+                  {therapistsList.map((d) => (
+                    <li key={d}>
+                      <Link
+                        to="#"
+                        className={`dropdown-item rounded-1 fs-12 py-2 ${filterDoctor === d ? "active" : ""}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterDoctor(d || "");
+                        }}
+                      >
+                        {d}
+                      </Link>
+                    </li>
+                  ))}
+                  {therapistsList.length === 0 && (
+                    <li>
+                      <span className="dropdown-item-text text-muted fs-12 py-2">No therapists found</span>
+                    </li>
+                  )}
+                </ul>
+              </div>
+
+              {/* Date Filter Dropdown */}
+              <div className="dropdown flex-shrink-0">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap follow-up-select"
+                  style={{ height: "32px", fontSize: "11px", display: "flex", alignItems: "center" }}
+                  data-bs-toggle="dropdown"
+                  data-bs-auto-close="outside"
+                >
+                  <span className="text-truncate">
+                    <span className="text-muted"><i className="ti ti-calendar me-1"></i></span> {datePreset === "All" ? "Filter Date" : datePreset}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2 animate__animated animate__fadeIn" style={{ minWidth: "180px", zIndex: 1050 }}>
+                  {["All", "Today", "Yesterday", "Last 7 Days", "Custom"].map((preset) => (
+                    <li key={preset}>
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1 fs-12 py-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (preset === "Custom") {
+                            e.stopPropagation();
+                          }
+                          setDatePreset(preset);
+                        }}
+                      >
+                        {preset}
+                      </Link>
+                    </li>
+                  ))}
+                  {datePreset === "Custom" && (
+                    <li className="p-2 border-top mt-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="d-flex flex-column gap-1">
+                        <label className="text-muted fs-10 fw-bold text-uppercase mb-0">Start Date</label>
+                        <input
+                          type="date"
+                          className="form-control fs-12 px-2 py-1"
+                          value={filterStartDate}
+                          onChange={(e) => setFilterStartDate(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <label className="text-muted fs-10 fw-bold text-uppercase mb-0 mt-1">End Date</label>
+                        <input
+                          type="date"
+                          className="form-control fs-12 px-2 py-1"
+                          value={filterEndDate}
+                          onChange={(e) => setFilterEndDate(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </li>
+                  )}
+                </ul>
+              </div>
+
+              {/* Clear Filter Button */}
+              {isAnyFilterActive && (
+                <button className="btn btn-sm clear-filter-btn" onClick={handleClearFilters}>
+                  <i className="ti ti-refresh" /> Clear
+                </button>
+              )}
+
+              {/* Book Appointment Button */}
               <Link
                 to="/book-therapy-appointment"
-                className="btn btn-primary d-flex align-items-center gap-2"
-                style={{ minHeight: "38px", borderRadius: 8 }}
+                className="btn btn-sm btn-primary new-appointment-btn"
               >
-                <i className="ti ti-plus" /> Book Appointment
+                <i className="ti ti-plus me-1" /> Book Appointment
               </Link>
             </div>
           </div>

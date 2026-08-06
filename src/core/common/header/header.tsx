@@ -12,7 +12,7 @@ import { useNotifications } from "../../hooks/useNotifications";
 import moment from "moment";
 import { Button } from "../button/Button";
 import { Input } from "../input/Input";
-import { Search } from "react-feather";
+import { canSeeSection } from "../../utils/staffPermissions";
 
 const Header = () => {
 
@@ -316,7 +316,8 @@ const Header = () => {
               {/* Module Switcher */}
               {user?.role !== "SUPER_ADMIN" &&
                 user?.role !== "DOCTOR" &&
-                user?.role !== "PATIENT" && (
+                user?.role !== "PATIENT" &&
+                canSeeSection("Therapy") && (
                 <button
                   type="button"
                   className={`btn d-flex align-items-center gap-2 border px-3 shadow-sm text-nowrap ms-2`}

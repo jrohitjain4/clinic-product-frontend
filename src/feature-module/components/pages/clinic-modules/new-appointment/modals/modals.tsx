@@ -170,7 +170,7 @@ const Modals = () => {
                   <div className="col-md-6">
                     <div className="mb-3">
                       <label className="form-label mb-1 fw-medium">
-                        Address 1<span className="text-danger ms-1">*</span>
+                        Address 1
                       </label>
                       <IconFormControl fieldLabel="Address 1" type="text" placeholder="Enter address line 1" />
                     </div>
@@ -178,7 +178,7 @@ const Modals = () => {
                   <div className="col-md-6">
                     <div className="mb-3">
                       <label className="form-label mb-1 fw-medium">
-                        Address 2<span className="text-danger ms-1">*</span>
+                        Address 2
                       </label>
                       <IconFormControl fieldLabel="Address 2" type="text" placeholder="Enter address line 2" />
                     </div>

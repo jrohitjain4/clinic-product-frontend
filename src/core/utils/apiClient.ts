@@ -1,6 +1,38 @@
 import { apiUrl } from "../config/api";
 import { toast } from "react-toastify";
 
+let authRedirectPending = false;
+
+const clearAuthAndRedirect = (message?: string) => {
+  if (authRedirectPending) return;
+  authRedirectPending = true;
+
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+
+  if (message && !window.location.pathname.startsWith("/login")) {
+    toast.error(message);
+  }
+
+  if (!window.location.pathname.startsWith("/login")) {
+    window.location.href = "/login";
+  } else {
+    authRedirectPending = false;
+  }
+};
+
+const handleAuthError = (status: number, message: string) => {
+  const isAuthFailure =
+    status === 401 ||
+    (status === 403 &&
+      /invalid or expired token|authorization header is missing|unauthorized/i.test(message));
+
+  if (isAuthFailure) {
+    clearAuthAndRedirect(message);
+    throw new Error(message);
+  }
+};
+
 export const authHeaders = (): HeadersInit => {
   const token = localStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -14,6 +46,7 @@ export async function apiGet<T>(path: string): Promise<T> {
       typeof data === "object" && data && "message" in data
         ? String((data as { message: string }).message)
         : `Request failed (${res.status})`;
+    handleAuthError(res.status, message);
     toast.error(message);
     throw new Error(message);
   }
@@ -36,6 +69,7 @@ async function apiRequest<T>(path: string, method: string, body?: any): Promise<
     const message = typeof data === "object" && data && "message" in data
       ? String((data as { message: string }).message)
       : `Request failed (${res.status})`;
+    handleAuthError(res.status, message);
     toast.error(message);
     throw new Error(message);
   }

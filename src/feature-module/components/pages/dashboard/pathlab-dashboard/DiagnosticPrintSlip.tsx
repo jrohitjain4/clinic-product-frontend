@@ -14,17 +14,54 @@ const displayStatus = (status?: string) => {
   return status;
 };
 
+const inr = (amount: number | string | null | undefined) =>
+  `₹${Number(amount || 0).toLocaleString("en-IN")}`;
+
+const parseTestsList = (raw: any): any[] => {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
 const getBookingTests = (bk: any) => {
-  if (Array.isArray(bk?.testsList) && bk.testsList.length > 0) return bk.testsList;
+  const fromList = parseTestsList(bk?.testsList).filter((t) => t && (t.name || t.testId));
+  if (fromList.length > 0) return fromList;
+
   if (bk?.test) {
     return [
       {
         testId: bk.test.id,
         name: bk.test.name,
         testCode: bk.test.testCode,
-        price: bk.test.price || 0,
+        price: Number(bk.test.price) || Number(bk.totalAmount) || 0,
         categoryName: bk.test.category?.name || "—",
-        status: bk.status === "Checked Out" || bk.status === "Completed" ? "Completed" : "Pending",
+        status:
+          bk.status === "Checked Out" || bk.status === "Completed" ? "Completed" : "Pending",
+        assignedUserId: bk.assignedUserId,
+      },
+    ];
+  }
+
+  // Last resort: show one line from booking totals so slip is never empty
+  if (Number(bk?.totalAmount) > 0 || bk?.bookingCode) {
+    return [
+      {
+        testId: bk.id || "booking-test",
+        name: "Diagnostic Test",
+        testCode: "—",
+        price: Number(bk.totalAmount) || 0,
+        categoryName: "—",
+        status:
+          bk.status === "Checked Out" || bk.status === "Completed" ? "Completed" : "Pending",
+        assignedUserId: bk.assignedUserId,
       },
     ];
   }
@@ -77,10 +114,18 @@ const DiagnosticPrintSlip: React.FC<DiagnosticPrintSlipProps> = ({
   };
 
   const tests = useMemo(() => getBookingTests(booking), [booking]);
-  const subtotal = useMemo(
+  const testsSubtotal = useMemo(
     () => tests.reduce((acc: number, t: any) => acc + (Number(t.price) || 0), 0),
     [tests]
   );
+  const discountAmt = Number(booking?.discount) || 0;
+  const taxAmt = Number(booking?.tax) || 0;
+  const totalAmt = Number(booking?.totalAmount) || 0;
+  // Prefer sum of test prices; if missing, reconstruct from total + discount - tax
+  const subtotal =
+    testsSubtotal > 0
+      ? testsSubtotal
+      : Math.max(0, totalAmt + discountAmt - taxAmt) || totalAmt;
 
   if (!booking) return null;
 
@@ -91,6 +136,7 @@ const DiagnosticPrintSlip: React.FC<DiagnosticPrintSlipProps> = ({
   const isPaid =
     String(booking.paymentStatus || "").toLowerCase().includes("paid") &&
     !String(booking.paymentStatus || "").toLowerCase().includes("unpaid");
+  const completedCount = tests.filter((t: any) => t.status === "Completed").length;
 
   const kv = (label: string, value: React.ReactNode) => (
     <div className="dbs-kv">
@@ -215,16 +261,12 @@ const DiagnosticPrintSlip: React.FC<DiagnosticPrintSlipProps> = ({
                 </span>
               )}
               {kv("Payment Method", booking.paymentMethod || "—")}
-              {kv("Subtotal", `₹${subtotal.toLocaleString("en-IN")}`)}
-              {Number(booking.discount) > 0
-                ? kv("Discount", `- ₹${Number(booking.discount).toLocaleString("en-IN")}`)
-                : null}
-              {Number(booking.tax) > 0
-                ? kv("Tax", `₹${Number(booking.tax).toLocaleString("en-IN")}`)
-                : null}
+              {kv("Subtotal", inr(subtotal))}
+              {discountAmt > 0 ? kv("Discount", `- ${inr(discountAmt)}`) : null}
+              {taxAmt > 0 ? kv("Tax", inr(taxAmt)) : null}
               {kv(
                 "Total Amount",
-                <strong className="dbs-total">₹${Number(booking.totalAmount || subtotal).toLocaleString("en-IN")}</strong>
+                <strong className="dbs-total">{inr(totalAmt || subtotal)}</strong>
               )}
             </div>
           </div>
@@ -269,9 +311,7 @@ const DiagnosticPrintSlip: React.FC<DiagnosticPrintSlipProps> = ({
                           {t.status === "Completed" ? "Completed" : "Pending"}
                         </span>
                       </td>
-                      <td className="text-end fw-bold">
-                        ₹{Number(t.price || 0).toLocaleString("en-IN")}
-                      </td>
+                      <td className="text-end fw-bold">{inr(t.price)}</td>
                     </tr>
                   ))
                 )}
@@ -281,9 +321,7 @@ const DiagnosticPrintSlip: React.FC<DiagnosticPrintSlipProps> = ({
                   <td colSpan={6} className="text-end fw-bold">
                     Grand Total
                   </td>
-                  <td className="text-end fw-bold dbs-total">
-                    ₹{Number(booking.totalAmount || subtotal).toLocaleString("en-IN")}
-                  </td>
+                  <td className="text-end fw-bold dbs-total">{inr(totalAmt || subtotal)}</td>
                 </tr>
               </tfoot>
             </table>
@@ -321,10 +359,7 @@ const DiagnosticPrintSlip: React.FC<DiagnosticPrintSlipProps> = ({
                 <i className="ti ti-list-check" /> BOOKING SUMMARY
               </div>
               {kv("Total Tests", tests.length)}
-              {kv(
-                "Completed Tests",
-                `${tests.filter((t: any) => t.status === "Completed").length} / ${tests.length}`
-              )}
+              {kv("Completed Tests", `${completedCount} / ${tests.length}`)}
               {kv("Booking Code", booking.bookingCode || "—")}
               {booking.invoiceNo ? kv("Invoice No.", booking.invoiceNo) : null}
             </div>

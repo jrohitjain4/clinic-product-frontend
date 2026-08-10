@@ -24,23 +24,6 @@ const PrescriptionPad: React.FC<PrescriptionPadProps> = ({ appointment, prescrip
 
   const clinicName = clinic?.name || appointment?.clinicName || prescription?.clinicName || "City Care Clinic";
   const clinicTagline = clinic?.landingPage?.tagline || "Compassionate Care, Better Health";
-
-  const addressParts = [
-    clinic.addressLine1,
-    clinic.addressLine2,
-    clinic.city,
-    clinic.state,
-    clinic.country,
-    clinic.pincode ? `PIN - ${clinic.pincode}` : ""
-  ].filter(Boolean);
-  const clinicAddress = addressParts.length > 0 
-    ? addressParts.join(", ") 
-    : "123, Green Valley Road, Near City Mall, Civil Lines, Lucknow - 226001";
-
-  const clinicPhone = clinic?.phone || "+91 98765 43210";
-  const clinicEmail = clinic?.ownerEmail || clinic?.email || "info@citycareclinic.com";
-  const clinicWebsite = clinic?.website || "www.citycareclinic.com";
-  const clinicRegNo = clinic?.gstNumber || "CCC/2023/00125";
   const clinicLogo = clinic?.landingPage?.logo || null;
 
   const apptCode = appointment?.appointmentCode || prescription?.appointment?.appointmentCode || "N/A";
@@ -58,41 +41,8 @@ const PrescriptionPad: React.FC<PrescriptionPadProps> = ({ appointment, prescrip
   return (
     <div className="prescription-pad-card">
 
-      {/* ========== HEADER ========== */}
-      <div className="pad-header d-flex justify-content-between align-items-center">
-        <div className="d-flex align-items-center gap-2">
-          <div className="pad-logo">
-            {clinicLogo ? (
-              <img
-                src={resolveMediaUrl(clinicLogo)}
-                alt="Clinic Logo"
-                style={{ maxHeight: "46px", maxWidth: "100px", objectFit: "contain" }}
-                onError={(e) => { e.currentTarget.style.display = "none"; }}
-              />
-            ) : null}
-          </div>
-          <div>
-            <h2 className="pad-clinic-name">{clinicName.toUpperCase()}</h2>
-            <p className="pad-clinic-tagline">{clinicTagline}</p>
-          </div>
-        </div>
-
-        <div className="pad-contact-grid d-flex flex-column text-end">
-          <div className="d-flex align-items-center justify-content-end gap-1 mb-1">
-            <i className="ti ti-map-pin" />
-            <span>{clinicAddress}</span>
-          </div>
-          <div className="d-flex justify-content-end gap-3 mb-1">
-            <div className="d-flex align-items-center gap-1"><i className="ti ti-mail" /><span>{clinicEmail}</span></div>
-          </div>
-          <div className="d-flex justify-content-end gap-3">
-            <div className="d-flex align-items-center gap-1"><i className="ti ti-clock" /><span>Mon-Sat: 9AM-8PM | Sun: 10AM-2PM</span></div>
-            <div className="d-flex align-items-center gap-1"><i className="ti ti-receipt" /><span>Reg: {clinicRegNo}</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div className="divider-thick" />
+      {/* Header & footer intentionally omitted for blank pad
+          (pre-printed stationery already has clinic branding) */}
 
       {/* ========== THREE-COLUMN META GRID ========== */}
       <div className="pad-meta-grid row g-0">
@@ -199,17 +149,6 @@ const PrescriptionPad: React.FC<PrescriptionPadProps> = ({ appointment, prescrip
         </div>
       </div>
 
-      {/* ========== FOOTER ========== */}
-      <div className="divider-thin" />
-      <div className="pad-footer d-flex flex-column align-items-center">
-        <p className="footer-thanks">Thank you for trusting {clinicName.toUpperCase()} for your healthcare needs.</p>
-        <div className="footer-contacts d-flex align-items-center gap-3">
-          <div className="d-flex align-items-center gap-1"><i className="ti ti-phone" /> {clinicPhone}</div>
-          <span>|</span>
-          <div className="d-flex align-items-center gap-1"><i className="ti ti-mail" /> {clinicEmail}</div>
-        </div>
-      </div>
-
       {/* ========== STYLES ========== */}
       <style>{`
         .prescription-pad-card {
@@ -231,13 +170,6 @@ const PrescriptionPad: React.FC<PrescriptionPadProps> = ({ appointment, prescrip
           font-family: 'Inter', sans-serif;
           box-sizing: border-box;
         }
-
-        /* ---- HEADER ---- */
-        .pad-header { margin-bottom: 16px !important; }
-        .pad-clinic-name { font-size: 20px; font-weight: 800 !important; color: #0d4b83 !important; margin: 0; line-height: 1.1; }
-        .pad-clinic-tagline { font-size: 11px; font-weight: 600 !important; color: #55ad6f !important; margin: 0; }
-        .pad-contact-grid { font-size: 9.5px; color: #111111 !important; line-height: 1.35; }
-        .pad-contact-grid i { color: #0d4b83 !important; }
 
         /* ---- DIVIDERS ---- */
         .divider-thick { height: 2.5px; background-color: #0d4b83 !important; margin: 10px 0 20px 0; flex-shrink: 0; }
@@ -297,11 +229,6 @@ const PrescriptionPad: React.FC<PrescriptionPadProps> = ({ appointment, prescrip
         .rx-signature-container { align-self: flex-end; text-align: center; width: 150px; margin-bottom: 5px; }
         .sig-line { border-top: 1px solid #000000 !important; width: 100%; margin-bottom: 3px; }
         .sig-text { font-size: 10px; font-weight: 700 !important; color: #000000 !important; }
-
-        /* ---- FOOTER ---- */
-        .pad-footer { text-align: center; padding: 2px 0 0 0; font-size: 9.5px; flex-shrink: 0; }
-        .footer-thanks { font-weight: 800 !important; color: #0d4b83 !important; margin-bottom: 1px; }
-        .footer-contacts { color: #555555 !important; font-size: 9px; }
 
         /* ---- PRINT ---- */
         @media print {

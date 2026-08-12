@@ -89,7 +89,7 @@ const DoctorsGrid = ({ doctors, loading, error, onRetry, onDelete }: DoctorsGrid
           const fee = doctor.consultationCharge
             ? `₹${doctor.consultationCharge}`
             : "—";
-          const statusLabel = doctor.status === "Active" ? "Available" : (doctor.status === "Inactive" ? "Unable" : doctor.status);
+          const statusLabel = doctor.status === "Active" ? "Available" : (doctor.status === "Inactive" ? "Unavailable" : doctor.status);
 
           return (
             <div key={doctor.id} className="col-xxl-3 col-xl-4 col-lg-6 col-md-6 mb-3">

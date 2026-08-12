@@ -146,7 +146,7 @@ const MyAttendance = () => {
                                         </td>
                                         <td className="text-center"><span className="badge badge-soft-primary border border-primary fw-bold text-primary">{emp.totalWorkingDays}</span></td>
                                         <td className="text-center"><span className="badge badge-soft-success border border-success fw-bold text-success">{emp.presentDays}</span></td>
-                                        <td className="text-center"><span className={`badge border fw-bold ${parseInt(emp.percentage) < 80 ? "badge-soft-warning border-warning" : "badge-soft-success border-success"}`}>{emp.percentage}%</span></td>
+                                        <td className="text-center"><span className={`badge border fw-bold ${parseInt(emp.percentage) < 80 ? "badge-soft-warning border-warning" : "badge-soft-success border-success"}`}>{String(emp.percentage || 0).replace(/%+$/, '')}%</span></td>
                                         {daysArray.map((day) => (
                                             <td key={day} className="text-center">{getStatusIcon(emp.attendance[day] || "")}</td>
                                         ))}

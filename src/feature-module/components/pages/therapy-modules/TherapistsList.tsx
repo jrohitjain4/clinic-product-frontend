@@ -95,7 +95,7 @@ const TherapistsList = () => {
         Phone: d.phone || "",
         Email: d.email || "",
         Fees: d.consultationCharge != null ? `₹${d.consultationCharge}` : "—",
-        Status: d.status === "Active" ? "Available" : (d.status === "Inactive" ? "Unable" : d.status),
+        Status: d.status === "Active" ? "Available" : (d.status === "Inactive" ? "Unavailable" : d.status),
         img: d.profileImage || "assets/img/doctor-placeholder.png",
       })),
     [filteredTherapists]
@@ -278,7 +278,7 @@ const TherapistsList = () => {
                   data-bs-toggle="dropdown"
                 >
                   <span className="text-truncate">
-                    <span className="text-muted">Status:</span> {filterStatus === "All" ? "All" : filterStatus === "Active" ? "Available" : "Unable"}
+                    <span className="text-muted">Status:</span> {filterStatus === "All" ? "All" : filterStatus === "Active" ? "Available" : "Unavailable"}
                   </span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
@@ -294,7 +294,7 @@ const TherapistsList = () => {
                   </li>
                   <li>
                     <Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterStatus("Inactive"); }}>
-                      Unable
+                      Unavailable
                     </Link>
                   </li>
                 </ul>

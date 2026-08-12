@@ -375,7 +375,7 @@ const DoctorSchedules = () => {
                         </span>
                       </div>
                       <span className={`badge ms-auto ${(selectedDoctor as any).status === "Active" ? "badge-soft-success" : "badge-soft-danger"}`}>
-                        {(selectedDoctor as any).status === "Active" ? "Available" : "Unable"}
+                        {(selectedDoctor as any).status === "Active" ? "Available" : "Unavailable"}
                       </span>
                     </div>
                   )}

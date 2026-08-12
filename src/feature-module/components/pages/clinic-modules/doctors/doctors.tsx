@@ -180,7 +180,7 @@ const Doctors = () => {
                   data-bs-toggle="dropdown"
                 >
                   <span className="text-truncate">
-                    <span className="text-muted">Status:</span> {filterStatus === "All" ? "All" : filterStatus === "Active" ? "Available" : "Unable"}
+                    <span className="text-muted">Status:</span> {filterStatus === "All" ? "All" : filterStatus === "Active" ? "Available" : "Unavailable"}
                   </span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
@@ -196,7 +196,7 @@ const Doctors = () => {
                   </li>
                   <li>
                     <Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterStatus("Inactive"); }}>
-                      Unable
+                      Unavailable
                     </Link>
                   </li>
                 </ul>

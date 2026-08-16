@@ -15,33 +15,9 @@ import { useClinicStaff } from "../../../../../core/hooks/useClinicStaff";
 import EmptyState from "../../../../../core/common/emptyState";
 import AddPatientModal from "../../clinic-modules/appointments/modals/addPatientModal";
 import { statusBadgeClass } from "../../../../../core/utils/appointmentForm";
-import AppointmentPrintSlip from "../../clinic-modules/appointments/AppointmentPrintSlip";
-import { resolveMediaUrl } from "../../../../../core/config/api";
+import DiagnosticBookingPrintLayout from "./DiagnosticBookingPrintLayout";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import { IconFormControl, IconTextarea } from "../../../../../core/common/form-fields";
-
-const customSelectStyles = `
-  @media print {
-    @page { size: A4; margin: 0; }
-    body { visibility: hidden !important; }
-    #print-appointment, #print-appointment * {
-      visibility: visible !important;
-    }
-    #print-appointment {
-      visibility: visible !important;
-      display: block !important;
-      position: absolute !important;
-      left: 0 !important;
-      top: 0 !important;
-      width: 100% !important;
-      background: white !important;
-      z-index: 99999 !important;
-      padding: 1.5cm !important;
-      margin: 0 !important;
-    }
-    .bg-light { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
-  }
-`;
 
 const DiagnosticBooking = () => {
   const { bookings, loading, createBooking, updateBooking, deleteBooking, bulkDeleteBookings } = useLabBookings();
@@ -142,15 +118,33 @@ const DiagnosticBooking = () => {
   }, [bookings, filterCategory]);
 
   useEffect(() => {
-    if (printBooking) {
-      const handleAfterPrint = () => {
-        setPrintBooking(null);
-        window.removeEventListener("afterprint", handleAfterPrint);
-      };
-      window.addEventListener("afterprint", handleAfterPrint);
-      const timer = setTimeout(() => { window.print(); }, 300);
-      return () => { clearTimeout(timer); window.removeEventListener("afterprint", handleAfterPrint); };
-    }
+    if (!printBooking) return;
+
+    let triggered = false;
+
+    const runPrint = () => {
+      if (triggered) return true;
+      const el = document.getElementById("diagnostic-booking-print");
+      const slip = el?.querySelector(".dbs-slip");
+      if (!el || !slip) return false;
+
+      triggered = true;
+      requestAnimationFrame(() => {
+        window.print();
+        setTimeout(() => setPrintBooking(null), 800);
+      });
+      return true;
+    };
+
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts += 1;
+      if (runPrint() || attempts >= 20) {
+        clearInterval(timer);
+      }
+    }, 100);
+
+    return () => clearInterval(timer);
   }, [printBooking]);
 
   const [formPatientId, setFormPatientId] = useState("");
@@ -922,7 +916,7 @@ const DiagnosticBooking = () => {
         return (
           <div className="d-flex align-items-center justify-content-center gap-2">
             <button className="bg-transparent border-0 text-info p-1" title="View" data-bs-toggle="modal" data-bs-target="#view_booking" onClick={() => setViewBooking(record.raw)}><i className="ti ti-eye fs-18"></i></button>
-            <button className="bg-transparent border-0 text-secondary p-1" onClick={() => setPrintBooking(record.raw)} title="Print"><i className="ti ti-printer fs-18" /></button>
+            <button className="bg-transparent border-0 text-secondary p-1" onClick={() => setPrintBooking(record.raw)} title="Print Booking Slip"><i className="ti ti-printer fs-18" /></button>
             {record.canExpand && (
               <button
                 type="button"
@@ -983,7 +977,6 @@ const DiagnosticBooking = () => {
   return (
     <>
       <style>{`
-        ${customSelectStyles}
         .pathlab-booking-expanded thead th {
           background: #E6E6FF !important;
           color: #1e293b !important;
@@ -1884,11 +1877,7 @@ const DiagnosticBooking = () => {
         </div>
       </div>
 
-      {printBooking && (
-        <div id="print-appointment" style={{ display: 'none' }}>
-          <AppointmentPrintSlip appointment={printBooking} isDiagnostic={true} />
-        </div>
-      )}
+      <DiagnosticBookingPrintLayout booking={printBooking} doctors={doctors} staff={staff} />
     </>
   );
 };

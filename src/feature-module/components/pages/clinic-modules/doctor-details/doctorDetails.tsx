@@ -186,7 +186,7 @@ const DoctorDetails = () => {
 
   const profileImg =
     doctor?.profileImage || "assets/img/doctor-placeholder.png";
-  const statusLabel = doctor?.status === "Active" ? "Available" : (doctor?.status === "Inactive" ? "Unable" : doctor?.status);
+  const statusLabel = doctor?.status === "Active" ? "Available" : (doctor?.status === "Inactive" ? "Unavailable" : doctor?.status);
   const location = [doctor?.address1, doctor?.city, doctor?.state, doctor?.country]
     .filter(Boolean)
     .join(", ");

@@ -1,10 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Datatable from "../../../../../core/common/dataTable";
 import { DatePicker } from "antd";
 import { Link } from "react-router";
 import { ViewModal } from "../../../../../core/common/modal/ViewModal";
 import html2pdf from "html2pdf.js";
-import InvoiceSlip from "../../patient-modules/patient-invoice-details/InvoiceSlip";
+import PharmacyInvoicePrintLayout from "./PharmacyInvoicePrintLayout";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { useClinicPatients } from "../../../../../core/hooks/useClinicPatients";
@@ -12,7 +12,6 @@ import { useMedicines } from "../../../../../core/hooks/useMedicines";
 import { usePharmacyBilling } from "../../../../../core/hooks/usePharmacyBilling";
 import type { PharmacyInvoice } from "../../../../../core/hooks/usePharmacyBilling";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
-import { apiUrl } from "../../../../../core/config/api";
 import EmptyState from "../../../../../core/common/emptyState";
 import AddPatientModal from "../../clinic-modules/appointments/modals/addPatientModal";
 import { IconFormControl } from "../../../../../core/common/form-fields";
@@ -40,7 +39,8 @@ const PharmacyBilling = () => {
 
   // Show Add Bill Modal
   const [showAddBillModal, setShowAddBillModal] = useState(false);
-  const [printInvoiceData, setPrintInvoiceData] = useState<PharmacyInvoice | null>(null);
+  const [printInvoiceData, setPrintInvoiceData] = useState<any | null>(null);
+  const [printAction, setPrintAction] = useState<"print" | "download" | null>(null);
   const [viewInvoiceData, setViewInvoiceData] = useState<PharmacyInvoice | null>(null);
 
   // Form states inside modal
@@ -364,9 +364,9 @@ const PharmacyBilling = () => {
       clinic.city,
       clinic.state,
       clinic.country,
-      clinic.pincode ? `PIN - ${clinic.pincode}` : ""
+      clinic.pincode ? `PIN - ${clinic.pincode}` : "",
     ].filter(Boolean);
-    const clinicAddress = addressParts.length > 0 ? addressParts.join(", ") : (clinic.address || "");
+    const clinicAddress = addressParts.length > 0 ? addressParts.join(", ") : clinic.address || "";
 
     return {
       ...inv,
@@ -375,11 +375,17 @@ const PharmacyBilling = () => {
         name: clinicName,
         phone: clinicPhone,
         email: clinicEmail,
-        addressLine1: clinicAddress,
+        addressLine1: clinic.addressLine1 || clinicAddress,
+        addressLine2: clinic.addressLine2 || "",
+        city: clinic.city || "",
+        state: clinic.state || "",
+        country: clinic.country || "",
+        pincode: clinic.pincode || "",
         landingPage: {
           tagline: clinic.landingPage?.tagline || clinic.tagline || "",
           logo: clinic.landingPage?.logo || clinic.logo || null,
-        }
+          email: clinic.landingPage?.email || clinicEmail,
+        },
       },
       invoiceCode: inv.invoiceNo,
       items: inv.items?.map((item: any) => {
@@ -397,37 +403,75 @@ const PharmacyBilling = () => {
     };
   };
 
-  const handlePrint = (inv: any) => {
-    setPrintInvoiceData(buildInvoiceData(inv));
-    setTimeout(() => {
-      const el = document.getElementById('print-pharmacy-invoice-slip');
-      if (!el) return;
-      el.style.display = 'block';
-      window.print();
-      setTimeout(() => {
-        el.style.display = 'none';
-        setPrintInvoiceData(null);
-      }, 1500);
+  useEffect(() => {
+    if (!printInvoiceData || !printAction) return;
+
+    let triggered = false;
+
+    const run = () => {
+      if (triggered) return true;
+      const el = document.getElementById("pharmacy-invoice-print");
+      const slip = el?.querySelector(".pharm-slip");
+      if (!el || !slip) return false;
+
+      triggered = true;
+
+      if (printAction === "print") {
+        requestAnimationFrame(() => {
+          window.print();
+          setTimeout(() => {
+            setPrintInvoiceData(null);
+            setPrintAction(null);
+          }, 800);
+        });
+      } else if (printAction === "download") {
+        const prevStyle = el.getAttribute("style") || "";
+        el.setAttribute(
+          "style",
+          "position:fixed;left:0;top:0;width:210mm;opacity:1;z-index:99999;pointer-events:none;background:#fff;"
+        );
+
+        const opt = {
+          margin: 0,
+          filename: `Pharmacy-Invoice-${printInvoiceData.invoiceNo || printInvoiceData.invoiceCode || "bill"}.pdf`,
+          image: { type: "jpeg" as const, quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
+        };
+
+        html2pdf()
+          .from(el)
+          .set(opt)
+          .save()
+          .finally(() => {
+            if (prevStyle) el.setAttribute("style", prevStyle);
+            else el.removeAttribute("style");
+            setPrintInvoiceData(null);
+            setPrintAction(null);
+          });
+      }
+      return true;
+    };
+
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts += 1;
+      if (run() || attempts >= 20) clearInterval(timer);
     }, 100);
+
+    return () => clearInterval(timer);
+  }, [printInvoiceData, printAction]);
+
+  const handlePrint = (inv: any) => {
+    if (!inv) return;
+    setPrintInvoiceData(buildInvoiceData(inv));
+    setPrintAction("print");
   };
 
   const handleDownload = (inv: any) => {
+    if (!inv) return;
     setPrintInvoiceData(buildInvoiceData(inv));
-    setTimeout(() => {
-      const el = document.getElementById('print-pharmacy-invoice-slip');
-      if (!el) return;
-      el.style.display = 'block';
-      const opt = {
-        margin: 0,
-        filename: `Invoice-${inv.invoiceNo || 'pharmacy'}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
-      };
-      html2pdf().from(el).set(opt).save()
-        .then(() => { el.style.display = 'none'; setPrintInvoiceData(null); })
-        .catch(() => { el.style.display = 'none'; setPrintInvoiceData(null); });
-    }, 100);
+    setPrintAction("download");
   };
 
   const [filterDate, setFilterDate] = useState<dayjs.Dayjs | null>(null);
@@ -860,10 +904,8 @@ const PharmacyBilling = () => {
         }}
       />
 
-      {/* Hidden Pharmacy Invoice Slip for Print/Download */}
-      <div id="print-pharmacy-invoice-slip" style={{ display: 'none' }}>
-        {printInvoiceData && <InvoiceSlip invoice={printInvoiceData} />}
-      </div>
+      {/* Pharmacy Invoice Print Layout (portal) */}
+      <PharmacyInvoicePrintLayout invoice={printInvoiceData} />
 
       {/* VIEW DETAILS MODAL */}
       <ViewModal
@@ -937,24 +979,6 @@ const PharmacyBilling = () => {
           </div>
         )}
       </ViewModal>
-
-      <style>{`
-        @media print {
-          body * { visibility: hidden !important; }
-          #print-pharmacy-invoice-slip, #print-pharmacy-invoice-slip * { visibility: visible !important; }
-          #print-pharmacy-invoice-slip {
-            position: fixed !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 21cm !important;
-            height: 29.7cm !important;
-            z-index: 99999 !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            overflow: hidden !important;
-          }
-        }
-      `}</style>
     </>
   );
 };

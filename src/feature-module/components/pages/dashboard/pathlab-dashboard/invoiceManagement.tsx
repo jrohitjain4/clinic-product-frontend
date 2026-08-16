@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { useLabBookings } from "../../../../../core/hooks/useLabBookings";
 import EmptyState from "../../../../../core/common/emptyState";
+import DiagnosticInvoicePrintLayout from "./DiagnosticInvoicePrintLayout";
 import InvoiceSlip from "../../patient-modules/patient-invoice-details/InvoiceSlip";
 import html2pdf from "html2pdf.js";
 import { IconFormControl } from "../../../../../core/common/form-fields";
@@ -137,53 +138,73 @@ const InvoiceManagement = () => {
   useEffect(() => {
     if (!printInvoice || !printAction) return;
 
-    const timer = setTimeout(() => {
-      const el = document.getElementById('print-invoice-slip');
-      if (!el) return;
+    let triggered = false;
 
-      el.style.display = 'block';
+    const runPrint = () => {
+      if (triggered) return true;
+      const el = document.getElementById("diagnostic-invoice-print");
+      const slip = el?.querySelector(".inv-slip");
+      if (!el || !slip) return false;
+
+      triggered = true;
 
       if (printAction === "print") {
-        window.print();
-        setTimeout(() => {
-          el.style.display = 'none';
-          setPrintInvoice(null);
-          setPrintAction(null);
-        }, 1000);
-      } else if (printAction === "download") {
-        const opt = {
-          margin: 0,
-          filename: `Invoice-${printInvoice.invoiceCode || 'diagnostic'}.pdf`,
-          image: { type: 'jpeg' as const, quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, logging: false },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
-        };
-        html2pdf().from(el).set(opt).save()
-          .then(() => {
-            el.style.display = 'none';
+        requestAnimationFrame(() => {
+          window.print();
+          setTimeout(() => {
             setPrintInvoice(null);
             setPrintAction(null);
-          })
-          .catch(() => {
-            el.style.display = 'none';
+          }, 800);
+        });
+      } else if (printAction === "download") {
+        const prevStyle = el.getAttribute("style") || "";
+        el.setAttribute(
+          "style",
+          "position:fixed;left:0;top:0;width:210mm;opacity:1;z-index:99999;pointer-events:none;background:#fff;"
+        );
+
+        const opt = {
+          margin: 0,
+          filename: `Invoice-${printInvoice.invoiceCode || "diagnostic"}.pdf`,
+          image: { type: "jpeg" as const, quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
+        };
+
+        html2pdf()
+          .from(el)
+          .set(opt)
+          .save()
+          .finally(() => {
+            if (prevStyle) el.setAttribute("style", prevStyle);
+            else el.removeAttribute("style");
             setPrintInvoice(null);
             setPrintAction(null);
           });
       }
-    }, 250);
+      return true;
+    };
 
-    return () => clearTimeout(timer);
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts += 1;
+      if (runPrint() || attempts >= 20) {
+        clearInterval(timer);
+      }
+    }, 100);
+
+    return () => clearInterval(timer);
   }, [printInvoice, printAction]);
 
   const handlePrint = (inv: any) => {
-    const invoiceData = buildInvoiceData(inv);
-    setPrintInvoice(invoiceData);
+    if (!inv) return;
+    setPrintInvoice(buildInvoiceData(inv));
     setPrintAction("print");
   };
 
   const handleDownload = (inv: any) => {
-    const invoiceData = buildInvoiceData(inv);
-    setPrintInvoice(invoiceData);
+    if (!inv) return;
+    setPrintInvoice(buildInvoiceData(inv));
     setPrintAction("download");
   };
 
@@ -398,14 +419,14 @@ const InvoiceManagement = () => {
                 <button
                   type="button"
                   className="btn btn-outline-primary btn-sm me-2"
-                  onClick={() => handlePrint(viewInvoice)}
+                  onClick={() => viewInvoice && handlePrint(viewInvoice)}
                 >
                   <i className="ti ti-printer me-1" /> Print Slip
                 </button>
                 <button
                   type="button"
                   className="btn btn-outline-success btn-sm me-2"
-                  onClick={() => handleDownload(viewInvoice)}
+                  onClick={() => viewInvoice && handleDownload(viewInvoice)}
                 >
                   <i className="ti ti-download me-1" /> Download PDF
                 </button>
@@ -428,10 +449,7 @@ const InvoiceManagement = () => {
         </div>
       </div>
 
-      {/* Hidden InvoiceSlip for Print/Download - exact same component and container ID as main finance invoices */}
-      <div id="print-invoice-slip" style={{ display: 'none' }}>
-        {printInvoice && <InvoiceSlip invoice={printInvoice} />}
-      </div>
+      <DiagnosticInvoicePrintLayout invoice={printInvoice} />
     </>
   );
 };

@@ -267,10 +267,13 @@ const MultiStepRegister: React.FC = () => {
 
                 localStorage.setItem("token", data.token);
                 setLocalStorageUser(data.user);
+                localStorage.setItem("activeModuleMode", "clinic");
 
                 toast.success("Account created successfully!");
-                setSuccess("🎉 Account created successfully! Redirecting...");
-                setTimeout(() => navigate(all_routes.dashboard), 2000);
+                setSuccess("🎉 Account created successfully! Logging in...");
+                setTimeout(() => {
+                    window.location.href = all_routes.aboutDocYori || "/about-docyori";
+                }, 1000);
             } catch (err: any) {
                 const msg = err.message || "Something went wrong. Please try again.";
                 setError(msg);
@@ -343,10 +346,13 @@ const MultiStepRegister: React.FC = () => {
 
                     localStorage.setItem("token", data.token);
                     setLocalStorageUser(data.user);
+                    localStorage.setItem("activeModuleMode", "clinic");
 
                     toast.success("Registration successful!");
-                    setSuccess("🎉 Account created successfully! Redirecting...");
-                    setTimeout(() => navigate(all_routes.dashboard), 2000);
+                    setSuccess("🎉 Account created successfully! Logging in...");
+                    setTimeout(() => {
+                        window.location.href = all_routes.aboutDocYori || "/about-docyori";
+                    }, 1000);
                     return;
                 }
 
@@ -387,10 +393,13 @@ const MultiStepRegister: React.FC = () => {
 
                             localStorage.setItem("token", verifyData.token);
                             setLocalStorageUser(verifyData.user);
+                            localStorage.setItem("activeModuleMode", "clinic");
 
                             toast.success("Payment successful & account created!");
-                            setSuccess("🎉 Payment verified & account created! Redirecting...");
-                            setTimeout(() => navigate(all_routes.dashboard), 2000);
+                            setSuccess("🎉 Payment verified! Logging in...");
+                            setTimeout(() => {
+                                window.location.href = all_routes.aboutDocYori || "/about-docyori";
+                            }, 1000);
                         } catch (err: any) {
                             const msg = err.message || "Failed to verify payment. Please contact support.";
                             setError(msg);

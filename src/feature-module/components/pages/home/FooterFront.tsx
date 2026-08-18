@@ -164,9 +164,10 @@ const FooterFront = ({ clinic }: FooterFrontProps) => {
         <footer className="dy-footer" id="contact">
             <div className="dy-container dy-footer-grid">
                 <div className="dy-footer-brand">
-                    <div className="footer-logo" style={{ marginBottom: "1rem" }}>
+                    <div className="footer-logo" style={{ marginBottom: "0.5rem" }}>
                         <img src="/logo.png" alt="DocYori" style={{ height: "60px", width: "auto", objectFit: "contain" }} />
                     </div>
+                    <p className="unit-tag mb-2" style={{ color: "#94a3b8", fontSize: "0.85rem", fontWeight: 600 }}>A Unit of Veridian Innovations Private Limited</p>
                     <p className="tag-line">Smarter Care. Better Health.</p>
                     <p>All-in-one clinic management software to automate operations, manage staff, and deliver better patient care.</p>
                     <div className="dy-socials">
@@ -217,7 +218,7 @@ const FooterFront = ({ clinic }: FooterFrontProps) => {
                 </div>
             </div>
             <div className="dy-footer-bottom">
-                <p>© {new Date().getFullYear()} DocYori by Veridian Innovations Private Limited. All Rights Reserved.</p>
+                <p>© {new Date().getFullYear()} DocYori — A Unit of Veridian Innovations Private Limited. All Rights Reserved.</p>
             </div>
         </footer>
     );

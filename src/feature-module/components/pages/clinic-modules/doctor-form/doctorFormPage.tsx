@@ -14,6 +14,7 @@ import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { apiUrl } from "../../../../../core/config/api";
 import { toast } from "react-toastify";
+import { getPhoneValidationError } from "../../../../../core/utils/phoneValidation";
 import {
   Blood_Group,
   City,
@@ -674,9 +675,17 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
       toast.error("Checking username availability. Please wait...");
       return false;
     }
-    if (!phone) {
-      toast.error("Phone number is required.");
+    const phoneErr = getPhoneValidationError(phone, "Phone number", true);
+    if (phoneErr) {
+      toast.error(phoneErr);
       return false;
+    }
+    if (alternateMobile) {
+      const altErr = getPhoneValidationError(alternateMobile, "Alternative contact number", false);
+      if (altErr) {
+        toast.error(altErr);
+        return false;
+      }
     }
     if (!email.trim()) {
       toast.error("Email address is required.");

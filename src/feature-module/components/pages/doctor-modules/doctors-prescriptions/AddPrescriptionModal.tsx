@@ -491,9 +491,11 @@ const AddPrescriptionModal = ({
         e.preventDefault();
         if (!isCurrentVisit) return; // only allow generating current visit
         if (!patientId || !doctorId) return alert("Please select a patient and doctor.");
-        if (currentDraft.medicines.some((m) => !m.medicineName)) return alert("Please fill in all medicine names.");
 
-        const invalidMed = currentDraft.medicines.find(m => {
+        // Filter out empty medicines (if user left medicine search blank)
+        const validMedicines = currentDraft.medicines.filter((m) => m.medicineName && m.medicineName.trim() !== "");
+
+        const invalidMed = validMedicines.find(m => {
             const enteredText = m.medicineName.trim().toLowerCase();
             return !medicineOptions.some(opt =>
                 opt.name.toLowerCase() === enteredText ||
@@ -514,7 +516,7 @@ const AddPrescriptionModal = ({
                 followUpDate: currentDraft.followUpDate ? currentDraft.followUpDate.toISOString() : null,
                 followUpNotes: currentDraft.followUpNotes,
                 diagnosticTests: currentDraft.diagnosticTests || [],
-                medicines: currentDraft.medicines.map((m) => {
+                medicines: validMedicines.map((m) => {
                     let name = m.medicineName;
                     const dashIndex = name.indexOf(" - ");
                     if (dashIndex !== -1) {
@@ -878,7 +880,6 @@ const AddPrescriptionModal = ({
                                                                                 setActiveSearchIndex(null);
                                                                             }, 250);
                                                                         }}
-                                                                        required
                                                                         autoComplete="off"
                                                                         disabled={!isCurrentVisit}
                                                                     />

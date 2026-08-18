@@ -153,7 +153,7 @@ const FooterFront = ({ clinic }: FooterFrontProps) => {
 
                 </div>
                 <div className="dy-footer-bottom">
-                    <p>© {new Date().getFullYear()} {clinic.name}. All Rights Reserved.</p>
+                    <p>© {new Date().getFullYear()} {clinic.name}. Powered by Veridian Innovations Private Limited. All Rights Reserved.</p>
                 </div>
             </footer>
         );
@@ -217,7 +217,7 @@ const FooterFront = ({ clinic }: FooterFrontProps) => {
                 </div>
             </div>
             <div className="dy-footer-bottom">
-                <p>© {new Date().getFullYear()} DocYori. All Rights Reserved.</p>
+                <p>© {new Date().getFullYear()} DocYori by Veridian Innovations Private Limited. All Rights Reserved.</p>
             </div>
         </footer>
     );

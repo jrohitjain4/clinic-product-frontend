@@ -1563,8 +1563,19 @@ const DiagnosticBooking = () => {
                             style={{ width: '58px', height: '32px', fontSize: '15px', padding: '2px 4px', outline: 'none', boxShadow: 'none' }}
                             value={formDiscountPercent}
                             onChange={(e) => {
-                              const val = parseFloat(e.target.value);
+                              const raw = e.target.value;
+                              if (raw === "") {
+                                setFormDiscountPercent("" as any);
+                                return;
+                              }
+                              const val = parseFloat(raw);
                               setFormDiscountPercent(isNaN(val) ? 0 : Math.min(100, Math.max(0, val)));
+                            }}
+                            onFocus={() => {
+                              if (formDiscountPercent === 0 || formDiscountPercent.toString() === "0") setFormDiscountPercent("" as any);
+                            }}
+                            onBlur={() => {
+                              if (formDiscountPercent.toString().trim() === "") setFormDiscountPercent(0);
                             }}
                           />
                           <span className="fw-bold text-muted" style={{ fontSize: '13px' }}>%</span>
@@ -1580,8 +1591,19 @@ const DiagnosticBooking = () => {
                             style={{ width: '72px', height: '32px', fontSize: '15px', padding: '2px 4px', outline: 'none', boxShadow: 'none' }}
                             value={formDiscountAmount}
                             onChange={(e) => {
-                              const val = parseFloat(e.target.value);
+                              const raw = e.target.value;
+                              if (raw === "") {
+                                setFormDiscountAmount("" as any);
+                                return;
+                              }
+                              const val = parseFloat(raw);
                               setFormDiscountAmount(isNaN(val) ? 0 : Math.min(totalAmount, Math.max(0, val)));
+                            }}
+                            onFocus={() => {
+                              if (formDiscountAmount === 0 || formDiscountAmount.toString() === "0") setFormDiscountAmount("" as any);
+                            }}
+                            onBlur={() => {
+                              if (formDiscountAmount.toString().trim() === "") setFormDiscountAmount(0);
                             }}
                           />
                         </div>

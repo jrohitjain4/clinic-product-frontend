@@ -24,21 +24,30 @@ const TransactionsList = () => {
 
   const transactions = useMemo(() => {
     const invTrans = invoices
-      .filter((inv) => inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed" || inv.paymentStatus === "Pending")
+      .filter((inv) => inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed" || inv.paymentStatus === "Pending" || inv.paymentStatus === "Partially Paid" || inv.paymentStatus === "Partial" || inv.paymentStatus === "Unpaid")
       .map((inv) => {
         const isPharmacy = inv.otherInfo === "Pharmacy" || inv.invoiceCode?.startsWith("PH-");
+        const isIPD = inv.otherInfo === "IPD Billing" || inv.invoiceCode?.startsWith("IPD-") || (inv as any).isIPD;
+        let type = "INVOICE";
+        if (isPharmacy) type = "PHARMACY";
+        if (isIPD) type = "IPD";
+
+        let desc = inv.items?.[0]?.description || inv.items?.[0]?.itemName || "Invoice Payment";
+        if (isPharmacy) desc = "Pharmacy Medicine Purchase";
+        if (isIPD) desc = `IPD Billing (${inv.items?.length || 0} items)`;
+
         return {
           id: inv.id,
           code: inv.invoiceCode,
           patientName: inv.patient ? `${inv.patient.firstName || ""} ${inv.patient.lastName || ""}`.trim() : "—",
           image: inv.patient?.profileImage,
-          description: isPharmacy ? "Pharmacy Medicine Purchase" : (inv.items?.[0]?.description || "Invoice Payment"),
+          description: desc,
           date: inv.invoiceDate,
           method: inv.paymentMethod || "—",
           amount: inv.totalAmount,
           status: inv.paymentStatus,
-          type: isPharmacy ? "PHARMACY" : "INVOICE",
-          color: inv.paymentStatus === "Pending" ? "warning" : "success"
+          type,
+          color: inv.paymentStatus === "Pending" || inv.paymentStatus === "Unpaid" ? "warning" : "success"
         };
       });
 

@@ -23,6 +23,7 @@ import type {
 import "../../../../../../core/common/form-fields/IconField.scss";
 import { apiUrl } from "../../../../../../core/config/api";
 import { apiGet, apiPost, authHeaders } from "../../../../../../core/utils/apiClient";
+import { getPhoneValidationError, cleanPhoneDigits } from "../../../../../../core/utils/phoneValidation";
 import { findSelectOption } from "../../../../../../core/utils/doctorSchedule";
 import { emptyPatientForm } from "../../../../../../core/utils/patientForm";
 import PatientProfileUpload from "../../../../../../core/common/patient-profile-upload/PatientProfileUpload";
@@ -131,6 +132,13 @@ const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
     }
     if (!form.lastName.trim()) {
       setError("Last name is required.");
+      return;
+    }
+
+    const phoneErr = getPhoneValidationError(form.phone, "Patient phone number", true);
+    if (phoneErr) {
+      setError(phoneErr);
+      toast.error(phoneErr);
       return;
     }
 
@@ -413,7 +421,7 @@ const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
             <div className="col-md-6">
               <div className="mb-3">
                 <label className="form-label mb-1 fw-medium">
-                  DOB<span className="text-danger ms-1">*</span>
+                  DOB (Optional)
                 </label>
                 <div className="icon-field-shell">
                   <span className="icon-field-box" aria-hidden>

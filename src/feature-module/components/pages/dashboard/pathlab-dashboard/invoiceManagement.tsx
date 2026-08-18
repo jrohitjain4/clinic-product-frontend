@@ -373,12 +373,14 @@ const InvoiceManagement = () => {
                       <option value="Paid">Paid</option><option value="Unpaid">Unpaid</option><option value="Partial">Partial</option>
                     </select>
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label fw-semibold">Payment Method</label>
-                    <select className="form-select" value={formPaymentMethod} onChange={(e) => setFormPaymentMethod(e.target.value)}>
-                      <option value="">Not Applicable</option><option value="Cash">Cash</option><option value="UPI">UPI</option><option value="Card">Card</option><option value="Online">Online</option>
-                    </select>
-                  </div>
+                  {formPaymentStatus !== "Unpaid" && (
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">Payment Method</label>
+                      <select className="form-select" value={formPaymentMethod} onChange={(e) => setFormPaymentMethod(e.target.value)}>
+                        <option value="">Not Applicable</option><option value="Cash">Cash</option><option value="UPI">UPI</option><option value="Card">Card</option><option value="Online">Online</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
                 <div className="modal-footer bg-light"><button type="button" className="btn btn-light" onClick={() => setShowEditModal(false)}>Cancel</button><button type="submit" className="btn btn-primary px-4" disabled={submitting}>{submitting ? "Updating..." : "Update Payment"}</button></div>
               </form>

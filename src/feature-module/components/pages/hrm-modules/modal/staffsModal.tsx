@@ -27,6 +27,7 @@ import {
   statusToLabel,
 } from "../../../../../core/utils/staffForm";
 import { findSelectOption } from "../../../../../core/utils/doctorSchedule";
+import { getPhoneValidationError } from "../../../../../core/utils/phoneValidation";
 
 interface DesigOption {
   id: string;
@@ -249,6 +250,13 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
       return;
     }
 
+    const phoneErr = getPhoneValidationError(form.phone, "Staff phone number", false);
+    if (phoneErr) {
+      setFormError(phoneErr);
+      toast.error(phoneErr);
+      return;
+    }
+
     setSubmitting(true);
     setFormError(null);
     try {
@@ -283,6 +291,13 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
     if (!selected?.id) return;
     if (!form.fullName.trim()) {
       setFormError("Name is required.");
+      return;
+    }
+
+    const phoneErr = getPhoneValidationError(form.phone, "Staff phone number", false);
+    if (phoneErr) {
+      setFormError(phoneErr);
+      toast.error(phoneErr);
       return;
     }
 

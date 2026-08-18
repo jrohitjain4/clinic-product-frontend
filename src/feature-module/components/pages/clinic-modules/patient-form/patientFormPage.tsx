@@ -27,6 +27,7 @@ import {
   emptyPatientForm,
 } from "../../../../../core/utils/patientForm";
 import { findSelectOption } from "../../../../../core/utils/doctorSchedule";
+import { getPhoneValidationError, cleanPhoneDigits } from "../../../../../core/utils/phoneValidation";
 import "../../../../../core/common/form-fields/IconField.scss";
 
 type ReferOption = { id: string; name: string; description?: string };
@@ -188,6 +189,13 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
     }
     if (!form.lastName.trim()) {
       setFormError("Last name is required.");
+      return;
+    }
+
+    const phoneErr = getPhoneValidationError(form.phone, "Patient phone number", true);
+    if (phoneErr) {
+      setFormError(phoneErr);
+      toast.error(phoneErr);
       return;
     }
 
@@ -459,7 +467,7 @@ const PatientFormPage = ({ mode }: PatientFormPageProps) => {
                     <div className="col-md-6">
                       <div className="mb-3">
                         <label className="form-label mb-1 fw-medium">
-                          DOB<span className="text-danger ms-1">*</span>
+                          DOB (Optional)
                         </label>
                         <div className="icon-field-shell">
                           <span className="icon-field-box" aria-hidden>

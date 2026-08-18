@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Footer from "../../../../core/common/footer/footer";
 import { apiUrl } from "../../../../core/config/api";
+import { getPhoneValidationError } from "../../../../core/utils/phoneValidation";
 import { toast } from "react-toastify";
 import { IconFormControl } from "../../../../core/common/form-fields";
 
@@ -133,6 +134,13 @@ const IpdNursesPage: React.FC = () => {
     if (!fullName.trim()) {
       toast.error("Please enter nurse full name.");
       return;
+    }
+    if (phone.trim()) {
+      const phoneErr = getPhoneValidationError(phone, "Nurse phone number", false);
+      if (phoneErr) {
+        toast.error(phoneErr);
+        return;
+      }
     }
 
     setSubmitting(true);

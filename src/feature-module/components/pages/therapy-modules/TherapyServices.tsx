@@ -594,7 +594,7 @@ const TherapyServices = () => {
       {/* Edit Therapy Modal */}
       <div className="modal fade" id="edit_therapy" tabIndex={-1} aria-hidden="true">
         <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: 12, overflow: "hidden" }}>
+          <form onSubmit={handleEditSubmit} className="modal-content border-0 shadow-lg" style={{ borderRadius: 12, overflow: "hidden" }}>
             <div className="modal-header bg-primary text-white">
               <h4 className="modal-title fw-bold text-white mb-0 d-flex align-items-center gap-2">
                 <i className="ti ti-edit" /> Edit Therapy
@@ -607,177 +607,175 @@ const TherapyServices = () => {
                 id="close-edit-therapy-modal"
               />
             </div>
-            <form onSubmit={handleEditSubmit}>
-              <div className="modal-body">
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold text-dark">
-                      Therapy Name <span className="text-danger">*</span>
-                    </label>
-                    <IconFormControl
-                      fieldLabel="service"
-                      type="text"
-                      placeholder="Therapy name"
-                      required
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold text-dark">
-                      Category <span className="text-danger">*</span>
-                    </label>
-                    <select
-                      className="form-select"
-                      required
-                      value={editCategory}
-                      onChange={(e) => setEditCategory(e.target.value)}
-                    >
-                      <option value="">Select Category</option>
-                      {specializations.map((cat: any) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label fw-semibold text-dark">Therapy Code</label>
-                    <IconFormControl
-                      type="text"
-                      fieldLabel="service"
-                      className="bg-light"
-                      readOnly
-                      value={editCode}
-                      placeholder="Therapy Code"
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label fw-semibold text-dark">
-                      Duration (Minutes) <span className="text-danger">*</span>
-                    </label>
-                    <IconFormControl
-                      type="number"
-                      fieldLabel="time"
-                      placeholder="e.g. 50"
-                      required
-                      min="1"
-                      value={editDuration}
-                      onChange={(e) => setEditDuration(e.target.value)}
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label fw-semibold text-dark">
-                      Price / Session (₹) <span className="text-danger">*</span>
-                    </label>
-                    <IconFormControl
-                      fieldLabel="price"
-                      type="number"
-                      placeholder="e.g. 1500"
-                      required
-                      min="0"
-                      value={editPrice}
-                      onChange={(e) => setEditPrice(e.target.value)}
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label fw-semibold text-dark">
-                      Min Sessions <span className="text-danger">*</span>
-                    </label>
-                    <IconFormControl
-                      type="number"
-                      fieldLabel="quantity"
-                      min="1"
-                      required
-                      value={editMinSessions}
-                      onChange={(e) => setEditMinSessions(e.target.value)}
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label fw-semibold text-dark">
-                      Max Sessions <span className="text-danger">*</span>
-                    </label>
-                    <IconFormControl
-                      type="number"
-                      fieldLabel="quantity"
-                      min="1"
-                      required
-                      value={editMaxSessions}
-                      onChange={(e) => setEditMaxSessions(e.target.value)}
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label fw-semibold text-dark">Status</label>
-                    <select
-                      className="form-select"
-                      value={editStatus}
-                      onChange={(e) => setEditStatus(e.target.value)}
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
-                  </div>
-                  <div className="col-12">
-                    <label className="form-label fw-semibold text-dark">Schedule Type</label>
-                    <div className="d-flex flex-wrap gap-2">
-                      {SCHEDULE_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          className={`btn btn-sm d-inline-flex align-items-center gap-1 ${
-                            editScheduleType === opt.value ? "btn-primary" : "btn-outline-primary"
-                          }`}
-                          onClick={() => {
-                            setEditScheduleType(opt.value);
-                            if (opt.value === "daily") setEditSessionGap("0");
-                            else if (opt.value === "alternate") setEditSessionGap("1");
-                            else if (opt.value === "weekly") setEditSessionGap("7");
-                            else setEditSessionGap("");
-                          }}
-                        >
-                          <i className={opt.icon} />
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label fw-semibold text-dark">Session Gap (Days)</label>
-                    <IconFormControl
-                      type="number"
-                      fieldLabel="time"
-                      min="0"
-                      disabled={editScheduleType !== "custom"}
-                      value={editSessionGap}
-                      onChange={(e) => setEditSessionGap(e.target.value)}
-                    />
-                  </div>
-                  <div className="col-12">
-                    <label className="form-label fw-semibold text-dark">Description</label>
-                    <IconTextarea
-                      fieldLabel="description"
-                      rows={3}
-                      placeholder="Therapy details (optional)"
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                    />
+            <div className="modal-body">
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold text-dark">
+                    Therapy Name <span className="text-danger">*</span>
+                  </label>
+                  <IconFormControl
+                    fieldLabel="service"
+                    type="text"
+                    placeholder="Therapy name"
+                    required
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label fw-semibold text-dark">
+                    Category <span className="text-danger">*</span>
+                  </label>
+                  <select
+                    className="form-select"
+                    required
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                  >
+                    <option value="">Select Category</option>
+                    {specializations.map((cat: any) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold text-dark">Therapy Code</label>
+                  <IconFormControl
+                    type="text"
+                    fieldLabel="service"
+                    className="bg-light"
+                    readOnly
+                    value={editCode}
+                    placeholder="Therapy Code"
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold text-dark">
+                    Duration (Minutes) <span className="text-danger">*</span>
+                  </label>
+                  <IconFormControl
+                    type="number"
+                    fieldLabel="time"
+                    placeholder="e.g. 50"
+                    required
+                    min="1"
+                    value={editDuration}
+                    onChange={(e) => setEditDuration(e.target.value)}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold text-dark">
+                    Price / Session (₹) <span className="text-danger">*</span>
+                  </label>
+                  <IconFormControl
+                    fieldLabel="price"
+                    type="number"
+                    placeholder="e.g. 1500"
+                    required
+                    min="0"
+                    value={editPrice}
+                    onChange={(e) => setEditPrice(e.target.value)}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold text-dark">
+                    Min Sessions <span className="text-danger">*</span>
+                  </label>
+                  <IconFormControl
+                    type="number"
+                    fieldLabel="quantity"
+                    min="1"
+                    required
+                    value={editMinSessions}
+                    onChange={(e) => setEditMinSessions(e.target.value)}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold text-dark">
+                    Max Sessions <span className="text-danger">*</span>
+                  </label>
+                  <IconFormControl
+                    type="number"
+                    fieldLabel="quantity"
+                    min="1"
+                    required
+                    value={editMaxSessions}
+                    onChange={(e) => setEditMaxSessions(e.target.value)}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold text-dark">Status</label>
+                  <select
+                    className="form-select"
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+                <div className="col-12">
+                  <label className="form-label fw-semibold text-dark">Schedule Type</label>
+                  <div className="d-flex flex-wrap gap-2">
+                    {SCHEDULE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`btn btn-sm d-inline-flex align-items-center gap-1 ${
+                          editScheduleType === opt.value ? "btn-primary" : "btn-outline-primary"
+                        }`}
+                        onClick={() => {
+                          setEditScheduleType(opt.value);
+                          if (opt.value === "daily") setEditSessionGap("0");
+                          else if (opt.value === "alternate") setEditSessionGap("1");
+                          else if (opt.value === "weekly") setEditSessionGap("7");
+                          else setEditSessionGap("");
+                        }}
+                      >
+                        <i className={opt.icon} />
+                        {opt.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold text-dark">Session Gap (Days)</label>
+                  <IconFormControl
+                    type="number"
+                    fieldLabel="time"
+                    min="0"
+                    disabled={editScheduleType !== "custom"}
+                    value={editSessionGap}
+                    onChange={(e) => setEditSessionGap(e.target.value)}
+                  />
+                </div>
+                <div className="col-12">
+                  <label className="form-label fw-semibold text-dark">Description</label>
+                  <IconTextarea
+                    fieldLabel="description"
+                    rows={3}
+                    placeholder="Therapy details (optional)"
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                  />
+                </div>
               </div>
-              <div className="modal-footer border-top">
-                <button
-                  type="button"
-                  className="btn btn-light px-4"
-                  data-bs-dismiss="modal"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary px-4" disabled={savingEdit}>
-                  {savingEdit ? "Saving..." : "Save Changes"}
-                </button>
-              </div>
-            </form>
-          </div>
+            </div>
+            <div className="modal-footer border-top bg-light">
+              <button
+                type="button"
+                className="btn btn-light px-4"
+                data-bs-dismiss="modal"
+              >
+                Cancel
+              </button>
+              <button type="submit" className="btn btn-primary px-4 fw-bold" disabled={savingEdit}>
+                {savingEdit ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 

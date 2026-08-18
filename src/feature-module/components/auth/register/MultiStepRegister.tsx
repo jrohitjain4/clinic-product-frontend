@@ -4,6 +4,7 @@ import { all_routes } from "../../../routes/all_routes";
 import { toast } from "react-toastify";
 import { apiUrl } from "../../../../core/config/api";
 import { setLocalStorageUser } from "../../../../core/utils/apiClient";
+import { cleanPhoneDigits } from "../../../../core/utils/phoneValidation";
 
 import { Input } from "../../../../core/common/input/Input";
 import { Button } from "../../../../core/common/button/Button";
@@ -149,8 +150,12 @@ const MultiStepRegister: React.FC = () => {
             if (!form.ownerName) { newErrors.ownerName = "Owner name is required"; hasError = true; }
 
             if (!form.mobileNumber) { newErrors.mobileNumber = "Mobile number is required"; hasError = true; }
-            else if (!/^[6-9]\d{9}$/.test(form.mobileNumber)) {
-                newErrors.mobileNumber = "Enter a valid 10-digit number";
+            else if (cleanPhoneDigits(form.mobileNumber).length !== 10) {
+                newErrors.mobileNumber = "Must be a valid 10-digit mobile number";
+                hasError = true;
+            }
+            if (form.whatsappNumber && cleanPhoneDigits(form.whatsappNumber).length !== 10) {
+                newErrors.whatsappNumber = "WhatsApp number must be 10 digits";
                 hasError = true;
             }
 

@@ -181,7 +181,13 @@ const IpdBillingsPage: React.FC = () => {
       }
       if (ctRes.ok) {
         const data = await ctRes.json();
-        setChargeTypes(Array.isArray(data) ? data : []);
+        const types = Array.isArray(data) ? data : [];
+        setChargeTypes(types);
+        setSelectedTypeForMaster((prev) => {
+          if (!prev) return types[0] || null;
+          const updated = types.find((t: any) => t.id === prev.id);
+          return updated || types[0] || null;
+        });
       }
     } catch (err: any) {
       toast.error("Failed to load IPD billings data");
@@ -336,6 +342,14 @@ const IpdBillingsPage: React.FC = () => {
 
   // Delete Master Item
   const handleDeleteMasterItem = async (itemId: string) => {
+    // Optimistic UI update: immediately remove deleted item from state
+    if (selectedTypeForMaster) {
+      const updatedItems = (selectedTypeForMaster.items || []).filter((it: any) => it.id !== itemId);
+      const updatedCategory = { ...selectedTypeForMaster, items: updatedItems };
+      setSelectedTypeForMaster(updatedCategory);
+      setChargeTypes((prev) => prev.map((ct) => (ct.id === updatedCategory.id ? updatedCategory : ct)));
+    }
+
     const token = localStorage.getItem("token");
     try {
       await fetch(apiUrl(`/api/ipd/charge-types/items/${itemId}`), {
@@ -346,6 +360,7 @@ const IpdBillingsPage: React.FC = () => {
       fetchData();
     } catch (err: any) {
       toast.error("Error deleting item");
+      fetchData();
     }
   };
 

@@ -510,18 +510,6 @@ const CreatePharmacyBillModal = ({ open, onClose, onCreated }: Props) => {
 
                     <div className="row g-3 mt-2">
                       <div className="col-md-6">
-                        <label className="form-label text-muted mb-1">Payment Method</label>
-                        <select
-                          className="form-select form-select-sm"
-                          value={paymentMethod}
-                          onChange={(e) => setPaymentMethod(e.target.value)}
-                        >
-                          <option value="Cash">Cash</option>
-                          <option value="UPI / QR Code">UPI / QR Code</option>
-                          <option value="Card">Card</option>
-                        </select>
-                      </div>
-                      <div className="col-md-6">
                         <label className="form-label text-muted mb-1">Payment Status</label>
                         <select
                           className="form-select form-select-sm"
@@ -532,6 +520,20 @@ const CreatePharmacyBillModal = ({ open, onClose, onCreated }: Props) => {
                           <option value="Unpaid">Unpaid</option>
                         </select>
                       </div>
+                      {paymentStatus === "Paid" && (
+                        <div className="col-md-6">
+                          <label className="form-label text-muted mb-1">Payment Method</label>
+                          <select
+                            className="form-select form-select-sm"
+                            value={paymentMethod}
+                            onChange={(e) => setPaymentMethod(e.target.value)}
+                          >
+                            <option value="Cash">Cash</option>
+                            <option value="UPI / QR Code">UPI / QR Code</option>
+                            <option value="Card">Card</option>
+                          </select>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

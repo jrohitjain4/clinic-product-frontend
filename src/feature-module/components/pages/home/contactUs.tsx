@@ -15,7 +15,7 @@ const ContactUs = () => {
         whatsapp: "+919876543210", 
         phone: "+91 98765 43210",
         email: "hello@docyori.com",
-        address: "DocYori Technologies Pvt. Ltd.\n123, Healthcare Street, Sector 62,\nNoida, Uttar Pradesh - 201301, India",
+        address: "Veridian Innovations Private Limited\n123, Healthcare Street, Sector 62,\nNoida, Uttar Pradesh - 201301, India",
         website: "www.docyori.com"
     });
 

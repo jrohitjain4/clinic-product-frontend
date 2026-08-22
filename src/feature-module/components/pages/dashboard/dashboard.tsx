@@ -606,13 +606,13 @@ const Dashboard = () => {
                     <i className="ti ti-currency-rupee" />
                   </div>
                   <div>
-                    <div className="hero-val">₹{(stats.revenue || 0).toLocaleString('en-IN')}</div>
+                    <div className="hero-val">₹{(stats.monthlyRevenue !== undefined ? stats.monthlyRevenue : (stats.revenue || 0)).toLocaleString('en-IN')}</div>
                     <div className="hero-title">Monthly Revenue</div>
                   </div>
                 </div>
                 <div className="hero-card-right">
-                  <div className="badge-trend up">
-                    <i className="ti ti-arrow-up" /> +12.5%
+                  <div className={`badge-trend ${(stats.monthlyRevenueGrowth ?? 12.5) >= 0 ? "up" : "down"}`}>
+                    <i className={`ti ti-arrow-${(stats.monthlyRevenueGrowth ?? 12.5) >= 0 ? "up" : "down"}`} /> {(stats.monthlyRevenueGrowth ?? 12.5) >= 0 ? `+${stats.monthlyRevenueGrowth ?? 12.5}%` : `${stats.monthlyRevenueGrowth}%`}
                   </div>
                   <div className="hero-chart-wrap">
                     <ImageWithBasePath src="assets/img/charts/revenue-area.svg" alt="Revenue trend" />
@@ -807,7 +807,7 @@ const Dashboard = () => {
                       <div className="p-4 rounded-4 text-center d-flex flex-column justify-content-center h-100" style={{ background: 'linear-gradient(145deg, #f5f3ff 0%, #ede9fe 100%)', border: '1px solid #ddd6fe' }}>
                         <p className="text-muted fw-bold mb-2 text-uppercase" style={{ fontSize: '12px', letterSpacing: '1px', color: '#7c3aed' }}>Total Revenue</p>
                         <h2 className="fw-bold mb-3" style={{ color: '#4c1d95', fontSize: '32px', letterSpacing: '-1px' }}>
-                          ₹{(stats.totalIncome || 0).toLocaleString('en-IN')}
+                          ₹{(stats.totalRevenue !== undefined ? stats.totalRevenue : (stats.totalIncome || 0)).toLocaleString('en-IN')}
                         </h2>
                         <span className="badge mx-auto px-3 py-2 rounded-pill fw-bold" style={{ background: '#dcfce7', color: '#059669', fontSize: '12px' }}>
                           <i className="ti ti-arrow-up-right me-1" /> + 25.8% vs last month

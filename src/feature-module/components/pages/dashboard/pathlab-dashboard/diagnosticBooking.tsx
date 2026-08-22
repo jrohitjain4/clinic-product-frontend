@@ -210,7 +210,11 @@ const DiagnosticBooking = () => {
 
     setTogglingId(id);
     try {
-      await updateBooking(id, { status: nextStatus });
+      const isPaid = ["Confirmed", "Checked In", "Checked Out", "Completed"].includes(nextStatus);
+      await updateBooking(id, { 
+        status: nextStatus,
+        paymentStatus: isPaid ? "Paid" : "Unpaid"
+      });
       toast.success(`Booking status updated to ${nextStatus}!`);
     } catch (err: any) {
       toast.error("Failed to update status");
@@ -458,6 +462,9 @@ const DiagnosticBooking = () => {
       const discountAmount = resolvedDiscountAmount;
       const finalTotalAmount = Math.max(0, totalAmount - discountAmount);
 
+      const isPaidStatus = ["Confirmed", "Checked In", "Checked Out", "Completed"].includes(formStatus);
+      const computedPaymentStatus = user?.role === "PATIENT" ? "Unpaid" : (isPaidStatus ? "Paid" : "Unpaid");
+
       if (formMode === "add") {
         await createBooking({
           patientId: formPatientId,
@@ -465,7 +472,7 @@ const DiagnosticBooking = () => {
           testsList: formTestsList,
           scheduledAt,
           status: user?.role === "PATIENT" ? "Schedule" : formStatus,
-          paymentStatus: "Unpaid",
+          paymentStatus: computedPaymentStatus,
           discount: discountAmount,
           tax,
           totalAmount: finalTotalAmount,
@@ -482,6 +489,7 @@ const DiagnosticBooking = () => {
           testsList: formTestsList,
           scheduledAt,
           status: formStatus,
+          paymentStatus: computedPaymentStatus,
           discount: discountAmount,
           tax,
           totalAmount: finalTotalAmount,
@@ -664,16 +672,19 @@ const DiagnosticBooking = () => {
     }
 
     try {
+      const isPaid = ["Confirmed", "Checked In", "Checked Out", "Completed"].includes(nextStatus);
       await updateBooking(bookingId, {
         testsList: updatedTestsList,
-        status: nextStatus
+        status: nextStatus,
+        paymentStatus: isPaid ? "Paid" : "Unpaid"
       });
       setViewBooking((prev: any) => {
         if (prev && prev.id === bookingId) {
           return {
             ...prev,
             testsList: updatedTestsList,
-            status: nextStatus
+            status: nextStatus,
+            paymentStatus: isPaid ? "Paid" : "Unpaid"
           };
         }
         return prev;

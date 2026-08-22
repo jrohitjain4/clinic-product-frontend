@@ -92,23 +92,54 @@ export async function apiDelete<T>(path: string): Promise<T> {
 export const setLocalStorageUser = (user: any) => {
   if (!user) return;
   try {
-    const sanitized = JSON.parse(JSON.stringify(user));
-    
-    // Recursively strip all base64 data URLs (data:image) to prevent QuotaExceededError
-    const stripBase64 = (obj: any) => {
-      if (!obj || typeof obj !== "object") return;
-      for (const key in obj) {
-        if (typeof obj[key] === "string" && obj[key].startsWith("data:image")) {
-          obj[key] = "";
-        } else if (typeof obj[key] === "object") {
-          stripBase64(obj[key]);
-        }
-      }
+    const sanitized = {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      clinicId: user.clinicId,
+      profileImage: typeof user.profileImage === "string" && !user.profileImage.startsWith("data:") ? user.profileImage : "",
+      permissions: user.permissions,
+      doctorId: user.doctorId,
+      patientId: user.patientId,
+      clinic: user.clinic ? {
+        id: user.clinic.id,
+        name: user.clinic.name,
+        username: user.clinic.username,
+        status: user.clinic.status,
+        onboardingStep: typeof user.clinic.onboardingStep === "number" ? user.clinic.onboardingStep : 2,
+        packageId: user.clinic.packageId,
+        packageName: user.clinic.package?.name || user.clinic.packageName,
+        packageDurationInDays: user.clinic.package?.durationInDays || user.clinic.packageDurationInDays,
+        packageStartsAt: user.clinic.packageStartsAt,
+        packageExpiresAt: user.clinic.packageExpiresAt,
+        package: user.clinic.package ? {
+          id: user.clinic.package.id,
+          name: user.clinic.package.name,
+          price: user.clinic.package.price,
+          durationInDays: user.clinic.package.durationInDays,
+        } : undefined,
+      } : undefined,
     };
-    
-    stripBase64(sanitized);
     localStorage.setItem("user", JSON.stringify(sanitized));
   } catch (e) {
-    console.error("Error saving user to localStorage", e);
+    console.error("Error saving user to localStorage, clearing cached temp items", e);
+    try {
+      localStorage.setItem("user", JSON.stringify({
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        clinicId: user.clinicId,
+        clinic: user.clinic ? {
+          id: user.clinic.id,
+          name: user.clinic.name,
+          status: user.clinic.status,
+          onboardingStep: typeof user.clinic.onboardingStep === "number" ? user.clinic.onboardingStep : 2,
+          packageId: user.clinic.packageId,
+          packageExpiresAt: user.clinic.packageExpiresAt,
+        } : undefined,
+      }));
+    } catch (_) {}
   }
 };

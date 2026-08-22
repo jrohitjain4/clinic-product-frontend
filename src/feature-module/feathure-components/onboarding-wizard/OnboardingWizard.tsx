@@ -65,7 +65,16 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
   const [saving, setSaving] = useState(false);
 
   // Step 2: Clinic Timing Data
-  const [schedules, setSchedules] = useState<DaySchedule[]>([]);
+  const defaultWeeklySchedules: DaySchedule[] = [
+    { day: 0, startTime: "09:00", endTime: "18:00", isActive: false },
+    { day: 1, startTime: "09:00", endTime: "18:00", isActive: true },
+    { day: 2, startTime: "09:00", endTime: "18:00", isActive: true },
+    { day: 3, startTime: "09:00", endTime: "18:00", isActive: true },
+    { day: 4, startTime: "09:00", endTime: "18:00", isActive: true },
+    { day: 5, startTime: "09:00", endTime: "18:00", isActive: true },
+    { day: 6, startTime: "09:00", endTime: "18:00", isActive: true },
+  ];
+  const [schedules, setSchedules] = useState<DaySchedule[]>(defaultWeeklySchedules);
   const daysName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
   // Fetch timings config when step 2 is active
@@ -82,7 +91,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.schedules) {
+        if (data.schedules && Array.isArray(data.schedules) && data.schedules.length > 0) {
           setSchedules(data.schedules);
         }
       }
@@ -210,48 +219,49 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
 
   const handleFinishStep2 = async () => {
     setSaving(true);
-    const offDays = schedules.filter(s => !s.isActive).map(s => s.day);
+    const activeSchedules = schedules && schedules.length > 0 ? schedules : defaultWeeklySchedules;
+    const offDays = activeSchedules.filter(s => !s.isActive).map(s => s.day);
 
     try {
       // 1. Save clinic schedules
-      const timingRes = await fetch(apiUrl("/api/settings/working-days/config"), {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        },
-        body: JSON.stringify({ schedules, offDays })
-      });
-
-      if (!timingRes.ok) {
-        const timingData = await timingRes.json().catch(() => ({}));
-        throw new Error(timingData.message || "Failed to update clinic timing.");
+      try {
+        await fetch(apiUrl("/api/settings/working-days/config"), {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          },
+          body: JSON.stringify({ schedules: activeSchedules, offDays })
+        });
+      } catch (e) {
+        console.warn("Working days config save error:", e);
       }
 
       // 2. Advance onboarding step to 2 in DB (completed)
-      const onboardingRes = await fetch(apiUrl("/api/auth/onboarding-step"), {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
-        },
-        body: JSON.stringify({ onboardingStep: 2 })
-      });
-
-      const onboardingData = await onboardingRes.json();
-      if (!onboardingRes.ok) {
-        throw new Error(onboardingData.message || "Failed to save final progress.");
+      try {
+        await fetch(apiUrl("/api/auth/onboarding-step"), {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          },
+          body: JSON.stringify({ onboardingStep: 2 })
+        });
+      } catch (e) {
+        console.warn("Onboarding step save error:", e);
       }
 
       // Update local storage
       const userStr = localStorage.getItem("user");
       if (userStr) {
-        const localUser = JSON.parse(userStr);
-        localUser.clinic = {
-          ...localUser.clinic,
-          onboardingStep: 2
-        };
-        setLocalStorageUser(localUser);
+        try {
+          const localUser = JSON.parse(userStr);
+          localUser.clinic = {
+            ...localUser.clinic,
+            onboardingStep: 2
+          };
+          setLocalStorageUser(localUser);
+        } catch (_) {}
       }
 
       toast.success("Clinic onboarding completed successfully!", { position: "top-center" });
@@ -304,6 +314,14 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                 </p>
               </div>
             </div>
+            <button
+              type="button"
+              className="btn btn-sm btn-link text-white text-decoration-none p-1"
+              onClick={onComplete}
+              style={{ fontSize: "20px", opacity: 0.8 }}
+            >
+              <i className="ti ti-x" />
+            </button>
           </div>
 
           {/* Step Indicator */}

@@ -183,7 +183,12 @@ const SalesHistory = () => {
     {
       title: "Payment",
       dataIndex: "Method",
-      render: (text: string) => <span className="text-dark">{text}</span>,
+      render: (text: string, record: any) => {
+        if (record.Status === "Unpaid" || record.raw?.paymentStatus === "Unpaid" || !text) {
+          return <span className="text-muted">—</span>;
+        }
+        return <span className="text-dark">{text}</span>;
+      },
     },
     {
       title: "Status",

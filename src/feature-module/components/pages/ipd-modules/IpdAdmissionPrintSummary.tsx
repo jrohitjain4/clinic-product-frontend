@@ -495,7 +495,7 @@ const IpdAdmissionPrintSummary: React.FC<IpdAdmissionPrintSummaryProps> = ({ adm
                 "Payment Status",
                 <span className={`as-pill ${isPaid ? "as-pill-green" : "as-pill-orange"}`}>{paymentStatus}</span>
               )}
-              {kv("Estimated Total", money(estimatedTotal))}
+              {kv("Admission First Total", money(estimatedTotal))}
               {kv("Advance Deposit", money(admission.advancePaid))}
               {kv("Total Paid", money(admission.totalPaid))}
               {kv("Due Balance", money(admission.dueAmount ?? admission.computed?.runningDueAmount))}
@@ -650,7 +650,7 @@ const IpdAdmissionPrintSummary: React.FC<IpdAdmissionPrintSummaryProps> = ({ adm
                 "Payment Status",
                 <span className={`as-pill ${isPaid ? "as-pill-green" : "as-pill-orange"}`}>{paymentStatus}</span>
               )}
-              {kv("Estimated Total", money(estimatedTotal))}
+              {kv("Admission First Total", money(estimatedTotal))}
               {kv("Advance Deposit", money(admission.advancePaid))}
               {kv("Total Paid", money(admission.totalPaid))}
               {kv("Due Balance", money(admission.dueAmount ?? admission.computed?.runningDueAmount))}

@@ -312,7 +312,7 @@ const PharmacyBilling = () => {
         tax: totalGst,
         subTotal,
         totalAmount,
-        paymentMethod,
+        paymentMethod: paymentStatus === "Unpaid" ? "" : paymentMethod,
         paymentStatus,
         items: billingItems.map(item => ({
           medicineId: item.medicineId,
@@ -551,8 +551,13 @@ const PharmacyBilling = () => {
     {
       title: "Method",
       dataIndex: "Method",
-      render: (text: string) => <span className="text-muted">{text}</span>,
-      sorter: (a: any, b: any) => a.Method.localeCompare(b.Method),
+      render: (text: string, record: any) => {
+        if (record.Status === "Unpaid" || record.raw?.paymentStatus === "Unpaid" || !text) {
+          return <span className="text-muted">—</span>;
+        }
+        return <span className="text-muted">{text}</span>;
+      },
+      sorter: (a: any, b: any) => (a.Method || "").localeCompare(b.Method || ""),
     },
     {
       title: "Payment",

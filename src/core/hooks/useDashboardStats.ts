@@ -6,6 +6,9 @@ export interface DashboardStats {
     patientsCount: number;
     appointmentsCount: number;
     revenue: number;
+    monthlyRevenue?: number;
+    monthlyRevenueGrowth?: number;
+    totalRevenue?: number;
     totalIncome: number;
     totalExpense: number;
     netProfit: number;

@@ -372,6 +372,11 @@ export const publicRoutes = [
     route: Route,
   },
   {
+    path: routes.pricing,
+    element: <Pricing />,
+    route: Route,
+  },
+  {
     path: routes.appointmentDetails,
     element: <AppointmentDetails />,
     route: Route,

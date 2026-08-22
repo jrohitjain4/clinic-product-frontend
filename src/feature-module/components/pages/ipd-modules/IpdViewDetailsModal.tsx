@@ -346,7 +346,7 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
                 <div className="row text-center g-3">
                   <div className="col-6 col-md-3">
                     <div className="p-2 bg-white rounded ipd-vd-stat">
-                      <span className="text-muted fs-11 d-block fw-semibold">ESTIMATED TOTAL</span>
+                      <span className="text-muted fs-11 d-block fw-semibold">ADMISSION FIRST TOTAL</span>
                       <h6 className="fw-bold mb-0 text-dark mt-1">
                         {formatCurrency(
                           adm.estimatedTotal ||

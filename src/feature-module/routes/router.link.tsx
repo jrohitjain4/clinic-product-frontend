@@ -81,7 +81,6 @@ const Locations = lazy(() => import("../components/pages/clinic-modules/location
 const Messages = lazy(() => import("../components/pages/clinic-modules/messages/messages"));
 const NewAppointment = lazy(() => import("../components/pages/clinic-modules/new-appointment/newAppointment"));
 const EditAppointment = lazy(() => import("../components/pages/clinic-modules/edit-appointment/editAppointment"));
-const AppointmentDetails = lazy(() => import("../components/pages/clinic-modules/appointments/appointmentDetails"));
 const PatientDetails = lazy(() => import("../components/pages/clinic-modules/patient-details/patientDetails"));
 const PatientsGrid = lazy(() => import("../components/pages/clinic-modules/patients-grid/patientsGrid"));
 const Patients = lazy(() => import("../components/pages/clinic-modules/patients/patients"));

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useLocation } from "react-router-dom";
 import { all_routes } from "../../../../routes/all_routes";
 import { apiUrl } from "../../../../../core/config/api";
 import dayjs from "dayjs";
@@ -8,6 +8,8 @@ import html2pdf from "html2pdf.js";
 
 const InvoicesDetails = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const fromPatientId = location.state?.fromPatientId;
   const [invoice, setInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -111,10 +113,17 @@ const InvoicesDetails = () => {
               <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
                   <h6 className="fw-bold mb-0 d-flex align-items-center">
-                    <Link to={all_routes.invoices} className="">
-                      <i className="ti ti-chevron-left me-1 fs-14" />
-                      Invoices
-                    </Link>
+                    {fromPatientId ? (
+                      <Link to={all_routes.patientDetails.replace(":id", fromPatientId)}>
+                        <i className="ti ti-chevron-left me-1 fs-14" />
+                        Patient Details
+                      </Link>
+                    ) : (
+                      <Link to={all_routes.invoices} className="">
+                        <i className="ti ti-chevron-left me-1 fs-14" />
+                        Invoices
+                      </Link>
+                    )}
                   </h6>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router";
+import { Link, useParams, useLocation } from "react-router";
 import { useEffect, useMemo, useState, useRef } from "react";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
@@ -28,6 +28,8 @@ import PrescriptionPad from "./PrescriptionPad";
 
 const AppointmentDetails = () => {
     const { id } = useParams<{ id: string }>();
+    const location = useLocation();
+    const fromPatientId = location.state?.fromPatientId;
     const { appointment, loading, error, refetch } = useClinicAppointment(id);
     const { prescriptions, createPrescription, updatePrescription, deletePrescription, refetch: refetchPres } = usePrescriptions();
     const { patient: fullPatientData } = useClinicPatient(appointment?.patientId);
@@ -667,10 +669,17 @@ const AppointmentDetails = () => {
             <div className="content">
                 <div className="mb-2">
                     <h6 className="fw-semibold fs-14 mb-0">
-                        <Link to={all_routes.appointments}>
-                            <i className="ti ti-chevron-left me-1" />
-                            Appointments
-                        </Link>
+                        {fromPatientId ? (
+                            <Link to={all_routes.patientDetails.replace(":id", fromPatientId)}>
+                                <i className="ti ti-chevron-left me-1" />
+                                Patient Details
+                            </Link>
+                        ) : (
+                            <Link to={all_routes.appointments}>
+                                <i className="ti ti-chevron-left me-1" />
+                                Appointments
+                            </Link>
+                        )}
                     </h6>
                 </div>
 

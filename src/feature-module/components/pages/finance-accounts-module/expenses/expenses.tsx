@@ -78,7 +78,7 @@ const ExpensesList = () => {
     S_No: index + 1,
     Expense: exp.name,
     Category: exp.category,
-    Amount: "$" + exp.amount,
+    Amount: "₹" + exp.amount,
     Date: new Date(exp.date).toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "short",
@@ -425,8 +425,7 @@ const ExpensesList = () => {
           { icon: <i className="ti ti-user" />, label: "Purchased By", value: viewExpense?.purchasedBy || "—" },
           { icon: <i className="ti ti-credit-card" />, label: "Payment Method", value: viewExpense?.paymentMethod || "—" },
           { icon: <i className="ti ti-circle-check" />, label: "Status", value: viewExpense?.status || "—" },
-          { icon: <i className="ti ti-paperclip" />, label: "Receipt", value: viewExpense?.receipt || "N/A" },
-          { icon: <i className="ti ti-file-description" />, label: "Description", value: viewExpense?.description || "No description provided", fullWidth: true }
+          { icon: <i className="ti ti-paperclip" />, label: "Receipt", value: viewExpense?.receipt || "N/A" }
         ]}
         onEdit={() => {
           if (viewExpense) setSelectedExpense(viewExpense);

@@ -223,7 +223,7 @@ const ExpensesModal: React.FC<ExpensesModalProps> = ({ selectedExpense, refetch 
 
         <div className="col-md-6">
           <label className="form-label mb-1 text-dark fs-14 fw-medium">
-            Amount ($) <span className="text-danger">*</span>
+            Amount <span className="text-danger">*</span>
           </label>
           <IconFormControl
             fieldLabel="Amount"

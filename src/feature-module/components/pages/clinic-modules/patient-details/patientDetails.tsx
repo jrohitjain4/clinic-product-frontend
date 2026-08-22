@@ -197,7 +197,7 @@ const PatientDetails = () => {
         status: a.status,
         module: isTherapy ? ("therapy" as const) : ("opd" as const),
         type: isTherapy ? "Therapy" : "OPD / Clinic",
-        link: isTherapy ? "/therapy-appointments" : `/appointments/appointment-details/${a.id}`,
+        link: all_routes.appointmentDetails.replace(":id", a.id),
         raw: a,
       };
     });
@@ -569,6 +569,7 @@ const PatientDetails = () => {
                   ) : (
                     <Link
                       to={a.link}
+                      state={{ fromPatientId: id }}
                       className="btn btn-icon btn-sm bg-primary-subtle text-primary rounded-circle"
                     >
                       <i className="ti ti-eye fs-13" />

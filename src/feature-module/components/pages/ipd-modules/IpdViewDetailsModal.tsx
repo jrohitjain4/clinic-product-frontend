@@ -344,11 +344,12 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
               </div>
               <div className="card-body p-3 bg-light">
                 <div className="row text-center g-3">
-                  <div className="col-6 col-md-3">
+                  <div className={Boolean((adm.discountAmount || 0) > 0) ? "col-6 col-md-3" : "col-6 col-md-3"}>
                     <div className="p-2 bg-white rounded ipd-vd-stat">
-                      <span className="text-muted fs-11 d-block fw-semibold">ADMISSION FIRST TOTAL</span>
+                      <span className="text-muted fs-11 d-block fw-semibold">TOTAL BILLED</span>
                       <h6 className="fw-bold mb-0 text-dark mt-1">
                         {formatCurrency(
+                          adm.totalAmount ||
                           adm.estimatedTotal ||
                             adm.totalEstimatedAmount ||
                             adm.totalBilled ||
@@ -357,19 +358,23 @@ const IpdViewDetailsModal: React.FC<IpdViewDetailsModalProps> = ({ show, onClose
                       </h6>
                     </div>
                   </div>
-                  <div className="col-6 col-md-3">
-                    <div className="p-2 bg-white rounded ipd-vd-stat">
-                      <span className="text-muted fs-11 d-block fw-semibold">ADVANCE DEPOSIT</span>
-                      <h6 className="fw-bold mb-0 text-info mt-1">{formatCurrency(adm.advancePaid)}</h6>
+                  {Boolean((adm.discountAmount || 0) > 0) && (
+                    <div className="col-6 col-md-3">
+                      <div className="p-2 bg-white rounded ipd-vd-stat">
+                        <span className="text-muted fs-11 d-block fw-semibold">DISCOUNT / CONCESSION</span>
+                        <h6 className="fw-bold mb-0 text-warning mt-1">
+                          - {formatCurrency(adm.discountAmount)}
+                        </h6>
+                      </div>
                     </div>
-                  </div>
-                  <div className="col-6 col-md-3">
+                  )}
+                  <div className={Boolean((adm.discountAmount || 0) > 0) ? "col-6 col-md-3" : "col-6 col-md-3"}>
                     <div className="p-2 bg-white rounded ipd-vd-stat">
                       <span className="text-muted fs-11 d-block fw-semibold">TOTAL PAID</span>
                       <h6 className="fw-bold mb-0 text-success mt-1">{formatCurrency(adm.totalPaid)}</h6>
                     </div>
                   </div>
-                  <div className="col-6 col-md-3">
+                  <div className={Boolean((adm.discountAmount || 0) > 0) ? "col-6 col-md-3" : "col-6 col-md-3"}>
                     <div className="p-2 bg-white rounded ipd-vd-stat">
                       <span className="text-muted fs-11 d-block fw-semibold">DUE BALANCE</span>
                       <h6

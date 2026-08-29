@@ -23,7 +23,8 @@ const DiagnosticBooking = () => {
   const { bookings, loading, createBooking, updateBooking, deleteBooking, bulkDeleteBookings } = useLabBookings();
   const { tests: allTests } = useLabTests();
   const { categories: allCategories } = useLabCategories();
-  const { patients: allPatients } = useClinicPatients();
+  const { patients: allPatients, refetch: refetchPatients } = useClinicPatients();
+  const [extraPatients, setExtraPatients] = useState<any[]>([]);
   const { doctors } = useClinicDoctors();
   const { staffs: staff } = useClinicStaff();
 
@@ -89,6 +90,13 @@ const DiagnosticBooking = () => {
     cancelled: bookings.filter((b) => b.status === "Cancelled").length,
   }), [bookings]);
 
+  const mergedPatients = useMemo(() => {
+    const map = new Map<string, any>();
+    allPatients.forEach((p: any) => { if (p?.id) map.set(p.id, p); });
+    extraPatients.forEach((p: any) => { if (p?.id) map.set(p.id, p); });
+    return Array.from(map.values());
+  }, [allPatients, extraPatients]);
+
   const patientList = useMemo(() => {
     const names = Array.from(new Set(bookings.map(b => b.patient ? `${b.patient.firstName} ${b.patient.lastName}` : "")));
     return names.filter(n => n).sort();
@@ -150,11 +158,11 @@ const DiagnosticBooking = () => {
   const [formPatientId, setFormPatientId] = useState("");
 
   const patientOptions = useMemo(() => {
-    return allPatients.map((p: any) => ({
+    return mergedPatients.map((p: any) => ({
       value: p.id,
       label: `${p.firstName} ${p.lastName} (${p.patientCode || ""})`,
     }));
-  }, [allPatients]);
+  }, [mergedPatients]);
 
   const selectedPatientOption = useMemo(() => {
     return patientOptions.find((opt) => opt.value === formPatientId) || null;
@@ -1809,7 +1817,12 @@ const DiagnosticBooking = () => {
         show={showAddPatientModal}
         onHide={() => setShowAddPatientModal(false)}
         onSuccess={(newPatient) => {
-          setFormPatientId(newPatient.id);
+          if (newPatient?.id) {
+            setExtraPatients((prev) => [newPatient, ...prev]);
+            setFormPatientId(newPatient.id);
+          }
+          refetchPatients();
+          setShowAddPatientModal(false);
         }}
       />
 

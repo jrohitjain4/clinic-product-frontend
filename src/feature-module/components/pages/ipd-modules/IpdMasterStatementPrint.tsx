@@ -22,6 +22,7 @@ export type MasterStatementData = {
   invoicesCount: number;
   allItems: MasterStatementItem[];
   totalBilled: number;
+  discountAmount?: number;
   totalPaid: number;
   dueAmount: number;
   /** Full admission payload from API when available */
@@ -444,6 +445,8 @@ const IpdMasterStatementPrint: React.FC<IpdMasterStatementPrintProps> = ({ data 
                 <span className={`as-pill ${isPaid ? "as-pill-green" : "as-pill-orange"}`}>{paymentStatus}</span>
               )}
               {kv("Total Billed", money(data.totalBilled))}
+              {Boolean((data.discountAmount || admission.discountAmount) && (data.discountAmount || admission.discountAmount) > 0) &&
+                kv("Discount / Concession", `- ${money(data.discountAmount || admission.discountAmount)}`)}
               {kv("Total Paid", money(data.totalPaid))}
               {kv("Due Balance", money(data.dueAmount))}
               {kv("Payment Mode", admission.paymentMethod || "—")}

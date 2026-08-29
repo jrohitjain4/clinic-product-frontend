@@ -30,17 +30,24 @@ const premiumStyles = `
   }
 `;
 
-const formatDuration = (days?: number | null) => {
-  if (!days) return "1 Month (30 Days)";
-  if (days >= 365) {
-    const years = Math.round(days / 365);
-    return `${years} Year${years > 1 ? 's' : ''} (${days} Days)`;
+const formatDuration = (days?: number | null, startsAt?: string | null, expiresAt?: string | null) => {
+  let totalDays = days;
+  if ((!totalDays || totalDays === 30) && startsAt && expiresAt) {
+    const diff = Math.round(dayjs(expiresAt).diff(dayjs(startsAt), 'day', true));
+    if (diff > 0) totalDays = diff;
   }
-  if (days >= 30) {
-    const months = Math.round(days / 30);
-    return `${months} Month${months > 1 ? 's' : ''} (${days} Days)`;
+
+  if (!totalDays || totalDays <= 0) return "1 Month (30 Days)";
+
+  if (totalDays >= 350) {
+    const years = Math.round(totalDays / 365);
+    return `${years} Year${years > 1 ? 's' : ''} (${totalDays} Days)`;
   }
-  return `${days} Days`;
+  if (totalDays >= 25) {
+    const months = Math.round(totalDays / 30);
+    return `${months} Month${months > 1 ? 's' : ''} (${totalDays} Days)`;
+  }
+  return `${totalDays} Days`;
 };
 
 const TrialCountdown = () => {
@@ -68,9 +75,10 @@ const TrialCountdown = () => {
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.user) {
-          setLocalStorageUser(data.user);
-          setUser(data.user);
+        const userObj = data.user || (data.id ? data : null);
+        if (userObj) {
+          setLocalStorageUser(userObj);
+          setUser(userObj);
         }
       }
     } catch (e) {
@@ -103,9 +111,21 @@ const TrialCountdown = () => {
     const status = user?.clinic?.status;
     const pkg = user?.clinic?.package || user?.clinic?.Package || user?.subscription?.package;
     const pkgName = pkg?.name || user?.clinic?.packageName || (status === 'TRIAL' ? "Free Trial" : "Premium Plan");
-    const pkgDuration = pkg?.durationInDays || user?.clinic?.packageDurationInDays || 30;
     const pkgExpiresAt = user?.clinic?.packageExpiresAt || user?.subscription?.expiresAt || null;
-    const pkgStartsAt = user?.clinic?.packageStartsAt || null;
+    const pkgStartsAt = user?.clinic?.packageStartsAt || user?.clinic?.createdAt || null;
+
+    let computedDays = pkg?.durationInDays || user?.clinic?.packageDurationInDays;
+    if ((!computedDays || computedDays === 30) && pkgStartsAt && pkgExpiresAt) {
+      const diff = Math.round(dayjs(pkgExpiresAt).diff(dayjs(pkgStartsAt), 'day', true));
+      if (diff > 0) computedDays = diff;
+    }
+    if (!computedDays && pkgExpiresAt) {
+      const diffFromNow = Math.round(dayjs(pkgExpiresAt).diff(dayjs(), 'day', true));
+      if (diffFromNow > 200) computedDays = 365;
+      else if (diffFromNow > 45) computedDays = Math.round(diffFromNow / 30) * 30;
+      else if (diffFromNow > 0) computedDays = Math.max(30, diffFromNow);
+    }
+    const pkgDuration = computedDays || 30;
 
     setPackageName(pkgName);
     setDurationDays(pkgDuration);
@@ -172,7 +192,7 @@ const TrialCountdown = () => {
                     Active Plan
                   </span>
                   <span className="badge bg-light text-muted border fs-11 px-2 py-0.5 rounded-pill">
-                    {formatDuration(durationDays)}
+                    {formatDuration(durationDays, startsAt, expiresAt)}
                   </span>
                 </div>
               </div>
@@ -182,7 +202,7 @@ const TrialCountdown = () => {
             <div className="border rounded-3 p-3 bg-light-subtle mb-3">
               <div className="plan-info-row border-bottom pb-2 mb-1">
                 <span className="text-muted">Plan Duration:</span>
-                <span className="fw-bold text-dark">{formatDuration(durationDays)}</span>
+                <span className="fw-bold text-dark">{formatDuration(durationDays, startsAt, expiresAt)}</span>
               </div>
               {startsAt && (
                 <div className="plan-info-row border-bottom pb-2 mb-1">

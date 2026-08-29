@@ -18,11 +18,11 @@ interface Package {
 
 const formatDuration = (days?: number) => {
   if (!days) return "1 Month (30 Days)";
-  if (days >= 365) {
+  if (days >= 350) {
     const years = Math.round(days / 365);
     return `${years} Year${years > 1 ? "s" : ""} (${days} Days)`;
   }
-  if (days >= 30) {
+  if (days >= 25) {
     const months = Math.round(days / 30);
     return `${months} Month${months > 1 ? "s" : ""} (${days} Days)`;
   }

@@ -131,6 +131,7 @@ const IpdBillingsPage: React.FC = () => {
     invoicesCount: number;
     allItems: { itemType: string; itemName: string; unitPrice: number; quantity: number; totalPrice: number; invoiceNumber: string }[];
     totalBilled: number;
+    discountAmount: number;
     totalPaid: number;
     dueAmount: number;
     admission?: any;
@@ -514,7 +515,10 @@ const IpdBillingsPage: React.FC = () => {
       }
     });
 
-    const dueAmount = Math.max(0, totalBilled - totalPaid);
+    const discountAmount = admissionInfo?.discountAmount || 0;
+    const dueAmount = admissionInfo?.dueAmount !== undefined
+      ? admissionInfo.dueAmount
+      : Math.max(0, totalBilled - discountAmount - totalPaid);
 
     const baseData = {
       admissionId,
@@ -526,6 +530,7 @@ const IpdBillingsPage: React.FC = () => {
       invoicesCount: relatedInvoices.length,
       allItems,
       totalBilled,
+      discountAmount,
       totalPaid,
       dueAmount,
       admission: admissionInfo || null,
@@ -542,6 +547,8 @@ const IpdBillingsPage: React.FC = () => {
       });
       const full = await res.json().catch(() => null);
       if (res.ok && full?.id) {
+        const fullDiscount = full.discountAmount !== undefined ? full.discountAmount : discountAmount;
+        const fullDue = full.dueAmount !== undefined ? full.dueAmount : Math.max(0, totalBilled - fullDiscount - totalPaid);
         setMasterStatementData((prev) =>
           prev
             ? {
@@ -552,6 +559,8 @@ const IpdBillingsPage: React.FC = () => {
                 patientCode: full.patient?.patientCode || prev.patientCode,
                 wardName: full.ward?.wardName || prev.wardName,
                 doctorName: full.doctor?.fullName || prev.doctorName,
+                discountAmount: fullDiscount,
+                dueAmount: fullDue,
               }
             : prev
         );
@@ -2018,23 +2027,32 @@ const IpdBillingsPage: React.FC = () => {
 
                 <div className="p-4 bg-white rounded-3 ipd-ms-card">
                   <div className="row g-3 align-items-center text-center text-md-start">
-                    <div className="col-md-4">
-                      <span className="text-muted fs-13 fw-semibold d-block">TOTAL BILLED AMOUNT</span>
-                      <h3 className="fw-bold text-dark mb-0">
+                    <div className={masterStatementData.discountAmount > 0 ? "col-md-3" : "col-md-4"}>
+                      <span className="text-muted fs-12 fw-semibold d-block">TOTAL BILLED AMOUNT</span>
+                      <h3 className="fw-bold text-dark mb-0 fs-20">
                         ₹{masterStatementData.totalBilled.toLocaleString("en-IN")}
                       </h3>
                     </div>
 
-                    <div className="col-md-4">
-                      <span className="text-muted fs-13 fw-semibold d-block">TOTAL AMOUNT PAID</span>
-                      <h3 className="fw-bold text-success mb-0">
+                    {masterStatementData.discountAmount > 0 && (
+                      <div className="col-md-3">
+                        <span className="text-muted fs-12 fw-semibold d-block">DISCOUNT / CONCESSION</span>
+                        <h3 className="fw-bold text-warning mb-0 fs-20">
+                          - ₹{masterStatementData.discountAmount.toLocaleString("en-IN")}
+                        </h3>
+                      </div>
+                    )}
+
+                    <div className={masterStatementData.discountAmount > 0 ? "col-md-3" : "col-md-4"}>
+                      <span className="text-muted fs-12 fw-semibold d-block">TOTAL AMOUNT PAID</span>
+                      <h3 className="fw-bold text-success mb-0 fs-20">
                         ₹{masterStatementData.totalPaid.toLocaleString("en-IN")}
                       </h3>
                     </div>
 
-                    <div className="col-md-4">
-                      <span className="text-muted fs-13 fw-semibold d-block">OUTSTANDING DUE BALANCE</span>
-                      <h3 className="fw-bold text-danger mb-0">
+                    <div className={masterStatementData.discountAmount > 0 ? "col-md-3" : "col-md-4"}>
+                      <span className="text-muted fs-12 fw-semibold d-block">OUTSTANDING DUE BALANCE</span>
+                      <h3 className={`fw-bold mb-0 fs-20 ${masterStatementData.dueAmount > 0 ? "text-danger" : "text-success"}`}>
                         ₹{masterStatementData.dueAmount.toLocaleString("en-IN")}
                       </h3>
                     </div>

@@ -127,11 +127,15 @@ const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
 
   const handleSubmit = async () => {
     if (!form.firstName.trim()) {
-      setError("First name is required.");
+      const msg = "First name is required.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
     if (!form.lastName.trim()) {
-      setError("Last name is required.");
+      const msg = "Last name is required.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -174,15 +178,18 @@ const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
       });
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Failed to create patient");
       }
 
       const createdPatient = await res.json();
+      toast.success("Patient created successfully!");
       onSuccess(createdPatient);
       onHide();
     } catch (err: any) {
-      setError(err.message);
+      const msg = err.message || "Failed to create patient";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }

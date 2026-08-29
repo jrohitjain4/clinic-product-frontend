@@ -495,7 +495,9 @@ const IpdAdmissionPrintSummary: React.FC<IpdAdmissionPrintSummaryProps> = ({ adm
                 "Payment Status",
                 <span className={`as-pill ${isPaid ? "as-pill-green" : "as-pill-orange"}`}>{paymentStatus}</span>
               )}
-              {kv("Admission First Total", money(estimatedTotal))}
+              {kv("Total Billed", money(estimatedTotal || admission.totalAmount))}
+              {Boolean((admission.discountAmount || 0) > 0) &&
+                kv("Discount / Concession", `- ${money(admission.discountAmount)}`)}
               {kv("Advance Deposit", money(admission.advancePaid))}
               {kv("Total Paid", money(admission.totalPaid))}
               {kv("Due Balance", money(admission.dueAmount ?? admission.computed?.runningDueAmount))}

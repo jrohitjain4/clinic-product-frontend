@@ -58,6 +58,12 @@ interface AdmissionOption {
   wardId?: string;
   admissionDate?: string;
   invoices?: any[];
+  discountAmount?: number;
+  dueAmount?: number;
+  totalPaid?: number;
+  totalAmount?: number;
+  status?: string;
+  [key: string]: any;
 }
 
 interface ChargeItemMaster {

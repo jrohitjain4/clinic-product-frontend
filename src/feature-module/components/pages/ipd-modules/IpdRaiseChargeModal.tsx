@@ -15,6 +15,7 @@ interface AdmissionOption {
   wardId?: string;
   admissionDate?: string;
   invoices?: any[];
+  [key: string]: any;
 }
 
 interface ChargeItemMaster {

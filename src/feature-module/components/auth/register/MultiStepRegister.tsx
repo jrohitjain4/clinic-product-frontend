@@ -7,7 +7,7 @@ import { setLocalStorageUser } from "../../../../core/utils/apiClient";
 
 import { Input } from "../../../../core/common/input/Input";
 import { Button } from "../../../../core/common/button/Button";
-import { UserPlus, User, Phone, Mail, MessageCircle, MapPin, Hash, Lock, CheckCircle, ArrowRight, ArrowLeft, Eye, EyeOff, Home, AtSign, Map, Users, Calendar, Star, Zap, ChevronDown } from "react-feather";
+import { UserPlus, User, Phone, Mail, MessageCircle, MapPin, Hash, Lock, CheckCircle, ArrowRight, ArrowLeft, Eye, EyeOff, Home, AtSign, Map, Users, Calendar, Star, Zap, ChevronDown, RefreshCw } from "react-feather";
 import { Country, State, City } from "country-state-city";
 
 const MultiStepRegister: React.FC = () => {
@@ -19,6 +19,7 @@ const MultiStepRegister: React.FC = () => {
     const [formErrors, setFormErrors] = useState<any>({});
     const [success, setSuccess] = useState("");
     const [selectedPkgId, setSelectedPkgId] = useState("");
+    const [isAutoPay, setIsAutoPay] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
@@ -75,11 +76,47 @@ const MultiStepRegister: React.FC = () => {
         confirmPassword: "",
     });
 
+    const sortPackagesBySequence = (list: Package[]) => {
+        const getRank = (pkg: Package) => {
+            const price = Number(pkg.price) || 0;
+            const days = Number(pkg.durationInDays) || 0;
+            const name = (pkg.name || "").toLowerCase();
+
+            // 1. Free / Trial Plans
+            if (price === 0 || days === 14 || name.includes("trial") || name.includes("free")) return 1;
+            // 2. Weekly Plans
+            if (days === 7 || name.includes("week") || (days >= 1 && days <= 13)) return 2;
+            // 3. Monthly Plans
+            if ((days >= 20 && days <= 45) || name.includes("month")) return 3;
+            // 4. Quarterly Plans
+            if ((days >= 75 && days <= 110) || name.includes("quarter") || name.includes("3 month")) return 4;
+            // 5. Half Yearly Plans
+            if ((days >= 150 && days <= 210) || name.includes("half") || name.includes("6 month")) return 5;
+            // 6. Yearly Plans
+            if ((days >= 300 && days <= 370) || name.includes("year") || name.includes("annual")) return 6;
+            return 1;
+        };
+
+        return [...list].sort((a, b) => {
+            const rankA = getRank(a);
+            const rankB = getRank(b);
+            if (rankA !== rankB) return rankA - rankB;
+            const priceA = Number(a.price) || 0;
+            const priceB = Number(b.price) || 0;
+            if (priceA !== priceB) return priceA - priceB;
+            return (Number(a.durationInDays) || 0) - (Number(b.durationInDays) || 0);
+        });
+    };
+
     useEffect(() => {
         if (step === 3) {
             fetch(apiUrl("/api/auth/packages"))
                 .then((res) => res.json())
-                .then((data) => setPackages(data))
+                .then((data) => {
+                    if (Array.isArray(data)) {
+                        setPackages(sortPackagesBySequence(data));
+                    }
+                })
                 .catch(console.error);
         }
     }, [step]);
@@ -280,7 +317,7 @@ const MultiStepRegister: React.FC = () => {
                 setSelectedPkgId("");
             }
         } else {
-            // Paid Package - Razorpay flow
+            // Paid Package - Razorpay flow (AutoPay Recurring vs One-time Order)
             setSelectedPkgId(packageId);
             setLoading(true);
             setError("");
@@ -303,122 +340,203 @@ const MultiStepRegister: React.FC = () => {
                     doctorCount: form.doctorCount ? parseInt(form.doctorCount) : 0,
                 };
 
-                // 1. Create order on the backend
-                const orderRes = await fetch(apiUrl("/api/payments/create-order"), {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ packageId }),
-                });
-
-                const orderData = await orderRes.json();
-                if (!orderRes.ok) {
-                    throw new Error(orderData.message || "Failed to initiate payment. Please contact support.");
-                }
-
-                if (orderData.bypass) {
-                    const res = await fetch(apiUrl("/api/auth/register-full"), {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            ownerName: form.ownerName,
-                            email: form.emailId,
-                            password: form.password,
-                            phone: form.mobileNumber,
-                            whatsappNumber: form.sameAsMobile ? form.mobileNumber : form.whatsappNumber,
-                            clinicName: form.clinicName,
-                            username: form.username.toLowerCase().trim(),
-                            addressLine1: form.addressLine1,
-                            addressLine2: form.addressLine2,
-                            district: form.district,
-                            city: form.city,
-                            state: form.state,
-                            country: form.country,
-                            pincode: form.pincode,
-                            doctorCount: form.doctorCount ? parseInt(form.doctorCount) : 0,
-                            packageId: packageId,
-                        }),
-                    });
-                    const data = await res.json();
-                    if (!res.ok) throw new Error(data.message || "Failed to complete registration");
-
-                    localStorage.setItem("token", data.token);
-                    setLocalStorageUser(data.user);
-
-                    toast.success("Registration successful!");
-                    setSuccess("🎉 Account created successfully! Redirecting...");
-                    setTimeout(() => navigate(all_routes.dashboard), 2000);
-                    return;
-                }
-
-                // 2. Load Razorpay script only when actual payment is needed
+                // Load Razorpay script only when actual payment is needed
                 const isLoaded = await loadRazorpayScript();
                 if (!isLoaded) {
                     throw new Error("Razorpay SDK failed to load. Are you connected to the internet?");
                 }
 
-                // 3. Open Razorpay checkout modal
-                const options = {
-                    key: orderData.razorpayKeyId,
-                    amount: orderData.amount,
-                    currency: orderData.currency,
-                    name: "Docyori Clinic SaaS",
-                    description: `Subscription: ${selectedPkg.name}`,
-                    order_id: orderData.orderId,
-                    handler: async function (response: any) {
-                        setLoading(true);
-                        try {
-                            // 3. Verify payment signature and complete registration
-                            const verifyRes = await fetch(apiUrl("/api/payments/verify"), {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                    razorpay_order_id: response.razorpay_order_id,
-                                    razorpay_payment_id: response.razorpay_payment_id,
-                                    razorpay_signature: response.razorpay_signature,
-                                    packageId,
-                                    clinicData
-                                })
-                            });
+                if (isAutoPay) {
+                    // ── 1. AutoPay Recurring Subscription Flow ──
+                    const subRes = await fetch(apiUrl("/api/payments/create-subscription"), {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            packageId,
+                            customerName: form.ownerName,
+                            customerEmail: form.emailId,
+                            customerPhone: form.mobileNumber,
+                        }),
+                    });
 
-                            const verifyData = await verifyRes.json();
-                            if (!verifyRes.ok) {
-                                throw new Error(verifyData.message || "Payment verification failed");
-                            }
-
-                            localStorage.setItem("token", verifyData.token);
-                            setLocalStorageUser(verifyData.user);
-
-                            toast.success("Payment successful & account created!");
-                            setSuccess("🎉 Payment verified & account created! Redirecting...");
-                            setTimeout(() => navigate(all_routes.dashboard), 2000);
-                        } catch (err: any) {
-                            const msg = err.message || "Failed to verify payment. Please contact support.";
-                            setError(msg);
-                            toast.error(msg);
-                        } finally {
-                            setLoading(false);
-                            setSelectedPkgId("");
-                        }
-                    },
-                    prefill: {
-                        name: form.ownerName,
-                        email: form.emailId,
-                        contact: form.mobileNumber,
-                    },
-                    theme: {
-                        color: "#7c3aed", // Docyori brand violet color
-                    },
-                    modal: {
-                        ondismiss: function () {
-                            setLoading(false);
-                            setSelectedPkgId("");
-                            toast.info("Payment cancelled.");
-                        }
+                    const subData = await subRes.json();
+                    if (!subRes.ok) {
+                        throw new Error(subData.message || "Failed to initiate AutoPay subscription. Please contact support.");
                     }
-                };
 
-                const rzp = new (window as any).Razorpay(options);
-                rzp.open();
+                    if (subData.bypass) {
+                        const res = await fetch(apiUrl("/api/auth/register-full"), {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ ...clinicData, packageId }),
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.message || "Failed to complete registration");
+
+                        localStorage.setItem("token", data.token);
+                        setLocalStorageUser(data.user);
+
+                        toast.success("Registration successful!");
+                        setSuccess("🎉 Account created successfully! Redirecting...");
+                        setTimeout(() => navigate(all_routes.dashboard), 2000);
+                        return;
+                    }
+
+                    const options = {
+                        key: subData.razorpayKeyId,
+                        subscription_id: subData.subscriptionId,
+                        name: "Docyori Clinic SaaS",
+                        description: `AutoPay Recurring: ${selectedPkg.name}`,
+                        handler: async function (response: any) {
+                            setLoading(true);
+                            try {
+                                const verifyRes = await fetch(apiUrl("/api/payments/verify"), {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                        razorpay_payment_id: response.razorpay_payment_id,
+                                        razorpay_subscription_id: response.razorpay_subscription_id,
+                                        razorpay_signature: response.razorpay_signature,
+                                        packageId,
+                                        clinicData,
+                                        isAutoPay: true,
+                                    })
+                                });
+
+                                const verifyData = await verifyRes.json();
+                                if (!verifyRes.ok) {
+                                    throw new Error(verifyData.message || "AutoPay verification failed");
+                                }
+
+                                localStorage.setItem("token", verifyData.token);
+                                setLocalStorageUser(verifyData.user);
+
+                                toast.success("AutoPay setup successful & account created!");
+                                setSuccess("🎉 AutoPay enabled & account created! Redirecting...");
+                                setTimeout(() => navigate(all_routes.dashboard), 2000);
+                            } catch (err: any) {
+                                const msg = err.message || "Failed to verify AutoPay setup. Please contact support.";
+                                setError(msg);
+                                toast.error(msg);
+                            } finally {
+                                setLoading(false);
+                                setSelectedPkgId("");
+                            }
+                        },
+                        prefill: {
+                            name: form.ownerName,
+                            email: form.emailId,
+                            contact: form.mobileNumber,
+                        },
+                        theme: {
+                            color: "#7c3aed",
+                        },
+                        modal: {
+                            ondismiss: function () {
+                                setLoading(false);
+                                setSelectedPkgId("");
+                                toast.info("AutoPay setup cancelled.");
+                            }
+                        }
+                    };
+
+                    const rzp = new (window as any).Razorpay(options);
+                    rzp.open();
+
+                } else {
+                    // ── 2. One-Time Order Flow (AutoPay OFF) ──
+                    const orderRes = await fetch(apiUrl("/api/payments/create-order"), {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ packageId }),
+                    });
+
+                    const orderData = await orderRes.json();
+                    if (!orderRes.ok) {
+                        throw new Error(orderData.message || "Failed to initiate payment. Please contact support.");
+                    }
+
+                    if (orderData.bypass) {
+                        const res = await fetch(apiUrl("/api/auth/register-full"), {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ ...clinicData, packageId }),
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.message || "Failed to complete registration");
+
+                        localStorage.setItem("token", data.token);
+                        setLocalStorageUser(data.user);
+
+                        toast.success("Registration successful!");
+                        setSuccess("🎉 Account created successfully! Redirecting...");
+                        setTimeout(() => navigate(all_routes.dashboard), 2000);
+                        return;
+                    }
+
+                    const options = {
+                        key: orderData.razorpayKeyId,
+                        amount: orderData.amount,
+                        currency: orderData.currency,
+                        name: "Docyori Clinic SaaS",
+                        description: `Subscription: ${selectedPkg.name}`,
+                        order_id: orderData.orderId,
+                        handler: async function (response: any) {
+                            setLoading(true);
+                            try {
+                                const verifyRes = await fetch(apiUrl("/api/payments/verify"), {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                        razorpay_order_id: response.razorpay_order_id,
+                                        razorpay_payment_id: response.razorpay_payment_id,
+                                        razorpay_signature: response.razorpay_signature,
+                                        packageId,
+                                        clinicData,
+                                        isAutoPay: false,
+                                    })
+                                });
+
+                                const verifyData = await verifyRes.json();
+                                if (!verifyRes.ok) {
+                                    throw new Error(verifyData.message || "Payment verification failed");
+                                }
+
+                                localStorage.setItem("token", verifyData.token);
+                                setLocalStorageUser(verifyData.user);
+
+                                toast.success("Payment successful & account created!");
+                                setSuccess("🎉 Payment verified & account created! Redirecting...");
+                                setTimeout(() => navigate(all_routes.dashboard), 2000);
+                            } catch (err: any) {
+                                const msg = err.message || "Failed to verify payment. Please contact support.";
+                                setError(msg);
+                                toast.error(msg);
+                            } finally {
+                                setLoading(false);
+                                setSelectedPkgId("");
+                            }
+                        },
+                        prefill: {
+                            name: form.ownerName,
+                            email: form.emailId,
+                            contact: form.mobileNumber,
+                        },
+                        theme: {
+                            color: "#7c3aed",
+                        },
+                        modal: {
+                            ondismiss: function () {
+                                setLoading(false);
+                                setSelectedPkgId("");
+                                toast.info("Payment cancelled.");
+                            }
+                        }
+                    };
+
+                    const rzp = new (window as any).Razorpay(options);
+                    rzp.open();
+                }
             } catch (err: any) {
                 const msg = err.message || "Something went wrong. Please try again.";
                 setError(msg);
@@ -881,6 +999,81 @@ const MultiStepRegister: React.FC = () => {
                                                 {/* ─── STEP 3: Pricing ─── */}
                                                 {step === 3 && (
                                                     <div>
+                                                        {/* AutoPay Recurring Toggle Banner */}
+                                                        <div
+                                                            className="autopay-banner mb-3 p-3 rounded-4"
+                                                            style={{
+                                                                background: isAutoPay
+                                                                    ? "linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(99, 102, 241, 0.05) 100%)"
+                                                                    : "#f8fafc",
+                                                                border: isAutoPay ? "1.5px solid #a78bfa" : "1.5px solid #e2e8f0",
+                                                                transition: "all 0.3s ease",
+                                                            }}
+                                                        >
+                                                            <div className="d-flex align-items-center justify-content-between gap-3">
+                                                                <div className="d-flex align-items-center gap-3">
+                                                                    <div
+                                                                        style={{
+                                                                            width: "42px",
+                                                                            height: "42px",
+                                                                            borderRadius: "12px",
+                                                                            background: isAutoPay ? "linear-gradient(135deg, #7c3aed, #4f46e5)" : "#e2e8f0",
+                                                                            color: isAutoPay ? "#ffffff" : "#64748b",
+                                                                            display: "flex",
+                                                                            alignItems: "center",
+                                                                            justifyContent: "center",
+                                                                            flexShrink: 0,
+                                                                            boxShadow: isAutoPay ? "0 4px 12px rgba(124,58,237,0.25)" : "none",
+                                                                        }}
+                                                                    >
+                                                                        <RefreshCw size={20} />
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="d-flex align-items-center gap-2">
+                                                                            <span style={{ fontWeight: 700, fontSize: "15px", color: "#1e293b" }}>
+                                                                                AutoPay (Auto-Renewal)
+                                                                            </span>
+                                                                            <span
+                                                                                style={{
+                                                                                    fontSize: "11px",
+                                                                                    fontWeight: 700,
+                                                                                    padding: "2px 8px",
+                                                                                    borderRadius: "20px",
+                                                                                    background: isAutoPay ? "#dcfce7" : "#f1f5f9",
+                                                                                    color: isAutoPay ? "#15803d" : "#64748b",
+                                                                                }}
+                                                                            >
+                                                                                {isAutoPay ? "Recommended • ON" : "OFF"}
+                                                                            </span>
+                                                                        </div>
+                                                                        <p className="mb-0 text-muted" style={{ fontSize: "12px", marginTop: "2px", lineHeight: "1.4" }}>
+                                                                            {isAutoPay
+                                                                                ? "Automated recurring renewal via UPI / Card. Never miss clinic updates. Cancel anytime."
+                                                                                : "Manual renewal required. Subscription will not auto-renew when expired."}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="form-check form-switch m-0" style={{ cursor: "pointer" }}>
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                        role="switch"
+                                                                        id="autoPayToggle"
+                                                                        checked={isAutoPay}
+                                                                        onChange={(e) => setIsAutoPay(e.target.checked)}
+                                                                        style={{
+                                                                            width: "48px",
+                                                                            height: "26px",
+                                                                            cursor: "pointer",
+                                                                            backgroundColor: isAutoPay ? "#7c3aed" : "#cbd5e1",
+                                                                            borderColor: isAutoPay ? "#7c3aed" : "#cbd5e1",
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
                                                         {packages.length === 0 && (
                                                             <div className="text-center p-4 text-muted">
                                                                 <span className="spinner-border spinner-border-sm me-2" />Loading plans...
@@ -910,7 +1103,11 @@ const MultiStepRegister: React.FC = () => {
                                                                         <div className={`pkg-price ${p.price === 0 ? "free" : "paid"}`}>
                                                                             {p.price === 0 ? "FREE" : `₹${p.price.toLocaleString("en-IN")}`}
                                                                         </div>
-                                                                        {p.price > 0 && <div style={{ fontSize: "11px", color: "#9ca3af" }}>per cycle</div>}
+                                                                        {p.price > 0 && (
+                                                                            <div style={{ fontSize: "11px", color: isAutoPay ? "#7c3aed" : "#9ca3af", fontWeight: isAutoPay ? 600 : 400 }}>
+                                                                                {isAutoPay ? "per cycle • AutoPay" : "one-time payment"}
+                                                                            </div>
+                                                                        )}
 
                                                                         <Button
                                                                             type="button"
@@ -930,16 +1127,35 @@ const MultiStepRegister: React.FC = () => {
                                                                 {(() => {
                                                                     const selectedPkg = packages.find(p => p.id === selectedPkgId);
                                                                     return selectedPkg ? (
-                                                                        <Button
-                                                                            variant="primary"
-                                                                            size="large"
-                                                                            className="w-100 fs-15 btn-primary-grad d-flex align-items-center justify-content-center gap-2"
-                                                                            style={{ minHeight: "50px" }}
-                                                                            onClick={() => handleComplete(selectedPkgId)}
-                                                                            disabled={loading}
-                                                                        >
-                                                                            {loading ? "Processing..." : selectedPkg.price === 0 ? <><Zap size={18} /> Start Free Trial Now</> : `Pay ₹${selectedPkg.price.toLocaleString("en-IN")} Now`}
-                                                                        </Button>
+                                                                        <>
+                                                                            <Button
+                                                                                variant="primary"
+                                                                                size="large"
+                                                                                className="w-100 fs-15 btn-primary-grad d-flex align-items-center justify-content-center gap-2"
+                                                                                style={{ minHeight: "50px" }}
+                                                                                onClick={() => handleComplete(selectedPkgId)}
+                                                                                disabled={loading}
+                                                                            >
+                                                                                {loading ? (
+                                                                                    "Processing..."
+                                                                                ) : selectedPkg.price === 0 ? (
+                                                                                    <><Zap size={18} /> Start Free Trial Now</>
+                                                                                ) : isAutoPay ? (
+                                                                                    <><RefreshCw size={17} /> Pay ₹{selectedPkg.price.toLocaleString("en-IN")} & Setup AutoPay</>
+                                                                                ) : (
+                                                                                    `Pay ₹${selectedPkg.price.toLocaleString("en-IN")} Now (One-time)`
+                                                                                )}
+                                                                            </Button>
+                                                                            {selectedPkg.price > 0 && (
+                                                                                <p className="text-center text-muted mt-2 mb-0" style={{ fontSize: "12px" }}>
+                                                                                    {isAutoPay ? (
+                                                                                        <span>🔒 Auto-debit via UPI AutoPay / e-Mandate • Cancel anytime from settings</span>
+                                                                                    ) : (
+                                                                                        <span>⚡ One-time payment for {selectedPkg.durationInDays} days • No auto-renewal</span>
+                                                                                    )}
+                                                                                </p>
+                                                                            )}
+                                                                        </>
                                                                     ) : null;
                                                                 })()}
                                                             </div>

@@ -297,12 +297,20 @@ const RazorpaySettingsAdmin = () => {
                                                     </td>
                                                     <td className="px-4 py-3 text-end">
                                                         <div className="d-flex justify-content-end gap-2">
-                                                            <button className="btn btn-sm btn-white border" onClick={() => startEdit(config)}>
-                                                                <i className="ti ti-edit" />
-                                                            </button>
-                                                            <button className="btn btn-sm btn-white border text-danger" onClick={() => handleDelete(config.id)}>
-                                                                <i className="ti ti-trash" />
-                                                            </button>
+                                                            {config.id === "env-default" ? (
+                                                                <span className="badge bg-light text-muted border px-2 py-1 fs-12">
+                                                                    .env
+                                                                </span>
+                                                            ) : (
+                                                                <>
+                                                                    <button className="btn btn-sm btn-white border" onClick={() => startEdit(config)} title="Edit">
+                                                                        <i className="ti ti-edit" />
+                                                                    </button>
+                                                                    <button className="btn btn-sm btn-white border text-danger" onClick={() => handleDelete(config.id)} title="Delete">
+                                                                        <i className="ti ti-trash" />
+                                                                    </button>
+                                                                </>
+                                                            )}
                                                         </div>
                                                     </td>
                                                 </tr>

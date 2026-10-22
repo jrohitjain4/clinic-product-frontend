@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { all_routes } from "../../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
-import 'overlayscrollbars/overlayscrollbars.css';
+import 'overlayscrollbars/styles/overlayscrollbars.css';
 
 const Chat = () => {
   return (

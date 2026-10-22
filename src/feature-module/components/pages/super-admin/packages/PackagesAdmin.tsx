@@ -1156,7 +1156,6 @@ const PackagesAdmin = () => {
                                                 }
                                             )}
                                         </div>
-                                    </div>                                        </div>
                                     </div>
 
                                     {/* 2. Core Package Info */}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { apiUrl } from "../../../../../core/config/api";
 import { toast } from "react-toastify";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 interface SmtpConfig {
     id: string;
@@ -183,9 +184,10 @@ const EmailSettingsAdmin = () => {
                                     <form onSubmit={handleAddOrUpdate}>
                                         <div className="mb-3">
                                             <label className="form-label fw-medium">Gmail Address</label>
-                                            <input
+                                            <IconFormControl
                                                 type="email"
-                                                className="form-control form-control-lg fs-14"
+                                                fieldLabel="email"
+                                                className="form-control-lg fs-14"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
                                                 placeholder="example@gmail.com"
@@ -194,9 +196,10 @@ const EmailSettingsAdmin = () => {
                                         </div>
                                         <div className="mb-4">
                                             <label className="form-label fw-medium">App Password</label>
-                                            <input
+                                            <IconFormControl
                                                 type="password"
-                                                className="form-control form-control-lg fs-14"
+                                                fieldLabel="password"
+                                                className="form-control-lg fs-14"
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
                                                 placeholder="Enter 16-character app password"

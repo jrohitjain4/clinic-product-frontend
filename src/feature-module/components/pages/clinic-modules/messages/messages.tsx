@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 const Messages = () => {
   return (
@@ -1943,10 +1944,10 @@ const Messages = () => {
                       </Link>
                     </div>
                     <div className="form-wrap">
-                      <input
+                      <IconFormControl
+                        fieldLabel="message"
                         type="text"
-                        className="form-control"
-                        placeholder="Type Your Message"
+                        placeholder="Type your message"
                       />
                     </div>
                     <div className="form-item emoj-action-foot">

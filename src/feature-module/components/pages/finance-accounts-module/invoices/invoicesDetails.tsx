@@ -1,39 +1,53 @@
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useParams, useLocation } from "react-router-dom";
 import { all_routes } from "../../../../routes/all_routes";
 import { apiUrl } from "../../../../../core/config/api";
 import dayjs from "dayjs";
-import InvoiceSlip from "../../patient-modules/patient-invoice-details/InvoiceSlip";
+import ClinicInvoicePrintLayout from "./ClinicInvoicePrintLayout";
 import html2pdf from "html2pdf.js";
 
 const InvoicesDetails = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const fromPatientId = location.state?.fromPatientId;
   const [invoice, setInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const handleInvoicePrint = () => {
-    const el = document.getElementById('print-invoice-slip');
-    if (!el) return;
-    el.style.display = 'block';
-    window.print();
-    setTimeout(() => { el.style.display = 'none'; }, 1500);
+    const root = document.getElementById("clinic-invoice-print");
+    if (!root) return;
+    requestAnimationFrame(() => {
+      setTimeout(() => window.print(), 100);
+    });
   };
 
   const handleInvoiceDownload = () => {
-    const el = document.getElementById('print-invoice-slip');
+    const el = document.getElementById("clinic-invoice-print");
     if (!el || !invoice) return;
-    el.style.display = 'block';
+
+    const prevStyle = el.getAttribute("style") || "";
+    el.setAttribute(
+      "style",
+      "position:fixed;left:0;top:0;width:210mm;opacity:1;z-index:99999;pointer-events:none;background:#fff;"
+    );
+
     const opt = {
-      margin: 0,
-      filename: `Invoice-${invoice.invoiceCode || 'record'}.pdf`,
-      image: { type: 'jpeg' as const, quality: 0.98 },
+      margin: 10,
+      filename: `Invoice-${invoice.invoiceCode || "record"}.pdf`,
+      image: { type: "jpeg" as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
     };
-    html2pdf().from(el).set(opt).save()
-      .then(() => { el.style.display = 'none'; })
-      .catch(() => { el.style.display = 'none'; });
+
+    html2pdf()
+      .from(el)
+      .set(opt)
+      .save()
+      .finally(() => {
+        if (prevStyle) el.setAttribute("style", prevStyle);
+        else el.removeAttribute("style");
+      });
   };
 
   useEffect(() => {
@@ -61,6 +75,27 @@ const InvoicesDetails = () => {
     ? dayjs(invoice.dueDate).diff(dayjs(), "day")
     : null;
 
+  const clinicInfo = useMemo(() => {
+    if (!invoice) return { name: "—", address: "—", phone: "", email: "" };
+
+    const clinic = invoice.clinic || {};
+    const addressParts = [
+      clinic.addressLine1,
+      clinic.addressLine2,
+      clinic.city,
+      clinic.state,
+      clinic.country,
+      clinic.pincode ? `PIN - ${clinic.pincode}` : "",
+    ].filter(Boolean);
+
+    return {
+      name: clinic.name || invoice.clinicName || "Your Clinic",
+      address: addressParts.length > 0 ? addressParts.join(", ") : "Billing address on file",
+      phone: clinic.phone || clinic.whatsappNumber || "",
+      email: clinic.ownerEmail || "",
+    };
+  }, [invoice]);
+
   const statusColor =
     invoice?.paymentStatus === "Paid"
       ? "bg-success"
@@ -78,10 +113,17 @@ const InvoicesDetails = () => {
               <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-3 pb-3 border-bottom">
                 <div className="flex-grow-1">
                   <h6 className="fw-bold mb-0 d-flex align-items-center">
-                    <Link to={all_routes.invoices} className="">
-                      <i className="ti ti-chevron-left me-1 fs-14" />
-                      Invoices
-                    </Link>
+                    {fromPatientId ? (
+                      <Link to={all_routes.patientDetails.replace(":id", fromPatientId)}>
+                        <i className="ti ti-chevron-left me-1 fs-14" />
+                        Patient Details
+                      </Link>
+                    ) : (
+                      <Link to={all_routes.invoices} className="">
+                        <i className="ti ti-chevron-left me-1 fs-14" />
+                        Invoices
+                      </Link>
+                    )}
                   </h6>
                 </div>
               </div>
@@ -176,13 +218,21 @@ const InvoicesDetails = () => {
                       <div className="col-lg-4">
                         <h5 className="mb-2 fs-16 fw-bold">Clinic</h5>
                         <p className="text-dark fw-medium mb-1">
-                          Your Clinic
+                          {clinicInfo.name}
                         </p>
                         <p className="text-body mb-1 pe-5">
-                          <span className="text-body">
-                            Billing address on file
-                          </span>
+                          {clinicInfo.address}
                         </p>
+                        {clinicInfo.phone && (
+                          <p className="text-body mb-1">
+                            {clinicInfo.phone}
+                          </p>
+                        )}
+                        {clinicInfo.email && (
+                          <p className="text-body mb-0">
+                            {clinicInfo.email}
+                          </p>
+                        )}
                       </div>
                       <div className="col-lg-4 text-lg-end">
                         <h5 className="mb-2 fs-16 fw-bold">Invoice To</h5>
@@ -329,28 +379,10 @@ const InvoicesDetails = () => {
         </div>
       </div>
 
-      {/* Hidden Invoice Slip for Print/Download */}
-      <div id="print-invoice-slip" style={{ display: 'none' }}>
-        <InvoiceSlip invoice={invoice} />
-      </div>
+      <ClinicInvoicePrintLayout invoice={invoice} />
 
       <style>{`
         .shadow-primary { box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39); }
-        @media print {
-          body * { visibility: hidden !important; }
-          #print-invoice-slip, #print-invoice-slip * { visibility: visible !important; }
-          #print-invoice-slip {
-            position: fixed !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 21cm !important;
-            height: 29.7cm !important;
-            z-index: 99999 !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            overflow: hidden !important;
-          }
-        }
       `}</style>
     </>
   );

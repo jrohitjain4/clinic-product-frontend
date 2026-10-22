@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { all_routes } from "../../../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../../../../core/imageWithBasePath";
+import { IconFormControl } from "../../../../../../../core/common/form-fields";
 
 const Modals = () => {
   return (
@@ -26,13 +27,13 @@ const Modals = () => {
                   <label className="form-label">
                     Tax Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl fieldLabel="Title" type="text" placeholder="Enter tax name" />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">
                     Tax Rate (%)<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl fieldLabel="Tax Rate" type="text" placeholder="Enter tax rate" />
                 </div>
               </div>
               <div className="modal-footer d-flex align-items-center gap-1">
@@ -73,9 +74,10 @@ const Modals = () => {
                   <label className="form-label">
                     Tax Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Title"
                     type="text"
-                    className="form-control"
+                    placeholder="Enter tax name"
                     defaultValue="VAT"
                   />
                 </div>
@@ -83,9 +85,10 @@ const Modals = () => {
                   <label className="form-label">
                     Tax Rate (%)<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Tax Rate"
                     type="text"
-                    className="form-control"
+                    placeholder="Enter tax rate"
                     defaultValue="10%"
                   />
                 </div>
@@ -182,7 +185,7 @@ const Modals = () => {
                   <label className="form-label">
                     Tax Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl fieldLabel="Title" type="text" placeholder="Enter tax name" />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">
@@ -192,6 +195,7 @@ const Modals = () => {
                     className="input-tags form-control"
                     id="inputBox2"
                     type="text"
+                    placeholder="Enter sub taxes"
                     data-role="tagsinput"
                     name="specialist"
                   />
@@ -235,7 +239,7 @@ const Modals = () => {
                   <label className="form-label">
                     Tax Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl fieldLabel="Title" type="text" placeholder="Enter tax name" />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">
@@ -244,6 +248,7 @@ const Modals = () => {
                   <input
                     className="input-tags form-control"
                     type="text"
+                    placeholder="Enter sub taxes"
                     data-role="tagsinput"
                     name="specialist"
                     defaultValue="CGST, SGST"

@@ -66,224 +66,325 @@ const SuperAdminDashboard = () => {
     <>
       <div className="page-wrapper dashboard-page-wrapper">
         <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
           .dashboard-page-wrapper {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%) !important;
+            background-color: #F8FAFC !important;
             min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
           }
           .dashboard-page-wrapper .content {
             background: transparent !important;
-            padding: 15px 15px 2px 15px !important;
+            padding: 32px 32px 20px 32px !important;
+            max-width: 1600px;
+            margin: 0 auto;
+          }
+          /* Premium Hero Cards */
+          .hero-card {
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 0 3px rgba(0,0,0,0.02);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+          }
+          .hero-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.06), 0 4px 8px -2px rgba(0,0,0,0.04);
+            border-color: rgba(203, 213, 225, 1);
+          }
+          .hero-card-bg-glow {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.15;
+            z-index: 0;
+            pointer-events: none;
+          }
+          .hero-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            z-index: 1;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 10px rgba(0,0,0,0.05);
+          }
+          .hero-val {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #0f172a;
+            margin-top: 16px;
+            margin-bottom: 4px;
+            z-index: 1;
+            position: relative;
+          }
+          .hero-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            z-index: 1;
+            position: relative;
           }
 
-          .dashboard-page-wrapper .card {
-            border: 1px solid #94a3b8 !important;
-            border-radius: 12px !important;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.04) !important;
-            background-color: #ffffff;
-            margin-bottom: 0 !important;
+          /* Analytics Cards */
+          .analytic-card {
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+            margin-bottom: 24px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            height: 100%;
           }
-          .dashboard-page-wrapper .card-header {
-             padding: 12px 15px !important;
-             background: transparent !important;
-             border-bottom: 1px solid #f1f5f9 !important;
+          .analytic-card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(241, 245, 249, 1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
           }
-          .dashboard-page-wrapper .card-body {
-             padding: 12px 15px !important;
+          .analytic-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
           }
-          .dashboard-page-wrapper .row {
-             margin-bottom: 8px !important;
+          .analytic-card-body {
+            padding: 24px;
           }
+          .btn-link {
+            color: #4f46e5 !important;
+            font-weight: 600;
+            font-size: 13px;
+          }
+          .btn-link:hover {
+            color: #6366f1 !important;
+          }
+          .list-row-item {
+            border: 1px solid #f1f5f9;
+            background-color: #f8fafc;
+            transition: all 0.2s ease;
+            border-radius: 12px;
+            padding: 10px;
+          }
+          .list-row-item:hover {
+            border-color: #e2e8f0;
+            background: #ffffff;
+          }
+
+          /* Animations */
+          .fade-in-up {
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .delay-1 { animation-delay: 0.1s; }
+          .delay-2 { animation-delay: 0.2s; }
+          .delay-3 { animation-delay: 0.3s; }
+          .delay-4 { animation-delay: 0.4s; }
         `}</style>
 
         <div className="content">
           {/* Page Header */}
-          <div className="d-md-flex d-block align-items-center justify-content-between mb-3">
-            <div className="my-auto mb-2">
-              <h3 className="page-title mb-1 fw-bold fs-20">Super Admin Dashboard</h3>
-              <p className="text-muted mb-0 fs-13">Here's the overall platform overview.</p>
+          <div className="d-flex align-items-sm-center justify-content-between flex-wrap gap-2 mb-4 fade-in-up">
+            <div>
+              <h4 className="fw-bold mb-1 fs-20" style={{ fontSize: '32px', letterSpacing: '-0.5px', color: '#0f172a' }}>Super Admin Dashboard</h4>
+              <p className="mb-0" style={{ color: '#64748b', fontSize: '15px' }}>Here's the overall platform overview.</p>
             </div>
           </div>
           {/* /Page Header */}
 
-          <div className="row g-2 mb-2">
+          <div className="row g-4 mb-4">
             {/* Enterprises */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#6366f1' }}>
-                        <i className="ti ti-building-hospital fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Enterprises</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{analytics.totalClinics || 0}</h4>
-                      </div>
-                    </div>
-                    <span className="badge fw-semibold" style={{ color: '#10b981', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Active</span>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-1">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#3b82f6' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#dbeafe', color: '#2563eb' }}>
+                    <i className="ti ti-building-hospital" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Total clinics on platform</p>
+                  <div className="badge border bg-light text-muted fw-semibold rounded-pill px-2 py-1" style={{ fontSize: '10px' }}>
+                    Active
+                  </div>
+                </div>
+                <div>
+                  <div className="hero-val">{analytics.totalClinics || 0}</div>
+                  <div className="hero-title">Enterprises</div>
                 </div>
               </div>
             </div>
 
             {/* Free Trial Packages */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#3b82f6' }}>
-                        <i className="ti ti-gift fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Free Trial Packages</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{analytics.freeTrials || 0}</h4>
-                      </div>
-                    </div>
-                    <span className="badge fw-semibold" style={{ color: '#3b82f6', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Trial</span>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-2">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#3b82f6' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#dbeafe', color: '#2563eb' }}>
+                    <i className="ti ti-gift" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Clinics currently on trial</p>
+                  <div className="badge border bg-light text-muted fw-semibold rounded-pill px-2 py-1" style={{ fontSize: '10px' }}>
+                    Trial
+                  </div>
+                </div>
+                <div>
+                  <div className="hero-val">{analytics.freeTrials || 0}</div>
+                  <div className="hero-title">Free Trial Packages</div>
+                  <p className="mb-0 mt-1" style={{ fontSize: '11px', color: '#94a3b8', zIndex: 1, position: 'relative' }}>Clinics currently on trial</p>
                 </div>
               </div>
             </div>
 
             {/* Premium Packages */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#10b981' }}>
-                        <i className="ti ti-crown fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Premium Packages</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{analytics.premiumPackages || 0}</h4>
-                      </div>
-                    </div>
-                    <span className="badge fw-semibold" style={{ color: '#f97316', backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Upgraded</span>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-3">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#ec4899' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#fce7f3', color: '#db2777' }}>
+                    <i className="ti ti-crown" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Clinics with paid plans</p>
+                  <div className="badge border bg-light text-muted fw-semibold rounded-pill px-2 py-1" style={{ fontSize: '10px' }}>
+                    Upgraded
+                  </div>
+                </div>
+                <div>
+                  <div className="hero-val">{analytics.premiumPackages || 0}</div>
+                  <div className="hero-title">Premium Packages</div>
                 </div>
               </div>
             </div>
 
             {/* Demo Bookings */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#f59e0b' }}>
-                        <i className="ti ti-calendar-event fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Demo Bookings</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{analytics.demoBookings || 0}</h4>
-                      </div>
-                    </div>
-                    <span className="badge fw-semibold" style={{ color: '#8b5cf6', backgroundColor: '#f3e8ff', border: '1px solid #ddd6fe', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Requests</span>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-4">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#f59e0b' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#fffbeb', color: '#d97706' }}>
+                    <i className="ti ti-calendar-event" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Pending demo requests</p>
+                  <div className="badge border bg-light text-muted fw-semibold rounded-pill px-2 py-1" style={{ fontSize: '10px' }}>
+                    Requests
+                  </div>
+                </div>
+                <div>
+                  <div className="hero-val">{analytics.demoBookings || 0}</div>
+                  <div className="hero-title">Demo Bookings</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="row g-2 mb-3">
+          <div className="row g-4 mb-4">
             {/* No of Packages */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#64748b' }}>
-                        <i className="ti ti-box fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>No of Packages</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{analytics.totalPackages || 0}</h4>
-                      </div>
-                    </div>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-1">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#64748b' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#f1f5f9', color: '#475569' }}>
+                    <i className="ti ti-box" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Total available plans</p>
+                </div>
+                <div>
+                  <div className="hero-val">{analytics.totalPackages || 0}</div>
+                  <div className="hero-title">No of Packages</div>
                 </div>
               </div>
             </div>
 
             {/* Tickets No. */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#ef4444' }}>
-                        <i className="ti ti-ticket fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Tickets No.</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{analytics.totalTickets || 0}</h4>
-                      </div>
-                    </div>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-2">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#ef4444' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#fef2f2', color: '#ef4444' }}>
+                    <i className="ti ti-ticket" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Total support tickets</p>
+                </div>
+                <div>
+                  <div className="hero-val">{analytics.totalTickets || 0}</div>
+                  <div className="hero-title">Total Tickets</div>
                 </div>
               </div>
             </div>
 
             {/* Open Tickets */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#f43f5e' }}>
-                        <i className="ti ti-ticket-off fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Open Tickets No</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{analytics.openTickets || 0}</h4>
-                      </div>
-                    </div>
-                    <span className="badge fw-semibold" style={{ color: '#ef4444', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Unresolved</span>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-3">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#f43f5e' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#fff1f2', color: '#e11d48' }}>
+                    <i className="ti ti-ticket-off" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Tickets needing action</p>
+                  <div className="badge border bg-light text-muted fw-semibold rounded-pill px-2 py-1" style={{ fontSize: '10px' }}>
+                    Unresolved
+                  </div>
+                </div>
+                <div>
+                  <div className="hero-val">{analytics.openTickets || 0}</div>
+                  <div className="hero-title">Open Tickets</div>
                 </div>
               </div>
             </div>
 
             {/* Total Revenue */}
-            <div className="col-xxl-3 col-xl-6 col-md-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#10b981' }}>
-                        <i className="ti ti-currency-rupee fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Total Revenue</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>₹{(analytics.totalRevenue || 0).toLocaleString("en-IN")}</h4>
-                      </div>
-                    </div>
-                    <span className="badge fw-semibold" style={{ color: '#10b981', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Lifetime</span>
+            <div className="col-xl-3 col-lg-6 col-md-6 col-12 fade-in-up delay-4">
+              <div className="hero-card">
+                <div className="hero-card-bg-glow" style={{ background: '#10b981' }}></div>
+                <div className="d-flex justify-content-between align-items-start">
+                  <div className="hero-icon-box" style={{ background: '#d1fae5', color: '#059669' }}>
+                    <i className="ti ti-currency-rupee" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Overall platform revenue</p>
+                  <div className="badge border bg-light text-muted fw-semibold rounded-pill px-2 py-1" style={{ fontSize: '10px' }}>
+                    Lifetime
+                  </div>
+                </div>
+                <div>
+                  <div className="hero-val">₹{(analytics.totalRevenue || 0).toLocaleString("en-IN")}</div>
+                  <div className="hero-title">Total Revenue</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="row g-3 mb-4">
+          <div className="row g-4 mb-4">
             {/* Enterprises Chart */}
-            <div className="col-xl-4 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Enterprises Overview</h5>
-                  <Link to={all_routes.tenants} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
+            <div className="col-xl-4 col-12 fade-in-up delay-1">
+              <div className="analytic-card w-100 flex-fill mb-0">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#e0e7ff', color: '#4f46e5', boxShadow: 'none' }}>
+                      <i className="ti ti-building-hospital" />
+                    </div>
+                    Enterprises Overview
+                  </h3>
+                  <Link to={all_routes.tenants} className="btn-link text-decoration-none fs-13">View All</Link>
                 </div>
-                <div className="card-body p-3 d-flex flex-column justify-content-center align-items-center">
+                <div className="analytic-card-body p-3 d-flex flex-column justify-content-center align-items-center">
                   <div style={{ width: '100%', maxWidth: '300px' }}>
                     <ReactApexChart options={clinicChartOptions} series={clinicChartSeries} type="donut" height={220} />
                   </div>
@@ -310,20 +411,23 @@ const SuperAdminDashboard = () => {
             </div>
 
             {/* Tickets Block */}
-            <div className="col-xl-4 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <div className="d-flex align-items-center gap-2">
-                    <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Recent Tickets</h5>
+            <div className="col-xl-4 col-12 fade-in-up delay-2">
+              <div className="analytic-card w-100 flex-fill mb-0">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#fee2e2', color: '#ef4444', boxShadow: 'none' }}>
+                      <i className="ti ti-ticket" />
+                    </div>
+                    Recent Tickets
                     <span className="badge bg-danger-transparent text-danger fw-semibold" style={{ borderRadius: '4px', fontSize: '10px', padding: '3px 6px' }}>{analytics.ticketsList?.length || 0}</span>
-                  </div>
-                  <Link to={all_routes.tickets || "#"} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
+                  </h3>
+                  <Link to={all_routes.tickets || "#"} className="btn-link text-decoration-none fs-13">View All</Link>
                 </div>
-                <div className="card-body p-3">
+                <div className="analytic-card-body p-3">
                   {analytics.ticketsList && analytics.ticketsList.length > 0 ? (
                     <div className="d-flex flex-column gap-3">
                       {analytics.ticketsList.map((ticket: any) => (
-                        <div key={ticket.id} className="d-flex align-items-center justify-content-between p-2 rounded-3" style={{ border: '1px solid #f1f5f9', backgroundColor: '#f8fafc', transition: 'all 0.2s ease' }}>
+                        <div key={ticket.id} className="d-flex align-items-center justify-content-between list-row-item">
                           <div className="d-flex align-items-center gap-3">
                             <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '36px', height: '36px', backgroundColor: '#fee2e2', color: '#ef4444' }}>
                               <i className="ti ti-ticket fs-16" />
@@ -350,15 +454,18 @@ const SuperAdminDashboard = () => {
             </div>
 
             {/* Recent Emails */}
-            <div className="col-xl-4 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <div className="d-flex align-items-center gap-2">
-                    <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Recent Emails</h5>
-                  </div>
-                  <Link to={all_routes.superAdminEmailSettings || "#"} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>Settings</Link>
+            <div className="col-xl-4 col-12 fade-in-up delay-3">
+              <div className="analytic-card w-100 flex-fill mb-0">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#dbeafe', color: '#2563eb', boxShadow: 'none' }}>
+                      <i className="ti ti-mail" />
+                    </div>
+                    Recent Emails
+                  </h3>
+                  <Link to={all_routes.superAdminEmailSettings || "#"} className="btn-link text-decoration-none fs-13">Settings</Link>
                 </div>
-                <div className="card-body p-3">
+                <div className="analytic-card-body p-3">
                   <div className="d-flex flex-column gap-3">
                     {[
                       { id: 1, title: 'Welcome Email', target: 'New Clinics', status: 'Active', icon: 'ti-mail', color: '#3b82f6', bg: '#eff6ff' },
@@ -366,7 +473,7 @@ const SuperAdminDashboard = () => {
                       { id: 3, title: 'Password Reset', target: 'Security', status: 'Active', icon: 'ti-lock', color: '#f59e0b', bg: '#fffbeb' },
                       { id: 4, title: 'Trial Expiry Notice', target: 'Trial Clinics', status: 'Paused', icon: 'ti-alert-circle', color: '#ef4444', bg: '#fef2f2' }
                     ].map((email) => (
-                      <div key={email.id} className="d-flex align-items-center justify-content-between p-2 rounded-3" style={{ border: '1px solid #f1f5f9', backgroundColor: '#f8fafc', transition: 'all 0.2s ease' }}>
+                      <div key={email.id} className="d-flex align-items-center justify-content-between list-row-item">
                         <div className="d-flex align-items-center gap-3">
                           <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '36px', height: '36px', backgroundColor: email.bg, color: email.color }}>
                             <i className={`ti ${email.icon} fs-16`} />
@@ -388,19 +495,24 @@ const SuperAdminDashboard = () => {
           </div>
 
           {/* Third Row: Demo Bookings, Razorpay, Packages */}
-          <div className="row g-3 mb-4">
+          <div className="row g-4 mb-4">
             {/* Demo Bookings Block */}
-            <div className="col-xl-4 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Demo Bookings</h5>
-                  <Link to={all_routes.demoBookings || "#"} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
+            <div className="col-xl-4 col-12 fade-in-up delay-1">
+              <div className="analytic-card w-100 flex-fill mb-0">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#fef3c7', color: '#d97706', boxShadow: 'none' }}>
+                      <i className="ti ti-calendar-event" />
+                    </div>
+                    Demo Bookings
+                  </h3>
+                  <Link to={all_routes.demoBookings || "#"} className="btn-link text-decoration-none fs-13">View All</Link>
                 </div>
-                <div className="card-body p-3">
+                <div className="analytic-card-body p-3">
                   {analytics.demoBookingsList && analytics.demoBookingsList.length > 0 ? (
                     <div className="d-flex flex-column gap-3">
                       {analytics.demoBookingsList.map((demo: any) => (
-                        <div key={demo.id} className="d-flex align-items-center justify-content-between p-2 rounded-3" style={{ border: '1px solid #f1f5f9', backgroundColor: '#f8fafc', transition: 'all 0.2s ease' }}>
+                        <div key={demo.id} className="d-flex align-items-center justify-content-between list-row-item">
                           <div className="d-flex align-items-center gap-3">
                             <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '36px', height: '36px', backgroundColor: '#fef3c7', color: '#f59e0b' }}>
                               <i className="ti ti-calendar-event fs-16" />
@@ -427,17 +539,22 @@ const SuperAdminDashboard = () => {
             </div>
 
             {/* Razorpay (Transactions) Block */}
-            <div className="col-xl-4 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Razorpay Payments</h5>
-                  <Link to={all_routes.purchaseTransaction || "#"} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
+            <div className="col-xl-4 col-12 fade-in-up delay-2">
+              <div className="analytic-card w-100 flex-fill mb-0">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#d1fae5', color: '#059669', boxShadow: 'none' }}>
+                      <i className="ti ti-credit-card" />
+                    </div>
+                    Razorpay Payments
+                  </h3>
+                  <Link to={all_routes.purchaseTransaction || "#"} className="btn-link text-decoration-none fs-13">View All</Link>
                 </div>
-                <div className="card-body p-3">
+                <div className="analytic-card-body p-3">
                   {analytics.transactionHistory && analytics.transactionHistory.length > 0 ? (
                     <div className="d-flex flex-column gap-3">
                       {analytics.transactionHistory.slice(0, 4).map((txn: any) => (
-                        <div key={txn.transactionId} className="d-flex align-items-center justify-content-between p-2 rounded-3" style={{ border: '1px solid #f1f5f9', backgroundColor: '#f8fafc', transition: 'all 0.2s ease' }}>
+                        <div key={txn.transactionId} className="d-flex align-items-center justify-content-between list-row-item">
                           <div className="d-flex align-items-center gap-3">
                             <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '36px', height: '36px', backgroundColor: '#dcfce7', color: '#16a34a' }}>
                               <i className="ti ti-currency-rupee fs-16" />
@@ -467,17 +584,22 @@ const SuperAdminDashboard = () => {
             </div>
 
             {/* Packages List Block */}
-            <div className="col-xl-4 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Packages</h5>
-                  <Link to={all_routes.packages || "#"} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
+            <div className="col-xl-4 col-12 fade-in-up delay-3">
+              <div className="analytic-card w-100 flex-fill mb-0">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#f3e8ff', color: '#9333ea', boxShadow: 'none' }}>
+                      <i className="ti ti-package" />
+                    </div>
+                    Packages
+                  </h3>
+                  <Link to={all_routes.packages || "#"} className="btn-link text-decoration-none fs-13">View All</Link>
                 </div>
-                <div className="card-body p-3">
+                <div className="analytic-card-body p-3">
                   {analytics.packagesList && analytics.packagesList.length > 0 ? (
                     <div className="d-flex flex-column gap-3">
                       {analytics.packagesList.map((pkg: any) => (
-                        <div key={pkg.id} className="d-flex align-items-center justify-content-between p-2 rounded-3" style={{ border: '1px solid #f1f5f9', backgroundColor: '#f8fafc', transition: 'all 0.2s ease' }}>
+                        <div key={pkg.id} className="d-flex align-items-center justify-content-between list-row-item">
                           <div className="d-flex align-items-center gap-3">
                             <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '36px', height: '36px', backgroundColor: '#f3e8ff', color: '#9333ea' }}>
                               <i className="ti ti-box fs-16" />
@@ -508,22 +630,23 @@ const SuperAdminDashboard = () => {
           </div>
 
           {/* Quick Links Blocks at the bottom */}
-          <div className="row g-3">
+          <div className="row g-4">
             {/* Privacy Policy Block */}
-            <div className="col-xl-4 col-md-6 col-12">
+            <div className="col-xl-4 col-md-6 col-12 fade-in-up delay-1">
               <Link to={all_routes.privacyPolicyAdmin || "#"} className="text-decoration-none">
-                <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px', transition: 'all 0.3s ease' }}>
-                  <div className="card-body p-4 d-flex align-items-center justify-content-between">
+                <div className="hero-card">
+                  <div className="hero-card-bg-glow" style={{ background: '#10b981' }}></div>
+                  <div className="d-flex align-items-center justify-content-between">
                     <div className="d-flex align-items-center gap-3">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '48px', height: '48px', backgroundColor: '#ecfdf5', color: '#10b981' }}>
-                        <i className="ti ti-shield-check fs-24" />
+                      <div className="hero-icon-box" style={{ background: '#ecfdf5', color: '#10b981' }}>
+                        <i className="ti ti-shield-check" />
                       </div>
-                      <div>
+                      <div style={{ zIndex: 1, position: 'relative' }}>
                         <h5 className="mb-1 fw-bold text-dark fs-16">Privacy Policy</h5>
                         <p className="mb-0 text-muted fs-12">Update privacy terms</p>
                       </div>
                     </div>
-                    <div className="text-muted">
+                    <div className="text-muted" style={{ zIndex: 1, position: 'relative' }}>
                       <i className="ti ti-chevron-right fs-20" />
                     </div>
                   </div>
@@ -532,20 +655,21 @@ const SuperAdminDashboard = () => {
             </div>
 
             {/* Refund Policy Block */}
-            <div className="col-xl-4 col-md-6 col-12">
+            <div className="col-xl-4 col-md-6 col-12 fade-in-up delay-2">
               <Link to={all_routes.refundPolicyAdmin || "#"} className="text-decoration-none">
-                <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px', transition: 'all 0.3s ease' }}>
-                  <div className="card-body p-4 d-flex align-items-center justify-content-between">
+                <div className="hero-card">
+                  <div className="hero-card-bg-glow" style={{ background: '#3b82f6' }}></div>
+                  <div className="d-flex align-items-center justify-content-between">
                     <div className="d-flex align-items-center gap-3">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '48px', height: '48px', backgroundColor: '#eff6ff', color: '#3b82f6' }}>
-                        <i className="ti ti-receipt-refund fs-24" />
+                      <div className="hero-icon-box" style={{ background: '#eff6ff', color: '#3b82f6' }}>
+                        <i className="ti ti-receipt-refund" />
                       </div>
-                      <div>
+                      <div style={{ zIndex: 1, position: 'relative' }}>
                         <h5 className="mb-1 fw-bold text-dark fs-16">Refund Policy</h5>
                         <p className="mb-0 text-muted fs-12">Manage refund rules</p>
                       </div>
                     </div>
-                    <div className="text-muted">
+                    <div className="text-muted" style={{ zIndex: 1, position: 'relative' }}>
                       <i className="ti ti-chevron-right fs-20" />
                     </div>
                   </div>
@@ -554,20 +678,21 @@ const SuperAdminDashboard = () => {
             </div>
 
             {/* Terms & Conditions Block */}
-            <div className="col-xl-4 col-md-6 col-12">
+            <div className="col-xl-4 col-md-6 col-12 fade-in-up delay-3">
               <Link to={all_routes.termsConditionAdmin || "#"} className="text-decoration-none">
-                <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px', transition: 'all 0.3s ease' }}>
-                  <div className="card-body p-4 d-flex align-items-center justify-content-between">
+                <div className="hero-card">
+                  <div className="hero-card-bg-glow" style={{ background: '#f97316' }}></div>
+                  <div className="d-flex align-items-center justify-content-between">
                     <div className="d-flex align-items-center gap-3">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '48px', height: '48px', backgroundColor: '#fff7ed', color: '#f97316' }}>
-                        <i className="ti ti-file-text fs-24" />
+                      <div className="hero-icon-box" style={{ background: '#fff7ed', color: '#f97316' }}>
+                        <i className="ti ti-file-text" />
                       </div>
-                      <div>
+                      <div style={{ zIndex: 1, position: 'relative' }}>
                         <h5 className="mb-1 fw-bold text-dark fs-16">Terms & Conditions</h5>
                         <p className="mb-0 text-muted fs-12">Manage user agreements</p>
                       </div>
                     </div>
-                    <div className="text-muted">
+                    <div className="text-muted" style={{ zIndex: 1, position: 'relative' }}>
                       <i className="ti ti-chevron-right fs-20" />
                     </div>
                   </div>

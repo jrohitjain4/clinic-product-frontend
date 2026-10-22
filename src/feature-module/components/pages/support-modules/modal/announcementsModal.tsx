@@ -3,6 +3,7 @@ import { all_routes } from "../../../../routes/all_routes";
 import { StatusActive } from "../../../../../core/common/selectOption";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
+import { IconFormControl, IconTextarea } from "../../../../../core/common/form-fields";
 
 const AnnouncementsModal = () => {
   return (
@@ -31,19 +32,20 @@ const AnnouncementsModal = () => {
                     Announcement Title
                     <span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl type="text" fieldLabel="title" placeholder="e.g., System Maintenance Scheduled" />
                 </div>
                 <div className="mb-2">
                   <label className="form-label">
                     Announcement Type<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl type="text" fieldLabel="category" placeholder="Announcement Type" />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">Content</label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="description"
                     rows={3}
+                    placeholder="Enter announcement content..."
                     defaultValue={""}
                   />
                 </div>
@@ -89,9 +91,9 @@ const AnnouncementsModal = () => {
                     Announcement Title
                     <span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
+                    fieldLabel="title"
                     defaultValue="System Maintenance Scheduled"
                   />
                 </div>
@@ -99,16 +101,17 @@ const AnnouncementsModal = () => {
                   <label className="form-label">
                     Announcement Type<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
+                    fieldLabel="category"
+                    placeholder="Announcement Type"
                     defaultValue="System Update"
                   />
                 </div>
                 <div className="mb-2">
                   <label className="form-label">Content</label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="description"
                     rows={3}
                     defaultValue={
                       "Platform will be under maintenance on 07 Apr from 1 AM to 3 AM."

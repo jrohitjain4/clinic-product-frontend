@@ -3,6 +3,10 @@ import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import { DatePicker, TimePicker, type TimePickerProps } from "antd";
 import dayjs from "dayjs";
 import { all_routes } from "../../../../../routes/all_routes";
+import {
+  IconFormControl,
+  IconTextarea,
+} from "../../../../../../core/common/form-fields";
 
 const Modal = () => {
   const getModalContainer = () => {
@@ -39,9 +43,12 @@ const Modal = () => {
                         Appointment ID <span className="text-danger">*</span>
                       </label>
                       <div className="input-group">
-                        <input
+                        <IconFormControl
+                          fieldLabel="Appointment ID"
+                          icon="ti ti-hash"
                           type="text"
-                          className="form-control rounded bg-light"
+                          className="rounded bg-light"
+                          placeholder="Auto-generated appointment ID"
                           defaultValue="AP234354"
                         />
                       </div>
@@ -279,7 +286,12 @@ const Modal = () => {
                         <label className="form-label mb-1 text-dark fs-14 fw-medium">
                           Appointment Reason
                         </label>
-                        <textarea rows={4} className="form-control rounded" />
+                        <IconTextarea
+                          fieldLabel="Appointment Reason"
+                          rows={4}
+                          className="rounded"
+                          placeholder="Enter appointment reason"
+                        />
                       </div>
                     </div>
                   </div>
@@ -399,9 +411,12 @@ const Modal = () => {
                         Appointment ID <span className="text-danger">*</span>
                       </label>
                       <div className="input-group">
-                        <input
+                        <IconFormControl
+                          fieldLabel="Appointment ID"
+                          icon="ti ti-hash"
                           type="text"
-                          className="form-control rounded bg-light"
+                          className="rounded bg-light"
+                          placeholder="Auto-generated appointment ID"
                           defaultValue="AP234354"
                         />
                       </div>
@@ -639,9 +654,11 @@ const Modal = () => {
                         <label className="form-label mb-1 text-dark fs-14 fw-medium">
                           Appointment Reason
                         </label>
-                        <textarea
+                        <IconTextarea
+                          fieldLabel="Appointment Reason"
                           rows={4}
-                          className="form-control rounded"
+                          className="rounded"
+                          placeholder="Enter appointment reason"
                           defaultValue={
                             " An account of the present illness, which includes the circumstances surrounding the onset of recent health changes and the Purpose. "
                           }

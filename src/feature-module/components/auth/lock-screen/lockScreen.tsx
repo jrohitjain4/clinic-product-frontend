@@ -2,6 +2,7 @@ import { useState } from "react";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { Link } from "react-router";
 import { all_routes } from "../../../routes/all_routes";
+import { IconFormControl } from "../../../../core/common/form-fields";
 type PasswordField = "password" | "confirmPassword";
 
 const LockScreen = () => {
@@ -53,18 +54,16 @@ const LockScreen = () => {
                       <div className="mb-3">
                         <label className="form-label">Password</label>
                         <div className="position-relative">
-                          <div className="pass-group input-group position-relative border rounded">
-                            <span className="input-group-text bg-white border-0">
-                              <i className="ti ti-lock text-dark fs-14" />
-                            </span>
-                            <input
+                          <div className="pass-group position-relative">
+                            <IconFormControl
                               type={
                                 passwordVisibility.password
                                   ? "text"
                                   : "password"
                               }
-                              className="pass-input form-control border-start-0 ps-0"
-                              placeholder="****************"
+                              fieldLabel="Password"
+                              placeholder="Password"
+                              className="pass-input pe-5"
                             />
                             <span
                               className={`ti toggle-password text-dark fs-14 ${

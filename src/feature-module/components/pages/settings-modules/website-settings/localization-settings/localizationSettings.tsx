@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { Link } from "react-router"
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar"
 import { toast } from "react-toastify"
+import { IconFormControl, IconTextarea } from "../../../../../../core/common/form-fields"
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000"
 
@@ -96,8 +97,8 @@ const LocalizationSettings = () => {
                               <small className="d-block text-muted">100–150 words</small>
                             </div>
                             <div className="col-lg-12">
-                              <textarea
-                                className="form-control"
+                              <IconTextarea
+                                fieldLabel="Description"
                                 rows={5}
                                 placeholder="Write about your clinic – specialties, mission, patient care philosophy, etc."
                                 value={form.about}
@@ -117,9 +118,9 @@ const LocalizationSettings = () => {
                             <div className="row align-items-center mb-3">
                               <div className="col-12">
                                 <label className="form-label mb-1">{f.label}</label>
-                                <input
+                                <IconFormControl
+                                  fieldLabel={f.label}
                                   type={f.type}
-                                  className="form-control"
                                   placeholder={f.ph}
                                   value={form[f.key]}
                                   min={f.min}

@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { all_routes } from "../../../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../../../../core/imageWithBasePath";
+import { IconFormControl } from "../../../../../../../core/common/form-fields";
 
 const Modals = () => {
   return (
@@ -28,32 +29,32 @@ const Modals = () => {
                   <label className="form-label">
                     Bank Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl fieldLabel="Bank" type="text" placeholder="Enter bank name" />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">
                     Account Number<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl fieldLabel="Account Number" type="text" placeholder="Enter account number" />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">
                     Account Holder Name
                     <span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl fieldLabel="Name" type="text" placeholder="Enter account holder name" />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">
                     Branch<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl type="text" placeholder="Enter branch" />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">
                     ABA Number<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl type="text" placeholder="Enter ABA number" />
                 </div>
               </div>
               <div className="modal-footer d-flex align-items-center gap-1">
@@ -96,9 +97,10 @@ const Modals = () => {
                   <label className="form-label">
                     Bank Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Bank"
                     type="text"
-                    className="form-control"
+                    placeholder="Enter bank name"
                     defaultValue="JPM"
                   />
                 </div>
@@ -106,9 +108,10 @@ const Modals = () => {
                   <label className="form-label">
                     Account Number<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Account Number"
                     type="text"
-                    className="form-control"
+                    placeholder="Enter account number"
                     defaultValue="9471 8424 1832"
                   />
                 </div>
@@ -117,9 +120,10 @@ const Modals = () => {
                     Account Holder Name
                     <span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Name"
                     type="text"
-                    className="form-control"
+                    placeholder="Enter account holder name"
                     defaultValue="Andrew Simons"
                   />
                 </div>
@@ -127,9 +131,9 @@ const Modals = () => {
                   <label className="form-label">
                     Branch<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
+                    placeholder="Enter branch"
                     defaultValue="New York"
                   />
                 </div>
@@ -137,9 +141,9 @@ const Modals = () => {
                   <label className="form-label">
                     ABA Number<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
+                    placeholder="Enter ABA number"
                     defaultValue="{021000021}"
                   />
                 </div>

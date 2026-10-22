@@ -95,7 +95,7 @@ const TherapistsList = () => {
         Phone: d.phone || "",
         Email: d.email || "",
         Fees: d.consultationCharge != null ? `₹${d.consultationCharge}` : "—",
-        Status: d.status === "Active" ? "Available" : (d.status === "Inactive" ? "Unable" : d.status),
+        Status: d.status === "Active" ? "Available" : (d.status === "Inactive" ? "Unavailable" : d.status),
         img: d.profileImage || "assets/img/doctor-placeholder.png",
       })),
     [filteredTherapists]
@@ -180,7 +180,6 @@ const TherapistsList = () => {
         <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
           <Link to={doctorDetailsPath(record.key)} className="text-info p-1" title="View"><i className="ti ti-eye fs-18" /></Link>
           <Link to={editDoctorPath(record.key)} className="text-primary p-1" title="Edit"><i className="ti ti-edit fs-18" /></Link>
-          <button className="bg-transparent border-0 text-secondary p-1" title="Print" onClick={() => { /* print */ }}><i className="ti ti-printer fs-18" /></button>
           <button className="bg-transparent border-0 text-danger p-1" title="Delete" data-bs-toggle="modal" data-bs-target="#delete_modal" onClick={() => setDoctorToDelete(record.key)}><i className="ti ti-trash fs-18" /></button>
         </div>
       ),
@@ -279,7 +278,7 @@ const TherapistsList = () => {
                   data-bs-toggle="dropdown"
                 >
                   <span className="text-truncate">
-                    <span className="text-muted">Status:</span> {filterStatus === "All" ? "All" : filterStatus === "Active" ? "Available" : "Unable"}
+                    <span className="text-muted">Status:</span> {filterStatus === "All" ? "All" : filterStatus === "Active" ? "Available" : "Unavailable"}
                   </span>
                 </Link>
                 <ul className="dropdown-menu dropdown-menu-end p-2">
@@ -295,7 +294,7 @@ const TherapistsList = () => {
                   </li>
                   <li>
                     <Link to="#" className="dropdown-item rounded-1" onClick={(e) => { e.preventDefault(); setFilterStatus("Inactive"); }}>
-                      Unable
+                      Unavailable
                     </Link>
                   </li>
                 </ul>

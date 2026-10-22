@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { useLabCategories } from "../../../../../core/hooks/useLabCategories";
 import EmptyState from "../../../../../core/common/emptyState";
+import { IconFormControl, IconTextarea } from "../../../../../core/common/form-fields";
 
 const CategoryManagement = () => {
   const { categories, loading, createCategory, updateCategory, deleteCategory, bulkDeleteCategories } = useLabCategories();
@@ -247,7 +248,7 @@ const CategoryManagement = () => {
 
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
               <div className="search-field position-relative" style={{ width: "200px" }}>
-                <input type="text" className="form-control fs-13 py-2" placeholder="Search Category..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+                <IconFormControl fieldLabel="search" type="text" className="fs-13 py-2" placeholder="Search Category..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
               </div>
 
               <div className="dropdown">
@@ -311,11 +312,11 @@ const CategoryManagement = () => {
                 <div className="modal-body p-4">
                   <div className="mb-3">
                     <label className="form-label fw-semibold">Category Name <span className="text-danger">*</span></label>
-                    <input type="text" className="form-control" placeholder="e.g. Blood Test" value={formName} onChange={(e) => setFormName(e.target.value)} required />
+                    <IconFormControl fieldLabel="category" type="text" placeholder="e.g. Blood Test" value={formName} onChange={(e) => setFormName(e.target.value)} required />
                   </div>
                   <div className="mb-3">
                     <label className="form-label fw-semibold">Description</label>
-                    <textarea className="form-control" rows={3} placeholder="Provide category details..." value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
+                    <IconTextarea fieldLabel="description" rows={3} placeholder="Provide category details..." value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
                   </div>
                   <div className="mb-3">
                     <label className="form-label fw-semibold">Status</label>
@@ -349,11 +350,11 @@ const CategoryManagement = () => {
                 <div className="modal-body p-4">
                   <div className="mb-3">
                     <label className="form-label fw-semibold">Category Name <span className="text-danger">*</span></label>
-                    <input type="text" className="form-control" value={formName} onChange={(e) => setFormName(e.target.value)} required />
+                    <IconFormControl fieldLabel="category" type="text" value={formName} onChange={(e) => setFormName(e.target.value)} required />
                   </div>
                   <div className="mb-3">
                     <label className="form-label fw-semibold">Description</label>
-                    <textarea className="form-control" rows={3} value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
+                    <IconTextarea fieldLabel="description" rows={3} value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
                   </div>
                   <div className="mb-3">
                     <label className="form-label fw-semibold">Status</label>

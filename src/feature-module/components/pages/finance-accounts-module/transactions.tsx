@@ -8,6 +8,9 @@ import Datatable from "../../../../core/common/dataTable";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
 
+const getInitial = (value?: string) =>
+  (value || "").trim().charAt(0).toUpperCase() || "?";
+
 const TransactionsList = () => {
   const { invoices, loading: invLoading, error: invError } = useClinicInvoices();
   const { payrolls, loading: payLoading, error: payError } = usePayroll();
@@ -21,21 +24,30 @@ const TransactionsList = () => {
 
   const transactions = useMemo(() => {
     const invTrans = invoices
-      .filter((inv) => inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed" || inv.paymentStatus === "Pending")
+      .filter((inv) => inv.paymentStatus === "Paid" || inv.paymentStatus === "Completed" || inv.paymentStatus === "Pending" || inv.paymentStatus === "Partially Paid" || inv.paymentStatus === "Partial" || inv.paymentStatus === "Unpaid")
       .map((inv) => {
         const isPharmacy = inv.otherInfo === "Pharmacy" || inv.invoiceCode?.startsWith("PH-");
+        const isIPD = inv.otherInfo === "IPD Billing" || inv.invoiceCode?.startsWith("IPD-") || (inv as any).isIPD;
+        let type = "INVOICE";
+        if (isPharmacy) type = "PHARMACY";
+        if (isIPD) type = "IPD";
+
+        let desc = inv.items?.[0]?.description || inv.items?.[0]?.itemName || "Invoice Payment";
+        if (isPharmacy) desc = "Pharmacy Medicine Purchase";
+        if (isIPD) desc = `IPD Billing (${inv.items?.length || 0} items)`;
+
         return {
           id: inv.id,
           code: inv.invoiceCode,
           patientName: inv.patient ? `${inv.patient.firstName || ""} ${inv.patient.lastName || ""}`.trim() : "—",
           image: inv.patient?.profileImage,
-          description: isPharmacy ? "Pharmacy Medicine Purchase" : (inv.items?.[0]?.description || "Invoice Payment"),
+          description: desc,
           date: inv.invoiceDate,
           method: inv.paymentMethod || "—",
           amount: inv.totalAmount,
           status: inv.paymentStatus,
-          type: isPharmacy ? "PHARMACY" : "INVOICE",
-          color: inv.paymentStatus === "Pending" ? "warning" : "success"
+          type,
+          color: inv.paymentStatus === "Pending" || inv.paymentStatus === "Unpaid" ? "warning" : "success"
         };
       });
 
@@ -162,18 +174,20 @@ const TransactionsList = () => {
       title: "Name / Patient",
       dataIndex: "Patient",
       render: (text: string, record: any) => {
-        const hasImage = record.Image && record.Image.trim() !== "" && record.Image !== "avatar-01.jpg" && !record.Image.includes("300x300") && !record.Image.includes("ui-avatars.com");
-        const patientImg = hasImage ? record.Image : "assets/img/patient-placeholder.png";
-
         return (
           <div className="d-flex align-items-center">
             <div className="avatar avatar-sm me-2">
-              <img
-                src={patientImg.startsWith('assets') || patientImg.startsWith('/uploads') || patientImg.startsWith('http') ? `/${patientImg.replace(/^\//, '')}` : `/${patientImg}`}
-                alt={text}
-                className="rounded-circle border"
-                style={{ width: 36, height: 36, objectFit: "cover" }}
-              />
+              <span
+                className="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white"
+                style={{
+                  width: 36,
+                  height: 36,
+                  background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                  fontSize: "14px",
+                }}
+              >
+                {getInitial(text)}
+              </span>
             </div>
             <span className="text-dark fw-medium">{text}</span>
           </div>

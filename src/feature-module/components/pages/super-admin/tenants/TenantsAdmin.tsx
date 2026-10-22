@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiUrl } from "../../../../../core/config/api";
 import { toast } from "react-toastify";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 interface Tenant {
     id: string;
@@ -496,7 +497,7 @@ const TenantsAdmin = () => {
                             <div className="modal-body p-4">
                                 <div className="mb-3">
                                     <label className="form-label fw-semibold fs-13 text-muted">Clinic Name</label>
-                                    <input type="text" className="form-control" value={activeTenant.name} disabled />
+                                    <IconFormControl type="text" fieldLabel="company" placeholder="Clinic Name" value={activeTenant.name} disabled />
                                 </div>
                                 <div className="mb-3">
                                     <label className="form-label fw-semibold fs-13 text-muted">Assign Package</label>

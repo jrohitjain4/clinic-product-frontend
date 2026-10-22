@@ -1,11 +1,15 @@
 import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
-import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import {
   DesignDepartment,
   StatusActive,
 } from "../../../../../core/common/selectOption";
+import {
+  IconFormControl,
+  IconSelect,
+  IconTextarea,
+} from "../../../../../core/common/form-fields";
 
 const DesignationModal = () => {
   return (
@@ -63,13 +67,18 @@ const DesignationModal = () => {
                   <label className="form-label">
                     Designation Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl
+                    fieldLabel="Designation"
+                    type="text"
+                    placeholder="Enter designation name"
+                  />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">
                     Department<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="Department"
                     options={DesignDepartment}
                     className="select"
                     defaultValue={DesignDepartment[0]}
@@ -77,9 +86,10 @@ const DesignationModal = () => {
                 </div>
                 <div className="mb-0">
                   <label className="form-label">Description</label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="Description"
                     rows={3}
+                    placeholder="Enter description"
                     defaultValue={""}
                   />
                 </div>
@@ -155,9 +165,10 @@ const DesignationModal = () => {
                   <label className="form-label">
                     Designation Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Designation"
                     type="text"
-                    className="form-control"
+                    placeholder="Enter designation name"
                     defaultValue="Nurse"
                   />
                 </div>
@@ -165,7 +176,8 @@ const DesignationModal = () => {
                   <label className="form-label">
                     Department<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="Department"
                     options={DesignDepartment}
                     className="select"
                     defaultValue={DesignDepartment[1]}
@@ -173,9 +185,10 @@ const DesignationModal = () => {
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Description</label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="Description"
                     rows={3}
+                    placeholder="Enter description"
                     defaultValue={
                       "A nurse provides patient care and supports medical treatments."
                     }
@@ -183,7 +196,8 @@ const DesignationModal = () => {
                 </div>
                 <div className="mb-0">
                   <label className="form-label">Status</label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="Status"
                     options={StatusActive}
                     className="select"
                     defaultValue={StatusActive[1]}

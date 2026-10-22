@@ -1,6 +1,10 @@
 import { DatePicker } from "antd";
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
+import {
+  IconFormControl,
+  IconTextarea,
+} from "../../../../../../core/common/form-fields";
 
 const Modals = () => {
   const getModalContainer = () => {
@@ -200,7 +204,7 @@ const Modals = () => {
                       No of Days<span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="No of Days" type="text" placeholder="Enter no of days" />
                     </div>
                   </div>
                 </div>
@@ -270,10 +274,11 @@ const Modals = () => {
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">
                         Reason
                       </label>
-                      <textarea
+                      <IconTextarea
+                        fieldLabel="Reason"
                         rows={4}
-                        className="form-control rounded"
-                        placeholder="Description"
+                        className="rounded"
+                        placeholder="Enter reason"
                       />
                     </div>
                   </div>
@@ -319,10 +324,11 @@ const Modals = () => {
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">
                     Reason
                   </label>
-                  <textarea
+                  <IconTextarea
+                    fieldLabel="Reason"
                     rows={4}
-                    className="form-control rounded"
-                    placeholder="Description"
+                    className="rounded"
+                    placeholder="Enter reason"
                   />
                 </div>
               </div>
@@ -537,10 +543,10 @@ const Modals = () => {
                       No of Days<span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input
+                      <IconFormControl
+                        fieldLabel="No of Days"
                         type="text"
-                        className="form-control"
-                        placeholder="{30}"
+                        placeholder="Enter no of days"
                       />
                     </div>
                   </div>
@@ -611,10 +617,11 @@ const Modals = () => {
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">
                         Reason
                       </label>
-                      <textarea
+                      <IconTextarea
+                        fieldLabel="Reason"
                         rows={4}
-                        className="form-control rounded"
-                        placeholder="Description"
+                        className="rounded"
+                        placeholder="Enter reason"
                       />
                     </div>
                   </div>

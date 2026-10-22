@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import SearchInput from "../../../../../core/common/dataTable/dataTableSearch";
 import { all_routes } from "../../../../routes/all_routes";
 import { useClinicInvoices } from "../../../../../core/hooks/useClinicInvoices";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 const PatientInvoices = () => {
   const { invoices, loading } = useClinicInvoices();
@@ -271,13 +272,13 @@ const PatientInvoices = () => {
 
             <div className="d-flex align-items-center flex-wrap gap-2">
               {/* Search */}
-              <div className="position-relative">
-                <i className="ti ti-search position-absolute top-50 translate-middle-y ms-2 text-muted fs-14" style={{ zIndex: 10 }} />
-                <input
+              <div style={{ width: '180px' }}>
+                <IconFormControl
+                  fieldLabel="search"
                   type="text"
-                  className="form-control text-end"
+                  className="text-end fs-13"
                   placeholder="Search Invoice ID..."
-                  style={{ width: '180px', paddingLeft: '30px', height: '38px', fontSize: '13px' }}
+                  style={{ height: '38px', fontSize: '13px' }}
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                 />
@@ -298,9 +299,10 @@ const PatientInvoices = () => {
               </select>
 
               {datePreset === "Custom" && (
-                <input
+                <IconFormControl
+                  fieldLabel="Date"
                   type="date"
-                  className="form-control fs-13"
+                  className="fs-13"
                   style={{ width: '150px', height: '38px' }}
                   value={filterDate}
                   onChange={(e) => setFilterDate(e.target.value)}

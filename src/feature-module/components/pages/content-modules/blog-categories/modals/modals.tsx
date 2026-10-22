@@ -4,6 +4,7 @@ import {
   StatusActive,
 } from "../../../../../../core/common/selectOption";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
+import { IconSelect } from "../../../../../../core/common/form-fields";
 import PredefinedDatePicker from "../../../../../../core/common/datePicker";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../../routes/all_routes";
@@ -32,7 +33,8 @@ const Modals = () => {
                   <label className="form-label">
                     Category Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="category"
                     options={Category}
                     className="select"
                     defaultValue={Category[0]}
@@ -53,7 +55,8 @@ const Modals = () => {
                   <label className="form-label">
                     Status<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="status"
                     options={StatusActive}
                     className="select"
                     defaultValue={StatusActive[0]}
@@ -98,7 +101,8 @@ const Modals = () => {
                   <label className="form-label">
                     Category Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="category"
                     options={Category}
                     className="select"
                     defaultValue={Category[1]}
@@ -119,7 +123,8 @@ const Modals = () => {
                   <label className="form-label">
                     Status<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="status"
                     options={StatusActive}
                     className="select"
                     defaultValue={StatusActive[0]}

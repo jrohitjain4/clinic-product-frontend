@@ -13,6 +13,7 @@ import moment from "moment";
 import { Button } from "../button/Button";
 import { Input } from "../input/Input";
 import { Search } from "react-feather";
+import { canSeeSection } from "../../utils/staffPermissions";
 
 const Header = () => {
 
@@ -91,9 +92,9 @@ const Header = () => {
     window.dispatchEvent(new Event("activeModuleModeChange"));
     
     if (newMode === "therapy") {
-      navigate(all_routes.dashboard);
+      navigate(all_routes.aboutDocYori);
     } else {
-      navigate(all_routes.dashboard);
+      navigate(all_routes.aboutDocYori);
     }
   };
 
@@ -165,7 +166,7 @@ const Header = () => {
         <div className="page-container topbar-menu">
           <div className="d-flex align-items-center gap-2">
             {/* Logo */}
-            <Link to={all_routes.dashboard} className="logo">
+            <Link to={all_routes.aboutDocYori} className="logo">
               {/* Logo Normal */}
               <span className="logo-light">
                 <span className="logo-lg">
@@ -316,7 +317,8 @@ const Header = () => {
               {/* Module Switcher */}
               {user?.role !== "SUPER_ADMIN" &&
                 user?.role !== "DOCTOR" &&
-                user?.role !== "PATIENT" && (
+                user?.role !== "PATIENT" &&
+                canSeeSection("Therapy") && (
                 <button
                   type="button"
                   className={`btn d-flex align-items-center gap-2 border px-3 shadow-sm text-nowrap ms-2`}
@@ -382,29 +384,6 @@ const Header = () => {
                   <i className="ti ti-settings-2" />
                 </Link>
               </div>
-            </div>
-            {/* Settings */}
-            {/* Light/Dark Mode Button */}
-            <div className="header-item d-none d-sm-flex me-2">
-              <Link
-                to="#"
-                id="dark-mode-toggle"
-                className={`topbar-link btn btn-icon topbar-link header-togglebtn ${themeSettings["data-bs-theme"] === "dark" ? "activate" : ""
-                  }`}
-                onClick={() => handleUpdateTheme("data-bs-theme", "light")}
-              >
-                <i className="ti ti-sun fs-16" />
-              </Link>
-              {/* Light Mode Toggle */}
-              <Link
-                to="#"
-                id="light-mode-toggle"
-                className={`topbar-link btn btn-icon topbar-link header-togglebtn ${themeSettings["data-bs-theme"] === "light" ? "activate" : ""
-                  }`}
-                onClick={() => handleUpdateTheme("data-bs-theme", "dark")}
-              >
-                <i className="ti ti-moon fs-16" />
-              </Link>
             </div>
             {/* Notification Dropdown */}
             <div className="header-item">

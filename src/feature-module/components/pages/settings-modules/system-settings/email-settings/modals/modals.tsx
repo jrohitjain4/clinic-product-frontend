@@ -1,4 +1,4 @@
-
+import { IconFormControl } from "../../../../../../../core/common/form-fields";
 
 const Modals = () => {
   return (
@@ -24,19 +24,19 @@ const Modals = () => {
               <label className="form-label">
                 From Email Address<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl fieldLabel="Email Address" type="text" placeholder="Enter from email address" />
             </div>
             <div className="mb-3">
               <label className="form-label">
                 Email Password<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl fieldLabel="Password" type="text" placeholder="Enter email password" />
             </div>
             <div className="mb-0">
               <label className="form-label">
                 From Email Name<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl fieldLabel="Name" type="text" placeholder="Enter from email name" />
             </div>
           </div>
           <div className="modal-footer d-flex align-items-center gap-1">
@@ -77,25 +77,25 @@ const Modals = () => {
               <label className="form-label">
                 From Email Address<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl fieldLabel="Email Address" type="text" placeholder="Enter from email address" />
             </div>
             <div className="mb-3">
               <label className="form-label">
                 Email Password<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl fieldLabel="Password" type="text" placeholder="Enter email password" />
             </div>
             <div className="mb-3">
               <label className="form-label">
                 Email Host<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl fieldLabel="Website" type="text" placeholder="Enter email host" />
             </div>
             <div className="mb-0">
               <label className="form-label">
                 Port<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl type="text" placeholder="Enter port" />
             </div>
           </div>
           <div className="modal-footer d-flex align-items-center gap-1">
@@ -136,7 +136,7 @@ const Modals = () => {
               <label className="form-label">
                 Email Address<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl fieldLabel="Email Address" type="text" placeholder="Enter email address" />
             </div>
           </div>
           <div className="modal-footer d-flex align-items-center gap-1">

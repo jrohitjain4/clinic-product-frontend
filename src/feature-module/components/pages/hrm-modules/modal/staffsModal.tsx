@@ -8,10 +8,13 @@ import {
   Blood_Group,
   City,
   Country,
-  Gender,
   State,
 } from "../../../../../core/common/selectOption";
-import CommonSelect from "../../../../../core/common/common-select/commonSelect";
+import {
+  IconFormControl,
+  IconSelect,
+  GenderOptionGroup,
+} from "../../../../../core/common/form-fields";
 import StaffProfileUpload from "../../../../../core/common/staff-profile-upload/StaffProfileUpload";
 import { apiUrl } from "../../../../../core/config/api";
 import type { ClinicStaff } from "../../../../../core/types/clinicStaff";
@@ -24,6 +27,7 @@ import {
   statusToLabel,
 } from "../../../../../core/utils/staffForm";
 import { findSelectOption } from "../../../../../core/utils/doctorSchedule";
+import { getPhoneValidationError } from "../../../../../core/utils/phoneValidation";
 
 interface DesigOption {
   id: string;
@@ -246,6 +250,13 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
       return;
     }
 
+    const phoneErr = getPhoneValidationError(form.phone, "Staff phone number", false);
+    if (phoneErr) {
+      setFormError(phoneErr);
+      toast.error(phoneErr);
+      return;
+    }
+
     setSubmitting(true);
     setFormError(null);
     try {
@@ -280,6 +291,13 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
     if (!selected?.id) return;
     if (!form.fullName.trim()) {
       setFormError("Name is required.");
+      return;
+    }
+
+    const phoneErr = getPhoneValidationError(form.phone, "Staff phone number", false);
+    if (phoneErr) {
+      setFormError(phoneErr);
+      toast.error(phoneErr);
       return;
     }
 
@@ -356,9 +374,9 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
         <label className="form-label">
           Name <span className="text-danger">*</span>
         </label>
-        <input
+        <IconFormControl
+          fieldLabel="Name"
           type="text"
-          className="form-control"
           placeholder="Enter full name"
           value={form.fullName}
           onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
@@ -371,7 +389,8 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
               Role<span className="text-danger ms-1">*</span>
             </label>
             {clinicRoles.length > 0 ? (
-              <CommonSelect
+              <IconSelect
+                fieldLabel="Role"
                 options={dynamicRoleOptions}
                 className="select"
                 value={findSelectOption(dynamicRoleOptions, form.role)}
@@ -391,7 +410,8 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
               Designation<span className="text-danger ms-1">*</span>
             </label>
             {desigOptions.length > 0 ? (
-              <CommonSelect
+              <IconSelect
+                fieldLabel="Designation"
                 options={desigOptions}
                 className="select"
                 value={findSelectOption(desigOptions, form.designationId)}
@@ -413,7 +433,8 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
           <label className="form-label">
             Status<span className="text-danger ms-1">*</span>
           </label>
-          <CommonSelect
+          <IconSelect
+            fieldLabel="Status"
             options={STAFF_STATUS_OPTIONS}
             className="select"
             value={findSelectOption(STAFF_STATUS_OPTIONS, form.status)}
@@ -430,9 +451,9 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
           <label className="form-label">
             Phone Number<span className="text-danger ms-1">*</span>
           </label>
-          <input
+          <IconFormControl
+            fieldLabel="Phone Number"
             type="text"
-            className="form-control"
             placeholder="Enter phone number"
             value={form.phone}
             onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
@@ -442,9 +463,9 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
           <label className="form-label">
             Email<span className="text-danger ms-1">*</span>
           </label>
-          <input
+          <IconFormControl
+            fieldLabel="Email"
             type="email"
-            className="form-control"
             placeholder="Enter email address"
             value={form.email}
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
@@ -479,18 +500,17 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
           <label className="form-label">
             Gender<span className="text-danger ms-1">*</span>
           </label>
-          <CommonSelect
-            options={Gender}
-            className="select"
-            value={findSelectOption(Gender, form.gender) || Gender[0]}
-            onChange={(opt) => setForm((f) => ({ ...f, gender: opt?.value || "" }))}
+          <GenderOptionGroup
+            value={form.gender}
+            onChange={(v) => setForm((f) => ({ ...f, gender: v }))}
           />
         </div>
         <div className="col-md-12">
           <label className="form-label">
             Blood Group<span className="text-danger ms-1">*</span>
           </label>
-          <CommonSelect
+          <IconSelect
+            fieldLabel="Blood Group"
             options={Blood_Group}
             className="select"
             value={findSelectOption(Blood_Group, form.bloodGroup) || Blood_Group[0]}
@@ -499,9 +519,9 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
         </div>
         <div className="col-md-6">
           <label className="form-label">Address 1</label>
-          <input
+          <IconFormControl
+            fieldLabel="Address 1"
             type="text"
-            className="form-control"
             placeholder="Enter address line 1"
             value={form.address1}
             onChange={(e) => setForm((f) => ({ ...f, address1: e.target.value }))}
@@ -509,9 +529,9 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
         </div>
         <div className="col-md-6">
           <label className="form-label">Address 2</label>
-          <input
+          <IconFormControl
+            fieldLabel="Address 2"
             type="text"
-            className="form-control"
             placeholder="Enter address line 2"
             value={form.address2}
             onChange={(e) => setForm((f) => ({ ...f, address2: e.target.value }))}
@@ -519,7 +539,8 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
         </div>
         <div className="col-md-6">
           <label className="form-label">Country</label>
-          <CommonSelect
+          <IconSelect
+            fieldLabel="Country"
             options={Country}
             className="select"
             value={findSelectOption(Country, form.country) || Country[0]}
@@ -528,7 +549,8 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
         </div>
         <div className="col-md-6">
           <label className="form-label">State</label>
-          <CommonSelect
+          <IconSelect
+            fieldLabel="State"
             options={State}
             className="select"
             value={findSelectOption(State, form.state) || State[0]}
@@ -537,7 +559,8 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
         </div>
         <div className="col-md-6">
           <label className="form-label">City</label>
-          <CommonSelect
+          <IconSelect
+            fieldLabel="City"
             options={City}
             className="select"
             value={findSelectOption(City, form.city) || City[0]}
@@ -546,9 +569,9 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
         </div>
         <div className="col-md-6">
           <label className="form-label">Pincode</label>
-          <input
+          <IconFormControl
+            fieldLabel="Pincode"
             type="text"
-            className="form-control"
             placeholder="Enter pincode"
             value={form.pincode}
             onChange={(e) => setForm((f) => ({ ...f, pincode: e.target.value }))}
@@ -598,9 +621,9 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
               )}
               <div className="mb-3">
                 <label className="form-label mb-1 text-dark fs-14 fw-medium">Role Name <span className="text-danger">*</span></label>
-                <input
+                <IconFormControl
+                  fieldLabel="Role"
                   type="text"
-                  className="form-control"
                   placeholder="Enter role name (e.g. Accountant)"
                   value={newRoleName}
                   onChange={(e) => setNewRoleName(e.target.value)}
@@ -609,7 +632,8 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
               </div>
               <div className="mb-3">
                 <label className="form-label mb-1 text-dark fs-14 fw-medium">Status <span className="text-danger">*</span></label>
-                <CommonSelect
+                <IconSelect
+                  fieldLabel="Status"
                   options={[
                     { value: "Active", label: "Active" },
                     { value: "Inactive", label: "Inactive" }
@@ -686,9 +710,9 @@ const StaffsModal = ({ selected, onSelect, onSaved }: StaffsModalProps) => {
 
               <div className="mb-3">
                 <label className="form-label mb-1 text-dark fs-14 fw-medium">Designation Name <span className="text-danger">*</span></label>
-                <input
+                <IconFormControl
+                  fieldLabel="Designation"
                   type="text"
-                  className="form-control"
                   placeholder="e.g. Senior Nurse, Accountant"
                   value={newDesigName}
                   onChange={(e) => setNewDesigName(e.target.value)}

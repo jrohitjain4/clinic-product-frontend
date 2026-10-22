@@ -18,6 +18,9 @@ import { apiDelete, authHeaders } from "../../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
 import AppointmentPrintSlip from "./AppointmentPrintSlip";
 
+const getInitial = (value?: string) =>
+  (value || "").trim().charAt(0).toUpperCase() || "?";
+
 const Appointments = () => {
   const customSelectStyles = `
     .custom-select-header .ant-select-selector {
@@ -31,39 +34,61 @@ const Appointments = () => {
       font-weight: 700 !important;
       color: #6c757d !important;
     }
+    .compact-table .ant-table-thead > tr > th {
+      padding: 8px 8px !important;
+      white-space: nowrap !important;
+      font-size: 12px !important;
+    }
     .compact-table .ant-table-tbody > tr > td {
-      padding: 8px 12px !important; /* Further reduced padding */
+      padding: 8px 8px !important;
+      vertical-align: middle !important;
     }
     .compact-table .avatar-md {
-      width: 38px !important;
-      height: 38px !important;
+      width: 34px !important;
+      height: 34px !important;
     }
     .compact-table .avatar-xs {
-      width: 24px !important;
-      height: 24px !important;
+      width: 22px !important;
+      height: 22px !important;
     }
     .compact-table .card {
-      margin-bottom: 0 !important;
-      border-radius: 8px !important;
+      margin-bottom: 12px !important;
+      border-radius: 12px !important;
+    }
+    .compact-table .appt-nowrap {
+      white-space: nowrap !important;
     }
 
     /* Appointments responsive filter line classes */
     .appointments-filter-line {
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex-wrap: nowrap;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
       width: 100%;
+      overflow: visible;
     }
     .appointments-filter-line h4 {
       font-size: 16px !important;
+      flex-shrink: 0;
+      margin: 0 !important;
+    }
+    .appointments-filter-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex: 1 1 auto;
+      min-width: 0;
     }
     .status-buttons-group {
       display: flex;
       align-items: center;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       gap: 4px;
-      margin-left: auto !important;
+      margin-left: 0 !important;
     }
     .status-btn {
       padding: 0 8px !important;
@@ -85,14 +110,25 @@ const Appointments = () => {
       width: 125px;
       flex-shrink: 0;
     }
-    .follow-up-select {
+    .clinic-appointments-page .follow-up-select {
       height: 32px !important;
       font-size: 11px !important;
       font-weight: bold !important;
-      padding: 0 24px 0 8px !important;
+      padding: 0 34px 0 10px !important;
       text-overflow: ellipsis !important;
       white-space: nowrap !important;
       overflow: hidden !important;
+      min-width: 140px !important;
+      max-width: 190px !important;
+      background-position: right 10px center !important;
+      background-size: 12px 10px !important;
+    }
+    .clinic-appointments-page .follow-up-select > span {
+      display: block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-right: 4px;
     }
     .filter-btn {
       height: 32px !important;
@@ -120,16 +156,16 @@ const Appointments = () => {
       align-items: center;
       gap: 2px;
     }
-    .new-appointment-btn {
+    .clinic-appointments-page .new-appointment-btn {
       height: 32px !important;
       border-radius: 6px !important;
       font-size: 11px !important;
-      padding: 0 10px !important;
+      padding: 0 12px !important;
       font-weight: 700 !important;
-      white-space: nowrap;
-      display: flex;
+      white-space: nowrap !important;
+      display: inline-flex !important;
       align-items: center;
-      flex-shrink: 0;
+      flex-shrink: 0 !important;
     }
 
     /* Standard large screen (100% zoom / wide screen) styling */
@@ -139,6 +175,9 @@ const Appointments = () => {
       }
       .appointments-filter-line h4 {
         font-size: 18px !important;
+      }
+      .appointments-filter-actions {
+        gap: 12px;
       }
       .status-buttons-group {
         gap: 12px;
@@ -156,10 +195,13 @@ const Appointments = () => {
       .follow-up-select-wrapper {
         width: 165px;
       }
-      .follow-up-select {
+      .clinic-appointments-page .follow-up-select {
         height: 36px !important;
         font-size: 13px !important;
-        padding: 0 24px 0 12px !important;
+        padding: 0 36px 0 12px !important;
+        min-width: 150px !important;
+        max-width: 210px !important;
+        background-position: right 12px center !important;
       }
       .filter-btn {
         height: 36px !important;
@@ -174,7 +216,7 @@ const Appointments = () => {
         font-size: 12px !important;
         padding: 0 12px !important;
       }
-      .new-appointment-btn {
+      .clinic-appointments-page .new-appointment-btn {
         height: 36px !important;
         font-size: 12px !important;
         padding: 0 12px !important;
@@ -194,9 +236,10 @@ const Appointments = () => {
         left: 0 !important;
         top: 0 !important;
         width: 100% !important;
+        height: 100% !important;
         background: white !important;
         z-index: 99999 !important;
-        padding: 1.5cm !important;
+        padding: 0 !important;
         margin: 0 !important;
       }
       .bg-light { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
@@ -420,7 +463,8 @@ const Appointments = () => {
             : row._raw.followUpStatus?.toLowerCase() === filterFollowUp.toLowerCase() || (filterFollowUp === "Follow-up" && row._raw.isFollowUp);
 
       const matchDoctor = filterDoctor
-        ? row.Doctor.toLowerCase().includes(filterDoctor.toLowerCase())
+        ? (row._raw.doctorName || row._raw.doctor?.fullName || row.Doctor || "").toLowerCase() === filterDoctor.toLowerCase()
+          || row._raw.doctorId === selectedDoctorId
         : true;
 
       // Date Filter Logic
@@ -461,7 +505,7 @@ const Appointments = () => {
 
       return matchFollowUp && matchDate && matchDept && matchType && matchDoctor && matchSession;
     });
-  }, [tableData, filterFollowUp, filterStartDate, filterEndDate, datePreset, filterDepartment, filterType, filterDoctor, filterSession, sessionOptions]);
+  }, [tableData, filterFollowUp, filterStartDate, filterEndDate, datePreset, filterDepartment, filterType, filterDoctor, filterSession, sessionOptions, selectedDoctorId]);
 
   const filteredData = useMemo(() => {
     const list = filteredSubData.filter((row) => {
@@ -634,7 +678,7 @@ const Appointments = () => {
 
   const columns = [
     {
-      title: "Sr / Queue",
+      title: "# / Queue",
       dataIndex: "SrNo",
       render: (text: number, record: any) => {
         const isSlotBooking = !!(record._raw.doctor?.appointmentDuration && record._raw.doctor?.maxBookingsPerSlot);
@@ -649,22 +693,29 @@ const Appointments = () => {
     {
       title: "Date & Time",
       dataIndex: "Date_Time",
+      className: "appt-nowrap",
       render: (_: any, record: any) => {
-        const dateStr = record._raw.scheduledAt ? dayjs(record._raw.scheduledAt).format("DD MMM YYYY") : "—";
-        const timeStr = record._raw.scheduledAt ? dayjs(record._raw.scheduledAt).format("hh:mm A") : "";
+        const dateStr = record._raw.scheduledAt
+          ? dayjs(record._raw.scheduledAt).format("DD MMM YYYY")
+          : "—";
+        const timeStr = record._raw.scheduledAt
+          ? dayjs(record._raw.scheduledAt).format("hh:mm A")
+          : "";
         return (
-          <div className="d-flex flex-column" style={{ lineHeight: '1.2' }}>
-            <span className="fw-medium text-dark text-nowrap">{dateStr}</span>
-            {timeStr && <span className="text-muted fs-11 mt-1 text-nowrap">{timeStr}</span>}
+          <div className="d-flex align-items-center fw-bold text-dark fs-13 appt-nowrap gap-1">
+            <i className="ti ti-calendar-event text-primary fs-15" />
+            <span>{dateStr}</span>
+            {timeStr ? (
+              <>
+                <span className="text-muted fw-normal">·</span>
+                <i className="ti ti-clock text-muted fs-14" />
+                <span className="fw-medium text-muted">{timeStr}</span>
+              </>
+            ) : null}
           </div>
         );
       },
       sorter: (a: any, b: any) => a.Date_Time.localeCompare(b.Date_Time),
-    },
-    {
-      title: "Expected Time",
-      dataIndex: "expectedTime",
-      render: (text: string) => <span className="fw-bold text-dark">{text}</span>,
     },
     {
       title: "Patient",
@@ -672,7 +723,17 @@ const Appointments = () => {
       render: (text: string, record: any) => (
         <div className="d-flex align-items-center">
           <Link to={all_routes.patientDetails.replace(":id", record._raw.patientId)} className="avatar avatar-md me-2">
-            <ImageWithBasePath src={record.Patient_Image} alt="Patient" className="rounded-circle" />
+            <span
+              className="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white"
+              style={{
+                width: "34px",
+                height: "34px",
+                background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                fontSize: "14px",
+              }}
+            >
+              {getInitial(text)}
+            </span>
           </Link>
           <div className="lh-1">
             <Link to={all_routes.patientDetails.replace(":id", record._raw.patientId)} className="text-dark fw-bold d-block mb-1 fs-13 text-nowrap">{text}</Link>
@@ -693,35 +754,54 @@ const Appointments = () => {
         </div>
       ),
     },
-    { title: "Mode", dataIndex: "Mode" },
+    {
+      title: "Mode",
+      dataIndex: "Mode",
+      className: "appt-nowrap",
+      render: (text: string) => {
+        const isOnline = (text || "").toLowerCase() === "online";
+        return (
+          <div className="d-flex align-items-center fw-bold text-dark fs-13 appt-nowrap gap-1">
+            <i
+              className={`${isOnline ? "ti ti-world" : "ti ti-walk"} fs-16`}
+              style={{ color: "#6610f2" }}
+            />
+            <span>{text || "—"}</span>
+          </div>
+        );
+      },
+    },
     {
       title: "Status",
       dataIndex: "Status",
       render: (text: string, record: any) => {
         const raw = record._raw;
+        const s = (text || "").toLowerCase();
+        let bg = "#f8f9fa", color = "#6c757d", icon = "ti ti-point";
+        if (s.includes("confirmed")) { bg = "#f0eaff"; color = "#6610f2"; icon = "ti ti-circle-check"; }
+        else if (s.includes("checked out")) { bg = "#e8f3ff"; color = "#0d6efd"; icon = "ti ti-circle-check"; }
+        else if (s.includes("checked in")) { bg = "#fff3cd"; color = "#fd7e14"; icon = "ti ti-clock"; }
+        else if (s.includes("schedule")) { bg = "#e7f1ff"; color = "#0d6efd"; icon = "ti ti-calendar"; }
+        else if (s.includes("cancel")) { bg = "#fdeded"; color = "#dc3545"; icon = "ti ti-circle-x"; }
+
         return (
           <div className="d-flex flex-column align-items-start gap-1">
-            <span className={`badge ${statusBadgeClass(text)} `}>{text}</span>
+            <span className="badge px-3 py-2 rounded-pill d-flex align-items-center gap-1" style={{ backgroundColor: bg, color: color, fontWeight: 600, fontSize: '12px' }}>
+              <i className={`${icon} fs-14`}></i> {text}
+            </span>
             {["Schedule", "Confirmed", "Checked In"].includes(text) && (
-              <div className="form-check form-switch p-0 ms-2" style={{ minHeight: 'auto' }}>
+              <div className="form-check form-switch p-0 ms-1 mt-1" style={{ minHeight: "auto" }}>
                 <input
                   className="form-check-input ms-0"
                   type="checkbox"
                   role="switch"
                   checked={togglingId === raw.id}
                   onChange={() => handleStatusToggle(raw.id, text)}
-                  style={{ cursor: 'pointer', width: '30px', height: '16px' }}
+                  style={{ cursor: "pointer", width: "30px", height: "16px" }}
                 />
-                <label className="text-black fw-bold small ms-1" style={{ fontSize: '10px' }}>
+                <label className="text-black fw-bold small ms-1" style={{ fontSize: "10px" }}>
                   {text === "Schedule" ? "Confirm" : text === "Confirmed" ? "Checkin" : "Checkout"}
                 </label>
-              </div>
-            )}
-            {raw?.isFollowUp && (
-              <div className="mt-1">
-                <span className="text-muted fw-bold" style={{ fontSize: '10px' }}>
-                  {raw.followUpStatus || "Follow-up"}
-                </span>
               </div>
             )}
           </div>
@@ -736,9 +816,21 @@ const Appointments = () => {
       align: "center" as const,
       render: (_: any, record: any) => (
         <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
-          <Link to={all_routes.appointmentDetails.replace(":id", record._raw.id)} className="text-info p-1" title="View"><i className="ti ti-eye fs-18" /></Link>
-          <button className="bg-transparent border-0 text-secondary p-1" onClick={() => handlePrintAppointment(record._raw)} title="Print"><i className="ti ti-printer fs-18" /></button>
-          <button className="bg-transparent border-0 text-danger p-1" data-bs-toggle="modal" data-bs-target="#delete_appointment_modal" onClick={() => setSelected(record._raw)} title="Delete"><i className="ti ti-trash fs-18" /></button>
+          <Link to={all_routes.appointmentDetails.replace(":id", record._raw.id)} className="text-primary p-1" title="View Details">
+            <i className="ti ti-eye fs-18" />
+          </Link>
+          <button className="bg-transparent border-0 text-info p-1" onClick={() => handlePrintAppointment(record._raw)} title="Print">
+            <i className="ti ti-printer fs-18" />
+          </button>
+          <button
+            className="bg-transparent border-0 text-danger p-1"
+            data-bs-toggle="modal"
+            data-bs-target="#delete_appointment_modal"
+            onClick={() => setSelected(record._raw)}
+            title="Delete"
+          >
+            <i className="ti ti-trash fs-18" />
+          </button>
         </div>
       )
     }
@@ -748,95 +840,145 @@ const Appointments = () => {
     <>
       <style>{customSelectStyles}</style>
       <div className="page-wrapper">
-        <div className="content">
+        <div className="content clinic-appointments-page">
           <div className="appointments-filter-line pb-3 mb-3 border-bottom">
             <h4 className="fw-bold mb-0 text-dark flex-shrink-0">Appointment</h4>
-            <div className="status-buttons-group ms-auto">
-              {["All", "Schedule", "Confirmed", "Checked In"].map((s) => (
-                <button
-                  key={s}
-                  className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} status-btn`}
-                  onClick={() => setFilterStatus(s)}
-                >
-                  {s}
-                  <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1 count-badge`}>
-                    {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : appointments.filter(a => a.status === s).length}
-                  </span>
-                </button>
-              ))}
-            </div>
+            <div className="appointments-filter-actions">
+              <div className="status-buttons-group">
+                {["All", "Schedule", "Confirmed", "Checked In"].map((s) => (
+                  <button
+                    key={s}
+                    className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} status-btn`}
+                    onClick={() => setFilterStatus(s)}
+                  >
+                    {s}
+                    <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1 count-badge`}>
+                      {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : appointments.filter(a => a.status === s).length}
+                    </span>
+                  </button>
+                ))}
+              </div>
 
-            <div className="dropdown">
-              <Link
-                to="#"
-                className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap follow-up-select"
-                style={{ minWidth: "140px", height: "32px", fontSize: "11px", display: "flex", alignItems: "center" }}
-                data-bs-toggle="dropdown"
-                data-bs-auto-close="outside"
-              >
-                <span className="text-truncate">
-                  <span className="text-muted"><i className="ti ti-calendar me-1"></i></span> {datePreset === "All" ? "Filter Date" : datePreset}
-                </span>
-              </Link>
-              <ul className="dropdown-menu dropdown-menu-end p-2 animate__animated animate__fadeIn" style={{ minWidth: "180px", zIndex: 1050 }}>
-                {["All", "Today", "Yesterday", "Last 7 Days", "Custom"].map((preset) => (
-                  <li key={preset}>
+              <div className="dropdown flex-shrink-0">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center text-nowrap follow-up-select"
+                  style={{ height: "32px", fontSize: "11px", display: "flex", alignItems: "center", minWidth: "150px" }}
+                  data-bs-toggle="dropdown"
+                >
+                  <span className="text-truncate pe-1">
+                    <span className="text-muted"><i className="ti ti-user-heart me-1"></i></span>{" "}
+                    {filterDoctor || "Filter Doctor"}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2 animate__animated animate__fadeIn" style={{ minWidth: "200px", maxHeight: "280px", overflowY: "auto", zIndex: 1050 }}>
+                  <li>
                     <Link
                       to="#"
-                      className="dropdown-item rounded-1 fs-12 py-2"
+                      className={`dropdown-item rounded-1 fs-12 py-2 ${!filterDoctor ? "active" : ""}`}
                       onClick={(e) => {
                         e.preventDefault();
-                        if (preset === "Custom") {
-                          e.stopPropagation();
-                        }
-                        setDatePreset(preset);
+                        setFilterDoctor("");
+                        setFilterSession("All");
                       }}
                     >
-                      {preset}
+                      All Doctors
                     </Link>
                   </li>
-                ))}
-                {datePreset === "Custom" && (
-                  <li className="p-2 border-top mt-2" onClick={(e) => e.stopPropagation()}>
-                    <div className="d-flex flex-column gap-1">
-                      <label className="text-muted fs-10 fw-bold text-uppercase mb-0">Start Date</label>
-                      <input
-                        type="date"
-                        className="form-control fs-12 px-2 py-1"
-                        value={filterStartDate}
-                        onChange={(e) => setFilterStartDate(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <label className="text-muted fs-10 fw-bold text-uppercase mb-0 mt-1">End Date</label>
-                      <input
-                        type="date"
-                        className="form-control fs-12 px-2 py-1"
-                        value={filterEndDate}
-                        onChange={(e) => setFilterEndDate(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                  </li>
-                )}
-              </ul>
+                  {doctorsList.map((d) => (
+                    <li key={d}>
+                      <Link
+                        to="#"
+                        className={`dropdown-item rounded-1 fs-12 py-2 ${filterDoctor === d ? "active" : ""}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterDoctor(d || "");
+                        }}
+                      >
+                        {d}
+                      </Link>
+                    </li>
+                  ))}
+                  {doctorsList.length === 0 && (
+                    <li>
+                      <span className="dropdown-item-text text-muted fs-12 py-2">No doctors found</span>
+                    </li>
+                  )}
+                </ul>
+              </div>
+
+              <div className="dropdown flex-shrink-0">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap follow-up-select"
+                  style={{ height: "32px", fontSize: "11px", display: "flex", alignItems: "center" }}
+                  data-bs-toggle="dropdown"
+                  data-bs-auto-close="outside"
+                >
+                  <span className="text-truncate">
+                    <span className="text-muted"><i className="ti ti-calendar me-1"></i></span> {datePreset === "All" ? "Filter Date" : datePreset}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2 animate__animated animate__fadeIn" style={{ minWidth: "180px", zIndex: 1050 }}>
+                  {["All", "Today", "Yesterday", "Last 7 Days", "Custom"].map((preset) => (
+                    <li key={preset}>
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1 fs-12 py-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (preset === "Custom") {
+                            e.stopPropagation();
+                          }
+                          setDatePreset(preset);
+                        }}
+                      >
+                        {preset}
+                      </Link>
+                    </li>
+                  ))}
+                  {datePreset === "Custom" && (
+                    <li className="p-2 border-top mt-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="d-flex flex-column gap-1">
+                        <label className="text-muted fs-10 fw-bold text-uppercase mb-0">Start Date</label>
+                        <input
+                          type="date"
+                          className="form-control fs-12 px-2 py-1"
+                          value={filterStartDate}
+                          onChange={(e) => setFilterStartDate(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <label className="text-muted fs-10 fw-bold text-uppercase mb-0 mt-1">End Date</label>
+                        <input
+                          type="date"
+                          className="form-control fs-12 px-2 py-1"
+                          value={filterEndDate}
+                          onChange={(e) => setFilterEndDate(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </li>
+                  )}
+                </ul>
+              </div>
+
+              {isAnyFilterActive ? (
+                <button className="btn btn-sm clear-filter-btn" onClick={handleClearFilters}>
+                  <i className="ti ti-refresh" /> Clear
+                </button>
+              ) : (
+                <button className="btn btn-sm btn-light border filter-btn" data-bs-toggle="offcanvas" data-bs-target="#filter_drawer">
+                  <i className="ti ti-filter" /> Filter
+                </button>
+              )}
+
+              <Link to={all_routes.newAppointment} className="btn btn-sm btn-primary new-appointment-btn">
+                <i className="ti ti-plus me-1" /> New Appointment
+              </Link>
             </div>
-
-            {isAnyFilterActive ? (
-              <button className="btn btn-sm clear-filter-btn" onClick={handleClearFilters}>
-                <i className="ti ti-refresh" /> Clear
-              </button>
-            ) : (
-              <button className="btn btn-sm btn-light border filter-btn" data-bs-toggle="offcanvas" data-bs-target="#filter_drawer">
-                <i className="ti ti-filter" /> Filter
-              </button>
-            )}
-
-            <Link to={all_routes.newAppointment} className="btn btn-sm btn-primary new-appointment-btn">
-              <i className="ti ti-plus me-1" /> New Appointment
-            </Link>
           </div>
 
-          <div className="table-responsive border rounded bg-white compact-table">
+          <div className="table-responsive rounded bg-white compact-table" style={{ border: "none", borderRadius: "12px", boxShadow: "none" }}>
             <Datatable
               columns={columns}
               dataSource={filteredData}
@@ -975,3 +1117,5 @@ const Appointments = () => {
 };
 
 export default Appointments;
+
+

@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { all_routes } from "../../../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../../../../core/imageWithBasePath";
+import { IconFormControl } from "../../../../../../../core/common/form-fields";
 
 const Modals = () => {
   return (
@@ -28,7 +29,7 @@ const Modals = () => {
                   <label className="form-label">
                     Sitemap URL<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl fieldLabel="Website" type="text" placeholder="Enter sitemap URL" />
                 </div>
               </div>
               <div className="modal-footer d-flex align-items-center gap-1">

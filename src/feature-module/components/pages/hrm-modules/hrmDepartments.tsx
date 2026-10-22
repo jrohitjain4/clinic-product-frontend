@@ -10,6 +10,7 @@ import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 import { ViewModal } from "../../../../core/common/modal/ViewModal";
+import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
 
 interface Department {
   id: string;
@@ -572,22 +573,22 @@ const HrmDepartments = () => {
                     Department Name
                     <span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Department"
                     type="text"
-                    className="form-control"
+                    placeholder="Enter department name"
                     value={addName}
                     onChange={(e) => setAddName(e.target.value)}
-                    placeholder="e.g. Cardiology"
                   />
                 </div>
                 <div className="mb-0">
                   <label className="form-label fw-semibold">Description</label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="Description"
                     rows={3}
+                    placeholder="Enter description"
                     value={addDesc}
                     onChange={(e) => setAddDesc(e.target.value)}
-                    placeholder="Optional description"
                   />
                 </div>
               </div>
@@ -642,11 +643,11 @@ const HrmDepartments = () => {
                 )}
                 <div className="mb-3">
                   <label className="form-label fw-bold">Department Name <span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" value={editName} onChange={e => setEditName(e.target.value)} placeholder="e.g. Cardiology" />
+                  <IconFormControl fieldLabel="Department" type="text" placeholder="Enter department name" value={editName} onChange={e => setEditName(e.target.value)} />
                 </div>
                 <div className="mb-3">
                   <label className="form-label fw-bold">Description</label>
-                  <textarea className="form-control" rows={3} value={editDesc} onChange={e => setEditDesc(e.target.value)} placeholder="Optional description" />
+                  <IconTextarea fieldLabel="Description" rows={3} placeholder="Enter description" value={editDesc} onChange={e => setEditDesc(e.target.value)} />
                 </div>
                 <div className="mb-0">
                   <label className="form-label fw-semibold">Status</label>

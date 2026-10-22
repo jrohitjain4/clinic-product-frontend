@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
+import dayjs from "dayjs";
 import Datatable from "../../../../core/common/dataTable";
 import { apiGet, apiDelete, apiPost, apiPut } from "../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
@@ -7,13 +8,36 @@ import { ViewModal } from "../../../../core/common/modal/ViewModal";
 import EmptyState from "../../../../core/common/emptyState";
 import { apiUrl } from "../../../../core/config/api";
 import { useMedicines } from "../../../../core/hooks/useMedicines";
+import { useLabTests } from "../../../../core/hooks/useLabTests";
+import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
+import html2pdf from "html2pdf.js";
+import PrescriptionPadSlip from "../clinic-modules/appointments/PrescriptionPadSlip";
+import AppointmentPrintSlip from "../clinic-modules/appointments/AppointmentPrintSlip";
+
+const mapTherapyMedToPad = (m: any) => {
+  const raw = String(m?.dosage || "").trim();
+  const looksLikeFreq =
+    /^(\d+-\d+|SOS|As Directed)/i.test(raw) || /^\d+-\d+(-\d+)*/.test(raw);
+  return {
+    medicineName: m?.name || m?.medicineName || "",
+    strength: m?.strength || "",
+    dosage: looksLikeFreq ? "1 Tablet" : raw || "1 Tablet",
+    frequency: m?.frequency || (looksLikeFreq ? raw : "1-0-1"),
+    duration: m?.duration || "5 Days",
+    timings: m?.instructions || m?.timings || "After Food",
+    category: m?.category || "General Medicine",
+  };
+};
 
 const TherapyAppointments = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isConsultancy = location.pathname.includes("consultations");
   const { medicines: pharmacyMedicines } = useMedicines();
+  const { tests: labTests } = useLabTests();
   const [activeSearchIndex, setActiveSearchIndex] = useState<number | null>(null);
+  const [testSearchText, setTestSearchText] = useState("");
+  const [showTestDropdown, setShowTestDropdown] = useState(false);
 
   const medicineOptions = useMemo(() => {
     return (pharmacyMedicines || []).map((m: any) => ({
@@ -57,7 +81,15 @@ const TherapyAppointments = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedAppt, setSelectedAppt] = useState<any>(null);
   const [viewAppt, setViewAppt] = useState<any>(null);
+  const [slipPrintAppointment, setSlipPrintAppointment] = useState<any | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  // Filter States (Same as OPD Appointments)
+  const [filterDoctor, setFilterDoctor] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [datePreset, setDatePreset] = useState("All");
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
 
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -89,6 +121,75 @@ const TherapyAppointments = () => {
   useEffect(() => {
     fetchAppointments();
   }, []);
+
+  useEffect(() => {
+    if (!slipPrintAppointment) return;
+
+    document.body.classList.add("printing-therapy-appt-slip");
+    const pad = document.getElementById("therapy-modal-print-prescription-pad");
+    pad?.setAttribute("data-hidden-for-print", "true");
+
+    const handleAfterPrint = () => {
+      document.body.classList.remove("printing-therapy-appt-slip");
+      pad?.removeAttribute("data-hidden-for-print");
+      setSlipPrintAppointment(null);
+      window.removeEventListener("afterprint", handleAfterPrint);
+    };
+    window.addEventListener("afterprint", handleAfterPrint);
+
+    const timer = setTimeout(() => {
+      window.print();
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("afterprint", handleAfterPrint);
+      document.body.classList.remove("printing-therapy-appt-slip");
+      pad?.removeAttribute("data-hidden-for-print");
+    };
+  }, [slipPrintAppointment]);
+
+  const handlePrintAppointmentSlip = async (raw: any) => {
+    const normalizeForSlip = (src: any) => {
+      const patient = src.patient || {};
+      const doctor = src.doctor || {};
+      const nameFromFlat = String(src.patientName || "").trim();
+      const nameParts = nameFromFlat ? nameFromFlat.split(/\s+/) : [];
+      const baseFee = src.consultationFee ?? doctor.consultationCharge ?? 0;
+      const finalFee = src.finalFee ?? src.amount ?? baseFee;
+      return {
+        ...src,
+        appointmentType: src.appointmentType || "Therapy",
+        amount: finalFee,
+        consultationFee: baseFee,
+        finalFee,
+        paymentMode: src.paymentMethod || src.paymentMode || "—",
+        paymentMethod: src.paymentMethod || src.paymentMode || "—",
+        paymentStatus: src.paymentStatus || "Unpaid",
+        patient: {
+          ...patient,
+          firstName: patient.firstName || nameParts[0] || "",
+          lastName: patient.lastName || nameParts.slice(1).join(" ") || "",
+          phone: patient.phone || src.patientPhone || "",
+          email: patient.email || src.patientEmail || "",
+        },
+        doctor: {
+          ...doctor,
+          fullName: doctor.fullName || src.doctorName || "",
+          consultationCharge: doctor.consultationCharge ?? baseFee,
+          phone: doctor.phone || src.doctorPhone || "",
+          email: doctor.email || src.doctorEmail || "",
+        },
+      };
+    };
+
+    try {
+      const full = await apiGet<any>(`/api/appointments/${raw.id}`);
+      setSlipPrintAppointment(normalizeForSlip({ ...raw, ...(full || {}) }));
+    } catch {
+      setSlipPrintAppointment(normalizeForSlip(raw));
+    }
+  };
 
   const handleDelete = async (id: string) => {
     try {
@@ -224,6 +325,7 @@ const TherapyAppointments = () => {
         attachments: updatedAttachments,
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updatedConsult);
       toast.success("Prescription file(s) uploaded successfully!");
@@ -252,6 +354,7 @@ const TherapyAppointments = () => {
         attachments: selectedConsultation.attachments,
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updated);
     } catch (err: any) {
@@ -267,6 +370,7 @@ const TherapyAppointments = () => {
         attachments: currentAttachments,
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updatedConsult);
       toast.success("Attachment removed successfully");
@@ -278,7 +382,13 @@ const TherapyAppointments = () => {
   const addModalMedicineRow = () => {
     if (!selectedConsultation) return;
     const currentMeds = [...(selectedConsultation.medicines || [])];
-    currentMeds.push({ name: "", dosage: "1-0-1", duration: "5 Days", instructions: "After Food" });
+    currentMeds.push({
+      name: "",
+      dosage: "1 Tablet",
+      frequency: "1-0-1",
+      duration: "5 Days",
+      instructions: "After Food",
+    });
     setSelectedConsultation({
       ...selectedConsultation,
       medicines: currentMeds,
@@ -312,6 +422,160 @@ const TherapyAppointments = () => {
     });
   };
 
+  const diagnosticTestsList: string[] = Array.isArray(selectedConsultation?.diagnosticTests)
+    ? selectedConsultation.diagnosticTests
+    : [];
+
+  const addDiagnosticTest = (name: string) => {
+    const val = name.trim();
+    if (!selectedConsultation || !val) return;
+    const current = Array.isArray(selectedConsultation.diagnosticTests)
+      ? selectedConsultation.diagnosticTests
+      : [];
+    if (current.includes(val)) return;
+    setSelectedConsultation({
+      ...selectedConsultation,
+      diagnosticTests: [...current, val],
+    });
+    setTestSearchText("");
+    setShowTestDropdown(false);
+  };
+
+  const removeDiagnosticTest = (idx: number) => {
+    if (!selectedConsultation) return;
+    const current = Array.isArray(selectedConsultation.diagnosticTests)
+      ? selectedConsultation.diagnosticTests
+      : [];
+    setSelectedConsultation({
+      ...selectedConsultation,
+      diagnosticTests: current.filter((_: string, i: number) => i !== idx),
+    });
+  };
+
+  const printAppointment = useMemo(() => {
+    const appt = selectedConsultation?.appointment || {};
+    return {
+      ...appt,
+      id: appt.id || selectedConsultation?.appointmentId,
+      appointmentCode: appt.appointmentCode,
+      scheduledAt: appt.scheduledAt || selectedConsultation?.createdAt || new Date(),
+      patient: selectedConsultation?.patient || appt.patient,
+      doctor: selectedConsultation?.doctor || appt.doctor,
+      clinic: appt.clinic || selectedConsultation?.clinic,
+      department: appt.department || selectedConsultation?.doctor?.department,
+    };
+  }, [selectedConsultation]);
+
+  const printPrescription = useMemo(() => {
+    const meds = (selectedConsultation?.medicines || []).map(mapTherapyMedToPad);
+    return {
+      createdAt: selectedConsultation?.createdAt || new Date(),
+      id: selectedConsultation?.id || "draft",
+      prescriptionCode:
+        selectedConsultation?.consultationCode ||
+        selectedConsultation?.prescriptionCode ||
+        "",
+      medicines: meds,
+      advice: selectedConsultation?.advice || "",
+      followUpDate: selectedConsultation?.followUpDate || null,
+      followUpNotes: selectedConsultation?.followUpNotes || "",
+      diagnosticTests: selectedConsultation?.diagnosticTests || [],
+      attachments: selectedConsultation?.attachments || [],
+      patient: printAppointment?.patient,
+      doctor: printAppointment?.doctor,
+      clinic: printAppointment?.clinic,
+      department: printAppointment?.department,
+    };
+  }, [selectedConsultation, printAppointment]);
+
+  const waitForPadImages = (pad: HTMLElement) =>
+    Promise.all(
+      Array.from(pad.querySelectorAll("img")).map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            if (img.complete && img.naturalWidth > 0) {
+              resolve();
+              return;
+            }
+            const done = () => resolve();
+            img.addEventListener("load", done, { once: true });
+            img.addEventListener("error", done, { once: true });
+            setTimeout(done, 2500);
+          })
+      )
+    );
+
+  const handlePrintPrescription = () => {
+    const pad = document.getElementById("therapy-modal-print-prescription-pad");
+    if (!pad) return;
+    const hideSelectors = [
+      "#print-prescription-pad",
+      "#print-prescription-slip",
+      "#print-appointment",
+      "#print-prescription",
+      "#modal-print-prescription-pad",
+    ];
+    const hiddenEls: HTMLElement[] = [];
+    hideSelectors.forEach((sel) => {
+      document.querySelectorAll<HTMLElement>(sel).forEach((el) => {
+        if (el === pad || pad.contains(el)) return;
+        el.setAttribute("data-hidden-for-print", "true");
+        el.style.setProperty("display", "none", "important");
+        hiddenEls.push(el);
+      });
+    });
+    const originalDisplay = pad.style.display;
+    pad.style.display = "block";
+    waitForPadImages(pad).then(() => {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          window.print();
+          setTimeout(() => {
+            pad.style.display = originalDisplay;
+            hiddenEls.forEach((el) => {
+              el.removeAttribute("data-hidden-for-print");
+              el.style.removeProperty("display");
+            });
+          }, 1500);
+        }, 50);
+      });
+    });
+  };
+
+  const handleDownloadPrescription = () => {
+    const element = document.getElementById("therapy-modal-print-prescription-pad");
+    if (!element) return;
+    const originalDisplay = element.style.display;
+    element.style.display = "block";
+    const code =
+      selectedConsultation?.consultationCode ||
+      printAppointment?.appointmentCode ||
+      "Record";
+    const opt = {
+      margin: 0,
+      filename: `Prescription-${code}.pdf`,
+      image: { type: "jpeg" as const, quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, windowY: 0 },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
+      pagebreak: { mode: ["css", "legacy"] as const },
+    };
+    waitForPadImages(element)
+      .then(() =>
+        html2pdf()
+          .from(element)
+          .set(opt)
+          .save()
+      )
+      .then(() => {
+        element.style.display = originalDisplay;
+      })
+      .catch((err: any) => {
+        console.error("Prescription PDF failed:", err);
+        toast.error("Failed to download PDF");
+        element.style.display = originalDisplay;
+      });
+  };
+
   const handleSaveModalConsultation = async () => {
     if (!selectedConsultation) return;
     try {
@@ -319,6 +583,7 @@ const TherapyAppointments = () => {
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
         attachments: selectedConsultation.attachments || [],
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updated);
       await fetchAppointments();
@@ -342,7 +607,8 @@ const TherapyAppointments = () => {
     } else if (type === "clinic") {
       medicinesToCopy = (prevConsult.medicines || []).map((m: any) => ({
         name: m.medicineName || "",
-        dosage: m.frequency || m.dosage || "1-0-1",
+        dosage: m.dosage || "1 Tablet",
+        frequency: m.frequency || "1-0-1",
         duration: m.duration || "5 Days",
         instructions: m.timings || "After Food",
       }));
@@ -352,6 +618,7 @@ const TherapyAppointments = () => {
       ...selectedConsultation,
       medicines: medicinesToCopy,
       advice: adviceToCopy,
+      diagnosticTests: Array.isArray(prevConsult.diagnosticTests) ? [...prevConsult.diagnosticTests] : [],
       attachments: attachmentsToCopy,
     });
     toast.info("Copied medicines, advice & images from past prescription.");
@@ -363,18 +630,34 @@ const TherapyAppointments = () => {
       ...selectedConsultation,
       medicines: [],
       advice: "",
+      diagnosticTests: [],
       attachments: [],
     });
     toast.info("Cleared prescription inputs.");
   };
 
-  const statusBadgeClass = (status: string) => {
-    if (status === "Checked Out") return "badge-soft-info text-info border-info";
-    if (status === "Checked In") return "badge-soft-warning text-warning border-warning";
-    if (status === "Cancelled") return "badge-soft-danger text-danger border-danger";
-    if (status === "Schedule") return "badge-soft-primary text-primary border-primary";
-    if (status === "Confirmed") return "badge-soft-success text-success border-success";
-    return "badge-soft-secondary text-secondary border-secondary";
+  const statusMeta = (status: string) => {
+    if (status === "Checked Out")
+      return { cls: "ta-badge ta-badge-info", icon: "ti ti-circle-check", label: status };
+    if (status === "Checked In")
+      return { cls: "ta-badge ta-badge-warning", icon: "ti ti-login", label: status };
+    if (status === "Cancelled")
+      return { cls: "ta-badge ta-badge-danger", icon: "ti ti-ban", label: status };
+    if (status === "Schedule")
+      return { cls: "ta-badge ta-badge-primary", icon: "ti ti-calendar-event", label: status };
+    if (status === "Confirmed")
+      return { cls: "ta-badge ta-badge-success", icon: "ti ti-rosette-discount-check", label: status };
+    return { cls: "ta-badge ta-badge-muted", icon: "ti ti-point", label: status || "—" };
+  };
+
+  const statusBadgeClass = (status: string) => statusMeta(status).cls;
+
+  const paymentMeta = (status: string) => {
+    const isPaid = status === "Paid";
+    const isPartial = status === "Partial Paid" || status === "Partially Paid";
+    if (isPaid) return { cls: "ta-badge ta-badge-success", icon: "ti ti-cash", label: status };
+    if (isPartial) return { cls: "ta-badge ta-badge-warning", icon: "ti ti-coins", label: status };
+    return { cls: "ta-badge ta-badge-danger", icon: "ti ti-alert-circle", label: status || "Unpaid" };
   };
 
   // Auto-expand parents if they have a child appointment scheduled for today
@@ -409,15 +692,17 @@ const TherapyAppointments = () => {
     }
 
     return (
-      <div className="p-3 bg-light rounded-3" style={{ border: "1px solid #e2e8f0" }}>
-        <h6 className="fw-bold mb-2 text-dark fs-13 d-flex align-items-center gap-1">
-          <i className="ti ti-link text-primary"></i> Connected Sessions / Slots
+      <div className="ta-expand p-3">
+        <h6 className="fw-bold mb-3 text-dark fs-13 d-flex align-items-center gap-2">
+          <span className="ta-mini-icon"><i className="ti ti-link" /></span>
+          Connected Sessions / Slots
+          <span className="ta-badge ta-badge-muted ms-1">{sortedChildren.length} sessions</span>
         </h6>
-        <div className="table-responsive bg-white rounded-2 border">
-          <table className="table table-sm table-hover align-middle mb-0" style={{ fontSize: "11px" }}>
-            <thead className="bg-light text-muted">
+        <div className="table-responsive bg-white rounded-3 border overflow-hidden">
+          <table className="table table-sm align-middle mb-0 ta-child-table">
+            <thead>
               <tr>
-                <th className="py-2 px-3 border-0" style={{ width: 80 }}>Session No</th>
+                <th className="py-2 px-3 border-0" style={{ width: 90 }}>Session</th>
                 <th className="py-2 px-3 border-0">Appointment ID</th>
                 <th className="py-2 px-3 border-0">Date & Time</th>
                 <th className="py-2 px-3 border-0">Therapist</th>
@@ -429,60 +714,61 @@ const TherapyAppointments = () => {
             </thead>
             <tbody>
               {sortedChildren.map((child: any) => {
-                const isPaid = child.paymentStatus === "Paid";
-                const isPartial = child.paymentStatus === "Partial Paid";
+                const pay = paymentMeta(child.paymentStatus || "Unpaid");
+                const st = statusMeta(child.status);
                 return (
                   <tr key={child.id}>
-                    <td className="py-2 px-3 border-0 fw-semibold text-dark">
-                      Session {child.sessionNumber || "—"}
-                    </td>
-                    <td className="py-2 px-3 border-0 fw-semibold text-primary">
-                      {child.appointmentCode}
-                    </td>
-                    <td className="py-2 px-3 border-0 text-dark">
-                      {child.dateTimeLabel || new Date(child.scheduledAt).toLocaleString("en-GB", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })}
-                    </td>
-                    <td className="py-2 px-3 border-0 text-secondary">
-                      {child.doctorName || child.doctor?.fullName || "—"}
+                    <td className="py-2 px-3 border-0">
+                      <span className="ta-session-chip">Session {child.sessionNumber || "—"}</span>
                     </td>
                     <td className="py-2 px-3 border-0">
-                      <span className="badge bg-light text-dark border px-2 py-0.5">
+                      <span className="ta-code">{child.appointmentCode}</span>
+                    </td>
+                    <td className="py-2 px-3 border-0">
+                      <div className="ta-meta-line">
+                        <i className="ti ti-calendar-event" />
+                        <span>
+                          {child.dateTimeLabel || new Date(child.scheduledAt).toLocaleString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-2 px-3 border-0">
+                      <div className="ta-meta-line text-secondary">
+                        <i className="ti ti-user" />
+                        <span>{child.doctorName || child.doctor?.fullName || "—"}</span>
+                      </div>
+                    </td>
+                    <td className="py-2 px-3 border-0">
+                      <span className="ta-mode-chip">
+                        <i className={`ti ${child.mode === "Online" ? "ti-video" : "ti-building"}`} />
                         {child.mode}
                       </span>
                     </td>
                     <td className="py-2 px-3 border-0">
-                      <span className="text-dark fw-semibold">₹{child.finalFee || child.consultationFee || 0}</span>
-                      <span className={`badge border ms-2 ${
-                        isPaid 
-                          ? "badge-soft-success border-success text-success" 
-                          : isPartial 
-                          ? "badge-soft-warning border-warning text-warning" 
-                          : "badge-soft-danger border-danger text-danger"
-                      } px-1 py-0.2 fs-10`}>
-                        {child.paymentStatus || "Unpaid"}
-                      </span>
+                      <div className="d-flex flex-column align-items-start gap-1">
+                        <span className="fw-bold text-dark">₹{child.finalFee || child.consultationFee || 0}</span>
+                        <span className={pay.cls}><i className={pay.icon} />{pay.label}</span>
+                      </div>
                     </td>
                     <td className="py-2 px-3 border-0">
-                      <div className="d-flex align-items-center gap-1">
-                        <span className={`badge border ${statusBadgeClass(child.status)} px-2 py-0.5 fs-11`}>
-                          {child.status}
-                        </span>
+                      <div className="d-flex align-items-center gap-2 flex-wrap">
+                        <span className={st.cls}><i className={st.icon} />{st.label}</span>
                         {["Schedule", "Confirmed", "Checked In"].includes(child.status) && (
-                          <div className="form-check form-switch p-0 ms-2" style={{ minHeight: 'auto', display: 'inline-block' }}>
+                          <div className="form-check form-switch p-0 mb-0" style={{ minHeight: "auto" }}>
                             <input
                               className="form-check-input ms-0"
                               type="checkbox"
                               role="switch"
                               checked={togglingId === child.id}
                               onChange={() => handleStatusToggle(child.id, child.status)}
-                              style={{ cursor: 'pointer', width: '25px', height: '14px' }}
+                              style={{ cursor: "pointer", width: "28px", height: "15px" }}
                             />
                           </div>
                         )}
@@ -492,16 +778,15 @@ const TherapyAppointments = () => {
                       <div className="d-flex align-items-center justify-content-end gap-1">
                         <button
                           type="button"
-                          className={`bg-transparent border-0 p-1 ${child.consultation ? "text-success" : "text-primary"}`}
-                          title={child.consultation ? "View / Upload Prescription Scan" : "Create Prescription Upload"}
-                          data-bs-toggle="modal"
-                          data-bs-target="#prescription_modal"
-                          onClick={() => handleOpenPrescriptionModal(child)}
+                          className="ta-action-btn primary"
+                          title="Print Appointment Slip"
+                          onClick={() => handlePrintAppointmentSlip(child)}
                         >
-                          <i className="ti ti-pill fs-14"></i>
+                          <i className="ti ti-printer" />
                         </button>
                         <button
-                          className="bg-transparent border-0 text-info p-1"
+                          type="button"
+                          className="ta-action-btn info"
                           title="View Details"
                           data-bs-toggle="modal"
                           data-bs-target="#view_therapy_appt"
@@ -518,16 +803,17 @@ const TherapyAppointments = () => {
                             }
                           }}
                         >
-                          <i className="ti ti-eye fs-14"></i>
+                          <i className="ti ti-eye" />
                         </button>
                         <button
-                          className="bg-transparent border-0 text-danger p-1"
+                          type="button"
+                          className="ta-action-btn danger"
                           data-bs-toggle="modal"
                           data-bs-target="#delete_therapy_appt"
                           onClick={() => setSelectedAppt(child)}
                           title="Cancel Appointment"
                         >
-                          <i className="ti ti-trash fs-14"></i>
+                          <i className="ti ti-trash" />
                         </button>
                       </div>
                     </td>
@@ -541,54 +827,145 @@ const TherapyAppointments = () => {
     );
   };
 
+  const therapistsList = useMemo(() => {
+    const names = Array.from(new Set(appointments.map(a => a.doctorName || a.doctor?.fullName)));
+    return names.filter(n => n && n !== "—").sort();
+  }, [appointments]);
+
+  const filteredSubData = useMemo(() => {
+    return appointments.filter((a: any) => {
+      if (a.parentAppointmentId) return false;
+
+      const doctorName = a.doctorName || a.doctor?.fullName || "";
+      const matchDoctor = filterDoctor
+        ? doctorName.toLowerCase() === filterDoctor.toLowerCase()
+        : true;
+
+      let matchDate = true;
+      if (a.scheduledAt) {
+        const rowDate = dayjs(a.scheduledAt);
+        if (datePreset === "Today") {
+          matchDate = rowDate.isSame(dayjs(), 'day');
+        } else if (datePreset === "Yesterday") {
+          matchDate = rowDate.isSame(dayjs().subtract(1, 'day'), 'day');
+        } else if (datePreset === "Last 7 Days") {
+          matchDate = rowDate.isAfter(dayjs().subtract(7, 'day'));
+        } else if (datePreset === "Custom") {
+          const rowDateStr = rowDate.format("YYYY-MM-DD");
+          if (filterStartDate && filterEndDate) {
+            matchDate = rowDateStr >= filterStartDate && rowDateStr <= filterEndDate;
+          } else if (filterStartDate) {
+            matchDate = rowDateStr >= filterStartDate;
+          } else if (filterEndDate) {
+            matchDate = rowDateStr <= filterEndDate;
+          }
+        }
+      }
+
+      return matchDoctor && matchDate;
+    });
+  }, [appointments, filterDoctor, datePreset, filterStartDate, filterEndDate]);
+
+  const filteredData = useMemo(() => {
+    return filteredSubData.filter((a: any) => {
+      const matchStatus = filterStatus === "All" || !filterStatus
+        ? true
+        : (a.status || "").toLowerCase() === filterStatus.toLowerCase();
+      return matchStatus;
+    });
+  }, [filteredSubData, filterStatus]);
+
+  const counts = useMemo(() => {
+    return {
+      all: filteredSubData.length,
+      schedule: filteredSubData.filter((a: any) => a.status === "Schedule").length,
+      confirmed: filteredSubData.filter((a: any) => a.status === "Confirmed").length,
+      checkedIn: filteredSubData.filter((a: any) => a.status === "Checked In").length,
+      checkedOut: filteredSubData.filter((a: any) => a.status === "Checked Out").length,
+    };
+  }, [filteredSubData]);
+
+  const isAnyFilterActive = useMemo(() => {
+    return (
+      (filterStatus !== "All" && filterStatus !== "") ||
+      datePreset !== "All" ||
+      filterStartDate !== "" ||
+      filterEndDate !== "" ||
+      filterDoctor !== ""
+    );
+  }, [filterStatus, datePreset, filterStartDate, filterEndDate, filterDoctor]);
+
+  const handleClearFilters = () => {
+    setFilterStatus("All");
+    setDatePreset("All");
+    setFilterStartDate("");
+    setFilterEndDate("");
+    setFilterDoctor("");
+  };
+
   const data = useMemo(() => {
-    // Only show top-level (parent) appointments in the main list
-    const parents = appointments.filter((a: any) => !a.parentAppointmentId);
-    return parents.map((a, index) => ({
+    return filteredData.map((a: any, index: number) => ({
       key: a.id,
       id: a.id,
       sr_no: index + 1,
       code: a.appointmentCode || "N/A",
       patientName: a.patientName || "N/A",
-      therapist: a.doctorName || "N/A",
-      date: a.dateTimeLabel || "N/A",
+      therapist: a.doctorName || a.doctor?.fullName || "N/A",
+      date: a.dateTimeLabel || (a.scheduledAt ? dayjs(a.scheduledAt).format("DD MMM YYYY · hh:mm A") : "N/A"),
       mode: a.mode || "Offline",
       fee: a.finalFee || a.consultationFee || 0,
       status: a.status || "Schedule",
       raw: a,
     }));
-  }, [appointments]);
+  }, [filteredData]);
 
   const columns = [
     {
       title: "Sr No.",
       dataIndex: "sr_no",
-      render: (text: number) => <span className="fs-13 fw-medium text-dark">{text}</span>,
+      render: (text: number) => (
+        <span className="ta-sr">{text}</span>
+      ),
       sorter: (a: any, b: any) => a.sr_no - b.sr_no,
-      width: 60,
+      width: 70,
     },
     {
       title: "Appointment ID",
       dataIndex: "code",
-      render: (text: string) => <span className="text-primary fw-semibold">{text}</span>,
+      render: (text: string) => <span className="ta-code">{text}</span>,
       sorter: (a: any, b: any) => a.code.localeCompare(b.code),
     },
     {
       title: "Patient Name",
       dataIndex: "patientName",
-      render: (text: string) => <span className="fw-semibold text-dark fs-14">{text}</span>,
+      render: (text: string) => (
+        <div className="d-flex align-items-center gap-2">
+          <span className="ta-avatar">{(text || "?").charAt(0).toUpperCase()}</span>
+          <span className="fw-semibold text-dark">{text}</span>
+        </div>
+      ),
       sorter: (a: any, b: any) => a.patientName.localeCompare(b.patientName),
     },
     {
       title: "Therapist",
       dataIndex: "therapist",
-      render: (text: string) => <span className="text-secondary">{text}</span>,
+      render: (text: string) => (
+        <div className="ta-meta-line text-secondary">
+          <i className="ti ti-stethoscope" />
+          <span className="fw-medium">{text}</span>
+        </div>
+      ),
       sorter: (a: any, b: any) => a.therapist.localeCompare(b.therapist),
     },
     {
       title: "Date & Time",
       dataIndex: "date",
-      render: (text: string) => <span className="text-dark fs-13">{text}</span>,
+      render: (text: string) => (
+        <div className="ta-meta-line text-dark">
+          <i className="ti ti-calendar-event" />
+          <span className="fs-13">{text}</span>
+        </div>
+      ),
       sorter: (a: any, b: any) => a.date.localeCompare(b.date),
     },
     {
@@ -609,26 +986,22 @@ const TherapyAppointments = () => {
         const remaining = Math.max(0, total - paid);
         const status = c.paymentStatus || inv?.paymentStatus || "Unpaid";
         const invoiceCode = inv?.invoiceCode || "";
-        
-        const isPaid = status === "Paid";
-        const isPartial = status === "Partial Paid" || status === "Partially Paid";
+        const pay = paymentMeta(status);
         
         return (
-          <div className="d-flex flex-column align-items-start gap-1">
-            {invoiceCode && <span className="fw-semibold text-dark fs-13">{invoiceCode}</span>}
-            <div className="text-muted fs-11" style={{ lineHeight: '1.2' }}>
-              <div>Total: ₹{total.toLocaleString()}</div>
-              <div className="fw-medium text-danger">Due: ₹{remaining.toLocaleString()}</div>
-            </div>
-            <span className={`badge border ${
-              isPaid 
-                ? "badge-soft-success border-success text-success" 
-                : isPartial 
-                ? "badge-soft-warning border-warning text-warning" 
-                : "badge-soft-danger border-danger text-danger"
-            } px-1.5 py-0.2 fs-10 mt-1`}>
-              {status}
-            </span>
+          <div className="ta-invoice-cell d-flex flex-column align-items-start gap-1">
+            {invoiceCode && <span className="ta-invoice-code">{invoiceCode}</span>}
+            {(total > 0 || remaining > 0) && (
+              <div className="ta-amount-stack">
+                {total > 0 && (
+                  <span>Total <strong>₹{total.toLocaleString()}</strong></span>
+                )}
+                {remaining > 0 && (
+                  <span className="due">Due <strong>₹{remaining.toLocaleString()}</strong></span>
+                )}
+              </div>
+            )}
+            <span className={pay.cls}><i className={pay.icon} />{pay.label}</span>
           </div>
         );
       },
@@ -641,26 +1014,18 @@ const TherapyAppointments = () => {
         const hasConsult = !!raw.consultation;
         const status = hasConsult ? "Paid" : (raw.paymentStatus || "Unpaid");
         const isPaid = status === "Paid";
-        const isPartial = status === "Partial Paid";
+        const pay = paymentMeta(status);
         return (
-          <div className="d-flex flex-column align-items-start gap-1">
-            <span className="text-dark fw-bold">₹{text}</span>
-            <span className={`badge border ${
-              isPaid 
-                ? "badge-soft-success border-success text-success" 
-                : isPartial 
-                ? "badge-soft-warning border-warning text-warning" 
-                : "badge-soft-danger border-danger text-danger"
-            } px-1 py-0.5 fs-11`}>
-              {status}
-            </span>
+          <div className="d-flex flex-column align-items-start gap-1" style={{ minWidth: 110 }}>
+            <span className="ta-fee">₹{Number(text).toLocaleString()}</span>
+            <span className={pay.cls}><i className={pay.icon} />{pay.label}</span>
             {!isPaid && (
               <button
-                className="btn btn-xs btn-outline-success py-0 px-1 fs-10 fw-bold mt-1 text-uppercase"
+                type="button"
+                className="ta-mark-paid"
                 onClick={() => handleMarkPaymentPaid(raw.id)}
-                style={{ borderRadius: "4px" }}
               >
-                Mark Paid
+                <i className="ti ti-check" /> Mark Paid
               </button>
             )}
           </div>
@@ -673,24 +1038,25 @@ const TherapyAppointments = () => {
       dataIndex: "status",
       render: (text: string, record: any) => {
         const raw = record.raw;
+        const st = statusMeta(text);
         return (
-          <div className="d-flex flex-column align-items-start gap-1">
-            <span className={`badge border ${statusBadgeClass(text)} px-2 py-1 fs-12`}>
-              {text}
-            </span>
+          <div className="d-flex flex-column align-items-start gap-2">
+            <span className={st.cls}><i className={st.icon} />{st.label}</span>
             {["Schedule", "Confirmed", "Checked In"].includes(text) && (
-              <div className="form-check form-switch p-0 ms-2" style={{ minHeight: 'auto' }}>
-                <input
-                  className="form-check-input ms-0"
-                  type="checkbox"
-                  role="switch"
-                  checked={togglingId === raw.id}
-                  onChange={() => handleStatusToggle(raw.id, text)}
-                  style={{ cursor: 'pointer', width: '30px', height: '16px' }}
-                />
-                <label className="text-black fw-bold small ms-1" style={{ fontSize: '10px' }}>
-                  {text === "Schedule" ? "Confirm" : text === "Confirmed" ? "Checkin" : "Checkout"}
-                </label>
+              <div className="d-flex align-items-center gap-2">
+                <div className="form-check form-switch p-0 mb-0" style={{ minHeight: "auto" }}>
+                  <input
+                    className="form-check-input ms-0"
+                    type="checkbox"
+                    role="switch"
+                    checked={togglingId === raw.id}
+                    onChange={() => handleStatusToggle(raw.id, text)}
+                    style={{ cursor: "pointer", width: "32px", height: "17px" }}
+                  />
+                </div>
+                <span className="ta-status-hint">
+                  {text === "Schedule" ? "Confirm" : text === "Confirmed" ? "Check-in" : "Check-out"}
+                </span>
               </div>
             )}
           </div>
@@ -704,39 +1070,37 @@ const TherapyAppointments = () => {
       render: (_text: string, record: any) => {
         const raw = record.raw;
         const isChildAppt = !!raw.parentAppointmentId;
-        const hasConsult = !!raw.consultation;
         const children = appointments.filter((a: any) => a.parentAppointmentId === raw.id);
         const hasChildren = children.length > 0;
         const isExpanded = expandedRowKeys.includes(raw.id);
 
         return (
-          <div className="d-flex align-items-center justify-content-center gap-2">
+          <div className="d-flex align-items-center justify-content-center gap-1">
             {hasChildren && (
               <button
                 type="button"
-                className={`bg-transparent border-0 p-1 ${isExpanded ? "text-primary" : "text-muted"}`}
+                className={`ta-action-btn ${isExpanded ? "primary" : "muted"}`}
                 title={isExpanded ? "Hide Connected Sessions" : "Show Connected Sessions"}
                 onClick={() => handleToggleExpand(raw.id)}
               >
-                <i className={`ti ${isExpanded ? "ti-chevron-up" : "ti-chevron-down"} fs-18`}></i>
+                <i className={`ti ${isExpanded ? "ti-chevron-up" : "ti-chevron-down"}`} />
               </button>
             )}
 
             {!isChildAppt && (
               <button
                 type="button"
-                className={`bg-transparent border-0 p-1 ${hasConsult ? "text-success" : "text-primary"}`}
-                title={hasConsult ? "View / Upload Prescription Scan" : "Create Prescription Upload"}
-                data-bs-toggle="modal"
-                data-bs-target="#prescription_modal"
-                onClick={() => handleOpenPrescriptionModal(raw)}
+                className="ta-action-btn primary"
+                title="Print Appointment Slip"
+                onClick={() => handlePrintAppointmentSlip(raw)}
               >
-                <i className="ti ti-pill fs-18"></i>
+                <i className="ti ti-printer" />
               </button>
             )}
 
             <button
-              className="bg-transparent border-0 text-info p-1"
+              type="button"
+              className="ta-action-btn info"
               title="View Details"
               onClick={async () => {
                 if (isConsultancy) {
@@ -769,45 +1133,255 @@ const TherapyAppointments = () => {
                 }
               }}
             >
-              <i className="ti ti-eye fs-18"></i>
+              <i className="ti ti-eye" />
             </button>
             <button
-              className="bg-transparent border-0 text-danger p-1"
+              type="button"
+              className="ta-action-btn danger"
               data-bs-toggle="modal"
               data-bs-target="#delete_therapy_appt"
               onClick={() => setSelectedAppt(record.raw)}
               title="Cancel Appointment"
             >
-              <i className="ti ti-trash fs-18"></i>
+              <i className="ti ti-trash" />
             </button>
           </div>
         );
       },
-      width: 120,
+      width: 140,
     },
   ];
 
+  const customSelectStyles = `
+    .appointments-filter-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      width: 100%;
+      overflow: visible;
+    }
+    .appointments-filter-line h4 {
+      font-size: 16px !important;
+      flex-shrink: 0;
+      margin: 0 !important;
+    }
+    .appointments-filter-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .status-buttons-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-left: 0 !important;
+    }
+    .status-btn {
+      padding: 0 8px !important;
+      font-weight: 700 !important;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 1px;
+      text-wrap: nowrap;
+      border-radius: 6px !important;
+      height: 32px !important;
+      font-size: 11px !important;
+    }
+    .count-badge {
+      font-size: 10px !important;
+      padding: 2px 4px !important;
+    }
+    .follow-up-select {
+      height: 32px !important;
+      font-size: 11px !important;
+      font-weight: bold !important;
+      padding: 0 24px 0 10px !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      min-width: 130px !important;
+      max-width: 190px !important;
+    }
+    .clear-filter-btn {
+      height: 32px !important;
+      border-radius: 6px !important;
+      font-size: 11px !important;
+      padding: 0 8px !important;
+      font-weight: 700 !important;
+      background-color: #dc3545 !important;
+      color: #fff !important;
+      border-color: #dc3545 !important;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .new-appointment-btn {
+      height: 32px !important;
+      border-radius: 6px !important;
+      font-size: 11px !important;
+      padding: 0 12px !important;
+      font-weight: 700 !important;
+      white-space: nowrap !important;
+      display: inline-flex !important;
+      align-items: center;
+      flex-shrink: 0 !important;
+    }
+  `;
+
   return (
     <>
+      <style>{customSelectStyles}</style>
       <div className="page-wrapper">
-        <div className="content">
-          {/* Page Header */}
-          <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
-            <div className="flex-grow-1">
-              <h4 className="page-title fw-bold mb-0">
-                {isConsultancy ? "Therapy Consultancy" : "Therapy Appointments"}
-                <span className="badge badge-soft-primary fs-13 fw-medium ms-2">
-                  {isConsultancy ? "Total Consultations" : "Total Bookings"}: {loading ? "" : data.length}
-                </span>
-              </h4>
-            </div>
-            <div className="d-flex align-items-center gap-2">
+        <div className="content therapy-appt-page">
+          {/* Page Header Filter Bar */}
+          <div className="appointments-filter-line pb-3 mb-3 border-bottom">
+            <h4 className="fw-bold mb-0 text-dark flex-shrink-0">
+              {isConsultancy ? "Therapy Consultancy" : "Therapy Appointments"}
+            </h4>
+
+            <div className="appointments-filter-actions">
+              {/* Status Buttons Group: All, Schedule, Confirmed, Checked In */}
+              <div className="status-buttons-group">
+                {["All", "Schedule", "Confirmed", "Checked In"].map((s) => (
+                  <button
+                    key={s}
+                    className={`btn btn-sm ${filterStatus === s || (s === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} status-btn`}
+                    onClick={() => setFilterStatus(s)}
+                  >
+                    {s}
+                    <span className={`badge ${filterStatus === s || (s === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1 count-badge`}>
+                      {s === "All" ? counts.all : s === "Schedule" ? counts.schedule : s === "Confirmed" ? counts.confirmed : s === "Checked In" ? counts.checkedIn : filteredSubData.filter((a: any) => a.status === s).length}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Therapist Filter Dropdown */}
+              <div className="dropdown flex-shrink-0">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center text-nowrap follow-up-select"
+                  style={{ height: "32px", fontSize: "11px", display: "flex", alignItems: "center", minWidth: "150px" }}
+                  data-bs-toggle="dropdown"
+                >
+                  <span className="text-truncate pe-1">
+                    <span className="text-muted"><i className="ti ti-user-heart me-1"></i></span>{" "}
+                    {filterDoctor || "Filter Therapist"}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2 animate__animated animate__fadeIn" style={{ minWidth: "200px", maxHeight: "280px", overflowY: "auto", zIndex: 1050 }}>
+                  <li>
+                    <Link
+                      to="#"
+                      className={`dropdown-item rounded-1 fs-12 py-2 ${!filterDoctor ? "active" : ""}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setFilterDoctor("");
+                      }}
+                    >
+                      All Therapists
+                    </Link>
+                  </li>
+                  {therapistsList.map((d) => (
+                    <li key={d}>
+                      <Link
+                        to="#"
+                        className={`dropdown-item rounded-1 fs-12 py-2 ${filterDoctor === d ? "active" : ""}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterDoctor(d || "");
+                        }}
+                      >
+                        {d}
+                      </Link>
+                    </li>
+                  ))}
+                  {therapistsList.length === 0 && (
+                    <li>
+                      <span className="dropdown-item-text text-muted fs-12 py-2">No therapists found</span>
+                    </li>
+                  )}
+                </ul>
+              </div>
+
+              {/* Date Filter Dropdown */}
+              <div className="dropdown flex-shrink-0">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap follow-up-select"
+                  style={{ height: "32px", fontSize: "11px", display: "flex", alignItems: "center" }}
+                  data-bs-toggle="dropdown"
+                  data-bs-auto-close="outside"
+                >
+                  <span className="text-truncate">
+                    <span className="text-muted"><i className="ti ti-calendar me-1"></i></span> {datePreset === "All" ? "Filter Date" : datePreset}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2 animate__animated animate__fadeIn" style={{ minWidth: "180px", zIndex: 1050 }}>
+                  {["All", "Today", "Yesterday", "Last 7 Days", "Custom"].map((preset) => (
+                    <li key={preset}>
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1 fs-12 py-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (preset === "Custom") {
+                            e.stopPropagation();
+                          }
+                          setDatePreset(preset);
+                        }}
+                      >
+                        {preset}
+                      </Link>
+                    </li>
+                  ))}
+                  {datePreset === "Custom" && (
+                    <li className="p-2 border-top mt-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="d-flex flex-column gap-1">
+                        <label className="text-muted fs-10 fw-bold text-uppercase mb-0">Start Date</label>
+                        <input
+                          type="date"
+                          className="form-control fs-12 px-2 py-1"
+                          value={filterStartDate}
+                          onChange={(e) => setFilterStartDate(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <label className="text-muted fs-10 fw-bold text-uppercase mb-0 mt-1">End Date</label>
+                        <input
+                          type="date"
+                          className="form-control fs-12 px-2 py-1"
+                          value={filterEndDate}
+                          onChange={(e) => setFilterEndDate(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </li>
+                  )}
+                </ul>
+              </div>
+
+              {/* Clear Filter Button */}
+              {isAnyFilterActive && (
+                <button className="btn btn-sm clear-filter-btn" onClick={handleClearFilters}>
+                  <i className="ti ti-refresh" /> Clear
+                </button>
+              )}
+
+              {/* Book Appointment Button */}
               <Link
                 to="/book-therapy-appointment"
-                className="btn btn-primary d-flex align-items-center gap-2"
-                style={{ minHeight: "38px" }}
+                className="btn btn-sm btn-primary new-appointment-btn"
               >
-                <i className="ti ti-plus" /> Book Appointment
+                <i className="ti ti-plus me-1" /> Book Appointment
               </Link>
             </div>
           </div>
@@ -845,7 +1419,7 @@ const TherapyAppointments = () => {
               />
             </div>
           ) : (
-            <div className="table-responsive">
+            <div className="table-responsive ta-table-wrap">
               <Datatable
                 columns={columns}
                 dataSource={data}
@@ -865,6 +1439,234 @@ const TherapyAppointments = () => {
               />
             </div>
           )}
+
+          <style>{`
+            .ta-badge {
+              display: inline-flex;
+              align-items: center;
+              gap: 5px;
+              border-radius: 999px;
+              padding: 5px 10px;
+              font-size: 11px;
+              font-weight: 600;
+              line-height: 1.2;
+              border: 1px solid transparent;
+              white-space: nowrap;
+              flex-shrink: 0;
+            }
+            .ta-badge i { font-size: 13px; }
+            .ta-badge-primary {
+              background: rgba(79, 70, 229, 0.1);
+              color: #4f46e5;
+              border-color: rgba(79, 70, 229, 0.25);
+            }
+            .ta-badge-success {
+              background: rgba(25, 135, 84, 0.1);
+              color: #198754;
+              border-color: rgba(25, 135, 84, 0.28);
+            }
+            .ta-badge-warning {
+              background: rgba(245, 158, 11, 0.12);
+              color: #b45309;
+              border-color: rgba(245, 158, 11, 0.3);
+            }
+            .ta-badge-danger {
+              background: rgba(220, 53, 69, 0.1);
+              color: #dc3545;
+              border-color: rgba(220, 53, 69, 0.28);
+            }
+            .ta-badge-info {
+              background: rgba(13, 202, 240, 0.12);
+              color: #0aa2c0;
+              border-color: rgba(13, 202, 240, 0.3);
+            }
+            .ta-badge-muted {
+              background: #f1f5f9;
+              color: #64748b;
+              border-color: #e2e8f0;
+            }
+            .therapy-appt-page .ta-table-wrap {
+              background: #fff;
+              border: 1px solid #e8edf3;
+              border-radius: 12px;
+              overflow: hidden;
+              box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+            }
+            .therapy-appt-page .ta-table-wrap .ant-table-tbody > tr > td {
+              border-bottom: 1px solid #f1f5f9 !important;
+              vertical-align: middle;
+              padding-top: 14px !important;
+              padding-bottom: 14px !important;
+            }
+            .therapy-appt-page .ta-table-wrap .ant-table-tbody > tr:hover > td {
+              background: #fafbff !important;
+            }
+            .therapy-appt-page .ta-sr {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              min-width: 28px;
+              height: 28px;
+              border-radius: 8px;
+              background: #f1f5f9;
+              color: #475569;
+              font-size: 12px;
+              font-weight: 700;
+            }
+            .therapy-appt-page .ta-code {
+              display: inline-flex;
+              color: #4f46e5;
+              font-weight: 700;
+              font-size: 13px;
+              background: rgba(79, 70, 229, 0.06);
+              border: 1px solid rgba(79, 70, 229, 0.14);
+              border-radius: 8px;
+              padding: 4px 8px;
+              white-space: nowrap;
+            }
+            .therapy-appt-page .ta-invoice-code {
+              display: inline-block;
+              color: #4f46e5;
+              font-weight: 700;
+              font-size: 10px;
+              line-height: 1.2;
+              background: rgba(79, 70, 229, 0.06);
+              border: 1px solid rgba(79, 70, 229, 0.14);
+              border-radius: 6px;
+              padding: 3px 6px;
+              white-space: nowrap;
+              max-width: 100%;
+            }
+            .therapy-appt-page .ta-avatar {
+              width: 32px;
+              height: 32px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+              color: #fff;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 13px;
+              font-weight: 700;
+              flex-shrink: 0;
+            }
+            .therapy-appt-page .ta-meta-line {
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              font-size: 13px;
+            }
+            .therapy-appt-page .ta-meta-line i {
+              color: #94a3b8;
+              font-size: 15px;
+            }
+            .therapy-appt-page .ta-amount-stack {
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+              font-size: 11px;
+              color: #64748b;
+            }
+            .therapy-appt-page .ta-amount-stack .due {
+              color: #dc3545;
+            }
+            .therapy-appt-page .ta-fee {
+              font-size: 14px;
+              font-weight: 800;
+              color: #0f172a;
+            }
+            .therapy-appt-page .ta-mark-paid {
+              display: inline-flex;
+              align-items: center;
+              gap: 4px;
+              border: 1px solid rgba(25, 135, 84, 0.35);
+              background: rgba(25, 135, 84, 0.08);
+              color: #198754;
+              border-radius: 999px;
+              padding: 3px 10px;
+              font-size: 10px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.02em;
+              white-space: nowrap;
+              flex-shrink: 0;
+            }
+            .therapy-appt-page .ta-mark-paid:hover {
+              background: rgba(25, 135, 84, 0.14);
+            }
+            .therapy-appt-page .ta-status-hint {
+              font-size: 10px;
+              font-weight: 700;
+              color: #64748b;
+              text-transform: uppercase;
+              letter-spacing: 0.03em;
+            }
+            .therapy-appt-page .ta-action-btn {
+              width: 32px;
+              height: 32px;
+              border-radius: 9px;
+              border: 1px solid #e2e8f0;
+              background: #fff;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              color: #64748b;
+              transition: all 0.15s ease;
+            }
+            .therapy-appt-page .ta-action-btn i { font-size: 15px; }
+            .therapy-appt-page .ta-action-btn:hover { transform: translateY(-1px); }
+            .therapy-appt-page .ta-action-btn.primary { color: #4f46e5; background: rgba(79,70,229,0.08); border-color: rgba(79,70,229,0.2); }
+            .therapy-appt-page .ta-action-btn.success { color: #198754; background: rgba(25,135,84,0.08); border-color: rgba(25,135,84,0.22); }
+            .therapy-appt-page .ta-action-btn.info { color: #0aa2c0; background: rgba(13,202,240,0.1); border-color: rgba(13,202,240,0.25); }
+            .therapy-appt-page .ta-action-btn.danger { color: #dc3545; background: rgba(220,53,69,0.08); border-color: rgba(220,53,69,0.22); }
+            .therapy-appt-page .ta-action-btn.muted { color: #94a3b8; }
+            .therapy-appt-page .ta-expand {
+              background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+              border-top: 1px solid #e8edf3;
+            }
+            .therapy-appt-page .ta-mini-icon {
+              width: 26px;
+              height: 26px;
+              border-radius: 8px;
+              background: rgba(79, 70, 229, 0.1);
+              color: #4f46e5;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .therapy-appt-page .ta-child-table thead tr {
+              background: #f8fafc;
+              color: #64748b;
+              font-size: 11px;
+              text-transform: uppercase;
+              letter-spacing: 0.03em;
+            }
+            .therapy-appt-page .ta-child-table tbody tr:hover {
+              background: #fafbff;
+            }
+            .therapy-appt-page .ta-session-chip {
+              display: inline-flex;
+              align-items: center;
+              background: #eef2ff;
+              color: #4338ca;
+              border-radius: 8px;
+              padding: 4px 8px;
+              font-size: 11px;
+              font-weight: 700;
+            }
+            .therapy-appt-page .ta-mode-chip {
+              display: inline-flex;
+              align-items: center;
+              gap: 4px;
+              background: #f8fafc;
+              border: 1px solid #e2e8f0;
+              color: #334155;
+              border-radius: 999px;
+              padding: 4px 9px;
+              font-size: 11px;
+              font-weight: 600;
+            }
+          `}</style>
         </div>
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
@@ -885,11 +1687,12 @@ const TherapyAppointments = () => {
         headerIcon={<i className="ti ti-calendar" />}
         highlightTitle={viewAppt ? `Appointment ID: ${viewAppt.appointmentCode}` : "Appointment"}
         highlightStatus={
-          <span className={`badge border ${statusBadgeClass(viewAppt?.status || "Schedule")} fw-bold px-2 py-1`} style={{ fontSize: "10px", borderRadius: "10px" }}>
-            <i className="ti ti-point-filled me-1"></i>{viewAppt?.status || "Schedule"}
+          <span className={statusBadgeClass(viewAppt?.status || "Schedule")}>
+            <i className={statusMeta(viewAppt?.status || "Schedule").icon} />
+            {viewAppt?.status || "Schedule"}
           </span>
         }
-        highlightColor="#e0e7ff"
+        highlightColor="#dbeafe"
         details={[
           { icon: <i className="ti ti-user" />, label: "Patient", value: viewAppt?.patientName || "N/A" },
           { icon: <i className="ti ti-id" />, label: "Therapist / Doctor", value: viewAppt?.doctorName || "N/A" },
@@ -901,13 +1704,41 @@ const TherapyAppointments = () => {
           { icon: <i className="ti ti-credit-card" />, label: "Payment Status", value: viewAppt?.paymentStatus || "Unpaid" },
           { icon: <i className="ti ti-brand-whatsapp" />, label: "WhatsApp Alerts", value: viewAppt?.whatsappNotification ? "Enabled" : "Disabled" }
         ]}
+        footerStart={
+          viewAppt && !viewAppt.parentAppointmentId ? (
+            <button
+              type="button"
+              className="btn btn-outline-primary fw-medium d-flex align-items-center gap-2"
+              onClick={() => {
+                const raw = viewAppt;
+                const viewEl = document.getElementById("view_therapy_appt");
+                const bootstrap = (window as any).bootstrap;
+                if (viewEl && bootstrap?.Modal) {
+                  const viewInstance = bootstrap.Modal.getInstance(viewEl) || new bootstrap.Modal(viewEl);
+                  viewInstance.hide();
+                }
+                void handleOpenPrescriptionModal(raw);
+                setTimeout(() => {
+                  const rxEl = document.getElementById("prescription_modal");
+                  if (rxEl && bootstrap?.Modal) {
+                    const rxInstance = bootstrap.Modal.getInstance(rxEl) || new bootstrap.Modal(rxEl);
+                    rxInstance.show();
+                  }
+                }, 250);
+              }}
+            >
+              <i className="ti ti-prescription" />
+              Generate Prescription
+            </button>
+          ) : null
+        }
       >
         {viewAppt?.mode?.toLowerCase() === "online" && viewAppt?.onlineLink && (
-          <div className="px-4 pb-3">
-            <label className="text-muted fs-12 mb-1 uppercase tracking-wider block fw-semibold">
+          <div className="mt-3 p-3 bg-white rounded-3 view-modal-card">
+            <label className="text-muted fs-12 mb-1 text-uppercase fw-semibold d-block">
               Online Meeting Link
             </label>
-            <div className="fs-14 text-primary leading-relaxed bg-light p-2 rounded">
+            <div className="fs-14 text-primary leading-relaxed">
               <a href={viewAppt.onlineLink} target="_blank" rel="noreferrer" className="text-break">
                 {viewAppt.onlineLink}
               </a>
@@ -916,29 +1747,29 @@ const TherapyAppointments = () => {
         )}
 
         {viewAppt?.mode?.toLowerCase().includes("home") && viewAppt?.homeAddress && (
-          <div className="px-4 pb-3">
-            <label className="text-muted fs-12 mb-1 uppercase tracking-wider block fw-semibold">
+          <div className="mt-3 p-3 bg-white rounded-3 view-modal-card">
+            <label className="text-muted fs-12 mb-1 text-uppercase fw-semibold d-block">
               Home Visit Address
             </label>
-            <div className="fs-14 text-secondary leading-relaxed bg-light p-2 rounded">
+            <div className="fs-14 text-secondary leading-relaxed">
               {viewAppt.homeAddress}
             </div>
           </div>
         )}
 
         {viewAppt?.reason && (
-          <div className="px-4 pb-3">
-            <label className="text-muted fs-12 mb-1 uppercase tracking-wider block fw-semibold">
+          <div className="mt-3 p-3 bg-white rounded-3 view-modal-card">
+            <label className="text-muted fs-12 mb-1 text-uppercase fw-semibold d-block">
               Reason / Remarks
             </label>
-            <div className="fs-14 text-secondary leading-relaxed bg-light p-2 rounded">
+            <div className="fs-14 text-secondary leading-relaxed">
               {viewAppt.reason}
             </div>
           </div>
         )}
 
         {viewConsultation && (
-          <div className="px-4 pb-3 border-top pt-3">
+          <div className="mt-3 p-3 bg-white rounded-3 view-modal-card">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h5 className="fw-bold mb-0 text-dark d-flex align-items-center gap-2" style={{ fontSize: 14 }}>
                 <i className="ti ti-report-medical text-primary fs-18"></i> Examination & Consultation Report
@@ -1122,60 +1953,59 @@ const TherapyAppointments = () => {
           </div>
         </div>
       </div>
-      {/* ===== PRESCRIPTION SCANS & ATTACHMENTS MODAL ===== */}
-      <div className="modal fade" id="prescription_modal" tabIndex={-1} aria-hidden="true">
-        <div className="modal-dialog modal-dialog-centered modal-xl">
-          <div className="modal-content" style={{ borderRadius: 16 }}>
-            {/* Modal Header with circular Rx badge */}
-            <div className="modal-header border-0 pb-0 d-flex justify-content-between align-items-center">
-              <div className="d-flex align-items-center gap-2">
-                <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: 36, height: 36 }}>
-                  <span className="fw-bold" style={{ fontSize: 14 }}>Rx</span>
-                </div>
-                <div>
-                  <h5 className="modal-title fw-bold mb-0">Generate Prescription</h5>
-                  <span className="text-muted fs-12">Create prescription for this visit</span>
-                </div>
-              </div>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-prescription-modal"></button>
+      {/* ===== GENERATE PRESCRIPTION MODAL (clinic appointment UI theme) ===== */}
+      <div className="modal fade prescription-modal-wrapper" id="prescription_modal" tabIndex={-1} aria-hidden="true">
+        <div className="modal-dialog modal-xl modal-dialog-centered">
+          <div
+            className="modal-content text-dark border-0 shadow-lg overflow-hidden"
+            style={{ maxHeight: "90vh", display: "flex", flexDirection: "column", borderRadius: 12 }}
+          >
+            <div className="modal-header bg-primary text-white py-3 px-4 d-flex align-items-center justify-content-between" style={{ flexShrink: 0 }}>
+              <h5 className="modal-title fw-bold text-white mb-0 d-flex align-items-center">
+                <i className="ti ti-prescription me-2 fs-20" />
+                Generate Prescription
+              </h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="close-prescription-modal" />
             </div>
 
-            <div className="modal-body pt-3">
-              {selectedConsultation ? (
-                <div>
-                  {/* Current Visit Header bar */}
-                  <div className="mb-4 d-flex justify-content-between align-items-center bg-light p-3 rounded-3">
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="bg-white border rounded px-3 py-2 text-center" style={{ minWidth: 120 }}>
-                        <div className="text-muted small uppercase fw-bold" style={{ fontSize: 10 }}>Current Visit</div>
-                        <div className="fw-bold text-primary small">{selectedConsultation.appointment?.dateTimeLabel || "Today"}</div>
+            {selectedConsultation && (
+              <div className="visits-bar bg-light border-bottom p-2 px-3 d-flex align-items-center justify-content-between flex-shrink-0">
+                <div className="d-flex align-items-center gap-2 overflow-auto" style={{ flex: 1 }}>
+                  <div className="visit-tab-card p-2 px-3 rounded border active bg-white border-primary shadow-sm">
+                    <div className="d-flex align-items-center gap-2">
+                      <i className="ti ti-calendar fs-14 text-primary" />
+                      <div className="lh-1">
+                        <span className="d-block fw-bold fs-12 text-primary">Current Visit</span>
+                        <small className="fs-10 text-muted">{selectedConsultation.appointment?.dateTimeLabel || "Today"}</small>
                       </div>
-                      <div className="d-none d-sm-block">
-                        <div className="text-muted small">Patient: <strong>{selectedConsultation.patient?.firstName} {selectedConsultation.patient?.lastName}</strong></div>
-                        <div className="text-muted small">Appointment ID: <strong>{selectedConsultation.appointment?.appointmentCode}</strong></div>
-                      </div>
-                    </div>
-                    <div className="bg-white border rounded px-3 py-2 text-center text-muted small">
-                      <i className="ti ti-activity me-1 text-success"></i> Admit Recommendation: <strong>N/A</strong>
                     </div>
                   </div>
+                  <div className="d-none d-md-block ms-2">
+                    <div className="text-dark fw-bold fs-12">
+                      {selectedConsultation.patient?.firstName} {selectedConsultation.patient?.lastName}
+                    </div>
+                    <small className="text-muted fs-11">{selectedConsultation.appointment?.appointmentCode || "N/A"}</small>
+                  </div>
+                </div>
+              </div>
+            )}
 
-                  <div className="row g-4">
-                    {/* LEFT COLUMN: PRESCRIPTION INPUTS */}
-                    <div className="col-lg-8 border-end pr-lg-4">
-                      {/* Medicines List */}
-                      <div className="card border-0 shadow-none mb-4 bg-transparent">
-                        <div className="card-header bg-transparent border-0 p-0 mb-2 d-flex justify-content-between align-items-center">
-                          <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                            <i className="ti ti-pill text-primary"></i> Medicines
-                          </h6>
+            <div className="modal-body bg-light-subtle p-0 d-flex overflow-hidden" style={{ flex: 1, minHeight: 0 }}>
+              {selectedConsultation ? (
+                <>
+                  <div className="prescription-main-content p-3" style={{ flex: 1, overflowY: "auto" }}>
+                      <div className="bg-white border rounded-3 shadow-sm p-3 mb-3" style={{ overflow: "visible" }}>
+                        <div className="d-flex align-items-center justify-content-between mb-3">
+                          <div className="d-flex align-items-center gap-2">
+                            <i className="ti ti-pill text-primary fs-18" />
+                            <h6 className="fw-bold text-dark mb-0 fs-14">Medicines</h6>
+                          </div>
                           <button
                             type="button"
-                            className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 py-1 px-2 fw-semibold"
-                            style={{ borderRadius: 6, fontSize: 11 }}
+                            className="btn btn-sm btn-outline-primary rounded-pill d-flex align-items-center gap-1"
                             onClick={addModalMedicineRow}
                           >
-                            <i className="ti ti-plus" /> Add Medicine
+                            <i className="ti ti-plus fs-12" /> Add Medicine
                           </button>
                         </div>
                         <div className="card-body p-0">
@@ -1184,199 +2014,331 @@ const TherapyAppointments = () => {
                               <span className="text-muted small">No medicines prescribed yet. Click "+ Add Medicine" to prescribe.</span>
                             </div>
                           ) : (
-                            <div style={{ overflow: "visible" }}>
-                              <table className="table table-hover align-middle mb-0" style={{ fontSize: 12 }}>
-                                <thead>
-                                  <tr className="bg-light">
-                                    <th className="border-0 py-2">Medicine Name *</th>
-                                    <th className="border-0 py-2" style={{ width: 120 }}>Dose</th>
-                                    <th className="border-0 py-2" style={{ width: 120 }}>Frequency</th>
-                                    <th className="border-0 py-2" style={{ width: 110 }}>Duration</th>
-                                    <th className="border-0 py-2" style={{ width: 130 }}>Timing</th>
-                                    <th className="border-0 py-2 text-end" style={{ width: 40 }}>Action</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {selectedConsultation.medicines.map((m: any, idx: number) => (
-                                    <tr key={idx}>
-                                      <td 
-                                        className="border-0 py-1 position-relative"
-                                        style={{ zIndex: activeSearchIndex === idx ? 1000 : 1 }}
+                            <div className="d-flex flex-column gap-3" style={{ overflow: "visible" }}>
+                              {selectedConsultation.medicines.map((m: any, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="border rounded-3 p-3 bg-light-subtle position-relative"
+                                  style={{ overflow: "visible", zIndex: activeSearchIndex === idx ? 1000 : 1 }}
+                                >
+                                  <div className="d-flex align-items-center justify-content-between gap-2 mb-3">
+                                    <div className="d-flex align-items-center gap-2">
+                                      <span
+                                        className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary fw-bold"
+                                        style={{ width: 30, height: 30, fontSize: 12 }}
                                       >
-                                        <input
-                                          type="text"
-                                          className="form-control form-control-sm"
-                                          placeholder="Search/Enter Medicine..."
-                                          value={m.name}
-                                          onChange={(e) => updateModalMedicineRow(idx, "name", e.target.value)}
-                                          onFocus={() => setActiveSearchIndex(idx)}
-                                          onBlur={() => {
-                                            setTimeout(() => {
-                                              setActiveSearchIndex(null);
-                                            }, 250);
+                                        {idx + 1}
+                                      </span>
+                                      <div>
+                                        <div className="fw-bold text-dark fs-13">Medicine {idx + 1}</div>
+                                        <div className="text-muted" style={{ fontSize: 11 }}>
+                                          Add medicine details and schedule
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="btn btn-sm btn-link text-danger p-0 d-flex align-items-center gap-1"
+                                      onClick={() => removeModalMedicineRow(idx)}
+                                    >
+                                      <i className="ti ti-trash fs-5" />
+                                    </button>
+                                  </div>
+
+                                  <div className="row g-3">
+                                    <div
+                                      className="col-12 position-relative"
+                                      style={{ zIndex: activeSearchIndex === idx ? 1001 : 1 }}
+                                    >
+                                      <label className="form-label fw-semibold small text-muted mb-1">
+                                        Medicine Name *
+                                      </label>
+                                      <IconFormControl
+                                        type="text"
+                                        fieldLabel="medicine"
+                                        className="form-control-sm"
+                                        placeholder="Search or enter medicine name"
+                                        value={m.name}
+                                        onChange={(e) => updateModalMedicineRow(idx, "name", e.target.value)}
+                                        onFocus={() => setActiveSearchIndex(idx)}
+                                        onBlur={() => {
+                                          setTimeout(() => {
+                                            setActiveSearchIndex(null);
+                                          }, 250);
+                                        }}
+                                        style={{ borderRadius: 8 }}
+                                        autoComplete="off"
+                                      />
+                                      {activeSearchIndex === idx && (
+                                        <div
+                                          className="position-absolute bg-white border rounded-3 shadow-lg mt-1 w-100"
+                                          style={{
+                                            zIndex: 1002,
+                                            maxHeight: "180px",
+                                            overflowY: "auto",
+                                            top: "100%",
+                                            left: 0,
                                           }}
-                                          style={{ borderRadius: 6 }}
-                                          autoComplete="off"
-                                        />
-                                        {activeSearchIndex === idx && (
-                                          <div
-                                            className="position-absolute bg-white border rounded shadow-lg mb-1"
-                                            style={{
-                                              zIndex: 1000,
-                                              maxHeight: '180px',
-                                              overflowY: 'auto',
-                                              bottom: '100%',
-                                              left: 0,
-                                              minWidth: '280px'
-                                            }}
-                                          >
-                                            {medicineOptions
-                                              .filter((opt: any) => {
-                                                const search = (m.name || "").toLowerCase();
-                                                return (opt.name || "").toLowerCase().includes(search) ||
-                                                       (opt.category || "").toLowerCase().includes(search);
-                                              })
-                                              .slice(0, 50)
-                                              .map((opt: any, itemIdx: number) => (
-                                                <div
-                                                   key={itemIdx}
-                                                   className="px-3 py-2 text-dark border-bottom text-start"
-                                                   onMouseDown={() => handleSelectMedicine(idx, opt)}
-                                                   style={{ cursor: "pointer", transition: "background 0.1s" }}
-                                                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f8fafc"}
-                                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
-                                                 >
-                                                   <span className="fw-semibold text-dark" style={{ fontSize: 13 }}>{opt.name} - {opt.category}</span>
-                                                 </div>
-                                              ))}
-                                            {medicineOptions.filter((opt: any) => {
+                                        >
+                                          {medicineOptions
+                                            .filter((opt: any) => {
                                               const search = (m.name || "").toLowerCase();
                                               return (opt.name || "").toLowerCase().includes(search) ||
                                                      (opt.category || "").toLowerCase().includes(search);
-                                            }).length === 0 && (
-                                              <div className="px-3 py-2 text-muted text-start" style={{ fontSize: 11 }}>
-                                                No matching medicines found
+                                            })
+                                            .slice(0, 50)
+                                            .map((opt: any, itemIdx: number) => (
+                                              <div
+                                                key={itemIdx}
+                                                className="px-3 py-2 text-dark border-bottom text-start"
+                                                onMouseDown={() => handleSelectMedicine(idx, opt)}
+                                                style={{ cursor: "pointer", transition: "background 0.1s" }}
+                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f8fafc"}
+                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                                              >
+                                                <div className="fw-semibold text-dark" style={{ fontSize: 13 }}>
+                                                  {opt.name}
+                                                </div>
+                                                <div className="text-muted" style={{ fontSize: 11 }}>
+                                                  {opt.category}
+                                                </div>
                                               </div>
-                                            )}
-                                          </div>
-                                        )}
-                                      </td>
-                                      <td className="border-0 py-1">
-                                        <select
-                                          className="form-select form-select-sm"
-                                          value={m.dosage || "1 Tablet"}
-                                          onChange={(e) => updateModalMedicineRow(idx, "dosage", e.target.value)}
-                                          style={{ borderRadius: 6 }}
-                                        >
-                                          <option value="1 Tablet">1 Tablet</option>
-                                          <option value="2 Tablets">2 Tablets</option>
-                                          <option value="1 Spoon">1 Spoon</option>
-                                          <option value="0.5 Tablet">0.5 Tablet</option>
-                                          <option value="1 Capsule">1 Capsule</option>
-                                          <option value="2 Capsules">2 Capsules</option>
-                                          <option value="As Directed">As Directed</option>
-                                        </select>
-                                      </td>
-                                      <td className="border-0 py-1">
-                                        <select
-                                          className="form-select form-select-sm"
-                                          value={m.dosage === "1 Tablet" || m.dosage === "2 Tablets" || m.dosage === "1 Spoon" || m.dosage === "0.5 Tablet" || m.dosage === "1 Capsule" || m.dosage === "2 Capsules" || m.dosage === "As Directed" ? (m.dosage || "1-0-1") : m.dosage}
-                                          onChange={(e) => updateModalMedicineRow(idx, "dosage", e.target.value)}
-                                          style={{ borderRadius: 6 }}
-                                        >
-                                          <option value="1-0-1">1-0-1 (Twice)</option>
-                                          <option value="1-1-1">1-1-1 (Thrice)</option>
-                                          <option value="1-0-0">1-0-0 (Morning)</option>
-                                          <option value="0-1-0">0-1-0 (Afternoon)</option>
-                                          <option value="0-0-1">0-0-1 (Night)</option>
-                                          <option value="1-1-1-1">1-1-1-1 (Four times)</option>
-                                          <option value="SOS">SOS (As needed)</option>
-                                          <option value="As Directed">As Directed</option>
-                                        </select>
-                                      </td>
-                                      <td className="border-0 py-1">
-                                        <select
-                                          className="form-select form-select-sm"
-                                          value={m.duration || "5 Days"}
-                                          onChange={(e) => updateModalMedicineRow(idx, "duration", e.target.value)}
-                                          style={{ borderRadius: 6 }}
-                                        >
-                                          <option value="3 Days">3 Days</option>
-                                          <option value="5 Days">5 Days</option>
-                                          <option value="7 Days">7 Days</option>
-                                          <option value="10 Days">10 Days</option>
-                                          <option value="2 Weeks">2 Weeks</option>
-                                          <option value="1 Month">1 Month</option>
-                                        </select>
-                                      </td>
-                                      <td className="border-0 py-1">
-                                        <select
-                                          className="form-select form-select-sm"
-                                          value={m.instructions || "After Food"}
-                                          onChange={(e) => updateModalMedicineRow(idx, "instructions", e.target.value)}
-                                          style={{ borderRadius: 6 }}
-                                        >
-                                          <option value="After Food">After Food</option>
-                                          <option value="Before Food">Before Food</option>
-                                          <option value="With Food">With Food</option>
-                                          <option value="Empty Stomach">Empty Stomach</option>
-                                        </select>
-                                      </td>
-                                      <td className="border-0 py-1 text-end">
-                                        <button
-                                          type="button"
-                                          className="btn btn-sm btn-link text-danger p-0"
-                                          onClick={() => removeModalMedicineRow(idx)}
-                                        >
-                                          <i className="ti ti-trash fs-5" />
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
+                                            ))}
+                                          {medicineOptions.filter((opt: any) => {
+                                            const search = (m.name || "").toLowerCase();
+                                            return (opt.name || "").toLowerCase().includes(search) ||
+                                                   (opt.category || "").toLowerCase().includes(search);
+                                          }).length === 0 && (
+                                            <div className="px-3 py-2 text-muted text-start" style={{ fontSize: 11 }}>
+                                              No matching medicines found
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    <div className="col-md-3 col-sm-6">
+                                      <label className="form-label fw-semibold small text-muted mb-1">Dose</label>
+                                      <select
+                                        className="form-select form-select-sm"
+                                        value={m.dosage || "1 Tablet"}
+                                        onChange={(e) => updateModalMedicineRow(idx, "dosage", e.target.value)}
+                                        style={{ borderRadius: 8 }}
+                                      >
+                                        <option value="1 Tablet">1 Tablet</option>
+                                        <option value="2 Tablets">2 Tablets</option>
+                                        <option value="1 Spoon">1 Spoon</option>
+                                        <option value="0.5 Tablet">0.5 Tablet</option>
+                                        <option value="1 Capsule">1 Capsule</option>
+                                        <option value="2 Capsules">2 Capsules</option>
+                                        <option value="As Directed">As Directed</option>
+                                      </select>
+                                    </div>
+
+                                    <div className="col-md-3 col-sm-6">
+                                      <label className="form-label fw-semibold small text-muted mb-1">Frequency</label>
+                                      <select
+                                        className="form-select form-select-sm"
+                                        value={m.frequency || "1-0-1"}
+                                        onChange={(e) => updateModalMedicineRow(idx, "frequency", e.target.value)}
+                                        style={{ borderRadius: 8 }}
+                                      >
+                                        <option value="1-0-1">1-0-1 (Twice)</option>
+                                        <option value="1-1-1">1-1-1 (Thrice)</option>
+                                        <option value="1-0-0">1-0-0 (Morning)</option>
+                                        <option value="0-1-0">0-1-0 (Afternoon)</option>
+                                        <option value="0-0-1">0-0-1 (Night)</option>
+                                        <option value="1-1-1-1">1-1-1-1 (Four times)</option>
+                                        <option value="SOS">SOS (As needed)</option>
+                                        <option value="As Directed">As Directed</option>
+                                      </select>
+                                    </div>
+
+                                    <div className="col-md-3 col-sm-6">
+                                      <label className="form-label fw-semibold small text-muted mb-1">Duration</label>
+                                      <select
+                                        className="form-select form-select-sm"
+                                        value={m.duration || "5 Days"}
+                                        onChange={(e) => updateModalMedicineRow(idx, "duration", e.target.value)}
+                                        style={{ borderRadius: 8 }}
+                                      >
+                                        <option value="3 Days">3 Days</option>
+                                        <option value="5 Days">5 Days</option>
+                                        <option value="7 Days">7 Days</option>
+                                        <option value="10 Days">10 Days</option>
+                                        <option value="2 Weeks">2 Weeks</option>
+                                        <option value="1 Month">1 Month</option>
+                                      </select>
+                                    </div>
+
+                                    <div className="col-md-3 col-sm-6">
+                                      <label className="form-label fw-semibold small text-muted mb-1">Timing</label>
+                                      <select
+                                        className="form-select form-select-sm"
+                                        value={m.instructions || "After Food"}
+                                        onChange={(e) => updateModalMedicineRow(idx, "instructions", e.target.value)}
+                                        style={{ borderRadius: 8 }}
+                                      >
+                                        <option value="After Food">After Food</option>
+                                        <option value="Before Food">Before Food</option>
+                                        <option value="With Food">With Food</option>
+                                        <option value="Empty Stomach">Empty Stomach</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           )}
                         </div>
                       </div>
 
                       {/* Advice and Diagnostic Tests Row */}
-                      <div className="row g-3 mb-4">
+                      <div className="row g-3 mb-3">
                         <div className="col-md-6">
-                          <h6 className="fw-bold mb-2 d-flex align-items-center gap-2">
-                            <i className="ti ti-message-report text-primary"></i> Advice
-                          </h6>
-                          <textarea
-                            className="form-control"
-                            rows={4}
-                            value={selectedConsultation.advice || ""}
-                            onChange={(e) => updateModalAdvice(e.target.value)}
-                            placeholder="Enter doctor's instructions, recommendations, or advices..."
-                            style={{ borderRadius: 10, fontSize: 13 }}
-                          />
+                          <div className="bg-white border rounded-3 shadow-sm p-3 h-100">
+                            <div className="d-flex align-items-center gap-2 mb-2">
+                              <i className="ti ti-message-dots text-primary fs-18" />
+                              <h6 className="fw-bold text-dark mb-0 fs-14">Advice</h6>
+                            </div>
+                            <IconTextarea
+                              fieldLabel="notes"
+                              rows={4}
+                              className="text-dark border-secondary-subtle p-2"
+                              value={selectedConsultation.advice || ""}
+                              onChange={(e) => updateModalAdvice(e.target.value)}
+                              placeholder="Enter doctor's instructions, recommendations, or advices..."
+                              style={{ borderRadius: 8, fontSize: 13 }}
+                            />
+                          </div>
                         </div>
                         <div className="col-md-6">
-                          <h6 className="fw-bold mb-2 d-flex align-items-center gap-2">
-                            <i className="ti ti-stethoscope text-primary"></i> Diagnostic Tests
-                          </h6>
-                          <input
-                            type="text"
-                            className="form-control form-control-sm mb-2"
-                            placeholder="Search/Add Diagnostic Test..."
-                            disabled
-                            style={{ borderRadius: 8 }}
-                          />
-                          <div className="text-center py-4 border rounded-3 bg-light text-muted small" style={{ borderStyle: "dashed" }}>
-                            No diagnostic tests prescribed.
+                          <div className="bg-white border rounded-3 shadow-sm p-3 h-100 d-flex flex-column">
+                            <div className="d-flex align-items-center gap-2 mb-2">
+                              <i className="ti ti-activity text-primary fs-18" />
+                              <h6 className="fw-bold text-dark mb-0 fs-14">Diagnostic Tests</h6>
+                            </div>
+                            <div className="position-relative mb-2" style={{ zIndex: 5 }}>
+                              <div className="input-group input-group-sm border rounded-3 bg-white px-2 align-items-center">
+                                <i className="ti ti-search text-muted fs-14 me-1" />
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm text-dark fw-semibold border-0 p-1"
+                                  placeholder="Search/Add Diagnostic Test..."
+                                  value={testSearchText}
+                                  onChange={(e) => {
+                                    setTestSearchText(e.target.value);
+                                    setShowTestDropdown(true);
+                                  }}
+                                  onFocus={() => setShowTestDropdown(true)}
+                                  onBlur={() => setTimeout(() => setShowTestDropdown(false), 250)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault();
+                                      addDiagnosticTest(testSearchText);
+                                    }
+                                  }}
+                                />
+                                {testSearchText && (
+                                  <button
+                                    type="button"
+                                    className="btn btn-link btn-sm text-muted p-0 border-0"
+                                    onClick={() => setTestSearchText("")}
+                                  >
+                                    <i className="ti ti-x fs-13" />
+                                  </button>
+                                )}
+                              </div>
+
+                              {showTestDropdown && (
+                                <div
+                                  className="position-absolute w-100 bg-white border rounded shadow-lg mt-1"
+                                  style={{
+                                    zIndex: 1000,
+                                    maxHeight: 180,
+                                    overflowY: "auto",
+                                    top: "100%",
+                                    left: 0,
+                                  }}
+                                >
+                                  {labTests
+                                    .filter((t: any) =>
+                                      t.name.toLowerCase().includes(testSearchText.toLowerCase())
+                                    )
+                                    .map((t: any) => (
+                                      <div
+                                        key={t.id}
+                                        className="px-3 py-2 d-flex align-items-center justify-content-between text-dark medicine-dropdown-item"
+                                        style={{ cursor: "pointer", borderBottom: "1px solid #f8fafc", fontSize: 13 }}
+                                        onMouseDown={() => addDiagnosticTest(t.name)}
+                                      >
+                                        <span className="fw-bold">{t.name}</span>
+                                        {t.testCode && (
+                                          <span className="badge bg-light text-muted" style={{ fontSize: 10 }}>
+                                            {t.testCode}
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  {testSearchText.trim() &&
+                                    !labTests.some(
+                                      (t: any) =>
+                                        t.name.toLowerCase() === testSearchText.toLowerCase().trim()
+                                    ) && (
+                                      <div
+                                        className="px-3 py-2 text-primary fw-bold text-center border-top"
+                                        style={{ cursor: "pointer", fontSize: 13 }}
+                                        onMouseDown={() => addDiagnosticTest(testSearchText)}
+                                      >
+                                        <i className="ti ti-plus me-1" /> Add Custom: &quot;
+                                        {testSearchText.trim()}&quot;
+                                      </div>
+                                    )}
+                                  {labTests.length === 0 && !testSearchText.trim() && (
+                                    <div className="px-3 py-2 text-muted text-center" style={{ fontSize: 12 }}>
+                                      No lab tests found. Type to add a custom test.
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <div
+                              className="flex-grow-1 border rounded-3 p-2 bg-light-subtle d-flex flex-wrap gap-2 align-content-start"
+                              style={{ minHeight: 72 }}
+                            >
+                              {diagnosticTestsList.length > 0 ? (
+                                diagnosticTestsList.map((testName: string, idx: number) => (
+                                  <span
+                                    key={`${testName}-${idx}`}
+                                    className="badge bg-soft-primary text-primary px-2 py-2 rounded-3 fw-bold d-inline-flex align-items-center gap-1"
+                                    style={{ fontSize: 12 }}
+                                  >
+                                    {testName}
+                                    <button
+                                      type="button"
+                                      className="btn-close p-0 border-0 ms-1"
+                                      style={{ fontSize: 8, width: 10, height: 10 }}
+                                      onClick={() => removeDiagnosticTest(idx)}
+                                      aria-label={`Remove ${testName}`}
+                                    />
+                                  </span>
+                                ))
+                              ) : (
+                                <div className="text-center w-100 my-auto text-muted small d-flex align-items-center justify-content-center">
+                                  No diagnostic tests prescribed.
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
 
                       {/* Photo / Scan Upload Area */}
-                      <div className="mb-2">
-                        <h6 className="fw-bold mb-2 d-flex align-items-center gap-2">
-                          <i className="ti ti-photo-plus text-primary"></i> Prescription Scans & Attachments
-                        </h6>
+                      <div className="bg-white border rounded-3 shadow-sm p-3 mb-2">
+                        <div className="d-flex align-items-center gap-2 mb-2">
+                          <i className="ti ti-photo-plus text-primary fs-18" />
+                          <h6 className="fw-bold text-dark mb-0 fs-14">Prescription Scans & Attachments</h6>
+                        </div>
                         <div className="p-3 border rounded-3 bg-light text-center mb-3" style={{ borderStyle: "dashed" }}>
                           <input
                             type="file"
@@ -1433,9 +2395,10 @@ const TherapyAppointments = () => {
                                       style={{ width: "100%", height: 90, objectFit: "cover", cursor: "zoom-in" }}
                                     />
                                   </a>
-                                  <input
+                                  <IconFormControl
                                     type="text"
-                                    className="form-control form-control-sm"
+                                    fieldLabel="notes"
+                                    className="form-control-sm"
                                     placeholder="Add remark..."
                                     value={att.remark || ""}
                                     onChange={(e) => handleUpdateModalRemark(idx, e.target.value)}
@@ -1448,132 +2411,252 @@ const TherapyAppointments = () => {
                           </div>
                         )}
                       </div>
-                    </div>
+                  </div>
 
-                    {/* RIGHT COLUMN: PREVIOUS PRESCRIPTIONS */}
-                    <div className="col-lg-4">
-                      <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
-                        <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                          <i className="ti ti-history text-muted"></i> Previous Prescriptions
-                        </h6>
+                  {/* RIGHT: previous prescriptions sidebar */}
+                  <div
+                    className="prescription-sidebar bg-white border-start p-3"
+                    style={{ width: 250, flexShrink: 0, overflowY: "auto", display: "flex", flexDirection: "column" }}
+                  >
+                      <div className="d-flex align-items-center gap-2 mb-2">
+                        <i className="ti ti-history text-primary fs-18" />
+                        <h6 className="fw-bold text-dark mb-0 fs-14">Previous Prescriptions</h6>
                       </div>
 
-                      <div className="overflow-auto pr-1" style={{ maxHeight: 380 }}>
-                        {/* Therapy consultations list */}
+                      <div className="alert bg-warning-subtle border-0 rounded-3 mb-3 p-2 d-flex align-items-start gap-2 text-warning-emphasis fs-12" style={{ lineHeight: 1.45 }}>
+                        <i className="ti ti-bulb fs-15 text-warning" />
+                        <span>Click on any visit to copy its prescription and continue.</span>
+                      </div>
+
+                      <div className="previous-prescriptions-list d-flex flex-column gap-2" style={{ flex: 1 }}>
                         {previousConsultations.length > 0 && (
-                          <div className="mb-3">
+                          <div className="mb-2">
                             <div className="text-muted fw-bold small uppercase mb-2" style={{ fontSize: 10 }}>Therapy Visits</div>
                             {previousConsultations.map((pc: any) => (
                               <div
                                 key={pc.id}
-                                className="p-3 border rounded-3 mb-2 bg-light-soft hover-bg-light cursor-pointer shadow-none"
+                                className="card border rounded-3 p-3 mb-2 hover-shadow bg-light-subtle"
                                 onClick={() => handleCopyPreviousPrescription(pc, "therapy")}
-                                style={{ cursor: "pointer", transition: "background 0.2s" }}
+                                style={{ cursor: "pointer" }}
                                 title="Click to copy prescription"
                               >
-                                <div className="fw-bold text-primary small d-flex justify-content-between mb-1">
-                                  <span>{pc.consultationCode || "Therapy Plan"}</span>
-                                  <span className="text-muted">{pc.appointment?.scheduledAt ? new Date(pc.appointment.scheduledAt).toLocaleDateString() : new Date(pc.createdAt).toLocaleDateString()}</span>
+                                <div className="d-flex align-items-center justify-content-between mb-2">
+                                  <span className="fw-bold fs-13 text-dark">{pc.consultationCode || "Therapy Plan"}</span>
+                                  <i className="ti ti-copy fs-14 text-primary" />
                                 </div>
-                                <div className="text-muted fs-11 mb-2 pb-1" style={{ borderBottom: "1px dashed #e2e8f0" }}>
-                                  <div><i className="ti ti-calendar me-1"></i>Appt: <strong>{pc.appointment?.appointmentCode || "N/A"}</strong></div>
-                                  <div><i className="ti ti-user me-1"></i>Therapist: <strong>{pc.doctor?.fullName || "N/A"}</strong></div>
-                                </div>
-                                {pc.medicines && pc.medicines.length > 0 && (
-                                  <div className="text-secondary small mt-1 fs-11" style={{ lineHeight: "1.4" }}>
-                                    <strong>Meds:</strong> {pc.medicines.map((m: any) => `${m.name} (${m.dosage})`).join(", ")}
-                                  </div>
-                                )}
-                                {pc.advice && (
-                                  <div className="text-muted small mt-1 fs-11 text-truncate">
-                                    <strong>Advice:</strong> {pc.advice}
-                                  </div>
-                                )}
+                                <small className="d-block text-muted fs-11 mb-1">
+                                  <i className="ti ti-calendar me-1" />
+                                  {pc.appointment?.scheduledAt ? new Date(pc.appointment.scheduledAt).toLocaleDateString() : new Date(pc.createdAt).toLocaleDateString()}
+                                </small>
+                                <span className="badge bg-soft-primary text-primary px-2 rounded fs-10 fw-bold">
+                                  {pc.medicines?.length || 0} Medicines
+                                </span>
                               </div>
                             ))}
                           </div>
                         )}
 
-                        {/* Clinic prescriptions list */}
                         {previousClinicPrescriptions.length > 0 && (
-                          <div className="mb-3">
+                          <div className="mb-2">
                             <div className="text-muted fw-bold small uppercase mb-2" style={{ fontSize: 10 }}>Clinic Visits</div>
                             {previousClinicPrescriptions.map((cp: any) => (
                               <div
                                 key={cp.id}
-                                className="p-3 border rounded-3 mb-2 bg-light-soft hover-bg-light cursor-pointer shadow-none"
+                                className="card border rounded-3 p-3 mb-2 hover-shadow bg-light-subtle"
                                 onClick={() => handleCopyPreviousPrescription(cp, "clinic")}
-                                style={{ cursor: "pointer", transition: "background 0.2s" }}
+                                style={{ cursor: "pointer" }}
                                 title="Click to copy prescription"
                               >
-                                <div className="fw-bold text-success small d-flex justify-content-between mb-1">
-                                  <span>{cp.prescriptionCode || "Prescription"}</span>
-                                  <span className="text-muted">{cp.appointment?.scheduledAt ? new Date(cp.appointment.scheduledAt).toLocaleDateString() : new Date(cp.createdAt).toLocaleDateString()}</span>
+                                <div className="d-flex align-items-center justify-content-between mb-2">
+                                  <span className="fw-bold fs-13 text-dark">{cp.prescriptionCode || "Prescription"}</span>
+                                  <i className="ti ti-copy fs-14 text-primary" />
                                 </div>
-                                <div className="text-muted fs-11 mb-2 pb-1" style={{ borderBottom: "1px dashed #e2e8f0" }}>
-                                  <div><i className="ti ti-calendar me-1"></i>Appt: <strong>{cp.appointment?.appointmentCode || "N/A"}</strong></div>
-                                  <div><i className="ti ti-user me-1"></i>Doctor: <strong>{cp.doctor?.fullName || "N/A"}</strong></div>
-                                </div>
-                                {cp.medicines && cp.medicines.length > 0 && (
-                                  <div className="text-secondary small mt-1 fs-11" style={{ lineHeight: "1.4" }}>
-                                    <strong>Meds:</strong> {cp.medicines.map((m: any) => `${m.medicineName || m.name}`).join(", ")}
-                                  </div>
-                                )}
-                                {cp.advice && (
-                                  <div className="text-muted small mt-1 fs-11 text-truncate">
-                                    <strong>Advice:</strong> {cp.advice}
-                                  </div>
-                                )}
+                                <small className="d-block text-muted fs-11 mb-1">
+                                  <i className="ti ti-calendar me-1" />
+                                  {cp.appointment?.scheduledAt ? new Date(cp.appointment.scheduledAt).toLocaleDateString() : new Date(cp.createdAt).toLocaleDateString()}
+                                </small>
+                                <span className="badge bg-soft-primary text-primary px-2 rounded fs-10 fw-bold">
+                                  {cp.medicines?.length || 0} Medicines
+                                </span>
                               </div>
                             ))}
                           </div>
                         )}
 
                         {previousConsultations.length === 0 && previousClinicPrescriptions.length === 0 && (
-                          <div className="text-center py-5 text-muted border rounded-3 bg-light">
-                            <i className="ti ti-clipboard-x fs-24 mb-2 d-block text-muted"></i>
-                            <div className="small">No previous prescriptions recorded.</div>
+                          <div className="text-center py-5 text-muted">
+                            <i className="ti ti-folder-off fs-30 opacity-50 mb-2" /><br />
+                            No previous prescriptions recorded.
                           </div>
                         )}
                       </div>
 
-                      {/* Clear button */}
-                      <button
-                        type="button"
-                        className="btn btn-outline-danger w-100 mt-4 d-flex align-items-center justify-content-center gap-2 fw-semibold py-2"
-                        onClick={handleClearPrescription}
-                        style={{ borderRadius: 8 }}
-                      >
-                        <i className="ti ti-reload"></i> Clear Prescription
-                      </button>
-                    </div>
+                      <div className="mt-3 pt-2 border-top" style={{ flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger w-100 fw-bold d-flex align-items-center justify-content-center gap-1.5 fs-13"
+                          onClick={handleClearPrescription}
+                        >
+                          <i className="ti ti-refresh fs-14" /> Clear Prescription
+                        </button>
+                      </div>
                   </div>
-                </div>
+                </>
               ) : (
-                <div className="text-center py-5">
+                <div className="text-center py-5 w-100">
                   <span className="spinner-border text-primary"></span>
                   <div className="text-muted mt-2">Initializing prescription record...</div>
                 </div>
               )}
             </div>
 
-            <div className="modal-footer border-top bg-light justify-content-between" style={{ borderBottomLeftRadius: 16, borderBottomRightRadius: 16 }}>
-              <div>
-                <button type="button" className="btn btn-outline-secondary me-2" disabled style={{ borderRadius: 8 }}>
-                  <i className="ti ti-printer me-1"></i> Print
+            <div className="modal-footer bg-light border-top-0 p-3 d-flex align-items-center justify-content-between" style={{ flexShrink: 0 }}>
+              <div className="d-flex align-items-center gap-2">
+                <button
+                  type="button"
+                  className="btn btn-outline-info fw-bold px-3 fs-13 d-flex align-items-center gap-1.5"
+                  onClick={handlePrintPrescription}
+                  disabled={!selectedConsultation}
+                >
+                  <i className="ti ti-printer" /> Print
                 </button>
-                <button type="button" className="btn btn-outline-secondary" disabled style={{ borderRadius: 8 }}>
-                  <i className="ti ti-download me-1"></i> PDF
+                <button
+                  type="button"
+                  className="btn btn-outline-success fw-bold px-3 fs-13 d-flex align-items-center gap-1.5"
+                  onClick={handleDownloadPrescription}
+                  disabled={!selectedConsultation}
+                >
+                  <i className="ti ti-download" /> Download PDF
                 </button>
               </div>
-              <div>
-                <button type="button" className="btn btn-light me-2" data-bs-dismiss="modal" style={{ borderRadius: 8 }}>Cancel</button>
-                <button type="button" className="btn btn-primary" onClick={handleSaveModalConsultation} style={{ borderRadius: 8 }}>Generate Prescription</button>
+              <div className="d-flex align-items-center gap-2">
+                <button type="button" className="btn btn-light fw-bold px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" className="btn btn-primary fw-bold px-4 shadow-sm d-flex align-items-center gap-1.5" onClick={handleSaveModalConsultation}>
+                  <i className="ti ti-check fs-15" /> Generate Prescription
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <div id="therapy-modal-print-prescription-pad" style={{ display: "none" }}>
+        <PrescriptionPadSlip
+          appointment={printAppointment}
+          prescription={printPrescription}
+        />
+      </div>
+      {slipPrintAppointment && (
+        <div id="print-therapy-appointment-slip" style={{ display: "none" }}>
+          <AppointmentPrintSlip appointment={slipPrintAppointment} />
+        </div>
+      )}
+      <style>{`
+        .prescription-modal-wrapper .modal-xl { max-width: 1080px; width: 92%; }
+        .prescription-modal-wrapper .visit-tab-card {
+          min-width: 120px; display: flex; align-items: center;
+          background-color: #f8fafc !important; border: 1px solid #cbd5e1 !important;
+          padding: 6px 12px !important; border-radius: 8px !important;
+        }
+        .prescription-modal-wrapper .visit-tab-card.active {
+          background-color: #fff !important; border: 2px solid #4f46e5 !important;
+        }
+        .prescription-modal-wrapper .bg-soft-primary {
+          background-color: rgba(79,70,229,0.1) !important; color: #4f46e5 !important;
+        }
+        .prescription-modal-wrapper .hover-shadow:hover {
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05); transform: translateY(-1px);
+        }
+        .prescription-modal-wrapper .medicine-dropdown-item {
+          padding: 8px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #f8fafc;
+        }
+        .prescription-modal-wrapper .medicine-dropdown-item:hover { background-color: #f1f5f9; }
+        .prescription-modal-wrapper .btn-outline-primary { color: #4f46e5 !important; border-color: #4f46e5 !important; }
+        .prescription-modal-wrapper .btn-outline-primary:hover { background-color: #4f46e5 !important; color: #fff !important; }
+
+        @media print {
+          @page { size: A4; margin: 0; }
+          html, body {
+            height: auto !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          html:has(#therapy-modal-print-prescription-pad .rx-slip--with-attachments),
+          body:has(#therapy-modal-print-prescription-pad .rx-slip--with-attachments) {
+            overflow: visible !important;
+          }
+          body * { visibility: hidden !important; }
+          #print-prescription-pad,
+          #print-prescription-slip,
+          #print-appointment,
+          #print-prescription,
+          #modal-print-prescription-pad,
+          #print-therapy-appointment-slip,
+          [data-hidden-for-print],
+          [data-hidden-for-print] * {
+            display: none !important;
+            visibility: hidden !important;
+          }
+          #therapy-modal-print-prescription-pad,
+          #therapy-modal-print-prescription-pad * {
+            visibility: visible !important;
+          }
+          #therapy-modal-print-prescription-pad {
+            visibility: visible !important;
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 210mm !important;
+            height: auto !important;
+            max-height: 297mm !important;
+            min-height: 0 !important;
+            background: white !important;
+            z-index: 99999 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+            border: none !important;
+            page-break-after: avoid !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          #therapy-modal-print-prescription-pad:has(.rx-slip--with-attachments) {
+            max-height: none !important;
+            overflow: visible !important;
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+            page-break-after: auto !important;
+          }
+        }
+
+        /* Appointment slip print (same design as /appointments) */
+        @media print {
+          body.printing-therapy-appt-slip * {
+            visibility: hidden !important;
+          }
+          body.printing-therapy-appt-slip #therapy-modal-print-prescription-pad,
+          body.printing-therapy-appt-slip #therapy-modal-print-prescription-pad * {
+            display: none !important;
+            visibility: hidden !important;
+          }
+          body.printing-therapy-appt-slip #print-therapy-appointment-slip,
+          body.printing-therapy-appt-slip #print-therapy-appointment-slip * {
+            visibility: visible !important;
+          }
+          body.printing-therapy-appt-slip #print-therapy-appointment-slip {
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 210mm !important;
+            background: #fff !important;
+            z-index: 99999 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+        }
+      `}</style>
       {/* ===== GORGEOUS LIGHTBOX PREVIEW MODAL ===== */}
       {previewImage && (
         <div 

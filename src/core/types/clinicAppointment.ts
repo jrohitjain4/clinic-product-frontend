@@ -32,6 +32,7 @@ export interface ClinicAppointment {
     city?: string | null;
     state?: string | null;
     pincode?: string | null;
+    suggestIPD?: boolean | null;
   };
   doctor: {
     id: string;

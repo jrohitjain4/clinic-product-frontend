@@ -7,6 +7,7 @@ import {
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../../routes/all_routes";
+import { IconSelect } from "../../../../../../core/common/form-fields";
 
 const Modals = () => {
   return (
@@ -42,7 +43,8 @@ const Modals = () => {
                   <label className="form-label">
                     Country Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="country"
                     options={Country_Name}
                     className="select"
                     defaultValue={Country_Name[0]}
@@ -52,7 +54,8 @@ const Modals = () => {
                   <label className="form-label">
                     Status<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="status"
                     options={StatusActive}
                     className="select"
                     defaultValue={StatusActive[0]}
@@ -107,7 +110,8 @@ const Modals = () => {
                   <label className="form-label">
                     Country Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="country"
                     options={Country_Name}
                     className="select"
                     defaultValue={Country_Name[1]}
@@ -117,7 +121,8 @@ const Modals = () => {
                   <label className="form-label">
                     Status<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="status"
                     options={StatusActive}
                     className="select"
                     defaultValue={StatusActive[1]}

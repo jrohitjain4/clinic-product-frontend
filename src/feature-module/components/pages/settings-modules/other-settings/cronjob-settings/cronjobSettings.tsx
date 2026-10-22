@@ -2,6 +2,7 @@ import { useState } from "react";
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar";
 import TagInput from "../../../../../../core/common/Taginput";
 import { Link } from "react-router";
+import { IconFormControl } from "../../../../../../core/common/form-fields";
 
 const CronjobSettings = () => {
   const [tags, setTags] = useState<string[]>(["1 Day", "1 Hour"]);
@@ -46,7 +47,7 @@ const CronjobSettings = () => {
                             </div>
                             {/* end col */}
                             <div className="col-lg-12">
-                              <input type="text" className="form-control" />
+                              <IconFormControl fieldLabel="Website" type="text" placeholder="Enter cronjob link" />
                             </div>
                             {/* end col */}
                           </div>

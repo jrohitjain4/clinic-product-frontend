@@ -4,6 +4,7 @@ import { all_routes } from "../../../routes/all_routes";
 import { toast } from "react-toastify";
 import { apiUrl } from "../../../../core/config/api";
 import { setLocalStorageUser } from "../../../../core/utils/apiClient";
+import { cleanPhoneDigits } from "../../../../core/utils/phoneValidation";
 
 import { Input } from "../../../../core/common/input/Input";
 import { Button } from "../../../../core/common/button/Button";
@@ -194,8 +195,12 @@ const MultiStepRegister: React.FC = () => {
             if (!form.ownerName) { newErrors.ownerName = "Owner name is required"; hasError = true; }
 
             if (!form.mobileNumber) { newErrors.mobileNumber = "Mobile number is required"; hasError = true; }
-            else if (!/^[6-9]\d{9}$/.test(form.mobileNumber)) {
-                newErrors.mobileNumber = "Enter a valid 10-digit number";
+            else if (cleanPhoneDigits(form.mobileNumber).length !== 10) {
+                newErrors.mobileNumber = "Must be a valid 10-digit mobile number";
+                hasError = true;
+            }
+            if (form.whatsappNumber && cleanPhoneDigits(form.whatsappNumber).length !== 10) {
+                newErrors.whatsappNumber = "WhatsApp number must be 10 digits";
                 hasError = true;
             }
 
@@ -312,10 +317,13 @@ const MultiStepRegister: React.FC = () => {
 
                 localStorage.setItem("token", data.token);
                 setLocalStorageUser(data.user);
+                localStorage.setItem("activeModuleMode", "clinic");
 
                 toast.success("Account created successfully!");
-                setSuccess("🎉 Account created successfully! Redirecting...");
-                setTimeout(() => navigate(all_routes.dashboard), 2000);
+                setSuccess("🎉 Account created successfully! Logging in...");
+                setTimeout(() => {
+                    window.location.href = all_routes.aboutDocYori || "/about-docyori";
+                }, 1000);
             } catch (err: any) {
                 const msg = err.message || "Something went wrong. Please try again.";
                 setError(msg);
@@ -383,10 +391,13 @@ const MultiStepRegister: React.FC = () => {
 
                         localStorage.setItem("token", data.token);
                         setLocalStorageUser(data.user);
+                        localStorage.setItem("activeModuleMode", "clinic");
 
                         toast.success("Registration successful!");
-                        setSuccess("🎉 Account created successfully! Redirecting...");
-                        setTimeout(() => navigate(all_routes.dashboard), 2000);
+                        setSuccess("🎉 Account created successfully! Logging in...");
+                        setTimeout(() => {
+                            window.location.href = all_routes.aboutDocYori || "/about-docyori";
+                        }, 1000);
                         return;
                     }
 
@@ -418,10 +429,13 @@ const MultiStepRegister: React.FC = () => {
 
                                 localStorage.setItem("token", verifyData.token);
                                 setLocalStorageUser(verifyData.user);
+                                localStorage.setItem("activeModuleMode", "clinic");
 
                                 toast.success("AutoPay setup successful & account created!");
-                                setSuccess("🎉 AutoPay enabled & account created! Redirecting...");
-                                setTimeout(() => navigate(all_routes.dashboard), 2000);
+                                setSuccess("🎉 AutoPay enabled & account created! Logging in...");
+                                setTimeout(() => {
+                                    window.location.href = all_routes.aboutDocYori || "/about-docyori";
+                                }, 1000);
                             } catch (err: any) {
                                 const msg = err.message || "Failed to verify AutoPay setup. Please contact support.";
                                 setError(msg);
@@ -475,10 +489,13 @@ const MultiStepRegister: React.FC = () => {
 
                         localStorage.setItem("token", data.token);
                         setLocalStorageUser(data.user);
+                        localStorage.setItem("activeModuleMode", "clinic");
 
                         toast.success("Registration successful!");
-                        setSuccess("🎉 Account created successfully! Redirecting...");
-                        setTimeout(() => navigate(all_routes.dashboard), 2000);
+                        setSuccess("🎉 Account created successfully! Logging in...");
+                        setTimeout(() => {
+                            window.location.href = all_routes.aboutDocYori || "/about-docyori";
+                        }, 1000);
                         return;
                     }
 
@@ -512,10 +529,13 @@ const MultiStepRegister: React.FC = () => {
 
                                 localStorage.setItem("token", verifyData.token);
                                 setLocalStorageUser(verifyData.user);
+                                localStorage.setItem("activeModuleMode", "clinic");
 
                                 toast.success("Payment successful & account created!");
-                                setSuccess("🎉 Payment verified & account created! Redirecting...");
-                                setTimeout(() => navigate(all_routes.dashboard), 2000);
+                                setSuccess("🎉 Payment verified & account created! Logging in...");
+                                setTimeout(() => {
+                                    window.location.href = all_routes.aboutDocYori || "/about-docyori";
+                                }, 1000);
                             } catch (err: any) {
                                 const msg = err.message || "Failed to verify payment. Please contact support.";
                                 setError(msg);

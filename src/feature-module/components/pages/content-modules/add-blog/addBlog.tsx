@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { Category } from "../../../../../core/common/selectOption";
-import CommonSelect from "../../../../../core/common/common-select/commonSelect";
+import { IconFormControl, IconSelect } from "../../../../../core/common/form-fields";
 import { useState } from "react";
 import TagInput from "../../../../../core/common/Taginput";
 import { all_routes } from "../../../../routes/all_routes";
@@ -34,11 +34,12 @@ const AddBlog = () => {
                 <div className="card-body">
                   <div className="mb-3">
                     <label className="form-label">Title</label>
-                    <input type="text" className="form-control" />
+                    <IconFormControl type="text" fieldLabel="title" placeholder="Enter blog title" />
                   </div>
                   <div className="mb-3">
                     <label className="form-label">Category</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="category"
                       options={Category}
                       className="select"
                       defaultValue={Category[0]}
@@ -82,7 +83,7 @@ const AddBlog = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 ï¿½
             <Link to="#" className="link-primary">
               Docyari
             </Link>

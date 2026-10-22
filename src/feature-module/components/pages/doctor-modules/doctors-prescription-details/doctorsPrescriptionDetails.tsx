@@ -4,6 +4,7 @@ import { all_routes } from "../../../../routes/all_routes";
 import { useState, useEffect } from "react";
 import { usePrescriptions } from "../../../../../core/hooks/usePrescriptions";
 import html2pdf from 'html2pdf.js';
+import PrescriptionPadSlip from "../../clinic-modules/appointments/PrescriptionPadSlip";
 
 const DoctorsPrescriptionDetails = () => {
   const [searchParams] = useSearchParams();
@@ -27,21 +28,21 @@ const DoctorsPrescriptionDetails = () => {
     if (!element) return;
 
     const opt = {
-      margin: 0.3,
+      margin: 0,
       filename: `prescription_${prescription?.prescriptionCode || 'report'}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
+      html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, windowY: 0 },
+      jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
+      pagebreak: { mode: ['avoid-all'] as const }
     };
 
-    // Ensure visibility during capture
     const originalStyle = element.getAttribute('style') || '';
     element.style.display = 'block';
     element.style.visibility = 'visible';
     element.style.position = 'fixed';
     element.style.left = '-9999px';
     element.style.background = 'white';
-    element.style.padding = '30px';
+    element.style.padding = '0';
 
     setTimeout(() => {
       html2pdf().set(opt).from(element).save().finally(() => {
@@ -253,113 +254,10 @@ const DoctorsPrescriptionDetails = () => {
 
       {/* Printable Prescription (Hidden in UI, Visible on Print) */}
       <div id="print-prescription" style={{ display: 'none' }}>
-        <div className="p-4" style={{ minHeight: '29.7cm', width: '21cm', margin: 'auto', background: '#fff', color: '#000', fontFamily: "'Inter', sans-serif" }}>
-
-          {/* Header */}
-          <div className="d-flex justify-content-between align-items-start mb-4">
-            <div className="d-flex gap-3">
-              <div className="rounded p-1 d-flex align-items-center justify-content-center" style={{ width: '80px', height: '80px', border: '1px dashed #4f46e5', backgroundColor: '#fff' }}>
-                <ImageWithBasePath src={(prescription as any)?.clinic?.landingPage?.logo || "logo.png"} alt="logo" style={{ maxHeight: '70px', maxWidth: '70px', objectFit: 'contain' }} />
-              </div>
-              <div>
-                <h4 className="fw-bold mb-1 mt-1" style={{ color: '#000', fontSize: '20px' }}>{(prescription as any).clinic?.name || (prescription as any).clinicName || "Apollo Multispeciality Clinic"}</h4>
-                <p className="mb-1 text-muted fs-12 d-flex align-items-center gap-1">
-                  <i className="ti ti-map-pin fs-10" /> {(prescription as any).clinic?.address || (prescription as any).location || "City Med Tower, 4F"}
-                </p>
-                <h6 className="fw-bold fs-14 mb-0" style={{ color: '#000' }}>{doctor.fullName}</h6>
-                <p className="text-muted fs-11 mb-0">{doctor.designation?.name || "Consultant"} · {doctor.department?.name || "Medicine"}</p>
-              </div>
-            </div>
-            <div className="text-end">
-              <span className="badge bg-white text-primary border border-primary-subtle fw-bold px-3 py-2 mb-2" style={{ fontSize: '11px' }}>
-                {prescription.prescriptionCode || "#---"}
-              </span>
-              <div className="text-muted fs-11 mt-1">
-                <div className="mb-1 text-dark"><strong>Department:</strong> {doctor.department?.name || "General"}</div>
-                <div className="mb-1 text-dark"><strong>Date:</strong> {new Date(prescription.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Patient Infobar */}
-          <div className="bg-light px-3 py-2 rounded-1 d-flex justify-content-between align-items-center mb-4 border-top border-bottom border-light-subtle">
-            <div className="d-flex align-items-center gap-3">
-              <span className="fw-bold text-dark fs-13">Patient Details</span>
-              <span style={{ width: '1px', height: '15px', background: '#ccc' }}></span>
-              <span className="fw-bold text-dark fs-15">{patient.firstName} {patient.lastName}</span>
-            </div>
-            <div className="text-muted fs-11 fw-medium d-flex align-items-center gap-2">
-              <span>{patientAge !== null ? `${patientAge}Y / ${patient.gender || "N/A"}` : "N/A"}</span>
-              <span className="opacity-50">|</span>
-              <span>Blood: {patient.bloodGroup || "O+"}</span>
-              <span className="opacity-50">|</span>
-              <span>Patient ID: <span className="text-dark fw-bold">{patient.patientCode || "#---"}</span></span>
-            </div>
-          </div>
-
-          {/* Prescription Title */}
-          <div className="text-center mb-4 pt-2">
-            <h5 className="fw-bold text-dark text-uppercase tracking-wider" style={{ borderBottom: '2px solid #eee', display: 'inline-block', paddingBottom: '5px' }}>
-              {doctor.department?.name || "Clinical"} Prescription
-            </h5>
-          </div>
-
-          {/* Medicines Table */}
-          <div className="mb-5">
-            <div className="table-responsive">
-              <table className="table table-bordered fs-12 mb-0 border-light-subtle">
-                <thead style={{ background: '#f8f9fa' }}>
-                  <tr>
-                    <th className="py-2 text-center" style={{ width: '50px' }}>SNO</th>
-                    <th className="py-2">Medicine Name</th>
-                    <th className="py-2 text-center">Dosage</th>
-                    <th className="py-2 text-center">Frequency</th>
-                    <th className="py-2 text-center">Duration</th>
-                    <th className="py-2 text-center">Timings</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {medicines.map((med: any, i: number) => (
-                    <tr key={med.id || i}>
-                      <td className="py-2 text-center text-muted fw-medium">{String(i + 1).padStart(2, "0")}</td>
-                      <td className="py-2 fw-bold text-dark">{med.medicineName}</td>
-                      <td className="py-2 text-center">{med.dosage || "—"}</td>
-                      <td className="py-2 text-center fw-bold text-primary">{med.frequency || "—"}</td>
-                      <td className="py-2 text-center">{med.duration || "—"}</td>
-                      <td className="py-2 text-center">{med.timings || "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Advice */}
-          {prescription.advice && (
-            <div className="mb-5">
-              <h6 className="fw-bold text-dark mb-2 fs-13"><i className="ti ti-notes me-1" /> Advice / Instructions</h6>
-              <div className="p-3 border rounded-1 bg-white" style={{ minHeight: '100px', lineHeight: '1.6', fontSize: '14px' }}>
-                {prescription.advice}
-              </div>
-            </div>
-          )}
-
-          {/* Footer / Signature */}
-          <div className="mt-auto pt-5">
-            <div className="d-flex justify-content-between align-items-end">
-              <div>
-                <p className="mb-1 text-dark fs-12"><strong>Follow Up Date:</strong> {prescription.followUpDate ? new Date(prescription.followUpDate).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" }) : "—"}</p>
-                {prescription.followUpNotes && <p className="mb-0 text-muted fs-11">Notes: {prescription.followUpNotes}</p>}
-              </div>
-              <div className="text-end" style={{ width: '200px' }}>
-                <img src="/assets/img/icons/signature-img.svg" alt="signature" style={{ height: '50px', marginBottom: '5px' }} />
-                <h6 className="fw-bold fs-14 mb-0">{doctor.fullName}</h6>
-                <p className="text-muted fs-11 mb-0">{doctor.designation?.name || "Consultant"}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
+        <PrescriptionPadSlip
+          appointment={prescription.appointment || null}
+          prescription={prescription}
+        />
         <style>{`
           @media print {
             @page { size: A4; margin: 0; }
@@ -373,13 +271,17 @@ const DoctorsPrescriptionDetails = () => {
                 position: absolute !important;
                 left: 0 !important;
                 top: 0 !important;
-                width: 100% !important;
+                width: 210mm !important;
+                max-height: 297mm !important;
+                height: auto !important;
+                overflow: hidden !important;
                 background: white !important;
                 z-index: 99999 !important;
-                padding: 1.5cm !important;
+                padding: 0 !important;
                 margin: 0 !important;
+                page-break-after: avoid !important;
+                page-break-inside: avoid !important;
             }
-            .bg-light { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
           }
         `}</style>
       </div>

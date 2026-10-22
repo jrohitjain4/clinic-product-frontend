@@ -1,0 +1,92 @@
+.status-option-group {
+  width: 100%;
+}
+
+.status-option-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.status-option-card {
+  flex: 1 1 0;
+  min-width: 120px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.status-option-card:hover {
+  border-color: #cbd5e1;
+}
+
+.status-radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.status-radio-check {
+  font-size: 11px;
+  line-height: 1;
+  color: #fff;
+}
+
+.status-option-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.status-option-label {
+  white-space: nowrap;
+}
+
+/* Available — green when selected */
+.status-option-card.tone-success.is-selected {
+  background: #ecfdf5;
+  border-color: #34d399;
+  color: #047857;
+}
+
+.status-option-card.tone-success.is-selected .status-radio {
+  border-color: #10b981;
+  background: #10b981;
+}
+
+.status-option-card.tone-success.is-selected .status-option-icon {
+  color: #059669;
+}
+
+/* Unavailable — muted / soft red when selected */
+.status-option-card.tone-muted.is-selected {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #334155;
+}
+
+.status-option-card.tone-muted.is-selected .status-radio {
+  border-color: #64748b;
+  background: #64748b;
+}
+
+.status-option-card.tone-muted.is-selected .status-option-icon {
+  color: #64748b;
+}

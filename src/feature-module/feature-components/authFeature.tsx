@@ -8,7 +8,7 @@ const getDashboardPath = (role: string): string => {
     case "PATIENT":
       return all_routes.patientdashboard;
     default:
-      return all_routes.dashboard;
+      return all_routes.aboutDocYori;
   }
 };
 

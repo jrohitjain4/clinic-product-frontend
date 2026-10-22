@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
 import { toast } from "react-toastify";
 import { apiUrl } from "../../../../../core/config/api";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 const DoctorsPasswordSettings = () => {
   const [passwords, setPasswords] = useState({
@@ -100,9 +101,10 @@ const DoctorsPasswordSettings = () => {
                             New Password <span className="text-danger">*</span>
                           </label>
                           <div className="position-relative">
-                            <input
+                            <IconFormControl
+                              fieldLabel="New Password"
                               type={showNew ? "text" : "password"}
-                              className="form-control pe-5"
+                              className="pe-5"
                               placeholder="Enter new password"
                               value={passwords.newPassword}
                               onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
@@ -121,9 +123,10 @@ const DoctorsPasswordSettings = () => {
                             Confirm Password <span className="text-danger">*</span>
                           </label>
                           <div className="position-relative">
-                            <input
+                            <IconFormControl
+                              fieldLabel="Confirm Password"
                               type={showConfirm ? "text" : "password"}
-                              className="form-control pe-5"
+                              className="pe-5"
                               placeholder="Re-enter new password"
                               value={passwords.confirmPassword}
                               onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}

@@ -2,6 +2,7 @@ import { Link } from "react-router"
 import { all_routes } from "../../../routes/all_routes"
 import { useState } from "react";
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
+import { IconFormControl } from "../../../../core/common/form-fields";
 type PasswordField = "password" | "confirmPassword";
 
 const ResetPasswordCover = () => {
@@ -77,18 +78,16 @@ const ResetPasswordCover = () => {
                       <div className="mb-3">
                         <label className="form-label">Password</label>
                         <div className="position-relative">
-                          <div className="pass-group input-group position-relative border rounded">
-                            <span className="input-group-text bg-white border-0">
-                              <i className="ti ti-lock text-dark fs-14" />
-                            </span>
-                           <input
+                          <div className="pass-group position-relative">
+                            <IconFormControl
                               type={
                                 passwordVisibility.password
                                   ? "text"
                                   : "password"
                               }
-                              className="pass-input form-control border-start-0 ps-0"
-                              placeholder="****************"
+                              fieldLabel="Password"
+                              placeholder="Password"
+                              className="pass-input pe-5"
                             />
                             <span
                               className={`ti toggle-password text-dark fs-14 ${
@@ -106,18 +105,16 @@ const ResetPasswordCover = () => {
                       <div className="mb-3">
                         <label className="form-label">Confirm Password</label>
                         <div className="position-relative">
-                          <div className="pass-group input-group position-relative border rounded">
-                            <span className="input-group-text bg-white border-0">
-                              <i className="ti ti-lock text-dark fs-14" />
-                            </span>
-                            <input
+                          <div className="pass-group position-relative">
+                            <IconFormControl
                               type={
                                 passwordVisibility.confirmPassword
                                   ? "text"
                                   : "password"
                               }
-                              className="pass-input form-control border-start-0 ps-0"
-                              placeholder="****************"
+                              fieldLabel="Confirm Password"
+                              placeholder="Confirm Password"
+                              className="pass-input pe-5"
                             />
                             <span
                               className={`ti toggle-password text-dark fs-14 ${
@@ -152,7 +149,7 @@ const ResetPasswordCover = () => {
                 </div>
               </form>
               <p className="fs-14 text-dark text-center mt-4">
-                Copyright © 2025 - Docyari.
+                Copyright ï¿½ 2025 - Docyari.
               </p>
             </div>
             {/* end row*/}

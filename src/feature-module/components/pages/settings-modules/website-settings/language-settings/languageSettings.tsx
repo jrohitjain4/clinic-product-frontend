@@ -2,6 +2,7 @@ import { Link } from "react-router"
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar"
 import { all_routes } from "../../../../../routes/all_routes"
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath"
+import { IconFormControl } from "../../../../../../core/common/form-fields"
 
 const LanguageSettings = () => {
   return (
@@ -72,10 +73,11 @@ const LanguageSettings = () => {
               <div className="card-body px-0 mx-3">
                 <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                   <div className="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                    <div className="input-icon-start position-relative me-2">
-                      <input
+                    <div className="me-2">
+                      <IconFormControl
+                        fieldLabel="search"
                         type="text"
-                        className="form-control form-control-sm ps-2 bg-white"
+                        className="form-control-sm bg-white"
                         placeholder="Search"
                       />
                     </div>

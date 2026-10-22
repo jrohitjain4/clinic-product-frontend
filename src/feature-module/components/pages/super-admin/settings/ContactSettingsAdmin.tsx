@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { message } from "antd";
+import { IconFormControl, IconTextarea } from "../../../../../core/common/form-fields";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -130,8 +131,8 @@ const ContactSettingsAdmin = () => {
                                     <form onSubmit={handleSave} className="d-flex flex-column gap-4">
                                         <div className="form-group">
                                             <label className="form-label fw-bold text-dark">Our Address</label>
-                                            <textarea
-                                                className="form-control"
+                                            <IconTextarea
+                                                fieldLabel="address"
                                                 rows={4}
                                                 placeholder="Enter full clinic/office address"
                                                 value={settings.contact_address}
@@ -145,9 +146,9 @@ const ContactSettingsAdmin = () => {
                                             <div className="col-md-6">
                                                 <div className="form-group">
                                                     <label className="form-label fw-bold text-dark">Phone Number</label>
-                                                    <input
+                                                    <IconFormControl
                                                         type="text"
-                                                        className="form-control"
+                                                        fieldLabel="phone"
                                                         placeholder="e.g. +91 98765 43210"
                                                         value={settings.contact_phone}
                                                         onChange={(e) => handleChange("contact_phone", e.target.value)}
@@ -159,10 +160,10 @@ const ContactSettingsAdmin = () => {
                                             <div className="col-md-6">
                                                 <div className="form-group">
                                                     <label className="form-label fw-bold text-dark">WhatsApp Number</label>
-                                                    <input
+                                                    <IconFormControl
                                                         type="text"
-                                                        className="form-control"
-                                                        placeholder="e.g. +919876543210"
+                                                        fieldLabel="phone"
+                                                        placeholder="WhatsApp Number"
                                                         value={settings.contact_whatsapp}
                                                         onChange={(e) => handleChange("contact_whatsapp", e.target.value)}
                                                         style={{ borderRadius: "8px", height: "46px" }}
@@ -176,9 +177,9 @@ const ContactSettingsAdmin = () => {
                                             <div className="col-md-6">
                                                 <div className="form-group">
                                                     <label className="form-label fw-bold text-dark">Email Address</label>
-                                                    <input
+                                                    <IconFormControl
                                                         type="email"
-                                                        className="form-control"
+                                                        fieldLabel="email"
                                                         placeholder="e.g. hello@docyori.com"
                                                         value={settings.contact_email}
                                                         onChange={(e) => handleChange("contact_email", e.target.value)}
@@ -190,9 +191,9 @@ const ContactSettingsAdmin = () => {
                                             <div className="col-md-6">
                                                 <div className="form-group">
                                                     <label className="form-label fw-bold text-dark">Website URL</label>
-                                                    <input
+                                                    <IconFormControl
                                                         type="text"
-                                                        className="form-control"
+                                                        fieldLabel="website"
                                                         placeholder="e.g. www.docyori.com"
                                                         value={settings.contact_website}
                                                         onChange={(e) => handleChange("contact_website", e.target.value)}
@@ -210,33 +211,27 @@ const ContactSettingsAdmin = () => {
                                             <div className="col-md-6">
                                                 <div className="form-group">
                                                     <label className="form-label fw-semibold text-muted">Facebook URL</label>
-                                                    <div className="input-group">
-                                                        <span className="input-group-text bg-light border-end-0"><i className="ti ti-brand-facebook text-primary fs-18"></i></span>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control border-start-0 ps-0"
-                                                            placeholder="e.g. https://facebook.com/docyori"
-                                                            value={settings.contact_facebook}
-                                                            onChange={(e) => handleChange("contact_facebook", e.target.value)}
-                                                            style={{ borderRadius: "0 8px 8px 0", height: "46px" }}
-                                                        />
-                                                    </div>
+                                                    <IconFormControl
+                                                        type="text"
+                                                        fieldLabel="url"
+                                                        placeholder="Facebook URL"
+                                                        value={settings.contact_facebook}
+                                                        onChange={(e) => handleChange("contact_facebook", e.target.value)}
+                                                        style={{ borderRadius: "8px", height: "46px" }}
+                                                    />
                                                 </div>
                                             </div>
                                             <div className="col-md-6">
                                                 <div className="form-group">
                                                     <label className="form-label fw-semibold text-muted">Twitter URL</label>
-                                                    <div className="input-group">
-                                                        <span className="input-group-text bg-light border-end-0"><i className="ti ti-brand-twitter text-info fs-18"></i></span>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control border-start-0 ps-0"
-                                                            placeholder="e.g. https://twitter.com/docyori"
-                                                            value={settings.contact_twitter}
-                                                            onChange={(e) => handleChange("contact_twitter", e.target.value)}
-                                                            style={{ borderRadius: "0 8px 8px 0", height: "46px" }}
-                                                        />
-                                                    </div>
+                                                    <IconFormControl
+                                                        type="text"
+                                                        fieldLabel="url"
+                                                        placeholder="Twitter URL"
+                                                        value={settings.contact_twitter}
+                                                        onChange={(e) => handleChange("contact_twitter", e.target.value)}
+                                                        style={{ borderRadius: "8px", height: "46px" }}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -245,33 +240,27 @@ const ContactSettingsAdmin = () => {
                                             <div className="col-md-6">
                                                 <div className="form-group">
                                                     <label className="form-label fw-semibold text-muted">LinkedIn URL</label>
-                                                    <div className="input-group">
-                                                        <span className="input-group-text bg-light border-end-0"><i className="ti ti-brand-linkedin text-primary fs-18"></i></span>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control border-start-0 ps-0"
-                                                            placeholder="e.g. https://linkedin.com/company/docyori"
-                                                            value={settings.contact_linkedin}
-                                                            onChange={(e) => handleChange("contact_linkedin", e.target.value)}
-                                                            style={{ borderRadius: "0 8px 8px 0", height: "46px" }}
-                                                        />
-                                                    </div>
+                                                    <IconFormControl
+                                                        type="text"
+                                                        fieldLabel="url"
+                                                        placeholder="LinkedIn URL"
+                                                        value={settings.contact_linkedin}
+                                                        onChange={(e) => handleChange("contact_linkedin", e.target.value)}
+                                                        style={{ borderRadius: "8px", height: "46px" }}
+                                                    />
                                                 </div>
                                             </div>
                                             <div className="col-md-6">
                                                 <div className="form-group">
                                                     <label className="form-label fw-semibold text-muted">YouTube URL</label>
-                                                    <div className="input-group">
-                                                        <span className="input-group-text bg-light border-end-0"><i className="ti ti-brand-youtube text-danger fs-18"></i></span>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control border-start-0 ps-0"
-                                                            placeholder="e.g. https://youtube.com/c/docyori"
-                                                            value={settings.contact_youtube}
-                                                            onChange={(e) => handleChange("contact_youtube", e.target.value)}
-                                                            style={{ borderRadius: "0 8px 8px 0", height: "46px" }}
-                                                        />
-                                                    </div>
+                                                    <IconFormControl
+                                                        type="text"
+                                                        fieldLabel="url"
+                                                        placeholder="YouTube URL"
+                                                        value={settings.contact_youtube}
+                                                        onChange={(e) => handleChange("contact_youtube", e.target.value)}
+                                                        style={{ borderRadius: "8px", height: "46px" }}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>

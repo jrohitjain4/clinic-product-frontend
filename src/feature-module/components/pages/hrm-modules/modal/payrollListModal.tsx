@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
-import CommonSelect from "../../../../../core/common/common-select/commonSelect";
+import { IconSelect, IconFormControl } from "../../../../../core/common/form-fields";
 import { useState, useEffect } from "react";
 import { apiPost, apiPut, apiDelete } from "../../../../../core/utils/apiClient";
 import { Spin } from "antd";
@@ -243,7 +243,8 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                   <div className="col-md-6">
                     <div className="mb-3">
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">Select Employee <span className="text-danger">*</span></label>
-                      <CommonSelect
+                      <IconSelect
+                        fieldLabel="Staff"
                         options={staffOptions}
                         className="select"
                         value={employeeId}
@@ -255,7 +256,8 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                   <div className="col-md-6">
                     <div className="mb-3">
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">Status <span className="text-danger">*</span></label>
-                      <CommonSelect
+                      <IconSelect
+                        fieldLabel="Status"
                         options={STATUS_OPTIONS}
                         className="select"
                         value={status}
@@ -266,7 +268,7 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                   <div className="col-md-12">
                     <div className="mb-3">
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">Salary Month / Date <span className="text-danger">*</span></label>
-                      <input type="date" className="form-control" value={salaryDate} onChange={(e) => setSalaryDate(e.target.value)} required />
+                      <IconFormControl fieldLabel="Date" type="date" value={salaryDate} onChange={(e) => setSalaryDate(e.target.value)} required />
                     </div>
                   </div>
                   <div className="col-md-12">
@@ -282,9 +284,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     <h6 className="mb-3 fw-bold">Earnings (₹)</h6>
                     <div className="mb-3">
                       <label className="form-label">Basic Salary <span className="text-danger ms-1">*</span></label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Salary"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter basic salary"
                         value={basicSalary}
                         onChange={(e) => setBasicSalary(e.target.value)}
                         onFocus={() => handleFocus(basicSalary, setBasicSalary)}
@@ -294,9 +297,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">DA (40%)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter DA"
                         value={da}
                         onChange={(e) => setDa(e.target.value)}
                         onFocus={() => handleFocus(da, setDa)}
@@ -305,9 +309,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">HRA (15%)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter HRA"
                         value={hra}
                         onChange={(e) => setHra(e.target.value)}
                         onFocus={() => handleFocus(hra, setHra)}
@@ -316,9 +321,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Conveyance</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter conveyance"
                         value={conveyance}
                         onChange={(e) => setConveyance(e.target.value)}
                         onFocus={() => handleFocus(conveyance, setConveyance)}
@@ -327,9 +333,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Medical Allowance</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter medical allowance"
                         value={medicalAllowance}
                         onChange={(e) => setMedicalAllowance(e.target.value)}
                         onFocus={() => handleFocus(medicalAllowance, setMedicalAllowance)}
@@ -338,9 +345,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-0">
                       <label className="form-label">Others</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter other earnings"
                         value={otherEarnings}
                         onChange={(e) => setOtherEarnings(e.target.value)}
                         onFocus={() => handleFocus(otherEarnings, setOtherEarnings)}
@@ -352,9 +360,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     <h6 className="mb-3 fw-bold">Deductions (₹)</h6>
                     <div className="mb-3">
                       <label className="form-label">TDS</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Tax Rate"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter TDS"
                         value={tds}
                         onChange={(e) => setTds(e.target.value)}
                         onFocus={() => handleFocus(tds, setTds)}
@@ -363,9 +372,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">ESI</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter ESI"
                         value={esi}
                         onChange={(e) => setEsi(e.target.value)}
                         onFocus={() => handleFocus(esi, setEsi)}
@@ -374,9 +384,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">PF</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter PF"
                         value={pf}
                         onChange={(e) => setPf(e.target.value)}
                         onFocus={() => handleFocus(pf, setPf)}
@@ -385,9 +396,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Prof Tax</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Tax Rate"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter prof tax"
                         value={profTax}
                         onChange={(e) => setProfTax(e.target.value)}
                         onFocus={() => handleFocus(profTax, setProfTax)}
@@ -396,9 +408,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Labour Welfare</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter labour welfare"
                         value={labourWelfare}
                         onChange={(e) => setLabourWelfare(e.target.value)}
                         onFocus={() => handleFocus(labourWelfare, setLabourWelfare)}
@@ -407,9 +420,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-0">
                       <label className="form-label">Others</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter other deductions"
                         value={otherDeductions}
                         onChange={(e) => setOtherDeductions(e.target.value)}
                         onFocus={() => handleFocus(otherDeductions, setOtherDeductions)}
@@ -442,7 +456,8 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                   <div className="col-md-6">
                     <div className="mb-3">
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">Select Employee <span className="text-danger">*</span></label>
-                      <CommonSelect
+                      <IconSelect
+                        fieldLabel="Staff"
                         options={staffOptions}
                         className="select"
                         value={employeeId}
@@ -454,7 +469,8 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                   <div className="col-md-6">
                     <div className="mb-3">
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">Status <span className="text-danger">*</span></label>
-                      <CommonSelect
+                      <IconSelect
+                        fieldLabel="Status"
                         options={STATUS_OPTIONS}
                         className="select"
                         value={status}
@@ -465,7 +481,7 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                   <div className="col-md-12">
                     <div className="mb-3">
                       <label className="form-label mb-1 text-dark fs-14 fw-medium">Salary Month / Date <span className="text-danger">*</span></label>
-                      <input type="date" className="form-control" value={salaryDate} onChange={(e) => setSalaryDate(e.target.value)} required />
+                      <IconFormControl fieldLabel="Date" type="date" value={salaryDate} onChange={(e) => setSalaryDate(e.target.value)} required />
                     </div>
                   </div>
                   <div className="col-md-12">
@@ -480,9 +496,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     <h6 className="mb-3 fw-bold">Earnings (₹)</h6>
                     <div className="mb-3">
                       <label className="form-label">Basic Salary <span className="text-danger ms-1">*</span></label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Salary"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter basic salary"
                         value={basicSalary}
                         onChange={(e) => setBasicSalary(e.target.value)}
                         onFocus={() => handleFocus(basicSalary, setBasicSalary)}
@@ -492,9 +509,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">DA (40%)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter DA"
                         value={da}
                         onChange={(e) => setDa(e.target.value)}
                         onFocus={() => handleFocus(da, setDa)}
@@ -503,9 +521,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">HRA (15%)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter HRA"
                         value={hra}
                         onChange={(e) => setHra(e.target.value)}
                         onFocus={() => handleFocus(hra, setHra)}
@@ -514,9 +533,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Conveyance</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter conveyance"
                         value={conveyance}
                         onChange={(e) => setConveyance(e.target.value)}
                         onFocus={() => handleFocus(conveyance, setConveyance)}
@@ -525,9 +545,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Medical Allowance</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter medical allowance"
                         value={medicalAllowance}
                         onChange={(e) => setMedicalAllowance(e.target.value)}
                         onFocus={() => handleFocus(medicalAllowance, setMedicalAllowance)}
@@ -536,9 +557,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-0">
                       <label className="form-label">Others</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter other earnings"
                         value={otherEarnings}
                         onChange={(e) => setOtherEarnings(e.target.value)}
                         onFocus={() => handleFocus(otherEarnings, setOtherEarnings)}
@@ -550,9 +572,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     <h6 className="mb-3 fw-bold">Deductions (₹)</h6>
                     <div className="mb-3">
                       <label className="form-label">TDS</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Tax Rate"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter TDS"
                         value={tds}
                         onChange={(e) => setTds(e.target.value)}
                         onFocus={() => handleFocus(tds, setTds)}
@@ -561,9 +584,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">ESI</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter ESI"
                         value={esi}
                         onChange={(e) => setEsi(e.target.value)}
                         onFocus={() => handleFocus(esi, setEsi)}
@@ -572,9 +596,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">PF</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter PF"
                         value={pf}
                         onChange={(e) => setPf(e.target.value)}
                         onFocus={() => handleFocus(pf, setPf)}
@@ -583,9 +608,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Prof Tax</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Tax Rate"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter prof tax"
                         value={profTax}
                         onChange={(e) => setProfTax(e.target.value)}
                         onFocus={() => handleFocus(profTax, setProfTax)}
@@ -594,9 +620,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-3">
                       <label className="form-label">Labour Welfare</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter labour welfare"
                         value={labourWelfare}
                         onChange={(e) => setLabourWelfare(e.target.value)}
                         onFocus={() => handleFocus(labourWelfare, setLabourWelfare)}
@@ -605,9 +632,10 @@ const PayrollListModal: React.FC<PayrollModalProps> = ({ selectedPayroll, refetc
                     </div>
                     <div className="mb-0">
                       <label className="form-label">Others</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="Amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter other deductions"
                         value={otherDeductions}
                         onChange={(e) => setOtherDeductions(e.target.value)}
                         onFocus={() => handleFocus(otherDeductions, setOtherDeductions)}

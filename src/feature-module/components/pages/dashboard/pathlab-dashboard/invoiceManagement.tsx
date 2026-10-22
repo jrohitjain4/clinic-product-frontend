@@ -7,8 +7,10 @@ import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { useLabBookings } from "../../../../../core/hooks/useLabBookings";
 import EmptyState from "../../../../../core/common/emptyState";
+import DiagnosticInvoicePrintLayout from "./DiagnosticInvoicePrintLayout";
 import InvoiceSlip from "../../patient-modules/patient-invoice-details/InvoiceSlip";
 import html2pdf from "html2pdf.js";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 const InvoiceManagement = () => {
   const { bookings, loading, updateBooking, deleteBooking, bulkDeleteBookings } = useLabBookings();
@@ -136,53 +138,73 @@ const InvoiceManagement = () => {
   useEffect(() => {
     if (!printInvoice || !printAction) return;
 
-    const timer = setTimeout(() => {
-      const el = document.getElementById('print-invoice-slip');
-      if (!el) return;
+    let triggered = false;
 
-      el.style.display = 'block';
+    const runPrint = () => {
+      if (triggered) return true;
+      const el = document.getElementById("diagnostic-invoice-print");
+      const slip = el?.querySelector(".inv-slip");
+      if (!el || !slip) return false;
+
+      triggered = true;
 
       if (printAction === "print") {
-        window.print();
-        setTimeout(() => {
-          el.style.display = 'none';
-          setPrintInvoice(null);
-          setPrintAction(null);
-        }, 1000);
-      } else if (printAction === "download") {
-        const opt = {
-          margin: 0,
-          filename: `Invoice-${printInvoice.invoiceCode || 'diagnostic'}.pdf`,
-          image: { type: 'jpeg' as const, quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, logging: false },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
-        };
-        html2pdf().from(el).set(opt).save()
-          .then(() => {
-            el.style.display = 'none';
+        requestAnimationFrame(() => {
+          window.print();
+          setTimeout(() => {
             setPrintInvoice(null);
             setPrintAction(null);
-          })
-          .catch(() => {
-            el.style.display = 'none';
+          }, 800);
+        });
+      } else if (printAction === "download") {
+        const prevStyle = el.getAttribute("style") || "";
+        el.setAttribute(
+          "style",
+          "position:fixed;left:0;top:0;width:210mm;opacity:1;z-index:99999;pointer-events:none;background:#fff;"
+        );
+
+        const opt = {
+          margin: 0,
+          filename: `Invoice-${printInvoice.invoiceCode || "diagnostic"}.pdf`,
+          image: { type: "jpeg" as const, quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
+        };
+
+        html2pdf()
+          .from(el)
+          .set(opt)
+          .save()
+          .finally(() => {
+            if (prevStyle) el.setAttribute("style", prevStyle);
+            else el.removeAttribute("style");
             setPrintInvoice(null);
             setPrintAction(null);
           });
       }
-    }, 250);
+      return true;
+    };
 
-    return () => clearTimeout(timer);
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts += 1;
+      if (runPrint() || attempts >= 20) {
+        clearInterval(timer);
+      }
+    }, 100);
+
+    return () => clearInterval(timer);
   }, [printInvoice, printAction]);
 
   const handlePrint = (inv: any) => {
-    const invoiceData = buildInvoiceData(inv);
-    setPrintInvoice(invoiceData);
+    if (!inv) return;
+    setPrintInvoice(buildInvoiceData(inv));
     setPrintAction("print");
   };
 
   const handleDownload = (inv: any) => {
-    const invoiceData = buildInvoiceData(inv);
-    setPrintInvoice(invoiceData);
+    if (!inv) return;
+    setPrintInvoice(buildInvoiceData(inv));
     setPrintAction("download");
   };
 
@@ -235,7 +257,36 @@ const InvoiceManagement = () => {
     {
       title: "Payment", dataIndex: "PaymentStatus",
       render: (text: string) => (
-        <span className={`badge border ${text === "Paid" ? "badge-soft-success border-success" : text === "Unpaid" ? "badge-soft-danger border-danger" : "badge-soft-warning border-warning"} px-2 py-1 fs-12 fw-medium`}>{text}</span>
+        <span
+          className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+          style={{
+            backgroundColor:
+              text === "Paid"
+                ? "#e6f8ef"
+                : text === "Unpaid"
+                  ? "#fdeded"
+                  : "#fff3cd",
+            color:
+              text === "Paid"
+                ? "#198754"
+                : text === "Unpaid"
+                  ? "#dc3545"
+                  : "#fd7e14",
+            fontWeight: 600,
+            fontSize: "12px",
+          }}
+        >
+          <i
+            className={`${
+              text === "Paid"
+                ? "ti ti-circle-check"
+                : text === "Unpaid"
+                  ? "ti ti-circle-x"
+                  : "ti ti-clock"
+            } fs-14`}
+          />
+          {text}
+        </span>
       ),
       sorter: (a: any, b: any) => a.PaymentStatus.localeCompare(b.PaymentStatus),
     },
@@ -260,7 +311,7 @@ const InvoiceManagement = () => {
           <div className="page-header d-flex align-items-sm-center flex-sm-row flex-column gap-2 border-bottom pb-3 mb-3">
             <div className="flex-grow-1"><h4 className="page-title fw-bold mb-0 d-flex align-items-center">Invoice Management <span className="badge badge-soft-primary border border-primary fs-13 fw-medium ms-2">Total : {loading ? "" : filteredData.length}</span></h4></div>
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
-              <div className="search-field position-relative" style={{ width: "200px" }}><input type="text" className="form-control fs-13 py-2" placeholder="Search Invoice..." value={searchText} onChange={(e) => setSearchText(e.target.value)} /></div>
+              <div className="search-field position-relative" style={{ width: "200px" }}><IconFormControl fieldLabel="search" type="text" className="fs-13 py-2" placeholder="Search Invoice..." value={searchText} onChange={(e) => setSearchText(e.target.value)} /></div>
               <div className="dropdown">
                 <Link to="#" className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap fs-13" style={{ minWidth: "160px", minHeight: "38px" }} data-bs-toggle="dropdown">
                   <span className="text-truncate"><span className="text-muted">Patient:</span> {filterPatient}</span>
@@ -314,20 +365,22 @@ const InvoiceManagement = () => {
               <div className="modal-header bg-primary text-white"><h5 className="modal-title text-white">Update Payment</h5><button type="button" className="btn-close btn-close-white" onClick={() => setShowEditModal(false)}></button></div>
               <form onSubmit={handleEditSubmit}>
                 <div className="modal-body p-4">
-                  <div className="mb-3"><label className="form-label fw-semibold">Invoice No</label><input type="text" className="form-control bg-light" value={selectedInvoice?.invoiceNo || ""} disabled /></div>
-                  <div className="mb-3"><label className="form-label fw-semibold">Amount</label><input type="text" className="form-control bg-light fw-bold" value={`₹${selectedInvoice?.totalAmount?.toLocaleString("en-IN") || 0}`} disabled /></div>
+                  <div className="mb-3"><label className="form-label fw-semibold">Invoice No</label><IconFormControl fieldLabel="Invoice" type="text" className="bg-light" value={selectedInvoice?.invoiceNo || ""} disabled /></div>
+                  <div className="mb-3"><label className="form-label fw-semibold">Amount</label><IconFormControl fieldLabel="Amount" type="text" className="bg-light fw-bold" value={`₹${selectedInvoice?.totalAmount?.toLocaleString("en-IN") || 0}`} disabled /></div>
                   <div className="mb-3">
                     <label className="form-label fw-semibold">Payment Status <span className="text-danger">*</span></label>
                     <select className="form-select" value={formPaymentStatus} onChange={(e) => setFormPaymentStatus(e.target.value)}>
                       <option value="Paid">Paid</option><option value="Unpaid">Unpaid</option><option value="Partial">Partial</option>
                     </select>
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label fw-semibold">Payment Method</label>
-                    <select className="form-select" value={formPaymentMethod} onChange={(e) => setFormPaymentMethod(e.target.value)}>
-                      <option value="">Not Applicable</option><option value="Cash">Cash</option><option value="UPI">UPI</option><option value="Card">Card</option><option value="Online">Online</option>
-                    </select>
-                  </div>
+                  {formPaymentStatus !== "Unpaid" && (
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">Payment Method</label>
+                      <select className="form-select" value={formPaymentMethod} onChange={(e) => setFormPaymentMethod(e.target.value)}>
+                        <option value="">Not Applicable</option><option value="Cash">Cash</option><option value="UPI">UPI</option><option value="Card">Card</option><option value="Online">Online</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
                 <div className="modal-footer bg-light"><button type="button" className="btn btn-light" onClick={() => setShowEditModal(false)}>Cancel</button><button type="submit" className="btn btn-primary px-4" disabled={submitting}>{submitting ? "Updating..." : "Update Payment"}</button></div>
               </form>
@@ -368,14 +421,14 @@ const InvoiceManagement = () => {
                 <button
                   type="button"
                   className="btn btn-outline-primary btn-sm me-2"
-                  onClick={() => handlePrint(viewInvoice)}
+                  onClick={() => viewInvoice && handlePrint(viewInvoice)}
                 >
                   <i className="ti ti-printer me-1" /> Print Slip
                 </button>
                 <button
                   type="button"
                   className="btn btn-outline-success btn-sm me-2"
-                  onClick={() => handleDownload(viewInvoice)}
+                  onClick={() => viewInvoice && handleDownload(viewInvoice)}
                 >
                   <i className="ti ti-download me-1" /> Download PDF
                 </button>
@@ -398,10 +451,7 @@ const InvoiceManagement = () => {
         </div>
       </div>
 
-      {/* Hidden InvoiceSlip for Print/Download - exact same component and container ID as main finance invoices */}
-      <div id="print-invoice-slip" style={{ display: 'none' }}>
-        {printInvoice && <InvoiceSlip invoice={printInvoice} />}
-      </div>
+      <DiagnosticInvoicePrintLayout invoice={printInvoice} />
     </>
   );
 };

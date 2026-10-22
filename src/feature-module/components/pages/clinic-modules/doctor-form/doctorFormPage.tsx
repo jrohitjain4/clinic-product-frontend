@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { Link, useNavigate } from "react-router";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
 import TagInput from "../../../../../core/common/Taginput";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import DuplicateForms, {
   cloneScheduleRows,
 } from "../../../../../core/common/duplicate-forms/duplicateForms";
@@ -14,14 +14,22 @@ import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { apiUrl } from "../../../../../core/config/api";
 import { toast } from "react-toastify";
+import { getPhoneValidationError } from "../../../../../core/utils/phoneValidation";
 import {
   Blood_Group,
   City,
   Country,
   Appointment_Type,
-  Gender,
   State,
 } from "../../../../../core/common/selectOption";
+import {
+  IconFormControl,
+  IconSelect,
+  IconTextarea,
+  GenderOptionGroup,
+  StatusOptionGroup,
+} from "../../../../../core/common/form-fields";
+import type { PatientStatusValue } from "../../../../../core/common/form-fields";
 import type { Dayjs } from "dayjs";
 import type { RowType } from "../../../../../core/common/duplicate-forms/duplicateForms.types";
 import type { AwardEntry, EducationEntry } from "../../../../../core/types/doctorProfile";
@@ -61,6 +69,14 @@ const Doctor_Types = [
 ];
 
 const isValidDoctorId = (id?: string) => !!id && id !== ":id" && !id.includes(":");
+
+/** "Dr. Ramesh Yadav" → "rameshyadav" */
+const buildUsernameFromName = (name: string) => {
+  let s = name.trim();
+  s = s.replace(/^(dr\.?|doctor)\s+/i, "");
+  s = s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return s;
+};
 
 const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disableDoctorTypeChange = false }: DoctorFormPageProps) => {
   const navigate = useNavigate();
@@ -188,6 +204,7 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
   const [awardsKey, setAwardsKey] = useState(0);
   const [certsKey, setCertsKey] = useState(0);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showWhatsAppConfirmModal, setShowWhatsAppConfirmModal] = useState(false);
   const [showEducation, setShowEducation] = useState(false);
   const [showAwards, setShowAwards] = useState(false);
   const [showCertifications, setShowCertifications] = useState(false);
@@ -276,6 +293,22 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const [initialUsername, setInitialUsername] = useState("");
   const [usernameWarning, setUsernameWarning] = useState<string | null>(null);
+  const usernameManuallyEditedRef = useRef(false);
+  const usernameAutoRetryRef = useRef(0);
+
+  const handleFullNameChange = (value: string) => {
+    setFullName(value);
+    // Auto-generate username only on create, and only until user edits username
+    if (isEdit || usernameManuallyEditedRef.current) return;
+    usernameAutoRetryRef.current = 0;
+    setUsername(buildUsernameFromName(value));
+  };
+
+  const handleUsernameChange = (value: string) => {
+    usernameManuallyEditedRef.current = true;
+    usernameAutoRetryRef.current = 0;
+    setUsername(value);
+  };
 
   // -- Username Availability Check -------------------------------
   useEffect(() => {
@@ -318,7 +351,18 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
         const data = await res.json();
         if (data.available) {
           setUsernameStatus("available");
+          usernameAutoRetryRef.current = 0;
         } else {
+          // Auto-append random number if still auto-generated (user hasn't edited)
+          if (!isEdit && !usernameManuallyEditedRef.current && usernameAutoRetryRef.current < 5) {
+            usernameAutoRetryRef.current += 1;
+            const base = buildUsernameFromName(fullName) || username.replace(/\d+$/, "");
+            if (base.length >= 2) {
+              const suffix = Math.floor(10 + Math.random() * 90);
+              setUsername(`${base}${suffix}`);
+              return;
+            }
+          }
           setUsernameStatus("taken");
         }
       } catch (err) {
@@ -329,7 +373,7 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
 
     const timeoutId = setTimeout(check, 500);
     return () => clearTimeout(timeoutId);
-  }, [username, isEdit, initialUsername]);
+  }, [username, isEdit, initialUsername, fullName]);
 
   // -- Load doctor for edit -----------------------------------------
   useEffect(() => {
@@ -351,6 +395,7 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
         setFullName(d.fullName || "");
         setUsername(d.username || "");
         setInitialUsername(d.username || "");
+        usernameManuallyEditedRef.current = true;
         setPhone(d.phone || undefined);
         setEmail(d.email || "");
         setDob(d.dob ? dayjs(d.dob) : null);
@@ -630,9 +675,17 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
       toast.error("Checking username availability. Please wait...");
       return false;
     }
-    if (!phone) {
-      toast.error("Phone number is required.");
+    const phoneErr = getPhoneValidationError(phone, "Phone number", true);
+    if (phoneErr) {
+      toast.error(phoneErr);
       return false;
+    }
+    if (alternateMobile) {
+      const altErr = getPhoneValidationError(alternateMobile, "Alternative contact number", false);
+      if (altErr) {
+        toast.error(altErr);
+        return false;
+      }
     }
     if (!email.trim()) {
       toast.error("Email address is required.");
@@ -836,17 +889,31 @@ const DoctorFormPage = ({ mode, doctorId, defaultDoctorType = "regular", disable
       toast.success(isEdit ? "Doctor updated successfully!" : "Doctor added successfully!");
       setSuccess(true);
 
-      // Send WhatsApp notification if it's a new doctor creation
+      // Ask to send WhatsApp welcome (theme modal, not browser confirm)
       if (!isEdit && phone) {
-        const confirmSend = window.confirm(`Do you want to send a WhatsApp welcome notification to Dr. ${fullName}?`);
-        if (confirmSend) {
-          try {
-            const userStr = localStorage.getItem("user");
-            const currentUser = userStr ? JSON.parse(userStr) : {};
-            const clinicName = currentUser?.clinic?.name || "our clinic";
-            const loginLink = `${window.location.origin}/login`;
+        setShowWhatsAppConfirmModal(true);
+        return;
+      }
 
-            const msg = `Dear Dr. ${fullName},
+      setTimeout(() => navigate(backRoute), 1500);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const doctorDisplayName = fullName.trim().replace(/^(dr\.?|doctor)\s+/i, "");
+
+  const handleWhatsAppConfirm = (send: boolean) => {
+    if (send && phone) {
+      try {
+        const userStr = localStorage.getItem("user");
+        const currentUser = userStr ? JSON.parse(userStr) : {};
+        const clinicName = currentUser?.clinic?.name || "our clinic";
+        const loginLink = `${window.location.origin}/login`;
+
+        const msg = `Dear Dr. ${doctorDisplayName},
 Welcome to ${clinicName}. Your doctor account has been successfully created on the DocYori Clinic Management System.
 You can now securely access your account using your registered mobile number and OTP verification.
 🔗 Login Here:
@@ -864,21 +931,15 @@ Thank you,
  ${clinicName}
 Powered by DocYori`;
 
-            const cleanPhone = phone.replace(/\D/g, "");
-            const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
-            window.open(whatsappUrl, "_blank");
-          } catch (e) {
-            console.error("Error generating WhatsApp notification link", e);
-          }
-        }
+        const cleanPhone = phone.replace(/\D/g, "");
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
+        window.open(whatsappUrl, "_blank");
+      } catch (e) {
+        console.error("Error generating WhatsApp notification link", e);
       }
-
-      setTimeout(() => navigate(backRoute), 1500);
-    } catch (err: any) {
-      toast.error(err.message);
-    } finally {
-      setSubmitting(false);
     }
+    setShowWhatsAppConfirmModal(false);
+    navigate(backRoute);
   };
 
   if (loadingDoctor) {
@@ -908,29 +969,91 @@ Powered by DocYori`;
   return (
     <>
       <div className="page-wrapper">
+        <style>{`
+          .page-wrapper .card.doctor-form-main-card {
+            border: none !important;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.1) !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+          }
+          .page-wrapper .card.doctor-form-main-card > .doctor-form-card-header {
+            border-top-left-radius: 12px !important;
+            border-top-right-radius: 12px !important;
+          }
+        `}</style>
         <div className="content">
           <div className="row">
             <div className="col-lg-10 mx-auto">
               {/* Page Header */}
-              <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-2 pb-3 border-bottom">
+              <div className="d-flex align-items-sm-center flex-sm-row flex-column gap-2 mb-2 pb-3">
                 <div className="flex-grow-1">
                   <h6 className="fw-bold mb-0 d-flex align-items-center">
-                    <Link to={backRoute}>
+                    <Link to={backRoute} className="text-dark">
                       <i className="ti ti-chevron-left me-1 fs-14" />
-                      {doctorType === "therapist" ? "Therapist" : "Doctor"}
+                      {doctorType === "therapist" ? "Therapists" : "Doctors"}
                     </Link>
                   </h6>
                 </div>
               </div>
 
-              <div className="card">
-                <div className="card-body">
-                  <div className="border-bottom d-flex align-items-center justify-content-between pb-3 mb-2">
-                    <h5 className="offcanvas-title fs-18 fw-bold">
-                      {isEdit ? (doctorType === "therapist" ? "Edit Therapist" : "Edit Doctor") : (doctorType === "therapist" ? "New Therapist" : "New Doctor")}
-                    </h5>
+              <div className="card border-0 doctor-form-main-card">
+                <div
+                  className="d-flex align-items-center justify-content-between px-4 py-3 bg-white border-bottom doctor-form-card-header"
+                  style={{ borderColor: "#e5e7eb" }}
+                >
+                  <div className="d-flex align-items-center gap-3">
+                    <div
+                      className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                      style={{
+                        width: 44,
+                        height: 44,
+                        background: "#f3e8ff",
+                        color: "#6d28d9",
+                      }}
+                    >
+                      <i
+                        className={`ti ${isEdit ? "ti-user-edit" : "ti-user-plus"} fs-20`}
+                      />
+                    </div>
+                    <div>
+                      <h5
+                        className="mb-0 fw-bold"
+                        style={{ color: "#1e1b4b", fontSize: 18 }}
+                      >
+                        {isEdit
+                          ? doctorType === "therapist"
+                            ? "Edit Therapist"
+                            : "Edit Doctor"
+                          : doctorType === "therapist"
+                            ? "Add New Therapist"
+                            : "Add New Doctor"}
+                      </h5>
+                      <p className="mb-0 text-muted" style={{ fontSize: 13 }}>
+                        {isEdit
+                          ? doctorType === "therapist"
+                            ? "Update therapist details in the system"
+                            : "Update doctor details in the system"
+                          : doctorType === "therapist"
+                            ? "Enter therapist details to register in the system"
+                            : "Enter doctor details to register in the system"}
+                      </p>
+                    </div>
                   </div>
-
+                  <Link
+                    to={backRoute}
+                    className="d-inline-flex align-items-center justify-content-center text-muted bg-white"
+                    aria-label="Close"
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 8,
+                      border: "1px solid #e5e7eb",
+                    }}
+                  >
+                    <i className="ti ti-x fs-18" />
+                  </Link>
+                </div>
+                <div className="card-body">
                   <form onSubmit={handleSubmit}>
                     {/* Stepper Progress Header UI */}
                     <div className="d-flex align-items-center justify-content-between mb-4 border rounded p-3 flex-wrap gap-3 bg-white shadow-sm" style={{ borderLeft: "4px solid #7367f0" }}>
@@ -1057,7 +1180,7 @@ Powered by DocYori`;
                       <div className="row">
                         {/* Profile Image */}
                         <div className="col-lg-12">
-                          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2" style={{ marginBottom: "10px" }}>
+                          <div className="d-flex align-items-center justify-content-between flex-wrap gap-3" style={{ marginBottom: "10px" }}>
                             <div className="d-flex align-items-center">
                               <label className="form-label me-3 mb-0">Profile Image</label>
                               <DoctorProfileUpload
@@ -1065,34 +1188,17 @@ Powered by DocYori`;
                                 onChange={setProfileImage}
                               />
                             </div>
-                            <div className="d-flex align-items-center border rounded p-2 bg-white shadow-sm">
-                              <label className="form-label me-3 mb-0 fw-bold">Availability Status:</label>
-                              <div className="form-check form-check-inline mb-0">
-                                <input
-                                  className="form-check-input"
-                                  type="radio"
-                                  name="dr_status"
-                                  id="status_active"
-                                  checked={status === "Active"}
-                                  onChange={() => setStatus("Active")}
-                                />
-                                <label className="form-check-label text-success fw-medium" htmlFor="status_active">
-                                  Available
-                                </label>
-                              </div>
-                              <div className="form-check form-check-inline mb-0">
-                                <input
-                                  className="form-check-input"
-                                  type="radio"
-                                  name="dr_status"
-                                  id="status_inactive"
-                                  checked={status === "Inactive"}
-                                  onChange={() => setStatus("Inactive")}
-                                />
-                                <label className="form-check-label text-danger fw-medium" htmlFor="status_inactive">
-                                  Unable
-                                </label>
-                              </div>
+                            <div style={{ minWidth: 280, maxWidth: 360, flex: "1 1 280px" }}>
+                              <label className="form-label mb-1 fw-medium">
+                                Availability Status
+                                <span className="text-danger ms-1">*</span>
+                              </label>
+                              <StatusOptionGroup
+                                value={status}
+                                onChange={(val: PatientStatusValue) =>
+                                  setStatus(val || "Active")
+                                }
+                              />
                             </div>
                           </div>
                         </div>
@@ -1102,11 +1208,11 @@ Powered by DocYori`;
                             <label className="form-label mb-0">
                               Name <span className="text-danger">*</span>
                             </label>
-                            <input
+                            <IconFormControl
+                              fieldLabel="Name"
                               type="text"
-                              className="form-control"
                               value={fullName}
-                              onChange={(e) => setFullName(e.target.value)}
+                              onChange={(e) => handleFullNameChange(e.target.value)}
                               placeholder="Dr. Full Name"
                             />
                           </div>
@@ -1118,11 +1224,11 @@ Powered by DocYori`;
                             <label className="form-label mb-0">
                               Username <span className="text-danger">*</span>
                             </label>
-                            <input
+                            <IconFormControl
+                              fieldLabel="Username"
                               type="text"
-                              className="form-control"
                               value={username}
-                              onChange={(e) => setUsername(e.target.value)}
+                              onChange={(e) => handleUsernameChange(e.target.value)}
                               placeholder="username"
                             />
                             <div className="d-flex flex-column" style={{ minHeight: "0px", marginTop: "2px" }}>
@@ -1156,9 +1262,9 @@ Powered by DocYori`;
                             <label className="form-label mb-0">
                               Email Address <span className="text-danger">*</span>
                             </label>
-                            <input
+                            <IconFormControl
+                              fieldLabel="Email Address"
                               type="email"
-                              className="form-control"
                               value={email}
                               onChange={(e) => setEmail(e.target.value)}
                               placeholder="doctor@clinic.com"
@@ -1233,9 +1339,8 @@ Powered by DocYori`;
                             <label className="form-label mb-0">
                               Year Of Experience <span className="text-danger">*</span>
                             </label>
-                            <input
+                            <IconFormControl
                               type="number"
-                              className="form-control"
                               value={yearOfExperience}
                               onChange={(e) => setYearOfExperience(e.target.value)}
                               placeholder="e.g. 5"
@@ -1243,6 +1348,20 @@ Powered by DocYori`;
                             />
                           </div>
                         </div>
+
+                        {/* Gender — same as Add Patient (half width, right side empty) */}
+                        <div className="col-lg-6">
+                          <div style={{ marginBottom: "10px" }}>
+                            <label className="form-label mb-1 fw-medium">
+                              Gender<span className="text-danger ms-1">*</span>
+                            </label>
+                            <GenderOptionGroup
+                              value={gender}
+                              onChange={(v) => setGender(v)}
+                            />
+                          </div>
+                        </div>
+                        <div className="w-100" />
 
                         {/* Department */}
                         <div className="col-lg-6">
@@ -1268,7 +1387,8 @@ Powered by DocYori`;
                                 Loading departments...
                               </div>
                             ) : deptOptions.length > 0 ? (
-                              <CommonSelect
+                              <IconSelect
+                                fieldLabel="Department"
                                 options={deptOptions}
                                 className="select"
                                 value={selectedDeptOption}
@@ -1303,7 +1423,8 @@ Powered by DocYori`;
                               </button>
                             </div>
                             {departmentId && desigOptions.length > 0 ? (
-                              <CommonSelect
+                              <IconSelect
+                                fieldLabel="Designation"
                                 key={departmentId}
                                 options={desigOptions}
                                 className="select"
@@ -1371,9 +1492,9 @@ Powered by DocYori`;
                               <label className="form-label mb-0 fw-bold text-dark">
                                 IPD Visit Charges (₹) <span className="text-muted font-normal">(Optional)</span>
                               </label>
-                              <input
+                              <IconFormControl
+                                fieldLabel="amount"
                                 type="number"
-                                className="form-control"
                                 placeholder="e.g. 500 (per visit / round)"
                                 value={ipdVisitCharge}
                                 onChange={(e) => setIpdVisitCharge(e.target.value)}
@@ -1447,8 +1568,11 @@ Powered by DocYori`;
                               onClick={() => setActiveScheduleDay(day)}
                             >
                               {day}
-                              {lockedDays[day] && <i className="ti ti-circle-check-filled fs-14 text-white shadow-sm" />}
-                              {!lockedDays[day] && dayEnabled[day] && <i className="ti ti-circle-filled fs-10 text-warning" />}
+                              {lockedDays[day] ? (
+                                <i className="ti ti-circle-check-filled fs-16 text-success" title="Locked" />
+                              ) : (
+                                <i className="ti ti-circle-x-filled fs-16 text-danger" title="Not locked" />
+                              )}
                             </button>
                           </li>
                         )
@@ -1672,9 +1796,11 @@ Powered by DocYori`;
                               <div className="col-lg-4">
                                 <div style={{ marginBottom: "10px" }}>
                                   <label className="form-label mb-0">Appointment Type</label>
-                                  <CommonSelect
+                                  <IconSelect
+                                    fieldLabel="Appointment Type"
                                     options={Appointment_Type}
                                     className="select"
+                                    placeholder="Select appointment type"
                                     isDisabled={!acceptingAppointments}
                                     value={
                                       findSelectOption(Appointment_Type, appointmentType) ||
@@ -1687,9 +1813,8 @@ Powered by DocYori`;
                               <div className="col-lg-4">
                                 <div style={{ marginBottom: "10px" }}>
                                   <label className="form-label mb-0">Accept bookings (in Advance)</label>
-                                  <input
+                                  <IconFormControl
                                     type="number"
-                                    className="form-control"
                                     min={0}
                                     disabled={!acceptingAppointments}
                                     value={acceptBookingsInAdvance}
@@ -1701,9 +1826,9 @@ Powered by DocYori`;
                               <div className="col-lg-4">
                                 <div style={{ marginBottom: "10px" }}>
                                   <label className="form-label mb-0">Consultation Charge</label>
-                                  <input
+                                  <IconFormControl
+                                    fieldLabel="amount"
                                     type="number"
-                                    className="form-control"
                                     min={0}
                                     step="0.01"
                                     disabled={!acceptingAppointments}
@@ -1762,9 +1887,8 @@ Powered by DocYori`;
                                   <label className="form-label mb-1 d-flex align-items-center" style={{ minHeight: "22px" }}>
                                     Follow-up Validity
                                   </label>
-                                  <input
+                                  <IconFormControl
                                     type="number"
-                                    className="form-control"
                                     disabled={!followUpEnabled}
                                     value={followUpValidityDays}
                                     onChange={(e) => setFollowUpValidityDays(e.target.value)}
@@ -1781,9 +1905,8 @@ Powered by DocYori`;
                                       <i className="ti ti-info-circle me-1" />0 = Unlimited
                                     </span>
                                   </label>
-                                  <input
+                                  <IconFormControl
                                     type="number"
-                                    className="form-control"
                                     disabled={!followUpEnabled}
                                     value={freeFollowUpLimit}
                                     onChange={(e) => setFreeFollowUpLimit(e.target.value)}
@@ -1795,9 +1918,9 @@ Powered by DocYori`;
                               <div className="col-lg-6">
                                 <div style={{ marginBottom: "10px" }}>
                                   <label className="form-label mb-0">Follow-up Fee (₹)</label>
-                                  <input
+                                  <IconFormControl
+                                    fieldLabel="amount"
                                     type="number"
-                                    className="form-control"
                                     disabled={!followUpEnabled}
                                     value={followUpFee}
                                     onChange={(e) => setFollowUpFee(e.target.value)}
@@ -1875,9 +1998,8 @@ Powered by DocYori`;
                                 <div className="col-lg-4">
                                   <div style={{ marginBottom: "15px" }}>
                                     <label className="form-label mb-1 fw-bold">Slot Duration (Minutes) <span className="text-danger">*</span></label>
-                                    <input
+                                    <IconFormControl
                                       type="number"
-                                      className="form-control"
                                       min={1}
                                       value={appointmentDuration}
                                       onChange={(e) => setAppointmentDuration(e.target.value)}
@@ -1889,9 +2011,8 @@ Powered by DocYori`;
                                 <div className="col-lg-4">
                                   <div style={{ marginBottom: "15px" }}>
                                     <label className="form-label mb-1 fw-bold">Bookings per Slot <span className="text-danger">*</span></label>
-                                    <input
+                                    <IconFormControl
                                       type="number"
-                                      className="form-control"
                                       min={1}
                                       value={maxBookingsPerSlot}
                                       onChange={(e) => setMaxBookingsPerSlot(e.target.value)}
@@ -1967,9 +2088,9 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Address 1</label>
-                                <input
+                                <IconFormControl
+                                  fieldLabel="Address 1"
                                   type="text"
-                                  className="form-control"
                                   value={address1}
                                   onChange={(e) => setAddress1(e.target.value)}
                                   placeholder="House No, Building, Street Name"
@@ -1979,9 +2100,9 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Address 2 (Optional)</label>
-                                <input
+                                <IconFormControl
+                                  fieldLabel="Address 2"
                                   type="text"
-                                  className="form-control"
                                   value={address2}
                                   onChange={(e) => setAddress2(e.target.value)}
                                   placeholder="Landmark, Area, Colony"
@@ -1991,7 +2112,8 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Country</label>
-                                <CommonSelect
+                                <IconSelect
+                                  fieldLabel="Country"
                                   options={Country}
                                   className="select"
                                   value={findSelectOption(Country, country) || { value: "India", label: "India" }}
@@ -2002,7 +2124,8 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">State</label>
-                                <CommonSelect
+                                <IconSelect
+                                  fieldLabel="State"
                                   options={State}
                                   className="select"
                                   value={findSelectOption(State, stateVal) || State[0]}
@@ -2013,7 +2136,8 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">City</label>
-                                <CommonSelect
+                                <IconSelect
+                                  fieldLabel="City"
                                   options={City}
                                   className="select"
                                   value={findSelectOption(City, city) || City[0]}
@@ -2024,11 +2148,12 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Pincode</label>
-                                <input
+                                <IconFormControl
+                                  fieldLabel="Pincode"
                                   type="text"
-                                  className="form-control"
                                   value={pincode}
                                   onChange={(e) => setPincode(e.target.value)}
+                                  placeholder="Enter pincode"
                                 />
                               </div>
                             </div>
@@ -2059,7 +2184,8 @@ Powered by DocYori`;
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Specializations</label>
                                 {specOptions.length > 0 ? (
-                                  <CommonSelect
+                                  <IconSelect
+                                    fieldLabel="Specialization"
                                     options={specOptions}
                                     className="select"
                                     value={specOptions.filter((o: any) => selectedSpecializations.includes(o.value)) as any}
@@ -2081,9 +2207,10 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Qualification</label>
-                                <input
+                                <IconFormControl
+                                  fieldLabel="Qualification"
+                                  icon="ti ti-school"
                                   type="text"
-                                  className="form-control"
                                   value={qualification}
                                   onChange={(e) => setQualification(e.target.value)}
                                   placeholder="e.g. MBBS, MD"
@@ -2115,9 +2242,10 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Medical License Number</label>
-                                <input
+                                <IconFormControl
+                                  fieldLabel="Medical License Number"
+                                  icon="ti ti-license"
                                   type="text"
-                                  className="form-control"
                                   value={medicalLicenseNumber}
                                   onChange={(e) => setMedicalLicenseNumber(e.target.value)}
                                   placeholder="ML-123456"
@@ -2139,9 +2267,9 @@ Powered by DocYori`;
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Alternative Contact No</label>
-                                <input
+                                <IconFormControl
+                                  fieldLabel="Mobile Number"
                                   type="text"
-                                  className="form-control"
                                   value={alternateMobile}
                                   onChange={(e) => setAlternateMobile(e.target.value)}
                                   placeholder="e.g. 9876543210"
@@ -2149,13 +2277,14 @@ Powered by DocYori`;
                               </div>
                             </div>
 
-                            {/* Blood Group + Gender */}
+                            {/* Blood Group */}
                             <div className="col-lg-6">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">
                                   Blood Group <span className="text-danger ms-1">*</span>
                                 </label>
-                                <CommonSelect
+                                <IconSelect
+                                  fieldLabel="Blood Group"
                                   options={Blood_Group}
                                   className="select"
                                   value={
@@ -2166,29 +2295,18 @@ Powered by DocYori`;
                                 />
                               </div>
                             </div>
-                            <div className="col-lg-6">
-                              <div style={{ marginBottom: "10px" }}>
-                                <label className="form-label mb-0">
-                                  Gender <span className="text-danger ms-1">*</span>
-                                </label>
-                                <CommonSelect
-                                  options={Gender}
-                                  className="select"
-                                  value={findSelectOption(Gender, gender) || Gender[0]}
-                                  onChange={(opt: any) => setGender(opt?.value || "")}
-                                />
-                              </div>
-                            </div>
 
                             {/* Bio */}
                             <div className="col-lg-12">
                               <div style={{ marginBottom: "10px" }}>
                                 <label className="form-label mb-0">Bio</label>
-                                <textarea
+                                <IconTextarea
+                                  fieldLabel="description"
                                   className="form-control"
                                   rows={3}
                                   value={bio}
                                   onChange={(e) => setBio(e.target.value)}
+                                  placeholder="Write a short bio about the doctor"
                                 />
                               </div>
                             </div>
@@ -2321,6 +2439,84 @@ Powered by DocYori`;
           </p>
         </div>
       </div>
+
+      {/* --- WhatsApp welcome confirm modal --- */}
+      {showWhatsAppConfirmModal && (
+        <div
+          className="modal fade show"
+          style={{
+            display: "block",
+            backgroundColor: "rgba(15, 23, 42, 0.45)",
+            backdropFilter: "blur(5px)",
+            WebkitBackdropFilter: "blur(5px)",
+            zIndex: 1060,
+          }}
+          role="dialog"
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div
+              className="modal-content border-0 shadow-lg"
+              style={{ borderRadius: "12px", overflow: "hidden" }}
+            >
+              <div
+                className="modal-header text-white border-0"
+                style={{
+                  background: "linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)",
+                }}
+              >
+                <h5 className="modal-title d-flex align-items-center gap-2 mb-0 fw-bold">
+                  <i className="ti ti-brand-whatsapp fs-22" />
+                  WhatsApp Notification
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  aria-label="Close"
+                  onClick={() => handleWhatsAppConfirm(false)}
+                />
+              </div>
+              <div className="modal-body p-4 text-center">
+                <div className="mb-3">
+                  <span
+                    className="avatar avatar-xl rounded-circle d-inline-flex align-items-center justify-content-center"
+                    style={{ background: "#dcfce7", color: "#16a34a", width: 72, height: 72 }}
+                  >
+                    <i className="ti ti-brand-whatsapp fs-36" />
+                  </span>
+                </div>
+                <h5 className="fw-bold mb-2 text-dark">Send welcome message?</h5>
+                <p className="text-muted mb-0 fs-14">
+                  Do you want to send a WhatsApp welcome notification to{" "}
+                  <strong className="text-dark">Dr. {doctorDisplayName}</strong>?
+                </p>
+              </div>
+              <div className="modal-footer border-top-0 pt-0 pb-4 justify-content-center gap-2">
+                <button
+                  type="button"
+                  className="btn btn-light px-4 border"
+                  style={{ borderRadius: "8px" }}
+                  onClick={() => handleWhatsAppConfirm(false)}
+                >
+                  Skip
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary px-4 shadow-sm d-inline-flex align-items-center gap-2"
+                  style={{
+                    borderRadius: "8px",
+                    background: "linear-gradient(90deg, #22c55e 0%, #16a34a 100%)",
+                    border: "none",
+                  }}
+                  onClick={() => handleWhatsAppConfirm(true)}
+                >
+                  <i className="ti ti-brand-whatsapp" />
+                  Send WhatsApp
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* --- Error Modal for missing Dept/Desig --- */}
       {showErrorModal && (
@@ -2460,9 +2656,9 @@ Powered by DocYori`;
               <div style={{ padding: '24px 24px 0' }}>
                 <div style={{ marginBottom: '16px' }}>
                   <label className="form-label fw-semibold">Department Name<span className="text-danger ms-1">*</span></label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Department"
                     type="text"
-                    className="form-control"
                     value={quickDeptName}
                     onChange={(e) => setQuickDeptName(e.target.value)}
                     placeholder="e.g. Cardiology"
@@ -2471,8 +2667,8 @@ Powered by DocYori`;
                 </div>
                 <div style={{ marginBottom: '16px' }}>
                   <label className="form-label fw-semibold">Description</label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="description"
                     rows={3}
                     value={quickDeptDesc}
                     onChange={(e) => setQuickDeptDesc(e.target.value)}
@@ -2558,7 +2754,8 @@ Powered by DocYori`;
               <div style={{ padding: '24px 24px 0' }}>
                 <div style={{ marginBottom: '16px' }}>
                   <label className="form-label fw-semibold">Department<span className="text-danger ms-1">*</span></label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="Department"
                     options={deptOptions}
                     className="select"
                     value={deptOptions.find(o => o.value === quickDesigDeptId) || null}
@@ -2568,9 +2765,9 @@ Powered by DocYori`;
                 </div>
                 <div style={{ marginBottom: '16px' }}>
                   <label className="form-label fw-semibold">Designation Name<span className="text-danger ms-1">*</span></label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Designation"
                     type="text"
-                    className="form-control"
                     value={quickDesigName}
                     onChange={(e) => setQuickDesigName(e.target.value)}
                     placeholder="e.g. Senior Consultant"

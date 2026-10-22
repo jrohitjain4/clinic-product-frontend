@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import { all_routes } from "../../../../../routes/all_routes";
+import { IconFormControl, IconTextarea } from "../../../../../../core/common/form-fields";
 
 const Modals = () => {
   return (
@@ -24,25 +25,25 @@ const Modals = () => {
               <div className="modal-body">
                 <div className="mb-2">
                   <label className="form-label">Category</label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
-                    placeholder="Placeholder"
+                    fieldLabel="category"
+                    placeholder="e.g. General"
                   />
                 </div>
                 <div className="mb-2">
                   <label className="form-label">Question</label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
-                    placeholder="Placeholder"
+                    fieldLabel="title"
+                    placeholder="Question"
                   />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">Answer</label>
-                  <textarea
-                    className="form-control"
-                    placeholder="Description"
+                  <IconTextarea
+                    fieldLabel="description"
+                    placeholder="Enter answer..."
                     defaultValue={""}
                   />
                 </div>
@@ -83,24 +84,25 @@ const Modals = () => {
               <div className="modal-body">
                 <div className="mb-2">
                   <label className="form-label">Category</label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
+                    fieldLabel="category"
                     defaultValue="General"
                   />
                 </div>
                 <div className="mb-2">
                   <label className="form-label">Question</label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
+                    fieldLabel="title"
+                    placeholder="Question"
                     defaultValue="Do you accept my health insurance?"
                   />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">Answer</label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="description"
                     defaultValue={
                       "We accep  t most major insurance plans. You can check the list of accepted insurers on our website or call us to confirm coverage."
                     }

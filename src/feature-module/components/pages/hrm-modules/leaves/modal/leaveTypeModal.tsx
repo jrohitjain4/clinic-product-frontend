@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
-import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import { StatusActive } from "../../../../../../core/common/selectOption";
+import {
+  IconFormControl,
+  IconSelect,
+} from "../../../../../../core/common/form-fields";
 import { toast } from "react-toastify";
 
 type Props = {
@@ -94,11 +97,11 @@ const LeaveTypeModal = ({ currentRecord, handleCreate, handleUpdate, handleDelet
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label">Leave Type<span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" placeholder="Enter Leave Type" value={name} onChange={e => setName(e.target.value)} required />
+                  <IconFormControl fieldLabel="Leave Type" type="text" placeholder="Enter leave type" value={name} onChange={e => setName(e.target.value)} required />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">Leave Quota (Days)<span className="text-danger ms-1">*</span></label>
-                  <input type="number" className="form-control" placeholder="Enter Leave Quota" value={quota} onChange={e => setQuota(e.target.value)} required />
+                  <IconFormControl fieldLabel="Leave Quota" type="number" placeholder="Enter leave quota" value={quota} onChange={e => setQuota(e.target.value)} required />
                 </div>
               </div>
               <div className="d-flex justify-content-end gap-2 px-4 pb-4 pt-3 mt-4 border-top">
@@ -121,15 +124,16 @@ const LeaveTypeModal = ({ currentRecord, handleCreate, handleUpdate, handleDelet
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label">Leave Type<span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" placeholder="Enter Leave Type" value={name} onChange={e => setName(e.target.value)} required />
+                  <IconFormControl fieldLabel="Leave Type" type="text" placeholder="Enter leave type" value={name} onChange={e => setName(e.target.value)} required />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Leave Quota (Days)<span className="text-danger ms-1">*</span></label>
-                  <input type="number" className="form-control" placeholder="Enter Leave Quota" value={quota} onChange={e => setQuota(e.target.value)} required />
+                  <IconFormControl fieldLabel="Leave Quota" type="number" placeholder="Enter leave quota" value={quota} onChange={e => setQuota(e.target.value)} required />
                 </div>
                 <div className="mb-0">
                   <label className="form-label">Status</label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="Status"
                     options={StatusActive}
                     className="select"
                     defaultValue={StatusActive.find(o => o.value === status) || StatusActive[0]}

@@ -9,6 +9,7 @@ import { useMedicines } from "../../../../../core/hooks/useMedicines";
 import type { Medicine } from "../../../../../core/hooks/useMedicines";
 import { usePharmacyCategories } from "../../../../../core/hooks/usePharmacyCategories";
 import EmptyState from "../../../../../core/common/emptyState";
+import { IconFormControl, IconTextarea } from "../../../../../core/common/form-fields";
 
 const MedicineManagement = () => {
   const { medicines, loading, createMedicine, updateMedicine, deleteMedicine, bulkDeleteMedicines, bulkCreateMedicines } = useMedicines();
@@ -505,7 +506,20 @@ const MedicineManagement = () => {
     {
       title: "Category",
       dataIndex: "Category",
-      render: (text: string) => <span className="badge badge-soft-primary border border-primary px-2 py-1 fs-12 fw-medium">{text}</span>,
+      render: (text: string) => (
+        <span
+          className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+          style={{
+            backgroundColor: "#ede9fe",
+            color: "#7c3aed",
+            fontWeight: 600,
+            fontSize: "12px",
+          }}
+        >
+          <i className="ti ti-category fs-14" />
+          {text}
+        </span>
+      ),
       sorter: (a: any, b: any) => a.Category.localeCompare(b.Category),
     },
     {
@@ -608,7 +622,7 @@ const MedicineManagement = () => {
 
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
               <div className="search-field position-relative" style={{ width: "200px" }}>
-                <input type="text" className="form-control fs-13 py-2" placeholder="Search Medicine..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+                <IconFormControl fieldLabel="search" type="text" className="fs-13 py-2" placeholder="Search Medicine..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
               </div>
 
               <div className="dropdown">
@@ -769,15 +783,15 @@ const MedicineManagement = () => {
                   <div className="row g-3 mb-4">
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Medicine Name <span className="text-danger">*</span></label>
-                      <input type="text" className="form-control" placeholder="e.g. Paracetamol 650" value={formName} onChange={(e) => setFormName(e.target.value)} required />
+                      <IconFormControl fieldLabel="medicine" type="text" placeholder="e.g. Paracetamol 650" value={formName} onChange={(e) => setFormName(e.target.value)} required />
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Generic Name</label>
-                      <input type="text" className="form-control" placeholder="e.g. Acetaminophen" value={formGeneric} onChange={(e) => setFormGeneric(e.target.value)} />
+                      <IconFormControl fieldLabel="name" type="text" placeholder="e.g. Acetaminophen" value={formGeneric} onChange={(e) => setFormGeneric(e.target.value)} />
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Brand Name</label>
-                      <input type="text" className="form-control" placeholder="e.g. Dolo" value={formBrand} onChange={(e) => setFormBrand(e.target.value)} />
+                      <IconFormControl fieldLabel="name" type="text" placeholder="e.g. Dolo" value={formBrand} onChange={(e) => setFormBrand(e.target.value)} />
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Category <span className="text-danger">*</span></label>
@@ -790,19 +804,19 @@ const MedicineManagement = () => {
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Manufacturer</label>
-                      <input type="text" className="form-control" placeholder="e.g. Micro Labs Ltd" value={formManufacturer} onChange={(e) => setFormManufacturer(e.target.value)} />
+                      <IconFormControl fieldLabel="company" type="text" placeholder="e.g. Micro Labs Ltd" value={formManufacturer} onChange={(e) => setFormManufacturer(e.target.value)} />
                     </div>
                     <div className="col-md-3">
                       <label className="form-label fw-semibold">SKU / Code</label>
-                      <input type="text" className="form-control" placeholder="e.g. MED10009" value={formCode} onChange={(e) => setFormCode(e.target.value)} />
+                      <IconFormControl fieldLabel="name" type="text" placeholder="e.g. MED10009" value={formCode} onChange={(e) => setFormCode(e.target.value)} />
                     </div>
                     <div className="col-md-3">
                       <label className="form-label fw-semibold">HSN Code</label>
-                      <input type="text" className="form-control" placeholder="e.g. 3004" value={formHsn} onChange={(e) => setFormHsn(e.target.value)} />
+                      <IconFormControl fieldLabel="name" type="text" placeholder="e.g. 3004" value={formHsn} onChange={(e) => setFormHsn(e.target.value)} />
                     </div>
                     <div className="col-12">
                       <label className="form-label fw-semibold">Description</label>
-                      <textarea className="form-control" rows={2} placeholder="Medicine details, instructions, etc..." value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
+                      <IconTextarea fieldLabel="description" rows={2} placeholder="Medicine details, instructions, etc..." value={formDesc} onChange={(e) => setFormDesc(e.target.value)} />
                     </div>
                   </div>
 
@@ -813,10 +827,10 @@ const MedicineManagement = () => {
                   <div className="row g-3 mb-4">
                     <div className="col-md-3">
                       <label className="form-label fw-semibold">Purchase Price (₹)</label>
-                      <input 
+                      <IconFormControl
+                        fieldLabel="price"
                         type="number" 
                         step="0.01" 
-                        className="form-control" 
                         value={formPurchasePrice} 
                         onChange={(e) => setFormPurchasePrice(e.target.value)} 
                         onFocus={() => { if (formPurchasePrice === "0") setFormPurchasePrice(""); }}
@@ -825,10 +839,10 @@ const MedicineManagement = () => {
                     </div>
                     <div className="col-md-3">
                       <label className="form-label fw-semibold">Selling Price (₹)</label>
-                      <input 
+                      <IconFormControl
+                        fieldLabel="price"
                         type="number" 
                         step="0.01" 
-                        className="form-control" 
                         value={formSellingPrice} 
                         onChange={(e) => setFormSellingPrice(e.target.value)} 
                         onFocus={() => { if (formSellingPrice === "0") setFormSellingPrice(""); }}
@@ -837,21 +851,22 @@ const MedicineManagement = () => {
                     </div>
                     <div className="col-md-3">
                       <label className="form-label fw-semibold">GST (%)</label>
-                      <input 
-                        type="number" 
-                        className="form-control" 
-                        value={formGst} 
-                        onChange={(e) => setFormGst(e.target.value)} 
+                      <IconFormControl
+                        fieldLabel="Tax Rate"
+                        type="number"
+                        value={formGst}
+                        onChange={(e) => setFormGst(e.target.value)}
+                        placeholder="0"
                         onFocus={() => { if (formGst === "0") setFormGst(""); }}
                         onBlur={() => { if (formGst.trim() === "") setFormGst("0"); }}
                       />
                     </div>
                     <div className="col-md-3">
                       <label className="form-label fw-semibold">MRP (₹)</label>
-                      <input 
+                      <IconFormControl
+                        fieldLabel="price"
                         type="number" 
                         step="0.01" 
-                        className="form-control" 
                         value={formMrp} 
                         onChange={(e) => setFormMrp(e.target.value)} 
                         onFocus={() => { if (formMrp === "0") setFormMrp(""); }}
@@ -867,9 +882,9 @@ const MedicineManagement = () => {
                   <div className="row g-3 mb-4">
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">Opening Stock</label>
-                      <input 
+                      <IconFormControl
+                        fieldLabel="quantity"
                         type="number" 
-                        className="form-control" 
                         value={formOpeningStock} 
                         onChange={(e) => setFormOpeningStock(e.target.value)} 
                         onFocus={() => { if (formOpeningStock === "0") setFormOpeningStock(""); }}
@@ -878,9 +893,9 @@ const MedicineManagement = () => {
                     </div>
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">Min Stock Alert</label>
-                      <input 
+                      <IconFormControl
+                        fieldLabel="quantity"
                         type="number" 
-                        className="form-control" 
                         value={formMinStock} 
                         onChange={(e) => setFormMinStock(e.target.value)} 
                         onFocus={() => { if (formMinStock === "0") setFormMinStock(""); }}
@@ -908,15 +923,15 @@ const MedicineManagement = () => {
                   <div className="row g-3 mb-4">
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">Batch Number</label>
-                      <input type="text" className="form-control" placeholder="e.g. B-9011" value={formBatch} onChange={(e) => setFormBatch(e.target.value)} />
+                      <IconFormControl fieldLabel="name" type="text" placeholder="e.g. B-9011" value={formBatch} onChange={(e) => setFormBatch(e.target.value)} />
                     </div>
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">Manufacturing Date</label>
-                      <input type="date" className="form-control" value={formMfgDate} onChange={(e) => setFormMfgDate(e.target.value)} />
+                      <IconFormControl fieldLabel="date" type="date" value={formMfgDate} onChange={(e) => setFormMfgDate(e.target.value)} />
                     </div>
                     <div className="col-md-4">
                       <label className="form-label fw-semibold">Expiry Date</label>
-                      <input type="date" className="form-control" value={formExpDate} onChange={(e) => setFormExpDate(e.target.value)} />
+                      <IconFormControl fieldLabel="date" type="date" value={formExpDate} onChange={(e) => setFormExpDate(e.target.value)} />
                     </div>
                   </div>
 

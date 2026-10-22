@@ -3,6 +3,11 @@ import { Link } from "react-router";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import { StatusActive } from "../../../../../../core/common/selectOption";
+import {
+  IconFormControl,
+  IconSelect,
+  IconTextarea,
+} from "../../../../../../core/common/form-fields";
 import { useClinicDepartments } from "../../../../../../core/hooks/useClinicDepartments";
 import { apiPost, apiPut, apiDelete } from "../../../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
@@ -169,19 +174,19 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Service Name<span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" placeholder="Enter Service Name" value={addName} onChange={(e) => setAddName(e.target.value)} required />
+                  <IconFormControl fieldLabel="service" type="text" placeholder="Enter Service Name" value={addName} onChange={(e) => setAddName(e.target.value)} required />
                 </div>
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Department<span className="text-danger ms-1">*</span></label>
-                  <CommonSelect options={deptOptions} className="select" value={addDept} onChange={(val) => setAddDept(val)} />
+                  <IconSelect fieldLabel="Department" options={deptOptions} className="select" placeholder="Select department" value={addDept} onChange={(val) => setAddDept(val)} />
                 </div>
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Price</label>
-                  <input type="number" className="form-control" placeholder="Enter Price" value={addPrice} onChange={(e) => setAddPrice(e.target.value)} />
+                  <IconFormControl fieldLabel="Price" type="number" placeholder="Enter Price" value={addPrice} onChange={(e) => setAddPrice(e.target.value)} />
                 </div>
                 <div className="mb-0">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Duration <span className="text-muted fw-normal fs-12">(Optional)</span></label>
-                  <input type="text" className="form-control" placeholder="e.g. 1 Day, 3 Days, 7 Days" value={addDuration} onChange={(e) => setAddDuration(e.target.value)} />
+                  <IconFormControl icon="ti ti-hourglass" fieldLabel="Duration" type="text" placeholder="e.g. 1 Day, 3 Days, 7 Days" value={addDuration} onChange={(e) => setAddDuration(e.target.value)} />
                 </div>
               </div>
               <div className="modal-footer d-flex align-items-center gap-2 mt-4 pt-3 border-top">
@@ -205,19 +210,19 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Service Name<span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" placeholder="Enter Service Name" value={editName} onChange={(e) => setEditName(e.target.value)} required />
+                  <IconFormControl fieldLabel="service" type="text" placeholder="Enter Service Name" value={editName} onChange={(e) => setEditName(e.target.value)} required />
                 </div>
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Department<span className="text-danger ms-1">*</span></label>
-                  <CommonSelect options={deptOptions} className="select" value={editDept} onChange={(val) => setEditDept(val)} />
+                  <IconSelect fieldLabel="Department" options={deptOptions} className="select" placeholder="Select department" value={editDept} onChange={(val) => setEditDept(val)} />
                 </div>
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Price</label>
-                  <input type="number" className="form-control" placeholder="Enter Price" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
+                  <IconFormControl fieldLabel="Price" type="number" placeholder="Enter Price" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
                 </div>
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Duration <span className="text-muted fw-normal fs-12">(Optional)</span></label>
-                  <input type="text" className="form-control" placeholder="e.g. 1 Day, 3 Days, 7 Days" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} />
+                  <IconFormControl icon="ti ti-hourglass" fieldLabel="Duration" type="text" placeholder="e.g. 1 Day, 3 Days, 7 Days" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} />
                 </div>
                 <div className="mb-0">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Status<span className="text-danger ms-1">*</span></label>
@@ -266,19 +271,19 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Name<span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" placeholder="Enter Name" value={productName} onChange={(e) => setProductName(e.target.value)} required />
+                  <IconFormControl fieldLabel="Name" type="text" placeholder="Enter Name" value={productName} onChange={(e) => setProductName(e.target.value)} required />
                 </div>
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Description<span className="text-danger ms-1">*</span></label>
-                  <textarea className="form-control" placeholder="Enter Description" value={productDesc} onChange={(e) => setProductDesc(e.target.value)} required />
+                  <IconTextarea fieldLabel="description" placeholder="Enter Description" value={productDesc} onChange={(e) => setProductDesc(e.target.value)} required />
                 </div>
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Price<span className="text-danger ms-1">*</span></label>
-                  <input type="number" className="form-control" placeholder="Enter Price" value={productPrice} onChange={(e) => setProductPrice(e.target.value)} required />
+                  <IconFormControl fieldLabel="Price" type="number" placeholder="Enter Price" value={productPrice} onChange={(e) => setProductPrice(e.target.value)} required />
                 </div>
                 <div className="mb-0">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">SKU-KEY <span className="text-muted fw-normal fs-12">(Optional)</span></label>
-                  <input type="text" className="form-control" placeholder="Enter SKU-KEY" value={productKey} onChange={(e) => setProductKey(e.target.value)} />
+                  <IconFormControl icon="ti ti-barcode" fieldLabel="SKU-KEY" type="text" placeholder="Enter SKU-KEY" value={productKey} onChange={(e) => setProductKey(e.target.value)} />
                 </div>
               </div>
               <div className="modal-footer d-flex align-items-center gap-2 mt-4 pt-3 border-top">
@@ -302,19 +307,19 @@ const Modals = ({ selectedService, selectedProduct, refetch }: ModalsProps) => {
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Name<span className="text-danger ms-1">*</span></label>
-                  <input type="text" className="form-control" placeholder="Enter Name" value={editProductName} onChange={(e) => setEditProductName(e.target.value)} required />
+                  <IconFormControl fieldLabel="Name" type="text" placeholder="Enter Name" value={editProductName} onChange={(e) => setEditProductName(e.target.value)} required />
                 </div>
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Description<span className="text-danger ms-1">*</span></label>
-                  <textarea className="form-control" placeholder="Enter Description" value={editProductDesc} onChange={(e) => setEditProductDesc(e.target.value)} />
+                  <IconTextarea fieldLabel="description" placeholder="Enter Description" value={editProductDesc} onChange={(e) => setEditProductDesc(e.target.value)} />
                 </div>
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Price<span className="text-danger ms-1">*</span></label>
-                  <input type="number" className="form-control" placeholder="Enter Price" value={editProductPrice} onChange={(e) => setEditProductPrice(e.target.value)} required />
+                  <IconFormControl fieldLabel="Price" type="number" placeholder="Enter Price" value={editProductPrice} onChange={(e) => setEditProductPrice(e.target.value)} required />
                 </div>
                 <div className="mb-0">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">SKU-KEY <span className="text-muted fw-normal fs-12">(Optional)</span></label>
-                  <input type="text" className="form-control" placeholder="Enter SKU-KEY" value={editProductKey} onChange={(e) => setEditProductKey(e.target.value)} />
+                  <IconFormControl icon="ti ti-barcode" fieldLabel="SKU-KEY" type="text" placeholder="Enter SKU-KEY" value={editProductKey} onChange={(e) => setEditProductKey(e.target.value)} />
                 </div>
               </div>
               <div className="modal-footer d-flex align-items-center gap-2 mt-4 pt-3 border-top">

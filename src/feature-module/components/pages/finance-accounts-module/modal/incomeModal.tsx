@@ -4,6 +4,7 @@ import ImageWithBasePath from "../../../../../core/imageWithBasePath";
 import { DatePicker } from "antd";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 const IncomeModal = () => {
   const getModalContainer = () => {
@@ -40,7 +41,7 @@ const IncomeModal = () => {
                       Income Name<span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="Name" type="text" placeholder="Enter income name" />
                     </div>
                   </div>
                 </div>{" "}
@@ -452,9 +453,10 @@ const IncomeModal = () => {
                       Income Name<span className="text-danger">*</span>
                     </label>
                     <div className="input-group">
-                      <input
+                      <IconFormControl
+                        fieldLabel="Name"
                         type="text"
-                        className="form-control"
+                        placeholder="Enter income name"
                         defaultValue="General Consultation"
                       />
                     </div>

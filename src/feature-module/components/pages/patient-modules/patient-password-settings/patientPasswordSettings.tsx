@@ -4,6 +4,7 @@ import { useState } from "react";
 import { apiUrl } from "../../../../../core/config/api";
 import { toast } from "react-toastify";
 import Footer from "../../../../../core/common/footer/footer";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 type PasswordField = "password" | "confirmPassword";
 
@@ -106,9 +107,10 @@ const PatientPasswordSettings = () => {
                       <div className="col-lg-6">
                         <label className="form-label fw-bold text-dark fs-13">New Password <span className="text-danger">*</span></label>
                         <div className="position-relative">
-                          <input
+                          <IconFormControl
+                            fieldLabel="new password"
                             type={passwordVisibility.password ? "text" : "password"}
-                            className="form-control pe-5"
+                            className="pe-5"
                             placeholder="Enter new password"
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
@@ -129,9 +131,10 @@ const PatientPasswordSettings = () => {
                       <div className="col-lg-6">
                         <label className="form-label fw-bold text-dark fs-13">Confirm Password <span className="text-danger">*</span></label>
                         <div className="position-relative">
-                          <input
+                          <IconFormControl
+                            fieldLabel="confirm password"
                             type={passwordVisibility.confirmPassword ? "text" : "password"}
-                            className="form-control pe-5"
+                            className="pe-5"
                             placeholder="Confirm new password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}

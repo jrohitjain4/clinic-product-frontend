@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { Input_Type, Module } from "../../../../../../core/common/selectOption";
-import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
+import { IconFormControl, IconSelect } from "../../../../../../core/common/form-fields";
 
 const CustomFieldsSettings = () => {
   return (
@@ -444,9 +444,11 @@ const CustomFieldsSettings = () => {
                   <label className="form-label">
                     Module<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="Category"
                     options={Module}
                     className="select"
+                    placeholder="Select module"
                     defaultValue={Module[0]}
                   />
                 </div>
@@ -454,9 +456,10 @@ const CustomFieldsSettings = () => {
                   <label className="form-label">
                     Input Type<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
                     options={Input_Type}
                     className="select"
+                    placeholder="Select input type"
                     defaultValue={Input_Type[0]}
                   />
                 </div>
@@ -464,13 +467,13 @@ const CustomFieldsSettings = () => {
                   <label className="form-label">
                     Label<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl type="text" placeholder="Enter label" />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">
                     Default Value<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl type="text" placeholder="Enter default value" />
                 </div>
                 <div className="mb-0">
                   <div className="d-flex align-items-center justify-content-between">
@@ -525,9 +528,11 @@ const CustomFieldsSettings = () => {
                   <label className="form-label">
                     Module<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="Category"
                     options={Module}
                     className="select"
+                    placeholder="Select module"
                     defaultValue={Module[1]}
                   />
                 </div>
@@ -535,9 +540,10 @@ const CustomFieldsSettings = () => {
                   <label className="form-label">
                     Input Type<span className="text-danger ms-1">*</span>
                   </label>
-                  <CommonSelect
+                  <IconSelect
                     options={Input_Type}
                     className="select"
+                    placeholder="Select input type"
                     defaultValue={Input_Type[1]}
                   />
                 </div>
@@ -545,9 +551,9 @@ const CustomFieldsSettings = () => {
                   <label className="form-label">
                     Label<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
+                    placeholder="Enter label"
                     defaultValue="Preferred Language"
                   />
                 </div>
@@ -555,9 +561,9 @@ const CustomFieldsSettings = () => {
                   <label className="form-label">
                     Default Value<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
+                    placeholder="Enter default value"
                     defaultValue="English"
                   />
                 </div>

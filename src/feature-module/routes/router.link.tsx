@@ -90,7 +90,6 @@ const RefsPage = lazy(() => import("../components/pages/clinic-modules/refers/re
 
 // Therapy Imports
 const TherapistsList = lazy(() => import("../components/pages/therapy-modules/TherapistsList"));
-const TherapyCategories = lazy(() => import("../components/pages/therapy-modules/TherapyCategories"));
 const TherapyServices = lazy(() => import("../components/pages/therapy-modules/TherapyServices"));
 const TherapyAppointments = lazy(() => import("../components/pages/therapy-modules/TherapyAppointments"));
 const BookTherapyAppointment = lazy(() => import("../components/pages/therapy-modules/BookTherapyAppointment"));
@@ -116,6 +115,7 @@ const Pages = lazy(() => import("../components/pages/content-modules/page/pages"
 const States = lazy(() => import("../components/pages/content-modules/states/states"));
 const Testimonials = lazy(() => import("../components/pages/content-modules/testimonials/testimonials"));
 const Dashboard = lazy(() => import("../components/pages/dashboard/dashboard"));
+const AboutDocYoriPage = lazy(() => import("../components/pages/dashboard/aboutDocYori"));
 const DoctorDahboard = lazy(() => import("../components/pages/dashboard/doctor-dashboard/doctorDahboard"));
 const PatientDashboard = lazy(() => import("../components/pages/dashboard/patient-dashboard/patientDashboard"));
 const PathlabDashboard = lazy(() => import("../components/pages/dashboard/pathlab-dashboard/pathlabDashboard"));
@@ -289,7 +289,7 @@ const UiRangeSlides = lazy(() => import("../components/pages/ui-modules/ui-inter
 const UiRating = lazy(() => import("../components/pages/ui-modules/ui-interface/ui-advance/uiRating"));
 const UiScrollbar = lazy(() => import("../components/pages/ui-modules/ui-interface/ui-advance/uiScrollbar"));
 import { all_routes } from "./all_routes";
-import { Route } from "react-router";
+import { Navigate, Route } from "react-router";
 
 const AppointmentDetails = lazy(() => import("../components/pages/clinic-modules/appointments/appointmentDetails"));
 const SuperAdminDashboard = lazy(() => import("../components/pages/super-admin/super-admin-dashboard/superAdminDashboard"));
@@ -372,6 +372,11 @@ export const publicRoutes = [
     route: Route,
   },
   {
+    path: routes.pricing,
+    element: <Pricing />,
+    route: Route,
+  },
+  {
     path: routes.appointmentDetails,
     element: <AppointmentDetails />,
     route: Route,
@@ -384,6 +389,11 @@ export const publicRoutes = [
   {
     path: routes.tenants,
     element: <TenantsAdmin />,
+    route: Route,
+  },
+  {
+    path: routes.aboutDocYori,
+    element: <AboutDocYoriPage />,
     route: Route,
   },
   {
@@ -1400,7 +1410,7 @@ export const publicRoutes = [
   },
   {
     path: routes.therapyCategories,
-    element: <TherapyCategories />,
+    element: <Navigate to={`${routes.therapyServices}?tab=categories`} replace />,
     route: Route,
   },
   {
@@ -1691,6 +1701,11 @@ export const publicRoutes = [
   {
     path: routes.editAppointment,
     element: <EditAppointment />,
+    route: Route,
+  },
+  {
+    path: routes.appointmentDetails,
+    element: <AppointmentDetails />,
     route: Route,
   },
   {

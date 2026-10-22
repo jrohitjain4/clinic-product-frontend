@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { apiUrl } from "../../../../../core/config/api";
 import { toast } from "react-toastify";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 interface RazorpayConfig {
     id: string;
@@ -197,9 +198,10 @@ const RazorpaySettingsAdmin = () => {
                                     <form onSubmit={handleAddOrUpdate}>
                                         <div className="mb-3">
                                             <label className="form-label fw-medium">Account Label / Environment</label>
-                                            <input
+                                            <IconFormControl
                                                 type="text"
-                                                className="form-control form-control-lg fs-14"
+                                                fieldLabel="title"
+                                                className="form-control-lg fs-14"
                                                 value={label}
                                                 onChange={(e) => setLabel(e.target.value)}
                                                 placeholder="e.g. Razorpay Test Sandbox, Live Production"
@@ -208,20 +210,21 @@ const RazorpaySettingsAdmin = () => {
                                         </div>
                                         <div className="mb-3">
                                             <label className="form-label fw-medium">Razorpay Key ID</label>
-                                            <input
+                                            <IconFormControl
                                                 type="text"
-                                                className="form-control form-control-lg fs-14"
+                                                placeholder="Razorpay Key ID"
+                                                className="form-control-lg fs-14"
                                                 value={keyId}
                                                 onChange={(e) => setKeyId(e.target.value)}
-                                                placeholder="rzp_test_..."
                                                 required
                                             />
                                         </div>
                                         <div className="mb-4">
                                             <label className="form-label fw-medium">Razorpay Key Secret</label>
-                                            <input
+                                            <IconFormControl
                                                 type="password"
-                                                className="form-control form-control-lg fs-14"
+                                                fieldLabel="password"
+                                                className="form-control-lg fs-14"
                                                 value={keySecret}
                                                 onChange={(e) => setKeySecret(e.target.value)}
                                                 placeholder={editingId ? "Enter new secret, or leave as ******** to keep current secret" : "Enter key secret"}

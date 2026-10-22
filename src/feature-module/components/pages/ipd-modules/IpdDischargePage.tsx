@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Footer from "../../../../core/common/footer/footer";
+import Datatable from "../../../../core/common/dataTable";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 import IpdViewDetailsModal from "./IpdViewDetailsModal";
+import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
 
 interface Patient {
   id: string;
@@ -242,9 +244,18 @@ const IpdDischargePage: React.FC = () => {
         throw new Error(errData.message || "Failed to process discharge");
       }
 
+      const dischargedAdm = {
+        ...targetAdmission,
+        status: "Discharged",
+        dischargeNotes: dischargeNotes.trim(),
+      };
+
       toast.success(`Patient ${getPatientName(targetAdmission.patient)} discharged & bill settled!`);
       setShowDischargeModal(false);
       fetchData();
+
+      // Immediately open Prescription / Discharge Summary Pad modal pre-filled with discharge summary notes
+      handleOpenPrescriptionModal(dischargedAdm, dischargeNotes.trim());
     } catch (err: any) {
       toast.error(err.message || "Error processing discharge");
     } finally {
@@ -253,11 +264,11 @@ const IpdDischargePage: React.FC = () => {
   };
 
   // ── Prescription helpers ──────────────────────────────────────────
-  const handleOpenPrescriptionModal = async (adm: Admission) => {
+  const handleOpenPrescriptionModal = async (adm: Admission, prefilledNotes?: string) => {
     setPrescriptionAdmission(adm);
     const existing = (adm as any).ipdPrescriptions && (adm as any).ipdPrescriptions.length > 0 ? (adm as any).ipdPrescriptions[0] : null;
     if (existing) {
-      setDischargeSummary(existing.dischargeSummary || "");
+      setDischargeSummary(existing.dischargeSummary || prefilledNotes || adm.dischargeNotes || adm.diagnosis || "");
       const meds: MedicineRow[] = Array.isArray(existing.medicineAdvice)
         ? existing.medicineAdvice.map((m: any) => ({
             name: m.name || "", dosage: m.dosage || "", strength: m.strength || "",
@@ -267,7 +278,7 @@ const IpdDischargePage: React.FC = () => {
       setMedicinesList(meds);
       setAttachedImages(Array.isArray(existing.images) ? existing.images : []);
     } else {
-      setDischargeSummary(adm.diagnosis || "");
+      setDischargeSummary(prefilledNotes || adm.dischargeNotes || adm.diagnosis || "");
       setMedicinesList([]);
       setAttachedImages([]);
     }
@@ -455,71 +466,472 @@ const IpdDischargePage: React.FC = () => {
     });
   }, [admissions, searchQuery, statusTab, wardFilter]);
 
+  const tableData = useMemo(
+    () =>
+      filteredAdmissions.map((adm, idx) => ({
+        key: adm.id,
+        sr: idx + 1,
+        admissionCode: adm.admissionCode,
+        patientName: getPatientName(adm.patient),
+        patientCode: adm.patient?.patientCode || "—",
+        doctorName: adm.doctor?.fullName || "Unassigned",
+        wardName: adm.ward?.wardName || "Ward",
+        admissionDate: adm.admissionDate,
+        totalAmount: adm.totalAmount,
+        totalPaid: adm.totalPaid,
+        dueAmount: adm.dueAmount,
+        status: adm.status,
+        dischargeDate: adm.dischargeDate || null,
+        hasPrescription: (adm.ipdPrescriptions?.length ?? 0) > 0,
+        _raw: adm,
+      })),
+    [filteredAdmissions]
+  );
+
+  const columns = useMemo(
+    () => [
+      {
+        title: "Sr.",
+        dataIndex: "sr",
+        width: 60,
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) => a.sr - b.sr,
+      },
+      {
+        title: "Admission Code",
+        dataIndex: "admissionCode",
+        render: (text: string) => (
+          <span
+            className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+            style={{
+              backgroundColor: "#e2e8f0",
+              color: "#1e293b",
+              fontWeight: 600,
+              fontSize: "12px",
+            }}
+          >
+            <i className="ti ti-hash fs-14" />
+            {text}
+          </span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.admissionCode.localeCompare(b.admissionCode),
+      },
+      {
+        title: "Patient Details",
+        dataIndex: "patientName",
+        render: (text: string, record: (typeof tableData)[0]) => (
+          <div className="lh-1">
+            <h6 className="mb-1 fs-14 fw-semibold text-dark">{text}</h6>
+            <span className="text-muted fs-12 fw-normal d-block mt-1">
+              UHID: {record.patientCode}
+            </span>
+          </div>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.patientName.localeCompare(b.patientName),
+      },
+      {
+        title: "Primary Doctor & Ward",
+        dataIndex: "doctorName",
+        render: (text: string, record: (typeof tableData)[0]) => (
+          <>
+            <span className="fw-semibold text-primary d-block fs-13">{text}</span>
+            <span className="badge bg-soft-info text-info fw-medium mt-1 d-inline-flex">
+              {record.wardName}
+            </span>
+          </>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.doctorName.localeCompare(b.doctorName),
+      },
+      {
+        title: "Admission Date",
+        dataIndex: "admissionDate",
+        render: (text: string) => (
+          <span className="text-muted fs-13">{new Date(text).toLocaleDateString()}</span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          new Date(a.admissionDate).getTime() - new Date(b.admissionDate).getTime(),
+      },
+      {
+        title: "Total Billed",
+        dataIndex: "totalAmount",
+        render: (val: number) => (
+          <span className="fw-bold text-dark fs-14">₹{val.toLocaleString("en-IN")}</span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.totalAmount - b.totalAmount,
+      },
+      {
+        title: "Paid Amount",
+        dataIndex: "totalPaid",
+        render: (val: number) => (
+          <span className="fw-bold text-success fs-14">₹{val.toLocaleString("en-IN")}</span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.totalPaid - b.totalPaid,
+      },
+      {
+        title: "Due Balance",
+        dataIndex: "dueAmount",
+        render: (val: number) => (
+          <span className={`fw-bold fs-14 ${val > 0 ? "text-danger" : "text-success"}`}>
+            ₹{val.toLocaleString("en-IN")}
+          </span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.dueAmount - b.dueAmount,
+      },
+      {
+        title: "Discharge Status",
+        dataIndex: "status",
+        render: (text: string, record: (typeof tableData)[0]) => {
+          const isAdmitted = text === "Admitted";
+          return isAdmitted ? (
+            <span
+              className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+              style={{
+                backgroundColor: "#e6f8ef",
+                color: "#198754",
+                fontWeight: 600,
+                fontSize: "12px",
+              }}
+            >
+              <i className="ti ti-activity fs-14" />
+              Active
+            </span>
+          ) : (
+            <span
+              className="badge px-3 py-2 rounded-pill d-inline-flex flex-column align-items-start gap-0"
+              style={{
+                backgroundColor: "#fdeded",
+                color: "#dc3545",
+                fontWeight: 600,
+                fontSize: "12px",
+                lineHeight: 1.35,
+              }}
+            >
+              <span className="d-flex align-items-center gap-1">
+                <i className="ti ti-user-check fs-14" /> Discharged
+              </span>
+              <span className="fw-normal fs-11" style={{ opacity: 0.8 }}>
+                {record.dischargeDate
+                  ? new Date(record.dischargeDate).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "Completed"}
+              </span>
+            </span>
+          );
+        },
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.status.localeCompare(b.status),
+      },
+      {
+        title: "Action",
+        className: "text-center text-nowrap",
+        width: 160,
+        align: "center" as const,
+        render: (_: unknown, record: (typeof tableData)[0]) => (
+          <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
+            <button
+              type="button"
+              className="bg-transparent border-0 text-primary p-1"
+              title="View Full IPD Details"
+              onClick={() => {
+                setSelectedViewAdmission(record._raw);
+                setShowViewModal(true);
+              }}
+            >
+              <i className="ti ti-eye fs-18" />
+            </button>
+            <button
+              type="button"
+              className={`bg-transparent border-0 p-1 ${
+                record.hasPrescription ? "text-success" : "text-info"
+              }`}
+              title={record.hasPrescription ? "View Prescription" : "Write Prescription"}
+              onClick={() => handlePrescriptionClick(record._raw)}
+            >
+              <i className="ti ti-file-text fs-18" />
+            </button>
+            {record.status === "Admitted" ? (
+              <button
+                type="button"
+                className="bg-transparent border-0 text-warning p-1"
+                title="Settle & Discharge"
+                onClick={() => handleOpenDischargeModal(record._raw)}
+              >
+                <i className="ti ti-user-check fs-18" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="bg-transparent border-0 text-success p-1"
+                title="View Settled Receipt"
+                onClick={() => {
+                  setSettledAdmissionData(record._raw);
+                  setShowSettledReceiptModal(true);
+                }}
+              >
+                <i className="ti ti-receipt fs-18" />
+              </button>
+            )}
+          </div>
+        ),
+      },
+    ],
+    []
+  );
+
   return (
-    <div className="page-wrapper">
+    <div className="page-wrapper ipd-discharge-page">
+      <style>{`
+        .ipd-discharge-page .ipd-metric-card.card,
+        .page-wrapper .ipd-discharge-empty-card.card,
+        .page-wrapper .datatable-main-container .datatable-table-shell.card {
+          border: none !important;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+          border-radius: 12px !important;
+        }
+
+        .ipd-med-advice-card {
+          border: 1px solid #e2e8f0 !important;
+          border-radius: 12px !important;
+          background: #fff !important;
+          overflow: visible !important;
+        }
+
+        .ipd-med-advice-card .ipd-med-advice-icon {
+          width: 34px;
+          height: 34px;
+          border-radius: 8px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: #ecfdf5;
+          color: #059669;
+          flex-shrink: 0;
+        }
+
+        .ipd-med-advice-card .ipd-med-field-label {
+          display: block;
+          font-size: 12px;
+          font-weight: 600;
+          color: #64748b;
+          margin-bottom: 6px;
+        }
+
+        .ipd-med-advice-card .ipd-med-search-wrap {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          width: 100%;
+          min-height: 42px;
+          padding: 0 12px;
+          border: 1.5px solid #6366f1;
+          border-radius: 10px;
+          background: #fff;
+          box-sizing: border-box;
+        }
+
+        .ipd-med-advice-card .ipd-med-search-wrap:focus-within {
+          border-color: #4f46e5;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+        }
+
+        .ipd-med-advice-card .ipd-med-search-input {
+          flex: 1;
+          min-width: 0;
+          border: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+          background: transparent !important;
+          padding: 10px 0 !important;
+          min-height: 0 !important;
+          height: auto !important;
+          font-size: 14px !important;
+          font-weight: 500 !important;
+          color: #1e293b !important;
+        }
+
+        .ipd-med-advice-card .ipd-med-field-input,
+        .ipd-med-advice-card .ipd-med-field-select {
+          display: block;
+          width: 100%;
+          height: 42px !important;
+          min-height: 42px !important;
+          max-height: 42px !important;
+          padding: 0 12px !important;
+          border: 1.5px solid #6366f1 !important;
+          border-radius: 10px !important;
+          background: #fff !important;
+          font-size: 13px !important;
+          font-weight: 500 !important;
+          line-height: 1.2 !important;
+          color: #1e293b !important;
+          box-sizing: border-box !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+
+        .ipd-med-advice-card .ipd-med-field-select {
+          padding-right: 32px !important;
+          appearance: none;
+          -webkit-appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 12px center !important;
+          background-size: 12px 8px !important;
+          cursor: pointer;
+        }
+
+        .ipd-med-advice-card .ipd-med-field-input:focus,
+        .ipd-med-advice-card .ipd-med-field-select:focus {
+          border-color: #4f46e5 !important;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+        }
+
+        .ipd-med-advice-card .ipd-med-field-input::placeholder {
+          color: #94a3b8 !important;
+          font-weight: 400 !important;
+        }
+
+        .ipd-med-advice-card .ipd-med-add-btn {
+          height: 42px !important;
+          min-height: 42px !important;
+          border-radius: 10px !important;
+          font-size: 13px !important;
+          font-weight: 700 !important;
+        }
+
+        .ipd-med-advice-card .ipd-med-dropdown {
+          position: absolute;
+          top: calc(100% + 4px);
+          left: 0;
+          right: 0;
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+          z-index: 9999;
+          max-height: 220px;
+          overflow-y: auto;
+        }
+
+        .ipd-med-advice-card .ipd-med-dropdown-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          padding: 10px 12px;
+          font-size: 13px;
+          cursor: pointer;
+          border-bottom: 1px solid #f1f5f9;
+        }
+
+        .ipd-med-advice-card .ipd-med-dropdown-item:last-child {
+          border-bottom: none;
+        }
+
+        .ipd-med-advice-card .ipd-med-dropdown-item:hover {
+          background: #f8fafc;
+        }
+
+        .ipd-med-advice-card .ipd-med-list-table {
+          font-size: 13px;
+        }
+
+        .ipd-med-advice-card .ipd-med-list-table thead th {
+          background: #f8fafc;
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.4px;
+          color: #64748b;
+          white-space: nowrap;
+        }
+      `}</style>
       <div className="content">
         {/* Header */}
-        <div className="d-md-flex d-block align-items-center justify-content-between mb-4 gap-3 flex-wrap">
-          <div>
-            <h3 className="page-title mb-0">Discharge Management & Final Settlement</h3>
-          </div>
+        <div className="d-flex align-items-center gap-2 mb-4 flex-wrap">
+          <h3 className="page-title mb-0 flex-shrink-0 me-auto">Discharge Management & Final Settlement</h3>
 
-          <div className="d-flex align-items-center gap-2 flex-wrap mt-3 mt-md-0">
-            {/* Search Filter Input */}
-            <input
+          <div style={{ width: "190px", flexShrink: 0 }}>
+            <IconFormControl
+              fieldLabel="search"
               type="text"
-              className="form-control form-control-sm"
-              style={{ width: "190px" }}
+              className="form-control-sm"
               placeholder="Search code/patient..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-
-            {/* Status Dropdown Filter */}
-            <select
-              className="form-select form-select-sm"
-              style={{ width: "150px" }}
-              value={statusTab}
-              onChange={(e) => setStatusTab(e.target.value as any)}
-            >
-              <option value="All">All Statuses ({admissions.length})</option>
-              <option value="Admitted">Active ({metrics.totalAdmitted})</option>
-              <option value="Discharged">Discharged ({metrics.totalDischarged})</option>
-            </select>
-
-            {/* Ward Dropdown Filter */}
-            <select
-              className="form-select form-select-sm"
-              style={{ width: "150px" }}
-              value={wardFilter}
-              onChange={(e) => setWardFilter(e.target.value)}
-            >
-              <option value="All">All Wards</option>
-              {wardOptions.map((w) => (
-                <option key={w} value={w}>{w}</option>
-              ))}
-            </select>
-
-            {(searchQuery || statusTab !== "All" || wardFilter !== "All") && (
-              <button
-                className="btn btn-sm btn-light border fw-semibold"
-                style={{ fontSize: '12px', borderRadius: '6px' }}
-                onClick={() => {
-                  setSearchQuery("");
-                  setStatusTab("All");
-                  setWardFilter("All");
-                }}
-              >
-                <i className="ti ti-x me-1" />Clear
-              </button>
-            )}
           </div>
+
+          <select
+            className="form-select"
+            style={{
+              width: "150px",
+              height: "46px",
+              minHeight: "46px",
+              flexShrink: 0,
+              borderRadius: "12px",
+              borderWidth: "1.5px",
+              borderColor: "#6366f1",
+              fontSize: "14px",
+              fontWeight: 500,
+            }}
+            value={statusTab}
+            onChange={(e) => setStatusTab(e.target.value as any)}
+          >
+            <option value="All">All Statuses ({admissions.length})</option>
+            <option value="Admitted">Active ({metrics.totalAdmitted})</option>
+            <option value="Discharged">Discharged ({metrics.totalDischarged})</option>
+          </select>
+
+          <select
+            className="form-select"
+            style={{
+              width: "150px",
+              height: "46px",
+              minHeight: "46px",
+              flexShrink: 0,
+              borderRadius: "12px",
+              borderWidth: "1.5px",
+              borderColor: "#6366f1",
+              fontSize: "14px",
+              fontWeight: 500,
+            }}
+            value={wardFilter}
+            onChange={(e) => setWardFilter(e.target.value)}
+          >
+            <option value="All">All Wards</option>
+            {wardOptions.map((w) => (
+              <option key={w} value={w}>{w}</option>
+            ))}
+          </select>
+
+          {(searchQuery || statusTab !== "All" || wardFilter !== "All") && (
+            <button
+              className="btn btn-light border fw-semibold d-inline-flex align-items-center"
+              style={{ height: "46px", fontSize: "13px", borderRadius: "12px", flexShrink: 0 }}
+              onClick={() => {
+                setSearchQuery("");
+                setStatusTab("All");
+                setWardFilter("All");
+              }}
+            >
+              <i className="ti ti-x me-1" />Clear
+            </button>
+          )}
         </div>
 
         {/* Overview Metric Cards */}
         <div className="row g-3 mb-4">
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-primary">
+            <div className="card border-0 shadow ipd-metric-card">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -535,7 +947,7 @@ const IpdDischargePage: React.FC = () => {
           </div>
 
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-success">
+            <div className="card border-0 shadow ipd-metric-card">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -543,7 +955,6 @@ const IpdDischargePage: React.FC = () => {
                     <h3 className="fw-bold mb-0 text-success">{metrics.totalDischarged}</h3>
                   </div>
                   <div className="avatar avatar-md bg-soft-success text-success rounded-circle">
-                    <i className="ti ti-[#1]" />
                     <i className="ti ti-user-check fs-20" />
                   </div>
                 </div>
@@ -552,7 +963,7 @@ const IpdDischargePage: React.FC = () => {
           </div>
 
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-danger">
+            <div className="card border-0 shadow ipd-metric-card">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -570,7 +981,7 @@ const IpdDischargePage: React.FC = () => {
           </div>
 
           <div className="col-xl-3 col-sm-6">
-            <div className="card border-0 shadow-sm border-start border-4 border-info">
+            <div className="card border-0 shadow ipd-metric-card">
               <div className="card-body p-3">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
@@ -588,368 +999,324 @@ const IpdDischargePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Admissions Table */}
-        <div className="card border-0 shadow-sm">
-          <div className="card-body p-0">
-            {loading ? (
-              <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status" />
-                <p className="text-muted mt-2 mb-0">Loading Inpatient Records...</p>
-              </div>
-            ) : filteredAdmissions.length === 0 ? (
-              <div className="text-center py-5">
-                <i className="ti ti-user-check fs-40 text-muted mb-2 d-block" />
-                <h5 className="fw-bold">No Inpatient Records Found</h5>
-                <p className="text-muted fs-13 mb-0">All patients in this view are discharged or no records exist.</p>
-              </div>
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-hover align-middle mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th style={{ width: "46px" }}>Sr.</th>
-                      <th>Admission Code</th>
-                      <th>Patient Details</th>
-                      <th>Primary Doctor & Ward</th>
-                      <th>Admission Date</th>
-                      <th>Total Billed</th>
-                      <th>Paid Amount</th>
-                      <th>Due Balance</th>
-                      <th>Discharge Status</th>
-                      <th className="text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAdmissions.map((adm, idx) => (
-                      <tr key={adm.id}>
-                        <td>
-                          <span className="text-muted fw-semibold fs-13">{idx + 1}</span>
-                        </td>
-                        <td>
-                          <span className="badge bg-soft-dark text-dark fw-bold">
-                            {adm.admissionCode}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="fw-bold text-dark d-block">{getPatientName(adm.patient)}</span>
-                          <small className="text-muted">UHID: {adm.patient?.patientCode || "—"}</small>
-                        </td>
-                        <td>
-                          <span className="fw-medium text-primary d-block">
-                            {adm.doctor?.fullName || "Unassigned"}
-                          </span>
-                          <span className="badge bg-soft-info text-info fs-11">
-                            {adm.ward?.wardName || "Ward"}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="text-muted fs-13">
-                            {new Date(adm.admissionDate).toLocaleDateString()}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="fw-bold text-dark fs-14">
-                            ₹{adm.totalAmount.toLocaleString("en-IN")}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="fw-bold text-success fs-14">
-                            ₹{adm.totalPaid.toLocaleString("en-IN")}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="fw-bold text-danger fs-14">
-                            ₹{adm.dueAmount.toLocaleString("en-IN")}
-                          </span>
-                        </td>
-
-                        <td>
-                          {adm.status === "Admitted" ? (
-                            <span className="badge bg-success py-1 px-2 fs-12 fw-bold d-inline-flex align-items-center gap-1">
-                              <i className="ti ti-activity" />
-                              <span>Active</span>
-                            </span>
-                          ) : (
-                            <span className="badge bg-danger py-1 px-2 fs-12 fw-bold d-flex flex-column align-items-start gap-0" style={{ lineHeight: 1.4 }}>
-                              <span className="d-flex align-items-center gap-1">
-                                <i className="ti ti-user-check" /> Discharged
-                              </span>
-                              <span className="fw-normal fs-11 opacity-75">
-                                {adm.dischargeDate
-                                  ? new Date(adm.dischargeDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
-                                  : "Completed"}
-                              </span>
-                            </span>
-                          )}
-                        </td>
-                        <td className="text-center">
-                          <div className="d-flex align-items-center justify-content-center gap-1">
-                            {/* View Admission Details */}
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-soft-secondary p-0 d-flex align-items-center justify-content-center"
-                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                              title="View Full IPD Details"
-                              onClick={() => {
-                                setSelectedViewAdmission(adm);
-                                setShowViewModal(true);
-                              }}
-                            >
-                              <i className="ti ti-eye fs-16" />
-                            </button>
-                            {/* Prescription */}
-                            <button
-                              type="button"
-                              className={`btn btn-sm p-0 d-flex align-items-center justify-content-center ${
-                                (adm as any).ipdPrescriptions?.length > 0 ? 'btn-soft-success' : 'btn-soft-primary'
-                              }`}
-                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                              title={(adm as any).ipdPrescriptions?.length > 0 ? "View Prescription" : "Write Prescription"}
-                              onClick={() => handlePrescriptionClick(adm)}
-                            >
-                              <i className="ti ti-file-text fs-16" />
-                            </button>
-                            {/* Settle / Receipt */}
-                            {adm.status === "Admitted" ? (
-                              <button
-                                className="btn btn-sm btn-soft-warning p-0 d-flex align-items-center justify-content-center"
-                                style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                                title="Settle & Discharge"
-                                onClick={() => handleOpenDischargeModal(adm)}
-                              >
-                                <i className="ti ti-user-check fs-16" />
-                              </button>
-                            ) : (
-                              <button
-                                className="btn btn-sm btn-soft-success p-0 d-flex align-items-center justify-content-center"
-                                style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                                title="View Settled Receipt"
-                                onClick={() => {
-                                  setSettledAdmissionData(adm);
-                                  setShowSettledReceiptModal(true);
-                                }}
-                              >
-                                <i className="ti ti-receipt fs-16" />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+        {/* Discharge Table — same Datatable shell/header/pagination as Patients */}
+        {loading ? (
+          <div className="card ipd-discharge-empty-card">
+            <div className="card-body text-center py-5">
+              <div className="spinner-border text-primary" role="status" />
+              <p className="text-muted mt-2 mb-0">Loading Inpatient Records...</p>
+            </div>
           </div>
-        </div>
+        ) : filteredAdmissions.length === 0 ? (
+          <div className="card ipd-discharge-empty-card">
+            <div className="card-body text-center py-5">
+              <i className="ti ti-user-check fs-40 text-muted mb-2 d-block" />
+              <h5 className="fw-bold">No Inpatient Records Found</h5>
+              <p className="text-muted fs-13 mb-0">
+                All patients in this view are discharged or no records exist.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <Datatable
+              columns={columns}
+              dataSource={tableData}
+              Selection={false}
+              searchText=""
+            />
+          </div>
+        )}
       </div>
 
       {/* MODAL: DISCHARGE & FINAL BILL SETTLEMENT */}
       {showDischargeModal && targetAdmission && (
-        <div
-          className="modal fade show d-block"
-          tabIndex={-1}
-          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
-        >
-          <div className="modal-dialog modal-lg modal-dialog-centered">
-            <div className="modal-content border-0 shadow-lg">
-              <div className="modal-header bg-dark text-white">
-                <h5 className="modal-title fw-bold text-white">
-                  <i className="ti ti-user-check me-2" />
-                  Process Patient Discharge & Final Bill Settlement
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white"
-                  onClick={() => setShowDischargeModal(false)}
-                />
-              </div>
-
-              <form onSubmit={handleSubmitDischarge}>
-                <div className="modal-body p-4">
-                  {/* Patient Banner */}
-                  <div className="p-3 bg-light rounded border mb-4 d-flex justify-content-between align-items-center">
+        <>
+          <div className="modal-backdrop fade show" style={{ zIndex: 1040 }} onClick={() => setShowDischargeModal(false)} />
+          <div className="modal fade show d-block text-dark" style={{ zIndex: 1050 }} tabIndex={-1}>
+            <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+              <form
+                onSubmit={handleSubmitDischarge}
+                className="modal-content border-0 shadow-lg"
+                style={{
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  maxHeight: "90vh",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <div
+                  className="modal-header bg-primary text-white py-3 px-4 d-flex align-items-center justify-content-between border-0"
+                  style={{ flexShrink: 0 }}
+                >
+                  <div className="d-flex align-items-center gap-2">
+                    <div
+                      className="bg-white rounded-circle p-2 d-flex align-items-center justify-content-center"
+                      style={{ width: 36, height: 36 }}
+                    >
+                      <i className="ti ti-user-check text-primary fs-18" />
+                    </div>
                     <div>
-                      <span className="text-muted fs-12 d-block">Inpatient Details:</span>
-                      <h5 className="fw-bold text-dark mb-0">{getPatientName(targetAdmission.patient)}</h5>
-                      <small className="text-muted">
-                        Code: {targetAdmission.admissionCode} | UHID: {targetAdmission.patient?.patientCode || "—"}
-                      </small>
-                    </div>
-
-                    <div className="text-end">
-                      <span className="badge bg-soft-primary text-primary fw-bold fs-13 d-block mb-1">
-                        {targetAdmission.ward?.wardName || "Ward"}
-                      </span>
-                      <small className="text-muted">Doctor: {targetAdmission.doctor?.fullName || "Doctor"}</small>
+                      <h5 className="modal-title fw-bold text-white mb-0">
+                        Process Patient Discharge & Final Bill Settlement
+                      </h5>
+                      <p className="mb-0 text-white-50 fs-12">Settle outstanding dues and complete discharge</p>
                     </div>
                   </div>
-
-                  {/* Financial Due Summary */}
-                  <div className="p-3 bg-soft-danger border border-danger rounded-3 mb-4">
-                    <div className="row text-center text-md-start align-items-center">
-                      <div className="col-md-4">
-                        <span className="text-muted fs-12 d-block">TOTAL BILLED AMOUNT</span>
-                        <h4 className="fw-bold text-dark mb-0">₹{targetAdmission.totalAmount}</h4>
-                      </div>
-                      <div className="col-md-4">
-                        <span className="text-muted fs-12 d-block">ADVANCE / PAID AMOUNT</span>
-                        <h4 className="fw-bold text-success mb-0">₹{targetAdmission.totalPaid}</h4>
-                      </div>
-                      <div className="col-md-4">
-                        <span className="text-muted fs-12 d-block">CURRENT OUTSTANDING DUE</span>
-                        <h3 className="fw-bold text-danger mb-0">₹{targetAdmission.dueAmount}</h3>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Discount / Concession Section */}
-                  <div className="p-3 bg-light rounded border mb-4">
-                    <h6 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
-                      <i className="ti ti-discount me-1 text-warning fs-18" />
-                      Apply Discharge Discount / Concession (Optional)
-                    </h6>
-
-                    <div className="row g-3">
-                      <div className="col-md-4">
-                        <label className="form-label fs-13 fw-semibold">Discount Type</label>
-                        <div className="d-flex gap-3 pt-1">
-                          <label className="form-check-label fw-medium cursor-pointer">
-                            <input
-                              type="radio"
-                              className="form-check-input me-1"
-                              name="discType"
-                              value="Fixed"
-                              checked={discountType === "Fixed"}
-                              onChange={() => setDiscountType("Fixed")}
-                            />
-                            Fixed Amount (₹)
-                          </label>
-                          <label className="form-check-label fw-medium cursor-pointer">
-                            <input
-                              type="radio"
-                              className="form-check-input me-1"
-                              name="discType"
-                              value="Percentage"
-                              checked={discountType === "Percentage"}
-                              onChange={() => setDiscountType("Percentage")}
-                            />
-                            Percentage (%)
-                          </label>
-                        </div>
-                      </div>
-
-                      <div className="col-md-4">
-                        <label className="form-label fs-13 fw-semibold">
-                          Discount Value {discountType === "Percentage" ? "(%)" : "(₹)"}
-                        </label>
-                        <input
-                          type="number"
-                          className="form-control fw-bold text-warning"
-                          placeholder={discountType === "Percentage" ? "e.g. 10" : "e.g. 500"}
-                          value={discountValue}
-                          onChange={(e) => setDiscountValue(e.target.value)}
-                          min={0}
-                        />
-                      </div>
-
-                      <div className="col-md-4">
-                        <label className="form-label fs-13 fw-semibold">Discount Deduction</label>
-                        <div className="form-control bg-white fw-bold text-danger">
-                          - ₹{computedDiscount.toLocaleString("en-IN")}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Final Settle Calculation */}
-                  <div className="p-3 bg-soft-success border border-success rounded-3 mb-4">
-                    <div className="d-flex align-items-center justify-content-between mb-3">
-                      <div>
-                        <span className="text-muted fs-13 d-block">NET FINAL PAYABLE BALANCE:</span>
-                        <h2 className="fw-bold text-success mb-0">
-                          ₹{netPayable.toLocaleString("en-IN")}
-                        </h2>
-                      </div>
-                      <button
-                        type="button"
-                        className="btn btn-outline-success btn-sm fw-bold"
-                        onClick={() => setPaymentAmount(String(netPayable))}
-                      >
-                        Auto-Fill Full Pay (₹{netPayable})
-                      </button>
-                    </div>
-
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label fs-13 fw-semibold">
-                          Final Payment Collecting (₹) <span className="text-danger">*</span>
-                        </label>
-                        <input
-                          type="number"
-                          className="form-control fw-bold text-success fs-18"
-                          value={paymentAmount}
-                          onChange={(e) => setPaymentAmount(e.target.value)}
-                          min={0}
-                          required
-                        />
-                      </div>
-
-                      <div className="col-md-6">
-                        <label className="form-label fs-13 fw-semibold">Payment Method</label>
-                        <select
-                          className="form-select"
-                          value={paymentMethod}
-                          onChange={(e) => setPaymentMethod(e.target.value)}
-                        >
-                          <option value="Cash">Cash</option>
-                          <option value="UPI">UPI / GPay / PhonePe</option>
-                          <option value="Card">Credit / Debit Card</option>
-                          <option value="Net Banking">Net Banking</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="form-label fw-semibold">Discharge Summary / Notes</label>
-                    <textarea
-                      className="form-control"
-                      rows={2}
-                      placeholder="e.g. Patient fully recovered. Prescribed post-op medications for 7 days."
-                      value={dischargeNotes}
-                      onChange={(e) => setDischargeNotes(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="modal-footer bg-light">
                   <button
                     type="button"
-                    className="btn btn-secondary"
+                    className="btn-close btn-close-white"
+                    onClick={() => setShowDischargeModal(false)}
+                    aria-label="Close"
+                  />
+                </div>
+
+                <div className="modal-body p-4 bg-light-subtle" style={{ overflowY: "auto", flex: 1, minHeight: 0 }}>
+                    {/* Patient Banner */}
+                    <div
+                      className="card border-0 bg-white shadow-sm mb-4"
+                      style={{ borderRadius: "12px" }}
+                    >
+                      <div className="card-body p-3">
+                        <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                          <div className="d-flex align-items-center gap-3">
+                            <div
+                              className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 fw-bold fs-18"
+                              style={{
+                                width: 52,
+                                height: 52,
+                                background: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)",
+                                color: "#4f46e5",
+                              }}
+                            >
+                              {getPatientName(targetAdmission.patient).charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <span className="text-muted fs-12 d-block">Inpatient Details</span>
+                              <h5 className="fw-bold text-dark mb-1">{getPatientName(targetAdmission.patient)}</h5>
+                              <small className="text-muted">
+                                Code: {targetAdmission.admissionCode} | UHID: {targetAdmission.patient?.patientCode || "—"}
+                              </small>
+                            </div>
+                          </div>
+                          <div className="text-md-end">
+                            <span className="badge bg-soft-primary text-primary fw-bold fs-13 d-inline-block mb-1">
+                              {targetAdmission.ward?.wardName || "Ward"}
+                            </span>
+                            <div>
+                              <small className="text-muted">
+                                Doctor: {targetAdmission.doctor?.fullName || "Doctor"}
+                              </small>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Financial Due Summary */}
+                    <div
+                      className="card border-0 bg-white shadow-sm mb-4"
+                      style={{ borderRadius: "12px" }}
+                    >
+                      <div className="card-body p-3">
+                        <h6 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                          <span
+                            className="d-inline-flex align-items-center justify-content-center rounded-2"
+                            style={{ width: 32, height: 32, background: "#eff6ff", color: "#2563eb" }}
+                          >
+                            <i className="ti ti-receipt fs-16" />
+                          </span>
+                          Bill Summary
+                        </h6>
+                        <div className="row g-3 text-center text-md-start">
+                          <div className="col-md-4">
+                            <span className="text-muted fs-12 d-block text-uppercase fw-semibold">Total Billed</span>
+                            <h4 className="fw-bold text-dark mb-0">₹{targetAdmission.totalAmount.toLocaleString("en-IN")}</h4>
+                          </div>
+                          <div className="col-md-4">
+                            <span className="text-muted fs-12 d-block text-uppercase fw-semibold">Advance / Paid</span>
+                            <h4 className="fw-bold text-success mb-0">₹{targetAdmission.totalPaid.toLocaleString("en-IN")}</h4>
+                          </div>
+                          <div className="col-md-4">
+                            <span className="text-muted fs-12 d-block text-uppercase fw-semibold">Outstanding Due</span>
+                            <h3 className="fw-bold text-danger mb-0">₹{targetAdmission.dueAmount.toLocaleString("en-IN")}</h3>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Discount / Concession Section */}
+                    <div
+                      className="card border-0 bg-white shadow-sm mb-4"
+                      style={{ borderRadius: "12px" }}
+                    >
+                      <div className="card-body p-3">
+                        <h6 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                          <span
+                            className="d-inline-flex align-items-center justify-content-center rounded-2"
+                            style={{ width: 32, height: 32, background: "#fef3c7", color: "#d97706" }}
+                          >
+                            <i className="ti ti-discount fs-16" />
+                          </span>
+                          Apply Discharge Discount / Concession (Optional)
+                        </h6>
+
+                        <div className="row g-3">
+                          <div className="col-md-4">
+                            <label className="form-label fs-13 fw-semibold text-secondary">Discount Type</label>
+                            <div className="d-flex flex-wrap gap-3 pt-1">
+                              <label className="form-check-label fw-medium cursor-pointer">
+                                <input
+                                  type="radio"
+                                  className="form-check-input me-1"
+                                  name="discType"
+                                  value="Fixed"
+                                  checked={discountType === "Fixed"}
+                                  onChange={() => setDiscountType("Fixed")}
+                                />
+                                Fixed Amount (₹)
+                              </label>
+                              <label className="form-check-label fw-medium cursor-pointer">
+                                <input
+                                  type="radio"
+                                  className="form-check-input me-1"
+                                  name="discType"
+                                  value="Percentage"
+                                  checked={discountType === "Percentage"}
+                                  onChange={() => setDiscountType("Percentage")}
+                                />
+                                Percentage (%)
+                              </label>
+                            </div>
+                          </div>
+
+                          <div className="col-md-4">
+                            <label className="form-label fs-13 fw-semibold text-secondary">
+                              Discount Value {discountType === "Percentage" ? "(%)" : "(₹)"}
+                            </label>
+                            <IconFormControl
+                              fieldLabel="amount"
+                              type="number"
+                              className="fw-bold text-warning"
+                              placeholder={discountType === "Percentage" ? "e.g. 10" : "e.g. 500"}
+                              value={discountValue}
+                              onChange={(e) => setDiscountValue(e.target.value)}
+                              min={0}
+                            />
+                          </div>
+
+                          <div className="col-md-4">
+                            <label className="form-label fs-13 fw-semibold text-secondary">Discount Deduction</label>
+                            <div className="form-control bg-white fw-bold text-danger border-secondary-subtle">
+                              - ₹{computedDiscount.toLocaleString("en-IN")}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Final Settle Calculation */}
+                    <div
+                      className="card border-0 bg-white shadow-sm mb-4"
+                      style={{ borderRadius: "12px", borderLeft: "4px solid #22c55e" }}
+                    >
+                      <div className="card-body p-3">
+                        <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                          <div>
+                            <span className="text-muted fs-13 d-block">Net Final Payable Balance</span>
+                            <h2 className="fw-bold text-success mb-0">
+                              ₹{netPayable.toLocaleString("en-IN")}
+                            </h2>
+                          </div>
+                          <button
+                            type="button"
+                            className="btn btn-outline-primary btn-sm fw-bold"
+                            onClick={() => setPaymentAmount(String(netPayable))}
+                          >
+                            Auto-Fill Full Pay (₹{netPayable.toLocaleString("en-IN")})
+                          </button>
+                        </div>
+
+                        <div className="row g-3">
+                          <div className="col-md-6">
+                            <label className="form-label fs-13 fw-semibold text-secondary">
+                              Final Payment Collecting (₹) <span className="text-danger">*</span>
+                            </label>
+                            <IconFormControl
+                              fieldLabel="amount"
+                              type="number"
+                              className="fw-bold text-success fs-18"
+                              placeholder="Enter final payment amount"
+                              value={paymentAmount}
+                              onChange={(e) => setPaymentAmount(e.target.value)}
+                              min={0}
+                              required
+                            />
+                          </div>
+
+                          <div className="col-md-6">
+                            <label className="form-label fs-13 fw-semibold text-secondary">Payment Method</label>
+                            <select
+                              className="form-select border-secondary-subtle text-dark"
+                              value={paymentMethod}
+                              onChange={(e) => setPaymentMethod(e.target.value)}
+                            >
+                              <option value="Cash">Cash</option>
+                              <option value="UPI">UPI / GPay / PhonePe</option>
+                              <option value="Card">Credit / Debit Card</option>
+                              <option value="Net Banking">Net Banking</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="form-label fw-semibold text-secondary fs-12">Discharge Summary / Notes</label>
+                      <IconTextarea
+                        fieldLabel="notes"
+                        rows={2}
+                        placeholder="e.g. Patient fully recovered. Prescribed post-op medications for 7 days."
+                        value={dischargeNotes}
+                        onChange={(e) => setDischargeNotes(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                <div
+                  className="modal-footer border-0 px-4 py-3 bg-white d-flex align-items-center justify-content-end gap-2"
+                  style={{ flexShrink: 0 }}
+                >
+                  <button
+                    type="button"
+                    className="btn btn-light border fw-medium px-4"
                     onClick={() => setShowDischargeModal(false)}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="btn btn-success px-4 fw-bold"
+                    className="btn btn-primary px-4 fw-bold d-flex align-items-center gap-1"
                     disabled={submittingDischarge}
                   >
                     {submittingDischarge ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" />
+                        <span className="spinner-border spinner-border-sm" role="status" />
                         Discharging...
                       </>
                     ) : (
-                      "Settle Bill & Discharge Inpatient"
+                      <>
+                        <i className="ti ti-user-check" />
+                        Settle Bill & Discharge Inpatient
+                      </>
                     )}
                   </button>
                 </div>
               </form>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* MODAL: DISCHARGED PATIENT SETTLED RECEIPT & SUMMARY */}
@@ -1121,8 +1488,8 @@ const IpdDischargePage: React.FC = () => {
                       {/* Discharge Summary */}
                       <div className="mb-3">
                         <label className="form-label fw-semibold">Discharge Summary / Diagnosis Notes</label>
-                        <textarea
-                          className="form-control"
+                        <IconTextarea
+                          fieldLabel="notes"
                           rows={4}
                           placeholder="Enter detailed discharge summary, diagnosis findings, and doctor's advice..."
                           value={dischargeSummary}
@@ -1132,58 +1499,67 @@ const IpdDischargePage: React.FC = () => {
 
                       {/* Medicine advice */}
                       <div className="mb-3">
-                        <label className="form-label fw-semibold"><i className="ti ti-pill me-1 text-success" />Add Medicine Advice</label>
-                        <div className="card border bg-light p-3 mb-2">
-                          <div className="row g-2 align-items-end mb-2">
-                            <div className="col-md-3" style={{ position: 'relative' }}>
-                              <label className="form-label fs-11 fw-semibold mb-1">Medicine Name</label>
-                              <input
-                                ref={medInputRef}
-                                type="text"
-                                className="form-control form-control-sm"
-                                placeholder="Search medicine..."
-                                value={medSearch || newMedName}
-                                autoComplete="off"
-                                onChange={(e) => {
-                                  setMedSearch(e.target.value);
-                                  setNewMedName(e.target.value);
-                                  setMedDropdownOpen(true);
-                                }}
-                                onFocus={() => setMedDropdownOpen(true)}
-                                onBlur={() => setTimeout(() => setMedDropdownOpen(false), 180)}
-                              />
-                              {medDropdownOpen && filteredSysMeds.length > 0 && (
-                                <div
-                                  style={{
-                                    position: 'absolute', top: '100%', left: 0, right: 0,
-                                    background: '#fff', border: '1px solid #d1d5db',
-                                    borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                                    zIndex: 9999, maxHeight: '200px', overflowY: 'auto',
+                        <div className="ipd-med-advice-card p-3 mb-2">
+                          <div className="d-flex align-items-center gap-2 mb-3">
+                            <span className="ipd-med-advice-icon">
+                              <i className="ti ti-pill fs-18" />
+                            </span>
+                            <h6 className="fw-bold text-dark mb-0 fs-14">Add Medicine Advice</h6>
+                          </div>
+
+                          <div className="row g-3">
+                            <div className="col-12 position-relative">
+                              <label className="ipd-med-field-label">Medicine Name</label>
+                              <div className="ipd-med-search-wrap">
+                                <i className="ti ti-search text-muted fs-16" />
+                                <input
+                                  ref={medInputRef}
+                                  type="text"
+                                  className="ipd-med-search-input"
+                                  placeholder="Search medicine..."
+                                  value={medSearch || newMedName}
+                                  autoComplete="off"
+                                  onChange={(e) => {
+                                    setMedSearch(e.target.value);
+                                    setNewMedName(e.target.value);
+                                    setMedDropdownOpen(true);
                                   }}
-                                >
+                                  onFocus={() => setMedDropdownOpen(true)}
+                                  onBlur={() => setTimeout(() => setMedDropdownOpen(false), 180)}
+                                />
+                              </div>
+                              {medDropdownOpen && filteredSysMeds.length > 0 && (
+                                <div className="ipd-med-dropdown">
                                   {filteredSysMeds.map((med) => {
                                     const name = getMedName(med);
                                     return (
                                       <div
                                         key={med.id}
-                                        className="d-flex align-items-center justify-content-between px-3 py-2"
-                                        style={{ cursor: 'pointer', borderBottom: '1px solid #f1f5f9', fontSize: '12px' }}
+                                        className="ipd-med-dropdown-item"
                                         onMouseDown={() => {
                                           setNewMedName(name);
                                           setMedSearch(name);
                                           if (med.unit) setNewMedStrength(med.unit);
                                           setMedDropdownOpen(false);
                                         }}
-                                        onMouseEnter={(e) => (e.currentTarget.style.background = '#f0f4ff')}
-                                        onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                                       >
-                                        <div>
-                                          <span className="fw-semibold text-dark">{name}</span>
-                                          {med.genericName && <small className="text-muted ms-1">({med.genericName})</small>}
+                                        <div className="min-w-0">
+                                          <span className="fw-semibold text-dark d-block text-truncate">{name}</span>
+                                          {med.genericName && (
+                                            <small className="text-muted">{med.genericName}</small>
+                                          )}
                                         </div>
-                                        <div className="d-flex gap-1 align-items-center">
-                                          {med.unit && <span className="badge bg-soft-primary text-primary" style={{ fontSize: '10px' }}>{med.unit}</span>}
-                                          {med.category?.name && <span className="badge bg-soft-success text-success" style={{ fontSize: '10px' }}>{med.category.name}</span>}
+                                        <div className="d-flex gap-1 align-items-center flex-shrink-0">
+                                          {med.unit && (
+                                            <span className="badge bg-soft-primary text-primary" style={{ fontSize: "10px" }}>
+                                              {med.unit}
+                                            </span>
+                                          )}
+                                          {med.category?.name && (
+                                            <span className="badge bg-soft-success text-success" style={{ fontSize: "10px" }}>
+                                              {med.category.name}
+                                            </span>
+                                          )}
                                         </div>
                                       </div>
                                     );
@@ -1191,47 +1567,120 @@ const IpdDischargePage: React.FC = () => {
                                 </div>
                               )}
                             </div>
-                            <div className="col-md-2">
-                              <label className="form-label fs-11 fw-semibold mb-1">Dosage</label>
-                              <input type="text" className="form-control form-control-sm" placeholder="Dosage" value={newMedDosage} onChange={(e) => setNewMedDosage(e.target.value)} />
+
+                            <div className="col-sm-6 col-lg-3">
+                              <label className="ipd-med-field-label">Dosage</label>
+                              <input
+                                type="text"
+                                className="ipd-med-field-input"
+                                placeholder="e.g. 1 tablet"
+                                value={newMedDosage}
+                                onChange={(e) => setNewMedDosage(e.target.value)}
+                              />
                             </div>
-                            <div className="col-md-2">
-                              <label className="form-label fs-11 fw-semibold mb-1">Strength</label>
-                              <input type="text" className="form-control form-control-sm" placeholder="Strength" value={newMedStrength} onChange={(e) => setNewMedStrength(e.target.value)} />
+
+                            <div className="col-sm-6 col-lg-3">
+                              <label className="ipd-med-field-label">Strength</label>
+                              <input
+                                type="text"
+                                className="ipd-med-field-input"
+                                placeholder="e.g. 500mg"
+                                value={newMedStrength}
+                                onChange={(e) => setNewMedStrength(e.target.value)}
+                              />
                             </div>
-                            <div className="col-md-2">
-                              <label className="form-label fs-11 fw-semibold mb-1">Frequency</label>
-                              <select className="form-select form-select-sm" value={newMedFrequency} onChange={(e) => setNewMedFrequency(e.target.value)}>
-                                {["Once daily","Twice daily","Thrice daily","Four times daily","Every 6 hours","Every 8 hours","As needed","At bedtime"].map(f => <option key={f}>{f}</option>)}
+
+                            <div className="col-sm-6 col-lg-3">
+                              <label className="ipd-med-field-label">Frequency</label>
+                              <select
+                                className="ipd-med-field-select"
+                                value={newMedFrequency}
+                                onChange={(e) => setNewMedFrequency(e.target.value)}
+                              >
+                                {[
+                                  "Once daily",
+                                  "Twice daily",
+                                  "Thrice daily",
+                                  "Four times daily",
+                                  "Every 6 hours",
+                                  "Every 8 hours",
+                                  "As needed",
+                                  "At bedtime",
+                                ].map((f) => (
+                                  <option key={f} value={f}>
+                                    {f}
+                                  </option>
+                                ))}
                               </select>
                             </div>
-                            <div className="col-md-3">
-                              <label className="form-label fs-11 fw-semibold mb-1">Duration</label>
-                              <input type="text" className="form-control form-control-sm" placeholder="e.g. 5 days" value={newMedDuration} onChange={(e) => setNewMedDuration(e.target.value)} />
+
+                            <div className="col-sm-6 col-lg-3">
+                              <label className="ipd-med-field-label">Duration</label>
+                              <input
+                                type="text"
+                                className="ipd-med-field-input"
+                                placeholder="e.g. 7 days"
+                                value={newMedDuration}
+                                onChange={(e) => setNewMedDuration(e.target.value)}
+                              />
                             </div>
-                            <div className="col-md-8 mt-2">
-                              <input type="text" className="form-control form-control-sm" placeholder="Instructions (e.g. after meal, with water)" value={newMedInstructions} onChange={(e) => setNewMedInstructions(e.target.value)} />
+
+                            <div className="col-lg-8">
+                              <label className="ipd-med-field-label">Instructions</label>
+                              <input
+                                type="text"
+                                className="ipd-med-field-input"
+                                placeholder="Enter instructions (before food, after meals, etc.)"
+                                value={newMedInstructions}
+                                onChange={(e) => setNewMedInstructions(e.target.value)}
+                              />
                             </div>
-                            <div className="col-md-4 mt-2">
-                              <button type="button" className="btn btn-success btn-sm w-100 fw-bold d-flex align-items-center justify-content-center shadow-sm" onClick={handleAddMedicineRow}>
-                                <i className="ti ti-plus me-1" /> Add Medicine
+
+                            <div className="col-lg-4 d-flex align-items-end">
+                              <button
+                                type="button"
+                                className="btn btn-success w-100 ipd-med-add-btn d-flex align-items-center justify-content-center gap-1 shadow-sm"
+                                onClick={handleAddMedicineRow}
+                              >
+                                <i className="ti ti-plus" /> Add Medicine
                               </button>
                             </div>
                           </div>
                         </div>
 
                         {medicinesList.length > 0 && (
-                          <div className="table-responsive">
-                            <table className="table table-sm table-bordered align-middle mb-0">
-                              <thead className="table-light"><tr><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th></th></tr></thead>
+                          <div className="table-responsive border rounded-3">
+                            <table className="table table-sm align-middle mb-0 ipd-med-list-table">
+                              <thead>
+                                <tr>
+                                  <th>Medicine</th>
+                                  <th>Dosage</th>
+                                  <th>Frequency</th>
+                                  <th>Duration</th>
+                                  <th>Instructions</th>
+                                  <th style={{ width: 48 }} />
+                                </tr>
+                              </thead>
                               <tbody>
                                 {medicinesList.map((med, idx) => (
                                   <tr key={idx}>
-                                    <td className="fw-semibold">{med.name} {med.strength && <small className="text-muted">({med.strength})</small>}</td>
+                                    <td className="fw-semibold">
+                                      {med.name}
+                                      {med.strength && <small className="text-muted ms-1">({med.strength})</small>}
+                                    </td>
                                     <td>{med.dosage || "—"}</td>
                                     <td>{med.frequency}</td>
                                     <td>{med.duration || "—"}</td>
-                                    <td><button type="button" className="btn btn-xs btn-outline-danger py-0 px-1" onClick={() => handleRemoveMedicineRow(idx)}><i className="ti ti-trash fs-12" /></button></td>
+                                    <td className="text-muted">{med.instructions || "—"}</td>
+                                    <td>
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger py-0 px-2"
+                                        onClick={() => handleRemoveMedicineRow(idx)}
+                                      >
+                                        <i className="ti ti-trash fs-12" />
+                                      </button>
+                                    </td>
                                   </tr>
                                 ))}
                               </tbody>

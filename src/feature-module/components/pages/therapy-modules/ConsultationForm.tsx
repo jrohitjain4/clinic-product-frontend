@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiGet, apiPost, apiPut, authHeaders } from "../../../../core/utils/apiClient";
 import { apiUrl } from "../../../../core/config/api";
@@ -6,11 +6,16 @@ import { toast } from "react-toastify";
 import { all_routes } from "../../../routes/all_routes";
 import { DatePicker } from "antd";
 import dayjs, { Dayjs } from "dayjs";
+import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
+import BodyDiagram3D from "./BodyDiagram3D";
+import type { BodyPartDef } from "./BodyDiagram3D";
+import ConsultationPrintPlan from "./ConsultationPrintPlan";
+import ConsultationPreviewPrint from "./ConsultationPreviewPrint";
 
 const routes = all_routes;
 
 // ─── Body Part Definitions ───────────────────────────────────
-const BODY_PARTS = [
+const BODY_PARTS: BodyPartDef[] = [
   // Front
   { id: "head", label: "Head", view: "front", x: 145, y: 18, r: 22 },
   { id: "neck", label: "Neck", view: "front", x: 145, y: 54, r: 12 },
@@ -44,7 +49,7 @@ const BODY_PARTS = [
 ];
 
 const severityColor = (s: number) => {
-  if (s <= 3) return "#22c55e";
+  if (s <= 3) return "#2563eb"; // mild / selected → blue
   if (s <= 6) return "#f59e0b";
   return "#ef4444";
 };
@@ -143,6 +148,40 @@ const emptyPlan = (): TherapyPlanRow => ({
   scheduleType: "daily",
   notes: "",
 });
+
+/** Parse stored sessionTime ("14:30" or "02:30 PM") → clock + period for inputs */
+const parseSessionTimeParts = (value: string): { clock: string; period: "AM" | "PM" } => {
+  if (!value?.trim()) return { clock: "", period: "AM" };
+  const upper = value.trim().toUpperCase();
+  const hasAm = /\bAM\b/.test(upper);
+  const hasPm = /\bPM\b/.test(upper);
+  let clock = upper.replace(/\s*(AM|PM)\s*/g, "").trim();
+
+  // Legacy 24h "HH:mm" → 12h display
+  if (!hasAm && !hasPm && /^\d{1,2}:\d{2}$/.test(clock)) {
+    const [hStr, mStr] = clock.split(":");
+    let h = parseInt(hStr, 10);
+    let period: "AM" | "PM" = "AM";
+    if (h === 0) {
+      h = 12;
+      period = "AM";
+    } else if (h === 12) {
+      period = "PM";
+    } else if (h > 12) {
+      h -= 12;
+      period = "PM";
+    }
+    return { clock: `${h}:${mStr}`, period };
+  }
+
+  return { clock, period: hasPm ? "PM" : "AM" };
+};
+
+const buildSessionTimeValue = (clock: string, period: "AM" | "PM"): string => {
+  const cleaned = clock.replace(/[^\d:]/g, "").slice(0, 5);
+  if (!cleaned) return "";
+  return `${cleaned} ${period}`;
+};
 
 // ─── Main Component ───────────────────────────────────────────
 const ConsultationForm = () => {
@@ -271,7 +310,6 @@ const ConsultationForm = () => {
 
     return info.originNode;
   };
-  const [bodyView, setBodyView] = useState<"front" | "back">("front");
   const [bodyPoints, setBodyPoints] = useState<BodyPoint[]>([]);
   const [pendingPart, setPendingPart] = useState<(typeof BODY_PARTS)[0] | null>(null);
   const [remarkDraft, setRemarkDraft] = useState("");
@@ -287,7 +325,7 @@ const ConsultationForm = () => {
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [whatsappNotification, setWhatsappNotification] = useState(false);
 
-  // Step 2 – Prescription & Advice
+  // Step 2 – Therapy plans & pricing
   const [advice, setAdvice] = useState("");
   const [medicines, setMedicines] = useState<any[]>([]);
   const [attachments, setAttachments] = useState<any[]>([]);
@@ -437,9 +475,22 @@ const ConsultationForm = () => {
   else if (discountType === "fixed") discountAmt = discValue;
   const finalTotal = Math.max(0, subtotal - discountAmt);
 
-  // Body diagram
+  // Body diagram — click selects part and cycles severity color (live preview until Save)
+  const cycleSeverity = (current: number) => {
+    if (current <= 3) return 5; // mild → moderate (orange)
+    if (current <= 6) return 8; // moderate → severe (red)
+    return 2; // severe → mild (green)
+  };
+
   const handleBodyClick = (part: (typeof BODY_PARTS)[0]) => {
     const existing = bodyPoints.find((bp) => bp.part === part.id);
+
+    // Re-click same pending circle → cycle color bands (green / orange / red)
+    if (pendingPart?.id === part.id) {
+      setSeverityDraft((prev) => cycleSeverity(prev));
+      return;
+    }
+
     if (existing) {
       setPendingPart(part);
       setRemarkDraft(existing.remark);
@@ -448,7 +499,8 @@ const ConsultationForm = () => {
     } else {
       setPendingPart(part);
       setRemarkDraft("");
-      setSeverityDraft(5);
+      // Start on mild green so click visibly changes from unmarked orange
+      setSeverityDraft(2);
       setDaysSinceDraft(0);
     }
   };
@@ -473,6 +525,108 @@ const ConsultationForm = () => {
 
   const removeBodyPoint = (partId: string) => {
     setBodyPoints((prev) => prev.filter((bp) => bp.part !== partId));
+  };
+
+  const examHasFront = useMemo(
+    () =>
+      bodyPoints.some((bp) => BODY_PARTS.find((p) => p.id === bp.part)?.view === "front"),
+    [bodyPoints]
+  );
+  const examHasBack = useMemo(
+    () =>
+      bodyPoints.some((bp) => BODY_PARTS.find((p) => p.id === bp.part)?.view === "back"),
+    [bodyPoints]
+  );
+
+  const getClinicForPrint = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const clinic = user?.clinic || {};
+      const address = [
+        clinic.addressLine1,
+        clinic.addressLine2,
+        clinic.city,
+        clinic.state,
+        clinic.country,
+        clinic.pincode ? `- ${clinic.pincode}` : "",
+      ]
+        .filter(Boolean)
+        .join(", ");
+      return {
+        name: clinic.name || clinic.clinicName || user?.clinicName || "Clinic",
+        phone: clinic.phone || clinic.mobile || "",
+        email: clinic.email || "",
+        address,
+        logo:
+          [clinic.landingPage?.logo, clinic.clinicLogo, clinic.logo, clinic.profileImage]
+            .map((v) => (typeof v === "string" ? v.trim() : ""))
+            .find((v) => v.length > 0 && v !== "null" && v !== "undefined") || "",
+      };
+    } catch {
+      return { name: "Clinic" };
+    }
+  };
+
+  const captureDiagramsForPrint = (root: HTMLElement | null) => {
+    const created: HTMLImageElement[] = [];
+    root?.querySelectorAll<HTMLCanvasElement>(".body-diagram-3d canvas").forEach((canvas) => {
+      try {
+        const dataUrl = canvas.toDataURL("image/png");
+        const img = document.createElement("img");
+        img.src = dataUrl;
+        img.className = "consult-print-canvas-img";
+        img.alt = "Body diagram";
+        Object.assign(img.style, {
+          width: "100%",
+          height: "auto",
+          display: "block",
+          borderRadius: "12px",
+        });
+        canvas.style.visibility = "hidden";
+        canvas.parentElement?.appendChild(img);
+        created.push(img);
+      } catch {
+        /* canvas may be tainted; skip */
+      }
+    });
+    const cleanup = () => {
+      created.forEach((img) => img.remove());
+      root?.querySelectorAll<HTMLCanvasElement>(".body-diagram-3d canvas").forEach((c) => {
+        c.style.visibility = "";
+      });
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    setTimeout(cleanup, 2500);
+  };
+
+  const handlePrintConsultationPlan = () => {
+    const root = document.getElementById("consultation-print-plan");
+    if (!root) {
+      toast.error("Print layout not ready");
+      return;
+    }
+    // Allow off-screen WebGL diagrams a moment to paint before capture
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        captureDiagramsForPrint(root);
+        window.print();
+      }, 350);
+    });
+  };
+
+  const handleConsultPrint = () => {
+    const root = document.getElementById("consultation-preview-print");
+    if (!root) {
+      toast.error("Print layout not ready");
+      return;
+    }
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        captureDiagramsForPrint(root);
+        window.print();
+      }, 350);
+    });
   };
 
   // Therapy plan row update
@@ -598,275 +752,6 @@ const ConsultationForm = () => {
     setAttachments((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const renderPrescriptionEditor = () => {
-    if (isViewMode && !isEditing) {
-      return (
-        <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-          <div className="card-header border-0 bg-white px-4 py-3" style={{ borderRadius: "16px 16px 0 0" }}>
-            <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-              <span className="rounded-2 d-flex align-items-center justify-content-center"
-                style={{ width: 28, height: 28, background: "#6366f118" }}>
-                <i className="ti ti-pill" style={{ color: "#6366f1", fontSize: 14 }} />
-              </span>
-              Prescription & Advice
-            </h6>
-          </div>
-          <div className="card-body px-4 py-3">
-            <div className="mb-4">
-              <label className="form-label fw-bold small text-muted">Doctor Advice / Instruction</label>
-              <div className="p-3 bg-light rounded text-slate-700 fs-13" style={{ whiteSpace: "pre-wrap", borderLeft: "4px solid #6366f1" }}>
-                {advice || "No advice recorded."}
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <label className="form-label fw-bold small text-muted mb-2 d-block">Prescribed Medicines</label>
-              {medicines.length === 0 ? (
-                <div className="text-center py-4 border rounded-3 bg-light" style={{ borderStyle: "dashed" }}>
-                  <span className="text-muted small">No medicines prescribed.</span>
-                </div>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-hover align-middle mb-0" style={{ fontSize: 13 }}>
-                    <thead>
-                      <tr style={{ background: "#f8fafc" }}>
-                        <th className="border-0 py-2">Medicine Name</th>
-                        <th className="border-0 py-2" style={{ width: 140 }}>Dosage</th>
-                        <th className="border-0 py-2" style={{ width: 120 }}>Duration</th>
-                        <th className="border-0 py-2" style={{ width: 160 }}>Instructions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {medicines.map((m, idx) => (
-                        <tr key={idx}>
-                          <td className="border-0 py-2 fw-semibold text-dark">{m.name || m.medicineName}</td>
-                          <td className="border-0 py-2">{m.dosage || m.frequency}</td>
-                          <td className="border-0 py-2">{m.duration}</td>
-                          <td className="border-0 py-2">{m.instructions || m.timings}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {attachments.length > 0 && (
-              <div>
-                <label className="form-label fw-bold small text-muted mb-2 d-block">Diagnostic Scans & Attachments</label>
-                <div className="row g-3">
-                  {attachments.map((att, idx) => (
-                    <div key={idx} className="col-md-6 col-lg-4">
-                      <div className="p-2 border rounded-3 bg-white h-100 shadow-sm d-flex flex-column gap-2">
-                        <img
-                          src={att.url.startsWith("/") ? apiUrl(att.url) : att.url}
-                          alt="Scan"
-                          className="rounded-2"
-                          style={{ width: "100%", height: 120, objectFit: "cover" }}
-                        />
-                        <div className="small text-dark fw-medium mt-1 px-1">{att.remark || "No remark"}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-        <div className="card-header border-0 bg-white px-4 py-3 d-flex align-items-center justify-content-between"
-          style={{ borderRadius: "16px 16px 0 0" }}>
-          <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-            <span className="rounded-2 d-flex align-items-center justify-content-center"
-              style={{ width: 28, height: 28, background: "#6366f118" }}>
-              <i className="ti ti-pill" style={{ color: "#6366f1", fontSize: 14 }} />
-            </span>
-            Prescription & Advice
-          </h6>
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
-            style={{ borderRadius: 8 }}
-            onClick={addMedicineRow}
-          >
-            <i className="ti ti-plus" /> Add Medicine
-          </button>
-        </div>
-        <div className="card-body px-4 py-3">
-          {/* General Advice */}
-          <div className="mb-4">
-            <label className="form-label fw-bold small">Doctor Advice / Instruction</label>
-            <textarea
-              className="form-control"
-              rows={3}
-              value={advice}
-              onChange={(e) => setAdvice(e.target.value)}
-              placeholder="Enter dietary, resting or general exercise instructions..."
-              style={{ borderRadius: 10, fontSize: 13 }}
-            />
-          </div>
-
-          {/* Medicines List */}
-          <div className="mb-4">
-            <label className="form-label fw-bold small mb-2 d-block">Prescribed Medicines</label>
-            {medicines.length === 0 ? (
-              <div className="text-center py-4 border rounded-3 bg-light" style={{ borderStyle: "dashed" }}>
-                <span className="text-muted small">No medicines prescribed yet. Click "+ Add Medicine" to prescribe.</span>
-              </div>
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-hover align-middle mb-0" style={{ fontSize: 13 }}>
-                  <thead>
-                    <tr style={{ background: "#f8fafc" }}>
-                      <th className="border-0 py-2">Medicine Name *</th>
-                      <th className="border-0 py-2" style={{ width: 140 }}>Dosage</th>
-                      <th className="border-0 py-2" style={{ width: 120 }}>Duration</th>
-                      <th className="border-0 py-2" style={{ width: 160 }}>Instructions</th>
-                      <th className="border-0 py-2 text-end" style={{ width: 60 }}>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {medicines.map((m, idx) => (
-                      <tr key={idx}>
-                        <td className="border-0 py-1">
-                          <input
-                            type="text"
-                            className="form-control form-control-sm"
-                            placeholder="e.g. Paracetamol 650mg"
-                            value={m.name}
-                            onChange={(e) => updateMedicineRow(idx, "name", e.target.value)}
-                            style={{ borderRadius: 6 }}
-                          />
-                        </td>
-                        <td className="border-0 py-1">
-                          <select
-                            className="form-select form-select-sm"
-                            value={m.dosage}
-                            onChange={(e) => updateMedicineRow(idx, "dosage", e.target.value)}
-                            style={{ borderRadius: 6 }}
-                          >
-                            <option value="1-0-1">1-0-1 (Morning & Night)</option>
-                            <option value="1-1-1">1-1-1 (Thrice a day)</option>
-                            <option value="1-0-0">1-0-0 (Morning only)</option>
-                            <option value="0-1-0">0-1-0 (Afternoon only)</option>
-                            <option value="0-0-1">0-0-1 (Night only)</option>
-                            <option value="1-1-1-1">1-1-1-1 (Four times)</option>
-                          </select>
-                        </td>
-                        <td className="border-0 py-1">
-                          <input
-                            type="text"
-                            className="form-control form-control-sm"
-                            placeholder="e.g. 5 Days"
-                            value={m.duration}
-                            onChange={(e) => updateMedicineRow(idx, "duration", e.target.value)}
-                            style={{ borderRadius: 6 }}
-                          />
-                        </td>
-                        <td className="border-0 py-1">
-                          <select
-                            className="form-select form-select-sm"
-                            value={m.instructions}
-                            onChange={(e) => updateMedicineRow(idx, "instructions", e.target.value)}
-                            style={{ borderRadius: 6 }}
-                          >
-                            <option value="After Food">After Food</option>
-                            <option value="Before Food">Before Food</option>
-                            <option value="With Food">With Food</option>
-                            <option value="Empty Stomach">Empty Stomach</option>
-                          </select>
-                        </td>
-                        <td className="border-0 py-1 text-end">
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-link text-danger p-0"
-                            onClick={() => removeMedicineRow(idx)}
-                          >
-                            <i className="ti ti-trash fs-5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {/* Diagnostic Scans / Attachments */}
-          <div>
-            <label className="form-label fw-bold small mb-2 d-block">Diagnostic Scans & Attachments (Multiple)</label>
-            <div className="d-flex align-items-center gap-3 mb-3">
-              <input
-                type="file"
-                id="consultation-file-input"
-                className="d-none"
-                accept="image/*"
-                onChange={handleFileChange}
-              />
-              <button
-                type="button"
-                className="btn btn-outline-secondary d-flex align-items-center gap-2"
-                onClick={() => document.getElementById("consultation-file-input")?.click()}
-                disabled={uploadingAttachment}
-                style={{ borderRadius: 10, padding: "8px 16px" }}
-              >
-                {uploadingAttachment ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm" /> Uploading...
-                  </>
-                ) : (
-                  <>
-                    <i className="ti ti-upload" /> Upload Image Scan
-                  </>
-                )}
-              </button>
-              <span className="text-muted small">Supports JPG, PNG images.</span>
-            </div>
-
-            {attachments.length > 0 && (
-              <div className="row g-3">
-                {attachments.map((att, idx) => (
-                  <div key={idx} className="col-md-6 col-lg-4">
-                    <div className="p-2 border rounded-3 bg-white h-100 shadow-sm d-flex flex-column gap-2" style={{ position: "relative" }}>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-danger rounded-circle p-1 d-flex align-items-center justify-content-center"
-                        onClick={() => removeAttachment(idx)}
-                        style={{ position: "absolute", top: 6, right: 6, width: 22, height: 22, zIndex: 10 }}
-                      >
-                        <i className="ti ti-x" style={{ fontSize: 10 }} />
-                      </button>
-                      <img
-                        src={att.url.startsWith("/") ? apiUrl(att.url) : att.url}
-                        alt="Scan"
-                        className="rounded-2"
-                        style={{ width: "100%", height: 120, objectFit: "cover" }}
-                      />
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        placeholder="Add caption / remark..."
-                        value={att.remark}
-                        onChange={(e) => updateAttachmentRemark(idx, e.target.value)}
-                        style={{ borderRadius: 6, fontSize: 12 }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const visibleParts = BODY_PARTS.filter((p) => p.view === bodyView);
 
   if (loadingConsultation) {
     return (
@@ -893,24 +778,23 @@ const ConsultationForm = () => {
 
     return (
       <div className="page-wrapper">
-        <div className="content">
+        <div className="content therapy-consult-page">
           {/* Header */}
-          <div className="page-header">
-            <div className="row align-items-center">
-              <div className="col">
-                <h3 className="page-title font-bold text-slate-800">Consultation Details</h3>
-                <ul className="breadcrumb">
-                  <li className="breadcrumb-item">
-                    <a href={routes.therapyConsultations}>Consultations</a>
-                  </li>
-                  <li className="breadcrumb-item active">{consultationData.consultationCode}</li>
-                </ul>
+          <div className="page-header d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 border-bottom pb-3 mb-3">
+            <div className="d-flex align-items-center gap-3 min-w-0">
+              <div className="tc-page-icon">
+                <i className="ti ti-file-description" />
               </div>
-              <div className="col-auto d-flex gap-2">
+              <div className="min-w-0">
+                <h4 className="fw-bold mb-0 text-dark">Consultation Details</h4>
+                <p className="text-muted fs-13 mb-0">{consultationData.consultationCode}</p>
+              </div>
+            </div>
+            <div className="d-flex flex-wrap gap-2">
                 {consultationData.status === "Confirmed" && (
                   <button
                     type="button"
-                    className="btn btn-warning text-white d-flex align-items-center gap-2 border shadow-sm"
+                    className="btn btn-warning text-white d-flex align-items-center gap-2"
                     onClick={() => {
                       setGeneralNotes(consultationData.examinationNotes || "");
                       setAdvice(consultationData.advice || "");
@@ -920,7 +804,7 @@ const ConsultationForm = () => {
                       setIsEditing(true);
                       setStep(1);
                     }}
-                    style={{ borderRadius: "10px", fontWeight: 600 }}
+                    style={{ borderRadius: "10px", fontWeight: 600, minHeight: 38 }}
                   >
                     <i className="ti ti-edit" />
                     Edit Details
@@ -928,26 +812,25 @@ const ConsultationForm = () => {
                 )}
                 <button
                   type="button"
-                  className="btn btn-light d-flex align-items-center gap-2 border shadow-sm"
-                  onClick={() => window.print()}
-                  style={{ borderRadius: "10px", fontWeight: 600 }}
+                  className="btn btn-light d-flex align-items-center gap-2"
+                  onClick={handlePrintConsultationPlan}
+                  style={{ borderRadius: "10px", fontWeight: 600, minHeight: 38 }}
                 >
                   <i className="ti ti-printer" /> Print Plan
                 </button>
                 <a
                   href={routes.therapyConsultations}
                   className="btn btn-primary d-flex align-items-center gap-2"
-                  style={{ borderRadius: "10px", fontWeight: 600 }}
+                  style={{ borderRadius: "10px", fontWeight: 600, minHeight: 38 }}
                 >
                   <i className="ti ti-arrow-left" /> Back to List
                 </a>
-              </div>
             </div>
           </div>
 
           {/* Top Info Card */}
-          <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-            <div className="card-body">
+          <div className="card tc-card mb-3">
+            <div className="card-body py-3">
               <div className="row g-3 align-items-center">
                 <div className="col-md-6 border-end">
                   <div className="d-flex align-items-center gap-3">
@@ -956,19 +839,19 @@ const ConsultationForm = () => {
                         src={consultationData.patient.profileImage}
                         alt=""
                         className="rounded-circle"
-                        style={{ width: 60, height: 60, objectFit: "cover" }}
+                        style={{ width: 52, height: 52, objectFit: "cover" }}
                       />
                     ) : (
                       <div
                         className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-primary"
-                        style={{ width: 60, height: 60, background: "#6366f118", fontSize: 20 }}
+                        style={{ width: 52, height: 52, background: "#6366f118", fontSize: 18 }}
                       >
                         {(consultationData.patient?.firstName?.[0] || "P").toUpperCase()}
                       </div>
                     )}
                     <div>
                       <span className="text-muted small d-block mb-1">PATIENT</span>
-                      <h5 className="mb-0 fw-bold">
+                      <h5 className="mb-0 fw-bold fs-16">
                         {consultationData.patient?.firstName} {consultationData.patient?.lastName}
                       </h5>
                       <div className="text-muted small">{consultationData.patient?.phone || "—"}</div>
@@ -991,101 +874,43 @@ const ConsultationForm = () => {
             </div>
           </div>
 
-          <div className="row g-4">
+          <div className="row g-3">
             {/* Left Column: Editable Examination Details */}
-            <div className="col-lg-7">
-              <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-                <div className="card-header border-0 bg-white d-flex align-items-center justify-content-between px-4 py-3"
-                  style={{ borderRadius: "16px 16px 0 0" }}>
+            <div className="col-lg-6">
+              <div className="card tc-card mb-3 h-100">
+                <div className="card-header tc-card-head d-flex align-items-center justify-content-between px-3 px-md-4 py-3">
                   <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <span className="rounded-2 d-flex align-items-center justify-content-center"
-                      style={{ width: 28, height: 28, background: "#6366f118" }}>
-                      <i className="ti ti-body-scan" style={{ color: "#6366f1", fontSize: 14 }} />
+                    <span className="tc-section-icon" style={{ background: "#e8f1ff", color: "#4f46e5" }}>
+                      <i className="ti ti-body-scan" />
                     </span>
                     Body Diagram Findings {isEditing && "(Click to Edit Points)"}
                   </h6>
-                  <div className="btn-group btn-group-sm">
-                    <button
-                      type="button"
-                      className={`btn ${bodyView === "front" ? "btn-primary" : "btn-outline-secondary"}`}
-                      style={{ borderRadius: "8px 0 0 8px", fontSize: 12 }}
-                      onClick={() => setBodyView("front")}
-                    >
-                      Front
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn ${bodyView === "back" ? "btn-primary" : "btn-outline-secondary"}`}
-                      style={{ borderRadius: "0 8px 8px 0", fontSize: 12 }}
-                      onClick={() => setBodyView("back")}
-                    >
-                      Back
-                    </button>
-                  </div>
                 </div>
 
-                <div className="card-body px-4 py-3">
-                  <div className="row">
-                    <div className="col-md-6 d-flex justify-content-center mb-3">
-                      <svg viewBox="0 0 290 360" width="100%" style={{ maxWidth: 280, cursor: "pointer" }}>
-                        <g opacity={0.15} fill="#6366f1">
-                          <ellipse cx="145" cy="20" rx="20" ry="22" />
-                          <rect x="136" y="42" width="18" height="18" rx="4" />
-                          <rect x="100" y="60" width="90" height="110" rx="10" />
-                          <rect x="57" y="65" width="43" height="120" rx="8" />
-                          <rect x="190" y="65" width="43" height="120" rx="8" />
-                          <ellipse cx="70" cy="195" rx="14" ry="10" />
-                          <ellipse cx="220" cy="195" rx="14" ry="10" />
-                          <rect x="98" y="170" width="40" height="170" rx="8" />
-                          <rect x="152" y="170" width="40" height="170" rx="8" />
-                        </g>
-                        {visibleParts.map((part) => {
-                          const marked = bodyPoints.find((bp) => bp.part === part.id);
-                          return (
-                            <g key={part.id} onClick={() => isEditing && handleBodyClick(part)} style={{ cursor: isEditing ? "pointer" : "default" }}>
-                              <circle
-                                cx={part.x}
-                                cy={part.y}
-                                r={part.r}
-                                fill={marked ? severityColor(marked.severity) : "transparent"}
-                                opacity={marked ? 0.85 : 0}
-                              />
-                              <circle
-                                cx={part.x}
-                                cy={part.y}
-                                r={part.r}
-                                fill="transparent"
-                                stroke={marked ? severityColor(marked.severity) : "#6366f1"}
-                                strokeWidth={marked ? 2 : 1}
-                                strokeDasharray={marked ? "none" : "3 2"}
-                                opacity={0.5}
-                              />
-                              {marked && (
-                                <text
-                                  x={part.x}
-                                  y={part.y + 4}
-                                  textAnchor="middle"
-                                  fill="#fff"
-                                  fontSize={10}
-                                  fontWeight="bold"
-                                >
-                                  {marked.severity}
-                                </text>
-                              )}
-                            </g>
-                          );
-                        })}
-                      </svg>
+                <div className="card-body px-3 px-md-4 py-3">
+                  <div className="row g-3">
+                    <div className="col-12 d-flex justify-content-center">
+                      <BodyDiagram3D
+                        parts={BODY_PARTS}
+                        marks={bodyPoints}
+                        interactive={isEditing}
+                        onPartClick={handleBodyClick}
+                        severityColor={severityColor}
+                        height={300}
+                        previewPartId={isEditing ? pendingPart?.id : null}
+                        previewSeverity={severityDraft}
+                      />
                     </div>
 
-                    <div className="col-md-6 d-flex flex-column gap-3">
+                    <div className="col-12 d-flex flex-column gap-3">
                       {isEditing && pendingPart && (
-                        <div className="p-3 border rounded-3 bg-light shadow-sm">
+                        <div className="p-3 rounded-3 bg-light tc-soft-panel">
                           <div className="fw-bold mb-2 text-primary">{pendingPart.label}</div>
                           <div className="mb-2">
                             <label className="form-label fw-semibold small mb-1">Remark</label>
-                            <textarea
-                              className="form-control form-control-sm"
+                            <IconTextarea
+                              fieldLabel="notes"
+                              className="form-control-sm"
                               rows={2}
                               value={remarkDraft}
                               onChange={(e) => setRemarkDraft(e.target.value)}
@@ -1106,16 +931,18 @@ const ConsultationForm = () => {
                           </div>
                           <div className="mb-3">
                             <label className="form-label fw-semibold small mb-1">Days Since</label>
-                            <input
+                            <IconFormControl
                               type="number"
-                              className="form-control form-control-sm"
+                              fieldLabel="time"
+                              className="form-control-sm"
+                              placeholder="Days Since"
                               value={daysSinceDraft}
                               onChange={(e) => setDaysSinceDraft(parseInt(e.target.value) || 0)}
                             />
                           </div>
                           <div className="d-flex gap-2">
                             <button type="button" className="btn btn-sm btn-primary" onClick={saveBodyPoint}>Save</button>
-                            <button type="button" className="btn btn-sm btn-light" onClick={() => setPendingPart(null)}>Cancel</button>
+                            <button type="button" className="btn btn-sm btn-cancel-danger" onClick={() => setPendingPart(null)}>Cancel</button>
                           </div>
                         </div>
                       )}
@@ -1123,16 +950,16 @@ const ConsultationForm = () => {
                       <div>
                         <label className="form-label fw-bold small">General Examination Notes</label>
                         {isEditing ? (
-                          <textarea
-                            className="form-control"
-                            rows={4}
+                          <IconTextarea
+                            fieldLabel="notes"
+                            rows={3}
                             value={generalNotes}
                             onChange={(e) => setGeneralNotes(e.target.value)}
                             placeholder="General examination notes..."
                             style={{ borderRadius: 10, fontSize: 13 }}
                           />
                         ) : (
-                          <div className="p-3 bg-light rounded text-slate-700 fs-13" style={{ whiteSpace: "pre-wrap", borderLeft: "4px solid #6366f1" }}>
+                          <div className="p-3 bg-light rounded text-slate-700 fs-13" style={{ whiteSpace: "pre-wrap" }}>
                             {consultationData.examinationNotes || "No examination notes recorded."}
                           </div>
                         )}
@@ -1141,12 +968,12 @@ const ConsultationForm = () => {
                   </div>
 
                   {bodyPoints.length > 0 && (
-                    <div className="mt-4">
-                      <h6 className="fw-bold mb-3 small">Marked Areas ({bodyPoints.length})</h6>
+                    <div className="mt-3">
+                      <h6 className="fw-bold mb-2 small">Marked Areas ({bodyPoints.length})</h6>
                       <div className="row g-2">
                         {bodyPoints.map((bp) => (
                           <div key={bp.part} className="col-md-6">
-                            <div className="p-3 border rounded-3 h-100" style={{ background: "#f8fafc" }}>
+                            <div className="p-3 rounded-3 h-100 tc-soft-panel">
                               <div className="fw-bold d-flex align-items-center justify-content-between small">
                                 <span className="d-flex align-items-center gap-2">
                                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: severityColor(bp.severity) }} />
@@ -1178,8 +1005,8 @@ const ConsultationForm = () => {
               </div>
 
               {/* Recommended Therapies Card */}
-              <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-                <div className="card-header border-0 bg-white px-4 py-3" style={{ borderRadius: "16px 16px 0 0" }}>
+              <div className="card tc-card mb-3">
+                <div className="card-header tc-card-head px-3 px-md-4 py-3">
                   <h6 className="fw-bold mb-0">Recommended Therapy Plan</h6>
                 </div>
                 <div className="card-body p-0">
@@ -1209,12 +1036,13 @@ const ConsultationForm = () => {
                   </div>
                 </div>
               </div>
+
             </div>
 
             {/* Right Column: Invoicing, Payment Capture, and Child Appointments */}
-            <div className="col-lg-5">
+            <div className="col-lg-6">
               {/* Payment Summary & Record Payment */}
-              <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+              <div className="card tc-card mb-3">
                 <div className="card-body">
                   <h6 className="fw-bold mb-3">Billing & Payment Summary</h6>
                   <div className="d-flex flex-column gap-2 mb-3" style={{ fontSize: 13 }}>
@@ -1251,9 +1079,10 @@ const ConsultationForm = () => {
                       <h6 className="fw-bold mb-2 small">Collect Payment</h6>
                       <div className="row g-2">
                         <div className="col-7">
-                          <input
+                          <IconFormControl
                             type="number"
-                            className="form-control form-control-sm"
+                            fieldLabel="amount"
+                            className="form-control-sm"
                             max={pendingBalance}
                             min={1}
                             placeholder="Amount (₹)"
@@ -1292,8 +1121,8 @@ const ConsultationForm = () => {
               </div>
 
               {/* Generated Appointments List */}
-              <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-                <div className="card-header border-0 bg-white px-4 py-3" style={{ borderRadius: "16px 16px 0 0" }}>
+              <div className="card tc-card mb-3">
+                <div className="card-header tc-card-head px-3 px-md-4 py-3">
                   <h6 className="fw-bold mb-0">Scheduled Therapy Sessions ({allChildAppts.length})</h6>
                 </div>
                 <div className="card-body p-0">
@@ -1353,6 +1182,93 @@ const ConsultationForm = () => {
               </div>
             </div>
           </div>
+
+          <ConsultationPrintPlan
+            clinic={getClinicForPrint()}
+            consultationCode={consultationData.consultationCode}
+            status={consultationData.status}
+            createdAt={consultationData.createdAt || consultationData.confirmedAt}
+            patient={consultationData.patient}
+            doctor={consultationData.doctor}
+            appointment={consultationData.appointment}
+            bodyParts={BODY_PARTS}
+            bodyPoints={bodyPoints}
+            examHasFront={examHasFront}
+            examHasBack={examHasBack}
+            examinationNotes={consultationData.examinationNotes || generalNotes}
+            therapyPlans={consultationData.therapyPlans || []}
+            sessions={allChildAppts}
+            billing={{
+              consultationFee: consultationData.consultationFee,
+              therapyTotal: (consultationData.therapyPlans || []).reduce(
+                (sum: number, p: any) =>
+                  sum + (Number(p.totalSessions) || 0) * (Number(p.sessionFee) || 0),
+                0
+              ),
+              discountType: consultationData.discountType,
+              discountValue: consultationData.discountValue,
+              finalTotalAmount: consultationData.finalTotalAmount,
+              amountPaid: consultationData.amountPaid,
+              paymentStatus: consultationData.paymentStatus,
+              paymentMethod: consultationData.paymentMethod || consultationData.invoice?.paymentMethod,
+              invoiceCode: consultationData.invoice?.invoiceCode,
+            }}
+            medicines={consultationData.medicines || medicines}
+            advice={consultationData.advice || advice}
+            severityColor={severityColor}
+            availability={availability}
+          />
+
+        <style>{`
+          .therapy-consult-page .tc-page-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            background: rgba(79,70,229,0.12); color: #4f46e5;
+            display: inline-flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+          }
+          .therapy-consult-page .tc-card,
+          .therapy-consult-page .card {
+            border: none !important;
+            border-radius: 14px !important;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08) !important;
+            background: #fff;
+          }
+          .therapy-consult-page .tc-card-head,
+          .therapy-consult-page .card-header:not(.tc-gradient-head) {
+            border-bottom: 1px solid rgba(15,23,42,0.05) !important;
+            background: #f8fafc !important;
+            border-radius: 14px 14px 0 0 !important;
+          }
+          .therapy-consult-page .tc-section-icon {
+            width: 32px; height: 32px; border-radius: 9px;
+            display: inline-flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+          }
+          .therapy-consult-page .tc-soft-panel {
+            background: #f8fafc !important;
+            border: none !important;
+            box-shadow: 0 1px 4px rgba(15,23,42,0.05);
+          }
+          .therapy-consult-page .tc-pending-card {
+            box-shadow: 0 8px 24px rgba(79,70,229,0.14) !important;
+          }
+          .therapy-consult-page .tc-plan-block {
+            background: #f8fafc !important;
+            border: none !important;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(15,23,42,0.06);
+          }
+          .therapy-consult-page .btn-cancel-danger {
+            border: 1px solid #b91c1c !important;
+            color: #b91c1c !important;
+            background: #fff !important;
+          }
+          .therapy-consult-page .btn-cancel-danger:hover {
+            background: #fef2f2 !important;
+            color: #991b1b !important;
+            border-color: #991b1b !important;
+          }
+          .therapy-consult-page .row.g-4 { --bs-gutter-y: 0.85rem; --bs-gutter-x: 0.85rem; }
+          .therapy-consult-page .card-body { padding-top: 1rem; padding-bottom: 1rem; }
+        `}</style>
         </div>
       </div>
     );
@@ -1360,40 +1276,38 @@ const ConsultationForm = () => {
 
   return (
     <div className="page-wrapper">
-      <div className="content">
+      <div className="content therapy-consult-page">
         {/* Header */}
-        <div className="page-header">
-          <div className="row align-items-center">
-            <div className="col">
-              <h3 className="page-title">
-                {isEditing 
-                  ? `Edit Consultation - ${consultationData?.consultationCode}` 
-                  : "New Consultation"}
-              </h3>
-              <ul className="breadcrumb">
-                <li className="breadcrumb-item">
-                  <a href={routes.therapyConsultations}>Consultations</a>
-                </li>
-                <li className="breadcrumb-item active">{isEditing ? "Edit" : "Create"}</li>
-              </ul>
+        <div className="page-header d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 border-bottom pb-3 mb-3">
+          <div className="d-flex align-items-center gap-3 min-w-0">
+            <div className="tc-page-icon">
+              <i className="ti ti-stethoscope" />
             </div>
-            {isEditing && (
-              <div className="col-auto">
-                <button
-                  type="button"
-                  className="btn btn-light d-flex align-items-center gap-2 border shadow-sm"
-                  onClick={() => setIsEditing(false)}
-                  style={{ borderRadius: 10, fontWeight: 600 }}
-                >
-                  <i className="ti ti-x" /> Cancel Edit
-                </button>
-              </div>
-            )}
+            <div className="min-w-0">
+              <h4 className="fw-bold mb-0 text-dark">
+                {isEditing
+                  ? `Edit Consultation - ${consultationData?.consultationCode}`
+                  : "New Consultation"}
+              </h4>
+              <p className="text-muted fs-13 mb-0">
+                {isEditing ? "Update examination & therapy plan" : "Create examination & therapy plan"}
+              </p>
+            </div>
           </div>
+          {isEditing && (
+            <button
+              type="button"
+              className="btn btn-cancel-danger d-flex align-items-center gap-2"
+              onClick={() => setIsEditing(false)}
+              style={{ borderRadius: 10, fontWeight: 600, minHeight: 38 }}
+            >
+              <i className="ti ti-x" /> Cancel Edit
+            </button>
+          )}
         </div>
 
         {/* Step Indicator */}
-        <div className="card border-0 mb-4" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+        <div className="card tc-card mb-3">
           <div className="card-body py-3 px-4">
             <div className="d-flex align-items-center gap-0">
               {[
@@ -1455,7 +1369,7 @@ const ConsultationForm = () => {
           <div className="row g-4">
             {/* Appointment Selection */}
             <div className="col-12">
-              <div className="card border-0" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+              <div className="card tc-card">
                 <div className="card-body">
                   <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
                     <span
@@ -1511,124 +1425,32 @@ const ConsultationForm = () => {
               </div>
             </div>
 
-            {/* Body Diagram */}
-            <div className="col-lg-7">
-              <div className="card border-0" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-                <div className="card-header border-0 bg-white d-flex align-items-center justify-content-between"
-                  style={{ borderRadius: "16px 16px 0 0", padding: "20px 24px 12px" }}>
+            {/* Body Diagram — fixed height (does not stretch with right panel) */}
+            <div className="col-lg-6">
+              <div className="card tc-card">
+                <div className="card-header tc-card-head d-flex align-items-center justify-content-between px-3 px-md-4 py-3">
                   <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <span className="rounded-2 d-flex align-items-center justify-content-center"
-                      style={{ width: 28, height: 28, background: "#6366f118" }}>
-                      <i className="ti ti-body-scan" style={{ color: "#6366f1", fontSize: 14 }} />
+                    <span className="tc-section-icon" style={{ background: "#e8f1ff", color: "#4f46e5" }}>
+                      <i className="ti ti-body-scan" />
                     </span>
                     Body Diagram – Click to Mark
                   </h6>
-                  <div className="btn-group btn-group-sm">
-                    <button
-                      type="button"
-                      className={`btn ${bodyView === "front" ? "btn-primary" : "btn-outline-secondary"}`}
-                      style={{ borderRadius: "8px 0 0 8px", fontSize: 12 }}
-                      onClick={() => setBodyView("front")}
-                    >
-                      Front
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn ${bodyView === "back" ? "btn-primary" : "btn-outline-secondary"}`}
-                      style={{ borderRadius: "0 8px 8px 0", fontSize: 12 }}
-                      onClick={() => setBodyView("back")}
-                    >
-                      Back
-                    </button>
-                  </div>
                 </div>
-                <div className="card-body d-flex justify-content-center" style={{ padding: "8px 24px 24px" }}>
-                  <svg
-                    viewBox="0 0 290 360"
-                    width="100%"
-                    style={{ maxWidth: 280, cursor: "pointer" }}
-                  >
-                    {/* Body outline - front */}
-                    {bodyView === "front" && (
-                      <g opacity={0.15} fill="#6366f1">
-                        {/* Head */}
-                        <ellipse cx="145" cy="20" rx="20" ry="22" />
-                        {/* Neck */}
-                        <rect x="136" y="42" width="18" height="18" rx="4" />
-                        {/* Torso */}
-                        <rect x="100" y="60" width="90" height="110" rx="10" />
-                        {/* Left arm */}
-                        <rect x="57" y="65" width="43" height="120" rx="8" />
-                        {/* Right arm */}
-                        <rect x="190" y="65" width="43" height="120" rx="8" />
-                        {/* Left hand */}
-                        <ellipse cx="70" cy="195" rx="14" ry="10" />
-                        {/* Right hand */}
-                        <ellipse cx="220" cy="195" rx="14" ry="10" />
-                        {/* Left leg */}
-                        <rect x="98" y="170" width="40" height="170" rx="8" />
-                        {/* Right leg */}
-                        <rect x="152" y="170" width="40" height="170" rx="8" />
-                      </g>
-                    )}
-                    {bodyView === "back" && (
-                      <g opacity={0.15} fill="#6366f1">
-                        <ellipse cx="145" cy="20" rx="20" ry="22" />
-                        <rect x="136" y="42" width="18" height="18" rx="4" />
-                        <rect x="100" y="60" width="90" height="110" rx="10" />
-                        <rect x="57" y="65" width="43" height="120" rx="8" />
-                        <rect x="190" y="65" width="43" height="120" rx="8" />
-                        <ellipse cx="70" cy="195" rx="14" ry="10" />
-                        <ellipse cx="220" cy="195" rx="14" ry="10" />
-                        <rect x="98" y="170" width="40" height="170" rx="8" />
-                        <rect x="152" y="170" width="40" height="170" rx="8" />
-                      </g>
-                    )}
-
-                    {/* Clickable hit zones */}
-                    {visibleParts.map((part) => {
-                      const marked = bodyPoints.find((bp) => bp.part === part.id);
-                      return (
-                        <g key={part.id} onClick={() => handleBodyClick(part)} style={{ cursor: "pointer" }}>
-                          <circle
-                            cx={part.x}
-                            cy={part.y}
-                            r={part.r}
-                            fill={marked ? severityColor(marked.severity) : "transparent"}
-                            opacity={marked ? 0.85 : 0}
-                          />
-                          <circle
-                            cx={part.x}
-                            cy={part.y}
-                            r={part.r}
-                            fill="transparent"
-                            stroke={marked ? severityColor(marked.severity) : "#6366f1"}
-                            strokeWidth={marked ? 2 : 1}
-                            strokeDasharray={marked ? "none" : "3 2"}
-                            opacity={0.5}
-                          />
-                          {marked && (
-                            <text
-                              x={part.x}
-                              y={part.y + 4}
-                              textAnchor="middle"
-                              fill="#fff"
-                              fontSize={10}
-                              fontWeight="bold"
-                            >
-                              {marked.severity}
-                            </text>
-                          )}
-                        </g>
-                      );
-                    })}
-                  </svg>
-                </div>
-                <div className="px-4 pb-3">
-                  <div className="d-flex align-items-center gap-3 flex-wrap">
+                <div className="card-body" style={{ padding: "8px 16px 12px" }}>
+                  <BodyDiagram3D
+                    parts={BODY_PARTS}
+                    marks={bodyPoints}
+                    interactive
+                    onPartClick={handleBodyClick}
+                    severityColor={severityColor}
+                    height={pendingPart ? 420 : 320}
+                    previewPartId={pendingPart?.id}
+                    previewSeverity={severityDraft}
+                  />
+                  <div className="d-flex align-items-center gap-3 flex-wrap pt-3">
                     <span style={{ fontSize: 12, color: "#64748b" }}>Severity Scale:</span>
                     {[
-                      { color: "#22c55e", label: "1–3 Mild" },
+                      { color: "#2563eb", label: "1–3 Mild" },
                       { color: "#f59e0b", label: "4–6 Moderate" },
                       { color: "#ef4444", label: "7–10 Severe" },
                     ].map((s) => (
@@ -1643,17 +1465,10 @@ const ConsultationForm = () => {
             </div>
 
             {/* Right side: Point Details + General Notes */}
-            <div className="col-lg-5 d-flex flex-column gap-3">
+            <div className="col-lg-6 d-flex flex-column gap-3">
               {/* Add Remark Modal/Panel */}
               {pendingPart && (
-                <div
-                  className="card border-0"
-                  style={{
-                    borderRadius: 16,
-                    boxShadow: "0 8px 32px rgba(99,102,241,0.15)",
-                    border: "2px solid #6366f1" as any,
-                  }}
-                >
+                <div className="card tc-card tc-pending-card">
                   <div className="card-body">
                     <div className="fw-bold mb-3" style={{ color: "#6366f1" }}>
                       <i className="ti ti-map-pin me-2" />
@@ -1663,8 +1478,8 @@ const ConsultationForm = () => {
                       <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                         Remark
                       </label>
-                      <textarea
-                        className="form-control"
+                      <IconTextarea
+                        fieldLabel="notes"
                         rows={2}
                         value={remarkDraft}
                         onChange={(e) => setRemarkDraft(e.target.value)}
@@ -1690,9 +1505,10 @@ const ConsultationForm = () => {
                       <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                         Since how many days?
                       </label>
-                      <input
+                      <IconFormControl
                         type="number"
-                        className="form-control"
+                        fieldLabel="time"
+                        placeholder="Since how many days?"
                         min={0}
                         value={daysSinceDraft}
                         onChange={(e) => setDaysSinceDraft(parseInt(e.target.value) || 0)}
@@ -1720,7 +1536,7 @@ const ConsultationForm = () => {
                       )}
                       <button
                         type="button"
-                        className="btn btn-light btn-sm"
+                        className="btn btn-cancel-danger btn-sm"
                         style={{ borderRadius: 8 }}
                         onClick={() => setPendingPart(null)}
                       >
@@ -1733,7 +1549,7 @@ const ConsultationForm = () => {
 
               {/* Marked Points List */}
               {bodyPoints.length > 0 && (
-                <div className="card border-0" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+                <div className="card tc-card">
                   <div className="card-body">
                     <h6 className="fw-bold mb-3" style={{ fontSize: 14 }}>
                       <i className="ti ti-map-2 me-2 text-primary" />
@@ -1781,14 +1597,14 @@ const ConsultationForm = () => {
               )}
 
               {/* General Notes */}
-              <div className="card border-0" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+              <div className="card tc-card">
                 <div className="card-body">
                   <h6 className="fw-bold mb-3" style={{ fontSize: 14 }}>
                     <i className="ti ti-notes me-2 text-primary" />
                     General Examination Notes (Optional)
                   </h6>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="notes"
                     rows={4}
                     value={generalNotes}
                     onChange={(e) => setGeneralNotes(e.target.value)}
@@ -1803,7 +1619,7 @@ const ConsultationForm = () => {
             <div className="col-12 d-flex justify-content-between">
               <button
                 type="button"
-                className="btn btn-light"
+                className="btn btn-cancel-danger"
                 style={{ borderRadius: 10, padding: "10px 28px" }}
                 onClick={() => navigate(routes.therapyConsultations)}
               >
@@ -1837,40 +1653,117 @@ const ConsultationForm = () => {
         {/* ─── STEP 2: THERAPY PLAN & PRICING ─────────────────── */}
         {step === 2 && (
           <div className="row g-4">
-            {/* Therapy Plans */}
+            {/* Examination body parts — reference for recommending therapies */}
             <div className="col-12">
-              <div className="card border-0" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-                <div className="card-header border-0 bg-white d-flex align-items-center justify-content-between"
-                  style={{ padding: "20px 24px 16px", borderRadius: "16px 16px 0 0" }}>
+              <div className="card tc-card">
+                <div className="card-header tc-card-head px-3 px-md-4 py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
                   <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                    <span className="rounded-2 d-flex align-items-center justify-content-center"
-                      style={{ width: 28, height: 28, background: "#6366f118" }}>
-                      <i className="ti ti-list-check" style={{ color: "#6366f1", fontSize: 14 }} />
+                    <span className="tc-section-icon" style={{ background: "#fef3c7", color: "#d97706" }}>
+                      <i className="ti ti-map-pin" />
                     </span>
-                    Recommended Therapies
+                    Examination Findings — Body Parts for Therapy
+                    <span
+                      className="badge ms-1"
+                      style={{
+                        background: "#fff7ed",
+                        color: "#c2410c",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        borderRadius: 8,
+                      }}
+                    >
+                      {bodyPoints.length}
+                    </span>
                   </h6>
                   <button
                     type="button"
-                    className="btn btn-sm btn-outline-primary"
+                    className="btn btn-sm btn-outline-secondary"
                     style={{ borderRadius: 8 }}
-                    onClick={() => setTherapyPlans((prev) => [...prev, emptyPlan()])}
+                    onClick={() => setStep(1)}
                   >
-                    <i className="ti ti-plus me-1" />
-                    Add Therapy
+                    <i className="ti ti-edit me-1" />
+                    Edit on Examination
                   </button>
+                </div>
+                <div className="card-body px-3 px-md-4 py-3">
+                  {bodyPoints.length === 0 ? (
+                    <div
+                      className="d-flex align-items-center gap-2 px-3 py-2"
+                      style={{ background: "#f8fafc", borderRadius: 10, color: "#64748b", fontSize: 13 }}
+                    >
+                      <i className="ti ti-info-circle" />
+                      No body parts marked in Step 1. Go back to Examination to mark areas that need therapy.
+                    </div>
+                  ) : (
+                    <div className="d-flex flex-wrap gap-2">
+                      {bodyPoints.map((bp) => (
+                        <div
+                          key={bp.part}
+                          className="d-flex flex-column gap-1 px-3 py-2"
+                          style={{
+                            background: "#f8fafc",
+                            borderRadius: 10,
+                            borderLeft: `3px solid ${severityColor(bp.severity)}`,
+                            minWidth: 160,
+                            maxWidth: 280,
+                          }}
+                        >
+                          <div className="d-flex align-items-center gap-2">
+                            <span
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: "50%",
+                                background: severityColor(bp.severity),
+                                flexShrink: 0,
+                              }}
+                            />
+                            <span className="fw-semibold text-dark" style={{ fontSize: 13 }}>
+                              {bp.label}
+                            </span>
+                            <span
+                              className="badge border ms-auto"
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 600,
+                                color: severityColor(bp.severity),
+                                borderColor: severityColor(bp.severity),
+                                background: `${severityColor(bp.severity)}14`,
+                              }}
+                            >
+                              {bp.severity}/10
+                            </span>
+                          </div>
+                          <div className="text-muted" style={{ fontSize: 11 }}>
+                            {bp.daysSince > 0 ? `${bp.daysSince} day(s)` : "Duration not set"}
+                            {bp.remark ? ` · ${bp.remark}` : ""}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Therapy Plans */}
+            <div className="col-lg-7">
+              <div className="card tc-card h-100">
+                <div className="card-header tc-card-head px-3 px-md-4 py-3">
+                  <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <span className="tc-section-icon" style={{ background: "#e8f1ff", color: "#4f46e5" }}>
+                      <i className="ti ti-list-check" />
+                    </span>
+                    Recommended Therapies
+                  </h6>
                 </div>
                 <div className="card-body">
                   <div className="d-flex flex-column gap-4">
                     {therapyPlans.map((plan, idx) => (
                       <div
                         key={idx}
-                        className="p-4"
-                        style={{
-                          background: "#f8fafc",
-                          borderRadius: 14,
-                          border: "1px solid #e2e8f0",
-                          position: "relative",
-                        }}
+                        className="p-3 p-md-4 tc-plan-block"
+                        style={{ position: "relative" }}
                       >
                         {/* Remove btn */}
                         {therapyPlans.length > 1 && (
@@ -1919,9 +1812,10 @@ const ConsultationForm = () => {
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                               Total Sessions *
                             </label>
-                            <input
+                            <IconFormControl
                               type="number"
-                              className="form-control"
+                              fieldLabel="quantity"
+                              placeholder="Total Sessions"
                               min={1}
                               value={plan.totalSessions}
                               onChange={(e) => {
@@ -1935,9 +1829,10 @@ const ConsultationForm = () => {
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                               Fee per Session (₹) *
                             </label>
-                            <input
+                            <IconFormControl
                               type="number"
-                              className="form-control"
+                              fieldLabel="price"
+                              placeholder="Fee per Session (₹)"
                               min={0}
                               value={plan.sessionFee}
                               onChange={(e) => {
@@ -1948,7 +1843,7 @@ const ConsultationForm = () => {
                             />
                           </div>
 
-                          <div className="col-md-3">
+                          <div className="col-md-4">
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                               Start Date *
                             </label>
@@ -1970,19 +1865,51 @@ const ConsultationForm = () => {
                               </span>
                             </div>
                           </div>
-                          <div className="col-md-3">
+                          <div className="col-md-4">
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                               Session Time (Optional)
                             </label>
-                            <input
-                              type="time"
-                              className="form-control"
-                              value={plan.sessionTime}
-                              onChange={(e) => updatePlan(idx, "sessionTime", e.target.value)}
-                              style={{ borderRadius: 8, fontSize: 13 }}
-                            />
+                            {(() => {
+                              const { clock, period } = parseSessionTimeParts(plan.sessionTime);
+                              return (
+                                <div className="d-flex gap-2 align-items-center">
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="hh:mm"
+                                    inputMode="numeric"
+                                    autoComplete="off"
+                                    value={clock}
+                                    onChange={(e) => {
+                                      let v = e.target.value.replace(/[^\d:]/g, "");
+                                      if (v.length === 2 && !v.includes(":") && clock.length < 2) {
+                                        v = `${v}:`;
+                                      }
+                                      v = v.slice(0, 5);
+                                      updatePlan(idx, "sessionTime", buildSessionTimeValue(v, period));
+                                    }}
+                                    style={{ borderRadius: 8, fontSize: 13, flex: 1, minWidth: 0 }}
+                                  />
+                                  <select
+                                    className="form-select"
+                                    value={period}
+                                    onChange={(e) =>
+                                      updatePlan(
+                                        idx,
+                                        "sessionTime",
+                                        buildSessionTimeValue(clock, e.target.value as "AM" | "PM")
+                                      )
+                                    }
+                                    style={{ borderRadius: 8, fontSize: 13, width: 88, flexShrink: 0 }}
+                                  >
+                                    <option value="AM">AM</option>
+                                    <option value="PM">PM</option>
+                                  </select>
+                                </div>
+                              );
+                            })()}
                           </div>
-                          <div className="col-md-3">
+                          <div className="col-md-4">
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                               Schedule Type
                             </label>
@@ -1997,13 +1924,13 @@ const ConsultationForm = () => {
                               <option value="weekly">Weekly</option>
                             </select>
                           </div>
-                          <div className="col-md-3">
+                          <div className="col-12">
                             <label className="form-label fw-semibold" style={{ fontSize: 13 }}>
                               Notes (Optional)
                             </label>
-                            <input
+                            <IconFormControl
+                              fieldLabel="notes"
                               type="text"
-                              className="form-control"
                               placeholder="Any instructions..."
                               value={plan.notes}
                               onChange={(e) => updatePlan(idx, "notes", e.target.value)}
@@ -2027,6 +1954,17 @@ const ConsultationForm = () => {
                         </div>
                       </div>
                     ))}
+                    <div className="d-flex justify-content-end">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary"
+                        style={{ borderRadius: 8 }}
+                        onClick={() => setTherapyPlans((prev) => [...prev, emptyPlan()])}
+                      >
+                        <i className="ti ti-plus me-1" />
+                        Add Therapy
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2034,13 +1972,12 @@ const ConsultationForm = () => {
 
 
             {/* Pricing */}
-            <div className="col-lg-5 offset-lg-7">
-              <div className="card border-0" style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+            <div className="col-lg-5">
+              <div className="card tc-card h-100">
                 <div className="card-body">
                   <h6 className="fw-bold mb-4 d-flex align-items-center gap-2">
-                    <span className="rounded-2 d-flex align-items-center justify-content-center"
-                      style={{ width: 28, height: 28, background: "#6366f118" }}>
-                      <i className="ti ti-receipt" style={{ color: "#6366f1", fontSize: 14 }} />
+                    <span className="tc-section-icon" style={{ background: "#e8f1ff", color: "#4f46e5" }}>
+                      <i className="ti ti-receipt" />
                     </span>
                     Pricing Summary
                   </h6>
@@ -2083,9 +2020,9 @@ const ConsultationForm = () => {
                         <option value="fixed">Fixed (₹)</option>
                       </select>
                       {discountType !== "none" && (
-                        <input
+                        <IconFormControl
+                          fieldLabel="amount"
                           type="number"
-                          className="form-control"
                           min={0}
                           value={discountValue}
                           onChange={(e) => {
@@ -2116,9 +2053,9 @@ const ConsultationForm = () => {
                   {/* Payment */}
                   <div className="mb-3">
                     <label className="form-label fw-semibold" style={{ fontSize: 13 }}>Amount Paid Now (₹)</label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="amount"
                       type="number"
-                      className="form-control"
                       min={0}
                       max={finalTotal}
                       value={amountPaid}
@@ -2228,17 +2165,18 @@ const ConsultationForm = () => {
           <div className="row g-4">
             <div className="col-12">
               <div
-                className="card border-0"
+                className="card tc-card"
                 id="consultation-preview"
-                style={{ borderRadius: 16, boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}
               >
+                {/* ═══ PRINT PAGE 1: Patient + Examination + Body diagrams ═══ */}
+                <div className="consult-print-page">
                 {/* Header */}
                 <div
-                  className="card-header border-0 text-white"
+                  className="card-header tc-gradient-head text-white"
                   style={{
                     background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
-                    borderRadius: "16px 16px 0 0",
-                    padding: "28px 32px",
+                    borderRadius: "14px 14px 0 0",
+                    padding: "24px 28px",
                   }}
                 >
                   <div className="d-flex justify-content-between align-items-start">
@@ -2249,6 +2187,9 @@ const ConsultationForm = () => {
                         {selectedAppointment?.doctor?.fullName}
                       </div>
                       <div style={{ opacity: 0.7, fontSize: 12, marginTop: 4 }}>
+                        {selectedAppointment?.appointmentCode && (
+                          <span className="me-2">Appt: {selectedAppointment.appointmentCode}</span>
+                        )}
                         {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}
                       </div>
                     </div>
@@ -2256,7 +2197,7 @@ const ConsultationForm = () => {
                       type="button"
                       className="btn btn-light btn-sm"
                       style={{ borderRadius: 8 }}
-                      onClick={() => window.print()}
+                      onClick={handleConsultPrint}
                     >
                       <i className="ti ti-printer me-1" />Print / Download
                     </button>
@@ -2265,13 +2206,12 @@ const ConsultationForm = () => {
 
                 <div className="card-body p-4">
                   {/* Examination Summary */}
-                  {(bodyPoints.length > 0 || generalNotes) && (
-                    <div className="mb-5">
+                  <div className="mb-4">
                       <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
                         <i className="ti ti-stethoscope text-primary" />
                         Examination Findings
                       </h6>
-                      {bodyPoints.length > 0 && (
+                      {bodyPoints.length > 0 ? (
                         <div className="row g-2 mb-3">
                           {bodyPoints.map((bp) => (
                             <div key={bp.part} className="col-md-6 col-lg-4">
@@ -2315,18 +2255,90 @@ const ConsultationForm = () => {
                             </div>
                           ))}
                         </div>
+                      ) : (
+                        <div className="text-muted mb-3" style={{ fontSize: 13 }}>
+                          No body parts marked during examination.
+                        </div>
                       )}
                       {generalNotes && (
                         <div
-                          className="p-3"
+                          className="p-3 mb-3"
                           style={{ background: "#f8fafc", borderRadius: 10, fontSize: 13 }}
                         >
                           <strong>General Notes:</strong> {generalNotes}
                         </div>
                       )}
-                    </div>
-                  )}
 
+                      {/* Body diagrams — front / back based on selected parts */}
+                      {bodyPoints.length > 0 && (examHasFront || examHasBack) && (
+                        <div className="mt-3 consult-body-diagrams-section">
+                          <h6 className="fw-bold mb-2 d-flex align-items-center gap-2" style={{ fontSize: 14 }}>
+                            <i className="ti ti-body-scan text-primary" />
+                            Body Diagram
+                          </h6>
+                          <div
+                            className={
+                              examHasFront && examHasBack
+                                ? "consult-body-diagrams-pair"
+                                : "d-flex justify-content-center"
+                            }
+                          >
+                            {examHasFront && (
+                              <div
+                                className={
+                                  examHasBack
+                                    ? "consult-body-diagram-item"
+                                    : "consult-body-diagram-single"
+                                }
+                                style={
+                                  examHasBack
+                                    ? undefined
+                                    : { width: "100%", maxWidth: 320 }
+                                }
+                              >
+                                <BodyDiagram3D
+                                  parts={BODY_PARTS}
+                                  marks={bodyPoints}
+                                  interactive={false}
+                                  severityColor={severityColor}
+                                  height={examHasBack ? 240 : 280}
+                                  lockedView="front"
+                                />
+                              </div>
+                            )}
+                            {examHasBack && (
+                              <div
+                                className={
+                                  examHasFront
+                                    ? "consult-body-diagram-item"
+                                    : "consult-body-diagram-single"
+                                }
+                                style={
+                                  examHasFront
+                                    ? undefined
+                                    : { width: "100%", maxWidth: 320 }
+                                }
+                              >
+                                <BodyDiagram3D
+                                  parts={BODY_PARTS}
+                                  marks={bodyPoints}
+                                  interactive={false}
+                                  severityColor={severityColor}
+                                  height={examHasFront ? 240 : 280}
+                                  lockedView="back"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                </div>
+                </div>{/* end print page 1 */}
+
+                {/* ═══ PRINT PAGE 2: Therapy plan & sessions ═══ */}
+                <div className="consult-print-page">
+                <div className="card-body p-4 pt-4">
                   {/* Therapy Plans Table */}
                   <div className="mb-5">
                     <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
@@ -2371,7 +2383,7 @@ const ConsultationForm = () => {
 
                   {/* Session Schedule Details */}
                   {therapyPlans.length > 0 && (
-                    <div className="mb-5">
+                    <div className="mb-2">
                       <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
                         <i className="ti ti-calendar-event text-primary" />
                         Daily Session Schedule
@@ -2449,10 +2461,19 @@ const ConsultationForm = () => {
                       })}
                     </div>
                   )}
+                </div>
+                </div>{/* end print page 2 */}
 
+                {/* ═══ PRINT PAGE 3: Payments ═══ */}
+                <div className="consult-print-page">
+                <div className="card-body p-4 pt-4">
+                  <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i className="ti ti-receipt text-primary" />
+                    Payment Details
+                  </h6>
                   {/* Pricing Summary */}
-                  <div className="row justify-content-end">
-                    <div className="col-md-5">
+                  <div className="row">
+                    <div className="col-md-7 col-lg-5">
                       <div
                         className="p-4"
                         style={{ background: "#f8fafc", borderRadius: 14, border: "1px solid #e2e8f0" }}
@@ -2479,8 +2500,8 @@ const ConsultationForm = () => {
                             <span style={{ color: "#6366f1" }}>₹{finalTotal.toLocaleString()}</span>
                           </div>
                           <div className="d-flex justify-content-between">
-                            <span className="text-muted">Amount Paid</span>
-                            <span className="text-success fw-semibold">₹{amountPaid.toLocaleString()}</span>
+                            <span className="text-muted">Amount Paid ({paymentMethod})</span>
+                            <span className="text-success fw-semibold">₹{Number(amountPaid).toLocaleString()}</span>
                           </div>
                           <div className="d-flex justify-content-between">
                             <span className="text-muted">Balance Due</span>
@@ -2537,6 +2558,7 @@ const ConsultationForm = () => {
                     </div>
                   )}
                 </div>
+                </div>{/* end print page 3 */}
               </div>
             </div>
 
@@ -2570,8 +2592,100 @@ const ConsultationForm = () => {
                 )}
               </button>
             </div>
+
+            <ConsultationPreviewPrint
+              clinic={getClinicForPrint()}
+              patient={selectedAppointment?.patient}
+              doctor={selectedAppointment?.doctor}
+              appointmentCode={selectedAppointment?.appointmentCode}
+              bodyParts={BODY_PARTS}
+              bodyPoints={bodyPoints}
+              examHasFront={examHasFront}
+              examHasBack={examHasBack}
+              examinationNotes={generalNotes}
+              therapyPlans={therapyPlans}
+              consultationFee={consultationFee}
+              therapyTotal={therapyTotal}
+              discountType={discountType}
+              discountValue={discountValue}
+              discountAmt={discountAmt}
+              finalTotal={finalTotal}
+              medicines={medicines}
+              advice={advice}
+              severityColor={severityColor}
+              availability={availability}
+            />
           </div>
         )}
+        <style>{`
+          .therapy-consult-page .tc-page-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            background: rgba(79,70,229,0.12); color: #4f46e5;
+            display: inline-flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+          }
+          .therapy-consult-page .tc-card,
+          .therapy-consult-page .card {
+            border: none !important;
+            border-radius: 14px !important;
+            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08) !important;
+            background: #fff;
+          }
+          .therapy-consult-page .tc-card-head,
+          .therapy-consult-page .card-header:not(.tc-gradient-head) {
+            border-bottom: 1px solid rgba(15,23,42,0.05) !important;
+            background: #f8fafc !important;
+            border-radius: 14px 14px 0 0 !important;
+          }
+          .therapy-consult-page .tc-section-icon {
+            width: 32px; height: 32px; border-radius: 9px;
+            display: inline-flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+          }
+          .therapy-consult-page .tc-soft-panel {
+            background: #f8fafc !important;
+            border: none !important;
+            box-shadow: 0 1px 4px rgba(15,23,42,0.05);
+          }
+          .therapy-consult-page .tc-pending-card {
+            box-shadow: 0 8px 24px rgba(79,70,229,0.14) !important;
+          }
+          .therapy-consult-page .tc-plan-block {
+            background: #f8fafc !important;
+            border: none !important;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(15,23,42,0.06);
+          }
+          .therapy-consult-page .btn-cancel-danger {
+            border: 1px solid #b91c1c !important;
+            color: #b91c1c !important;
+            background: #fff !important;
+          }
+          .therapy-consult-page .btn-cancel-danger:hover {
+            background: #fef2f2 !important;
+            color: #991b1b !important;
+            border-color: #991b1b !important;
+          }
+          .therapy-consult-page .row.g-4 { --bs-gutter-y: 0.85rem; --bs-gutter-x: 0.85rem; }
+          .therapy-consult-page .card-body { padding-top: 1rem; padding-bottom: 1rem; }
+
+          .consult-body-diagrams-pair {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 12px;
+            align-items: stretch;
+          }
+          .consult-body-diagram-item {
+            flex: 1 1 0;
+            min-width: 0;
+            max-width: 50%;
+          }
+          .consult-body-diagram-single {
+            max-width: 320px;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+          }
+        `}</style>
       </div>
     </div>
   );

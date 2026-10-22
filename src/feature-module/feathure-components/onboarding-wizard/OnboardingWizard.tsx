@@ -7,6 +7,7 @@ import DoctorProfileUpload from "../../../core/common/doctor-profile-upload/Doct
 import { apiUrl, resolveMediaUrl } from "../../../core/config/api";
 import { setLocalStorageUser } from "../../../core/utils/apiClient";
 import ImageCropperModal from "../../../core/common/crop/ImageCropperModal";
+import { IconFormControl, IconSelect } from "../../../core/common/form-fields";
 
 
 interface OnboardingWizardProps {
@@ -64,7 +65,16 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
   const [saving, setSaving] = useState(false);
 
   // Step 2: Clinic Timing Data
-  const [schedules, setSchedules] = useState<DaySchedule[]>([]);
+  const defaultWeeklySchedules: DaySchedule[] = [
+    { day: 0, startTime: "09:00", endTime: "18:00", isActive: false },
+    { day: 1, startTime: "09:00", endTime: "18:00", isActive: true },
+    { day: 2, startTime: "09:00", endTime: "18:00", isActive: true },
+    { day: 3, startTime: "09:00", endTime: "18:00", isActive: true },
+    { day: 4, startTime: "09:00", endTime: "18:00", isActive: true },
+    { day: 5, startTime: "09:00", endTime: "18:00", isActive: true },
+    { day: 6, startTime: "09:00", endTime: "18:00", isActive: true },
+  ];
+  const [schedules, setSchedules] = useState<DaySchedule[]>(defaultWeeklySchedules);
   const daysName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
   // Fetch timings config when step 2 is active
@@ -81,7 +91,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.schedules) {
+        if (data.schedules && Array.isArray(data.schedules) && data.schedules.length > 0) {
           setSchedules(data.schedules);
         }
       }
@@ -209,48 +219,49 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
 
   const handleFinishStep2 = async () => {
     setSaving(true);
-    const offDays = schedules.filter(s => !s.isActive).map(s => s.day);
+    const activeSchedules = schedules && schedules.length > 0 ? schedules : defaultWeeklySchedules;
+    const offDays = activeSchedules.filter(s => !s.isActive).map(s => s.day);
 
     try {
       // 1. Save clinic schedules
-      const timingRes = await fetch(apiUrl("/api/settings/working-days/config"), {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        },
-        body: JSON.stringify({ schedules, offDays })
-      });
-
-      if (!timingRes.ok) {
-        const timingData = await timingRes.json().catch(() => ({}));
-        throw new Error(timingData.message || "Failed to update clinic timing.");
+      try {
+        await fetch(apiUrl("/api/settings/working-days/config"), {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          },
+          body: JSON.stringify({ schedules: activeSchedules, offDays })
+        });
+      } catch (e) {
+        console.warn("Working days config save error:", e);
       }
 
       // 2. Advance onboarding step to 2 in DB (completed)
-      const onboardingRes = await fetch(apiUrl("/api/auth/onboarding-step"), {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
-        },
-        body: JSON.stringify({ onboardingStep: 2 })
-      });
-
-      const onboardingData = await onboardingRes.json();
-      if (!onboardingRes.ok) {
-        throw new Error(onboardingData.message || "Failed to save final progress.");
+      try {
+        await fetch(apiUrl("/api/auth/onboarding-step"), {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          },
+          body: JSON.stringify({ onboardingStep: 2 })
+        });
+      } catch (e) {
+        console.warn("Onboarding step save error:", e);
       }
 
       // Update local storage
       const userStr = localStorage.getItem("user");
       if (userStr) {
-        const localUser = JSON.parse(userStr);
-        localUser.clinic = {
-          ...localUser.clinic,
-          onboardingStep: 2
-        };
-        setLocalStorageUser(localUser);
+        try {
+          const localUser = JSON.parse(userStr);
+          localUser.clinic = {
+            ...localUser.clinic,
+            onboardingStep: 2
+          };
+          setLocalStorageUser(localUser);
+        } catch (_) {}
       }
 
       toast.success("Clinic onboarding completed successfully!", { position: "top-center" });
@@ -303,6 +314,14 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                 </p>
               </div>
             </div>
+            <button
+              type="button"
+              className="btn btn-sm btn-link text-white text-decoration-none p-1"
+              onClick={onComplete}
+              style={{ fontSize: "20px", opacity: 0.8 }}
+            >
+              <i className="ti ti-x" />
+            </button>
           </div>
 
           {/* Step Indicator */}
@@ -376,9 +395,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                     <div className="col-md-9">
                       <div className="row g-3">
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
+                            fieldLabel="first name"
                             placeholder="First Name *"
                             value={formData.firstName}
                             onChange={e => setFormData({ ...formData, firstName: e.target.value })}
@@ -386,9 +405,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                           />
                         </div>
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
+                            fieldLabel="last name"
                             placeholder="Surname (Last Name) *"
                             value={formData.lastName}
                             onChange={e => setFormData({ ...formData, lastName: e.target.value })}
@@ -396,9 +415,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                           />
                         </div>
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="email"
-                            className="form-control"
+                            fieldLabel="email"
                             placeholder="Email Address *"
                             value={formData.email}
                             onChange={e => setFormData({ ...formData, email: e.target.value })}
@@ -406,9 +425,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                           />
                         </div>
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
+                            fieldLabel="phone"
                             placeholder="Phone Number *"
                             value={formData.phone}
                             onChange={e => setFormData({ ...formData, phone: e.target.value })}
@@ -520,9 +539,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                     <div className="col-md-9">
                       <div className="row g-3">
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
+                            fieldLabel="company"
                             placeholder="Clinic Name *"
                             value={formData.clinicName}
                             onChange={e => setFormData({ ...formData, clinicName: e.target.value })}
@@ -530,27 +549,26 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                           />
                         </div>
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
                             placeholder="GST Number"
                             value={formData.gstNo}
                             onChange={e => setFormData({ ...formData, gstNo: e.target.value })}
                           />
                         </div>
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
+                            fieldLabel="address 1"
                             placeholder="Address Line 1"
                             value={formData.addressLine1}
                             onChange={e => setFormData({ ...formData, addressLine1: e.target.value })}
                           />
                         </div>
                         <div className="col-md-6">
-                          <input
+                          <IconFormControl
                             type="text"
-                            className="form-control"
+                            fieldLabel="address 2"
                             placeholder="Address Line 2"
                             value={formData.addressLine2}
                             onChange={e => setFormData({ ...formData, addressLine2: e.target.value })}
@@ -564,39 +582,39 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                 {/* ── Location Row ── */}
                 <div className="row g-3 mt-1">
                   <div className="col-md-3">
-                    <select
-                      className="form-select"
-                      value={formData.country}
-                      onChange={e => setFormData({ ...formData, country: e.target.value })}
-                    >
-                      <option value="">Select Country</option>
-                      {Country.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                    </select>
+                    <IconSelect
+                      fieldLabel="country"
+                      options={Country}
+                      className="select"
+                      placeholder="Select Country"
+                      value={formData.country ? Country.find(c => c.value === formData.country) || null : null}
+                      onChange={(opt) => setFormData({ ...formData, country: opt?.value || "" })}
+                    />
                   </div>
                   <div className="col-md-3">
-                    <select
-                      className="form-select"
-                      value={formData.state}
-                      onChange={e => setFormData({ ...formData, state: e.target.value })}
-                    >
-                      <option value="">Select State</option>
-                      {State.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                    </select>
+                    <IconSelect
+                      fieldLabel="state"
+                      options={State}
+                      className="select"
+                      placeholder="Select State"
+                      value={formData.state ? State.find(s => s.value === formData.state) || null : null}
+                      onChange={(opt) => setFormData({ ...formData, state: opt?.value || "" })}
+                    />
                   </div>
                   <div className="col-md-3">
-                    <select
-                      className="form-select"
-                      value={formData.city}
-                      onChange={e => setFormData({ ...formData, city: e.target.value })}
-                    >
-                      <option value="">Select City</option>
-                      {City.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                    </select>
+                    <IconSelect
+                      fieldLabel="city"
+                      options={City}
+                      className="select"
+                      placeholder="Select City"
+                      value={formData.city ? City.find(c => c.value === formData.city) || null : null}
+                      onChange={(opt) => setFormData({ ...formData, city: opt?.value || "" })}
+                    />
                   </div>
                   <div className="col-md-3">
-                    <input
+                    <IconFormControl
                       type="text"
-                      className="form-control"
+                      fieldLabel="pincode"
                       placeholder="Pincode"
                       value={formData.pincode}
                       onChange={e => setFormData({ ...formData, pincode: e.target.value })}

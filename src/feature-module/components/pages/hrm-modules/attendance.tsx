@@ -418,7 +418,7 @@ const AttendanceList = () => {
                                 : "badge-soft-success border-success"
                             }`}
                         >
-                          {emp.percentage}%
+                          {String(emp.percentage || 0).replace(/%+$/, '')}%
                         </span>
                       </td>
                       {daysArray.map((day) => {
@@ -487,7 +487,7 @@ const AttendanceList = () => {
           <p className="text-dark mb-0">
             2025
             <Link to="#" className="link-primary">
-              Docyari
+              DocYori
             </Link>
             , All Rights Reserved
           </p>

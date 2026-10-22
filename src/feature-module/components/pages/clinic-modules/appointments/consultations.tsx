@@ -18,6 +18,10 @@ import html2pdf from "html2pdf.js";
 import PrescriptionPadSlip from "./PrescriptionPadSlip";
 import PrescriptionPad from "./PrescriptionPad";
 import AddPrescriptionModal from "../../doctor-modules/doctors-prescriptions/AddPrescriptionModal";
+import RecommendIPDModal from "./RecommendIPDModal";
+
+const getInitial = (value?: string) =>
+  (value || "").trim().charAt(0).toUpperCase() || "?";
 
 const Consultations = () => {
   const customSelectStyles = `
@@ -37,22 +41,53 @@ const Consultations = () => {
       border-radius: 8px !important;
     }
 
+    .print-action-btn {
+      width: 48px !important;
+      min-width: 48px !important;
+      height: 40px !important;
+      padding: 0 8px !important;
+      border-radius: 10px !important;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+      gap: 6px !important;
+    }
+    .print-action-btn.dropdown-toggle::after {
+      margin-left: 2px !important;
+      vertical-align: middle !important;
+      border-top-width: 0.35em !important;
+      border-right-width: 0.35em !important;
+      border-left-width: 0.35em !important;
+      opacity: 0.75;
+    }
+
     .appointments-filter-line {
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex-wrap: nowrap;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
       width: 100%;
+      overflow: visible;
     }
     .appointments-filter-line h4 {
       font-size: 16px !important;
+      flex-shrink: 0;
+      margin: 0 !important;
+    }
+    .appointments-filter-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex: 1 1 auto;
+      min-width: 0;
     }
     .status-buttons-group {
       display: flex;
       align-items: center;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       gap: 4px;
-      margin-left: auto !important;
+      margin-left: 0 !important;
     }
     .status-btn {
       padding: 0 8px !important;
@@ -78,10 +113,21 @@ const Consultations = () => {
       height: 32px !important;
       font-size: 11px !important;
       font-weight: bold !important;
-      padding: 0 24px 0 8px !important;
+      padding: 0 34px 0 10px !important;
       text-overflow: ellipsis !important;
       white-space: nowrap !important;
       overflow: hidden !important;
+      min-width: 140px !important;
+      max-width: 190px !important;
+      background-position: right 10px center !important;
+      background-size: 12px 10px !important;
+    }
+    .follow-up-select > span {
+      display: block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-right: 4px;
     }
     .filter-btn {
       height: 32px !important;
@@ -117,6 +163,9 @@ const Consultations = () => {
       .appointments-filter-line h4 {
         font-size: 18px !important;
       }
+      .appointments-filter-actions {
+        gap: 12px;
+      }
       .status-buttons-group {
         gap: 12px;
       }
@@ -136,7 +185,10 @@ const Consultations = () => {
       .follow-up-select {
         height: 36px !important;
         font-size: 13px !important;
-        padding: 0 24px 0 12px !important;
+        padding: 0 36px 0 12px !important;
+        min-width: 150px !important;
+        max-width: 210px !important;
+        background-position: right 12px center !important;
       }
       .filter-btn {
         height: 36px !important;
@@ -156,10 +208,13 @@ const Consultations = () => {
     @media print {
       @page { size: A4; margin: 0; }
       body * { visibility: hidden !important; }
-      #print-prescription-pad, #print-prescription-pad *, #print-prescription-slip, #print-prescription-slip * {
+      #print-prescription-pad[data-print-active],
+      #print-prescription-pad[data-print-active] *,
+      #print-prescription-slip[data-print-active],
+      #print-prescription-slip[data-print-active] * {
         visibility: visible !important;
       }
-      #print-prescription-pad {
+      #print-prescription-pad[data-print-active] {
         visibility: visible !important;
         display: block !important;
         position: absolute !important;
@@ -168,20 +223,32 @@ const Consultations = () => {
         width: 100% !important;
         background: white !important;
         z-index: 99999 !important;
-        padding: 1.5cm !important;
+        padding: 0 !important;
         margin: 0 !important;
       }
-      #print-prescription-slip {
+      #print-prescription-slip[data-print-active] {
         visibility: visible !important;
         display: block !important;
         position: absolute !important;
         left: 0 !important;
         top: 0 !important;
-        width: 100% !important;
+        width: 210mm !important;
+        max-height: 297mm !important;
+        height: auto !important;
+        overflow: hidden !important;
         background: white !important;
         z-index: 99999 !important;
-        padding: 1.5cm !important;
+        padding: 0 !important;
         margin: 0 !important;
+        page-break-after: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      #print-prescription-pad:not([data-print-active]),
+      #print-prescription-slip:not([data-print-active]),
+      [data-hidden-for-print],
+      [data-hidden-for-print] * {
+        display: none !important;
+        visibility: hidden !important;
       }
     }
   `;
@@ -197,6 +264,8 @@ const Consultations = () => {
 
   const [selectedAppointment, setSelectedAppointment] = useState<ClinicAppointment | null>(null);
   const [showPresModal, setShowPresModal] = useState(false);
+  const [showViewPresModal, setShowViewPresModal] = useState(false);
+  const [showRecommendIPDModal, setShowRecommendIPDModal] = useState(false);
 
   const [searchText, setSearchText] = useState("");
   const [printAppointment, setPrintAppointment] = useState<any | null>(null);
@@ -384,12 +453,26 @@ const Consultations = () => {
     // Give state time to update prior to printing
     setTimeout(() => {
       const elementId = detailed && pres ? 'print-prescription-slip' : 'print-prescription-pad';
+      const otherId = detailed && pres ? 'print-prescription-pad' : 'print-prescription-slip';
       const el = document.getElementById(elementId);
+      const other = document.getElementById(otherId);
       if (!el) return;
       el.style.display = 'block';
+      el.setAttribute('data-print-active', 'true');
+      el.removeAttribute('data-hidden-for-print');
+      if (other) {
+        other.setAttribute('data-hidden-for-print', 'true');
+        other.removeAttribute('data-print-active');
+        other.style.display = 'none';
+      }
       window.print();
       setTimeout(() => {
         el.style.display = 'none';
+        el.removeAttribute('data-print-active');
+        if (other) {
+          other.removeAttribute('data-hidden-for-print');
+          other.style.display = 'none';
+        }
         setPrintAppointment(null);
         setPrintPrescription(null);
       }, 1500);
@@ -411,8 +494,9 @@ const Consultations = () => {
         margin: 0,
         filename: `Prescription-${detailed && pres?.prescriptionCode ? pres.prescriptionCode : (appt.appointmentCode || 'Pad')}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+        html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, windowY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+        pagebreak: { mode: ['avoid-all'] as const }
       };
       html2pdf().from(el).set(opt).save().then(() => {
         el.style.display = 'none';
@@ -429,7 +513,7 @@ const Consultations = () => {
 
   const columns = [
     {
-      title: "Sr / Queue",
+      title: "# / Queue",
       dataIndex: "SrNo",
       render: (text: number, record: any) => {
         const isSlotBooking = !!(record._raw.doctor?.appointmentDuration && record._raw.doctor?.maxBookingsPerSlot);
@@ -445,12 +529,20 @@ const Consultations = () => {
       title: "Date & Time",
       dataIndex: "Date_Time",
       render: (_: any, record: any) => {
-        const dateStr = record._raw.scheduledAt ? dayjs(record._raw.scheduledAt).format("DD MMM YYYY") : "";
+        const dateStr = record._raw.scheduledAt ? dayjs(record._raw.scheduledAt).format("DD MMM YYYY") : "—";
         const timeStr = record._raw.scheduledAt ? dayjs(record._raw.scheduledAt).format("hh:mm A") : "";
         return (
-          <div className="d-flex flex-column" style={{ lineHeight: '1.2' }}>
-            <span className="fw-medium text-dark text-nowrap">{dateStr}</span>
-            {timeStr && <span className="text-muted fs-11 mt-1 text-nowrap">{timeStr}</span>}
+          <div className="d-flex flex-column gap-1">
+            <div className="d-flex align-items-center fw-bold text-dark fs-13">
+              <i className="ti ti-calendar-event me-2 text-primary fs-16"></i>
+              {dateStr}
+            </div>
+            {timeStr && (
+              <div className="d-flex align-items-center text-muted fs-12 fw-medium">
+                <i className="ti ti-clock me-2 fs-16"></i>
+                {timeStr}
+              </div>
+            )}
           </div>
         );
       },
@@ -459,7 +551,12 @@ const Consultations = () => {
     {
       title: "Expected Time",
       dataIndex: "expectedTime",
-      render: (text: string) => <span className="fw-bold text-dark">{text}</span>,
+      render: (text: string) => (
+        <div className="d-flex align-items-center fw-bold text-dark fs-13">
+          <i className="ti ti-clock me-2 text-muted fs-16"></i>
+          {text || "—"}
+        </div>
+      ),
     },
     {
       title: "Patient",
@@ -467,7 +564,17 @@ const Consultations = () => {
       render: (text: string, record: any) => (
         <div className="d-flex align-items-center">
           <Link to={all_routes.patientDetails.replace(":id", record._raw.patientId)} className="avatar avatar-md me-2">
-            <ImageWithBasePath src={record.Patient_Image} alt="Patient" className="rounded-circle" />
+            <span
+              className="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white"
+              style={{
+                width: "38px",
+                height: "38px",
+                background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                fontSize: "15px",
+              }}
+            >
+              {getInitial(text)}
+            </span>
           </Link>
           <div className="lh-1">
             <Link to={all_routes.patientDetails.replace(":id", record._raw.patientId)} className="text-dark fw-bold d-block mb-1 fs-13 text-nowrap">{text}</Link>
@@ -488,22 +595,36 @@ const Consultations = () => {
         </div>
       ),
     },
-    { title: "Mode", dataIndex: "Mode" },
+    { 
+      title: "Mode", 
+      dataIndex: "Mode",
+      render: (text: string) => {
+        const isOnline = (text || "").toLowerCase() === "online";
+        return (
+          <div className="d-flex align-items-center fw-bold text-dark fs-13">
+            <i className={`${isOnline ? 'ti ti-world' : 'ti ti-walk'} me-2 fs-18`} style={{ color: '#6610f2' }}></i>
+            {text || "—"}
+          </div>
+        );
+      }
+    },
     {
       title: "Status",
       dataIndex: "Status",
-      render: (text: string, record: any) => {
-        const raw = record._raw;
+      render: (text: string) => {
+        const s = (text || "").toLowerCase();
+        let bg = "#f8f9fa", color = "#6c757d", icon = "ti ti-point";
+        if (s.includes("confirmed")) { bg = "#f0eaff"; color = "#6610f2"; icon = "ti ti-circle-check"; }
+        else if (s.includes("checked out")) { bg = "#e8f3ff"; color = "#0d6efd"; icon = "ti ti-circle-check"; }
+        else if (s.includes("checked in")) { bg = "#fff3cd"; color = "#fd7e14"; icon = "ti ti-clock"; }
+        else if (s.includes("schedule")) { bg = "#e7f1ff"; color = "#0d6efd"; icon = "ti ti-calendar"; }
+        else if (s.includes("cancel")) { bg = "#fdeded"; color = "#dc3545"; icon = "ti ti-circle-x"; }
+
         return (
           <div className="d-flex flex-column align-items-start gap-1">
-            <span className={`badge ${statusBadgeClass(text)} `}>{text}</span>
-            {raw?.isFollowUp && (
-              <div className="mt-1">
-                <span className="text-muted fw-bold" style={{ fontSize: '10px' }}>
-                  {raw.followUpStatus || "Follow-up"}
-                </span>
-              </div>
-            )}
+            <span className="badge px-3 py-2 rounded-pill d-flex align-items-center gap-1" style={{ backgroundColor: bg, color: color, fontWeight: 600, fontSize: '12px' }}>
+              <i className={`${icon} fs-14`}></i> {text}
+            </span>
           </div>
         );
       },
@@ -519,11 +640,18 @@ const Consultations = () => {
         const hasPres = prescriptions.some(p => p.appointmentId === raw.id || p.appointmentCode === raw.appointmentCode);
         return (
           <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
-            {/* Add / Edit Prescription */}
+            {/* Add / View Prescription */}
             <button
               className={`bg-transparent border-0 p-1 position-relative ${hasPres ? 'text-success' : 'text-primary'}`}
-              onClick={() => { setSelectedAppointment(raw); setShowPresModal(true); }}
-              title={hasPres ? "Edit Prescription" : "Add Prescription"}
+              onClick={() => {
+                setSelectedAppointment(raw);
+                if (hasPres) {
+                  setShowViewPresModal(true);
+                } else {
+                  setShowPresModal(true);
+                }
+              }}
+              title={hasPres ? "View Prescription" : "Generate Prescription"}
               style={{ transition: 'transform 0.15s ease' }}
               onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -540,16 +668,13 @@ const Consultations = () => {
             {/* Print/Download Dropdown Option Menu */}
             <div className="dropdown d-inline-block">
               <button
-                className="bg-transparent border-0 text-secondary p-1 dropdown-toggle no-caret"
+                className="btn btn-light border print-action-btn dropdown-toggle d-inline-flex align-items-center justify-content-center gap-1"
                 type="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
                 title="Print / Download Options"
-                style={{ transition: 'transform 0.15s ease' }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               >
-                <i className="ti ti-printer fs-18" />
+                <i className="ti ti-printer fs-18 text-secondary" />
               </button>
               <ul className="dropdown-menu dropdown-menu-end shadow border-0 py-2 fs-12" style={{ zIndex: 1050 }}>
                 {hasPres && (
@@ -592,96 +717,144 @@ const Consultations = () => {
         <div className="content">
           <div className="appointments-filter-line pb-3 mb-3 border-bottom">
             <h4 className="fw-bold mb-0 text-dark flex-shrink-0">Consultations</h4>
-            
-            {/* Tab Filters: Checked Out, Checked In, Confirmed, Cancelled */}
-            <div className="status-buttons-group ms-auto">
-              {[
-                { key: "All", label: "All", count: counts.all },
-                { key: "Checked Out", label: "Checked Out", count: counts.checkedOut },
-                { key: "Checked In", label: "Checked In", count: counts.checkedIn },
-                { key: "Confirmed", label: "Confirmed", count: counts.confirmed },
-                { key: "Cancelled", label: "Cancelled", count: counts.cancelled }
-              ].map((s) => (
-                <button
-                  key={s.key}
-                  className={`btn btn-sm ${filterStatus === s.key || (s.key === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} status-btn`}
-                  onClick={() => setFilterStatus(s.key)}
-                >
-                  {s.label}
-                  <span className={`badge ${filterStatus === s.key || (s.key === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1 count-badge`}>
-                    {s.count}
-                  </span>
-                </button>
-              ))}
-            </div>
+            <div className="appointments-filter-actions">
+              {/* Tab Filters: Checked Out, Checked In, Confirmed, Cancelled */}
+              <div className="status-buttons-group">
+                {[
+                  { key: "All", label: "All", count: counts.all },
+                  { key: "Checked Out", label: "Checked Out", count: counts.checkedOut },
+                  { key: "Checked In", label: "Checked In", count: counts.checkedIn },
+                  { key: "Confirmed", label: "Confirmed", count: counts.confirmed },
+                  { key: "Cancelled", label: "Cancelled", count: counts.cancelled }
+                ].map((s) => (
+                  <button
+                    key={s.key}
+                    className={`btn btn-sm ${filterStatus === s.key || (s.key === "All" && filterStatus === "") ? "btn-primary shadow-sm" : "btn-light border bg-white"} status-btn`}
+                    onClick={() => setFilterStatus(s.key)}
+                  >
+                    {s.label}
+                    <span className={`badge ${filterStatus === s.key || (s.key === "All" && filterStatus === "") ? "bg-white text-primary" : "bg-light text-dark"} ms-1 count-badge`}>
+                      {s.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
 
-            <div className="dropdown">
-              <Link
-                to="#"
-                className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap follow-up-select"
-                style={{ minWidth: "140px", height: "32px", fontSize: "11px", display: "flex", alignItems: "center" }}
-                data-bs-toggle="dropdown"
-                data-bs-auto-close="outside"
-              >
-                <span className="text-truncate">
-                  <span className="text-muted"><i className="ti ti-calendar me-1"></i></span> {datePreset === "All" ? "Filter Date" : datePreset}
-                </span>
-              </Link>
-              <ul className="dropdown-menu dropdown-menu-end p-2 animate__animated animate__fadeIn" style={{ minWidth: "180px", zIndex: 1050 }}>
-                {["All", "Today", "Yesterday", "Last 7 Days", "Custom"].map((preset) => (
-                  <li key={preset}>
+              <div className="dropdown flex-shrink-0">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center text-nowrap follow-up-select"
+                  style={{ height: "32px", fontSize: "11px", display: "flex", alignItems: "center", minWidth: "150px" }}
+                  data-bs-toggle="dropdown"
+                >
+                  <span className="text-truncate pe-1">
+                    <span className="text-muted"><i className="ti ti-user-heart me-1"></i></span>{" "}
+                    {filterDoctor || "Filter Doctor"}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2 animate__animated animate__fadeIn" style={{ minWidth: "200px", maxHeight: "280px", overflowY: "auto", zIndex: 1050 }}>
+                  <li>
                     <Link
                       to="#"
-                      className="dropdown-item rounded-1 fs-12 py-2"
+                      className={`dropdown-item rounded-1 fs-12 py-2 ${!filterDoctor ? "active" : ""}`}
                       onClick={(e) => {
                         e.preventDefault();
-                        if (preset === "Custom") {
-                          e.stopPropagation();
-                        }
-                        setDatePreset(preset);
+                        setFilterDoctor("");
                       }}
                     >
-                      {preset}
+                      All Doctors
                     </Link>
                   </li>
-                ))}
-                {datePreset === "Custom" && (
-                  <li className="p-2 border-top mt-2" onClick={(e) => e.stopPropagation()}>
-                    <div className="d-flex flex-column gap-1">
-                      <label className="text-muted fs-10 fw-bold text-uppercase mb-0">Start Date</label>
-                      <input
-                        type="date"
-                        className="form-control fs-12 px-2 py-1"
-                        value={filterStartDate}
-                        onChange={(e) => setFilterStartDate(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <label className="text-muted fs-10 fw-bold text-uppercase mb-0 mt-1">End Date</label>
-                      <input
-                        type="date"
-                        className="form-control fs-12 px-2 py-1"
-                        value={filterEndDate}
-                        onChange={(e) => setFilterEndDate(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                  </li>
-                )}
-              </ul>
-            </div>
+                  {doctorsList.map((d) => (
+                    <li key={d}>
+                      <Link
+                        to="#"
+                        className={`dropdown-item rounded-1 fs-12 py-2 ${filterDoctor === d ? "active" : ""}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setFilterDoctor(d || "");
+                        }}
+                      >
+                        {d}
+                      </Link>
+                    </li>
+                  ))}
+                  {doctorsList.length === 0 && (
+                    <li>
+                      <span className="dropdown-item-text text-muted fs-12 py-2">No doctors found</span>
+                    </li>
+                  )}
+                </ul>
+              </div>
 
-            {isAnyFilterActive ? (
-              <button className="btn btn-sm clear-filter-btn" onClick={handleClearFilters}>
-                <i className="ti ti-refresh" /> Clear
-              </button>
-            ) : (
-              <button className="btn btn-sm btn-light border filter-btn" data-bs-toggle="offcanvas" data-bs-target="#filter_drawer">
-                <i className="ti ti-filter" /> Filter
-              </button>
-            )}
+              <div className="dropdown flex-shrink-0">
+                <Link
+                  to="#"
+                  className="form-select text-dark text-decoration-none d-flex align-items-center justify-content-between text-nowrap follow-up-select"
+                  style={{ minWidth: "140px", height: "32px", fontSize: "11px", display: "flex", alignItems: "center" }}
+                  data-bs-toggle="dropdown"
+                  data-bs-auto-close="outside"
+                >
+                  <span className="text-truncate">
+                    <span className="text-muted"><i className="ti ti-calendar me-1"></i></span> {datePreset === "All" ? "Filter Date" : datePreset}
+                  </span>
+                </Link>
+                <ul className="dropdown-menu dropdown-menu-end p-2 animate__animated animate__fadeIn" style={{ minWidth: "180px", zIndex: 1050 }}>
+                  {["All", "Today", "Yesterday", "Last 7 Days", "Custom"].map((preset) => (
+                    <li key={preset}>
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1 fs-12 py-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (preset === "Custom") {
+                            e.stopPropagation();
+                          }
+                          setDatePreset(preset);
+                        }}
+                      >
+                        {preset}
+                      </Link>
+                    </li>
+                  ))}
+                  {datePreset === "Custom" && (
+                    <li className="p-2 border-top mt-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="d-flex flex-column gap-1">
+                        <label className="text-muted fs-10 fw-bold text-uppercase mb-0">Start Date</label>
+                        <input
+                          type="date"
+                          className="form-control fs-12 px-2 py-1"
+                          value={filterStartDate}
+                          onChange={(e) => setFilterStartDate(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <label className="text-muted fs-10 fw-bold text-uppercase mb-0 mt-1">End Date</label>
+                        <input
+                          type="date"
+                          className="form-control fs-12 px-2 py-1"
+                          value={filterEndDate}
+                          onChange={(e) => setFilterEndDate(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </li>
+                  )}
+                </ul>
+              </div>
+
+              {isAnyFilterActive ? (
+                <button className="btn btn-sm clear-filter-btn" onClick={handleClearFilters}>
+                  <i className="ti ti-refresh" /> Clear
+                </button>
+              ) : (
+                <button className="btn btn-sm btn-light border filter-btn" data-bs-toggle="offcanvas" data-bs-target="#filter_drawer">
+                  <i className="ti ti-filter" /> Filter
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="table-responsive border rounded bg-white compact-table">
+          <div className="table-responsive rounded bg-white compact-table" style={{ border: "none", borderRadius: "12px", boxShadow: "none" }}>
             <Datatable
               columns={columns}
               dataSource={filteredData}
@@ -771,6 +944,131 @@ const Consultations = () => {
         </div>
       </div>
 
+      {/* View existing prescription (print-style slip) */}
+      {showViewPresModal && selectedAppointment && (() => {
+        const viewPres =
+          prescriptions.find(
+            (p) =>
+              p.appointmentId === selectedAppointment.id ||
+              p.appointmentCode === selectedAppointment.appointmentCode
+          ) || null;
+        if (!viewPres) return null;
+        return (
+          <div
+            className="modal fade show d-block"
+            tabIndex={-1}
+            style={{ backgroundColor: "rgba(15, 23, 42, 0.45)", zIndex: 1060 }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowViewPresModal(false);
+                setSelectedAppointment(null);
+              }
+            }}
+          >
+            <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+              <div
+                className="modal-content border-0 shadow-lg"
+                style={{ borderRadius: 12, overflow: "hidden" }}
+              >
+                <div
+                  className="d-flex align-items-center justify-content-between px-4 py-3 bg-white border-bottom"
+                  style={{ borderColor: "#e5e7eb" }}
+                >
+                  <div className="d-flex align-items-center gap-3">
+                    <div
+                      className="d-flex align-items-center justify-content-center rounded-2 flex-shrink-0"
+                      style={{
+                        width: 44,
+                        height: 44,
+                        background: "#f3e8ff",
+                        color: "#6d28d9",
+                      }}
+                    >
+                      <i className="ti ti-prescription fs-20" />
+                    </div>
+                    <div>
+                      <h5 className="mb-0 fw-bold" style={{ color: "#1e1b4b", fontSize: 18 }}>
+                        Prescription
+                      </h5>
+                      <p className="mb-0 text-muted" style={{ fontSize: 13 }}>
+                        {selectedAppointment.appointmentCode || "Visit prescription"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowViewPresModal(false);
+                      setSelectedAppointment(null);
+                    }}
+                    className="d-inline-flex align-items-center justify-content-center text-muted bg-white"
+                    aria-label="Close"
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 8,
+                      border: "1px solid #e5e7eb",
+                    }}
+                  >
+                    <i className="ti ti-x fs-18" />
+                  </button>
+                </div>
+
+                <div
+                  className="px-3 py-3 bg-light"
+                  style={{ maxHeight: "70vh", overflowY: "auto" }}
+                >
+                  <div className="bg-white rounded-3 shadow-sm p-2">
+                    <PrescriptionPadSlip
+                      appointment={selectedAppointment}
+                      prescription={viewPres}
+                      suggestIPD={
+                        selectedAppointment?.patient?.suggestIPD ||
+                        viewPres?.patient?.suggestIPD
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="d-flex align-items-center justify-content-between gap-2 px-4 py-3 border-top bg-white">
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary d-inline-flex align-items-center gap-2"
+                    onClick={() => {
+                      setShowViewPresModal(false);
+                      setShowPresModal(true);
+                    }}
+                  >
+                    <i className="ti ti-edit" />
+                    Edit Prescription
+                  </button>
+                  <div className="d-flex gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-light"
+                      onClick={() => {
+                        setShowViewPresModal(false);
+                        setSelectedAppointment(null);
+                      }}
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary d-inline-flex align-items-center gap-2"
+                      onClick={() => handlePrintPrescription(selectedAppointment, true)}
+                    >
+                      <i className="ti ti-printer" />
+                      Print
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Add/Edit Prescription Modal */}
       {showPresModal && selectedAppointment && (() => {
         const existingPrescription = prescriptions.find(p => p.appointmentId === selectedAppointment.id) || null;
@@ -804,9 +1102,30 @@ const Consultations = () => {
             linkedAppointments={[selectedAppointment]}
             initialPrescription={existingPrescription}
             appointment={selectedAppointment}
+            onRecommendIPD={() => {
+              console.log("onRecommendIPD triggered in consultations.tsx");
+              setShowPresModal(false);
+              setShowRecommendIPDModal(true);
+            }}
           />
         );
       })()}
+
+      {/* Recommend for IPD Modal */}
+      {showRecommendIPDModal && selectedAppointment && (
+        <RecommendIPDModal
+          onClose={() => {
+            setShowRecommendIPDModal(false);
+            setSelectedAppointment(null);
+          }}
+          appointment={selectedAppointment}
+          onSuccess={() => {
+            setShowRecommendIPDModal(false);
+            setSelectedAppointment(null);
+            refetchPres();
+          }}
+        />
+      )}
 
       {/* Printable Prescription Pad Slip (detailed with medicines) */}
       {printAppointment && printPrescription && (
@@ -830,3 +1149,4 @@ const Consultations = () => {
 };
 
 export default Consultations;
+

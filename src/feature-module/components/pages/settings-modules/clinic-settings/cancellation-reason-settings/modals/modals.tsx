@@ -1,6 +1,7 @@
 import { Link } from "react-router"
 import { all_routes } from "../../../../../../routes/all_routes"
 import ImageWithBasePath from "../../../../../../../core/imageWithBasePath"
+import { IconFormControl } from "../../../../../../../core/common/form-fields"
 
 
 const Modals = () => {
@@ -29,7 +30,7 @@ const Modals = () => {
               <label className="form-label">
                 Reason<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl type="text" placeholder="Enter cancellation reason" />
             </div>
           </div>
           <div className="modal-footer d-flex align-items-center gap-1">
@@ -72,9 +73,9 @@ const Modals = () => {
               <label className="form-label">
                 Reason<span className="text-danger ms-1">*</span>
               </label>
-              <input
+              <IconFormControl
                 type="text"
-                className="form-control"
+                placeholder="Enter cancellation reason"
                 defaultValue="Personal Emergency"
               />
             </div>

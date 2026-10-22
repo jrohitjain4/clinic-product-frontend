@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import { StatusActive } from "../../../../../../core/common/selectOption";
+import { IconFormControl, IconTextarea } from "../../../../../../core/common/form-fields";
 import { apiPost, apiPut, apiDelete } from "../../../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
 
@@ -113,9 +114,9 @@ const Modals = ({ selectedSpecialization, refetch, specializationType = "regular
                   <label className="form-label">
                     {entityName}<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
+                    fieldLabel={entityName}
                     type="text"
-                    className="form-control"
                     placeholder={`Enter ${entityName}`}
                     value={addName}
                     onChange={(e) => setAddName(e.target.value)}
@@ -124,8 +125,8 @@ const Modals = ({ selectedSpecialization, refetch, specializationType = "regular
                 </div>
                 <div className="mb-0">
                   <label className="form-label">Description</label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="description"
                     rows={3}
                     placeholder="Enter Description"
                     value={addDesc}
@@ -172,9 +173,9 @@ const Modals = ({ selectedSpecialization, refetch, specializationType = "regular
                   <label className="form-label">
                     {entityName}<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
+                    fieldLabel={entityName}
                     type="text"
-                    className="form-control"
                     placeholder={`Enter ${entityName}`}
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
@@ -183,8 +184,8 @@ const Modals = ({ selectedSpecialization, refetch, specializationType = "regular
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Description</label>
-                  <textarea
-                    className="form-control"
+                  <IconTextarea
+                    fieldLabel="description"
                     rows={3}
                     placeholder="Enter Description"
                     value={editDesc}

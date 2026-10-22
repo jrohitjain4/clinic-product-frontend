@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Toast } from "react-bootstrap";
+import { Toast } from "react-bootstrap";
 
 const UiToasts = () => {
   const [showTopLeftToast, setShowTopLeftToast] = useState(false);
@@ -724,11 +724,6 @@ const UiToasts = () => {
                         className="bg-primary text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handlePrimaryToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>
                         {/* Add your toast content here */}
@@ -749,11 +744,6 @@ const UiToasts = () => {
                         className="bg-secondary text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleSecondaryToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>
                         {/* Add your toast content here */}
@@ -775,11 +765,6 @@ const UiToasts = () => {
                         className="bg-warning text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleWarningToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>
                         {/* Add your toast content here */}
@@ -801,11 +786,6 @@ const UiToasts = () => {
                         className="bg-info text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleInfoToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>
                         {/* Add your toast content here */}
@@ -826,11 +806,6 @@ const UiToasts = () => {
                         className="bg-success text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleSuccessToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>
                         {/* Add your toast content here */}
@@ -851,11 +826,6 @@ const UiToasts = () => {
                         className="bg-danger text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleDangerToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>
                         {/* Add your toast content here */}
@@ -915,14 +885,14 @@ const UiToasts = () => {
                     >
                       Success
                     </button>
-                    <Button
+                    <button
                       type="button"
                       className="btn btn-danger me-2 btn-wave"
                       id="solidDangerToastBtn"
                       onClick={handleSolidDangerToastButtonClick}
                     >
                       Danger
-                    </Button>
+                    </button>
                   </div>
                   <div className="toast-container position-fixed top-0 end-0 p-3">
                     <Toast
@@ -939,11 +909,6 @@ const UiToasts = () => {
                         className="bg-primary text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleSolidPrimaryToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>
                         {/* Add your toast content here */}
@@ -964,11 +929,6 @@ const UiToasts = () => {
                         className="bg-secondary text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleSolidSecondaryToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>
                         {/* Add your toast content here */}
@@ -990,11 +950,6 @@ const UiToasts = () => {
                         className="bg-warning text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleSolidWarningToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>
                         {/* Add your toast content here */}
@@ -1015,11 +970,6 @@ const UiToasts = () => {
                         className="bg-info text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleSolidInfoToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>
                         {/* Add your toast content here */}
@@ -1040,11 +990,6 @@ const UiToasts = () => {
                         className="bg-success text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleSolidSuccessToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>
                         {/* Add your toast content here */}
@@ -1065,11 +1010,6 @@ const UiToasts = () => {
                         className="bg-danger text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleSolidDangerToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>
                         {/* Add your toast content here */}
@@ -1091,13 +1031,14 @@ const UiToasts = () => {
                 </div>
                 <div className="card-body">
                   <div className="btn-list">
-                    <Button
-                      variant="outline-primary me-2 btn-wave"
+                    <button
+                      type="button"
+                      className="btn btn-outline-primary me-2 btn-wave"
                       id="topleftToastBtn"
                       onClick={handleTopLeftButtonClick}
                     >
                       Top Left
-                    </Button>
+                    </button>
                     <button
                       type="button"
                       className="btn btn-outline-primary me-2 btn-wave"
@@ -1173,11 +1114,6 @@ const UiToasts = () => {
                     >
                       <Toast.Header className="toast-header bg-primary text-fixed-white">
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleTopLeftToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>Your ,toast message here.</Toast.Body>
                     </Toast>
@@ -1195,11 +1131,6 @@ const UiToasts = () => {
                         className="bg-primary text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleTopCenterToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>Your, toast message here.</Toast.Body>
                     </Toast>
@@ -1220,11 +1151,6 @@ const UiToasts = () => {
                         className="bg-primary text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleTopEndToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>Your, toast message here.</Toast.Body>
                     </Toast>
@@ -1244,11 +1170,6 @@ const UiToasts = () => {
                         className="bg-primary text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleMiddleLeftToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>Your, toast message here.</Toast.Body>
                     </Toast>
@@ -1268,11 +1189,6 @@ const UiToasts = () => {
                         className="bg-primary text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleMiddleCenterToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>Your, toast message here.</Toast.Body>
                     </Toast>
@@ -1292,11 +1208,6 @@ const UiToasts = () => {
                         className="bg-primary text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleMiddleRightToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>Your, toast message here.</Toast.Body>
                     </Toast>
@@ -1316,11 +1227,6 @@ const UiToasts = () => {
                         className="bg-primary text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleBottomLeftToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>Your, toast message here.</Toast.Body>
                     </Toast>
@@ -1340,11 +1246,6 @@ const UiToasts = () => {
                         className="bg-primary text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleBottomCenterToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>Your, toast message here.</Toast.Body>
                     </Toast>
@@ -1364,11 +1265,6 @@ const UiToasts = () => {
                         className="bg-primary text-fixed-white"
                       >
                         <strong className="me-auto">Toast</strong>
-                        <Button
-                          variant="close"
-                          onClick={handleBottomRightToastClose}
-                          aria-label="Close"
-                        />
                       </Toast.Header>
                       <Toast.Body>Your, toast message here.</Toast.Body>
                     </Toast>

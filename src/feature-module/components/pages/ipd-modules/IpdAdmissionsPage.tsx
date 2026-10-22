@@ -2,9 +2,12 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { Link } from "react-router-dom";
 import { all_routes } from "../../../routes/all_routes";
 import Footer from "../../../../core/common/footer/footer";
+import Datatable from "../../../../core/common/dataTable";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 import IpdViewDetailsModal from "./IpdViewDetailsModal";
+import IpdRaiseChargeModal from "./IpdRaiseChargeModal";
+import { IconFormControl } from "../../../../core/common/form-fields";
 
 interface Patient {
   id: string;
@@ -70,6 +73,8 @@ interface Admission {
   paymentStatus: string;
   createdAt: string;
   ipdPrescriptions?: any[];
+  treatmentReason?: string | null;
+  referralAppointmentCode?: string | null;
 }
 
 const IpdAdmissionsPage: React.FC = () => {
@@ -88,6 +93,7 @@ const IpdAdmissionsPage: React.FC = () => {
   // Admission Modal State
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [activeReferralId, setActiveReferralId] = useState<string | null>(null);
 
   // Modal Form Fields
   const [admissionType, setAdmissionType] = useState<"Direct" | "Refer to OPD" | "Emergency">("Direct");
@@ -96,8 +102,11 @@ const IpdAdmissionsPage: React.FC = () => {
   const [selectedWardId, setSelectedWardId] = useState("");
   const [selectedTreatmentId, setSelectedTreatmentId] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
+  const [referralAppointmentId, setReferralAppointmentId] = useState<string | null>(null);
+  const [referralAppointmentCode, setReferralAppointmentCode] = useState<string | null>(null);
 
   // Financial Breakdown Fields
+  const [defaultAdmissionFee, setDefaultAdmissionFee] = useState("500");
   const [admissionFee, setAdmissionFee] = useState("500");
   const [treatmentFee, setTreatmentFee] = useState("0");
   const [wardCharge, setWardCharge] = useState("0");
@@ -139,6 +148,8 @@ const IpdAdmissionsPage: React.FC = () => {
   const [viewAdmission, setViewAdmission] = useState<Admission | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedViewAdmission, setSelectedViewAdmission] = useState<any>(null);
+  const [showRaiseModal, setShowRaiseModal] = useState(false);
+  const [selectedChargeAdmissionId, setSelectedChargeAdmissionId] = useState("");
 
   // System medicines for autocomplete
   const [systemMedicines, setSystemMedicines] = useState<any[]>([]);
@@ -185,12 +196,13 @@ const IpdAdmissionsPage: React.FC = () => {
     const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
     try {
-      const [admRes, patRes, docRes, wrdRes, trtRes] = await Promise.all([
+      const [admRes, patRes, docRes, wrdRes, trtRes, feeRes] = await Promise.all([
         fetch(apiUrl("/api/ipd/admissions"), { headers }),
         fetch(apiUrl("/api/patients"), { headers }),
         fetch(apiUrl("/api/doctors?type=IPD"), { headers }),
         fetch(apiUrl("/api/ipd/wards"), { headers }),
         fetch(apiUrl("/api/ipd/treatments"), { headers }),
+        fetch(apiUrl("/api/settings/ipd/admission-fee"), { headers }),
       ]);
 
       if (admRes.ok) {
@@ -212,6 +224,12 @@ const IpdAdmissionsPage: React.FC = () => {
       if (trtRes.ok) {
         const data = await trtRes.json();
         setTreatments(Array.isArray(data) ? data : []);
+      }
+      if (feeRes.ok) {
+        const feeData = await feeRes.json();
+        const val = String(feeData.ipdAdmissionFee !== undefined ? feeData.ipdAdmissionFee : "500");
+        setDefaultAdmissionFee(val);
+        setAdmissionFee(val);
       }
     } catch (err: any) {
       toast.error("Failed to load IPD admission data");
@@ -261,13 +279,14 @@ const IpdAdmissionsPage: React.FC = () => {
 
   // Reset Form
   const resetForm = () => {
+    setActiveReferralId(null);
     setAdmissionType("Direct");
     setSelectedPatientId(patients[0]?.id || "");
     setSelectedDoctorId(doctors[0]?.id || "");
     setSelectedWardId(wards[0]?.id || "");
     setSelectedTreatmentId("");
     setDiagnosis("");
-    setAdmissionFee("500");
+    setAdmissionFee(defaultAdmissionFee);
     setTreatmentFee("0");
     setWardCharge("0");
     setDoctorVisitCharge("0");
@@ -275,6 +294,8 @@ const IpdAdmissionsPage: React.FC = () => {
     setOtherCharges("0");
     setAdvancePaid("");
     setPaymentMethod("Cash");
+    setReferralAppointmentId(null);
+    setReferralAppointmentCode(null);
   };
 
   const handleOpenModal = (type: "Direct" | "Refer to OPD" | "Emergency") => {
@@ -295,6 +316,59 @@ const IpdAdmissionsPage: React.FC = () => {
     setShowModal(true);
   };
 
+  const handleStartAdmission = (adm: any) => {
+    resetForm();
+    setActiveReferralId(adm.id);
+    setAdmissionType("Refer to OPD");
+    setReferralAppointmentId(adm.referralAppointmentId || null);
+    setReferralAppointmentCode(adm.referralAppointmentCode || null);
+
+    setSelectedPatientId(adm.patientId);
+    if (adm.doctorId) {
+      setSelectedDoctorId(adm.doctorId);
+      const foundDoc = doctors.find((d) => d.id === adm.doctorId);
+      if (foundDoc && foundDoc.ipdVisitCharge) {
+        setDoctorVisitCharge(String(foundDoc.ipdVisitCharge));
+      }
+    }
+    if (adm.treatmentId) {
+      setSelectedTreatmentId(adm.treatmentId);
+      const foundTrt = treatments.find((t) => t.id === adm.treatmentId);
+      if (foundTrt) {
+        setTreatmentFee(String(foundTrt.totalPrice || 0));
+      }
+    }
+    if (adm.diagnosis) {
+      setDiagnosis(adm.diagnosis);
+    } else if (adm.treatmentReason) {
+      setDiagnosis(`Referred for Treatment: ${adm.treatmentReason}`);
+    }
+
+    if (wards.length > 0) {
+      setSelectedWardId(wards[0].id);
+      setWardCharge(String(wards[0].chargePerNight || 0));
+      setNursingFee(String(wards[0].nursingChargePerNight || 0));
+    }
+
+    setShowModal(true);
+  };
+
+  const handleDeleteAdmission = async (id: string) => {
+    if (!window.confirm("Are you sure you want to cancel/delete this IPD recommendation?")) return;
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(apiUrl(`/api/ipd/admissions/${id}`), {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to delete record");
+      toast.success("Recommendation deleted successfully!");
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "Error deleting record");
+    }
+  };
+
   const handleSubmitAdmission = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPatientId) {
@@ -304,6 +378,12 @@ const IpdAdmissionsPage: React.FC = () => {
 
     setSubmitting(true);
     const token = localStorage.getItem("token");
+    const isRecommendation = !activeReferralId && (admissionType === "Refer to OPD" || !selectedWardId);
+    const targetStatus = isRecommendation ? "Incomplete" : "Admitted";
+    const refCode = isRecommendation
+      ? (referralAppointmentCode || `APT-REF-${Math.floor(1000 + Math.random() * 9000)}`)
+      : (referralAppointmentCode || undefined);
+
     const payload = {
       admissionType,
       patientId: selectedPatientId,
@@ -311,6 +391,7 @@ const IpdAdmissionsPage: React.FC = () => {
       wardId: selectedWardId || undefined,
       treatmentId: selectedTreatmentId || undefined,
       diagnosis: diagnosis.trim() || undefined,
+      status: targetStatus,
       admissionFee: parseFloat(admissionFee) || 0,
       treatmentFee: parseFloat(treatmentFee) || 0,
       wardCharge: parseFloat(wardCharge) || 0,
@@ -319,7 +400,56 @@ const IpdAdmissionsPage: React.FC = () => {
       otherCharges: parseFloat(otherCharges) || 0,
       advancePaid: parseFloat(advancePaid) || 0,
       paymentMethod,
+      referralAppointmentId: referralAppointmentId || undefined,
+      referralAppointmentCode: refCode,
     };
+
+    if (activeReferralId) {
+      // UPDATE existing recommendation directly to Admitted (Inpatient) status
+      const updateUrl = apiUrl(`/api/ipd/admissions/${activeReferralId}`);
+      const updatePayload = {
+        status: "Admitted",
+        wardId: selectedWardId || undefined,
+        doctorId: selectedDoctorId || undefined,
+        treatmentId: selectedTreatmentId || undefined,
+        diagnosis: diagnosis.trim() || undefined,
+        admissionFee: parseFloat(admissionFee) || 0,
+        treatmentFee: parseFloat(treatmentFee) || 0,
+        wardCharge: parseFloat(wardCharge) || 0,
+        doctorVisitCharge: parseFloat(doctorVisitCharge) || 0,
+        nursingFee: parseFloat(nursingFee) || 0,
+        otherCharges: parseFloat(otherCharges) || 0,
+        advancePaid: parseFloat(advancePaid) || 0,
+        paymentMethod,
+      };
+
+      try {
+        const res = await fetch(updateUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updatePayload),
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || "Failed to update admission status");
+        }
+
+        toast.success("Patient admission started and status updated to Inpatient!");
+        setShowModal(false);
+        setActiveReferralId(null);
+        resetForm();
+        fetchData();
+        return;
+      } catch (err: any) {
+        toast.error(err.message || "Error updating admission");
+        setSubmitting(false);
+        return;
+      }
+    }
 
     try {
       const res = await fetch(apiUrl("/api/ipd/admissions"), {
@@ -336,16 +466,16 @@ const IpdAdmissionsPage: React.FC = () => {
         throw new Error(errData.message || "Failed to admit patient");
       }
 
-        toast.success("Patient admitted successfully! Advance receipt generated.");
-        setShowModal(false);
-        resetForm();
-        fetchData();
-      } catch (err: any) {
-        toast.error(err.message || "Error admitting patient");
-      } finally {
-        setSubmitting(false);
-      }
-    };
+      toast.success("Patient admitted successfully! Advance receipt generated.");
+      setShowModal(false);
+      resetForm();
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || "Error admitting patient");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleAddMedicineRow = () => {
     if (!newMedName.trim()) {
@@ -468,10 +598,303 @@ const IpdAdmissionsPage: React.FC = () => {
     });
   }, [admissions, filterWard, filterPatient, filterDoctor, filterDue]);
 
+  const tableData = useMemo(
+    () =>
+      filteredAdmissions.map((adm, idx) => ({
+        key: adm.id,
+        sr: idx + 1,
+        admissionCode: adm.admissionCode,
+        patientName: getPatientName(adm.patient),
+        patientMeta: `UHID: ${adm.patient?.patientCode || "—"} | ${adm.patient?.phone || "—"}`,
+        doctorName: adm.doctor?.fullName || "Unassigned",
+        doctorVisitCharge: adm.doctorVisitCharge,
+        wardName: adm.ward?.wardName || "Not Assigned",
+        wardCharge: adm.wardCharge,
+        treatmentName: adm.treatment?.procedureName || "Standard IPD Care",
+        treatmentReason: adm.treatmentReason || "",
+        referralAppointmentCode: adm.referralAppointmentCode || "",
+        treatmentFee: adm.treatmentFee,
+        totalEstimatedAmount: adm.totalEstimatedAmount,
+        advancePaid: adm.advancePaid,
+        dueAmount: adm.dueAmount,
+        paymentStatus: adm.paymentStatus,
+        status: adm.status,
+        _raw: adm,
+      })),
+    [filteredAdmissions]
+  );
+
+  const columns = useMemo(
+    () => [
+      {
+        title: "Sr.",
+        dataIndex: "sr",
+        width: 60,
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) => a.sr - b.sr,
+      },
+      {
+        title: "Admission Code",
+        dataIndex: "admissionCode",
+        render: (text: string) => (
+          <span
+            className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+            style={{
+              backgroundColor: "#e2e8f0",
+              color: "#1e293b",
+              fontWeight: 600,
+              fontSize: "12px",
+            }}
+          >
+            <i className="ti ti-hash fs-14" />
+            {text}
+          </span>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.admissionCode.localeCompare(b.admissionCode),
+      },
+      {
+        title: "Referral OPD",
+        dataIndex: "referralAppointmentCode",
+        render: (text: string) => (
+          text ? (
+            <span
+              className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+              style={{
+                backgroundColor: "#f5f3ff",
+                color: "#7c3aed",
+                fontWeight: 600,
+                fontSize: "12px",
+                border: "1px solid #ddd6fe"
+              }}
+            >
+              <i className="ti ti-link fs-14" />
+              {text}
+            </span>
+          ) : (
+            <span className="text-muted fs-12">—</span>
+          )
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          (a.referralAppointmentCode || "").localeCompare(b.referralAppointmentCode || ""),
+      },
+      {
+        title: "Patient Details",
+        dataIndex: "patientName",
+        render: (text: string, record: (typeof tableData)[0]) => (
+          <div className="lh-1">
+            <h6 className="mb-1 fs-14 fw-semibold text-dark">{text}</h6>
+            <span className="text-muted fs-12 fw-normal d-block mt-1">
+              {record.patientMeta}
+            </span>
+          </div>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.patientName.localeCompare(b.patientName),
+      },
+      {
+        title: "Primary Doctor",
+        dataIndex: "doctorName",
+        render: (text: string, record: (typeof tableData)[0]) => (
+          <>
+            <span className="fw-semibold text-primary d-block fs-13">{text}</span>
+            {record.doctorVisitCharge > 0 && (
+              <small className="text-muted d-block mt-1">
+                Visit: ₹{record.doctorVisitCharge}
+              </small>
+            )}
+          </>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.doctorName.localeCompare(b.doctorName),
+      },
+      {
+        title: "Assigned Ward",
+        dataIndex: "wardName",
+        render: (text: string, record: (typeof tableData)[0]) => (
+          <>
+            <span
+              className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1 mb-1"
+              style={{
+                backgroundColor: "#e0f2fe",
+                color: "#2563eb",
+                fontWeight: 600,
+                fontSize: "12px",
+              }}
+            >
+              <i className="ti ti-bed fs-14" />
+              {text}
+            </span>
+            {record.wardCharge > 0 && (
+              <small className="text-muted d-block mt-1">
+                Rate: ₹{record.wardCharge}/night
+              </small>
+            )}
+          </>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.wardName.localeCompare(b.wardName),
+      },
+      {
+        title: "Treatment / Surgery",
+        dataIndex: "treatmentName",
+        render: (text: string, record: (typeof tableData)[0]) => (
+          <>
+            <span className="fw-medium text-dark d-block fs-13">{text}</span>
+            {record.treatmentReason && (
+              <small className="text-muted d-block mt-1 fs-11">
+                Reason: {record.treatmentReason}
+              </small>
+            )}
+            {record.treatmentFee > 0 && (
+              <small className="text-muted d-block mt-1">
+                Proc Fee: ₹{record.treatmentFee}
+              </small>
+            )}
+          </>
+        ),
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.treatmentName.localeCompare(b.treatmentName),
+      },
+
+      {
+        title: "Status",
+        dataIndex: "status",
+        render: (text: string) => {
+          const isAdmitted = text === "Admitted";
+          const isIncomplete = text === "Incomplete";
+          
+          let bg = "#f1f5f9";
+          let color = "#64748b";
+          let icon = "ti ti-circle-dashed";
+          
+          if (isAdmitted) {
+            bg = "#e6f8ef";
+            color = "#198754";
+            icon = "ti ti-circle-check";
+          } else if (isIncomplete) {
+            bg = "#fef3c7";
+            color = "#d97706";
+            icon = "ti ti-alert-circle";
+          }
+          
+          return (
+            <span
+              className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+              style={{
+                backgroundColor: bg,
+                color: color,
+                fontWeight: 600,
+                fontSize: "12px",
+              }}
+            >
+              <i className={`${icon} fs-14`} />
+              {text === "Admitted" ? "Inpatient" : text}
+            </span>
+          );
+        },
+        sorter: (a: (typeof tableData)[0], b: (typeof tableData)[0]) =>
+          a.status.localeCompare(b.status),
+      },
+      {
+        title: "Action",
+        className: "text-center text-nowrap",
+        width: 180,
+        align: "center" as const,
+        render: (_: unknown, record: (typeof tableData)[0]) => (
+          <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
+            {record.status === "Incomplete" ? (
+              <>
+                <button
+                  type="button"
+                  className="bg-transparent border-0 text-primary p-1"
+                  title="View Full IPD Details"
+                  onClick={() => {
+                    setSelectedViewAdmission(record._raw);
+                    setShowViewModal(true);
+                  }}
+                >
+                  <i className="ti ti-eye fs-18" />
+                </button>
+                <button
+                  type="button"
+                  className="bg-transparent border-0 text-success p-1"
+                  title="Start Patient Admission"
+                  onClick={() => handleStartAdmission(record._raw)}
+                >
+                  <i className="ti ti-player-play-filled fs-18" style={{ color: "#10b981" }} />
+                </button>
+                <button
+                  type="button"
+                  className="bg-transparent border-0 text-danger p-1"
+                  title="Delete/Reject Recommendation"
+                  onClick={() => handleDeleteAdmission(record.key)}
+                >
+                  <i className="ti ti-trash fs-18" />
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="bg-transparent border-0 text-primary p-1"
+                  title="View Full IPD Details"
+                  onClick={() => {
+                    setSelectedViewAdmission(record._raw);
+                    setShowViewModal(true);
+                  }}
+                >
+                  <i className="ti ti-eye fs-18" />
+                </button>
+                <Link
+                  to={all_routes.ipdDischarge}
+                  className="text-success p-1"
+                  title="Process Discharge & Settle"
+                >
+                  <i className="ti ti-user-check fs-18" />
+                </Link>
+                <button
+                  type="button"
+                  className="bg-transparent border-0 text-info p-1"
+                  title="View & Add Invoice Charges"
+                  onClick={() => {
+                    setSelectedChargeAdmissionId(record.key);
+                    setShowRaiseModal(true);
+                  }}
+                >
+                  <i className="ti ti-file-invoice fs-18" />
+                </button>
+                <button
+                  type="button"
+                  className="bg-transparent border-0 text-primary p-1"
+                  title="Raise IPD Charge & Add Invoice"
+                  onClick={() => {
+                    setSelectedChargeAdmissionId(record.key);
+                    setShowRaiseModal(true);
+                  }}
+                >
+                  <i className="ti ti-plus fs-18" />
+                </button>
+              </>
+            )}
+          </div>
+        ),
+      },
+    ],
+    [doctors, treatments, wards]
+  );
+
   const hasActiveFilters = filterWard || filterPatient || filterDoctor || filterDue;
 
   return (
     <div className="page-wrapper">
+      <style>{`
+        .page-wrapper .ipd-admissions-empty-card.card,
+        .page-wrapper .datatable-main-container .datatable-table-shell.card {
+          border: none !important;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+          border-radius: 12px !important;
+        }
+      `}</style>
       <div className="content">
         {/* Header */}
         <div className="d-md-flex d-block align-items-center justify-content-between mb-4 gap-3 flex-wrap">
@@ -482,8 +905,18 @@ const IpdAdmissionsPage: React.FC = () => {
           <div className="d-flex align-items-center gap-2 flex-wrap">
             {/* Ward Filter */}
             <select
-              className="form-select form-select-sm"
-              style={{ width: "140px" }}
+              className="form-select"
+              style={{
+                width: "140px",
+                height: "46px",
+                minHeight: "46px",
+                flexShrink: 0,
+                borderRadius: "12px",
+                borderWidth: "1.5px",
+                borderColor: "#6366f1",
+                fontSize: "14px",
+                fontWeight: 500,
+              }}
               value={filterWard}
               onChange={(e) => setFilterWard(e.target.value)}
             >
@@ -495,8 +928,18 @@ const IpdAdmissionsPage: React.FC = () => {
 
             {/* Patient Filter */}
             <select
-              className="form-select form-select-sm"
-              style={{ width: "150px" }}
+              className="form-select"
+              style={{
+                width: "150px",
+                height: "46px",
+                minHeight: "46px",
+                flexShrink: 0,
+                borderRadius: "12px",
+                borderWidth: "1.5px",
+                borderColor: "#6366f1",
+                fontSize: "14px",
+                fontWeight: 500,
+              }}
               value={filterPatient}
               onChange={(e) => setFilterPatient(e.target.value)}
             >
@@ -510,8 +953,18 @@ const IpdAdmissionsPage: React.FC = () => {
 
             {/* Doctor Filter */}
             <select
-              className="form-select form-select-sm"
-              style={{ width: "140px" }}
+              className="form-select"
+              style={{
+                width: "140px",
+                height: "46px",
+                minHeight: "46px",
+                flexShrink: 0,
+                borderRadius: "12px",
+                borderWidth: "1.5px",
+                borderColor: "#6366f1",
+                fontSize: "14px",
+                fontWeight: 500,
+              }}
               value={filterDoctor}
               onChange={(e) => setFilterDoctor(e.target.value)}
             >
@@ -525,8 +978,18 @@ const IpdAdmissionsPage: React.FC = () => {
 
             {/* Due Amount Filter */}
             <select
-              className="form-select form-select-sm"
-              style={{ width: "130px" }}
+              className="form-select"
+              style={{
+                width: "130px",
+                height: "46px",
+                minHeight: "46px",
+                flexShrink: 0,
+                borderRadius: "12px",
+                borderWidth: "1.5px",
+                borderColor: "#6366f1",
+                fontSize: "14px",
+                fontWeight: 500,
+              }}
               value={filterDue}
               onChange={(e) => setFilterDue(e.target.value)}
             >
@@ -538,188 +1001,55 @@ const IpdAdmissionsPage: React.FC = () => {
 
             {hasActiveFilters && (
               <button
-                className="btn btn-sm btn-light border fw-semibold"
-                style={{ fontSize: '12px', borderRadius: '6px' }}
+                className="btn btn-light border fw-semibold d-inline-flex align-items-center"
+                style={{ height: "46px", fontSize: "13px", borderRadius: "12px", flexShrink: 0 }}
                 onClick={() => { setFilterWard(""); setFilterPatient(""); setFilterDoctor(""); setFilterDue(""); }}
               >
                 <i className="ti ti-x me-1" />Clear
               </button>
             )}
 
-            <button className="btn btn-primary btn-sm ms-md-2" onClick={() => handleOpenModal("Direct")}>
-              <i className="ti ti-user-plus me-1" /> + Add Patient Admission
+            <button
+              className="btn btn-primary d-inline-flex align-items-center ms-md-2"
+              style={{ height: "46px", flexShrink: 0, borderRadius: "12px" }}
+              onClick={() => handleOpenModal("Direct")}
+            >
+              <i className="ti ti-user-plus me-1" /> Add Patient Admission
             </button>
           </div>
         </div>
 
-        {/* Admissions Table */}
-        <div className="card border-0 shadow-sm">
-          <div className="card-body p-0">
-            {loading ? (
-              <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status" />
-                <p className="text-muted mt-2 mb-0">Loading IPD Admissions...</p>
-              </div>
-            ) : filteredAdmissions.length === 0 ? (
-              <div className="text-center py-5">
-                <i className="ti ti-user-plus fs-40 text-muted mb-2 d-block" />
-                <h5 className="fw-bold">No Inpatient Admissions Found</h5>
-                <p className="text-muted fs-13 mb-3">
-                  Click below to admit your first patient to IPD with ward & treatment selection.
-                </p>
-                <button className="btn btn-primary btn-sm" onClick={() => handleOpenModal("Direct")}>
-                  <i className="ti ti-plus me-1" /> + Add Patient Admission
-                </button>
-              </div>
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-hover align-middle mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th style={{ width: "48px" }}>Sr.</th>
-                      <th>Admission Code</th>
-                      <th>Patient Details</th>
-                      <th>Primary Doctor</th>
-                      <th>Assigned Ward</th>
-                      <th>Treatment / Surgery</th>
-                      <th>Est. Total</th>
-                      <th>Advance Paid</th>
-                      <th>Due Amount</th>
-                      <th>Payment Status</th>
-                      <th>Status</th>
-                      <th className="text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAdmissions.map((adm, idx) => (
-                      <tr key={adm.id}>
-                        <td>
-                          <span className="text-muted fw-semibold fs-13">{idx + 1}</span>
-                        </td>
-                        <td>
-                          <span className="badge bg-soft-dark text-dark fw-bold">
-                            {adm.admissionCode}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="fw-bold text-dark d-block">{getPatientName(adm.patient)}</span>
-                          <small className="text-muted">
-                            UHID: {adm.patient?.patientCode || "—"} | {adm.patient?.phone || "—"}
-                          </small>
-                        </td>
-                        <td>
-                          <span className="fw-semibold text-primary d-block">
-                            {adm.doctor?.fullName || "Unassigned"}
-                          </span>
-                          {adm.doctorVisitCharge > 0 && (
-                            <small className="text-muted">Visit: ₹{adm.doctorVisitCharge}</small>
-                          )}
-                        </td>
-                        <td>
-                          <span className="badge bg-soft-primary text-primary fw-medium d-block mb-1">
-                            {adm.ward?.wardName || "Not Assigned"}
-                          </span>
-                          {adm.wardCharge > 0 && (
-                            <small className="text-muted">Rate: ₹{adm.wardCharge}/night</small>
-                          )}
-                        </td>
-                        <td>
-                          <span className="fw-medium text-dark d-block">
-                            {adm.treatment?.procedureName || "Standard IPD Care"}
-                          </span>
-                          {adm.treatmentFee > 0 && (
-                            <small className="text-muted">Proc Fee: ₹{adm.treatmentFee}</small>
-                          )}
-                        </td>
-                        <td>
-                          <span className="fw-bold text-dark fs-14">
-                            {adm.totalEstimatedAmount > 0 ? `₹${adm.totalEstimatedAmount.toLocaleString("en-IN")}` : "₹0"}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="fw-bold text-success fs-14">
-                            {adm.advancePaid > 0 ? `₹${adm.advancePaid.toLocaleString("en-IN")}` : "₹0"}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`fw-bold fs-14 ${adm.dueAmount > 0 ? "text-danger" : "text-success"}`}>
-                            {adm.dueAmount > 0 ? `₹${adm.dueAmount.toLocaleString("en-IN")}` : "₹0"}
-                          </span>
-                        </td>
-                        <td>
-                          <span
-                            className={`badge ${
-                              adm.paymentStatus === "Paid"
-                                ? "bg-soft-success text-success"
-                                : adm.paymentStatus === "Partial"
-                                ? "bg-soft-warning text-warning"
-                                : "bg-soft-danger text-danger"
-                            }`}
-                          >
-                            {adm.paymentStatus}
-                          </span>
-                        </td>
-                        <td>
-                          <span
-                            className={`badge ${
-                              adm.status === "Admitted" ? "bg-success" : "bg-secondary"
-                            }`}
-                          >
-                            {adm.status}
-                          </span>
-                        </td>
-                        <td className="text-center">
-                          <div className="d-flex align-items-center justify-content-center gap-1">
-                            {/* View Admission Details */}
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-soft-secondary p-0 d-flex align-items-center justify-content-center"
-                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                              title="View Full IPD Details"
-                              onClick={() => {
-                                setSelectedViewAdmission(adm);
-                                setShowViewModal(true);
-                              }}
-                            >
-                              <i className="ti ti-eye fs-16" />
-                            </button>
-                            {/* Discharge */}
-                            <Link
-                              to={all_routes.ipdDischarge}
-                              className="btn btn-sm btn-soft-success p-0 d-flex align-items-center justify-content-center"
-                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                              title="Process Discharge & Settle"
-                            >
-                              <i className="ti ti-user-check fs-16" />
-                            </Link>
-                            {/* View Invoices */}
-                            <Link
-                              to={all_routes.ipdBillings}
-                              className="btn btn-sm btn-soft-primary p-0 d-flex align-items-center justify-content-center"
-                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                              title="View Invoices & Receipts"
-                            >
-                              <i className="ti ti-file-invoice fs-16" />
-                            </Link>
-                            {/* Raise IPD Charge */}
-                            <Link
-                              to={all_routes.ipdBillings}
-                              className="btn btn-sm btn-soft-info p-0 d-flex align-items-center justify-content-center"
-                              style={{ width: "32px", height: "32px", borderRadius: "8px" }}
-                              title="Raise IPD Charge"
-                            >
-                              <i className="ti ti-plus fs-16" />
-                            </Link>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+        {/* Admissions Table — same Datatable shell/header/pagination as Patients */}
+        {loading ? (
+          <div className="card ipd-admissions-empty-card">
+            <div className="card-body text-center py-5">
+              <div className="spinner-border text-primary" role="status" />
+              <p className="text-muted mt-2 mb-0">Loading IPD Admissions...</p>
+            </div>
           </div>
-        </div>
+        ) : filteredAdmissions.length === 0 ? (
+          <div className="card ipd-admissions-empty-card">
+            <div className="card-body text-center py-5">
+              <i className="ti ti-user-plus fs-40 text-muted mb-2 d-block" />
+              <h5 className="fw-bold">No Inpatient Admissions Found</h5>
+              <p className="text-muted fs-13 mb-3">
+                Click below to admit your first patient to IPD with ward & treatment selection.
+              </p>
+              <button className="btn btn-primary btn-sm" onClick={() => handleOpenModal("Direct")}>
+                <i className="ti ti-plus me-1" /> + Add Patient Admission
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <Datatable
+              columns={columns}
+              dataSource={tableData}
+              Selection={false}
+              searchText=""
+            />
+          </div>
+        )}
       </div>
 
       {/* ADMISSION MODAL */}
@@ -789,9 +1119,9 @@ const IpdAdmissionsPage: React.FC = () => {
 
                     <div className="col-md-12">
                       <label className="form-label fw-semibold">Diagnosis / Admission Reason</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="diagnosis"
                         type="text"
-                        className="form-control"
                         placeholder="e.g. Acute Appendicitis, High Fever, Post-op Recovery..."
                         value={diagnosis}
                         onChange={(e) => setDiagnosis(e.target.value)}
@@ -862,9 +1192,10 @@ const IpdAdmissionsPage: React.FC = () => {
                   <div className="row g-3 mb-4">
                     <div className="col-md-4 col-6">
                       <label className="form-label fw-semibold">Admission Fee (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter admission fee"
                         value={admissionFee}
                         onChange={(e) => setAdmissionFee(e.target.value)}
                         min={0}
@@ -873,9 +1204,10 @@ const IpdAdmissionsPage: React.FC = () => {
 
                     <div className="col-md-4 col-6">
                       <label className="form-label fw-semibold">Treatment / Surgery Fee (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter treatment fee"
                         value={treatmentFee}
                         onChange={(e) => setTreatmentFee(e.target.value)}
                         min={0}
@@ -884,9 +1216,10 @@ const IpdAdmissionsPage: React.FC = () => {
 
                     <div className="col-md-4 col-6">
                       <label className="form-label fw-semibold">Ward Per Night Charge (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter per night ward charge"
                         value={wardCharge}
                         onChange={(e) => setWardCharge(e.target.value)}
                         min={0}
@@ -895,9 +1228,10 @@ const IpdAdmissionsPage: React.FC = () => {
 
                     <div className="col-md-4 col-6">
                       <label className="form-label fw-semibold">Doctor Visit Fee (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter doctor visit fee"
                         value={doctorVisitCharge}
                         onChange={(e) => setDoctorVisitCharge(e.target.value)}
                         min={0}
@@ -906,9 +1240,10 @@ const IpdAdmissionsPage: React.FC = () => {
 
                     <div className="col-md-4 col-6">
                       <label className="form-label fw-semibold">Nursing Fee (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter nursing fee"
                         value={nursingFee}
                         onChange={(e) => setNursingFee(e.target.value)}
                         min={0}
@@ -917,9 +1252,10 @@ const IpdAdmissionsPage: React.FC = () => {
 
                     <div className="col-md-4 col-6">
                       <label className="form-label fw-semibold">Others (₹)</label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number"
-                        className="form-control"
+                        placeholder="Enter other charges"
                         value={otherCharges}
                         onChange={(e) => setOtherCharges(e.target.value)}
                         min={0}
@@ -943,9 +1279,10 @@ const IpdAdmissionsPage: React.FC = () => {
                         <label className="form-label fw-bold text-dark mb-1">
                           Advance Payment (₹)
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="amount"
                           type="number"
-                          className="form-control fw-bold text-success fs-16"
+                          className="fw-bold text-success fs-16"
                           placeholder="e.g. 5000"
                           value={advancePaid}
                           onChange={(e) => setAdvancePaid(e.target.value)}
@@ -1012,6 +1349,16 @@ const IpdAdmissionsPage: React.FC = () => {
         show={showViewModal}
         onClose={() => setShowViewModal(false)}
         admission={selectedViewAdmission}
+      />
+
+      {/* RAISE CHARGE / CREATE INVOICE MODAL */}
+      <IpdRaiseChargeModal
+        show={showRaiseModal}
+        onClose={() => setShowRaiseModal(false)}
+        onSuccess={() => {
+          fetchData();
+        }}
+        admissionId={selectedChargeAdmissionId}
       />
 
       <Footer />

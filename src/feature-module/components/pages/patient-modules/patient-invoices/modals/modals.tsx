@@ -3,6 +3,7 @@ import { StatusActive } from "../../../../../../core/common/selectOption";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
 import { DatePicker } from "antd";
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath";
+import { IconFormControl } from "../../../../../../core/common/form-fields";
 
 const Modals = () => {
      const getModalContainer = () => {
@@ -32,9 +33,11 @@ const Modals = () => {
                   <label className="form-label">
                     Edit Invoices<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="invoice"
                     type="text"
-                    className="form-control rounded-end h-auto py-2 bg-white"
+                    className="rounded-end h-auto py-2 bg-white"
+                    placeholder="Enter invoice number"
                   />
                 </div>
                 <div className="mb-2">

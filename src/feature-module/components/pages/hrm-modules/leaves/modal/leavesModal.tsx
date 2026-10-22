@@ -7,6 +7,11 @@ import {
   Employee,
   LeaveType,
 } from "../../../../../../core/common/selectOption";
+import {
+  IconFormControl,
+  IconSelect,
+  IconTextarea,
+} from "../../../../../../core/common/form-fields";
 import { DatePicker } from "antd";
 
 const LeavesModal = () => {
@@ -40,7 +45,8 @@ const LeavesModal = () => {
                       <label className="form-label">
                         Employee<span className="text-danger ms-1">*</span>
                       </label>
-                      <CommonSelect
+                      <IconSelect
+                        fieldLabel="Staff"
                         options={Employee}
                         className="select"
                         defaultValue={Employee[0]}
@@ -53,7 +59,8 @@ const LeavesModal = () => {
                       <label className="form-label">
                         Leave Type<span className="text-danger ms-1">*</span>
                       </label>
-                      <CommonSelect
+                      <IconSelect
+                        fieldLabel="Leave Type"
                         options={LeaveType}
                         className="select"
                         defaultValue={LeaveType[0]}
@@ -112,7 +119,7 @@ const LeavesModal = () => {
                       <label className="form-label">
                         No of Days<span className="text-danger ms-1">*</span>
                       </label>
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="No of Days" type="text" placeholder="Enter no of days" />
                     </div>
                   </div>
                   {/* end col */}
@@ -138,9 +145,10 @@ const LeavesModal = () => {
                       <label className="form-label">
                         No of Days<span className="text-danger ms-1">*</span>
                       </label>
-                      <textarea
-                        className="form-control"
+                      <IconTextarea
+                        fieldLabel="Reason"
                         rows={3}
+                        placeholder="Enter reason"
                         defaultValue={""}
                       />
                     </div>
@@ -190,7 +198,8 @@ const LeavesModal = () => {
                       <label className="form-label">
                         Employee<span className="text-danger ms-1">*</span>
                       </label>
-                      <CommonSelect
+                      <IconSelect
+                        fieldLabel="Staff"
                         options={Employee}
                         className="select"
                         defaultValue={Employee[1]}
@@ -203,7 +212,8 @@ const LeavesModal = () => {
                       <label className="form-label">
                         Leave Type<span className="text-danger ms-1">*</span>
                       </label>
-                      <CommonSelect
+                      <IconSelect
+                        fieldLabel="Leave Type"
                         options={LeaveType}
                         className="select"
                         defaultValue={LeaveType[1]}
@@ -262,9 +272,10 @@ const LeavesModal = () => {
                       <label className="form-label">
                         No of Days<span className="text-danger ms-1">*</span>
                       </label>
-                      <input
+                      <IconFormControl
+                        fieldLabel="No of Days"
                         type="text"
-                        className="form-control"
+                        placeholder="Enter no of days"
                         defaultValue={2}
                       />
                     </div>
@@ -304,9 +315,10 @@ const LeavesModal = () => {
                       <label className="form-label">
                         No of Days<span className="text-danger ms-1">*</span>
                       </label>
-                      <textarea
-                        className="form-control"
+                      <IconTextarea
+                        fieldLabel="Reason"
                         rows={3}
+                        placeholder="Enter reason"
                         defaultValue={
                           "Not feeling well due to cold and fatigue, taking rest as advised by family doctor."
                         }

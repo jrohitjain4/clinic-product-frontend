@@ -16,7 +16,7 @@ const PermissionGuard = ({ children }: { children: React.ReactNode }) => {
         // Only enforce for STAFF users (perms !== null means STAFF)
         if (perms !== null && !canAccessRoute(location.pathname)) {
             alert("You don't have permission to access this page.");
-            navigate("/dashboard", { replace: true });
+            navigate("/about-docyori", { replace: true });
         }
     }, [location.pathname]);
 

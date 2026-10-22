@@ -8,10 +8,16 @@ import {
   Country,
   Department,
   Designation,
-  Gender,
   State,
 } from "../../../../../../core/common/selectOption";
 import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
+import {
+  IconFormControl,
+  IconSelect,
+  IconTextarea,
+  GenderOptionGroup,
+  type GenderValue,
+} from "../../../../../../core/common/form-fields";
 import { DatePicker } from "antd";
 import { useState } from "react";
 import TagInput from "../../../../../../core/common/Taginput";
@@ -30,6 +36,8 @@ const Modals = ({ onDelete }: ModalsProps) => {
   };
 
   const [tags, setTags] = useState<string[]>(["English", "French"]);
+  const [addGender, setAddGender] = useState<GenderValue>("");
+  const [editGender, setEditGender] = useState<GenderValue>("Female");
   const handleTagsChange = (newTags: string[]) => {
     setTags(newTags);
   };
@@ -91,7 +99,11 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Name <span className="text-danger">*</span>
                         </label>
-                        <input type="text" className="form-control" />
+                        <IconFormControl
+                          fieldLabel="Name"
+                          type="text"
+                          placeholder="Enter full name"
+                        />
                       </div>
                     </div>
                     <div className="col-lg-6">
@@ -99,7 +111,11 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Username <span className="text-danger">*</span>
                         </label>
-                        <input type="text" className="form-control" />
+                        <IconFormControl
+                          fieldLabel="Username"
+                          type="text"
+                          placeholder="Enter username"
+                        />
                       </div>
                     </div>
                     <div className="col-lg-6">
@@ -107,7 +123,11 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Phone Number <span className="text-danger">*</span>
                         </label>
-                        <input type="text" className="form-control" />
+                        <IconFormControl
+                          fieldLabel="Phone Number"
+                          type="text"
+                          placeholder="Enter phone number"
+                        />
                       </div>
                     </div>
                     <div className="col-lg-6">
@@ -115,7 +135,11 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Email Address <span className="text-danger">*</span>
                         </label>
-                        <input type="text" className="form-control" />
+                        <IconFormControl
+                          fieldLabel="Email Address"
+                          type="text"
+                          placeholder="Enter email address"
+                        />
                       </div>
                     </div>
                   </div>
@@ -151,7 +175,10 @@ const Modals = ({ onDelete }: ModalsProps) => {
                           Year Of Experience
                           <span className="text-danger">*</span>
                         </label>
-                        <input type="text" className="form-control" />
+                        <IconFormControl
+                          type="text"
+                          placeholder="e.g. 5"
+                        />
                       </div>
                     </div>
                   </div>
@@ -164,7 +191,8 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Department<span className="text-danger ms-1">*</span>
                         </label>
-                        <CommonSelect
+                        <IconSelect
+                          fieldLabel="Department"
                           options={Department}
                           className="select"
                           defaultValue={Department[0]}
@@ -177,7 +205,8 @@ const Modals = ({ onDelete }: ModalsProps) => {
                           Designation
                           <span className="text-danger ms-1">*</span>
                         </label>
-                        <CommonSelect
+                        <IconSelect
+                          fieldLabel="Designation"
                           options={Designation}
                           className="select"
                           defaultValue={Designation[0]}
@@ -194,7 +223,12 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Medical License Number
                         </label>
-                        <input type="text" className="form-control" />
+                        <IconFormControl
+                          fieldLabel="Medical License Number"
+                          icon="ti ti-license"
+                          type="text"
+                          placeholder="e.g. ML-123456"
+                        />
                       </div>
                     </div>
                     <div className="col-lg-6">
@@ -209,7 +243,7 @@ const Modals = ({ onDelete }: ModalsProps) => {
                     <div className="col-lg-6">
                       <div className="mb-3">
                         <label className="form-label">Alternative Contact No</label>
-                        <input type="text" className="form-control" placeholder="e.g. 9876543210" />
+                        <IconFormControl fieldLabel="Mobile Number" type="text" placeholder="e.g. 9876543210" />
                       </div>
                     </div>
                   </div>
@@ -222,7 +256,8 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Blood Group<span className="text-danger ms-1">*</span>
                         </label>
-                        <CommonSelect
+                        <IconSelect
+                          fieldLabel="Blood Group"
                           options={Department}
                           className="select"
                           defaultValue={Department[0]}
@@ -234,11 +269,7 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Gender <span className="text-danger ms-1">*</span>
                         </label>
-                        <CommonSelect
-                          options={Gender}
-                          className="select"
-                          defaultValue={Gender[0]}
-                        />
+                        <GenderOptionGroup value={addGender} onChange={setAddGender} />
                       </div>
                     </div>
                   </div>
@@ -247,10 +278,11 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-12">
                   <div className="mb-3">
                     <label className="form-label">Bio</label>
-                    <textarea
-                      className="form-control"
+                    <IconTextarea
+                      fieldLabel="description"
                       rows={3}
                       defaultValue={"About Doctor"}
+                      placeholder="Write a short bio about the doctor"
                     />
                   </div>
                   <div className="form-check form-switch mb-3">
@@ -279,13 +311,13 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">Address 1</label>
-                    <input type="text" className="form-control" />
+                    <IconFormControl fieldLabel="Address 1" type="text" placeholder="Enter address line 1" />
                   </div>
                 </div>
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">Address 2 </label>
-                    <input type="text" className="form-control" />
+                    <IconFormControl fieldLabel="Address 2" type="text" placeholder="Enter address line 2 (optional)" />
                   </div>
                 </div>
               </div>
@@ -293,7 +325,8 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">Country</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="Country"
                       options={Country}
                       className="select"
                       defaultValue={Country[0]}
@@ -303,7 +336,8 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">City</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="City"
                       options={City}
                       className="select"
                       defaultValue={City[0]}
@@ -315,7 +349,8 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">State</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="State"
                       options={State}
                       className="select"
                       defaultValue={State[0]}
@@ -325,7 +360,7 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">Pincode</label>
-                    <input type="text" className="form-control" />
+                    <IconFormControl fieldLabel="Pincode" type="text" placeholder="Enter pincode" />
                   </div>
                 </div>
               </div>
@@ -485,9 +520,11 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">Appointment Type</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="Appointment Type"
                       options={Appointment_Type}
                       className="select"
+                      placeholder="Select appointment type"
                       defaultValue={Appointment_Type[0]}
                     />
                   </div>
@@ -499,7 +536,7 @@ const Modals = ({ onDelete }: ModalsProps) => {
                       Accept bookings (in Advance)
                     </label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl type="text" placeholder="Enter days (e.g. 15)" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         Days
                       </span>
@@ -510,7 +547,7 @@ const Modals = ({ onDelete }: ModalsProps) => {
                   <div className="mb-3">
                     <label className="form-label">Appointment Duration</label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl type="text" placeholder="Enter duration (e.g. 30)" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         Mins
                       </span>
@@ -521,7 +558,7 @@ const Modals = ({ onDelete }: ModalsProps) => {
                   <div className="mb-3">
                     <label className="form-label">Consultation Charge</label>
                     <div className="input-group">
-                      <input type="text" className="form-control" />
+                      <IconFormControl fieldLabel="amount" type="text" placeholder="Enter amount (e.g. 500)" />
                       <span className="input-group-text bg-transparent text-dark fs-14">
                         ₹
                       </span>
@@ -531,7 +568,7 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">Max Bookings Per Slot</label>
-                    <input type="text" className="form-control" />
+                    <IconFormControl type="text" placeholder="Enter max bookings per slot" />
                   </div>
                 </div>
                 <div className="col-md-6">
@@ -659,9 +696,10 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Name <span className="text-danger">*</span>
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="Name"
                           type="text"
-                          className="form-control"
+                          placeholder="Enter full name"
                           defaultValue="Dr.Mick Thompson"
                         />
                       </div>
@@ -671,9 +709,10 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Username <span className="text-danger">*</span>
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="Username"
                           type="text"
-                          className="form-control"
+                          placeholder="Enter username"
                           defaultValue="Andrew"
                         />
                       </div>
@@ -683,9 +722,10 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Phone Number <span className="text-danger">*</span>
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="Phone Number"
                           type="text"
-                          className="form-control"
+                          placeholder="Enter phone number"
                           defaultValue="+1 47895 58974"
                         />
                       </div>
@@ -695,9 +735,10 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Email Address <span className="text-danger">*</span>
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="Email Address"
                           type="text"
-                          className="form-control"
+                          placeholder="Enter email address"
                           defaultValue="mick@example.com"
                         />
                       </div>
@@ -735,9 +776,9 @@ const Modals = ({ onDelete }: ModalsProps) => {
                           Year Of Experience
                           <span className="text-danger">*</span>
                         </label>
-                        <input
+                        <IconFormControl
                           type="text"
-                          className="form-control"
+                          placeholder="e.g. 5"
                           defaultValue="+5 Years"
                         />
                       </div>
@@ -752,7 +793,8 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Department<span className="text-danger ms-1">*</span>
                         </label>
-                        <CommonSelect
+                        <IconSelect
+                          fieldLabel="Department"
                           options={Department}
                           className="select"
                           defaultValue={Department[1]}
@@ -765,7 +807,8 @@ const Modals = ({ onDelete }: ModalsProps) => {
                           Designation
                           <span className="text-danger ms-1">*</span>
                         </label>
-                        <CommonSelect
+                        <IconSelect
+                          fieldLabel="Designation"
                           options={Designation}
                           className="select"
                           defaultValue={Designation[1]}
@@ -782,9 +825,10 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Medical License Number
                         </label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="Medical License Number"
+                          icon="ti ti-license"
                           type="text"
-                          className="form-control"
                           defaultValue="MGF14578"
                         />
                       </div>
@@ -801,7 +845,7 @@ const Modals = ({ onDelete }: ModalsProps) => {
                     <div className="col-lg-6">
                       <div className="mb-3">
                         <label className="form-label">Alternative Contact No</label>
-                        <input type="text" className="form-control" placeholder="e.g. 9876543210" />
+                        <IconFormControl fieldLabel="Mobile Number" type="text" placeholder="e.g. 9876543210" />
                       </div>
                     </div>
                   </div>
@@ -814,7 +858,8 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Blood Group<span className="text-danger ms-1">*</span>
                         </label>
-                        <CommonSelect
+                        <IconSelect
+                          fieldLabel="Blood Group"
                           options={Blood_Group}
                           className="select"
                           defaultValue={Blood_Group[1]}
@@ -826,11 +871,7 @@ const Modals = ({ onDelete }: ModalsProps) => {
                         <label className="form-label">
                           Gender <span className="text-danger ms-1">*</span>
                         </label>
-                        <CommonSelect
-                          options={Gender}
-                          className="select"
-                          defaultValue={Gender[1]}
-                        />
+                        <GenderOptionGroup value={editGender} onChange={setEditGender} />
                       </div>
                     </div>
                   </div>
@@ -839,8 +880,8 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-12">
                   <div className="mb-3">
                     <label className="form-label">Bio</label>
-                    <textarea
-                      className="form-control"
+                    <IconTextarea
+                      fieldLabel="description"
                       rows={3}
                       defaultValue={
                         "Dr.Mick Thompson is a compassionate and experienced internal medicine physician with over 5 years of clinical practice."
@@ -873,9 +914,9 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">Address 1</label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="Address 1"
                       type="text"
-                      className="form-control"
                       defaultValue="2900 Alpha Avenue"
                     />
                   </div>
@@ -883,9 +924,9 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">Address 2 </label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="Address 2"
                       type="text"
-                      className="form-control"
                       defaultValue="2900 Alpha Avenue"
                     />
                   </div>
@@ -895,7 +936,8 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">Country</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="Country"
                       options={Country}
                       className="select"
                       defaultValue={Country[1]}
@@ -905,7 +947,8 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">City</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="City"
                       options={City}
                       className="select"
                       defaultValue={City[1]}
@@ -917,7 +960,8 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">State</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="State"
                       options={State}
                       className="select"
                       defaultValue={State[1]}
@@ -927,9 +971,9 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">Pincode</label>
-                    <input
+                    <IconFormControl
+                      fieldLabel="Pincode"
                       type="text"
-                      className="form-control"
                       defaultValue="PA 15650"
                     />
                   </div>
@@ -1091,9 +1135,11 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">Appointment Type</label>
-                    <CommonSelect
+                    <IconSelect
+                      fieldLabel="Appointment Type"
                       options={Appointment_Type}
                       className="select"
+                      placeholder="Select appointment type"
                       defaultValue={Appointment_Type[0]}
                     />
                   </div>
@@ -1105,9 +1151,9 @@ const Modals = ({ onDelete }: ModalsProps) => {
                       Accept bookings (in Advance)
                     </label>
                     <div className="input-group">
-                      <input
+                      <IconFormControl
                         type="text"
-                        className="form-control"
+                        placeholder="Enter days (e.g. 15)"
                         defaultValue={2}
                       />
                       <span className="input-group-text bg-transparent text-dark fs-14">
@@ -1120,9 +1166,9 @@ const Modals = ({ onDelete }: ModalsProps) => {
                   <div className="mb-3">
                     <label className="form-label">Appointment Duration</label>
                     <div className="input-group">
-                      <input
+                      <IconFormControl
                         type="text"
-                        className="form-control"
+                        placeholder="Enter duration (e.g. 30)"
                         defaultValue={30}
                       />
                       <span className="input-group-text bg-transparent text-dark fs-14">
@@ -1135,9 +1181,10 @@ const Modals = ({ onDelete }: ModalsProps) => {
                   <div className="mb-3">
                     <label className="form-label">Consultation Charge</label>
                     <div className="input-group">
-                      <input
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="text"
-                        className="form-control"
+                        placeholder="Enter amount (e.g. 500)"
                         defaultValue="100"
                       />
                       <span className="input-group-text bg-transparent text-dark fs-14">
@@ -1149,9 +1196,9 @@ const Modals = ({ onDelete }: ModalsProps) => {
                 <div className="col-lg-6">
                   <div className="mb-3">
                     <label className="form-label">Max Bookings Per Slot</label>
-                    <input
+                    <IconFormControl
                       type="text"
-                      className="form-control"
+                      placeholder="Enter max bookings per slot"
                       defaultValue={200}
                     />
                   </div>

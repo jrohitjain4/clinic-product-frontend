@@ -2,12 +2,15 @@ export interface ClinicPatient {
   id: string;
   patientCode?: string | null;
   firstName: string;
+  middleName?: string | null;
   lastName: string;
   fullName?: string;
   profileImage?: string | null;
   phone?: string | null;
+  alternateMobile?: string | null;
   email?: string | null;
   dob?: string | null;
+  age?: number | null;
   gender?: string | null;
   bloodGroup?: string | null;
   status: string;
@@ -45,6 +48,7 @@ export interface ClinicPatient {
   passportNumber?: string | null;
   occupation?: string | null;
   referredBy?: string | null;
+  referId?: string | null;
   emergencyContactName?: string | null;
   emergencyContactRelation?: string | null;
   emergencyContactPhone?: string | null;

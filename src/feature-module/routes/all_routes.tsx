@@ -60,6 +60,7 @@ export const all_routes = {
   successBasic: "/success-basic",
 
   //Dashboard routes
+  aboutDocYori: "/about-docyori",
   dashboard: "/dashboard",
   doctordashboard: "/doctor/doctor-dashboard",
   patientdashboard: "/patient/patient-dashboard",
@@ -383,7 +384,7 @@ export const all_routes = {
   formMask: "/form-mask",
 
   // PathLab
-  pathlabDashboard: "/pathlab/dashboard",
+  pathlabDashboard: "/diagnostic/dashboard",
   pathlabCategories: "/pathlab/categories",
   pathlabTests: "/pathlab/tests",
   pathlabBookings: "/pathlab/bookings",

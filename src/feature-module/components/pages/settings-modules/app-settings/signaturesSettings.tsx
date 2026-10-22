@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import SettingsSidebar from "../../../../../core/common/settings-sidebar/settingsSidebar";
 import ImageWithBasePath from "../../../../../core/imageWithBasePath";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 
 const SignaturesSettings = () => {
   return (
@@ -288,7 +289,7 @@ const SignaturesSettings = () => {
                   <label className="form-label">
                     Signature Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input type="text" className="form-control" />
+                  <IconFormControl fieldLabel="Name" type="text" placeholder="Enter signature name" />
                 </div>
                 <div className="mb-3">
                   <label className="form-label">
@@ -347,9 +348,10 @@ const SignaturesSettings = () => {
                   <label className="form-label">
                     Signature Name<span className="text-danger ms-1">*</span>
                   </label>
-                  <input
+                  <IconFormControl
+                    fieldLabel="Name"
                     type="text"
-                    className="form-control"
+                    placeholder="Enter signature name"
                     defaultValue="Samuel Donatte"
                   />
                 </div>

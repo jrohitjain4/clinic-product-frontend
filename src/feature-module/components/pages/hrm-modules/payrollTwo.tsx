@@ -1,6 +1,7 @@
 import ImageWithBasePath from "../../../../core/imageWithBasePath";
 import { Link } from "react-router";
 import { all_routes } from "../../../routes/all_routes";
+import { IconFormControl } from "../../../../core/common/form-fields";
 
 const PayrollTwo = () => {
   return (
@@ -73,25 +74,25 @@ const PayrollTwo = () => {
                         <h5 className="mb-3 fw-bold">Earnings</h5>
                         <div className="mb-3">
                           <label className="form-label">Basic Salary</label>
-                          <input type="text" className="form-control" />
+                          <IconFormControl fieldLabel="Salary" type="text" placeholder="Enter basic salary" />
                         </div>
                         <div className="mb-3">
                           <label className="form-label">
                             House Rent Allowance (H.R.A)
                           </label>
-                          <input type="text" className="form-control" />
+                          <IconFormControl fieldLabel="Amount" type="text" placeholder="Enter house rent allowance" />
                         </div>
                         <div className="mb-3">
                           <label className="form-label">Conveyance</label>
-                          <input type="text" className="form-control" />
+                          <IconFormControl fieldLabel="Amount" type="text" placeholder="Enter conveyance" />
                         </div>
                         <div className="mb-3">
                           <label className="form-label">Other Allowance</label>
-                          <input type="text" className="form-control" />
+                          <IconFormControl fieldLabel="Amount" type="text" placeholder="Enter other allowance" />
                         </div>
                         <div className="mb-0">
                           <label className="form-label">Total Earnings</label>
-                          <input type="text" className="form-control" />
+                          <IconFormControl fieldLabel="Amount" type="text" placeholder="Enter total earnings" />
                         </div>
                       </div>
                       {/* end col */}
@@ -101,23 +102,23 @@ const PayrollTwo = () => {
                           <label className="form-label">
                             Tax Deducted at Sources (T.D.S)
                           </label>
-                          <input type="text" className="form-control" />
+                          <IconFormControl fieldLabel="Tax Rate" type="text" placeholder="Enter tax deducted at source" />
                         </div>
                         <div className="mb-3">
                           <label className="form-label">Provident Fund</label>
-                          <input type="text" className="form-control" />
+                          <IconFormControl fieldLabel="Amount" type="text" placeholder="Enter provident fund" />
                         </div>
                         <div className="mb-3">
                           <label className="form-label">ESI</label>
-                          <input type="text" className="form-control" />
+                          <IconFormControl fieldLabel="Amount" type="text" placeholder="Enter ESI" />
                         </div>
                         <div className="mb-3">
                           <label className="form-label">Loan</label>
-                          <input type="text" className="form-control" />
+                          <IconFormControl fieldLabel="Amount" type="text" placeholder="Enter loan" />
                         </div>
                         <div className="mb-0">
                           <label className="form-label">Total Deductions</label>
-                          <input type="text" className="form-control" />
+                          <IconFormControl fieldLabel="Amount" type="text" placeholder="Enter total deductions" />
                         </div>
                       </div>
                       {/* end col */}
@@ -159,7 +160,7 @@ const PayrollTwo = () => {
         {/* Footer Start */}
         <div className="footer text-center bg-white p-2 border-top">
           <p className="text-dark mb-0">
-            2025 ©
+            2025 ï¿½
             <Link to="#" className="link-primary">
               Docyari
             </Link>

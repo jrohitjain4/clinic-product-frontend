@@ -284,16 +284,23 @@
                                 font-weight: $font-weight-normal;
                                 border: none;
                                 &.active {
-                                    color: $primary !important;
-                                    background: $menu-light-bg;
-                                    border-radius: 5px;
-                                    border-left: 2px solid $menu-item-active-color !important;
+                                    color: #ffffff !important;
+                                    background: transparent !important;
+                                    border-radius: 0;
+                                    border: none !important;
+                                    box-shadow: none !important;
                                     font-weight: $font-weight-medium;
                                     &::before {
-                                        opacity: 0;
+                                        opacity: 1;
                                     }
                                     &::after{
-                                        display: none;
+                                        display: flex !important;
+                                        opacity: 1;
+                                        background-color: #0F172A !important;
+                                        color: #0F172A !important;
+                                        border: 2px solid #ffffff !important;
+                                        width: 10px;
+                                        height: 10px;
                                     }
                                 }
                                 &:hover {                                 
@@ -348,7 +355,7 @@
                     }
                 }
                 .submenu.submenu-two {
-                    a {
+                    > a {
                         &.subdrop, &.active {
                             background: transparent;
                             color: $menu-item-active-color;   

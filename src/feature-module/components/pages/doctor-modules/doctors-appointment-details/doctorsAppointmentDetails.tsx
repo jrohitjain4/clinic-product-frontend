@@ -192,8 +192,9 @@ const DoctorsAppointmentDetails = () => {
       margin: 0,
       filename: `Appointment-Slip-${appointment.appointmentCode || 'Record'}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+      html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, windowY: 0 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+      pagebreak: { mode: ['avoid-all'] as const }
     };
 
     toast.info("Generating PDF, please wait...");
@@ -218,11 +219,16 @@ const DoctorsAppointmentDetails = () => {
     const presSlip = document.getElementById('print-prescription-slip');
     if (!pad) return;
     pad.style.display = 'block';
+    pad.setAttribute('data-print-active', 'true');
     if (slip) slip.setAttribute('data-hidden-for-print', 'true');
-    if (presSlip) presSlip.setAttribute('data-hidden-for-print', 'true');
+    if (presSlip) {
+      presSlip.setAttribute('data-hidden-for-print', 'true');
+      presSlip.removeAttribute('data-print-active');
+    }
     window.print();
     setTimeout(() => {
       pad.style.display = 'none';
+      pad.removeAttribute('data-print-active');
       if (slip) slip.removeAttribute('data-hidden-for-print');
       if (presSlip) presSlip.removeAttribute('data-hidden-for-print');
     }, 1500);
@@ -237,8 +243,9 @@ const DoctorsAppointmentDetails = () => {
       margin: 0,
       filename: `Prescription-Pad-${appointment.appointmentCode || 'Record'}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+      html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, windowY: 0 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+      pagebreak: { mode: ['avoid-all'] as const }
     };
     html2pdf()
       .from(element)
@@ -259,11 +266,16 @@ const DoctorsAppointmentDetails = () => {
     const apptSlip = document.getElementById('print-appointment');
     if (!slip) return;
     slip.style.display = 'block';
-    if (pad) pad.setAttribute('data-hidden-for-print', 'true');
+    slip.setAttribute('data-print-active', 'true');
+    if (pad) {
+      pad.setAttribute('data-hidden-for-print', 'true');
+      pad.removeAttribute('data-print-active');
+    }
     if (apptSlip) apptSlip.setAttribute('data-hidden-for-print', 'true');
     window.print();
     setTimeout(() => {
       slip.style.display = 'none';
+      slip.removeAttribute('data-print-active');
       if (pad) pad.removeAttribute('data-hidden-for-print');
       if (apptSlip) apptSlip.removeAttribute('data-hidden-for-print');
     }, 1500);
@@ -278,8 +290,9 @@ const DoctorsAppointmentDetails = () => {
       margin: 0,
       filename: `Prescription-Slip-${selectedPres.prescriptionCode || 'Record'}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+      html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, windowY: 0 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+      pagebreak: { mode: ['avoid-all'] as const }
     };
     html2pdf()
       .from(element)
@@ -1204,26 +1217,11 @@ const DoctorsAppointmentDetails = () => {
                         padding: 1.5cm !important;
                         margin: 0 !important;
                     }
-                    #print-prescription-pad, 
-                    #print-prescription-pad * {
+                    #print-prescription-pad[data-print-active],
+                    #print-prescription-pad[data-print-active] * {
                         visibility: visible !important;
                     }
-                    #print-prescription-pad {
-                        visibility: visible !important;
-                        display: block !important;
-                        position: absolute !important;
-                        left: 0 !important;
-                        top: 0 !important;
-                        width: 100% !important;
-                        background: white !important;
-                        z-index: 99999 !important;
-                        padding: 1.5cm !important;
-                        margin: 0 !important;
-                    }
-                    #print-prescription-slip:not([data-hidden-for-print]), #print-prescription-slip:not([data-hidden-for-print]) * {
-                        visibility: visible !important;
-                    }
-                    #print-prescription-slip:not([data-hidden-for-print]) {
+                    #print-prescription-pad[data-print-active] {
                         visibility: visible !important;
                         display: block !important;
                         position: absolute !important;
@@ -1234,8 +1232,38 @@ const DoctorsAppointmentDetails = () => {
                         z-index: 99999 !important;
                         padding: 0 !important;
                         margin: 0 !important;
+                    }
+                    #print-prescription-pad:not([data-print-active]),
+                    #print-prescription-pad:not([data-print-active]) * {
+                        display: none !important;
+                        visibility: hidden !important;
+                    }
+                    #print-prescription-slip[data-print-active],
+                    #print-prescription-slip[data-print-active] * {
+                        visibility: visible !important;
+                    }
+                    #print-prescription-slip[data-print-active] {
+                        visibility: visible !important;
+                        display: block !important;
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: 210mm !important;
+                        max-height: 297mm !important;
+                        height: auto !important;
+                        background: white !important;
+                        z-index: 99999 !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
                         overflow: hidden !important;
                         border: none !important;
+                        page-break-after: avoid !important;
+                        page-break-inside: avoid !important;
+                    }
+                    #print-prescription-slip:not([data-print-active]),
+                    #print-prescription-slip:not([data-print-active]) * {
+                        display: none !important;
+                        visibility: hidden !important;
                     }
                     .bg-light { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
                 }

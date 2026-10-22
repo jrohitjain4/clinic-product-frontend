@@ -4,23 +4,32 @@ import { Link, useSearchParams } from "react-router";
 import Datatable from "../../../../../../core/common/dataTable";
 import { all_routes } from "../../../../../routes/all_routes";
 import { useClinicRoles } from "../../../../../../core/hooks/useClinicRoles";
-import CommonSelect from "../../../../../../core/common/common-select/commonSelect";
+import { IconFormControl, IconSelect } from "../../../../../../core/common/form-fields";
 import dayjs from "dayjs";
 
 const SIDEBAR_SECTIONS = [
   {
-    section: "Main Menu",
+    section: "OPD",
     items: [
-      { key: "Dashboard", label: "Dashboard" }
-    ]
-  },
-  {
-    section: "Clinic",
-    items: [
+      { key: "Dashboard", label: "Dashboard" },
       { key: "Doctors", label: "Doctors" },
       { key: "Patients", label: "Patients" },
       { key: "Appointments", label: "Appointments" },
-      { key: "Services", label: "Services" }
+      { key: "Consultations", label: "Consultations" }
+    ]
+  },
+  {
+    section: "IPD",
+    items: [
+      { key: "IPD Dashboard", label: "Dashboard" },
+      { key: "IPD Patient", label: "Patient" },
+      { key: "Admission", label: "Admission" },
+      { key: "Inpatient", label: "Inpatient" },
+      { key: "Discharge", label: "Discharge" },
+      { key: "Ward Management", label: "Ward Management" },
+      { key: "IPD Billings & Invoices", label: "Billings & Invoices" },
+      { key: "IPD Doctor", label: "Doctor" },
+      { key: "Treatment & Packages", label: "Treatment & Packages" }
     ]
   },
   {
@@ -49,12 +58,11 @@ const SIDEBAR_SECTIONS = [
     items: [
       { key: "Staffs", label: "Staffs" },
       { key: "Departments", label: "Departments" },
-      { key: "Designation", label: "Designations" },
+      { key: "Designation", label: "Designation" },
       { key: "Attendance", label: "Attendance" },
       { key: "Leaves", label: "Leaves" },
       { key: "Holidays", label: "Holidays" },
-      { key: "Payroll", label: "Payroll" },
-      { key: "Specializations", label: "Specializations" }
+      { key: "Payroll", label: "Payroll" }
     ]
   },
   {
@@ -66,14 +74,61 @@ const SIDEBAR_SECTIONS = [
     ]
   },
   {
+    section: "Therapy",
+    items: [
+      { key: "Therapy Dashboard", label: "Dashboard" },
+      { key: "Therapy Patients", label: "Patients" },
+      { key: "Therapists", label: "Therapists" },
+      { key: "Therapies", label: "Therapies" },
+      { key: "Therapy Appointments", label: "Appointments" },
+      { key: "Therapy Consultancy", label: "Consultancy" },
+      { key: "Therapy Sessions", label: "Sessions" },
+      { key: "Therapy Invoices", label: "Invoices" }
+    ]
+  },
+  {
+    section: "Application",
+    items: [
+      { key: "To Do", label: "To Do" },
+      { key: "Notes", label: "Notes" }
+    ]
+  },
+  {
+    section: "Support",
+    items: [
+      { key: "Support", label: "Support" }
+    ]
+  },
+  {
     section: "Administration",
     items: [
-      { key: "Roles & Permissions", label: "Roles & Permissions" }
+      { key: "Roles & Permissions", label: "Roles & Permissions" },
+      { key: "Refer Sources", label: "Refer Sources" }
     ]
   }
 ];
 
 const ACTIONS = ["CREATE", "EDIT", "DELETE", "VIEW"];
+
+const SECTION_ICONS: Record<string, string> = {
+  OPD: "ti ti-stethoscope",
+  IPD: "ti ti-bed",
+  Diagnostic: "ti ti-microscope",
+  Pharmacy: "ti ti-pill",
+  HRM: "ti ti-users-group",
+  "Finance & Accounts": "ti ti-report-money",
+  Therapy: "ti ti-heart-handshake",
+  Application: "ti ti-apps",
+  Support: "ti ti-headset",
+  Administration: "ti ti-user-cog",
+};
+
+const TOTAL_MODULES = SIDEBAR_SECTIONS.reduce((n, s) => n + s.items.length, 0);
+
+const isModuleEnabled = (
+  permissions: Record<string, Record<string, boolean>>,
+  moduleKey: string
+) => ACTIONS.every((a) => permissions[moduleKey]?.[a]);
 
 const RolesAndPermissions = () => {
   const { roles, createRole, updateRole, deleteRole, loading, error } =
@@ -159,6 +214,15 @@ const RolesAndPermissions = () => {
       );
     }
   }, [role]);
+
+  const enabledModulesCount = useMemo(() => {
+    return SIDEBAR_SECTIONS.reduce((count, section) => {
+      return (
+        count +
+        section.items.filter((item) => isModuleEnabled(permissions, item.key)).length
+      );
+    }, 0);
+  }, [permissions]);
 
   const handleSingleToggle = (moduleKey: string, checked: boolean) => {
     setPermissions(prev => {
@@ -385,25 +449,10 @@ const RolesAndPermissions = () => {
 
             {/* Selector and Save Button - ONLY show on Permissions Tab */}
             {activeTab === "permissions" && (
-              <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-3">
-                <div className="d-flex align-items-center gap-2" style={{ minWidth: "250px" }}>
-                  <span className="text-dark fw-medium text-nowrap">Configure Role:</span>
-                  <div style={{ minWidth: "180px" }}>
-                    {roles.length > 0 && (
-                      <CommonSelect
-                        options={roles.map((r: any) => ({ value: r.id, label: r.name }))}
-                        value={role ? { value: role.id, label: role.name } : null}
-                        onChange={(val: any) => {
-                          if (val) {
-                            setSearchParams({ tab: "permissions", id: val.value });
-                          }
-                        }}
-                        className="select"
-                      />
-                    )}
-                  </div>
-                </div>
-
+              <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
+                <span className="badge badge-soft-primary border border-primary fs-13 fw-medium px-3 py-2">
+                  {enabledModulesCount} / {TOTAL_MODULES} modules enabled
+                </span>
                 <button
                   className="btn btn-primary d-flex align-items-center justify-content-center"
                   onClick={handleSave}
@@ -537,64 +586,197 @@ const RolesAndPermissions = () => {
                   <p className="text-muted mt-2 mb-0">Loading role permissions...</p>
                 </div>
               ) : (
-                <div>
-                  {SIDEBAR_SECTIONS.map((mg) => (
-                    <div className="card mb-4 border shadow-sm" key={mg.section} style={{ borderRadius: "10px" }}>
-                      <div className="card-header bg-light py-3">
-                        <div className="d-flex align-items-center justify-content-between">
-                          <h6 className="fw-bold mb-0 text-dark">{mg.section} Section</h6>
-                          <div className="form-check form-switch form-check-md">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              id={`select-all-${mg.section}`}
-                              checked={mg.items.every(item => ACTIONS.every(a => permissions[item.key]?.[a]))}
-                              onChange={(e) => handleSectionToggle(mg.items.map(i => i.key), e.target.checked)}
-                              style={{ cursor: "pointer" }}
-                            />
-                            <label className="form-check-label fw-medium text-muted ms-2" htmlFor={`select-all-${mg.section}`} style={{ cursor: "pointer" }}>
-                              Allow All in {mg.section}
-                            </label>
-                          </div>
-                        </div>
+                <div className="perm-manage">
+                  <div className="perm-role-bar d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4 p-3 p-md-4 bg-white border">
+                    <div className="d-flex align-items-center gap-3 min-w-0">
+                      <div className="perm-role-icon d-flex align-items-center justify-content-center flex-shrink-0">
+                        <i className="ti ti-shield-lock" />
                       </div>
-                      <div className="card-body p-0">
-                        <div className="table-responsive">
-                          <table className="table table-nowrap table-hover mb-0">
-                            <thead className="thead-light">
-                              <tr>
-                                <th style={{ width: "60%", paddingLeft: "24px" }}>Sidebar Option</th>
-                                <th className="text-center" style={{ width: "40%" }}>Status / Access</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {mg.items.map((item) => {
-                                const isChecked = ACTIONS.every(a => permissions[item.key]?.[a]);
-                                return (
-                                  <tr key={item.key}>
-                                    <td style={{ paddingLeft: "24px" }}>
-                                      <p className="fw-semibold text-dark mb-0">{item.label}</p>
-                                    </td>
-                                    <td className="text-center">
-                                      <div className="form-check form-check-md d-inline-block">
-                                        <input
-                                          className="form-check-input"
-                                          type="checkbox"
-                                          checked={isChecked}
-                                          onChange={(e) => handleSingleToggle(item.key, e.target.checked)}
-                                          style={{ cursor: "pointer", width: "20px", height: "20px" }}
-                                        />
-                                      </div>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
+                      <div className="min-w-0">
+                        <p className="text-muted fs-12 mb-1 text-uppercase fw-semibold letter-spacing">
+                          Configuring access for
+                        </p>
+                        <h5 className="fw-bold text-dark mb-0 text-truncate">{role.name}</h5>
                       </div>
                     </div>
-                  ))}
+                    <div className="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2" style={{ minWidth: "220px" }}>
+                      <span className="text-dark fw-medium text-nowrap align-self-center d-none d-sm-inline">Role</span>
+                      {roles.length > 0 && (
+                        <div className="flex-grow-1" style={{ minWidth: "180px" }}>
+                          <IconSelect
+                            fieldLabel="role"
+                            options={roles.map((r: any) => ({ value: r.id, label: r.name }))}
+                            value={role ? { value: role.id, label: role.name } : null}
+                            onChange={(val: any) => {
+                              if (val) {
+                                setSearchParams({ tab: "permissions", id: val.value });
+                              }
+                            }}
+                            className="select"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="row g-3">
+                    {SIDEBAR_SECTIONS.map((mg) => {
+                      const sectionEnabled = mg.items.filter((item) =>
+                        isModuleEnabled(permissions, item.key)
+                      ).length;
+                      const allOn = mg.items.every((item) =>
+                        isModuleEnabled(permissions, item.key)
+                      );
+                      const sectionIcon = SECTION_ICONS[mg.section] || "ti ti-folder";
+
+                      return (
+                        <div className="col-12" key={mg.section}>
+                          <div className="perm-section bg-white border overflow-hidden">
+                            <div className="perm-section-head d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 px-3 px-md-4 py-3">
+                              <div className="d-flex align-items-center gap-3 min-w-0">
+                                <div className="perm-section-icon d-flex align-items-center justify-content-center flex-shrink-0">
+                                  <i className={sectionIcon} />
+                                </div>
+                                <div className="min-w-0">
+                                  <h6 className="fw-bold text-dark mb-0">{mg.section}</h6>
+                                  <span className="fs-12 text-muted">
+                                    {sectionEnabled} of {mg.items.length} modules
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="form-check form-switch form-check-md mb-0 ms-sm-auto">
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  id={`select-all-${mg.section}`}
+                                  checked={allOn}
+                                  onChange={(e) =>
+                                    handleSectionToggle(
+                                      mg.items.map((i) => i.key),
+                                      e.target.checked
+                                    )
+                                  }
+                                  style={{ cursor: "pointer" }}
+                                />
+                                <label
+                                  className="form-check-label fw-medium text-dark ms-2"
+                                  htmlFor={`select-all-${mg.section}`}
+                                  style={{ cursor: "pointer" }}
+                                >
+                                  Allow All
+                                </label>
+                              </div>
+                            </div>
+
+                            <div className="perm-module-list">
+                              {mg.items.map((item) => {
+                                const isChecked = isModuleEnabled(permissions, item.key);
+                                return (
+                                  <div
+                                    key={item.key}
+                                    className={`perm-module-row d-flex align-items-center justify-content-between gap-3 px-3 px-md-4 py-3 ${isChecked ? "is-enabled" : ""}`}
+                                  >
+                                    <div className="d-flex align-items-center gap-2 min-w-0">
+                                      <span className={`perm-dot flex-shrink-0 ${isChecked ? "on" : ""}`} />
+                                      <span className={`fw-semibold text-truncate ${isChecked ? "text-dark" : "text-muted"}`}>
+                                        {item.label}
+                                      </span>
+                                      {isChecked && (
+                                        <span className="badge badge-soft-success border border-success fs-11 fw-medium d-none d-sm-inline-flex">
+                                          Enabled
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="form-check form-switch form-check-md mb-0 flex-shrink-0">
+                                      <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        id={`perm-${item.key}`}
+                                        checked={isChecked}
+                                        onChange={(e) =>
+                                          handleSingleToggle(item.key, e.target.checked)
+                                        }
+                                        style={{ cursor: "pointer" }}
+                                      />
+                                      <label
+                                        className="form-check-label visually-hidden"
+                                        htmlFor={`perm-${item.key}`}
+                                      >
+                                        Toggle {item.label}
+                                      </label>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <style>{`
+                    .perm-manage .letter-spacing { letter-spacing: 0.04em; }
+                    .perm-role-bar {
+                      border-radius: 12px;
+                      background:
+                        linear-gradient(135deg, rgba(13, 110, 253, 0.06) 0%, rgba(255,255,255,0) 45%),
+                        #fff;
+                    }
+                    .perm-role-icon {
+                      width: 48px;
+                      height: 48px;
+                      border-radius: 12px;
+                      background: rgba(13, 110, 253, 0.12);
+                      color: var(--bs-primary, #0d6efd);
+                      font-size: 22px;
+                    }
+                    .perm-section {
+                      border-radius: 12px;
+                      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+                    }
+                    .perm-section-head {
+                      border-bottom: 1px solid rgba(0,0,0,0.06);
+                      background: #f8fafc;
+                    }
+                    .perm-section-icon {
+                      width: 40px;
+                      height: 40px;
+                      border-radius: 10px;
+                      background: #e8f1ff;
+                      color: #0d6efd;
+                      font-size: 18px;
+                    }
+                    .perm-module-row {
+                      border-bottom: 1px solid rgba(0,0,0,0.05);
+                      transition: background 0.15s ease;
+                    }
+                    .perm-module-row:last-child { border-bottom: 0; }
+                    .perm-module-row.is-enabled {
+                      background: rgba(25, 135, 84, 0.04);
+                    }
+                    .perm-module-row:hover {
+                      background: rgba(13, 110, 253, 0.03);
+                    }
+                    .perm-module-row.is-enabled:hover {
+                      background: rgba(25, 135, 84, 0.07);
+                    }
+                    .perm-dot {
+                      width: 8px;
+                      height: 8px;
+                      border-radius: 50%;
+                      background: #cbd5e1;
+                    }
+                    .perm-dot.on {
+                      background: #198754;
+                      box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.18);
+                    }
+                    .perm-manage .form-check-input {
+                      width: 2.2em;
+                      height: 1.2em;
+                      cursor: pointer;
+                    }
+                  `}</style>
                 </div>
               )}
             </>
@@ -636,9 +818,11 @@ const RolesAndPermissions = () => {
                     <label className="form-label fw-bold small text-uppercase text-muted">
                       Role Name
                     </label>
-                    <input
+                    <IconFormControl
                       type="text"
-                      className="form-control bg-light"
+                      fieldLabel="role"
+                      className="bg-light"
+                      placeholder="Role Name"
                       value={viewRole.Role || ""}
                       readOnly
                     />
@@ -648,9 +832,11 @@ const RolesAndPermissions = () => {
                     <label className="form-label fw-bold small text-uppercase text-muted">
                       Status
                     </label>
-                    <input
+                    <IconFormControl
                       type="text"
-                      className="form-control bg-light"
+                      fieldLabel="status"
+                      className="bg-light"
+                      placeholder="Status"
                       value={viewRole.Status || ""}
                       readOnly
                     />
@@ -660,9 +846,11 @@ const RolesAndPermissions = () => {
                     <label className="form-label fw-bold small text-uppercase text-muted">
                       Created On
                     </label>
-                    <input
+                    <IconFormControl
                       type="text"
-                      className="form-control bg-light"
+                      fieldLabel="date"
+                      className="bg-light"
+                      placeholder="Created On"
                       value={viewRole.CreatedOn || ""}
                       readOnly
                     />
@@ -697,9 +885,9 @@ const RolesAndPermissions = () => {
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Role Name <span className="text-danger">*</span></label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
+                    fieldLabel="role"
                     placeholder="Enter role name (e.g. Accountant)"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -708,7 +896,8 @@ const RolesAndPermissions = () => {
                 </div>
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Status <span className="text-danger">*</span></label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="status"
                     options={[
                       { value: "Active", label: "Active" },
                       { value: "Inactive", label: "Inactive" }
@@ -743,9 +932,9 @@ const RolesAndPermissions = () => {
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Role Name <span className="text-danger">*</span></label>
-                  <input
+                  <IconFormControl
                     type="text"
-                    className="form-control"
+                    fieldLabel="role"
                     placeholder="Enter role name (e.g. Accountant)"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -754,7 +943,8 @@ const RolesAndPermissions = () => {
                 </div>
                 <div className="mb-3">
                   <label className="form-label mb-1 text-dark fs-14 fw-medium">Status <span className="text-danger">*</span></label>
-                  <CommonSelect
+                  <IconSelect
+                    fieldLabel="status"
                     options={[
                       { value: "Active", label: "Active" },
                       { value: "Inactive", label: "Inactive" }

@@ -2,7 +2,26 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { apiGet, apiPut, apiPost } from "../../../../core/utils/apiClient";
 import { toast } from "react-toastify";
 import { useMedicines } from "../../../../core/hooks/useMedicines";
+import { useLabTests } from "../../../../core/hooks/useLabTests";
 import { apiUrl } from "../../../../core/config/api";
+import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
+import html2pdf from "html2pdf.js";
+import PrescriptionPadSlip from "../clinic-modules/appointments/PrescriptionPadSlip";
+
+const mapTherapyMedToPad = (m: any) => {
+  const raw = String(m?.dosage || "").trim();
+  const looksLikeFreq =
+    /^(\d+-\d+|SOS|As Directed)/i.test(raw) || /^\d+-\d+(-\d+)*/.test(raw);
+  return {
+    medicineName: m?.name || m?.medicineName || "",
+    strength: m?.strength || "",
+    dosage: looksLikeFreq ? "1 Tablet" : raw || "1 Tablet",
+    frequency: m?.frequency || (looksLikeFreq ? raw : "1-0-1"),
+    duration: m?.duration || "5 Days",
+    timings: m?.instructions || m?.timings || "After Food",
+    category: m?.category || "General Medicine",
+  };
+};
 
 interface PrescriptionModalProps {
   appointment: any | null;
@@ -16,6 +35,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
   onClose,
 }) => {
   const { medicines: pharmacyMedicines } = useMedicines();
+  const { tests: labTests } = useLabTests();
   const modalRef = useRef<HTMLDivElement>(null);
 
   const [selectedConsultation, setSelectedConsultation] = useState<any | null>(null);
@@ -25,6 +45,8 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
   const [activeSearchIndex, setActiveSearchIndex] = useState<number | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [testSearchText, setTestSearchText] = useState("");
+  const [showTestDropdown, setShowTestDropdown] = useState(false);
 
   // Initialize consultation data when appointment is set
   useEffect(() => {
@@ -142,6 +164,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
         painLevel: selectedConsultation.painLevel,
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updatedConsult);
       toast.success("Prescription file(s) uploaded successfully!");
@@ -171,6 +194,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
         painLevel: selectedConsultation.painLevel,
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updated);
     } catch (err: any) {
@@ -187,6 +211,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         medicines: selectedConsultation.medicines || [],
         advice: selectedConsultation.advice || "",
         painLevel: selectedConsultation.painLevel,
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updatedConsult);
       toast.success("Attachment removed successfully");
@@ -240,6 +265,36 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
     });
   };
 
+  const diagnosticTestsList: string[] = Array.isArray(selectedConsultation?.diagnosticTests)
+    ? selectedConsultation.diagnosticTests
+    : [];
+
+  const addDiagnosticTest = (name: string) => {
+    const val = name.trim();
+    if (!selectedConsultation || !val) return;
+    const current = Array.isArray(selectedConsultation.diagnosticTests)
+      ? selectedConsultation.diagnosticTests
+      : [];
+    if (current.includes(val)) return;
+    setSelectedConsultation({
+      ...selectedConsultation,
+      diagnosticTests: [...current, val],
+    });
+    setTestSearchText("");
+    setShowTestDropdown(false);
+  };
+
+  const removeDiagnosticTest = (idx: number) => {
+    if (!selectedConsultation) return;
+    const current = Array.isArray(selectedConsultation.diagnosticTests)
+      ? selectedConsultation.diagnosticTests
+      : [];
+    setSelectedConsultation({
+      ...selectedConsultation,
+      diagnosticTests: current.filter((_: string, i: number) => i !== idx),
+    });
+  };
+
   const handleSaveModalConsultation = async () => {
     if (!selectedConsultation) return;
     try {
@@ -248,6 +303,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         advice: selectedConsultation.advice || "",
         attachments: selectedConsultation.attachments || [],
         painLevel: selectedConsultation.painLevel,
+        diagnosticTests: selectedConsultation.diagnosticTests || [],
       });
       setSelectedConsultation(updated);
       onSaveSuccess();
@@ -256,6 +312,130 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
     } catch (err: any) {
       toast.error(err.message || "Failed to save prescription");
     }
+  };
+
+  const printAppointment = useMemo(() => {
+    const appt = selectedConsultation?.appointment || appointment || {};
+    return {
+      ...appt,
+      id: appt.id || selectedConsultation?.appointmentId || appointment?.id,
+      appointmentCode: appt.appointmentCode || appointment?.appointmentCode,
+      scheduledAt: appt.scheduledAt || selectedConsultation?.createdAt || new Date(),
+      patient: selectedConsultation?.patient || appt.patient || appointment?.patient,
+      doctor: selectedConsultation?.doctor || appt.doctor || appointment?.doctor,
+      clinic: appt.clinic || selectedConsultation?.clinic || appointment?.clinic,
+      department: appt.department || selectedConsultation?.doctor?.department,
+    };
+  }, [selectedConsultation, appointment]);
+
+  const printPrescription = useMemo(() => {
+    const meds = (selectedConsultation?.medicines || []).map(mapTherapyMedToPad);
+    return {
+      createdAt: selectedConsultation?.createdAt || new Date(),
+      id: selectedConsultation?.id || "draft",
+      prescriptionCode:
+        selectedConsultation?.consultationCode ||
+        selectedConsultation?.prescriptionCode ||
+        "",
+      medicines: meds,
+      advice: selectedConsultation?.advice || "",
+      followUpDate: selectedConsultation?.followUpDate || null,
+      followUpNotes: selectedConsultation?.followUpNotes || "",
+      diagnosticTests: selectedConsultation?.diagnosticTests || [],
+      attachments: selectedConsultation?.attachments || [],
+      patient: printAppointment?.patient,
+      doctor: printAppointment?.doctor,
+      clinic: printAppointment?.clinic,
+      department: printAppointment?.department,
+    };
+  }, [selectedConsultation, printAppointment]);
+
+  const waitForPadImages = (pad: HTMLElement) =>
+    Promise.all(
+      Array.from(pad.querySelectorAll("img")).map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            if (img.complete && img.naturalWidth > 0) {
+              resolve();
+              return;
+            }
+            const done = () => resolve();
+            img.addEventListener("load", done, { once: true });
+            img.addEventListener("error", done, { once: true });
+            setTimeout(done, 2500);
+          })
+      )
+    );
+
+  const handlePrintPrescription = () => {
+    const pad = document.getElementById("therapy-modal-print-prescription-pad");
+    if (!pad) return;
+    const hideSelectors = [
+      "#print-prescription-pad",
+      "#print-prescription-slip",
+      "#print-appointment",
+      "#print-prescription",
+      "#modal-print-prescription-pad",
+    ];
+    const hiddenEls: HTMLElement[] = [];
+    hideSelectors.forEach((sel) => {
+      document.querySelectorAll<HTMLElement>(sel).forEach((el) => {
+        if (el === pad || pad.contains(el)) return;
+        el.setAttribute("data-hidden-for-print", "true");
+        el.style.setProperty("display", "none", "important");
+        hiddenEls.push(el);
+      });
+    });
+    const originalDisplay = pad.style.display;
+    pad.style.display = "block";
+    waitForPadImages(pad).then(() => {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          window.print();
+          setTimeout(() => {
+            pad.style.display = originalDisplay;
+            hiddenEls.forEach((el) => {
+              el.removeAttribute("data-hidden-for-print");
+              el.style.removeProperty("display");
+            });
+          }, 1500);
+        }, 50);
+      });
+    });
+  };
+
+  const handleDownloadPrescription = () => {
+    const element = document.getElementById("therapy-modal-print-prescription-pad");
+    if (!element) return;
+    const originalDisplay = element.style.display;
+    element.style.display = "block";
+    const code =
+      selectedConsultation?.consultationCode ||
+      printAppointment?.appointmentCode ||
+      "Record";
+    const opt = {
+      margin: 0,
+      filename: `Prescription-${code}.pdf`,
+      image: { type: "jpeg" as const, quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, windowY: 0 },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
+      pagebreak: { mode: ["css", "legacy"] as const },
+    };
+    waitForPadImages(element)
+      .then(() =>
+        html2pdf()
+          .from(element)
+          .set(opt)
+          .save()
+      )
+      .then(() => {
+        element.style.display = originalDisplay;
+      })
+      .catch((err: any) => {
+        console.error("Prescription PDF failed:", err);
+        toast.error("Failed to download PDF");
+        element.style.display = originalDisplay;
+      });
   };
 
   const handleCopyPreviousPrescription = (prevConsult: any, type: "therapy" | "clinic") => {
@@ -282,6 +462,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
       medicines: medicinesToCopy,
       advice: adviceToCopy,
       painLevel: prevConsult.painLevel || null,
+      diagnosticTests: Array.isArray(prevConsult.diagnosticTests) ? [...prevConsult.diagnosticTests] : [],
       attachments: attachmentsToCopy,
     });
     toast.info("Copied medicines, advice, pain level & images from past prescription.");
@@ -294,6 +475,7 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
       medicines: [],
       advice: "",
       painLevel: null,
+      diagnosticTests: [],
       attachments: [],
     });
     toast.info("Cleared prescription inputs.");
@@ -302,62 +484,56 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
   return (
     <>
       {/* ===== PRESCRIPTION SCANS & ATTACHMENTS MODAL ===== */}
-      <div className="modal fade" id="prescription_modal" tabIndex={-1} aria-hidden="true" ref={modalRef}>
-        <div className="modal-dialog modal-dialog-centered modal-xl">
-          <div className="modal-content" style={{ borderRadius: 16 }}>
-            {/* Modal Header with circular Rx badge */}
-            <div className="modal-header border-0 pb-0 d-flex justify-content-between align-items-center">
-              <div className="d-flex align-items-center gap-2">
-                <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: 36, height: 36 }}>
-                  <span className="fw-bold" style={{ fontSize: 14 }}>Rx</span>
-                </div>
-                <div>
-                  <h5 className="modal-title fw-bold mb-0">Generate Prescription</h5>
-                  <span className="text-muted fs-12">Create prescription for this visit</span>
-                </div>
-              </div>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-prescription-modal"></button>
+      <div className="modal fade prescription-modal-wrapper" id="prescription_modal" tabIndex={-1} aria-hidden="true" ref={modalRef}>
+        <div className="modal-dialog modal-xl modal-dialog-centered">
+          <div className="modal-content text-dark border-0 shadow-lg overflow-hidden" style={{ maxHeight: "90vh", display: "flex", flexDirection: "column", borderRadius: 12 }}>
+            <div className="modal-header bg-primary text-white py-3 px-4 d-flex align-items-center justify-content-between" style={{ flexShrink: 0 }}>
+              <h5 className="modal-title fw-bold text-white mb-0 d-flex align-items-center">
+                <i className="ti ti-prescription me-2 fs-20" />
+                Generate Prescription
+              </h5>
+              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="close-prescription-modal"></button>
             </div>
 
-            <div className="modal-body pt-3">
+            <div className="modal-body bg-light-subtle p-0 d-flex overflow-hidden" style={{ flex: 1, minHeight: 0 }}>
               {selectedConsultation ? (
-                <div>
+                <>
+                  <div className="prescription-main-content p-3" style={{ flex: 1, overflowY: "auto" }}>
                   {/* Current Visit Header bar */}
-                  <div className="mb-4 d-flex justify-content-between align-items-center bg-light p-3 rounded-3">
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="bg-white border rounded px-3 py-2 text-center" style={{ minWidth: 120 }}>
-                        <div className="text-muted small uppercase fw-bold" style={{ fontSize: 10 }}>Current Visit</div>
-                        <div className="fw-bold text-primary small">
-                          {selectedConsultation.appointment?.dateTimeLabel || 
-                           (appointment?.dateTimeLabel || "Today")}
+                  <div className="mb-3 d-flex align-items-center gap-2">
+                    <div className="visit-tab-card p-2 px-3 rounded border active bg-white border-primary shadow-sm">
+                      <div className="d-flex align-items-center gap-2">
+                        <i className="ti ti-calendar fs-14 text-primary" />
+                        <div className="lh-1">
+                          <span className="d-block fw-bold fs-12 text-primary">Current Visit</span>
+                          <small className="fs-10 text-muted">
+                            {selectedConsultation.appointment?.dateTimeLabel || (appointment?.dateTimeLabel || "Today")}
+                          </small>
                         </div>
                       </div>
-                      <div className="d-none d-sm-block">
-                        <div className="text-muted small">Patient: <strong>{selectedConsultation.patient?.firstName} {selectedConsultation.patient?.lastName}</strong></div>
-                        <div className="text-muted small">Appointment ID: <strong>{selectedConsultation.appointment?.appointmentCode || appointment?.appointmentCode || "N/A"}</strong></div>
-                      </div>
                     </div>
-                    <div className="bg-white border rounded px-3 py-2 text-center text-muted small">
-                      <i className="ti ti-activity me-1 text-success"></i> Admit Recommendation: <strong>N/A</strong>
+                    <div className="d-none d-sm-block ms-1">
+                      <div className="text-dark fw-bold fs-12">
+                        {selectedConsultation.patient?.firstName} {selectedConsultation.patient?.lastName}
+                      </div>
+                      <small className="text-muted fs-11">
+                        {selectedConsultation.appointment?.appointmentCode || appointment?.appointmentCode || "N/A"}
+                      </small>
                     </div>
                   </div>
 
-                  <div className="row g-4">
-                    {/* LEFT COLUMN: PRESCRIPTION INPUTS */}
-                    <div className="col-lg-8 border-end pr-lg-4">
-                      {/* Medicines List */}
-                      <div className="card border-0 shadow-none mb-4 bg-transparent">
-                        <div className="card-header bg-transparent border-0 p-0 mb-2 d-flex justify-content-between align-items-center">
-                          <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                            <i className="ti ti-pill text-primary"></i> Medicines
-                          </h6>
+                  <div className="bg-white border rounded-3 shadow-sm p-3 mb-3" style={{ overflow: "visible" }}>
+                        <div className="d-flex align-items-center justify-content-between mb-3">
+                          <div className="d-flex align-items-center gap-2">
+                            <i className="ti ti-pill text-primary fs-18"></i>
+                            <h6 className="fw-bold text-dark mb-0 fs-14">Medicines</h6>
+                          </div>
                           <button
                             type="button"
-                            className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 py-1 px-2 fw-semibold"
-                            style={{ borderRadius: 6, fontSize: 11 }}
+                            className="btn btn-sm btn-outline-primary rounded-pill d-flex align-items-center gap-1"
                             onClick={addModalMedicineRow}
                           >
-                            <i className="ti ti-plus" /> Add Medicine
+                            <i className="ti ti-plus fs-12" /> Add Medicine
                           </button>
                         </div>
                         <div className="card-body p-0">
@@ -385,10 +561,11 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                                         className="border-0 py-1 position-relative"
                                         style={{ zIndex: activeSearchIndex === idx ? 1000 : 1 }}
                                       >
-                                        <input
+                                        <IconFormControl
                                           type="text"
-                                          className="form-control form-control-sm"
-                                          placeholder="Search/Enter Medicine..."
+                                          fieldLabel="medicine"
+                                          className="form-control-sm"
+                                          placeholder="Medicine Name"
                                           value={m.name}
                                           onChange={(e) => updateModalMedicineRow(idx, "name", e.target.value)}
                                           onFocus={() => setActiveSearchIndex(idx)}
@@ -522,62 +699,176 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                         </div>
                       </div>
 
-                      {/* Pain Level Scale (1 to 10) */}
-                      <div className="card border-0 mb-4" style={{ borderRadius: 12, backgroundColor: "#fdf8f8", border: "1px solid #fce8e8 !important" }}>
-                        <div className="card-body p-3">
-                          <div className="d-flex align-items-center justify-content-between mb-2">
-                            <h6 className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: "#d946ef" }}>
-                              <i className="ti ti-activity text-danger fs-5"></i> How much pain left? (Pain Scale: 1 to 10)
-                            </h6>
-                            {selectedConsultation.painLevel ? (
-                              <span className={`badge px-3 py-2 fs-13 ${
-                                selectedConsultation.painLevel <= 3 ? "bg-success" :
-                                selectedConsultation.painLevel <= 7 ? "bg-warning text-dark" : "bg-danger"
-                              }`}>
-                                Current Pain: <strong>{selectedConsultation.painLevel} / 10</strong>
-                              </span>
-                            ) : (
-                              <span className="badge bg-secondary px-3 py-2 fs-13">Not Rated</span>
-                            )}
+                      {/* Pain Level Scale (1 to 10) — common theme */}
+                      <div
+                        className="mb-4 p-3 p-md-4"
+                        style={{
+                          borderRadius: 12,
+                          background: "#fff",
+                          boxShadow: "0 4px 14px rgba(15, 23, 42, 0.08)",
+                          border: "none",
+                        }}
+                      >
+                        <div className="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
+                          <div className="d-flex align-items-center gap-2">
+                            <span
+                              className="d-inline-flex align-items-center justify-content-center flex-shrink-0"
+                              style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 10,
+                                background: "#eff6ff",
+                                color: "#2563eb",
+                              }}
+                            >
+                              <i className="ti ti-activity-heartbeat" style={{ fontSize: 18 }} />
+                            </span>
+                            <div>
+                              <h6 className="fw-bold text-dark mb-0" style={{ fontSize: 14 }}>
+                                Pain Scale
+                              </h6>
+                              <p className="text-muted mb-0" style={{ fontSize: 12 }}>
+                                How much pain is left? Rate from 1 (mild) to 10 (severe)
+                              </p>
+                            </div>
                           </div>
-                          
-                          <div className="d-flex justify-content-between gap-1 mt-2 flex-wrap flex-md-nowrap">
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
-                              const isSelected = selectedConsultation.painLevel === num;
-                              let btnClass = "btn btn-outline-secondary";
-                              if (isSelected) {
-                                if (num <= 3) {
-                                  btnClass = "btn btn-success text-white border-success";
-                                } else if (num <= 7) {
-                                  btnClass = "btn btn-warning text-dark border-warning fw-bold";
-                                } else {
-                                  btnClass = "btn btn-danger text-white border-danger";
-                                }
-                              }
-                              return (
-                                <button
-                                  key={num}
-                                  type="button"
-                                  className={`flex-fill py-2 text-center fw-bold ${btnClass}`}
-                                  onClick={() => updateModalPainLevel(num)}
-                                  style={{
-                                    borderRadius: 8,
-                                    fontSize: 14,
-                                    minWidth: "35px",
-                                    transition: "all 0.2s",
-                                    ...(isSelected ? { transform: "scale(1.05)", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" } : {})
-                                  }}
-                                >
-                                  {num}
-                                </button>
-                              );
-                            })}
-                          </div>
-                          <div className="d-flex justify-content-between mt-2 text-muted small px-1" style={{ fontSize: 11 }}>
-                            <span className="text-success"><i className="ti ti-circle-check"></i> 1-3 Mild / Recovering</span>
-                            <span className="text-warning"><i className="ti ti-alert-triangle"></i> 4-7 Moderate</span>
-                            <span className="text-danger"><i className="ti ti-bolt"></i> 8-10 Severe Pain</span>
-                          </div>
+                          {selectedConsultation.painLevel ? (
+                            <span
+                              className="badge fw-semibold px-3 py-2"
+                              style={{
+                                fontSize: 12,
+                                borderRadius: 8,
+                                background:
+                                  selectedConsultation.painLevel <= 3
+                                    ? "#ecfdf5"
+                                    : selectedConsultation.painLevel <= 7
+                                    ? "#fffbeb"
+                                    : "#fef2f2",
+                                color:
+                                  selectedConsultation.painLevel <= 3
+                                    ? "#047857"
+                                    : selectedConsultation.painLevel <= 7
+                                    ? "#b45309"
+                                    : "#b91c1c",
+                                border: `1px solid ${
+                                  selectedConsultation.painLevel <= 3
+                                    ? "#6ee7b7"
+                                    : selectedConsultation.painLevel <= 7
+                                    ? "#fcd34d"
+                                    : "#fca5a5"
+                                }`,
+                              }}
+                            >
+                              Selected: {selectedConsultation.painLevel} / 10
+                            </span>
+                          ) : (
+                            <span
+                              className="badge fw-semibold px-3 py-2"
+                              style={{
+                                fontSize: 12,
+                                borderRadius: 8,
+                                background: "#f1f5f9",
+                                color: "#64748b",
+                                border: "1px solid #e2e8f0",
+                              }}
+                            >
+                              Not rated
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="d-flex gap-1 gap-md-2 flex-wrap">
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
+                            const isSelected = selectedConsultation.painLevel === num;
+                            const tone =
+                              num <= 3 ? "mild" : num <= 7 ? "moderate" : "severe";
+                            const palette = {
+                              mild: { bg: "#10b981", border: "#059669", soft: "#ecfdf5", text: "#047857" },
+                              moderate: { bg: "#f59e0b", border: "#d97706", soft: "#fffbeb", text: "#b45309" },
+                              severe: { bg: "#ef4444", border: "#dc2626", soft: "#fef2f2", text: "#b91c1c" },
+                            }[tone];
+
+                            return (
+                              <button
+                                key={num}
+                                type="button"
+                                onClick={() => updateModalPainLevel(num)}
+                                className="flex-fill d-flex align-items-center justify-content-center fw-bold"
+                                style={{
+                                  minWidth: 36,
+                                  height: 40,
+                                  borderRadius: 10,
+                                  fontSize: 14,
+                                  transition: "all 0.15s ease",
+                                  border: `1.5px solid ${isSelected ? palette.border : "#e2e8f0"}`,
+                                  background: isSelected ? palette.bg : "#fff",
+                                  color: isSelected ? "#fff" : "#334155",
+                                  boxShadow: isSelected
+                                    ? "0 4px 12px rgba(15, 23, 42, 0.15)"
+                                    : "none",
+                                  transform: isSelected ? "translateY(-1px)" : "none",
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!isSelected) {
+                                    e.currentTarget.style.background = palette.soft;
+                                    e.currentTarget.style.borderColor = palette.border;
+                                    e.currentTarget.style.color = palette.text;
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!isSelected) {
+                                    e.currentTarget.style.background = "#fff";
+                                    e.currentTarget.style.borderColor = "#e2e8f0";
+                                    e.currentTarget.style.color = "#334155";
+                                  }
+                                }}
+                              >
+                                {num}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <div className="d-flex flex-wrap gap-2 gap-md-3 mt-3 pt-3" style={{ borderTop: "1px solid #f1f5f9" }}>
+                          <span
+                            className="d-inline-flex align-items-center gap-1 px-2 py-1"
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              color: "#047857",
+                              background: "#ecfdf5",
+                              borderRadius: 999,
+                              border: "1px solid #a7f3d0",
+                            }}
+                          >
+                            <i className="ti ti-circle-check" /> 1–3 Mild
+                          </span>
+                          <span
+                            className="d-inline-flex align-items-center gap-1 px-2 py-1"
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              color: "#b45309",
+                              background: "#fffbeb",
+                              borderRadius: 999,
+                              border: "1px solid #fde68a",
+                            }}
+                          >
+                            <i className="ti ti-alert-triangle" /> 4–7 Moderate
+                          </span>
+                          <span
+                            className="d-inline-flex align-items-center gap-1 px-2 py-1"
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              color: "#b91c1c",
+                              background: "#fef2f2",
+                              borderRadius: 999,
+                              border: "1px solid #fecaca",
+                            }}
+                          >
+                            <i className="ti ti-bolt" /> 8–10 Severe
+                          </span>
                         </div>
                       </div>
 
@@ -587,8 +878,8 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                           <h6 className="fw-bold mb-2 d-flex align-items-center gap-2">
                             <i className="ti ti-message-report text-primary"></i> Advice
                           </h6>
-                          <textarea
-                            className="form-control"
+                          <IconTextarea
+                            fieldLabel="notes"
                             rows={4}
                             value={selectedConsultation.advice || ""}
                             onChange={(e) => updateModalAdvice(e.target.value)}
@@ -600,15 +891,132 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                           <h6 className="fw-bold mb-2 d-flex align-items-center gap-2">
                             <i className="ti ti-stethoscope text-primary"></i> Diagnostic Tests
                           </h6>
-                          <input
-                            type="text"
-                            className="form-control form-control-sm mb-2"
-                            placeholder="Search/Add Diagnostic Test..."
-                            disabled
-                            style={{ borderRadius: 8 }}
-                          />
-                          <div className="text-center py-4 border rounded-3 bg-light text-muted small" style={{ borderStyle: "dashed" }}>
-                            No diagnostic tests prescribed.
+
+                          <div className="position-relative mb-2" style={{ zIndex: 5 }}>
+                            <div
+                              className="d-flex align-items-center gap-2 bg-white px-2 py-1"
+                              style={{
+                                border: "1px solid #d8dbe5",
+                                borderRadius: 10,
+                                minHeight: 36,
+                              }}
+                            >
+                              <i className="ti ti-search text-muted fs-14 flex-shrink-0" />
+                              <input
+                                type="text"
+                                className="form-control form-control-sm text-dark fw-semibold border-0 shadow-none p-0"
+                                placeholder="Search/Add Diagnostic Test..."
+                                value={testSearchText}
+                                onChange={(e) => {
+                                  setTestSearchText(e.target.value);
+                                  setShowTestDropdown(true);
+                                }}
+                                onFocus={() => setShowTestDropdown(true)}
+                                onBlur={() => setTimeout(() => setShowTestDropdown(false), 250)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    addDiagnosticTest(testSearchText);
+                                  }
+                                }}
+                                style={{ boxShadow: "none", outline: "none", background: "transparent" }}
+                              />
+                              {testSearchText && (
+                                <button
+                                  type="button"
+                                  className="btn btn-link btn-sm text-muted p-0 border-0 flex-shrink-0"
+                                  onClick={() => setTestSearchText("")}
+                                >
+                                  <i className="ti ti-x fs-13" />
+                                </button>
+                              )}
+                            </div>
+
+                            {showTestDropdown && (
+                              <div
+                                className="position-absolute w-100 bg-white border rounded shadow-lg mt-1"
+                                style={{
+                                  zIndex: 1000,
+                                  maxHeight: 180,
+                                  overflowY: "auto",
+                                  top: "100%",
+                                  left: 0,
+                                }}
+                              >
+                                {labTests
+                                  .filter((t: any) =>
+                                    t.name.toLowerCase().includes(testSearchText.toLowerCase())
+                                  )
+                                  .map((t: any) => (
+                                    <div
+                                      key={t.id}
+                                      className="px-3 py-2 d-flex align-items-center justify-content-between text-dark"
+                                      style={{ cursor: "pointer", borderBottom: "1px solid #f8fafc", fontSize: 13 }}
+                                      onMouseDown={() => addDiagnosticTest(t.name)}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.background = "#f1f5f9";
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = "#fff";
+                                      }}
+                                    >
+                                      <span className="fw-bold">{t.name}</span>
+                                      {t.testCode && (
+                                        <span className="badge bg-light text-muted" style={{ fontSize: 10 }}>
+                                          {t.testCode}
+                                        </span>
+                                      )}
+                                    </div>
+                                  ))}
+                                {testSearchText.trim() &&
+                                  !labTests.some(
+                                    (t: any) =>
+                                      t.name.toLowerCase() === testSearchText.toLowerCase().trim()
+                                  ) && (
+                                    <div
+                                      className="px-3 py-2 text-primary fw-bold text-center border-top"
+                                      style={{ cursor: "pointer", fontSize: 13 }}
+                                      onMouseDown={() => addDiagnosticTest(testSearchText)}
+                                    >
+                                      <i className="ti ti-plus me-1" /> Add Custom: &quot;
+                                      {testSearchText.trim()}&quot;
+                                    </div>
+                                  )}
+                                {labTests.length === 0 && !testSearchText.trim() && (
+                                  <div className="px-3 py-2 text-muted text-center" style={{ fontSize: 12 }}>
+                                    No lab tests found. Type to add a custom test.
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          <div
+                            className="border rounded-3 p-2 bg-light d-flex flex-wrap gap-2 align-content-start"
+                            style={{ minHeight: 72 }}
+                          >
+                            {diagnosticTestsList.length > 0 ? (
+                              diagnosticTestsList.map((testName: string, idx: number) => (
+                                <span
+                                  key={`${testName}-${idx}`}
+                                  className="badge bg-soft-primary text-primary px-2 py-2 rounded-3 fw-bold d-inline-flex align-items-center gap-1"
+                                  style={{ fontSize: 12 }}
+                                >
+                                  {testName}
+                                  <button
+                                    type="button"
+                                    className="btn-close p-0 border-0 ms-1"
+                                    style={{ fontSize: 8, width: 10, height: 10 }}
+                                    onClick={() => removeDiagnosticTest(idx)}
+                                    aria-label={`Remove ${testName}`}
+                                  />
+                                </span>
+                              ))
+                            ) : (
+                              <div className="text-center w-100 my-auto text-muted" style={{ fontSize: 12 }}>
+                                No diagnostic tests prescribed.
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -674,9 +1082,10 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                                       style={{ width: "100%", height: 90, objectFit: "cover", cursor: "zoom-in" }}
                                     />
                                   </a>
-                                  <input
+                                  <IconFormControl
                                     type="text"
-                                    className="form-control form-control-sm"
+                                    fieldLabel="notes"
+                                    className="form-control-sm"
                                     placeholder="Add remark..."
                                     value={att.remark || ""}
                                     onChange={(e) => handleUpdateModalRemark(idx, e.target.value)}
@@ -689,17 +1098,23 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                           </div>
                         )}
                       </div>
-                    </div>
+                  </div>
 
-                    {/* RIGHT COLUMN: PREVIOUS PRESCRIPTIONS */}
-                    <div className="col-lg-4">
-                      <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
-                        <h6 className="fw-bold mb-0 d-flex align-items-center gap-2">
-                          <i className="ti ti-history text-muted"></i> Previous Prescriptions
-                        </h6>
+                  <div
+                    className="prescription-sidebar bg-white border-start p-3"
+                    style={{ width: 250, flexShrink: 0, overflowY: "auto", display: "flex", flexDirection: "column" }}
+                  >
+                      <div className="d-flex align-items-center gap-2 mb-2">
+                        <i className="ti ti-history text-primary fs-18"></i>
+                        <h6 className="fw-bold text-dark mb-0 fs-14">Previous Prescriptions</h6>
                       </div>
 
-                      <div className="overflow-auto pr-1" style={{ maxHeight: 380 }}>
+                      <div className="alert bg-warning-subtle border-0 rounded-3 mb-3 p-2 d-flex align-items-start gap-2 text-warning-emphasis fs-12">
+                        <i className="ti ti-bulb fs-15 text-warning" />
+                        <span>Click on any visit to copy its prescription and continue.</span>
+                      </div>
+
+                      <div className="overflow-auto pr-1" style={{ flex: 1 }}>
                         {/* Therapy consultations list */}
                         {previousConsultations.length > 0 && (
                           <div className="mb-3">
@@ -707,34 +1122,21 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                             {previousConsultations.map((pc: any) => (
                               <div
                                 key={pc.id}
-                                className="p-3 border rounded-3 mb-2 bg-light-soft hover-bg-light cursor-pointer shadow-none"
+                                className="card border rounded-3 p-3 mb-2 hover-shadow bg-light-subtle"
                                 onClick={() => handleCopyPreviousPrescription(pc, "therapy")}
-                                style={{ cursor: "pointer", transition: "background 0.2s" }}
+                                style={{ cursor: "pointer" }}
                                 title="Click to copy prescription"
                               >
-                                <div className="fw-bold text-primary small d-flex justify-content-between mb-1">
+                                <div className="fw-bold text-dark small d-flex justify-content-between mb-1">
                                   <span>{pc.consultationCode || "Therapy Plan"}</span>
-                                  <span className="text-muted">{pc.appointment?.scheduledAt ? new Date(pc.appointment.scheduledAt).toLocaleDateString() : new Date(pc.createdAt).toLocaleDateString()}</span>
+                                  <i className="ti ti-copy text-primary" />
                                 </div>
-                                <div className="text-muted fs-11 mb-2 pb-1" style={{ borderBottom: "1px dashed #e2e8f0" }}>
-                                  <div><i className="ti ti-calendar me-1"></i>Appt: <strong>{pc.appointment?.appointmentCode || "N/A"}</strong></div>
-                                  <div><i className="ti ti-user me-1"></i>Therapist: <strong>{pc.doctor?.fullName || "N/A"}</strong></div>
+                                <div className="text-muted fs-11 mb-2">
+                                  {pc.appointment?.scheduledAt ? new Date(pc.appointment.scheduledAt).toLocaleDateString() : new Date(pc.createdAt).toLocaleDateString()}
                                 </div>
-                                {pc.medicines && pc.medicines.length > 0 && (
-                                  <div className="text-secondary small mt-1 fs-11" style={{ lineHeight: "1.4" }}>
-                                    <strong>Meds:</strong> {pc.medicines.map((m: any) => `${m.name} (${m.dosage})`).join(", ")}
-                                  </div>
-                                )}
-                                {pc.painLevel !== undefined && pc.painLevel !== null && (
-                                  <div className="text-danger small mt-1 fs-11">
-                                    <i className="ti ti-activity me-1"></i>Pain Scale: <span className="badge bg-danger-light text-danger">{pc.painLevel} / 10</span>
-                                  </div>
-                                )}
-                                {pc.advice && (
-                                  <div className="text-muted small mt-1 fs-11 text-truncate">
-                                    <strong>Advice:</strong> {pc.advice}
-                                  </div>
-                                )}
+                                <span className="badge bg-soft-primary text-primary px-2 rounded fs-10 fw-bold">
+                                  {pc.medicines?.length || 0} Medicines
+                                </span>
                               </div>
                             ))}
                           </div>
@@ -747,79 +1149,150 @@ export const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                             {previousClinicPrescriptions.map((cp: any) => (
                               <div
                                 key={cp.id}
-                                className="p-3 border rounded-3 mb-2 bg-light-soft hover-bg-light cursor-pointer shadow-none"
+                                className="card border rounded-3 p-3 mb-2 hover-shadow bg-light-subtle"
                                 onClick={() => handleCopyPreviousPrescription(cp, "clinic")}
-                                style={{ cursor: "pointer", transition: "background 0.2s" }}
+                                style={{ cursor: "pointer" }}
                                 title="Click to copy prescription"
                               >
-                                <div className="fw-bold text-success small d-flex justify-content-between mb-1">
+                                <div className="fw-bold text-dark small d-flex justify-content-between mb-1">
                                   <span>{cp.prescriptionCode || "Prescription"}</span>
-                                  <span className="text-muted">{cp.appointment?.scheduledAt ? new Date(cp.appointment.scheduledAt).toLocaleDateString() : new Date(cp.createdAt).toLocaleDateString()}</span>
+                                  <i className="ti ti-copy text-primary" />
                                 </div>
-                                <div className="text-muted fs-11 mb-2 pb-1" style={{ borderBottom: "1px dashed #e2e8f0" }}>
-                                  <div><i className="ti ti-calendar me-1"></i>Appt: <strong>{cp.appointment?.appointmentCode || "N/A"}</strong></div>
-                                  <div><i className="ti ti-user me-1"></i>Doctor: <strong>{cp.doctor?.fullName || "N/A"}</strong></div>
+                                <div className="text-muted fs-11 mb-2">
+                                  {cp.appointment?.scheduledAt ? new Date(cp.appointment.scheduledAt).toLocaleDateString() : new Date(cp.createdAt).toLocaleDateString()}
                                 </div>
-                                {cp.medicines && cp.medicines.length > 0 && (
-                                  <div className="text-secondary small mt-1 fs-11" style={{ lineHeight: "1.4" }}>
-                                    <strong>Meds:</strong> {cp.medicines.map((m: any) => `${m.medicineName || m.name}`).join(", ")}
-                                  </div>
-                                )}
-                                {cp.advice && (
-                                  <div className="text-muted small mt-1 fs-11 text-truncate">
-                                    <strong>Advice:</strong> {cp.advice}
-                                  </div>
-                                )}
+                                <span className="badge bg-soft-primary text-primary px-2 rounded fs-10 fw-bold">
+                                  {cp.medicines?.length || 0} Medicines
+                                </span>
                               </div>
                             ))}
                           </div>
                         )}
 
                         {previousConsultations.length === 0 && previousClinicPrescriptions.length === 0 && (
-                          <div className="text-center py-5 text-muted border rounded-3 bg-light">
-                            <i className="ti ti-clipboard-x fs-24 mb-2 d-block text-muted"></i>
+                          <div className="text-center py-5 text-muted">
+                            <i className="ti ti-folder-off fs-30 opacity-50 mb-2"></i>
                             <div className="small">No previous prescriptions recorded.</div>
                           </div>
                         )}
                       </div>
 
-                      {/* Clear button */}
-                      <button
-                        type="button"
-                        className="btn btn-outline-danger w-100 mt-4 d-flex align-items-center justify-content-center gap-2 fw-semibold py-2"
-                        onClick={handleClearPrescription}
-                        style={{ borderRadius: 8 }}
-                      >
-                        <i className="ti ti-reload"></i> Clear Prescription
-                      </button>
-                    </div>
+                      <div className="mt-3 pt-2 border-top">
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger w-100 fw-bold d-flex align-items-center justify-content-center gap-1.5 fs-13"
+                          onClick={handleClearPrescription}
+                        >
+                          <i className="ti ti-refresh"></i> Clear Prescription
+                        </button>
+                      </div>
                   </div>
-                </div>
+                </>
               ) : (
-                <div className="text-center py-5">
+                <div className="text-center py-5 w-100">
                   <span className="spinner-border text-primary"></span>
                   <div className="text-muted mt-2">Initializing prescription record...</div>
                 </div>
               )}
             </div>
 
-            <div className="modal-footer border-top bg-light justify-content-between" style={{ borderBottomLeftRadius: 16, borderBottomRightRadius: 16 }}>
-              <div>
-                <button type="button" className="btn btn-outline-secondary me-2" disabled style={{ borderRadius: 8 }}>
-                  <i className="ti ti-printer me-1"></i> Print
+            <div className="modal-footer bg-light border-top-0 p-3 d-flex align-items-center justify-content-between" style={{ flexShrink: 0 }}>
+              <div className="d-flex align-items-center gap-2">
+                <button
+                  type="button"
+                  className="btn btn-outline-info fw-bold px-3 fs-13 d-flex align-items-center gap-1.5"
+                  onClick={handlePrintPrescription}
+                  disabled={!selectedConsultation}
+                >
+                  <i className="ti ti-printer" /> Print
                 </button>
-                <button type="button" className="btn btn-outline-secondary" disabled style={{ borderRadius: 8 }}>
-                  <i className="ti ti-download me-1"></i> PDF
+                <button
+                  type="button"
+                  className="btn btn-outline-success fw-bold px-3 fs-13 d-flex align-items-center gap-1.5"
+                  onClick={handleDownloadPrescription}
+                  disabled={!selectedConsultation}
+                >
+                  <i className="ti ti-download" /> Download PDF
                 </button>
               </div>
-              <div>
-                <button type="button" className="btn btn-light me-2" data-bs-dismiss="modal" style={{ borderRadius: 8 }}>Cancel</button>
-                <button type="button" className="btn btn-primary" onClick={handleSaveModalConsultation} style={{ borderRadius: 8 }}>Generate Prescription</button>
+              <div className="d-flex align-items-center gap-2">
+                <button type="button" className="btn btn-light fw-bold px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" className="btn btn-primary fw-bold px-4 shadow-sm d-flex align-items-center gap-1.5" onClick={handleSaveModalConsultation}>
+                  <i className="ti ti-check fs-15" /> Generate Prescription
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <div id="therapy-modal-print-prescription-pad" style={{ display: "none" }}>
+        <PrescriptionPadSlip
+          appointment={printAppointment}
+          prescription={printPrescription}
+        />
+      </div>
+      <style>{`
+        .prescription-modal-wrapper .modal-xl { max-width: 1080px; width: 92%; }
+        .prescription-modal-wrapper .visit-tab-card {
+          min-width: 120px; display: flex; align-items: center;
+          background: #f8fafc !important; border: 1px solid #cbd5e1 !important;
+          padding: 6px 12px !important; border-radius: 8px !important;
+        }
+        .prescription-modal-wrapper .visit-tab-card.active {
+          background: #fff !important; border: 2px solid #4f46e5 !important;
+        }
+        .prescription-modal-wrapper .btn-outline-primary { color: #4f46e5 !important; border-color: #4f46e5 !important; }
+        .prescription-modal-wrapper .btn-outline-primary:hover { background: #4f46e5 !important; color: #fff !important; }
+        .prescription-modal-wrapper .bg-soft-primary {
+          background-color: rgba(79,70,229,0.1) !important; color: #4f46e5 !important;
+        }
+        @media print {
+          @page { size: A4; margin: 0; }
+          html, body {
+            height: auto !important; overflow: hidden !important;
+            margin: 0 !important; padding: 0 !important;
+          }
+          html:has(#therapy-modal-print-prescription-pad .rx-slip--with-attachments),
+          body:has(#therapy-modal-print-prescription-pad .rx-slip--with-attachments) {
+            overflow: visible !important;
+          }
+          body * { visibility: hidden !important; }
+          #print-prescription-pad,
+          #print-prescription-slip,
+          #print-appointment,
+          #print-prescription,
+          #modal-print-prescription-pad,
+          [data-hidden-for-print],
+          [data-hidden-for-print] * {
+            display: none !important; visibility: hidden !important;
+          }
+          #therapy-modal-print-prescription-pad,
+          #therapy-modal-print-prescription-pad * {
+            visibility: visible !important;
+          }
+          #therapy-modal-print-prescription-pad {
+            visibility: visible !important;
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important; top: 0 !important;
+            width: 210mm !important; height: auto !important;
+            max-height: 297mm !important; min-height: 0 !important;
+            background: white !important; z-index: 99999 !important;
+            padding: 0 !important; margin: 0 !important;
+            overflow: hidden !important; border: none !important;
+            page-break-after: avoid !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          #therapy-modal-print-prescription-pad:has(.rx-slip--with-attachments) {
+            max-height: none !important;
+            overflow: visible !important;
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+            page-break-after: auto !important;
+          }
+        }
+      `}</style>
       {/* ===== GORGEOUS LIGHTBOX PREVIEW MODAL ===== */}
       {previewImage && (
         <div 

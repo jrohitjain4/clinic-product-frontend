@@ -1,5 +1,6 @@
 import React from "react";
 import Footer from "../../../../core/common/footer/footer";
+import { IconFormControl } from "../../../../core/common/form-fields";
 
 interface IpdGenericPageProps {
   title: string;
@@ -69,9 +70,9 @@ const IpdGenericPage: React.FC<IpdGenericPageProps> = ({ title, subtitle, module
                   <form onSubmit={(e) => e.preventDefault()}>
                     <div className="mb-3">
                       <label className="form-label fw-semibold">Admission Fee (₹)</label>
-                      <input 
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number" 
-                        className="form-control" 
                         defaultValue={1000} 
                         placeholder="Enter base admission fee" 
                       />
@@ -80,9 +81,9 @@ const IpdGenericPage: React.FC<IpdGenericPageProps> = ({ title, subtitle, module
 
                     <div className="mb-3">
                       <label className="form-label fw-semibold">Required Advance Amount at Admission (₹)</label>
-                      <input 
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number" 
-                        className="form-control" 
                         defaultValue={5000} 
                         placeholder="Enter advance amount required at admission time" 
                       />
@@ -91,9 +92,9 @@ const IpdGenericPage: React.FC<IpdGenericPageProps> = ({ title, subtitle, module
 
                     <div className="mb-3">
                       <label className="form-label fw-semibold">Daily Doctor Visit Charge (₹)</label>
-                      <input 
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number" 
-                        className="form-control" 
                         defaultValue={500} 
                         placeholder="Daily consultation charge per round" 
                       />
@@ -101,9 +102,9 @@ const IpdGenericPage: React.FC<IpdGenericPageProps> = ({ title, subtitle, module
 
                     <div className="mb-3">
                       <label className="form-label fw-semibold">Daily Nursing & Care Charge (₹)</label>
-                      <input 
+                      <IconFormControl
+                        fieldLabel="amount"
                         type="number" 
-                        className="form-control" 
                         defaultValue={300} 
                         placeholder="Daily nursing charge per bed" 
                       />
@@ -141,7 +142,7 @@ const IpdGenericPage: React.FC<IpdGenericPageProps> = ({ title, subtitle, module
             <div className="card-header bg-transparent border-bottom d-flex align-items-center justify-content-between">
               <h5 className="card-title mb-0 fw-bold">{title} Overview</h5>
               <div className="d-flex align-items-center gap-2">
-                <input type="text" className="form-control form-control-sm" placeholder="Search..." style={{ width: "200px" }} />
+                <IconFormControl fieldLabel="search" type="text" className="form-control-sm" placeholder="Search..." style={{ width: "200px" }} />
                 <span className="badge bg-soft-info text-info">Active Module</span>
               </div>
             </div>

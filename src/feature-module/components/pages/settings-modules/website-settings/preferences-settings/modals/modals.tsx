@@ -1,4 +1,4 @@
-
+import { IconFormControl } from "../../../../../../../core/common/form-fields";
 
 const Modals = () => {
   return (
@@ -26,19 +26,19 @@ const Modals = () => {
               <label className="form-label">
                 Client ID<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl type="text" placeholder="Enter client ID" />
             </div>
             <div className="mb-3">
               <label className="form-label">
                 Client Secret Key<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl fieldLabel="Password" type="text" placeholder="Enter client secret key" />
             </div>
             <div className="mb-0">
               <label className="form-label">
                 Login Redirect URL<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl fieldLabel="Website" type="text" placeholder="Enter login redirect URL" />
             </div>
           </div>
           <div className="modal-footer d-flex align-items-center gap-1">
@@ -81,19 +81,19 @@ const Modals = () => {
               <label className="form-label">
                 API ID<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl type="text" placeholder="Enter API ID" />
             </div>
             <div className="mb-3">
               <label className="form-label">
                 API Secret Key<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl fieldLabel="Password" type="text" placeholder="Enter API secret key" />
             </div>
             <div className="mb-0">
               <label className="form-label">
                 Login Redirect URL<span className="text-danger ms-1">*</span>
               </label>
-              <input type="text" className="form-control" />
+              <IconFormControl fieldLabel="Website" type="text" placeholder="Enter login redirect URL" />
             </div>
           </div>
           <div className="modal-footer d-flex align-items-center gap-1">

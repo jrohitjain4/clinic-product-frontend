@@ -43,15 +43,15 @@ const Dashboard = () => {
 
   const appointments = useMemo(() => {
     if (activeMode === "therapy") {
-      return allAppts.filter(a => a.appointmentType === "therapy" || a.parentAppointmentId !== null);
+      return allAppts.filter((a: any) => a.appointmentType === "therapy" || a.parentAppointmentId !== null);
     }
-    return allAppts.filter(a => a.appointmentType !== "therapy" && a.parentAppointmentId === null);
+    return allAppts.filter((a: any) => a.appointmentType !== "therapy" && a.parentAppointmentId === null);
   }, [allAppts, activeMode]);
 
   const patients = useMemo(() => {
     if (activeMode === "therapy") {
-      return allPatients.filter(p => 
-        appointments.some(appt => appt.patientId === p.id)
+      return allPatients.filter((p: any) => 
+        appointments.some((appt: any) => appt.patientId === p.id)
       );
     }
     return allPatients;
@@ -60,24 +60,24 @@ const Dashboard = () => {
   const [showAddAppointment, setShowAddAppointment] = useState(false);
 
   const todayAppointmentsCount = useMemo(() => {
-    return appointments.filter(a => dayjs(a.scheduledAt).isSame(dayjs(), 'day')).length;
+    return appointments.filter((a: any) => dayjs(a.scheduledAt).isSame(dayjs(), 'day')).length;
   }, [appointments]);
 
   const completedAppointmentsCount = useMemo(() => {
-    return appointments.filter(a => a.status === 'Completed' || a.status === 'Checked Out').length;
+    return appointments.filter((a: any) => a.status === 'Completed' || a.status === 'Checked Out').length;
   }, [appointments]);
 
   const newPatientsCount = useMemo(() => {
-    return patients.filter(p => p.createdAt && dayjs(p.createdAt).isAfter(dayjs().subtract(30, 'day'))).length;
+    return patients.filter((p: any) => p.createdAt && dayjs(p.createdAt).isAfter(dayjs().subtract(30, 'day'))).length;
   }, [patients]);
 
   const noShowAppointmentsCount = useMemo(() => {
-    return appointments.filter(a => a.status === 'Cancelled' || a.status === 'No Show').length;
+    return appointments.filter((a: any) => a.status === 'Cancelled' || a.status === 'No Show').length;
   }, [appointments]);
 
   const todayAppointmentsList = useMemo(() => {
-    return appointments.filter(a => dayjs(a.scheduledAt).isSame(dayjs(), 'day'))
-      .sort((a, b) => dayjs(a.scheduledAt).diff(dayjs(b.scheduledAt)));
+    return appointments.filter((a: any) => dayjs(a.scheduledAt).isSame(dayjs(), 'day'))
+      .sort((a: any, b: any) => dayjs(a.scheduledAt).diff(dayjs(b.scheduledAt)));
   }, [appointments]);
 
   const revenueBreakdown = useMemo(() => {
@@ -117,7 +117,7 @@ const Dashboard = () => {
     let checkedOut = 0;
     let noShowCancelled = 0;
 
-    appointments.forEach(app => {
+    appointments.forEach((app: any) => {
       const status = app.status;
       if (status === 'Schedule') {
         scheduled++;
@@ -157,12 +157,12 @@ const Dashboard = () => {
   }, [stats.topServices]);
 
   const recentRegistrationsList = useMemo(() => {
-    const sorted = [...patients].sort((a, b) => {
+    const sorted = [...patients].sort((a: any, b: any) => {
       const dateA = a.createdAt ? dayjs(a.createdAt) : dayjs(0);
       const dateB = b.createdAt ? dayjs(b.createdAt) : dayjs(0);
       return dateB.diff(dateA);
     });
-    return sorted.slice(0, 3).map(p => ({
+    return sorted.slice(0, 3).map((p: any) => ({
       id: p.id,
       firstName: p.firstName,
       lastName: p.lastName,
@@ -180,7 +180,7 @@ const Dashboard = () => {
 
   const staffChartOptions = useMemo((): ApexOptions => ({
     chart: {
-      type: 'radialBar' as const,
+      type: 'radialBar',
       sparkline: { enabled: true }
     },
     plotOptions: {
@@ -202,7 +202,7 @@ const Dashboard = () => {
             fontWeight: 700,
             color: '#1e293b',
             offsetY: -16,
-            formatter: (val: any) => `${val}%`
+            formatter: (val) => `${val}%`
           }
         }
       }
@@ -213,8 +213,6 @@ const Dashboard = () => {
       lineCap: 'round'
     }
   }), []);
-
-
 
   const [sColChart] = useState<any>({
     chart: {
@@ -250,7 +248,7 @@ const Dashboard = () => {
 
   const cellRender = (current: Dayjs, info: any) => {
     if (info.type === 'month') return null;
-    const isHoliday = holidays.find(h => dayjs(h.date).isSame(current, 'day') || (h.endDate && dayjs(current).isBetween(dayjs(h.date), dayjs(h.endDate), 'day', '[]')));
+    const isHoliday = holidays.find((h: any) => dayjs(h.date).isSame(current, 'day') || (h.endDate && dayjs(current).isBetween(dayjs(h.date), dayjs(h.endDate), 'day', '[]')));
     if (isHoliday) {
       return (
         <Tooltip title={`Holiday: ${isHoliday.title}`} key={current.toString()}>
@@ -270,926 +268,984 @@ const Dashboard = () => {
     <>
       <div className="page-wrapper dashboard-page-wrapper">
         <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+          
           .dashboard-page-wrapper {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%) !important;
+            background-color: #F8FAFC !important;
             min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
           }
           .dashboard-page-wrapper .content {
             background: transparent !important;
-            padding: 15px 15px 2px 15px !important;
+            padding: 32px 32px 20px 32px !important;
+            max-width: 1600px;
+            margin: 0 auto;
+          }
+          /* Premium Hero Cards */
+          .hero-card {
+            background: #ffffff;
+            border: none;
+            border-radius: 18px;
+            padding: 20px 20px 16px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            min-height: 148px;
+          }
+          .hero-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0,0,0,0.04);
+          }
+          .hero-card-bg-glow {
+            position: absolute;
+            top: -30px;
+            right: -20px;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            filter: blur(48px);
+            opacity: 0.18;
+            z-index: 0;
+            pointer-events: none;
+          }
+          .hero-card-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+            height: 100%;
+          }
+          .hero-card-left {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 0;
+            flex: 1;
+          }
+          .hero-card-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-shrink: 0;
+            min-width: 100px;
+          }
+          .hero-icon-box {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            z-index: 1;
+            position: relative;
+          }
+          .hero-val {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #0f172a;
+            margin-top: 14px;
+            margin-bottom: 2px;
+            line-height: 1.1;
+            z-index: 1;
+            position: relative;
+          }
+          .hero-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            z-index: 1;
+            position: relative;
+          }
+          .hero-chart-wrap {
+            margin-top: 8px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: flex-end;
+            width: 100%;
+          }
+          .hero-chart-wrap img {
+            max-width: 120px;
+            height: auto;
+            display: block;
+          }
+          .hero-chart-caption {
+            font-size: 10px;
+            color: #94a3b8;
+            font-weight: 500;
+            text-align: right;
+            margin-bottom: 4px;
+            line-height: 1.2;
+            max-width: 120px;
+          }
+          .hero-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+            width: 100%;
+          }
+          .hero-kpi-grid .hero-card {
+            width: 100%;
+            max-width: none;
+            min-height: 138px;
+            padding: 16px;
+          }
+          .hero-kpi-grid .hero-val {
+            font-size: 28px;
+            margin-top: 10px;
+          }
+          .hero-kpi-grid .hero-chart-wrap img {
+            max-width: 100px;
+          }
+          .hero-period-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #64748b;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            white-space: nowrap;
+          }
+          @media (max-width: 1199.98px) {
+            .hero-kpi-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+          }
+          @media (max-width: 575.98px) {
+            .hero-kpi-grid {
+              grid-template-columns: minmax(0, 1fr);
+            }
+          }
+          
+          /* Analytics Cards */
+          .analytic-card {
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+            margin-bottom: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+          }
+          .dashboard-section-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+          }
+          .analytic-card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(241, 245, 249, 1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+          }
+          .analytic-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+          .analytic-card-body {
+            padding: 24px;
+          }
+          
+          /* Quick Action Pills */
+          .action-pill {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 8px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            text-decoration: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            width: 100%;
+          }
+          .action-pill:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 16px -4px rgba(0,0,0,0.05);
+          }
+          .action-pill-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+          }
+          .action-pill-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+            white-space: nowrap;
           }
 
-          .dashboard-page-wrapper .card {
-            border: 1px solid #94a3b8 !important;
-            border-radius: 12px !important;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.04) !important;
-            background-color: #ffffff;
-            margin-bottom: 0 !important;
+          /* Buttons & Badges */
+          .btn-premium {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+            font-weight: 600 !important;
+            padding: 10px 20px !important;
+            border-radius: 10px !important;
+            transition: all 0.3s ease !important;
           }
-          .dashboard-page-wrapper .card-header {
-             padding: 12px 15px !important;
-             background: transparent !important;
-             border-bottom: 1px solid #f1f5f9 !important;
+          .btn-premium:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35) !important;
           }
-          .dashboard-page-wrapper .card-body {
-             padding: 12px 15px !important;
+          
+          .badge-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
           }
-          .dashboard-page-wrapper .row {
-             margin-bottom: 8px !important;
+          .badge-trend.up { background: #dcfce7; color: #059669; }
+          .badge-trend.down { background: #fee2e2; color: #e11d48; }
+
+          /* Avatars & Lists */
+          .appt-list-item {
+            padding: 16px;
+            border: 1px solid #f1f5f9;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            background: #ffffff;
           }
-           .ant-picker-calendar-full .ant-picker-panel {
-            background: transparent !important;
+          .appt-list-item:hover {
+            border-color: #e2e8f0;
+            background: #f8fafc;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
           }
-          .holiday-item {
-            transition: transform 0.2s;
+          
+          /* Calendar Overrides */
+          .premium-calendar-wrapper .ant-picker-calendar {
+            background: transparent;
+          }
+          .premium-calendar-wrapper .ant-picker-cell-inner {
             border-radius: 8px !important;
           }
-          .holiday-item:hover {
-            transform: translateX(5px);
+          .premium-calendar-wrapper .ant-picker-cell-selected .ant-picker-cell-inner {
+            background: #4f46e5 !important;
           }
+          .premium-calendar-wrapper .ant-picker-calendar-header {
+            padding-top: 0 !important;
+          }
+
+          /* Animations */
+          .fade-in-up {
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .delay-1 { animation-delay: 0.1s; }
+          .delay-2 { animation-delay: 0.2s; }
+          .delay-3 { animation-delay: 0.3s; }
+          .delay-4 { animation-delay: 0.4s; }
         `}</style>
 
-        <div className="content pb-0">
-          <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <div className="content">
+          {/* Header Row */}
+          <div className="d-flex align-items-center justify-content-between mb-4 fade-in-up">
             <div>
-              <h4 className="fw-bold mb-1 fs-20">Welcome back, Admin! 👋{activeMode === "therapy" ? " (Therapy)" : ""}</h4>
-              <p className="text-muted mb-0 fs-13">Here's what's happening in your {activeMode === "therapy" ? "therapy module" : "clinic"} today.</p>
+              <h1 className="fw-bold mb-1" style={{ fontSize: '32px', letterSpacing: '-0.5px', color: '#0f172a' }}>
+                Overview
+              </h1>
+              <p className="mb-0" style={{ color: '#64748b', fontSize: '15px' }}>
+                {activeMode === "therapy" ? "Welcome back to your Therapy Dashboard." : "Welcome back to your Clinic Dashboard."}
+              </p>
             </div>
-
-            {stats.profileCompletion !== undefined && (
-              <Link
-                to="/profile-settings"
-                className="d-flex align-items-center gap-2 px-3 py-1 rounded-pill text-decoration-none shadow-sm mx-md-auto my-2 my-md-0"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  backdropFilter: 'blur(8px)',
-                  border: '1px solid #d1d5db',
-                  cursor: 'pointer',
-                  minWidth: '200px',
-                  maxWidth: '300px',
-                  boxShadow: '0 2px 6px rgba(15, 23, 42, 0.06)',
-                  transition: 'all 0.2s ease-in-out'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.borderColor = stats.profileCompletion === 100 ? '#10b981' : '#6366f1';
-                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(15, 23, 42, 0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'none';
-                  e.currentTarget.style.borderColor = '#d1d5db';
-                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(15, 23, 42, 0.06)';
-                }}
-                title={stats.profileCompletion < 100 ? "Click to complete your profile settings" : "Profile setup is complete!"}
-              >
-                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{
-                  width: '22px',
-                  height: '22px',
-                  backgroundColor: stats.profileCompletion === 100 ? '#ecfdf5' : '#e0e7ff',
-                  color: stats.profileCompletion === 100 ? '#10b981' : '#6366f1'
-                }}>
-                  <i className={`ti ${stats.profileCompletion === 100 ? 'ti-circle-check' : 'ti-chart-pie'} fs-12`} />
-                </div>
-                <span className="fs-12 fw-bold text-dark text-nowrap" style={{ letterSpacing: '0.1px' }}>Profile</span>
-                <div className="progress flex-grow-1 mb-0" style={{ height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
-                  <div
-                    className="progress-bar"
-                    style={{
-                      width: `${stats.profileCompletion}%`,
-                      borderRadius: '3px',
-                      background: stats.profileCompletion === 100 
-                        ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)' 
-                        : 'linear-gradient(90deg, #6366f1 0%, #3b82f6 100%)',
-                      transition: 'width 0.6s ease'
-                    }}
-                    role="progressbar"
-                    aria-valuenow={stats.profileCompletion}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                  />
-                </div>
-                <span className="fs-11 fw-bold text-nowrap px-2 py-0.5 rounded-pill" style={{
-                  backgroundColor: stats.profileCompletion === 100 ? '#ecfdf5' : '#e0e7ff',
-                  color: stats.profileCompletion === 100 ? '#10b981' : '#6366f1'
-                }}>
-                  {stats.profileCompletion}%
-                </span>
-              </Link>
-            )}
-
-            <div className="d-flex align-items-center flex-wrap gap-2">
-              <Link to={all_routes.profilesettings} className="btn btn-outline-light border text-dark bg-white d-inline-flex align-items-center justify-content-center fw-semibold px-3 py-2" style={{ borderRadius: '8px', fontSize: '13px', minHeight: '38px' }}>
-                Profile Setting <i className="ti ti-settings ms-2" />
-              </Link>
-              <button onClick={() => setShowAddAppointment(true)} className="btn btn-primary d-inline-flex align-items-center justify-content-center fw-semibold px-3 py-2" style={{ borderRadius: '8px', fontSize: '13px', minHeight: '38px', backgroundColor: '#6366f1', borderColor: '#6366f1' }}>
-                New Appointment <i className="ti ti-plus ms-2" />
+            
+            <div className="d-flex align-items-center gap-3">
+              {stats.profileCompletion !== undefined && stats.profileCompletion < 100 && (
+                <Link to="/profile-settings" className="d-flex align-items-center gap-2 px-3 py-2 rounded-3 text-decoration-none" style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#d97706', fontWeight: 600, fontSize: '13px' }}>
+                  <i className="ti ti-alert-circle fs-16" /> Complete Profile ({stats.profileCompletion}%)
+                </Link>
+              )}
+              <button onClick={() => setShowAddAppointment(true)} className="btn-premium d-flex align-items-center gap-2">
+                <i className="ti ti-plus fs-16" /> New Appointment
               </button>
             </div>
           </div>
 
-          {/* Row 1 Stats */}
-          <div className="row g-2 mb-2">
-            {/* Total Doctors */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#6366f1' }}>
-                        <i className="ti ti-stethoscope fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>{activeMode === "therapy" ? "Total Therapists" : "Total Doctors"}</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{stats.doctorsCount}</h4>
-                      </div>
-                    </div>
-                    <span className="badge fw-semibold" style={{ color: '#10b981', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Active</span>
+          {/* Hero KPIs */}
+          <div className="hero-kpi-grid">
+            <div className="hero-card fade-in-up delay-1">
+              <div className="hero-card-bg-glow" style={{ background: '#10b981' }}></div>
+              <div className="hero-card-main">
+                <div className="hero-card-left">
+                  <div className="hero-icon-box" style={{ background: '#d1fae5', color: '#059669' }}>
+                    <i className="ti ti-currency-rupee" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "All registered therapists" : "All registered doctors"}</p>
+                  <div>
+                    <div className="hero-val">₹{(stats.monthlyRevenue !== undefined ? stats.monthlyRevenue : (stats.revenue || 0)).toLocaleString('en-IN')}</div>
+                    <div className="hero-title">Monthly Revenue</div>
+                  </div>
+                </div>
+                <div className="hero-card-right">
+                  <div className={`badge-trend ${(stats.monthlyRevenueGrowth ?? 12.5) >= 0 ? "up" : "down"}`}>
+                    <i className={`ti ti-arrow-${(stats.monthlyRevenueGrowth ?? 12.5) >= 0 ? "up" : "down"}`} /> {(stats.monthlyRevenueGrowth ?? 12.5) >= 0 ? `+${stats.monthlyRevenueGrowth ?? 12.5}%` : `${stats.monthlyRevenueGrowth}%`}
+                  </div>
+                  <div className="hero-chart-wrap">
+                    <ImageWithBasePath src="assets/img/charts/revenue-area.svg" alt="Revenue trend" />
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Total Patients */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#ec4899' }}>
-                        <i className="ti ti-users fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Total Patients</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{stats.patientsCount}</h4>
-                      </div>
-                    </div>
-                    <span className="badge fw-semibold" style={{ color: '#3b82f6', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Register</span>
+            <div className="hero-card fade-in-up delay-2">
+              <div className="hero-card-bg-glow" style={{ background: '#3b82f6' }}></div>
+              <div className="hero-card-main">
+                <div className="hero-card-left">
+                  <div className="hero-icon-box" style={{ background: '#dbeafe', color: '#2563eb' }}>
+                    <i className="ti ti-calendar-event" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "All registered therapy patients" : "All registered patients"}</p>
+                  <div>
+                    <div className="hero-val">{stats.appointmentsCount || 0}</div>
+                    <div className="hero-title">Total Appointments</div>
+                  </div>
+                </div>
+                <div className="hero-card-right">
+                  <div className="badge-trend up">
+                    <i className="ti ti-arrow-up" /> +8.2%
+                  </div>
+                  <div>
+                    <div className="hero-chart-caption">This Week vs. Last Week</div>
+                    <div className="hero-chart-wrap">
+                      <ImageWithBasePath src="assets/img/charts/appointments-bars.svg" alt="Appointments chart" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Appointments */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#3b82f6' }}>
-                        <i className="ti ti-calendar fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Appointments</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{stats.appointmentsCount}</h4>
-                      </div>
-                    </div>
-                    <span className="badge fw-semibold" style={{ color: '#f97316', backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Pending</span>
+            <div className="hero-card fade-in-up delay-3">
+              <div className="hero-card-bg-glow" style={{ background: '#ec4899' }}></div>
+              <div className="hero-card-main">
+                <div className="hero-card-left">
+                  <div className="hero-icon-box" style={{ background: '#fce7f3', color: '#db2777' }}>
+                    <i className="ti ti-users" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "Total therapy appointments" : "Total appointments"}</p>
+                  <div>
+                    <div className="hero-val">{stats.patientsCount || 0}</div>
+                    <div className="hero-title">Total Patients</div>
+                  </div>
+                </div>
+                <div className="hero-card-right">
+                  <div className="badge-trend up">
+                    <i className="ti ti-arrow-up" /> +5.4%
+                  </div>
+                  <div className="hero-chart-wrap">
+                    <ImageWithBasePath src="assets/img/charts/patients-donut.svg" alt="Patients progress" />
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Total Revenue */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#10b981' }}>
-                        <i className="ti ti-currency-rupee fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Total Revenue</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>₹{stats.revenue.toLocaleString('en-IN')}</h4>
-                      </div>
-                    </div>
-                    <span className="badge fw-semibold" style={{ color: '#10b981', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '4px', padding: '3px 8px', fontSize: '10px' }}>Monthly</span>
+            <div className="hero-card fade-in-up delay-4">
+              <div className="hero-card-bg-glow" style={{ background: '#8b5cf6' }}></div>
+              <div className="hero-card-main">
+                <div className="hero-card-left">
+                  <div className="hero-icon-box" style={{ background: '#f3e8ff', color: '#7c3aed' }}>
+                    <i className="ti ti-stethoscope" />
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "This month therapy revenue" : "This month revenue"}</p>
+                  <div>
+                    <div className="hero-val">{stats.doctorsCount || 0}</div>
+                    <div className="hero-title">{activeMode === "therapy" ? "Therapists" : "Doctors"}</div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Row 2 Stats */}
-          <div className="row g-2 mb-3">
-            {/* Today's Appointments */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#0d9488' }}>
-                        <i className="ti ti-calendar-event fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Today's Appointments</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{todayAppointmentsCount}</h4>
-                      </div>
+                <div className="hero-card-right">
+                  <div className="badge-trend up">
+                    <i className="ti ti-arrow-up" /> +2.1%
+                  </div>
+                  <div>
+                    <div className="hero-chart-caption">Doctor Availability of next week</div>
+                    <div className="hero-chart-wrap">
+                      <ImageWithBasePath src="assets/img/charts/doctors-heatmap.svg" alt="Doctors availability" />
                     </div>
                   </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "Therapy appointments for today" : "Appointments for today"}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Completed Appointments */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#10b981' }}>
-                        <i className="ti ti-circle-check fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>Completed Appointments</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{completedAppointmentsCount}</h4>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "This month completed therapy" : "This month completed"}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* New Patients */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#f97316' }}>
-                        <i className="ti ti-user-plus fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>New Patients</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{newPatientsCount}</h4>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "This month new therapy patients" : "This month new patients"}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* No Show Appointments */}
-            <div className="col-xxl-3 col-xl-3 col-lg-3 col-md-3 col-sm-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '44px', height: '44px', backgroundColor: '#6366f1' }}>
-                        <i className="ti ti-calendar-off fs-22 text-white" />
-                      </div>
-                      <div>
-                        <p className="mb-0 text-muted" style={{ fontSize: '12px', fontWeight: 500 }}>No Show Appointments</p>
-                        <h4 className="fw-bold mb-0 text-dark" style={{ fontSize: '22px' }}>{noShowAppointmentsCount}</h4>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{activeMode === "therapy" ? "This month therapy no shows" : "This month no shows"}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="row g-3 mb-3">
-            {/* Today's Schedule */}
-            <div className="col-xl-4 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Today's Schedule</h5>
-                  <Link to={all_routes.appointments} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
+          {/* Secondary Stats Row */}
+          <div className="hero-kpi-grid">
+            <div className="hero-card fade-in-up delay-2">
+              <div className="hero-card-bg-glow" style={{ background: '#0d9488' }}></div>
+              <div className="hero-card-main">
+                <div className="hero-card-left">
+                  <div className="hero-icon-box" style={{ background: '#ccfbf1', color: '#0f766e' }}>
+                    <i className="ti ti-calendar-event" />
+                  </div>
+                  <div>
+                    <div className="hero-val">{todayAppointmentsCount}</div>
+                    <div className="hero-title">Today's Appointments</div>
+                  </div>
                 </div>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex flex-column gap-3 mb-3">
-                    {todayAppointmentsList.length === 0 ? (
-                      <div className="text-center py-4">
-                        <i className="ti ti-calendar-off text-muted fs-32 mb-2" />
-                        <p className="text-muted mb-0 fs-13">No appointments scheduled for today</p>
-                      </div>
-                    ) : (
-                      todayAppointmentsList.slice(0, 4).map((app) => {
-                        const initials = `${app.patient?.firstName?.charAt(0) || ''}${app.patient?.lastName?.charAt(0) || ''}`.toUpperCase();
-                        const avatarColors = (() => {
-                          const colors = [
-                            { bg: '#f5f3ff', text: '#8b5cf6' }, // Purple
-                            { bg: '#ecfdf5', text: '#10b981' }, // Green
-                            { bg: '#eff6ff', text: '#3b82f6' }, // Blue
-                            { bg: '#fff7ed', text: '#f97316' }, // Orange
-                          ];
-                          const name = app.patient?.firstName || '';
-                          let hash = 0;
-                          for (let i = 0; i < name.length; i++) {
-                            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-                          }
-                          return colors[Math.abs(hash) % colors.length];
-                        })();
+                <div className="hero-card-right">
+                  <span className="hero-period-pill">Today</span>
+                  <div className="hero-chart-wrap">
+                    <ImageWithBasePath src="assets/img/charts/today-appts.svg" alt="Today appointments" />
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                        return (
-                          <div key={app.id} className="d-flex align-items-center justify-content-between gap-2">
-                            <div className="d-flex align-items-center gap-2">
-                              {/* Time Badge */}
-                              <div className="rounded text-center py-1 px-2 flex-shrink-0" style={{ backgroundColor: '#f5f3ff', color: '#6366f1', fontSize: '11px', fontWeight: 600, minWidth: '72px' }}>
-                                {dayjs(app.scheduledAt).format('hh:mm A')}
-                              </div>
-                              {/* Patient Avatar/Initials */}
-                              <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '36px', height: '36px', backgroundColor: avatarColors.bg, color: avatarColors.text, fontWeight: 700, fontSize: '12px' }}>
-                                {initials || 'P'}
-                              </div>
-                              {/* Patient Info */}
-                              <div>
-                                <h6 className="mb-0 text-dark fw-bold" style={{ fontSize: '13px' }}>{app.patient?.firstName} {app.patient?.lastName}</h6>
-                                <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>{app.reason || 'General Consultation'}</p>
-                              </div>
-                            </div>
-                            <div className="text-end">
-                              <span className="d-block text-dark fw-semibold" style={{ fontSize: '11px' }}>{app.doctor?.fullName || 'Dr. Sarah Johnson'}</span>
-                              <span className={`badge rounded px-2 py-0.5 fw-semibold mt-1`} style={{ 
-                                fontSize: '10px',
-                                backgroundColor: app.status === 'Completed' || app.status === 'Checked Out' ? '#ecfdf4' : app.status === 'Cancelled' || app.status === 'No Show' ? '#fef2f2' : '#fff9db',
-                                color: app.status === 'Completed' || app.status === 'Checked Out' ? '#10b981' : app.status === 'Cancelled' || app.status === 'No Show' ? '#ef4444' : '#fab005'
-                              }}>
-                                {app.status}
+            <div className="hero-card fade-in-up delay-2">
+              <div className="hero-card-bg-glow" style={{ background: '#10b981' }}></div>
+              <div className="hero-card-main">
+                <div className="hero-card-left">
+                  <div className="hero-icon-box" style={{ background: '#d1fae5', color: '#059669' }}>
+                    <i className="ti ti-circle-check" />
+                  </div>
+                  <div>
+                    <div className="hero-val">{completedAppointmentsCount}</div>
+                    <div className="hero-title">Completed Appts</div>
+                  </div>
+                </div>
+                <div className="hero-card-right">
+                  <span className="hero-period-pill">This Month</span>
+                  <div className="hero-chart-wrap">
+                    <ImageWithBasePath src="assets/img/charts/completed-bars.svg" alt="Completed appointments" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="hero-card fade-in-up delay-3">
+              <div className="hero-card-bg-glow" style={{ background: '#f97316' }}></div>
+              <div className="hero-card-main">
+                <div className="hero-card-left">
+                  <div className="hero-icon-box" style={{ background: '#ffedd5', color: '#c2410c' }}>
+                    <i className="ti ti-user-plus" />
+                  </div>
+                  <div>
+                    <div className="hero-val">{newPatientsCount}</div>
+                    <div className="hero-title">New Patients</div>
+                  </div>
+                </div>
+                <div className="hero-card-right">
+                  <span className="hero-period-pill">This Month</span>
+                  <div className="hero-chart-wrap">
+                    <ImageWithBasePath src="assets/img/charts/new-patients-donut.svg" alt="New patients" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="hero-card fade-in-up delay-3">
+              <div className="hero-card-bg-glow" style={{ background: '#6366f1' }}></div>
+              <div className="hero-card-main">
+                <div className="hero-card-left">
+                  <div className="hero-icon-box" style={{ background: '#e0e7ff', color: '#4338ca' }}>
+                    <i className="ti ti-calendar-off" />
+                  </div>
+                  <div>
+                    <div className="hero-val">{noShowAppointmentsCount}</div>
+                    <div className="hero-title">No Show Appts</div>
+                  </div>
+                </div>
+                <div className="hero-card-right">
+                  <span className="hero-period-pill">This Month</span>
+                  <div className="hero-chart-wrap">
+                    <ImageWithBasePath src="assets/img/charts/noshow-heatmap.svg" alt="No show appointments" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Grid: 70/30 Split */}
+          <div className="row g-4">
+            
+            {/* LEFT COLUMN (70%) */}
+            <div className="col-xl-8 col-lg-12 fade-in-up delay-2 dashboard-section-stack">
+              
+              {/* Revenue Overview (RESTORED) */}
+              <div className="analytic-card">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#ecfdf5', color: '#059669', boxShadow: 'none' }}>
+                      <i className="ti ti-currency-rupee" />
+                    </div>
+                    Revenue Overview
+                  </h3>
+                  <span className="badge bg-light text-dark border px-3 py-2 rounded-pill fw-semibold">This Month</span>
+                </div>
+                <div className="analytic-card-body p-4">
+                  <div className="row g-4 align-items-center">
+                    <div className="col-md-5">
+                      <div className="p-4 rounded-4 text-center d-flex flex-column justify-content-center h-100" style={{ background: 'linear-gradient(145deg, #f5f3ff 0%, #ede9fe 100%)', border: '1px solid #ddd6fe' }}>
+                        <p className="text-muted fw-bold mb-2 text-uppercase" style={{ fontSize: '12px', letterSpacing: '1px', color: '#7c3aed' }}>Total Revenue</p>
+                        <h2 className="fw-bold mb-3" style={{ color: '#4c1d95', fontSize: '32px', letterSpacing: '-1px' }}>
+                          ₹{(stats.totalRevenue !== undefined ? stats.totalRevenue : (stats.totalIncome || 0)).toLocaleString('en-IN')}
+                        </h2>
+                        <span className="badge mx-auto px-3 py-2 rounded-pill fw-bold" style={{ background: '#dcfce7', color: '#059669', fontSize: '12px' }}>
+                          <i className="ti ti-arrow-up-right me-1" /> + 25.8% vs last month
+                        </span>
+                      </div>
+                    </div>
+                    <div className="col-md-7">
+                      <div className="row g-3">
+                        {[
+                          { label: 'Consultation', val: revenueBreakdown.consultation, pct: '+18.5%', color: '#10b981', trend: 'up' },
+                          { label: 'Procedures', val: revenueBreakdown.procedures, pct: '+32.1%', color: '#3b82f6', trend: 'up' },
+                          { label: 'Products', val: revenueBreakdown.products, pct: '+12.3%', color: '#f59e0b', trend: 'up' },
+                          { label: 'Discounts', val: revenueBreakdown.discounts, pct: '-5.2%', color: '#ef4444', trend: 'down' }
+                        ].map(item => (
+                          <div key={item.label} className="col-6">
+                            <div className="p-3 rounded-4 bg-white" style={{ border: '1px solid #f1f5f9', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                              <p className="mb-1 text-muted fw-semibold" style={{ fontSize: '12px' }}>{item.label}</p>
+                              <h6 className="mb-1 fw-bold text-dark" style={{ fontSize: '16px' }}>₹{item.val.toLocaleString('en-IN')}</h6>
+                              <span className="fw-bold" style={{ fontSize: '11px', color: item.color }}>
+                                <i className={`ti ti-arrow-${item.trend}`} /> {item.pct}
                               </span>
                             </div>
                           </div>
-                        );
-                      })
-                    )}
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <Link to={all_routes.appointments} className="d-flex align-items-center justify-content-between text-decoration-none border-top pt-3 mt-auto" style={{ color: '#4f46e5', fontWeight: 600, fontSize: '12px' }}>
-                    <span>You have {Math.max(0, todayAppointmentsCount - 4)} more appointments today</span>
-                    <i className="ti ti-chevron-right fs-16" />
-                  </Link>
                 </div>
               </div>
-            </div>
 
-            {/* Holiday Calendar */}
-            <div className="col-xl-4 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Holiday Calendar</h5>
-                  <Link to={all_routes.holidays} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '13px' }}>View All</Link>
+              {/* Appointment Overview Chart */}
+              <div className="analytic-card">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#eff6ff', color: '#3b82f6', boxShadow: 'none' }}>
+                      <i className="ti ti-chart-donut" />
+                    </div>
+                    Appointment Overview
+                  </h3>
+                  <span className="badge bg-light text-dark border px-3 py-2 rounded-pill fw-semibold">This Month</span>
                 </div>
-                <div className="card-body p-3">
-                  <Calendar fullscreen={false} cellRender={cellRender} />
+                <div className="analytic-card-body d-flex flex-column flex-md-row align-items-center gap-4">
+                  <div className="flex-shrink-0" style={{ width: '220px' }}>
+                    <Chart 
+                      key={appointmentStats.total}
+                      options={{
+                        chart: { type: 'donut', sparkline: { enabled: true } },
+                        colors: ['#3b82f6', '#6366f1', '#0d9488', '#10b981', '#ef4444'],
+                        labels: ['Scheduled', 'Confirmed', 'Checked In', 'Checked Out', 'No Show'],
+                        plotOptions: { pie: { donut: { size: '75%', labels: { show: true, name: { color: '#64748b' }, value: { color: '#0f172a', fontWeight: 800 }, total: { show: true, label: 'Total', color: '#64748b' } } } } }
+                      }}
+                      series={[appointmentStats.scheduled, appointmentStats.confirmed, appointmentStats.checkedIn, appointmentStats.checkedOut, appointmentStats.noShow]}
+                      type="donut" height={220} 
+                    />
+                  </div>
+                  <div className="flex-grow-1 w-100">
+                    <div className="row g-3">
+                      {[
+                        { label: 'Completed', val: completedAppointmentsCount, pct: appointmentStats.checkedOutPercent, color: '#10b981' },
+                        { label: 'Scheduled', val: appointmentStats.scheduled, pct: appointmentStats.scheduledPercent, color: '#3b82f6' },
+                        { label: 'Confirmed', val: appointmentStats.confirmed, pct: appointmentStats.confirmedPercent, color: '#6366f1' },
+                        { label: 'No Show', val: noShowAppointmentsCount, pct: appointmentStats.noShowPercent, color: '#ef4444' }
+                      ].map(item => (
+                        <div key={item.label} className="col-sm-6">
+                          <div className="p-3 rounded-3" style={{ background: '#f8fafc', border: '1px solid #f1f5f9' }}>
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                              <span className="fw-semibold text-muted" style={{ fontSize: '13px' }}>
+                                <span className="d-inline-block rounded-circle me-2" style={{ width: 8, height: 8, background: item.color }} />
+                                {item.label}
+                              </span>
+                              <span className="fw-bold text-dark">{item.val}</span>
+                            </div>
+                            <div className="progress" style={{ height: 4, background: '#e2e8f0' }}>
+                              <div className="progress-bar" style={{ width: `${item.pct}%`, background: item.color, borderRadius: 4 }} />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Appointment Overview */}
-            <div className="col-xl-4 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Appointment Overview</h5>
-                  <div className="dropdown">
-                    <button className="btn btn-sm btn-outline-light border text-dark dropdown-toggle fw-semibold bg-white" type="button" style={{ fontSize: '12px', borderRadius: '6px' }}>
-                      This Month
-                    </button>
-                  </div>
-                </div>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="row align-items-center mb-3">
-                    <div className="col-sm-7 col-12">
-                      <Chart 
-                        key={appointmentStats.total}
-                        options={{
-                          chart: {
-                            type: 'donut',
-                            sparkline: { enabled: true }
-                          },
-                          colors: ['#3b82f6', '#6366f1', '#0d9488', '#10b981', '#ef4444'],
-                          labels: ['Scheduled', 'Confirmed', 'Checked In', 'Checked Out', 'No Show'],
-                          legend: { show: false },
-                          dataLabels: { enabled: false },
-                          plotOptions: {
-                            pie: {
-                              donut: {
-                                size: '75%',
-                                labels: {
-                                  show: true,
-                                  name: {
-                                    show: true,
-                                    fontSize: '11px',
-                                    fontWeight: 500,
-                                    color: '#64748b',
-                                    offsetY: 18
-                                  },
-                                  value: {
-                                    show: true,
-                                    fontSize: '22px',
-                                    fontWeight: 700,
-                                    color: '#1e293b',
-                                    offsetY: -16,
-                                    formatter: (val: any) => String(val)
-                                  },
-                                  total: {
-                                    show: true,
-                                    label: 'Total Appts',
-                                    fontSize: '11px',
-                                    color: '#64748b',
-                                    formatter: (w: any) => {
-                                      return String(
-                                        w.globals.seriesTotals.reduce(
-                                          (a: number, b: number) => a + b,
-                                          0
-                                        )
-                                      );
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          },
-                          stroke: {
-                            show: true,
-                            width: 2,
-                            colors: ['#ffffff']
-                          },
-                          tooltip: { enabled: true }
-                        }} 
-                        series={[
-                          appointmentStats.scheduled, 
-                          appointmentStats.confirmed, 
-                          appointmentStats.checkedIn, 
-                          appointmentStats.checkedOut, 
-                          appointmentStats.noShow
-                        ]} 
-                        type="donut" 
-                        height={180} 
-                      />
+              {/* Financial Summary & Top Services */}
+              <div className="row g-4">
+                {/* Financial Summary */}
+                <div className="col-md-6">
+                  <div className="analytic-card h-100">
+                    <div className="analytic-card-header border-0 pb-0">
+                      <h3 className="analytic-card-title">
+                        <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#ecfdf5', color: '#059669', boxShadow: 'none' }}>
+                          <i className="ti ti-wallet" />
+                        </div>
+                        Financial Summary
+                      </h3>
                     </div>
-                    <div className="col-sm-5 col-12 d-flex flex-column gap-2 mt-3 mt-sm-0" style={{ maxHeight: '180px', overflowY: 'auto' }}>
-                      <div className="d-flex align-items-center gap-2">
-                        <span className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#3b82f6' }}></span>
-                        <div>
-                          <p className="mb-0 text-muted" style={{ fontSize: '9px', lineHeight: 1.1 }}>Scheduled</p>
-                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '11px' }}>{appointmentStats.scheduled} <span className="text-muted fw-normal">({appointmentStats.scheduledPercent}%)</span></h6>
-                        </div>
+                    <div className="analytic-card-body pt-3">
+                      <div className="mb-4">
+                        <p className="text-muted fw-semibold mb-1 fs-12 text-uppercase">Net Profit</p>
+                        <h2 className="fw-bold mb-0" style={{ color: stats.netProfit >= 0 ? '#059669' : '#e11d48', fontSize: '28px', letterSpacing: '-0.5px' }}>
+                          {stats.netProfit >= 0 ? '+' : '-'}₹{Math.abs(stats.netProfit || 0).toLocaleString('en-IN')}
+                        </h2>
                       </div>
-                      <div className="d-flex align-items-center gap-2">
-                        <span className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#6366f1' }}></span>
-                        <div>
-                          <p className="mb-0 text-muted" style={{ fontSize: '9px', lineHeight: 1.1 }}>Confirmed</p>
-                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '11px' }}>{appointmentStats.confirmed} <span className="text-muted fw-normal">({appointmentStats.confirmedPercent}%)</span></h6>
-                        </div>
-                      </div>
-                      <div className="d-flex align-items-center gap-2">
-                        <span className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#0d9488' }}></span>
-                        <div>
-                          <p className="mb-0 text-muted" style={{ fontSize: '9px', lineHeight: 1.1 }}>Checked In</p>
-                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '11px' }}>{appointmentStats.checkedIn} <span className="text-muted fw-normal">({appointmentStats.checkedInPercent}%)</span></h6>
-                        </div>
-                      </div>
-                      <div className="d-flex align-items-center gap-2">
-                        <span className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#10b981' }}></span>
-                        <div>
-                          <p className="mb-0 text-muted" style={{ fontSize: '9px', lineHeight: 1.1 }}>Checked Out</p>
-                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '11px' }}>{appointmentStats.checkedOut} <span className="text-muted fw-normal">({appointmentStats.checkedOutPercent}%)</span></h6>
-                        </div>
-                      </div>
-                      <div className="d-flex align-items-center gap-2">
-                        <span className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: '#ef4444' }}></span>
-                        <div>
-                          <p className="mb-0 text-muted" style={{ fontSize: '9px', lineHeight: 1.1 }}>No Show</p>
-                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '11px' }}>{appointmentStats.noShow} <span className="text-muted fw-normal">({appointmentStats.noShowPercent}%)</span></h6>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Completion and Target Summary box */}
-                  <div className="p-2 rounded-3 border bg-light mb-3 d-flex justify-content-between align-items-center" style={{ fontSize: '11px', marginTop: '10px' }}>
-                    <div className="text-start">
-                      <span className="text-muted d-block" style={{ fontSize: '9px' }}>Completion Rate</span>
-                      <strong className="text-success" style={{ fontSize: '11px' }}>
-                        {appointmentStats.total > 0 ? Math.round((appointmentStats.checkedOut / appointmentStats.total) * 100) : 0}%
-                      </strong>
-                    </div>
-                    <div className="text-end">
-                      <span className="text-muted d-block" style={{ fontSize: '9px' }}>Upcoming Appts</span>
-                      <strong className="text-dark" style={{ fontSize: '11px' }}>
-                        {appointmentStats.scheduled + appointmentStats.confirmed}
-                      </strong>
-                    </div>
-                  </div>
-                  <Link to={all_routes.appointments} className="d-flex align-items-center justify-content-between text-decoration-none border-top pt-3 mt-auto" style={{ color: '#4f46e5', fontWeight: 600, fontSize: '12px' }}>
-                    <span>View all appointments</span>
-                    <i className="ti ti-arrow-right fs-16" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-
-
-          {/* Revenue Overview & Upcoming Holidays */}
-          <div className="row g-3 mb-3">
-            {/* Revenue Overview */}
-            <div className="col-xl-8 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Revenue Overview</h5>
-                  <div className="dropdown">
-                    <button className="btn btn-sm btn-outline-light border text-dark dropdown-toggle fw-semibold bg-white" type="button" style={{ fontSize: '12px', borderRadius: '6px' }}>
-                      This Month
-                    </button>
-                  </div>
-                </div>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="row g-3 align-items-stretch">
-                    {/* Left Column: Total Revenue Block */}
-                    <div className="col-md-5 col-12 d-flex flex-column justify-content-center">
-                      <div className="p-3 rounded-3 h-100 d-flex flex-column justify-content-center" style={{ backgroundColor: '#f5f3ff' }}>
-                        <p className="mb-1 text-muted" style={{ fontSize: '11px', fontWeight: 600 }}>Total Revenue</p>
-                        <div className="d-flex align-items-center gap-2">
-                          <h3 className="mb-0 fw-bold text-dark" style={{ fontSize: '24px' }}>₹{(stats.totalIncome || 0).toLocaleString('en-IN')}</h3>
-                          <span className="badge bg-soft-success text-success rounded-pill fw-bold" style={{ fontSize: '11px' }}>
-                            <i className="ti ti-arrow-up-right me-0.5" /> + 25.8%
-                          </span>
-                        </div>
-                        <p className="mb-0 text-muted mt-1" style={{ fontSize: '11px' }}>vs last month</p>
-                      </div>
-                    </div>
-
-                    {/* Right Column: Breakdown Grid */}
-                    <div className="col-md-7 col-12">
-                      <div className="row g-2">
-                        <div className="col-6">
-                          <div className="p-2 border rounded-3 bg-white h-100">
-                            <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Consultation</p>
-                            <h6 className="mb-0 fw-bold text-dark mt-1" style={{ fontSize: '14px' }}>₹{revenueBreakdown.consultation.toLocaleString('en-IN')}</h6>
-                            <span className="text-success fw-bold" style={{ fontSize: '10px' }}><i className="ti ti-arrow-up" /> + 18.5%</span>
+                      <div className="d-flex flex-column gap-3">
+                        <div className="d-flex align-items-center justify-content-between p-3 rounded-3" style={{ background: '#f0fdfa' }}>
+                          <div className="d-flex align-items-center gap-3">
+                            <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 36, height: 36, background: '#ccfbf1', color: '#0d9488' }}>
+                              <i className="ti ti-trending-up fs-18" />
+                            </div>
+                            <div>
+                              <p className="mb-0 fw-semibold text-muted fs-12">Total Income</p>
+                              <p className="mb-0 fw-bold text-dark fs-15">₹{stats.totalIncome?.toLocaleString('en-IN') || '0'}</p>
+                            </div>
                           </div>
                         </div>
-                        <div className="col-6">
-                          <div className="p-2 border rounded-3 bg-white h-100">
-                            <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Procedures</p>
-                            <h6 className="mb-0 fw-bold text-dark mt-1" style={{ fontSize: '14px' }}>₹{revenueBreakdown.procedures.toLocaleString('en-IN')}</h6>
-                            <span className="text-success fw-bold" style={{ fontSize: '10px' }}><i className="ti ti-arrow-up" /> + 32.1%</span>
-                          </div>
-                        </div>
-                        <div className="col-6">
-                          <div className="p-2 border rounded-3 bg-white h-100">
-                            <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Products</p>
-                            <h6 className="mb-0 fw-bold text-dark mt-1" style={{ fontSize: '14px' }}>₹{revenueBreakdown.products.toLocaleString('en-IN')}</h6>
-                            <span className="text-success fw-bold" style={{ fontSize: '10px' }}><i className="ti ti-arrow-up" /> + 12.3%</span>
-                          </div>
-                        </div>
-                        <div className="col-6">
-                          <div className="p-2 border rounded-3 bg-white h-100">
-                            <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>Discounts</p>
-                            <h6 className="mb-0 fw-bold text-dark mt-1" style={{ fontSize: '14px' }}>₹{revenueBreakdown.discounts.toLocaleString('en-IN')}</h6>
-                            <span className="text-danger fw-bold" style={{ fontSize: '10px' }}><i className="ti ti-arrow-down" /> - 5.2%</span>
+                        <div className="d-flex align-items-center justify-content-between p-3 rounded-3" style={{ background: '#fef2f2' }}>
+                          <div className="d-flex align-items-center gap-3">
+                            <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 36, height: 36, background: '#fee2e2', color: '#e11d48' }}>
+                              <i className="ti ti-trending-down fs-18" />
+                            </div>
+                            <div>
+                              <p className="mb-0 fw-semibold text-muted fs-12">Total Expense</p>
+                              <p className="mb-0 fw-bold text-dark fs-15">₹{stats.totalExpense?.toLocaleString('en-IN') || '0'}</p>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <Link to="/accounts/transactions" className="d-flex align-items-center justify-content-between text-decoration-none border-top pt-3 mt-3" style={{ color: '#4f46e5', fontWeight: 600, fontSize: '12px' }}>
-                    <span>View full financial report</span>
-                    <i className="ti ti-arrow-right fs-16" />
-                  </Link>
                 </div>
-              </div>
-            </div>
 
-            {/* Upcoming Holidays */}
-            <div className="col-xl-4 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '16px' }}>Upcoming Holidays</h5>
-                </div>
-                <div className="card-body p-3 d-flex flex-column shadow-none" style={{ maxHeight: '380px', overflowY: 'auto' }}>
-                  <div className="d-flex flex-column gap-2 flex-grow-1">
-                    {holidays.length === 0 ? (
-                      <div className="text-center py-5">
-                        <i className="ti ti-calendar-off text-muted fs-32 mb-2" />
-                        <p className="text-muted mb-0">No holidays scheduled</p>
-                      </div>
-                    ) : (
-                      holidays
-                        .filter(h => dayjs(h.date).isAfter(dayjs().subtract(1, 'day')) || (h.endDate && dayjs(h.endDate).isAfter(dayjs().subtract(1, 'day'))))
-                        .sort((a, b) => dayjs(a.date).diff(dayjs(b.date)))
-                        .slice(0, 5)
-                        .map(h => (
-                          <div key={h.id} className="d-flex align-items-center justify-content-between p-2 border rounded-3 holiday-item bg-white shadow-sm" style={{ borderRadius: '8px' }}>
-                            <div className="d-flex align-items-center gap-2">
-                              <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '36px', height: '36px', backgroundColor: '#f5f3ff', color: '#6366f1' }}>
-                                <i className="ti ti-calendar-event fs-18" />
-                              </div>
-                              <div>
-                                <h6 className="mb-0 text-dark fw-bold" style={{ fontSize: '13px' }}>{h.title}</h6>
-                                <p className="mb-0 text-muted" style={{ fontSize: '11px' }}>
-                                  {dayjs(h.date).format('DD MMM YYYY')}
-                                  {h.endDate && ` - ${dayjs(h.endDate).format('DD MMM YYYY')}`}
-                                </p>
+                {/* Top Services */}
+                <div className="col-md-6">
+                  <div className="analytic-card h-100">
+                    <div className="analytic-card-header border-0 pb-0">
+                      <h3 className="analytic-card-title">
+                        <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#f3e8ff', color: '#7c3aed', boxShadow: 'none' }}>
+                          <i className="ti ti-medical-cross" />
+                        </div>
+                        Top Services
+                      </h3>
+                    </div>
+                    <div className="analytic-card-body pt-3">
+                      <div className="d-flex flex-column gap-3">
+                        {topServicesList.length === 0 ? (
+                          <div className="text-center py-4">
+                            <p className="text-muted mb-0 fs-14">No services utilized yet</p>
+                          </div>
+                        ) : (
+                          topServicesList.slice(0, 4).map((service: any) => (
+                            <div key={service.name} className="d-flex align-items-center justify-content-between">
+                              <div className="flex-grow-1">
+                                <div className="d-flex align-items-center justify-content-between mb-2">
+                                  <span className="fw-semibold text-dark fs-14">{service.name}</span>
+                                  <span className="fw-bold text-dark fs-14">{service.count}</span>
+                                </div>
+                                <div className="progress" style={{ height: '6px', background: '#f1f5f9' }}>
+                                  <div className="progress-bar rounded-pill" style={{ width: `${Math.min(100, (service.count / 50) * 100)}%`, background: '#8b5cf6' }} />
+                                </div>
                               </div>
                             </div>
-                            <span className="badge rounded-pill bg-soft-primary text-primary text-nowrap px-2 py-1" style={{ fontSize: '10px', backgroundColor: '#e0e7ff', color: '#6366f1' }}>
-                              {h.endDate ? `${dayjs(h.endDate).diff(dayjs(h.date), 'day') + 1} days` : '1 day'}
-                            </span>
-                          </div>
-                        ))
-                    )}
+                          ))
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div className="row g-3 mb-3">
-            {/* Top Services */}
-            <div className="col-xl-3 col-md-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '15px' }}>Top Services</h5>
-                  <Link to={all_routes.services} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '12px' }}>View All</Link>
+              {/* Recent Registrations (RESTORED) */}
+              <div className="analytic-card">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#eff6ff', color: '#3b82f6', boxShadow: 'none' }}>
+                      <i className="ti ti-user-plus" />
+                    </div>
+                    Recent Registrations
+                  </h3>
+                  <Link to={all_routes.patients} className="btn-link text-decoration-none fs-13">View All</Link>
                 </div>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex flex-column gap-3 mb-2">
-                    {topServicesList.length === 0 ? (
-                      <div className="text-center py-4">
-                        <i className="ti ti-activity-heartbeat text-muted fs-32 mb-2" />
-                        <p className="text-muted mb-0 fs-13">No services utilized yet</p>
-                      </div>
-                    ) : (
-                      topServicesList.map((service: any, index) => {
-                        const isProduct = service.type === 'Product';
-                        const icon = isProduct ? 'ti-pill' : 'ti-activity-heartbeat';
-                        const color = isProduct ? '#0d9488' : '#6366f1';
-                        const bg = isProduct ? '#f0fdfa' : '#f5f3ff';
-                        const progressBarColor = isProduct ? '#0d9488' : '#6366f1';
-
-                        return (
-                          <div key={service.name} className="d-flex align-items-center justify-content-between">
-                            <div className="d-flex align-items-center gap-2 flex-grow-1">
-                              <div className="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: bg }}>
-                                <i className={`ti ${icon}`} style={{ color: color, fontSize: '16px' }} />
-                              </div>
-                              <div className="flex-grow-1 me-3">
-                                <div className="d-flex align-items-center justify-content-between mb-1">
-                                  <span className="d-block text-dark fw-bold" style={{ fontSize: '12px' }}>{service.name}</span>
-                                  <span className="badge badge-soft-secondary px-1 py-0.5" style={{ fontSize: '8px', lineHeight: 1 }}>
-                                    {isProduct ? 'Medicine' : 'Service'}
+                <div className="analytic-card-body p-0">
+                  {recentRegistrationsList.length === 0 ? (
+                    <div className="text-center py-5">
+                      <i className="ti ti-users fs-40 mb-3 d-block" style={{ color: '#cbd5e1' }} />
+                      <p className="text-muted fw-medium fs-14">No recent registrations</p>
+                    </div>
+                  ) : (
+                    <div className="table-responsive">
+                      <table className="table table-borderless mb-0">
+                        <tbody>
+                          {recentRegistrationsList.map((patient: any) => {
+                            const initials = `${patient.firstName?.charAt(0) || ''}${patient.lastName?.charAt(0) || ''}`.toUpperCase();
+                            return (
+                              <tr key={patient.id} className="border-bottom">
+                                <td className="ps-4 py-3">
+                                  <div className="d-flex align-items-center gap-3">
+                                    <div className="rounded-circle d-flex align-items-center justify-content-center fw-bold" style={{ width: '40px', height: '40px', background: '#f8fafc', color: '#4f46e5', border: '1px solid #e2e8f0', fontSize: '14px' }}>
+                                      {initials}
+                                    </div>
+                                    <div>
+                                      <h6 className="mb-0 fw-bold text-dark fs-14">{patient.firstName} {patient.lastName}</h6>
+                                      <span className="text-muted fs-12">New Patient</span>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="pe-4 py-3 text-end align-middle">
+                                  <span className="text-muted fs-12 fw-medium">
+                                    <i className="ti ti-calendar me-1" />
+                                    {dayjs(patient.createdAt).format('DD MMM YYYY')}
                                   </span>
-                                </div>
-                                <div className="progress" style={{ height: '4px' }}>
-                                  <div className="progress-bar rounded-pill" role="progressbar" style={{ width: `${Math.min(100, (service.count / 50) * 100)}%`, backgroundColor: progressBarColor }} aria-valuenow={(service.count / 50) * 100} aria-valuemin={0} aria-valuemax={100} />
-                                </div>
-                              </div>
-                            </div>
-                            <span className="fw-bold text-dark" style={{ fontSize: '13px' }}>{service.count}</span>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Recent Registrations */}
-            <div className="col-xl-3 col-md-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '15px' }}>Recent Registrations</h5>
-                  <Link to={all_routes.patients} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '12px' }}>View All</Link>
-                </div>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="d-flex flex-column gap-3 mb-2">
-                    {recentRegistrationsList.length === 0 ? (
-                      <div className="text-center py-4">
-                        <i className="ti ti-users text-muted fs-32 mb-2" />
-                        <p className="text-muted mb-0 fs-13">No recent registrations</p>
-                      </div>
-                    ) : (
-                      recentRegistrationsList.map((patient) => {
-                        const initials = `${patient.firstName?.charAt(0) || ''}${patient.lastName?.charAt(0) || ''}`.toUpperCase();
-                        const avatarColors = (() => {
-                          const colors = [
-                            { bg: '#f5f3ff', text: '#8b5cf6' },
-                            { bg: '#ecfdf5', text: '#10b981' },
-                            { bg: '#eff6ff', text: '#3b82f6' },
-                          ];
-                          const name = patient.firstName || '';
-                          let hash = 0;
-                          for (let i = 0; i < name.length; i++) {
-                            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-                          }
-                          return colors[Math.abs(hash) % colors.length];
-                        })();
-
-                        return (
-                          <div key={patient.id} className="d-flex align-items-center justify-content-between">
-                            <div className="d-flex align-items-center gap-2">
-                              <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: '32px', height: '32px', backgroundColor: avatarColors.bg, color: avatarColors.text, fontWeight: 700, fontSize: '11px' }}>
-                                {initials || 'P'}
-                              </div>
-                              <div>
-                                <h6 className="mb-0 text-dark fw-bold" style={{ fontSize: '12px' }}>{patient.firstName} {patient.lastName}</h6>
-                                <p className="mb-0 text-muted" style={{ fontSize: '10px' }}>
-                                  {dayjs(patient.createdAt).format('DD MMM YYYY')} <span className="mx-1">•</span> {dayjs(patient.createdAt).format('hh:mm A')}
-                                </p>
-                              </div>
-                            </div>
-                            <span className="badge bg-soft-success text-success rounded px-1.5 py-0.5 fw-semibold" style={{ fontSize: '9px' }}>New</span>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Staff Attendance */}
-            <div className="col-xl-3 col-md-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '15px' }}>Staff Attendance</h5>
-                  <Link to={all_routes.attendance} className="btn btn-sm btn-link p-0 fw-bold text-decoration-none" style={{ color: '#4f46e5', fontSize: '12px' }}>View All</Link>
-                </div>
-                <div className="card-body p-3 d-flex flex-column justify-content-between">
-                  <div className="row align-items-center mb-2">
-                    <div className="col-6">
-                      <Chart options={staffChartOptions} series={[staffAttendanceStats.percentage]} type="radialBar" height={150} />
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
                     </div>
-                    <div className="col-6 d-flex flex-column gap-2">
-                      <div className="d-flex align-items-center gap-2">
-                        <i className="ti ti-users text-muted fs-14" />
-                        <div>
-                          <p className="mb-0 text-muted" style={{ fontSize: '9px' }}>Total Staff</p>
-                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '12px' }}>{staffAttendanceStats.total}</h6>
-                        </div>
-                      </div>
-                      <div className="d-flex align-items-center gap-2">
-                        <span className="rounded-circle" style={{ width: '6px', height: '6px', backgroundColor: '#3b82f6' }}></span>
-                        <div>
-                          <p className="mb-0 text-muted" style={{ fontSize: '9px' }}>Present</p>
-                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '12px' }}>{staffAttendanceStats.present}</h6>
-                        </div>
-                      </div>
-                      <div className="d-flex align-items-center gap-2">
-                        <span className="rounded-circle" style={{ width: '6px', height: '6px', backgroundColor: '#ef4444' }}></span>
-                        <div>
-                          <p className="mb-0 text-muted" style={{ fontSize: '9px' }}>Absent</p>
-                          <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '12px' }}>{staffAttendanceStats.absent}</h6>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <Link to={all_routes.attendance} className="d-flex align-items-center justify-content-between text-decoration-none border-top pt-2 mt-auto" style={{ color: '#4f46e5', fontWeight: 600, fontSize: '11px' }}>
-                    <span>View attendance</span>
-                    <i className="ti ti-arrow-right fs-14" />
-                  </Link>
+                  )}
                 </div>
               </div>
+
             </div>
 
-            {/* Quick Actions */}
-            <div className="col-xl-3 col-md-6 col-12">
-              <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '12px' }}>
-                <div className="card-header d-flex align-items-center justify-content-between border-0 bg-transparent py-3">
-                  <h5 className="fw-bold mb-0 text-dark" style={{ fontSize: '15px' }}>Quick Actions</h5>
+            {/* RIGHT COLUMN (30%) */}
+            <div className="col-xl-4 col-lg-12 fade-in-up delay-3 dashboard-section-stack">
+              
+              {/* Quick Actions (RESTORED - 6 Items Premium Grid) */}
+              <div className="analytic-card">
+                <div className="analytic-card-header border-0 pb-2">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#e0e7ff', color: '#4f46e5', boxShadow: 'none' }}>
+                      <i className="ti ti-bolt" />
+                    </div>
+                    Quick Actions
+                  </h3>
                 </div>
-                <div className="card-body p-3">
+                <div className="analytic-card-body p-3 pt-0">
                   <div className="row g-2">
                     <div className="col-4">
-                      <Link to={all_routes.addDoctors} className="d-flex flex-column align-items-center justify-content-center rounded-3 p-2 text-decoration-none text-center h-100 border bg-white" style={{ minHeight: '68px' }}>
-                        <i className="ti ti-user-plus text-primary fs-20 mb-1" />
-                        <span className="text-dark fw-semibold" style={{ fontSize: '9px' }}>Add Doctor</span>
+                      <Link to={all_routes.addDoctors} className="action-pill">
+                        <div className="action-pill-icon" style={{ color: '#3b82f6' }}><i className="ti ti-user-plus" /></div>
+                        <span className="action-pill-text">Doctor</span>
                       </Link>
                     </div>
                     <div className="col-4">
-                      <Link to={all_routes.createPatient} className="d-flex flex-column align-items-center justify-content-center rounded-3 p-2 text-decoration-none text-center h-100 border bg-white" style={{ minHeight: '68px' }}>
-                        <i className="ti ti-user-check text-danger fs-20 mb-1" />
-                        <span className="text-dark fw-semibold" style={{ fontSize: '9px' }}>Add Patient</span>
+                      <Link to={all_routes.createPatient} className="action-pill">
+                        <div className="action-pill-icon" style={{ color: '#ef4444' }}><i className="ti ti-user-check" /></div>
+                        <span className="action-pill-text">Patient</span>
                       </Link>
                     </div>
                     <div className="col-4">
-                      <button onClick={() => setShowAddAppointment(true)} className="d-flex flex-column align-items-center justify-content-center rounded-3 p-2 text-decoration-none text-center h-100 w-100 border bg-white" style={{ minHeight: '68px' }}>
-                        <i className="ti ti-calendar-event text-success fs-20 mb-1" />
-                        <span className="text-dark fw-semibold" style={{ fontSize: '9px' }}>New Appt</span>
+                      <button onClick={() => setShowAddAppointment(true)} className="action-pill border-0" style={{ background: '#ecfdf5' }}>
+                        <div className="action-pill-icon" style={{ color: '#10b981' }}><i className="ti ti-calendar-plus" /></div>
+                        <span className="action-pill-text" style={{ color: '#059669' }}>Appt</span>
                       </button>
                     </div>
                     <div className="col-4">
-                      <Link to={all_routes.hrmDepartments} className="d-flex flex-column align-items-center justify-content-center rounded-3 p-2 text-decoration-none text-center h-100 border bg-white" style={{ minHeight: '68px' }}>
-                        <i className="ti ti-building-bank text-info fs-20 mb-1" />
-                        <span className="text-dark fw-semibold" style={{ fontSize: '9px' }}>Add Dept</span>
+                      <Link to={all_routes.hrmDepartments} className="action-pill">
+                        <div className="action-pill-icon" style={{ color: '#06b6d4' }}><i className="ti ti-building-bank" /></div>
+                        <span className="action-pill-text">Dept</span>
                       </Link>
                     </div>
                     <div className="col-4">
-                      <Link to={all_routes.designation} className="d-flex flex-column align-items-center justify-content-center rounded-3 p-2 text-decoration-none text-center h-100 border bg-white" style={{ minHeight: '68px' }}>
-                        <i className="ti ti-user-cog text-warning fs-20 mb-1" />
-                        <span className="text-dark fw-semibold" style={{ fontSize: '9px' }}>Add Desig</span>
+                      <Link to={all_routes.designation} className="action-pill">
+                        <div className="action-pill-icon" style={{ color: '#f59e0b' }}><i className="ti ti-user-cog" /></div>
+                        <span className="action-pill-text">Desig</span>
                       </Link>
                     </div>
                     <div className="col-4">
-                      <Link to={all_routes.specializations} className="d-flex flex-column align-items-center justify-content-center rounded-3 p-2 text-decoration-none text-center h-100 border bg-white" style={{ minHeight: '68px' }}>
-                        <i className="ti ti-user-shield text-success fs-20 mb-1" />
-                        <span className="text-dark fw-semibold" style={{ fontSize: '9px' }}>Add Spec</span>
+                      <Link to={all_routes.specializations} className="action-pill">
+                        <div className="action-pill-icon" style={{ color: '#8b5cf6' }}><i className="ti ti-user-shield" /></div>
+                        <span className="action-pill-text">Spec</span>
                       </Link>
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* Staff Attendance (RESTORED) */}
+              <div className="analytic-card">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#fef3c7', color: '#d97706', boxShadow: 'none' }}>
+                      <i className="ti ti-user-check" />
+                    </div>
+                    Staff Attendance
+                  </h3>
+                  <Link to={all_routes.attendance} className="btn-link text-decoration-none fs-13">View All</Link>
+                </div>
+                <div className="analytic-card-body d-flex align-items-center justify-content-between p-4">
+                  <div className="flex-shrink-0" style={{ width: '130px' }}>
+                    <Chart options={staffChartOptions} series={[staffAttendanceStats.percentage]} type="radialBar" height={160} />
+                  </div>
+                  <div className="flex-grow-1 ps-3">
+                    <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                      <span className="text-muted fw-semibold fs-13">Total Staff</span>
+                      <span className="fw-bold text-dark fs-14">{staffAttendanceStats.total}</span>
+                    </div>
+                    <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                      <span className="text-muted fw-semibold fs-13"><span className="d-inline-block rounded-circle me-2" style={{ width: 8, height: 8, background: '#6366f1' }} />Present</span>
+                      <span className="fw-bold fs-14" style={{ color: '#6366f1' }}>{staffAttendanceStats.present}</span>
+                    </div>
+                    <div className="d-flex align-items-center justify-content-between">
+                      <span className="text-muted fw-semibold fs-13"><span className="d-inline-block rounded-circle me-2" style={{ width: 8, height: 8, background: '#cbd5e1' }} />Absent</span>
+                      <span className="fw-bold text-muted fs-14">{staffAttendanceStats.absent}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Today's Schedule List */}
+              <div className="analytic-card">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#eff6ff', color: '#2563eb', boxShadow: 'none' }}>
+                      <i className="ti ti-calendar-event" />
+                    </div>
+                    Today's Schedule
+                  </h3>
+                  <Link to={all_routes.appointments} className="btn-link text-decoration-none fs-13">View All</Link>
+                </div>
+                <div className="analytic-card-body" style={{ maxHeight: '340px', overflowY: 'auto', paddingRight: '12px' }}>
+                  {todayAppointmentsList.length === 0 ? (
+                    <div className="text-center py-4">
+                      <i className="ti ti-calendar-off fs-40 mb-3 d-block" style={{ color: '#cbd5e1' }} />
+                      <p className="text-muted fw-medium fs-14">No appointments scheduled today.</p>
+                    </div>
+                  ) : (
+                    todayAppointmentsList.slice(0, 5).map((app: any) => {
+                      const initials = `${app.patient?.firstName?.charAt(0) || ''}${app.patient?.lastName?.charAt(0) || ''}`.toUpperCase();
+                      return (
+                        <div key={app.id} className="appt-list-item d-flex align-items-center justify-content-between">
+                          <div className="d-flex align-items-center gap-3">
+                            <div className="rounded-circle d-flex align-items-center justify-content-center fw-bold" style={{ width: '40px', height: '40px', background: '#f1f5f9', color: '#475569', fontSize: '14px' }}>
+                              {initials || 'PT'}
+                            </div>
+                            <div>
+                              <h6 className="mb-1 fw-bold text-dark fs-14">{app.patient?.firstName} {app.patient?.lastName}</h6>
+                              <div className="d-flex align-items-center gap-2 text-muted" style={{ fontSize: '12px' }}>
+                                <i className="ti ti-clock" /> {dayjs(app.scheduledAt).format('hh:mm A')}
+                              </div>
+                            </div>
+                          </div>
+                          <span className="badge rounded-pill fw-semibold px-2 py-1" style={{ 
+                            background: app.status === 'Completed' ? '#dcfce7' : '#eff6ff', 
+                            color: app.status === 'Completed' ? '#16a34a' : '#2563eb',
+                            fontSize: '11px' 
+                          }}>
+                            {app.status}
+                          </span>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* Upcoming Holidays (RESTORED) */}
+              <div className="analytic-card">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#fff7ed', color: '#ea580c', boxShadow: 'none' }}>
+                      <i className="ti ti-beach" />
+                    </div>
+                    Upcoming Holidays
+                  </h3>
+                </div>
+                <div className="analytic-card-body" style={{ maxHeight: '300px', overflowY: 'auto', paddingRight: '12px' }}>
+                  {holidays.length === 0 ? (
+                    <div className="text-center py-4">
+                      <i className="ti ti-calendar-off fs-40 mb-3 d-block" style={{ color: '#cbd5e1' }} />
+                      <p className="text-muted fw-medium fs-14">No holidays scheduled.</p>
+                    </div>
+                  ) : (
+                    <div className="d-flex flex-column gap-3">
+                      {holidays.map((h: any) => (
+                        <div key={h.id} className="p-3 rounded-4" style={{ background: '#f8fafc', border: '1px solid #f1f5f9' }}>
+                          <h6 className="fw-bold mb-1 fs-14 text-dark">{h.title}</h6>
+                          <div className="d-flex align-items-center gap-2 text-muted" style={{ fontSize: '12px' }}>
+                            <i className="ti ti-calendar" />
+                            {dayjs(h.date).format('MMM DD, YYYY')} {h.endDate && `- ${dayjs(h.endDate).format('MMM DD, YYYY')}`}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Holiday Calendar (RESTORED) */}
+              <div className="analytic-card">
+                <div className="analytic-card-header">
+                  <h3 className="analytic-card-title">
+                    <div className="hero-icon-box" style={{ width: '32px', height: '32px', fontSize: '16px', background: '#fce7f3', color: '#db2777', boxShadow: 'none' }}>
+                      <i className="ti ti-calendar-heart" />
+                    </div>
+                    Holiday Calendar
+                  </h3>
+                  <Link to={all_routes.holidays} className="btn-link text-decoration-none fs-13">View All</Link>
+                </div>
+                <div className="analytic-card-body p-3">
+                  <div className="premium-calendar-wrapper">
+                    <Calendar fullscreen={false} cellRender={cellRender} />
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
-
-          {/* ── TRANSACTION ANALYTICS SECTION ────────────────── */}
-          <div className="row g-1 mb-1">
-            <div className="col-xxl-4 col-xl-6 col-md-6 col-12">
-              <div className="card h-100 border-0" style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', borderLeft: '4px solid #10b981 !important' }}>
-                <div className="card-body d-flex align-items-center gap-3">
-                  <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 52, height: 52, background: 'rgba(16, 185, 129, 0.15)' }}>
-                    <i className="ti ti-trending-up fs-24" style={{ color: '#10b981' }} />
-                  </div>
-                  <div className="flex-grow-1">
-                    <p className="mb-1 fs-12 fw-semibold text-uppercase" style={{ color: '#6b7280', letterSpacing: '0.5px' }}>Total Income</p>
-                    <h4 className="fw-bold mb-0" style={{ color: '#065f46' }}>₹{stats.totalIncome?.toLocaleString('en-IN') || '0'}</h4>
-                  </div>
-                  <div className="d-flex align-items-center gap-1 px-2 py-1 rounded-pill" style={{ background: 'rgba(16, 185, 129, 0.12)', fontSize: '11px', fontWeight: 700, color: '#10b981' }}>
-                    <i className="ti ti-arrow-up fs-12" /> Income
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-xxl-4 col-xl-6 col-md-6 col-12">
-              <div className="card h-100 border-0" style={{ background: 'linear-gradient(135deg, #fef2f2 0%, #fecaca 100%)', borderLeft: '4px solid #ef4444 !important' }}>
-                <div className="card-body d-flex align-items-center gap-3">
-                  <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 52, height: 52, background: 'rgba(239, 68, 68, 0.12)' }}>
-                    <i className="ti ti-trending-down fs-24" style={{ color: '#ef4444' }} />
-                  </div>
-                  <div className="flex-grow-1">
-                    <p className="mb-1 fs-12 fw-semibold text-uppercase" style={{ color: '#6b7280', letterSpacing: '0.5px' }}>Total Expense</p>
-                    <h4 className="fw-bold mb-0" style={{ color: '#991b1b' }}>₹{stats.totalExpense?.toLocaleString('en-IN') || '0'}</h4>
-                  </div>
-                  <div className="d-flex align-items-center gap-1 px-2 py-1 rounded-pill" style={{ background: 'rgba(239, 68, 68, 0.12)', fontSize: '11px', fontWeight: 700, color: '#ef4444' }}>
-                    <i className="ti ti-arrow-down fs-12" /> Expense
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-xxl-4 col-xl-6 col-md-6 col-12">
-              <div className="card h-100 border-0" style={{ background: stats.netProfit >= 0 ? 'linear-gradient(135deg, #eff6ff 0%, #bfdbfe 100%)' : 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)', borderLeft: `4px solid ${stats.netProfit >= 0 ? '#3b82f6' : '#f97316'} !important` }}>
-                <div className="card-body d-flex align-items-center gap-3">
-                  <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 52, height: 52, background: stats.netProfit >= 0 ? 'rgba(59, 130, 246, 0.12)' : 'rgba(249, 115, 22, 0.12)' }}>
-                    <i className={`ti ${stats.netProfit >= 0 ? 'ti-chart-arrows-vertical' : 'ti-alert-triangle'} fs-24`} style={{ color: stats.netProfit >= 0 ? '#3b82f6' : '#f97316' }} />
-                  </div>
-                  <div className="flex-grow-1">
-                    <p className="mb-1 fs-12 fw-semibold text-uppercase" style={{ color: '#6b7280', letterSpacing: '0.5px' }}>Net Profit</p>
-                    <h4 className="fw-bold mb-0" style={{ color: stats.netProfit >= 0 ? '#1e40af' : '#9a3412' }}>
-                      {stats.netProfit >= 0 ? '+' : '-'}₹{Math.abs(stats.netProfit || 0).toLocaleString('en-IN')}
-                    </h4>
-                  </div>
-                  <div className="d-flex align-items-center gap-1 px-2 py-1 rounded-pill" style={{ background: stats.netProfit >= 0 ? 'rgba(59, 130, 246, 0.12)' : 'rgba(249, 115, 22, 0.12)', fontSize: '11px', fontWeight: 700, color: stats.netProfit >= 0 ? '#3b82f6' : '#f97316' }}>
-                    <i className={`ti ${stats.netProfit >= 0 ? 'ti-thumb-up' : 'ti-thumb-down'} fs-12`} /> {stats.netProfit >= 0 ? 'Profit' : 'Loss'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-
         </div>
 
-        <div className="footer text-center bg-white p-2 border-top mt-1" style={{ marginTop: '2px' }}>
-          <p className="text-dark mb-0 fs-12">2025 © <Link to="#" className="link-primary ms-1 fw-bold">Docyari</Link>, All Rights Reserved</p>
+        <div className="footer text-center bg-white p-2 border-top">
+          <p className="text-dark mb-0">
+            2025 © <Link to="#" className="link-primary">Docyari</Link>, All Rights Reserved
+          </p>
         </div>
       </div>
 
       {/* New Appointment Modal */}
-      <div className={`modal custom-modal fade ${showAddAppointment ? "show d-block" : "d-none"}`} role="dialog" style={{ zIndex: 1055 }}>
+      <div className={`modal custom-modal fade ${showAddAppointment ? "show d-block" : "d-none"}`} role="dialog" style={{ zIndex: 1055, background: showAddAppointment ? 'rgba(15,23,42,0.4)' : 'transparent', backdropFilter: 'blur(4px)' }}>
         <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '12px', overflow: 'hidden' }}>
-            <div className="modal-header bg-primary text-white">
-              <h5 className="modal-title">New Appointment</h5>
-              <button type="button" className="btn-close btn-close-white" onClick={() => setShowAddAppointment(false)}></button>
+          <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '20px', overflow: 'hidden' }}>
+            <div className="modal-header border-bottom-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center bg-white">
+              <h5 className="modal-title fw-bold fs-20 text-dark">Schedule Appointment</h5>
+              <button type="button" className="btn-close shadow-none" onClick={() => setShowAddAppointment(false)}></button>
             </div>
-            <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+            <div className="modal-body p-4" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
               {showAddAppointment && (
                 <AppointmentFormPage
                   mode="create"
                   isModal={true}
-                  onSuccess={() => {
-                    setShowAddAppointment(false);
-                    // Refresh stats/appointments on dashboard
-                    window.location.reload();
-                  }}
-                  onCancel={() => setShowAddAppointment(false)}
+                  onSuccess={() => setShowAddAppointment(false)}
                 />
               )}
             </div>
           </div>
         </div>
       </div>
-      {showAddAppointment && <div className="modal-backdrop fade show" style={{ zIndex: 1050 }}></div>}
     </>
   );
 };

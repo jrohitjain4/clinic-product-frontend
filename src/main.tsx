@@ -9,6 +9,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ALLRoutes from './feature-module/routes/router'
 import ThemeRouteHandler from './core/common/theme-route-handler/themeRouteHandler'
+import ToastIcon from './core/common/toast/ToastIcon';
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
 // @ts-ignore
 import * as bootstrap from "bootstrap";
@@ -30,17 +31,18 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter basename={base_path}>
         <ThemeRouteHandler />
         <ToastContainer
-          position="top-center"
-          autoClose={1500}
-          hideProgressBar={false}
-          newestOnTop={true}
+          position="top-right"
+          autoClose={2000}
+          hideProgressBar
+          newestOnTop
           closeOnClick
           rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
+          pauseOnFocusLoss={false}
+          draggable={false}
+          pauseOnHover={false}
           theme="light"
-          limit={1}
+          limit={3}
+          icon={ToastIcon}
         />
         <ALLRoutes />
       </BrowserRouter>

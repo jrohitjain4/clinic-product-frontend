@@ -11,6 +11,35 @@ import { all_routes } from "../../../feature-module/routes/all_routes";
 import { canSeeSection, canSeeMenuItem } from "../../utils/staffPermissions";
 
 
+const pathMatchesMenuItem = (item: any, pathname: string, fullPath: string) => {
+  if (!item) return false;
+  const link = item.link as string | undefined;
+  if (link?.includes("?")) {
+    return (
+      fullPath === link ||
+      (link.includes("tab=roles") && !fullPath.includes("?"))
+    );
+  }
+  if (link && link === pathname) return true;
+  const prefixes: string[] | undefined = item.activePrefixes;
+  if (Array.isArray(prefixes) && prefixes.length > 0) {
+    return prefixes.some(
+      (prefix) => pathname === prefix.replace(/\/$/, "") || pathname.startsWith(prefix)
+    );
+  }
+  return false;
+};
+
+const menuItemMatchesPath = (item: any, pathname: string, fullPath: string): boolean => {
+  if (pathMatchesMenuItem(item, pathname, fullPath)) return true;
+  if (item?.submenu && Array.isArray(item?.submenuItems)) {
+    return item.submenuItems.some((child: any) =>
+      menuItemMatchesPath(child, pathname, fullPath)
+    );
+  }
+  return false;
+};
+
 const Sidebar = () => {
   const Location = useLocation();
   const [subOpen, setSubopen] = useState<any>("");
@@ -159,15 +188,15 @@ const Sidebar = () => {
         <div className="sidebar-logo">
           <div>
             {/* Logo Normal */}
-            <Link to={all_routes.dashboard} className="logo logo-normal">
+            <Link to={all_routes.aboutDocYori} className="logo logo-normal">
               <ImageWithBasePath src="docyari-logo.svg" alt="Logo" style={{ width: '165px', height: '165px', marginTop: '-65px', marginBottom: '-65px', marginLeft: '-15px' }} />
             </Link>
             {/* Logo Small */}
-            <Link to={all_routes.dashboard} className="logo-small">
+            <Link to={all_routes.aboutDocYori} className="logo-small">
               <ImageWithBasePath src="docyari-logo.svg" alt="Logo" style={{ width: '60px', height: 'auto', marginLeft: '-10px' }} />
             </Link>
             {/* Logo Dark */}
-            <Link to={all_routes.dashboard} className="dark-logo">
+            <Link to={all_routes.aboutDocYori} className="dark-logo">
               <ImageWithBasePath src="docyari-logo.svg" alt="Logo" style={{ width: '165px', height: '165px', marginTop: '-65px', marginBottom: '-65px', marginLeft: '-15px' }} />
             </Link>
           </div>
@@ -189,22 +218,22 @@ const Sidebar = () => {
           <div id="sidebar-menu" className="sidebar-menu">
             <ul>
               {SidebarData?.filter(section => {
-                if (activeMode === "therapy") {
-                  return section.tittle === "Therapy";
-                } else {
-                  if (section.tittle === "Therapy") {
-                    return false;
-                  }
-                }
-
-                // Only show Super Admin section to SUPER_ADMIN role, and hide EVERYTHING else
-                if (user?.role === "SUPER_ADMIN") {
+                // Only show Super Admin section to SUPER_ADMIN role or super-admin path, and hide EVERYTHING else
+                if (user?.role === "SUPER_ADMIN" || Location.pathname.startsWith("/super-admin")) {
                   return section.tittle === "Super Admin";
                 }
 
                 // For other roles, don't show the Super Admin section
                 if (section.tittle === "Super Admin") {
                   return false;
+                }
+
+                if (activeMode === "therapy") {
+                  return section.tittle === "Therapy";
+                } else {
+                  if (section.tittle === "Therapy") {
+                    return false;
+                  }
                 }
                 // Hide demo-only sections for admin users
                 if (
@@ -254,6 +283,14 @@ const Sidebar = () => {
                           }
                           title.links = link_array;
 
+                          const currentFullPath = Location.pathname + Location.search;
+                          const isFromIpd = Location.state?.fromIpd;
+                          const isTitleActive =
+                            (isFromIpd && title?.label === "IPD") ||
+                            title?.links?.includes(Location.pathname) ||
+                            title?.link === Location.pathname ||
+                            menuItemMatchesPath(title, Location.pathname, currentFullPath);
+
                           return (
                             <li className="submenu" key={`title-${i}`}>
                               <Link
@@ -265,15 +302,10 @@ const Sidebar = () => {
                                     handleLayoutClick(title?.label);
                                   }
                                 }}
-                                className={`${subOpen === title?.label ||
-                                  title?.links?.includes(Location.pathname)
+                                className={`${subOpen === title?.label || isTitleActive
                                   ? "subdrop"
                                   : ""
-                                  } ${title?.links?.includes(Location.pathname) ||
-                                    title?.link === Location.pathname
-                                    ? "active"
-                                    : ""
-                                  }`}
+                                  } ${isTitleActive ? "active" : ""}`}
                               >
                                 <i className={`ti ti-${title.icon}`}></i>
                                 <span>{title?.label}</span>
@@ -292,13 +324,15 @@ const Sidebar = () => {
                                 <ul
                                   style={{
                                     display:
-                                      subOpen === title?.label ||
-                                        title?.links?.includes(Location.pathname)
+                                      subOpen === title?.label || isTitleActive
                                         ? "block"
                                         : "none",
                                   }}
                                 >
                                   {title?.submenuItems?.filter((item: any) => {
+                                    if (user?.role === "STAFF") {
+                                      return canSeeMenuItem(item?.label, title?.label);
+                                    }
                                     if (user?.role === "ADMIN" || user?.role === "SUPER_ADMIN") {
                                       if (item.label === "Doctor Dashboard" || item.label === "Patient Dashboard") return false;
                                     } else if (user?.role === "DOCTOR") {
@@ -309,25 +343,28 @@ const Sidebar = () => {
                                     return true;
                                   }).map(
                                     (item: any, j: any) => {
-                                      const currentFullPath = Location.pathname + Location.search;
-                                      const isSubActive =
-                                        item?.submenuItems
-                                          ?.map((link: any) => link?.link)
-                                          .includes(Location.pathname) ||
-                                        (item?.link?.includes("?")
-                                          ? (currentFullPath === item?.link || (item?.link?.includes("tab=roles") && !Location.search))
-                                          : item?.link === Location.pathname);
+                                      const hasNestedSubmenu =
+                                        !!item?.submenu &&
+                                        Array.isArray(item?.submenuItems) &&
+                                        item.submenuItems.length > 0;
+                                       const isSubActive =
+                                         (isFromIpd && title?.label === "IPD" && item?.label === "Patient") ||
+                                         menuItemMatchesPath(
+                                           item,
+                                           Location.pathname,
+                                           currentFullPath
+                                         );
 
                                       return (
                                         <li
-                                          className={`${item?.submenuItems
+                                          className={`${hasNestedSubmenu
                                             ? "submenu submenu-two"
                                             : ""
                                             } `}
                                           key={`item-${j}`}
                                         >
                                           <Link
-                                            to={item?.submenu ? "#" : item?.link}
+                                            to={hasNestedSubmenu ? "#" : item?.link}
                                             className={`${isSubActive ? "active subdrop" : ""
                                               } ${subsidebar === item?.label
                                                 ? "subdrop"
@@ -342,13 +379,14 @@ const Sidebar = () => {
 
 
                                           >
-                                            {item?.label}
-                                            {(item?.submenu ||
+                                            <i className={`ti ti-${item?.icon || "point"} menu-tree-icon`} />
+                                            <span>{item?.label}</span>
+                                            {(hasNestedSubmenu ||
                                               item?.customSubmenuTwo) && (
                                                 <span className="menu-arrow"></span>
                                               )}
                                           </Link>
-                                          {item?.submenuItems ? (
+                                          {hasNestedSubmenu ? (
                                             <ul
                                               style={{
                                                 display:
@@ -359,16 +397,11 @@ const Sidebar = () => {
                                             >
                                               {item?.submenuItems?.map(
                                                 (items: any, k: any) => {
-                                                  const isSubSubActive =
-                                                    items?.submenuItems
-                                                      ?.map(
-                                                        (link: any) => link.link
-                                                      )
-                                                      .includes(
-                                                        Location.pathname
-                                                      ) ||
-                                                    items?.link ===
-                                                    Location.pathname;
+                                                  const isSubSubActive = menuItemMatchesPath(
+                                                    items,
+                                                    Location.pathname,
+                                                    currentFullPath
+                                                  );
 
                                                   return (
                                                     <li key={`submenu-item-${k}`}>
@@ -383,7 +416,8 @@ const Sidebar = () => {
                                                           : ""
                                                           }`}
                                                       >
-                                                        {items?.label}
+                                                        <i className={`ti ti-${items?.icon || "box"} menu-tree-icon`} />
+                                                        <span>{items?.label}</span>
                                                       </Link>
                                                     </li>
                                                   );

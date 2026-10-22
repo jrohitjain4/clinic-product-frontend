@@ -1,6 +1,7 @@
 import { Link } from "react-router"
 import SettingsSidebar from "../../../../../../core/common/settings-sidebar/settingsSidebar"
 import ImageWithBasePath from "../../../../../../core/imageWithBasePath"
+import { IconFormControl } from "../../../../../../core/common/form-fields"
 
 
 const LanguageSettings3 = () => {
@@ -74,13 +75,12 @@ const LanguageSettings3 = () => {
               <div className="card-body px-0 mx-3">
                 <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
                   <div className="top-search me-2">
-                    <div className="input-icon-start position-relative me-2">
-                      <input
-                        type="text"
-                        className="form-control form-control-sm ps-1 bg-white"
-                        placeholder="Search"
-                      />
-                    </div>
+                    <IconFormControl
+                      fieldLabel="search"
+                      type="text"
+                      className="form-control-sm bg-white"
+                      placeholder="Search"
+                    />
                   </div>
                   <div className="d-flex align-items-center flex-wrap gap-2">
                     <Link
@@ -135,10 +135,12 @@ const LanguageSettings3 = () => {
                       <tr>
                         <td className="text-gray-9">Invoices</td>
                         <td>
-                          <input
+                          <IconFormControl
+                            fieldLabel="Title"
                             type="text"
                             dir="rtl"
-                            className="form-control text-end"
+                            className="text-end"
+                            placeholder="Enter invoices"
                             defaultValue="????????"
                           />
                         </td>
@@ -146,10 +148,12 @@ const LanguageSettings3 = () => {
                       <tr>
                         <td className="text-gray-9">Recurring Invoices</td>
                         <td>
-                          <input
+                          <IconFormControl
+                            fieldLabel="Title"
                             type="text"
                             dir="rtl"
-                            className="form-control text-end"
+                            className="text-end"
+                            placeholder="Enter recurring invoices"
                             defaultValue="???????? ????????"
                           />
                         </td>
@@ -157,10 +161,12 @@ const LanguageSettings3 = () => {
                       <tr>
                         <td className="text-gray-9">Credit Notes</td>
                         <td>
-                          <input
+                          <IconFormControl
+                            fieldLabel="Title"
                             type="text"
                             dir="rtl"
-                            className="form-control text-end"
+                            className="text-end"
+                            placeholder="Enter credit notes"
                             defaultValue="??????? ????????"
                           />
                         </td>
@@ -168,10 +174,12 @@ const LanguageSettings3 = () => {
                       <tr>
                         <td className="text-gray-9">Quotations</td>
                         <td>
-                          <input
+                          <IconFormControl
+                            fieldLabel="Title"
                             type="text"
                             dir="rtl"
-                            className="form-control text-end"
+                            className="text-end"
+                            placeholder="Enter quotations"
                             defaultValue="??????????"
                           />
                         </td>
@@ -179,10 +187,12 @@ const LanguageSettings3 = () => {
                       <tr>
                         <td className="text-gray-9">Delivery Challans</td>
                         <td>
-                          <input
+                          <IconFormControl
+                            fieldLabel="Title"
                             type="text"
                             dir="rtl"
-                            className="form-control text-end"
+                            className="text-end"
+                            placeholder="Enter delivery challans"
                             defaultValue="????? ??????"
                           />
                         </td>
@@ -190,10 +200,12 @@ const LanguageSettings3 = () => {
                       <tr>
                         <td className="text-gray-9">Customers</td>
                         <td>
-                          <input
+                          <IconFormControl
+                            fieldLabel="Title"
                             type="text"
                             dir="rtl"
-                            className="form-control text-end"
+                            className="text-end"
+                            placeholder="Enter customers"
                             defaultValue="?????"
                           />
                         </td>
@@ -214,7 +226,7 @@ const LanguageSettings3 = () => {
     {/* Footer Start */}
     <div className="footer text-center bg-white p-2 border-top">
       <p className="text-dark mb-0">
-        2025 ©
+        2025 ?
         <Link to="#" className="link-primary">
           Docyari
         </Link>

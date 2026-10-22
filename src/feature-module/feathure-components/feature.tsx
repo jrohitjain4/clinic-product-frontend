@@ -41,7 +41,7 @@ const Feature = () => {
       const userStr = localStorage.getItem("user");
       if (userStr) {
         const u = JSON.parse(userStr);
-        const step = u?.clinic?.onboardingStep ?? 0;
+        const step = typeof u?.clinic?.onboardingStep === "number" ? u.clinic.onboardingStep : 2;
         if (u?.role === "ADMIN" && step < 2) {
           setShowOnboarding(true);
           return;
@@ -51,17 +51,19 @@ const Feature = () => {
     };
 
     checkOnboarding();
-    const interval = setInterval(checkOnboarding, 2000);
-    return () => clearInterval(interval);
   }, [locations.pathname]);
 
   const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
     const userStr = localStorage.getItem("user");
     if (userStr) {
-      const u = JSON.parse(userStr);
-      if (u?.clinic?.onboardingStep >= 2) {
-        setShowOnboarding(false);
-      }
+      try {
+        const u = JSON.parse(userStr);
+        if (u?.clinic) {
+          u.clinic.onboardingStep = 2;
+          setLocalStorageUser(u);
+        }
+      } catch (_) {}
     }
   };
 

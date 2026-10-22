@@ -121,6 +121,12 @@ const HomePage = () => {
                   <i className="ti ti-cloud fs-16 fs-sm-18 text-info" /> Cloud Based
                 </div>
               </div>
+
+              {/* Company Unit Badge */}
+              <div className="mt-3 pt-2 d-flex align-items-center gap-2 fs-13 fw-semibold text-muted">
+                <i className="ti ti-building text-primary fs-16" />
+                <span>A Unit of <strong className="text-dark">Veridian Innovations Private Limited</strong></span>
+              </div>
             </div>
 
             {/* RIGHT */}

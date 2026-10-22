@@ -7,6 +7,8 @@ import dayjs, { Dayjs } from "dayjs";
 import { resolveMediaUrl } from "../../../../core/config/api";
 import "./homePage.scss";
 import { toast } from "react-toastify";
+import { IconFormControl, IconTextarea, GenderOptionGroup } from "../../../../core/common/form-fields";
+import { cleanPhoneDigits } from "../../../../core/utils/phoneValidation";
 
 interface Doctor {
     id: string;
@@ -213,12 +215,27 @@ export default function ClinicLandingPage() {
         if (!diagForm.firstName.trim()) { newErrors.firstName = "First name is required"; hasError = true; }
         if (!diagForm.lastName.trim()) { newErrors.lastName = "Last name is required"; hasError = true; }
         if (!diagForm.email.trim()) { newErrors.email = "Email is required"; hasError = true; }
-        if (!diagForm.phone.trim()) { newErrors.phone = "Phone number is required"; hasError = true; }
+        if (!diagForm.phone.trim()) { 
+            newErrors.phone = "Phone number is required"; 
+            hasError = true; 
+        } else if (cleanPhoneDigits(diagForm.phone).length !== 10) {
+            newErrors.phone = "Phone number must be exactly 10 digits";
+            hasError = true;
+        }
         if (!diagForm.gender) { newErrors.gender = "Gender is required"; hasError = true; }
         if (!diagForm.testId) { newErrors.testId = "Please select a test"; hasError = true; }
         if (!diagForm.date) { newErrors.date = "Please select a date"; hasError = true; }
 
-        if (hasError) { setDiagFormErrors(newErrors); return; }
+        if (hasError) {
+            setDiagFormErrors(newErrors);
+            const errList = Object.values(newErrors);
+            const summaryMsg = errList.length === 1 
+                ? `${errList[0]}` 
+                : `Diagnostic booking not submitted. Please fix missing/invalid fields: ${errList.join(", ")}`;
+            setDiagError(summaryMsg);
+            toast.error(summaryMsg);
+            return;
+        }
         if (!clinic?.id) return;
 
         setDiagLoading(true);
@@ -253,7 +270,9 @@ export default function ClinicLandingPage() {
             });
             setDiagSuccess(data.message || "Diagnostic test scheduled successfully!");
         } catch (err: any) {
-            setDiagError(err.message);
+            const errMsg = err.message || "Diagnostic booking failed. Please try again.";
+            setDiagError(errMsg);
+            toast.error(errMsg);
         } finally {
             setDiagLoading(false);
         }
@@ -357,6 +376,20 @@ export default function ClinicLandingPage() {
         return options;
     }, [diagForm.date, diagAvailableSchedules, selectedDiagTestObj]);
 
+    const closeBooking = () => {
+        setShowModal(false);
+        setBookFormErrors({});
+        setBookError(null);
+        setBookSuccess(null);
+    };
+
+    const closeDiagBooking = () => {
+        setShowDiagModal(false);
+        setDiagFormErrors({});
+        setDiagError(null);
+        setDiagSuccess(null);
+    };
+
     const openBooking = (doctorId = "") => {
         setPreselectedDoctor(doctorId);
         setBookForm({
@@ -371,6 +404,7 @@ export default function ClinicLandingPage() {
             time: "",
             reason: ""
         });
+        setBookFormErrors({});
         setBookSuccess(null);
         setBookError(null);
         setGeneratedCreds(null);
@@ -558,7 +592,13 @@ export default function ClinicLandingPage() {
         if (!bookForm.firstName.trim()) { newErrors.firstName = "First name is required"; hasError = true; }
         if (!bookForm.lastName.trim()) { newErrors.lastName = "Last name is required"; hasError = true; }
         if (!bookForm.email.trim()) { newErrors.email = "Email is required"; hasError = true; }
-        if (!bookForm.phone.trim()) { newErrors.phone = "Phone number is required"; hasError = true; }
+        if (!bookForm.phone.trim()) { 
+            newErrors.phone = "Phone number is required"; 
+            hasError = true; 
+        } else if (cleanPhoneDigits(bookForm.phone).length !== 10) {
+            newErrors.phone = "Phone number must be exactly 10 digits";
+            hasError = true;
+        }
         if (!bookForm.gender) { newErrors.gender = "Gender is required"; hasError = true; }
 
         const docId = bookForm.doctorId || preselectedDoctor;
@@ -572,6 +612,12 @@ export default function ClinicLandingPage() {
 
         if (hasError) {
             setBookFormErrors(newErrors);
+            const errList = Object.values(newErrors);
+            const summaryMsg = errList.length === 1 
+                ? `${errList[0]}` 
+                : `Booking not submitted. Please fix missing/invalid fields: ${errList.join(", ")}`;
+            setBookError(summaryMsg);
+            toast.error(summaryMsg);
             return;
         }
 
@@ -608,7 +654,9 @@ export default function ClinicLandingPage() {
             });
             setBookSuccess(data.message || "Appointment booked successfully!");
         } catch (err: any) {
-            setBookError(err.message);
+            const errMsg = err.message || "Booking failed. Please check details and try again.";
+            setBookError(errMsg);
+            toast.error(errMsg);
         } finally {
             setBookLoading(false);
         }
@@ -1501,7 +1549,7 @@ export default function ClinicLandingPage() {
                 <div
                     className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
                     style={{ zIndex: 99999, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
-                    onClick={(e) => { if (e.target === e.currentTarget) setShowDiagModal(false); }}
+                    onClick={(e) => { if (e.target === e.currentTarget) closeDiagBooking(); }}
                 >
                     <div className="bg-white rounded-4 shadow-lg d-flex flex-column" style={{ width: "100%", maxWidth: diagSuccess ? "650px" : "720px", margin: "20px", maxHeight: "90vh", overflow: "hidden", transition: "max-width 0.3s ease" }}>
                         {/* Header */}
@@ -1515,7 +1563,7 @@ export default function ClinicLandingPage() {
                             <button
                                 className="btn p-0 d-flex align-items-center justify-content-center text-white opacity-75"
                                 style={{ width: 30, height: 30, background: "rgba(255,255,255,0.15)", borderRadius: "50%" }}
-                                onClick={() => setShowDiagModal(false)}
+                                onClick={closeDiagBooking}
                             >
                                 <i className="ti ti-x fs-6" />
                             </button>
@@ -1600,7 +1648,7 @@ export default function ClinicLandingPage() {
                                         <button
                                             className="btn fw-bold py-2 px-2 rounded-3 text-white flex-grow-1"
                                             style={{ background: "#0f172a", fontSize: "12px", border: "none" }}
-                                            onClick={() => setShowDiagModal(false)}
+                                            onClick={closeDiagBooking}
                                         >
                                             Done
                                         </button>
@@ -1613,43 +1661,42 @@ export default function ClinicLandingPage() {
                                         {/* First Name & Last Name */}
                                         <div className="col-6">
                                             <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>First Name <span className="text-danger">*</span></label>
-                                            <input type="text" className={`form-control rounded-3 ${diagFormErrors.firstName ? 'is-invalid' : ''}`} placeholder="First name" value={diagForm.firstName} onChange={e => setDiagForm(f => ({ ...f, firstName: e.target.value }))} style={{ fontSize: "14px" }} />
+                                            <IconFormControl type="text" fieldLabel="first name" className={`rounded-3 ${diagFormErrors.firstName ? 'is-invalid' : ''}`} placeholder="First name" value={diagForm.firstName} onChange={e => setDiagForm(f => ({ ...f, firstName: e.target.value }))} style={{ fontSize: "14px" }} />
                                             {diagFormErrors.firstName && <div className="invalid-feedback">{diagFormErrors.firstName}</div>}
                                         </div>
                                         <div className="col-6">
                                             <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Last Name <span className="text-danger">*</span></label>
-                                            <input type="text" className={`form-control rounded-3 ${diagFormErrors.lastName ? 'is-invalid' : ''}`} placeholder="Last name" value={diagForm.lastName} onChange={e => setDiagForm(f => ({ ...f, lastName: e.target.value }))} style={{ fontSize: "14px" }} />
+                                            <IconFormControl type="text" fieldLabel="last name" className={`rounded-3 ${diagFormErrors.lastName ? 'is-invalid' : ''}`} placeholder="Last name" value={diagForm.lastName} onChange={e => setDiagForm(f => ({ ...f, lastName: e.target.value }))} style={{ fontSize: "14px" }} />
                                             {diagFormErrors.lastName && <div className="invalid-feedback">{diagFormErrors.lastName}</div>}
                                         </div>
 
                                         {/* Email */}
                                         <div className="col-12">
                                             <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Email Address <span className="text-danger">*</span></label>
-                                            <input type="email" className={`form-control rounded-3 ${diagFormErrors.email ? 'is-invalid' : ''}`} placeholder="username@example.com" value={diagForm.email} onChange={e => setDiagForm(f => ({ ...f, email: e.target.value }))} style={{ fontSize: "14px" }} />
+                                            <IconFormControl type="email" fieldLabel="email" className={`rounded-3 ${diagFormErrors.email ? 'is-invalid' : ''}`} placeholder="username@example.com" value={diagForm.email} onChange={e => setDiagForm(f => ({ ...f, email: e.target.value }))} style={{ fontSize: "14px" }} />
                                             {diagFormErrors.email && <div className="invalid-feedback">{diagFormErrors.email}</div>}
                                         </div>
 
                                         {/* Phone & Gender */}
                                         <div className="col-6">
                                             <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Phone Number <span className="text-danger">*</span></label>
-                                            <input type="tel" className={`form-control rounded-3 ${diagFormErrors.phone ? 'is-invalid' : ''}`} placeholder="+91 XXXXX XXXXX" value={diagForm.phone} onChange={e => setDiagForm(f => ({ ...f, phone: e.target.value }))} style={{ fontSize: "14px" }} />
+                                            <IconFormControl type="tel" fieldLabel="phone" className={`rounded-3 ${diagFormErrors.phone ? 'is-invalid' : ''}`} placeholder="+91 XXXXX XXXXX" value={diagForm.phone} onChange={e => setDiagForm(f => ({ ...f, phone: e.target.value }))} style={{ fontSize: "14px" }} />
                                             {diagFormErrors.phone && <div className="invalid-feedback">{diagFormErrors.phone}</div>}
                                         </div>
                                         <div className="col-6">
-                                            <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Gender <span className="text-danger">*</span></label>
-                                            <select className={`form-select rounded-3 text-secondary ${diagFormErrors.gender ? 'is-invalid' : ''}`} value={diagForm.gender} onChange={e => setDiagForm(f => ({ ...f, gender: e.target.value }))} style={{ fontSize: "14px" }}>
-                                                <option value="">Select Gender</option>
-                                                <option value="Male">Male</option>
-                                                <option value="Female">Female</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                            {diagFormErrors.gender && <div className="invalid-feedback">{diagFormErrors.gender}</div>}
+                                            <GenderOptionGroup
+                                                showLabel
+                                                required
+                                                value={diagForm.gender}
+                                                onChange={(val) => setDiagForm(f => ({ ...f, gender: val }))}
+                                            />
+                                            {diagFormErrors.gender && <div className="invalid-feedback d-block">{diagFormErrors.gender}</div>}
                                         </div>
 
                                         {/* Address */}
                                         <div className="col-12">
                                             <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Address (Optional)</label>
-                                            <input type="text" className="form-control rounded-3" placeholder="House no., Street, City, Pincode" value={diagForm.address} onChange={e => setDiagForm(f => ({ ...f, address: e.target.value }))} style={{ fontSize: "14px" }} />
+                                            <IconFormControl type="text" fieldLabel="address" className="rounded-3" placeholder="House no., Street, City, Pincode" value={diagForm.address} onChange={e => setDiagForm(f => ({ ...f, address: e.target.value }))} style={{ fontSize: "14px" }} />
                                         </div>
 
                                         {/* Test Selection */}
@@ -1898,7 +1945,7 @@ export default function ClinicLandingPage() {
                                         {/* Reason */}
                                         <div className="col-12">
                                             <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Reason / Notes (Optional)</label>
-                                            <textarea className="form-control rounded-3" rows={2} placeholder="Any specific reason or notes for the test..." value={diagForm.reason} onChange={e => setDiagForm(f => ({ ...f, reason: e.target.value }))} style={{ fontSize: "14px", resize: "none" }} />
+                                            <IconTextarea fieldLabel="notes" className="rounded-3" rows={2} placeholder="Any specific reason or notes for the test..." value={diagForm.reason} onChange={e => setDiagForm(f => ({ ...f, reason: e.target.value }))} style={{ fontSize: "14px", resize: "none" }} />
                                         </div>
 
                                         {/* Error */}
@@ -1940,7 +1987,7 @@ export default function ClinicLandingPage() {
                     <div
                         className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
                         style={{ zIndex: 99999, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
-                        onClick={(e) => { if (e.target === e.currentTarget) { setShowModal(false); } }}
+                        onClick={(e) => { if (e.target === e.currentTarget) { closeBooking(); } }}
                     >
                         <div className="bg-white rounded-4 shadow-lg d-flex flex-column" style={{ width: "100%", maxWidth: bookSuccess ? "650px" : "760px", margin: "20px", maxHeight: "90vh", overflow: "hidden", transition: "max-width 0.3s ease" }}>
                             {/* Modal Header — fixed */}
@@ -1954,7 +2001,7 @@ export default function ClinicLandingPage() {
                                 <button
                                     className="btn p-0 d-flex align-items-center justify-content-center text-white opacity-75"
                                     style={{ width: 30, height: 30, background: "rgba(255,255,255,0.15)", borderRadius: "50%" }}
-                                    onClick={() => setShowModal(false)}
+                                    onClick={closeBooking}
                                 >
                                     <i className="ti ti-x fs-6" />
                                 </button>
@@ -2051,7 +2098,7 @@ export default function ClinicLandingPage() {
                                             <button
                                                 className="btn fw-bold py-2 px-2 rounded-3 text-white flex-grow-1 animate-hover"
                                                 style={{ background: "#0f172a", fontSize: "12px", border: "none" }}
-                                                onClick={() => setShowModal(false)}
+                                                onClick={closeBooking}
                                             >
                                                 Done
                                             </button>
@@ -2157,86 +2204,94 @@ export default function ClinicLandingPage() {
                                                 </div>
                                             </div>
 
+                                            {/* Error Alert Banner - TOP */}
+                                            {bookError && (
+                                                <div className="col-12">
+                                                    <div className="alert alert-danger py-2 px-3 rounded-3 d-flex align-items-center gap-2 mb-0" style={{ fontSize: "13px" }}>
+                                                        <i className="ti ti-alert-circle text-danger fs-5 flex-shrink-0" />
+                                                        <span className="fw-medium">{bookError}</span>
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             {/* Patient First & Last Name */}
                                             <div className="col-6">
                                                 <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>First Name <span className="text-danger">*</span></label>
-                                                <input
+                                                <IconFormControl
                                                     type="text"
-                                                    className={`form-control rounded-3 ${bookFormErrors.firstName ? 'is-invalid' : ''}`}
+                                                    fieldLabel="first name"
+                                                    className={`rounded-3 ${bookFormErrors.firstName ? 'is-invalid' : ''}`}
                                                     placeholder="First name"
                                                     value={bookForm.firstName}
                                                     onChange={e => setBookForm(f => ({ ...f, firstName: e.target.value }))}
                                                     required
                                                     style={{ fontSize: "14px" }}
                                                 />
-                                                {bookFormErrors.firstName && <div className="invalid-feedback">{bookFormErrors.firstName}</div>}
+                                                {bookFormErrors.firstName && <div className="invalid-feedback d-block">{bookFormErrors.firstName}</div>}
                                             </div>
                                             <div className="col-6">
                                                 <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Last Name <span className="text-danger">*</span></label>
-                                                <input
+                                                <IconFormControl
                                                     type="text"
-                                                    className={`form-control rounded-3 ${bookFormErrors.lastName ? 'is-invalid' : ''}`}
+                                                    fieldLabel="last name"
+                                                    className={`rounded-3 ${bookFormErrors.lastName ? 'is-invalid' : ''}`}
                                                     placeholder="Last name"
                                                     value={bookForm.lastName}
                                                     onChange={e => setBookForm(f => ({ ...f, lastName: e.target.value }))}
                                                     required
                                                     style={{ fontSize: "14px" }}
                                                 />
-                                                {bookFormErrors.lastName && <div className="invalid-feedback">{bookFormErrors.lastName}</div>}
+                                                {bookFormErrors.lastName && <div className="invalid-feedback d-block">{bookFormErrors.lastName}</div>}
                                             </div>
 
                                             {/* Email & Phone */}
                                             <div className="col-12">
                                                 <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Email Address <span className="text-danger">*</span></label>
-                                                <input
+                                                <IconFormControl
                                                     type="email"
-                                                    className={`form-control rounded-3 ${bookFormErrors.email ? 'is-invalid' : ''}`}
+                                                    fieldLabel="email"
+                                                    className={`rounded-3 ${bookFormErrors.email ? 'is-invalid' : ''}`}
                                                     placeholder="username@example.com"
                                                     value={bookForm.email}
                                                     onChange={e => setBookForm(f => ({ ...f, email: e.target.value }))}
                                                     required
                                                     style={{ fontSize: "14px" }}
                                                 />
-                                                {bookFormErrors.email && <div className="invalid-feedback">{bookFormErrors.email}</div>}
+                                                {bookFormErrors.email && <div className="invalid-feedback d-block">{bookFormErrors.email}</div>}
                                             </div>
                                             <div className="col-6">
                                                 <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Phone Number <span className="text-danger">*</span></label>
-                                                <input
+                                                <IconFormControl
                                                     type="tel"
-                                                    className={`form-control rounded-3 ${bookFormErrors.phone ? 'is-invalid' : ''}`}
+                                                    fieldLabel="phone"
+                                                    className={`rounded-3 ${bookFormErrors.phone ? 'is-invalid' : ''}`}
                                                     placeholder="+91 XXXXX XXXXX"
                                                     value={bookForm.phone}
                                                     onChange={e => setBookForm(f => ({ ...f, phone: e.target.value }))}
                                                     required
                                                     style={{ fontSize: "14px" }}
                                                 />
-                                                {bookFormErrors.phone && <div className="invalid-feedback">{bookFormErrors.phone}</div>}
+                                                {bookFormErrors.phone && <div className="invalid-feedback d-block">{bookFormErrors.phone}</div>}
                                             </div>
 
                                             {/* Gender */}
                                             <div className="col-6">
-                                                <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Gender <span className="text-danger">*</span></label>
-                                                <select
-                                                    className={`form-select rounded-3 text-secondary ${bookFormErrors.gender ? 'is-invalid' : ''}`}
-                                                    value={bookForm.gender}
-                                                    onChange={e => setBookForm(f => ({ ...f, gender: e.target.value }))}
+                                                <GenderOptionGroup
+                                                    showLabel
                                                     required
-                                                    style={{ fontSize: "14px" }}
-                                                >
-                                                    <option value="">Select Gender</option>
-                                                    <option value="Male">Male</option>
-                                                    <option value="Female">Female</option>
-                                                    <option value="Other">Other</option>
-                                                </select>
-                                                {bookFormErrors.gender && <div className="invalid-feedback">{bookFormErrors.gender}</div>}
+                                                    value={bookForm.gender}
+                                                    onChange={(val) => setBookForm(f => ({ ...f, gender: val }))}
+                                                />
+                                                {bookFormErrors.gender && <div className="invalid-feedback d-block">{bookFormErrors.gender}</div>}
                                             </div>
 
                                             {/* Patient Address */}
                                             <div className="col-12">
                                                 <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Address (Optional)</label>
-                                                <input
+                                                <IconFormControl
                                                     type="text"
-                                                    className="form-control rounded-3"
+                                                    fieldLabel="address"
+                                                    className="rounded-3"
                                                     placeholder="House no., Street, City, Pincode"
                                                     value={bookForm.address}
                                                     onChange={e => setBookForm(f => ({ ...f, address: e.target.value }))}
@@ -2260,7 +2315,7 @@ export default function ClinicLandingPage() {
                                                         </option>
                                                     ))}
                                                 </select>
-                                                {bookFormErrors.doctorId && <div className="invalid-feedback">{bookFormErrors.doctorId}</div>}
+                                                {bookFormErrors.doctorId && <div className="invalid-feedback d-block">{bookFormErrors.doctorId}</div>}
                                                 {/* Show selected doctor info */}
                                                 {(bookForm.doctorId || preselectedDoctor) && (() => {
                                                     const selDoc = clinic.doctors.find((d: any) => d.id === (bookForm.doctorId || preselectedDoctor));
@@ -2490,8 +2545,9 @@ export default function ClinicLandingPage() {
                                             {/* Reason Symptoms */}
                                             <div className="col-12">
                                                 <label className="form-label fw-bold text-dark mb-1" style={{ fontSize: "13px" }}>Reason / Symptoms (Optional)</label>
-                                                <textarea
-                                                    className="form-control rounded-3"
+                                                <IconTextarea
+                                                    fieldLabel="notes"
+                                                    className="rounded-3"
                                                     rows={2}
                                                     placeholder="Brief description of your symptoms..."
                                                     value={bookForm.reason}

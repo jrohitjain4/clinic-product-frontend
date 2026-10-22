@@ -1,11 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Datatable from "../../../../../core/common/dataTable";
 import { DatePicker } from "antd";
 import { Link } from "react-router";
 import { ViewModal } from "../../../../../core/common/modal/ViewModal";
-import DeleteModal from "../../../../../core/common/modal/DeleteModal";
 import html2pdf from "html2pdf.js";
-import InvoiceSlip from "../../patient-modules/patient-invoice-details/InvoiceSlip";
+import PharmacyInvoicePrintLayout from "./PharmacyInvoicePrintLayout";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { useClinicPatients } from "../../../../../core/hooks/useClinicPatients";
@@ -13,9 +12,9 @@ import { useMedicines } from "../../../../../core/hooks/useMedicines";
 import { usePharmacyBilling } from "../../../../../core/hooks/usePharmacyBilling";
 import type { PharmacyInvoice } from "../../../../../core/hooks/usePharmacyBilling";
 import CommonSelect from "../../../../../core/common/common-select/commonSelect";
-import { apiUrl } from "../../../../../core/config/api";
 import EmptyState from "../../../../../core/common/emptyState";
 import AddPatientModal from "../../clinic-modules/appointments/modals/addPatientModal";
+import { IconFormControl } from "../../../../../core/common/form-fields";
 import { usePrescriptions } from "../../../../../core/hooks/usePrescriptions";
 
 interface BillingItem {
@@ -29,7 +28,7 @@ interface BillingItem {
 }
 
 const PharmacyBilling = () => {
-  const { invoices, loading, refetch: refetchInvoices, createInvoice, deleteInvoice } = usePharmacyBilling();
+  const { invoices, loading, refetch: refetchInvoices, createInvoice } = usePharmacyBilling();
   const { patients, refetch: refetchPatients } = useClinicPatients();
   const { medicines, refetch: refetchMedicines } = useMedicines();
   const { prescriptions } = usePrescriptions();
@@ -40,10 +39,9 @@ const PharmacyBilling = () => {
 
   // Show Add Bill Modal
   const [showAddBillModal, setShowAddBillModal] = useState(false);
-  const [printInvoiceData, setPrintInvoiceData] = useState<PharmacyInvoice | null>(null);
+  const [printInvoiceData, setPrintInvoiceData] = useState<any | null>(null);
+  const [printAction, setPrintAction] = useState<"print" | "download" | null>(null);
   const [viewInvoiceData, setViewInvoiceData] = useState<PharmacyInvoice | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
   // Form states inside modal
   const [selectedPatientId, setSelectedPatientId] = useState("");
@@ -314,7 +312,7 @@ const PharmacyBilling = () => {
         tax: totalGst,
         subTotal,
         totalAmount,
-        paymentMethod,
+        paymentMethod: paymentStatus === "Unpaid" ? "" : paymentMethod,
         paymentStatus,
         items: billingItems.map(item => ({
           medicineId: item.medicineId,
@@ -366,9 +364,9 @@ const PharmacyBilling = () => {
       clinic.city,
       clinic.state,
       clinic.country,
-      clinic.pincode ? `PIN - ${clinic.pincode}` : ""
+      clinic.pincode ? `PIN - ${clinic.pincode}` : "",
     ].filter(Boolean);
-    const clinicAddress = addressParts.length > 0 ? addressParts.join(", ") : (clinic.address || "");
+    const clinicAddress = addressParts.length > 0 ? addressParts.join(", ") : clinic.address || "";
 
     return {
       ...inv,
@@ -377,11 +375,17 @@ const PharmacyBilling = () => {
         name: clinicName,
         phone: clinicPhone,
         email: clinicEmail,
-        addressLine1: clinicAddress,
+        addressLine1: clinic.addressLine1 || clinicAddress,
+        addressLine2: clinic.addressLine2 || "",
+        city: clinic.city || "",
+        state: clinic.state || "",
+        country: clinic.country || "",
+        pincode: clinic.pincode || "",
         landingPage: {
           tagline: clinic.landingPage?.tagline || clinic.tagline || "",
           logo: clinic.landingPage?.logo || clinic.logo || null,
-        }
+          email: clinic.landingPage?.email || clinicEmail,
+        },
       },
       invoiceCode: inv.invoiceNo,
       items: inv.items?.map((item: any) => {
@@ -399,58 +403,75 @@ const PharmacyBilling = () => {
     };
   };
 
-  const handlePrint = (inv: any) => {
-    setPrintInvoiceData(buildInvoiceData(inv));
-    setTimeout(() => {
-      const el = document.getElementById('print-pharmacy-invoice-slip');
-      if (!el) return;
-      el.style.display = 'block';
-      window.print();
-      setTimeout(() => {
-        el.style.display = 'none';
-        setPrintInvoiceData(null);
-      }, 1500);
+  useEffect(() => {
+    if (!printInvoiceData || !printAction) return;
+
+    let triggered = false;
+
+    const run = () => {
+      if (triggered) return true;
+      const el = document.getElementById("pharmacy-invoice-print");
+      const slip = el?.querySelector(".pharm-slip");
+      if (!el || !slip) return false;
+
+      triggered = true;
+
+      if (printAction === "print") {
+        requestAnimationFrame(() => {
+          window.print();
+          setTimeout(() => {
+            setPrintInvoiceData(null);
+            setPrintAction(null);
+          }, 800);
+        });
+      } else if (printAction === "download") {
+        const prevStyle = el.getAttribute("style") || "";
+        el.setAttribute(
+          "style",
+          "position:fixed;left:0;top:0;width:210mm;opacity:1;z-index:99999;pointer-events:none;background:#fff;"
+        );
+
+        const opt = {
+          margin: 0,
+          filename: `Pharmacy-Invoice-${printInvoiceData.invoiceNo || printInvoiceData.invoiceCode || "bill"}.pdf`,
+          image: { type: "jpeg" as const, quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
+        };
+
+        html2pdf()
+          .from(el)
+          .set(opt)
+          .save()
+          .finally(() => {
+            if (prevStyle) el.setAttribute("style", prevStyle);
+            else el.removeAttribute("style");
+            setPrintInvoiceData(null);
+            setPrintAction(null);
+          });
+      }
+      return true;
+    };
+
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts += 1;
+      if (run() || attempts >= 20) clearInterval(timer);
     }, 100);
+
+    return () => clearInterval(timer);
+  }, [printInvoiceData, printAction]);
+
+  const handlePrint = (inv: any) => {
+    if (!inv) return;
+    setPrintInvoiceData(buildInvoiceData(inv));
+    setPrintAction("print");
   };
 
   const handleDownload = (inv: any) => {
+    if (!inv) return;
     setPrintInvoiceData(buildInvoiceData(inv));
-    setTimeout(() => {
-      const el = document.getElementById('print-pharmacy-invoice-slip');
-      if (!el) return;
-      el.style.display = 'block';
-      const opt = {
-        margin: 0,
-        filename: `Invoice-${inv.invoiceNo || 'pharmacy'}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
-      };
-      html2pdf().from(el).set(opt).save()
-        .then(() => { el.style.display = 'none'; setPrintInvoiceData(null); })
-        .catch(() => { el.style.display = 'none'; setPrintInvoiceData(null); });
-    }, 100);
-  };
-
-  const handleDeleteClick = (inv: any) => {
-    setSelectedInvoice(inv);
-    setShowDeleteModal(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!selectedInvoice) return;
-    setSubmitting(true);
-    try {
-      await deleteInvoice(selectedInvoice.id);
-      toast.success("Invoice deleted successfully and stock restored!");
-      setShowDeleteModal(false);
-      setSelectedInvoice(null);
-      refetchMedicines();
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to delete invoice");
-    } finally {
-      setSubmitting(false);
-    }
+    setPrintAction("download");
   };
 
   const [filterDate, setFilterDate] = useState<dayjs.Dayjs | null>(null);
@@ -530,14 +551,46 @@ const PharmacyBilling = () => {
     {
       title: "Method",
       dataIndex: "Method",
-      render: (text: string) => <span className="text-muted">{text}</span>,
-      sorter: (a: any, b: any) => a.Method.localeCompare(b.Method),
+      render: (text: string, record: any) => {
+        if (record.Status === "Unpaid" || record.raw?.paymentStatus === "Unpaid" || !text) {
+          return <span className="text-muted">—</span>;
+        }
+        return <span className="text-muted">{text}</span>;
+      },
+      sorter: (a: any, b: any) => (a.Method || "").localeCompare(b.Method || ""),
     },
     {
       title: "Payment",
       dataIndex: "Status",
       render: (text: string) => (
-        <span className={`badge border ${text === "Paid" ? "badge-soft-success border-success" : "badge-soft-danger border-danger"} px-2 py-1 fs-12 fw-medium`}>
+        <span
+          className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+          style={{
+            backgroundColor:
+              text === "Paid"
+                ? "#e6f8ef"
+                : text === "Partial"
+                  ? "#fff3cd"
+                  : "#fdeded",
+            color:
+              text === "Paid"
+                ? "#198754"
+                : text === "Partial"
+                  ? "#fd7e14"
+                  : "#dc3545",
+            fontWeight: 600,
+            fontSize: "12px",
+          }}
+        >
+          <i
+            className={`${
+              text === "Paid"
+                ? "ti ti-circle-check"
+                : text === "Partial"
+                  ? "ti ti-clock"
+                  : "ti ti-circle-x"
+            } fs-14`}
+          />
           {text}
         </span>
       ),
@@ -575,17 +628,9 @@ const PharmacyBilling = () => {
           >
             <i className="ti ti-download fs-18"></i>
           </button>
-          <button
-            type="button"
-            className="bg-transparent border-0 text-danger p-1"
-            title="Delete Invoice"
-            onClick={() => handleDeleteClick(record.raw)}
-          >
-            <i className="ti ti-trash fs-18"></i>
-          </button>
         </div>
       ),
-      width: 140,
+      width: 120,
     }
   ];
 
@@ -607,7 +652,7 @@ const PharmacyBilling = () => {
 
             <div className="d-flex align-items-center justify-content-sm-end justify-content-start flex-wrap gap-2">
               <div className="search-field position-relative" style={{ width: "220px" }}>
-                <input type="text" className="form-control fs-13 py-2" placeholder="Search Invoice/Patient/Medicine..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+                <IconFormControl fieldLabel="search" type="text" className="fs-13 py-2" placeholder="Search Invoice/Patient/Medicine..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
               </div>
 
               {/* Date Filter */}
@@ -794,11 +839,12 @@ const PharmacyBilling = () => {
                       </div>
                       <div className="col-md-3">
                         <label className="form-label text-muted mb-0">Discount (%)</label>
-                        <input
+                        <IconFormControl
+                          fieldLabel="Amount"
                           type="number"
                           min={0}
                           max={100}
-                          className="form-control form-control-sm"
+                          className="form-control-sm"
                           placeholder="0"
                           value={discountPercent}
                           onChange={(e) => setDiscountPercent(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
@@ -814,20 +860,22 @@ const PharmacyBilling = () => {
 
                     <div className="row g-3 mt-2">
                       <div className="col-md-6">
-                        <label className="form-label text-muted mb-1">Payment Method</label>
-                        <select className="form-select form-select-sm" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
-                          <option value="Cash">Cash</option>
-                          <option value="UPI / QR Code">UPI / QR Code</option>
-                          <option value="Card">Card</option>
-                        </select>
-                      </div>
-                      <div className="col-md-6">
                         <label className="form-label text-muted mb-1">Payment Status</label>
                         <select className="form-select form-select-sm" value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value)}>
                           <option value="Paid">Paid</option>
                           <option value="Unpaid">Unpaid</option>
                         </select>
                       </div>
+                      {paymentStatus === "Paid" && (
+                        <div className="col-md-6">
+                          <label className="form-label text-muted mb-1">Payment Method</label>
+                          <select className="form-select form-select-sm" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+                            <option value="Cash">Cash</option>
+                            <option value="UPI / QR Code">UPI / QR Code</option>
+                            <option value="Card">Card</option>
+                          </select>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -863,10 +911,8 @@ const PharmacyBilling = () => {
         }}
       />
 
-      {/* Hidden Pharmacy Invoice Slip for Print/Download */}
-      <div id="print-pharmacy-invoice-slip" style={{ display: 'none' }}>
-        {printInvoiceData && <InvoiceSlip invoice={printInvoiceData} />}
-      </div>
+      {/* Pharmacy Invoice Print Layout (portal) */}
+      <PharmacyInvoicePrintLayout invoice={printInvoiceData} />
 
       {/* VIEW DETAILS MODAL */}
       <ViewModal
@@ -940,39 +986,6 @@ const PharmacyBilling = () => {
           </div>
         )}
       </ViewModal>
-
-      <DeleteModal
-        show={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDeleteConfirm}
-        title="Delete Invoice?"
-        message={
-          <>
-            Are you sure you want to delete <strong>{selectedInvoice?.invoiceNo}</strong>?
-            <br />
-            This will restore the deducted medicine stock to inventory.
-          </>
-        }
-        submitting={submitting}
-      />
-
-      <style>{`
-        @media print {
-          body * { visibility: hidden !important; }
-          #print-pharmacy-invoice-slip, #print-pharmacy-invoice-slip * { visibility: visible !important; }
-          #print-pharmacy-invoice-slip {
-            position: fixed !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 21cm !important;
-            height: 29.7cm !important;
-            z-index: 99999 !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            overflow: hidden !important;
-          }
-        }
-      `}</style>
     </>
   );
 };

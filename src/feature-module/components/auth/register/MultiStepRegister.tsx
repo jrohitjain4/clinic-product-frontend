@@ -10,6 +10,14 @@ import { Button } from "../../../../core/common/button/Button";
 import { UserPlus, User, Phone, Mail, MessageCircle, MapPin, Hash, Lock, CheckCircle, ArrowRight, ArrowLeft, Eye, EyeOff, Home, AtSign, Map, Users, Calendar, Star, Zap, ChevronDown, RefreshCw } from "react-feather";
 import { Country, State, City } from "country-state-city";
 
+interface Package {
+    id: string;
+    name: string;
+    price: number | string;
+    durationInDays: number | string;
+    [key: string]: any;
+}
+
 const MultiStepRegister: React.FC = () => {
     const navigate = useNavigate();
     const [step, setStep] = useState(1);

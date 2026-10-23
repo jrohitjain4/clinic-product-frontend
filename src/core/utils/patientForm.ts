@@ -86,6 +86,7 @@ export const emptyPatientForm = () => ({
   email: "",
   doctorIds: [] as string[],
   dob: null as import("dayjs").Dayjs | null,
+  age: "" as string | number,
   gender: "",
   bloodGroup: "",
   address1: "",

@@ -755,9 +755,6 @@ const AppointmentDetails = () => {
                             </ul>
                         </div>
 
-                        <button className="btn btn-sm btn-soft-info d-flex align-items-center gap-2 fw-bold shadow-sm fs-12" onClick={() => { setSelectedPres(null); setEditingPrescription(currentApptPrescription); setShowPresModal(true); }}>
-                            <i className="ti ti-file-plus" /> {currentApptPrescription ? "Edit Prescription" : "Prescription"}
-                        </button>
 
                         <Link to={all_routes.editAppointment.replace(":id", appointment.id)} className="btn btn-sm btn-primary d-flex align-items-center gap-2 fw-bold shadow-sm fs-12">
                             <i className="ti ti-edit" /> Edit
@@ -861,6 +858,7 @@ const AppointmentDetails = () => {
                             <div className="av-kv flex-grow-1">
                                 <div className="av-kv-row"><span>Blood Group</span><strong>{patientBlood}</strong></div>
                                 <div className="av-kv-row"><span>Gender</span><strong>{patientGender}</strong></div>
+                                <div className="av-kv-row"><span>Age</span><strong>{patientAge != null ? `${patientAge} Yrs` : "—"}</strong></div>
                                 <div className="av-kv-row"><span>Date of Birth</span><strong>{patientDob ? dayjs(patientDob).format("DD MMM YYYY") : "—"}</strong></div>
                                 <div className="av-kv-row"><span>Marital Status</span><strong>{patientMarital}</strong></div>
                                 <div className="av-kv-row"><span>Occupation</span><strong>{patientOccupation}</strong></div>

@@ -23,6 +23,7 @@ export interface ClinicAppointment {
     patientCode?: string | null;
     phone?: string | null;
     dob?: string | null;
+    age?: number | null;
     gender?: string | null;
     bloodGroup?: string | null;
     profileImage?: string | null;

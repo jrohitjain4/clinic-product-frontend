@@ -4,7 +4,10 @@ import Datatable from "../../../../core/common/dataTable";
 import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 import IpdViewDetailsModal from "./IpdViewDetailsModal";
+import IpdAdmissionPrintSummary from "./IpdAdmissionPrintSummary";
 import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
+import PrescriptionPad from "../clinic-modules/appointments/PrescriptionPad";
+import html2pdf from "html2pdf.js";
 
 interface Patient {
   id: string;
@@ -79,6 +82,114 @@ const IpdDischargePage: React.FC = () => {
   // Discharge Settlement Modal State
   const [showDischargeModal, setShowDischargeModal] = useState(false);
   const [targetAdmission, setTargetAdmission] = useState<Admission | null>(null);
+  const [printAdmission, setPrintAdmission] = useState<any>(null);
+  const [printPadAppointment, setPrintPadAppointment] = useState<any | null>(null);
+  const [downloadingPad, setDownloadingPad] = useState(false);
+
+  const buildPadAppointment = (adm: any) => {
+    let loginClinic: any = {};
+    try {
+      loginClinic = JSON.parse(localStorage.getItem("user") || "{}")?.clinic || {};
+    } catch {}
+    return {
+      appointmentCode: adm.admissionCode || "IPD",
+      scheduledAt: adm.admissionDate,
+      mode: "IPD Admission",
+      isFollowUp: false,
+      patient: adm.patient || {},
+      doctor: adm.doctor || {},
+      clinic: { ...loginClinic, ...(adm.clinic || {}) },
+    };
+  };
+
+  const handlePrintBlankPad = (adm: any) => {
+    const padAppt = buildPadAppointment(adm);
+    setPrintPadAppointment(padAppt);
+
+    setTimeout(() => {
+      const el = document.getElementById("ipd-print-prescription-pad");
+      if (!el) return;
+      el.style.display = "block";
+      el.setAttribute("data-print-active", "true");
+      el.removeAttribute("data-hidden-for-print");
+
+      window.print();
+
+      setTimeout(() => {
+        el.style.display = "none";
+        el.removeAttribute("data-print-active");
+        setPrintPadAppointment(null);
+      }, 800);
+    }, 250);
+  };
+
+  const handleDownloadBlankPad = (adm: any) => {
+    const padAppt = buildPadAppointment(adm);
+    setPrintPadAppointment(padAppt);
+    setDownloadingPad(true);
+    toast.info("Preparing Blank Pad PDF...", { autoClose: 1500 });
+
+    setTimeout(() => {
+      const el = document.getElementById("ipd-print-prescription-pad");
+      if (!el) {
+        setDownloadingPad(false);
+        return;
+      }
+      el.style.display = "block";
+      const opt = {
+        margin: 0,
+        filename: `Prescription-Blank-Pad-${padAppt.appointmentCode || "IPD"}.pdf`,
+        image: { type: "jpeg" as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, windowY: 0 },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
+        pagebreak: { mode: ["avoid-all"] as const },
+      };
+      (html2pdf as any)()
+        .from(el)
+        .set(opt)
+        .save()
+        .then(() => {
+          toast.success("Blank Pad PDF downloaded successfully!");
+        })
+        .catch((err: any) => {
+          console.error("PDF Download Error:", err);
+          toast.error("Failed to generate Blank Pad PDF");
+        })
+        .finally(() => {
+          el.style.display = "none";
+          setPrintPadAppointment(null);
+          setDownloadingPad(false);
+        });
+    }, 300);
+  };
+
+  const handlePrintIpdSummary = async (admissionToPrint: any) => {
+    if (!admissionToPrint) return;
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(apiUrl(`/api/ipd/admissions/${admissionToPrint.id}`), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.id) {
+        setPrintAdmission(data);
+      } else {
+        setPrintAdmission(admissionToPrint);
+      }
+    } catch {
+      setPrintAdmission(admissionToPrint);
+    }
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const root = document.getElementById("ipd-admission-print-summary");
+        if (!root) {
+          toast.error("Print layout not ready");
+          return;
+        }
+        window.print();
+      }, 200);
+    });
+  };
 
   // View Discharged Settled Receipt Modal State
   const [showSettledReceiptModal, setShowSettledReceiptModal] = useState(false);
@@ -253,9 +364,6 @@ const IpdDischargePage: React.FC = () => {
       toast.success(`Patient ${getPatientName(targetAdmission.patient)} discharged & bill settled!`);
       setShowDischargeModal(false);
       fetchData();
-
-      // Immediately open Prescription / Discharge Summary Pad modal pre-filled with discharge summary notes
-      handleOpenPrescriptionModal(dischargedAdm, dischargeNotes.trim());
     } catch (err: any) {
       toast.error(err.message || "Error processing discharge");
     } finally {
@@ -352,17 +460,6 @@ const IpdDischargePage: React.FC = () => {
       toast.success(`Copied ${copiedMeds.length} medicine(s) from past prescription!`);
     } else {
       toast.info("No medicines found in this prescription.");
-    }
-  };
-
-  const handlePrescriptionClick = (adm: Admission) => {
-    const existing = (adm as any).ipdPrescriptions && (adm as any).ipdPrescriptions.length > 0 ? (adm as any).ipdPrescriptions[0] : null;
-    if (existing) {
-      setSelectedPrescription(existing);
-      setPrescriptionAdmission(adm);
-      setShowViewPrescriptionModal(true);
-    } else {
-      handleOpenPrescriptionModal(adm);
     }
   };
 
@@ -647,16 +744,48 @@ const IpdDischargePage: React.FC = () => {
             >
               <i className="ti ti-eye fs-18" />
             </button>
-            <button
-              type="button"
-              className={`bg-transparent border-0 p-1 ${
-                record.hasPrescription ? "text-success" : "text-info"
-              }`}
-              title={record.hasPrescription ? "View Prescription" : "Write Prescription"}
-              onClick={() => handlePrescriptionClick(record._raw)}
-            >
-              <i className="ti ti-file-text fs-18" />
-            </button>
+            {/* Print / Download Blank Pad Dropdown */}
+            <div className="dropdown d-inline-block">
+              <button
+                className="btn btn-white border dropdown-toggle d-inline-flex align-items-center justify-content-center px-2 py-1 gap-1"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                title="Print Blank Pad Options"
+                style={{
+                  borderRadius: "8px",
+                  borderColor: "#e2e8f0",
+                  backgroundColor: "#ffffff",
+                  minWidth: "52px",
+                  height: "36px",
+                }}
+              >
+                <i className="ti ti-printer fs-16" style={{ color: "#00bda6" }} />
+              </button>
+              <ul className="dropdown-menu dropdown-menu-end shadow border-0 py-2 fs-13" style={{ zIndex: 1060, minWidth: "210px", borderRadius: "10px" }}>
+                <li>
+                  <button
+                    type="button"
+                    className="dropdown-item py-2 fw-semibold text-dark d-flex align-items-center gap-2"
+                    onClick={() => handlePrintBlankPad(record._raw)}
+                  >
+                    <i className="ti ti-printer fs-15" style={{ color: "#00bda6" }} />
+                    <span>Print Blank Pad</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    className="dropdown-item py-2 fw-semibold text-dark d-flex align-items-center gap-2"
+                    onClick={() => handleDownloadBlankPad(record._raw)}
+                    disabled={downloadingPad}
+                  >
+                    <i className="ti ti-download fs-15" style={{ color: "#00bda6" }} />
+                    <span>Download Blank Pad PDF</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
             {record.status === "Admitted" ? (
               <button
                 type="button"
@@ -695,6 +824,13 @@ const IpdDischargePage: React.FC = () => {
           border: none !important;
           box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
           border-radius: 12px !important;
+        }
+
+        .ipd-discharge-page .icon-field-shell {
+          border: none !important;
+          box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08) !important;
+          border-radius: 10px;
+          background: #fff;
         }
 
         .ipd-med-advice-card {
@@ -859,17 +995,6 @@ const IpdDischargePage: React.FC = () => {
         <div className="d-flex align-items-center gap-2 mb-4 flex-wrap">
           <h3 className="page-title mb-0 flex-shrink-0 me-auto">Discharge Management & Final Settlement</h3>
 
-          <div style={{ width: "190px", flexShrink: 0 }}>
-            <IconFormControl
-              fieldLabel="search"
-              type="text"
-              className="form-control-sm"
-              placeholder="Search code/patient..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
           <select
             className="form-select"
             style={{
@@ -996,6 +1121,19 @@ const IpdDischargePage: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="card border-0 shadow rounded-3 mb-4">
+          <div className="card-body p-3">
+            <IconFormControl
+              fieldLabel="search"
+              type="text"
+              placeholder="Search active inpatients by name, UHID, or admission code..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
 
@@ -1285,38 +1423,52 @@ const IpdDischargePage: React.FC = () => {
                   </div>
 
                 <div
-                  className="modal-footer border-0 px-4 py-3 bg-white d-flex align-items-center justify-content-end gap-2"
+                  className="modal-footer border-0 px-4 py-3 bg-white d-flex align-items-center justify-content-between"
                   style={{ flexShrink: 0 }}
                 >
                   <button
                     type="button"
-                    className="btn btn-light border fw-medium px-4"
-                    onClick={() => setShowDischargeModal(false)}
+                    className="btn btn-light border fw-medium d-inline-flex align-items-center"
+                    onClick={() => handlePrintIpdSummary(targetAdmission)}
                   >
-                    Cancel
+                    <i className="ti ti-printer me-2" /> Print IPD Summary
                   </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary px-4 fw-bold d-flex align-items-center gap-1"
-                    disabled={submittingDischarge}
-                  >
-                    {submittingDischarge ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm" role="status" />
-                        Discharging...
-                      </>
-                    ) : (
-                      <>
-                        <i className="ti ti-user-check" />
-                        Settle Bill & Discharge Inpatient
-                      </>
-                    )}
-                  </button>
+
+                  <div className="d-flex align-items-center gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-light border fw-medium px-4"
+                      onClick={() => setShowDischargeModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary px-4 fw-bold d-flex align-items-center gap-1"
+                      disabled={submittingDischarge}
+                    >
+                      {submittingDischarge ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm" role="status" />
+                          Discharging...
+                        </>
+                      ) : (
+                        <>
+                          <i className="ti ti-user-check" />
+                          Settle Bill & Discharge Inpatient
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>
           </div>
         </>
+      )}
+
+      {showDischargeModal && (printAdmission || targetAdmission) && (
+        <IpdAdmissionPrintSummary admission={printAdmission || targetAdmission} />
       )}
 
       {/* MODAL: DISCHARGED PATIENT SETTLED RECEIPT & SUMMARY */}
@@ -1905,6 +2057,67 @@ const IpdDischargePage: React.FC = () => {
         onClose={() => setShowViewModal(false)}
         admission={selectedViewAdmission}
       />
+
+      {/* Printable Prescription Pad (blank pad) - off-screen on screen */}
+      {printPadAppointment && (
+        <div
+          id="ipd-print-prescription-pad"
+          style={{
+            display: "none",
+            position: "fixed",
+            left: "-9999px",
+            top: "0px",
+            width: "210mm",
+            minHeight: "297mm",
+            background: "#ffffff",
+            zIndex: -9999,
+            pointerEvents: "none",
+          }}
+        >
+          <PrescriptionPad appointment={printPadAppointment} prescription={null} />
+        </div>
+      )}
+      <style>{`
+        @media screen {
+          #ipd-print-prescription-pad {
+            position: fixed !important;
+            left: -9999px !important;
+            top: 0 !important;
+            width: 210mm !important;
+            min-height: 297mm !important;
+            background: #ffffff !important;
+            z-index: -9999 !important;
+            pointer-events: none !important;
+            overflow: hidden !important;
+          }
+        }
+        @media print {
+          @page { size: A4; margin: 0; }
+          body * { visibility: hidden !important; }
+          #ipd-print-prescription-pad[data-print-active],
+          #ipd-print-prescription-pad[data-print-active] * {
+            visibility: visible !important;
+          }
+          #ipd-print-prescription-pad[data-print-active] {
+            visibility: visible !important;
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            background: white !important;
+            z-index: 99999 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          #ipd-print-prescription-pad:not([data-print-active]),
+          [data-hidden-for-print],
+          [data-hidden-for-print] * {
+            display: none !important;
+            visibility: hidden !important;
+          }
+        }
+      `}</style>
 
       <Footer />
     </div>

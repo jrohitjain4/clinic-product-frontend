@@ -652,7 +652,7 @@ const DoctorsAppointmentDetails = () => {
                     <div className="d-flex align-items-center gap-2 py-2 px-2 bg-light rounded-2 text-black fw-bold">
                       <i className="ti ti-calendar fs-14 text-primary" />
                       <span className="text-black fw-bold">Age:</span>
-                      <span className="text-black fw-bold">{appointment.patient?.dob ? `${dayjs().diff(appointment.patient.dob, 'year')} Yrs` : "N/A"}</span>
+                      <span className="text-black fw-bold">{(appointment.patient as any)?.age != null ? `${(appointment.patient as any).age} Yrs` : (appointment.patient?.dob ? `${dayjs().diff(appointment.patient.dob, 'year')} Yrs` : "N/A")}</span>
                     </div>
                   </div>
                   <div className="col-6">

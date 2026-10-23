@@ -193,11 +193,22 @@ const SalesHistory = () => {
     {
       title: "Status",
       dataIndex: "Status",
-      render: (text: string) => (
-        <span className={`badge border ${text === "Paid" ? "badge-soft-success border-success" : "badge-soft-danger border-danger"} px-2 py-1 fs-12 fw-medium`}>
-          {text}
-        </span>
-      ),
+      render: (text: string) => {
+        const isPaid = text === "Paid";
+        return isPaid ? (
+          <span className="badge border badge-soft-success border-success text-success px-2 py-1 fs-12 fw-medium d-inline-flex align-items-center">
+            {text}
+          </span>
+        ) : (
+          <span
+            className="badge border badge-soft-danger border-danger text-danger px-2 py-1 fs-12 fw-medium d-inline-flex align-items-center"
+            style={{ color: "#dc2626", borderColor: "#dc2626", backgroundColor: "rgba(220, 38, 38, 0.1)" }}
+          >
+            <i className="ti ti-x me-1 fs-12" />
+            {text || "Unpaid"}
+          </span>
+        );
+      },
       sorter: (a: any, b: any) => a.Status.localeCompare(b.Status),
     },
     {
@@ -324,7 +335,7 @@ const SalesHistory = () => {
         }
         highlightStatus={
           <span className={`badge border ${viewInvoiceData?.paymentStatus === "Paid" ? "bg-success-transparent text-success border-success" : "bg-danger-transparent text-danger border-danger"} fw-bold px-2 py-1`} style={{ fontSize: "10px", borderRadius: "10px" }}>
-            <i className="ti ti-point-filled me-1" />{viewInvoiceData?.paymentStatus || "Unpaid"}
+            <i className={`ti ${viewInvoiceData?.paymentStatus === "Paid" ? "ti-point-filled" : "ti-x"} me-1`} />{viewInvoiceData?.paymentStatus || "Unpaid"}
           </span>
         }
         highlightColor="#e0f2fe"

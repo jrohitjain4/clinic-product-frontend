@@ -8,6 +8,8 @@ import { toast } from "react-toastify";
 import IpdViewDetailsModal from "./IpdViewDetailsModal";
 import IpdRaiseChargeModal from "./IpdRaiseChargeModal";
 import { IconFormControl } from "../../../../core/common/form-fields";
+import CommonSelect from "../../../../core/common/common-select/commonSelect";
+import AddPatientModal from "../clinic-modules/appointments/modals/addPatientModal";
 
 interface Patient {
   id: string;
@@ -16,6 +18,9 @@ interface Patient {
   lastName?: string;
   patientCode?: string;
   phone?: string;
+  gender?: string;
+  alternateMobile?: string;
+  email?: string;
 }
 
 const getPatientName = (p?: Patient | null) => {
@@ -92,6 +97,7 @@ const IpdAdmissionsPage: React.FC = () => {
 
   // Admission Modal State
   const [showModal, setShowModal] = useState(false);
+  const [showAddPatient, setShowAddPatient] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [activeReferralId, setActiveReferralId] = useState<string | null>(null);
 
@@ -188,6 +194,81 @@ const IpdAdmissionsPage: React.FC = () => {
     const adv = parseFloat(advancePaid) || 0;
     return Math.max(0, totalEstimatedAmount - adv);
   }, [totalEstimatedAmount, advancePaid]);
+
+  const patientOptions = useMemo(() => {
+    return patients.map((p) => {
+      const name = getPatientName(p);
+      const code = p.patientCode || "";
+      const phone = p.phone || "";
+      return {
+        value: p.id,
+        label: `${name} ${code ? `(${code})` : ""} - ${phone || "No Phone"}`,
+        patient: p,
+      };
+    });
+  }, [patients]);
+
+  const filterPatientOption = (option: any, inputValue: string) => {
+    if (!inputValue) return true;
+    const input = inputValue.toLowerCase().trim();
+    const p = option.data?.patient || option.patient;
+    if (!p) return (option.label || "").toLowerCase().includes(input);
+
+    const name = (getPatientName(p) || "").toLowerCase();
+    const code = (p.patientCode || "").toLowerCase();
+    const phone = (p.phone || "").toLowerCase();
+    const altPhone = (p.alternateMobile || "").toLowerCase();
+    const email = (p.email || "").toLowerCase();
+
+    return (
+      name.includes(input) ||
+      code.includes(input) ||
+      phone.includes(input) ||
+      altPhone.includes(input) ||
+      email.includes(input) ||
+      (option.label || "").toLowerCase().includes(input)
+    );
+  };
+
+  const formatPatientOptionLabel = (option: any, meta: any) => {
+    const p = option.patient;
+    if (!p) return option.label;
+    const isMenu = meta?.context === "menu";
+    const name = getPatientName(p);
+
+    if (!isMenu) {
+      return (
+        <span className="fw-semibold text-dark fs-14">
+          {name} {p.patientCode ? `(${p.patientCode})` : ""} {p.phone ? `• ${p.phone}` : ""}
+        </span>
+      );
+    }
+
+    return (
+      <div className="d-flex flex-column py-1">
+        <div className="d-flex align-items-center justify-content-between">
+          <span className="fw-bold fs-14 text-dark">{name}</span>
+          {p.gender && (
+            <span className="badge bg-light text-secondary border px-1.5 py-0 fs-10">
+              {p.gender}
+            </span>
+          )}
+        </div>
+        <div className="d-flex align-items-center gap-2 mt-1">
+          {p.patientCode && (
+            <span className="badge bg-primary-subtle text-primary border px-1.5 py-0 fs-10">
+              <i className="ti ti-id me-1" />{p.patientCode}
+            </span>
+          )}
+          {p.phone && (
+            <span className="fs-12 text-muted">
+              <i className="ti ti-phone me-1" />{p.phone}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   // Fetch Master Data
   const fetchData = useCallback(async () => {
@@ -1083,22 +1164,28 @@ const IpdAdmissionsPage: React.FC = () => {
 
                   <div className="row g-3 mb-4">
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">
-                        Select Patient <span className="text-danger">*</span>
-                      </label>
-                      <select
-                        className="form-select"
-                        value={selectedPatientId}
-                        onChange={(e) => setSelectedPatientId(e.target.value)}
-                        required
-                      >
-                        <option value="">Choose Patient</option>
-                        {patients.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {getPatientName(p)} ({p.patientCode || "No Code"}) - {p.phone || "No Phone"}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="d-flex align-items-center justify-content-between mb-1">
+                        <label className="form-label mb-0 fw-semibold">
+                          Select Patient <span className="text-danger">*</span>
+                        </label>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-primary d-inline-flex align-items-center gap-1 py-1 px-2.5 fs-12"
+                          onClick={() => setShowAddPatient(true)}
+                        >
+                          <i className="ti ti-plus" /> Add New Patient
+                        </button>
+                      </div>
+                      <CommonSelect
+                        options={patientOptions}
+                        value={patientOptions.find((opt) => opt.value === selectedPatientId) || null}
+                        onChange={(opt) => setSelectedPatientId(opt?.value || "")}
+                        placeholder="Search by name, ID or mobile number..."
+                        isSearchable={true}
+                        isClearable={true}
+                        filterOption={filterPatientOption}
+                        formatOptionLabel={formatPatientOptionLabel}
+                      />
                     </div>
 
                     <div className="col-md-6">
@@ -1359,6 +1446,24 @@ const IpdAdmissionsPage: React.FC = () => {
           fetchData();
         }}
         admissionId={selectedChargeAdmissionId}
+      />
+
+      {/* ADD NEW PATIENT MODAL */}
+      <AddPatientModal
+        show={showAddPatient}
+        zIndex={1070}
+        onHide={() => setShowAddPatient(false)}
+        onSuccess={(newPatient) => {
+          setShowAddPatient(false);
+          if (newPatient?.id) {
+            setPatients((prev) => {
+              if (prev.some((p) => p.id === newPatient.id)) return prev;
+              return [newPatient, ...prev];
+            });
+            setSelectedPatientId(newPatient.id);
+          }
+          fetchData();
+        }}
       />
 
       <Footer />

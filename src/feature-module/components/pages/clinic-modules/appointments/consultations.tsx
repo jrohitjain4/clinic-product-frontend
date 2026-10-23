@@ -640,31 +640,6 @@ const Consultations = () => {
         const hasPres = prescriptions.some(p => p.appointmentId === raw.id || p.appointmentCode === raw.appointmentCode);
         return (
           <div className="d-flex align-items-center gap-2 justify-content-center text-nowrap">
-            {/* Add / View Prescription */}
-            <button
-              className={`bg-transparent border-0 p-1 position-relative ${hasPres ? 'text-success' : 'text-primary'}`}
-              onClick={() => {
-                setSelectedAppointment(raw);
-                if (hasPres) {
-                  setShowViewPresModal(true);
-                } else {
-                  setShowPresModal(true);
-                }
-              }}
-              title={hasPres ? "View Prescription" : "Generate Prescription"}
-              style={{ transition: 'transform 0.15s ease' }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            >
-              <i className="ti ti-prescription fs-18" />
-              {hasPres && (
-                <span 
-                  className="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-success p-0.5" 
-                  style={{ width: '6px', height: '6px' }}
-                />
-              )}
-            </button>
-
             {/* Print/Download Dropdown Option Menu */}
             <div className="dropdown d-inline-block">
               <button

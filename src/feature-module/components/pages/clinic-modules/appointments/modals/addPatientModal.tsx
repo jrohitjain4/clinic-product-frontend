@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Modal, DatePicker } from "antd";
-import type { Dayjs } from "dayjs";
+import { Modal } from "antd";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { toast } from "react-toastify";
@@ -34,13 +33,13 @@ interface AddPatientModalProps {
   show: boolean;
   onHide: () => void;
   onSuccess: (newPatient: any) => void;
+  zIndex?: number;
 }
 
-const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
+const AddPatientModal = ({ show, onHide, onSuccess, zIndex = 1060 }: AddPatientModalProps) => {
   const [form, setForm] = useState(emptyPatientForm);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [phoneWarning, setPhoneWarning] = useState<string | null>(null);
 
   const [refers, setRefers] = useState<ReferOption[]>([]);
   const [showAddReferModal, setShowAddReferModal] = useState(false);
@@ -62,36 +61,9 @@ const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
     if (show) {
       setForm(emptyPatientForm);
       setError(null);
-      setPhoneWarning(null);
       fetchRefers();
     }
   }, [show]);
-
-  useEffect(() => {
-    if (!form.phone || form.phone.length < 5) {
-      setPhoneWarning(null);
-      return;
-    }
-    const token = localStorage.getItem("token");
-    fetch(apiUrl(`/api/patients?search=${form.phone}`), {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          if (data.some((p: any) => p.phone === form.phone)) {
-            setPhoneWarning(
-              "Warning: This phone number is already registered for another patient."
-            );
-          } else {
-            setPhoneWarning(null);
-          }
-        } else {
-          setPhoneWarning(null);
-        }
-      })
-      .catch(() => setPhoneWarning(null));
-  }, [form.phone]);
 
   const referOptions = refers.map((r) => ({
     value: r.id,
@@ -162,7 +134,8 @@ const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
           phone: form.phone || null,
           email: form.email || null,
           doctorIds: form.doctorIds || [],
-          dob: form.dob ? form.dob.toISOString() : null,
+          dob: null,
+          age: form.age !== "" && form.age != null ? parseInt(String(form.age), 10) : null,
           gender: form.gender || null,
           bloodGroup: form.bloodGroup || null,
           status: form.status || "Active",
@@ -205,7 +178,7 @@ const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
         centered
         closable={false}
         className="add-patient-modal-match"
-        zIndex={1050}
+        zIndex={zIndex}
         styles={{
           content: {
             padding: 0,
@@ -356,12 +329,6 @@ const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
                     className="icon-field-phone"
                   />
                 </div>
-                {phoneWarning && (
-                  <div className="text-warning fs-12 mt-1">
-                    <i className="ti ti-alert-triangle me-1" />
-                    {phoneWarning}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -428,24 +395,22 @@ const AddPatientModal = ({ show, onHide, onSuccess }: AddPatientModalProps) => {
             <div className="col-md-6">
               <div className="mb-3">
                 <label className="form-label mb-1 fw-medium">
-                  DOB (Optional)
+                  Age <span className="text-muted fw-normal fs-12">(Years)</span>
                 </label>
-                <div className="icon-field-shell">
-                  <span className="icon-field-box" aria-hidden>
-                    <i className="ti ti-calendar" />
-                  </span>
-                  <DatePicker
-                    className="form-control datetimepicker w-100 icon-field-input"
-                    format={{ format: "DD-MM-YYYY", type: "mask" }}
-                    getPopupContainer={() => document.body}
-                    placeholder="DD-MM-YYYY"
-                    suffixIcon={<i className="ti ti-calendar text-muted" />}
-                    value={form.dob}
-                    onChange={(d: Dayjs | null) =>
-                      setForm((f) => ({ ...f, dob: d }))
-                    }
-                  />
-                </div>
+                <IconFormControl
+                  fieldLabel="Age"
+                  type="number"
+                  placeholder="Enter age (e.g. 25)"
+                  min="0"
+                  max="150"
+                  value={form.age ?? ""}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      age: e.target.value,
+                    }))
+                  }
+                />
               </div>
             </div>
 

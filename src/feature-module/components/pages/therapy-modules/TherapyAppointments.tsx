@@ -90,6 +90,7 @@ const TherapyAppointments = () => {
   const [datePreset, setDatePreset] = useState("All");
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -862,9 +863,20 @@ const TherapyAppointments = () => {
         }
       }
 
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const pName = (a.patientName || `${a.patient?.firstName || ""} ${a.patient?.lastName || ""}`).toLowerCase();
+        const code = (a.appointmentCode || "").toLowerCase();
+        const uhid = (a.patient?.patientCode || "").toLowerCase();
+        const phone = (a.patient?.phone || "").toLowerCase();
+        if (!pName.includes(q) && !code.includes(q) && !uhid.includes(q) && !phone.includes(q)) {
+          return false;
+        }
+      }
+
       return matchDoctor && matchDate;
     });
-  }, [appointments, filterDoctor, datePreset, filterStartDate, filterEndDate]);
+  }, [appointments, filterDoctor, datePreset, filterStartDate, filterEndDate, searchQuery]);
 
   const filteredData = useMemo(() => {
     return filteredSubData.filter((a: any) => {
@@ -891,9 +903,10 @@ const TherapyAppointments = () => {
       datePreset !== "All" ||
       filterStartDate !== "" ||
       filterEndDate !== "" ||
-      filterDoctor !== ""
+      filterDoctor !== "" ||
+      searchQuery !== ""
     );
-  }, [filterStatus, datePreset, filterStartDate, filterEndDate, filterDoctor]);
+  }, [filterStatus, datePreset, filterStartDate, filterEndDate, filterDoctor, searchQuery]);
 
   const handleClearFilters = () => {
     setFilterStatus("All");
@@ -901,6 +914,7 @@ const TherapyAppointments = () => {
     setFilterStartDate("");
     setFilterEndDate("");
     setFilterDoctor("");
+    setSearchQuery("");
   };
 
   const data = useMemo(() => {
@@ -1235,6 +1249,12 @@ const TherapyAppointments = () => {
       align-items: center;
       flex-shrink: 0 !important;
     }
+    .therapy-appt-page .icon-field-shell {
+      border: none !important;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08) !important;
+      border-radius: 10px;
+      background: #fff;
+    }
   `;
 
   return (
@@ -1383,6 +1403,19 @@ const TherapyAppointments = () => {
               >
                 <i className="ti ti-plus me-1" /> Book Appointment
               </Link>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="card border-0 shadow rounded-3 mb-4">
+            <div className="card-body p-3">
+              <IconFormControl
+                fieldLabel="search"
+                type="text"
+                placeholder="Search therapy appointments by name, UHID, or appointment code..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
 

@@ -10,9 +10,11 @@ const PrescriptionPad: React.FC<PrescriptionPadProps> = ({ appointment, prescrip
   const patient = appointment?.patient || prescription?.patient || {};
   const doctor = appointment?.doctor || prescription?.doctor || {};
 
-  const patientAge = patient.dob
-    ? Math.floor((Date.now() - new Date(patient.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
-    : null;
+  const patientAge = patient.age != null
+    ? patient.age
+    : (patient.dob
+      ? Math.floor((Date.now() - new Date(patient.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+      : null);
 
   let loginClinic: any = {};
   try {

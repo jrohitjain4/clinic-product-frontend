@@ -21,6 +21,8 @@ import { authHeaders } from "../../../../../core/utils/apiClient";
 import { findSelectOption } from "../../../../../core/utils/doctorSchedule";
 import AddPatientModal from "../appointments/modals/addPatientModal";
 import { toast } from "react-toastify";
+import html2pdf from "html2pdf.js";
+import PrescriptionPad from "../appointments/PrescriptionPad";
 
 interface AppointmentFormPageProps {
   mode?: "create" | "edit";
@@ -151,6 +153,85 @@ const AppointmentFormPage = ({ mode = "create", isModal = false, onSuccess, onCa
     mode === "edit" && appointment?.appointmentCode
       ? appointment.appointmentCode
       : `AP${String(existingAppointments.length + 1).padStart(3, "0")}`;
+
+  const [printAppointmentData, setPrintAppointmentData] = useState<any>(null);
+  const [downloadingBlankPad, setDownloadingBlankPad] = useState(false);
+
+  const preparePadAppointment = () => {
+    const selPat = patients.find((p: any) => p.id === form.patientId);
+    return {
+      appointmentCode: nextCode,
+      isFollowUp: form.isFollowUp,
+      scheduledAt: form.appointmentDate ? dayjs(form.appointmentDate).toISOString() : new Date().toISOString(),
+      mode: form.appointmentType || "In-Person",
+      patient: selPat || null,
+      doctor: selectedDoctor || null,
+      clinic: currentUser?.clinic || {},
+    };
+  };
+
+  const handlePrintBlankPad = () => {
+    const apptData = preparePadAppointment();
+    setPrintAppointmentData(apptData);
+
+    setTimeout(() => {
+      const el = document.getElementById("print-prescription-pad");
+      if (!el) return;
+      el.style.display = "block";
+      el.setAttribute("data-print-active", "true");
+      el.removeAttribute("data-hidden-for-print");
+
+      window.print();
+
+      setTimeout(() => {
+        el.style.display = "none";
+        el.removeAttribute("data-print-active");
+        setPrintAppointmentData(null);
+      }, 800);
+    }, 250);
+  };
+
+  const handleDownloadBlankPad = () => {
+    const apptData = preparePadAppointment();
+    setPrintAppointmentData(apptData);
+    setDownloadingBlankPad(true);
+    toast.info("Preparing Blank Pad PDF...", { autoClose: 1500 });
+
+    setTimeout(() => {
+      const el = document.getElementById("print-prescription-pad");
+      if (!el) {
+        setDownloadingBlankPad(false);
+        return;
+      }
+
+      el.style.display = "block";
+
+      const opt = {
+        margin: 0,
+        filename: `Prescription-Blank-Pad-${apptData.appointmentCode || "Pad"}.pdf`,
+        image: { type: "jpeg" as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
+        pagebreak: { mode: ["avoid-all"] as const },
+      };
+      (html2pdf as any)()
+        .from(el)
+        .set(opt)
+        .save()
+        .then(() => {
+          toast.success("Blank Pad PDF downloaded successfully!");
+        })
+        .catch((err: any) => {
+          console.error("PDF Download Error:", err);
+          toast.error("Failed to generate Blank Pad PDF");
+        })
+        .finally(() => {
+          el.style.display = "none";
+          setPrintAppointmentData(null);
+          setDownloadingBlankPad(false);
+        });
+    }, 300);
+  };
 
   const getModalContainer = () =>
     document.getElementById("modal-datepicker") || document.body;
@@ -1493,48 +1574,128 @@ Powered by DocYori`;
           )}
         </div>
       </div>
-      <div className="d-flex justify-content-end mt-3 align-items-center gap-2">
-        {selectedDoctor && (
-          <div className="d-flex align-items-center gap-2 me-2">
+      <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+        {!isPatientRole && (
+          <div className="d-flex align-items-center gap-2">
             <button
               type="button"
-              className="btn btn-outline-info d-flex align-items-center gap-1.5 fw-bold cursor-default"
-              style={{ pointerEvents: 'none', borderRadius: '8px' }}
+              className="btn btn-white border d-inline-flex align-items-center gap-2 shadow-sm text-dark fw-semibold"
+              onClick={handlePrintBlankPad}
+              title="Print Blank Pad"
+              style={{ borderRadius: "8px", borderColor: "#e2e8f0" }}
             >
-              <i className="ti ti-coin text-info fs-15" />
-              <span>Fees: ₹{finalFee}</span>
-              {calculatedDiscount > 0 && (
-                <span className="badge bg-danger text-white ms-1 font-semibold fs-10">
-                  -₹{calculatedDiscount} Off
-                </span>
+              <i className="ti ti-printer fs-16" style={{ color: "#00bda6" }} />
+              <span>Print Blank Pad</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-white border d-inline-flex align-items-center gap-2 shadow-sm text-dark fw-semibold"
+              onClick={handleDownloadBlankPad}
+              disabled={downloadingBlankPad}
+              title="Download Blank Pad PDF"
+              style={{ borderRadius: "8px", borderColor: "#e2e8f0" }}
+            >
+              {downloadingBlankPad ? (
+                <>
+                  <span className="spinner-border spinner-border-sm text-primary" role="status" />
+                  <span>Downloading...</span>
+                </>
+              ) : (
+                <>
+                  <i className="ti ti-download fs-16" style={{ color: "#00bda6" }} />
+                  <span>Download Blank Pad PDF</span>
+                </>
               )}
-              <span className="badge bg-info text-white ms-1 font-semibold fs-10" style={{ textTransform: 'capitalize' }}>
-                {form.isFollowUp ? 'Follow-up' : 'Consultation'}
-              </span>
             </button>
           </div>
         )}
-        {isModal ? (
-          <button type="button" className="btn btn-light" onClick={onCancel}>
-            Cancel
+
+        <div className="d-flex align-items-center gap-2 ms-auto">
+          {selectedDoctor && (
+            <div className="d-flex align-items-center gap-2 me-2">
+              <button
+                type="button"
+                className="btn btn-outline-info d-flex align-items-center gap-1.5 fw-bold cursor-default"
+                style={{ pointerEvents: 'none', borderRadius: '8px' }}
+              >
+                <i className="ti ti-coin text-info fs-15" />
+                <span>Fees: ₹{finalFee}</span>
+                {calculatedDiscount > 0 && (
+                  <span className="badge bg-danger text-white ms-1 font-semibold fs-10">
+                    -₹{calculatedDiscount} Off
+                  </span>
+                )}
+                <span className="badge bg-info text-white ms-1 font-semibold fs-10" style={{ textTransform: 'capitalize' }}>
+                  {form.isFollowUp ? 'Follow-up' : 'Consultation'}
+                </span>
+              </button>
+            </div>
+          )}
+          {isModal ? (
+            <button type="button" className="btn btn-light" onClick={onCancel}>
+              Cancel
+            </button>
+          ) : (
+            <Link to={all_routes.appointments} className="btn btn-light">
+              Cancel
+            </Link>
+          )}
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={submitting}
+          >
+            {submitting
+              ? "Saving…"
+              : mode === "create"
+                ? "Create Appointment"
+                : "Save Changes"}
           </button>
-        ) : (
-          <Link to={all_routes.appointments} className="btn btn-light">
-            Cancel
-          </Link>
-        )}
-        <button
-          type="submit"
-          className="btn btn-primary"
-          disabled={submitting}
-        >
-          {submitting
-            ? "Saving…"
-            : mode === "create"
-              ? "Create Appointment"
-              : "Save Changes"}
-        </button>
+        </div>
       </div>
+
+      {/* Printable Prescription Pad (blank pad) */}
+      <div
+        id="print-prescription-pad"
+        style={{
+          display: "none",
+          width: "210mm",
+          minHeight: "297mm",
+          background: "#ffffff",
+        }}
+      >
+        {printAppointmentData && (
+          <PrescriptionPad appointment={printAppointmentData} prescription={null} />
+        )}
+      </div>
+      <style>{`
+        @media print {
+          @page { size: A4; margin: 0; }
+          body * { visibility: hidden !important; }
+          #print-prescription-pad[data-print-active],
+          #print-prescription-pad[data-print-active] * {
+            visibility: visible !important;
+          }
+          #print-prescription-pad[data-print-active] {
+            visibility: visible !important;
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            background: white !important;
+            z-index: 99999 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          #print-prescription-pad:not([data-print-active]),
+          [data-hidden-for-print],
+          [data-hidden-for-print] * {
+            display: none !important;
+            visibility: hidden !important;
+          }
+        }
+      `}</style>
     </form>
   );
 

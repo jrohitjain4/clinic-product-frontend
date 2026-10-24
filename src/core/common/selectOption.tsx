@@ -404,6 +404,8 @@ export const Blood_Group = [
   { value: "A-", label: "A-" },
   { value: "B+", label: "B+" },
   { value: "B-", label: "B-" },
+  { value: "AB+", label: "AB+" },
+  { value: "AB-", label: "AB-" },
 ];
 export const Gender = [
   { value: "Select", label: "Select" },

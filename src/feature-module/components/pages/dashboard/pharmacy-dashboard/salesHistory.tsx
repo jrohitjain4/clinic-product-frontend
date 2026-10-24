@@ -193,11 +193,60 @@ const SalesHistory = () => {
     {
       title: "Status",
       dataIndex: "Status",
-      render: (text: string) => (
-        <span className={`badge border ${text === "Paid" ? "badge-soft-success border-success" : "badge-soft-danger border-danger"} px-2 py-1 fs-12 fw-medium`}>
-          {text}
-        </span>
-      ),
+      render: (text: string) => {
+        const s = (text || "").toLowerCase().trim();
+        const isPaid = s === "paid";
+        const isPartial = s === "partial" || s === "partially paid";
+
+        if (isPaid) {
+          return (
+            <span
+              className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+              style={{
+                backgroundColor: "#e6f8ef",
+                color: "#198754",
+                fontWeight: 600,
+                fontSize: "12px",
+              }}
+            >
+              <i className="ti ti-circle-check fs-14" />
+              Paid
+            </span>
+          );
+        }
+
+        if (isPartial) {
+          return (
+            <span
+              className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+              style={{
+                backgroundColor: "#fff3cd",
+                color: "#fd7e14",
+                fontWeight: 600,
+                fontSize: "12px",
+              }}
+            >
+              <i className="ti ti-clock fs-14" />
+              Partial
+            </span>
+          );
+        }
+
+        return (
+          <span
+            className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+            style={{
+              backgroundColor: "#fdeded",
+              color: "#dc3545",
+              fontWeight: 600,
+              fontSize: "12px",
+            }}
+          >
+            <i className="ti ti-circle-x fs-14" />
+            {text || "Unpaid"}
+          </span>
+        );
+      },
       sorter: (a: any, b: any) => a.Status.localeCompare(b.Status),
     },
     {
@@ -324,7 +373,7 @@ const SalesHistory = () => {
         }
         highlightStatus={
           <span className={`badge border ${viewInvoiceData?.paymentStatus === "Paid" ? "bg-success-transparent text-success border-success" : "bg-danger-transparent text-danger border-danger"} fw-bold px-2 py-1`} style={{ fontSize: "10px", borderRadius: "10px" }}>
-            <i className="ti ti-point-filled me-1" />{viewInvoiceData?.paymentStatus || "Unpaid"}
+            <i className={`ti ${viewInvoiceData?.paymentStatus === "Paid" ? "ti-point-filled" : "ti-x"} me-1`} />{viewInvoiceData?.paymentStatus || "Unpaid"}
           </span>
         }
         highlightColor="#e0f2fe"

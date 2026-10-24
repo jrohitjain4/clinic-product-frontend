@@ -6,12 +6,18 @@ import dayjs, { Dayjs } from "dayjs";
 import { apiGet, apiPost } from "../../../../core/utils/apiClient";
 import AddPatientModal from "../clinic-modules/appointments/modals/addPatientModal";
 import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
+import CommonSelect from "../../../../core/common/common-select/commonSelect";
 
 interface Patient {
   id: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  phone?: string;
+  patientCode?: string;
+  alternateMobile?: string;
+  emergencyContactPhone?: string;
+  [key: string]: any;
 }
 
 interface Therapist {
@@ -128,6 +134,64 @@ const BookTherapyAppointment = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const patientOptions = useMemo(() => {
+    const list = Array.isArray(patients) ? patients.filter((p: any) => p && p.id) : [];
+    return list.map((p: any) => ({
+      value: p.id,
+      label: p.fullName || `${p.firstName || ""} ${p.lastName || ""}`.trim() || p.phone || "Patient",
+      patient: p,
+    }));
+  }, [patients]);
+
+  const filterPatient = (option: any, inputValue: string) => {
+    if (!inputValue) return true;
+    const input = inputValue.toLowerCase().trim();
+    const p = option.data?.patient || option.patient;
+    if (!p) return (option.label || "").toLowerCase().includes(input);
+
+    return (
+      (p.fullName || "").toLowerCase().includes(input) ||
+      (p.firstName || "").toLowerCase().includes(input) ||
+      (p.lastName || "").toLowerCase().includes(input) ||
+      (p.phone || "").toLowerCase().includes(input) ||
+      (p.alternateMobile || "").toLowerCase().includes(input) ||
+      (p.emergencyContactPhone || "").toLowerCase().includes(input) ||
+      (p.patientCode || "").toLowerCase().includes(input)
+    );
+  };
+
+  const formatPatientLabel = (option: any, meta?: any) => {
+    const p = option.patient;
+    if (!p) return option.label;
+    const isMenu = meta?.context === "menu";
+    return (
+      <div className="d-flex flex-column" style={{ lineHeight: "1.2" }}>
+        <span className="fw-bold fs-14" style={{ color: "inherit" }}>
+          {option.label}
+        </span>
+        <div className="d-flex align-items-center gap-2 mt-1">
+          {p.patientCode && (
+            <span
+              className="badge border-0 px-1 py-0 fs-10"
+              style={{
+                backgroundColor: isMenu ? "rgba(255,255,255,0.2)" : "rgba(101,113,255,0.12)",
+                color: "inherit",
+              }}
+            >
+              {p.patientCode}
+            </span>
+          )}
+          {p.phone && (
+            <span className="fs-11" style={{ color: "inherit", opacity: 0.85 }}>
+              <i className="ti ti-device-mobile me-1" />
+              {p.phone}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   // Helper to parse availability schedules and generate slot options
   const calculateAvailableSlots = (avail: any, dateString: string): Slot[] => {
@@ -479,25 +543,25 @@ const BookTherapyAppointment = () => {
                       <label className="form-label fw-semibold">
                         Patient <span className="text-danger">*</span>
                       </label>
-                      <div className="d-flex gap-2">
-                        <select
-                          className="form-select"
-                          required
-                          value={patientId}
-                          onChange={(e) => setPatientId(e.target.value)}
-                        >
-                          <option value="">Select Patient</option>
-                          {patients.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.firstName} {p.lastName} ({p.phone})
-                            </option>
-                          ))}
-                        </select>
+                      <div className="d-flex gap-2 align-items-center">
+                        <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                          <CommonSelect
+                            className="select"
+                            options={patientOptions}
+                            value={patientOptions.find((o) => o.value === patientId) || null}
+                            onChange={(opt: any) => setPatientId(opt?.value || "")}
+                            placeholder="Select Patient"
+                            filterOption={filterPatient}
+                            formatOptionLabel={formatPatientLabel}
+                            isSearchable
+                          />
+                        </div>
                         <button
                           type="button"
                           className="bt-add-patient-btn"
                           onClick={() => setShowAddPatient(true)}
                           title="Register New Patient"
+                          style={{ height: "46px", width: "46px" }}
                         >
                           <i className="ti ti-plus" />
                         </button>

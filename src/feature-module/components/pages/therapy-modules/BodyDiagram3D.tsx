@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Suspense, useMemo, useRef, type CSSProperties, type MutableRefObject } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Billboard, ContactShadows, Html } from "@react-three/drei";

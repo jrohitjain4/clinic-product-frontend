@@ -522,6 +522,33 @@
   .react-select__option {
     background-color: transparent;
     color: var(--pr-body-color);
+
+    .patient-opt-name {
+      color: #0f172a;
+      transition: color 0.15s ease;
+    }
+    .patient-opt-phone {
+      color: #64748b;
+      transition: color 0.15s ease;
+    }
+
+    &:hover,
+    &--is-focused,
+    &--is-selected {
+      .patient-opt-name,
+      .text-dark {
+        color: #ffffff !important;
+      }
+      .patient-opt-phone,
+      .text-muted {
+        color: #ffffff !important;
+        opacity: 0.95 !important;
+      }
+      .patient-opt-phone i,
+      .text-muted i {
+        color: #ffffff !important;
+      }
+    }
   }
 
   .react-select__option--is-focused {

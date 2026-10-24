@@ -1333,7 +1333,7 @@ const PatientDetails = () => {
                           <ProfileField label="DOB" value={formatPatientDateLong(patient.dob)} />
                         </div>
                         <div className="col-sm-6">
-                          <ProfileField label="Age" value={(patient as any).age} />
+                          <ProfileField label="Age" value={patientAge != null ? `${patientAge} Years` : "—"} />
                         </div>
                         <div className="col-sm-6">
                           <ProfileField label="Blood Group" value={patient.bloodGroup} />

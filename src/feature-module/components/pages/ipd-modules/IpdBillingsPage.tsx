@@ -1092,6 +1092,12 @@ const IpdBillingsPage: React.FC = () => {
           box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
           border-radius: 12px !important;
         }
+        .ipd-billings-page .icon-field-shell {
+          border: none !important;
+          box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08) !important;
+          border-radius: 10px;
+          background: #fff;
+        }
         .ipd-billing-expanded thead th {
           background: #E6E6FF !important;
           color: #1e293b !important;
@@ -1102,17 +1108,6 @@ const IpdBillingsPage: React.FC = () => {
         {/* Page Header */}
         <div className="d-flex align-items-center gap-2 mb-4 flex-wrap">
           <h3 className="page-title mb-0 flex-shrink-0 me-auto">IPD Billings & Invoices</h3>
-
-          <div style={{ width: "220px", flexShrink: 0 }}>
-            <IconFormControl
-              fieldLabel="search"
-              type="text"
-              className="form-control-sm"
-              placeholder="Search invoice/patient..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
 
           <select
             className="form-select"
@@ -1256,6 +1251,20 @@ const IpdBillingsPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Search */}
+        <div className="card border-0 shadow rounded-3 mb-4">
+          <div className="card-body p-3">
+            <IconFormControl
+              fieldLabel="search"
+              type="text"
+              placeholder="Search active inpatients by name, UHID, or admission code..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
         {/* Invoices Table — same Datatable shell/header/pagination as Patients */}
         {loading ? (
           <div className="card ipd-billings-empty-card">

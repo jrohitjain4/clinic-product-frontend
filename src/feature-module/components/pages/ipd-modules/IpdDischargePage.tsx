@@ -5,6 +5,7 @@ import { apiUrl } from "../../../../core/config/api";
 import { toast } from "react-toastify";
 import IpdViewDetailsModal from "./IpdViewDetailsModal";
 import IpdAdmissionPrintSummary from "./IpdAdmissionPrintSummary";
+import IpdSettledReceiptSlip from "./IpdSettledReceiptSlip";
 import { IconFormControl, IconTextarea } from "../../../../core/common/form-fields";
 import PrescriptionPad from "../clinic-modules/appointments/PrescriptionPad";
 import html2pdf from "html2pdf.js";
@@ -135,15 +136,18 @@ const IpdDischargePage: React.FC = () => {
         setDownloadingPad(false);
         return;
       }
+
       el.style.display = "block";
+
       const opt = {
         margin: 0,
         filename: `Prescription-Blank-Pad-${padAppt.appointmentCode || "IPD"}.pdf`,
         image: { type: "jpeg" as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, windowY: 0 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
         pagebreak: { mode: ["avoid-all"] as const },
       };
+
       (html2pdf as any)()
         .from(el)
         .set(opt)
@@ -165,6 +169,7 @@ const IpdDischargePage: React.FC = () => {
 
   const handlePrintIpdSummary = async (admissionToPrint: any) => {
     if (!admissionToPrint) return;
+    setPrintAdmission(admissionToPrint);
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(apiUrl(`/api/ipd/admissions/${admissionToPrint.id}`), {
@@ -187,13 +192,27 @@ const IpdDischargePage: React.FC = () => {
           return;
         }
         window.print();
-      }, 200);
+      }, 300);
     });
   };
 
-  // View Discharged Settled Receipt Modal State
   const [showSettledReceiptModal, setShowSettledReceiptModal] = useState(false);
   const [settledAdmissionData, setSettledAdmissionData] = useState<Admission | null>(null);
+
+  const handlePrintSettledReceipt = () => {
+    if (!settledAdmissionData) return;
+    const el = document.getElementById("ipd-settled-receipt-print");
+    if (!el) {
+      toast.error("Receipt print layout not found");
+      return;
+    }
+    el.setAttribute("data-print-active", "true");
+    window.print();
+    setTimeout(() => {
+      el.removeAttribute("data-print-active");
+    }, 600);
+  };
+
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedViewAdmission, setSelectedViewAdmission] = useState<any>(null);
 
@@ -355,15 +374,19 @@ const IpdDischargePage: React.FC = () => {
         throw new Error(errData.message || "Failed to process discharge");
       }
 
+      const resData = await res.json().catch(() => null);
+
       const dischargedAdm = {
         ...targetAdmission,
         status: "Discharged",
         dischargeNotes: dischargeNotes.trim(),
+        ...(resData?.data || resData || {}),
       };
 
       toast.success(`Patient ${getPatientName(targetAdmission.patient)} discharged & bill settled!`);
       setShowDischargeModal(false);
       fetchData();
+      handlePrintIpdSummary(dischargedAdm);
     } catch (err: any) {
       toast.error(err.message || "Error processing discharge");
     } finally {
@@ -1467,7 +1490,7 @@ const IpdDischargePage: React.FC = () => {
         </>
       )}
 
-      {showDischargeModal && (printAdmission || targetAdmission) && (
+      {(printAdmission || (showDischargeModal && targetAdmission)) && (
         <IpdAdmissionPrintSummary admission={printAdmission || targetAdmission} />
       )}
 
@@ -1493,96 +1516,7 @@ const IpdDischargePage: React.FC = () => {
               </div>
 
               <div className="modal-body p-4">
-                {/* Header & Status Banner */}
-                <div className="d-flex justify-content-between align-items-start pb-3 border-bottom mb-4">
-                  <div>
-                    <h3 className="fw-bold text-primary mb-1">DocYori Hospital</h3>
-                    <p className="text-muted fs-13 mb-0">Official Final Settlement & Discharge Summary</p>
-                  </div>
-                  <div className="text-end">
-                    <span className="badge bg-danger fs-14 py-2 px-3 mb-1 d-inline-block fw-bold">
-                      STATUS: DISCHARGED
-                    </span>
-                    <div className="text-muted fs-12">
-                      Discharged On:{" "}
-                      {settledAdmissionData.dischargeDate
-                        ? new Date(settledAdmissionData.dischargeDate).toLocaleString()
-                        : "Completed"}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Patient Summary Card */}
-                <div className="row g-3 p-3 bg-light rounded border mb-4">
-                  <div className="col-md-3 col-6">
-                    <span className="text-muted fs-12 fw-semibold d-block">PATIENT NAME</span>
-                    <strong className="text-dark fs-15">{getPatientName(settledAdmissionData.patient)}</strong>
-                    <small className="text-muted d-block">UHID: {settledAdmissionData.patient?.patientCode || "—"}</small>
-                  </div>
-
-                  <div className="col-md-3 col-6">
-                    <span className="text-muted fs-12 fw-semibold d-block">ATTENDING DOCTOR</span>
-                    <strong className="text-primary fs-15">
-                      {settledAdmissionData.doctor?.fullName || "Primary Doctor"}
-                    </strong>
-                  </div>
-
-                  <div className="col-md-3 col-6">
-                    <span className="text-muted fs-12 fw-semibold d-block">RELEASED WARD</span>
-                    <span className="badge bg-soft-info text-info fw-bold fs-13">
-                      {settledAdmissionData.ward?.wardName || "Assigned Ward"}
-                    </span>
-                  </div>
-
-                  <div className="col-md-3 col-6 text-md-end">
-                    <span className="text-muted fs-12 fw-semibold d-block">ADMISSION DATE</span>
-                    <strong className="text-dark fs-14">
-                      {new Date(settledAdmissionData.admissionDate).toLocaleDateString()}
-                    </strong>
-                  </div>
-                </div>
-
-                {/* Settlement Financial Summary Box */}
-                <div className="p-4 bg-soft-success border border-success rounded-3 mb-4">
-                  <h6 className="fw-bold text-success mb-3">Final Payment & Concession Breakdown</h6>
-                  <div className="row g-3 text-center text-md-start">
-                    <div className="col-md-3">
-                      <span className="text-muted fs-12 fw-semibold d-block">TOTAL Billed</span>
-                      <strong className="text-dark fs-16">
-                        ₹{settledAdmissionData.totalAmount.toLocaleString("en-IN")}
-                      </strong>
-                    </div>
-
-                    <div className="col-md-3">
-                      <span className="text-muted fs-12 fw-semibold d-block">CONCESSION / DISCOUNT</span>
-                      <strong className="text-warning fs-16">
-                        - ₹{(settledAdmissionData.discountAmount || 0).toLocaleString("en-IN")}
-                      </strong>
-                    </div>
-
-                    <div className="col-md-3">
-                      <span className="text-muted fs-12 fw-semibold d-block">TOTAL PAID SETTLED</span>
-                      <strong className="text-success fs-16">
-                        ₹{settledAdmissionData.totalPaid.toLocaleString("en-IN")}
-                      </strong>
-                    </div>
-
-                    <div className="col-md-3">
-                      <span className="text-muted fs-12 fw-semibold d-block">REMAINING DUE BALANCE</span>
-                      <strong className="text-danger fs-16">
-                        ₹{settledAdmissionData.dueAmount.toLocaleString("en-IN")}
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Discharge Notes / Summary */}
-                {settledAdmissionData.dischargeNotes && (
-                  <div className="p-3 bg-light rounded border">
-                    <span className="text-muted fs-12 fw-semibold d-block mb-1">DISCHARGE REMARKS & NOTES</span>
-                    <p className="text-dark mb-0 fs-13">{settledAdmissionData.dischargeNotes}</p>
-                  </div>
-                )}
+                <IpdSettledReceiptSlip admission={settledAdmissionData} />
               </div>
 
               <div className="modal-footer bg-light">
@@ -1595,14 +1529,21 @@ const IpdDischargePage: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary"
-                  onClick={() => window.print()}
+                  className="btn btn-primary fw-bold"
+                  onClick={handlePrintSettledReceipt}
                 >
                   <i className="ti ti-printer me-1" /> Print Discharge Receipt
                 </button>
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Printable Settled Receipt Container */}
+      {settledAdmissionData && (
+        <div id="ipd-settled-receipt-print" style={{ display: "none" }}>
+          <IpdSettledReceiptSlip admission={settledAdmissionData} isPrintOnly={true} />
         </div>
       )}
 
@@ -2058,42 +1999,41 @@ const IpdDischargePage: React.FC = () => {
         admission={selectedViewAdmission}
       />
 
-      {/* Printable Prescription Pad (blank pad) - off-screen on screen */}
-      {printPadAppointment && (
-        <div
-          id="ipd-print-prescription-pad"
-          style={{
-            display: "none",
-            position: "fixed",
-            left: "-9999px",
-            top: "0px",
-            width: "210mm",
-            minHeight: "297mm",
-            background: "#ffffff",
-            zIndex: -9999,
-            pointerEvents: "none",
-          }}
-        >
+      {/* Printable Prescription Pad (blank pad) */}
+      <div
+        id="ipd-print-prescription-pad"
+        style={{
+          display: "none",
+          width: "210mm",
+          minHeight: "297mm",
+          background: "#ffffff",
+        }}
+      >
+        {printPadAppointment && (
           <PrescriptionPad appointment={printPadAppointment} prescription={null} />
-        </div>
-      )}
+        )}
+      </div>
       <style>{`
-        @media screen {
-          #ipd-print-prescription-pad {
-            position: fixed !important;
-            left: -9999px !important;
-            top: 0 !important;
-            width: 210mm !important;
-            min-height: 297mm !important;
-            background: #ffffff !important;
-            z-index: -9999 !important;
-            pointer-events: none !important;
-            overflow: hidden !important;
-          }
-        }
         @media print {
-          @page { size: A4; margin: 0; }
+          @page { size: A4; margin: 10mm; }
           body * { visibility: hidden !important; }
+          #ipd-settled-receipt-print[data-print-active],
+          #ipd-settled-receipt-print[data-print-active] * {
+            visibility: visible !important;
+          }
+          #ipd-settled-receipt-print[data-print-active] {
+            visibility: visible !important;
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            max-width: 210mm !important;
+            background: white !important;
+            z-index: 999999 !important;
+            padding: 0 !important;
+            margin: 0 auto !important;
+          }
           #ipd-print-prescription-pad[data-print-active],
           #ipd-print-prescription-pad[data-print-active] * {
             visibility: visible !important;
@@ -2110,6 +2050,7 @@ const IpdDischargePage: React.FC = () => {
             padding: 0 !important;
             margin: 0 !important;
           }
+          #ipd-settled-receipt-print:not([data-print-active]),
           #ipd-print-prescription-pad:not([data-print-active]),
           [data-hidden-for-print],
           [data-hidden-for-print] * {

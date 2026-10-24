@@ -247,7 +247,7 @@ const IpdAdmissionsPage: React.FC = () => {
     return (
       <div className="d-flex flex-column py-1">
         <div className="d-flex align-items-center justify-content-between">
-          <span className="fw-bold fs-14 text-dark">{name}</span>
+          <span className="fw-bold fs-14 patient-opt-name">{name}</span>
           {p.gender && (
             <span className="badge bg-light text-secondary border px-1.5 py-0 fs-10">
               {p.gender}
@@ -261,7 +261,7 @@ const IpdAdmissionsPage: React.FC = () => {
             </span>
           )}
           {p.phone && (
-            <span className="fs-12 text-muted">
+            <span className="fs-12 patient-opt-phone">
               <i className="ti ti-phone me-1" />{p.phone}
             </span>
           )}
@@ -1467,6 +1467,45 @@ const IpdAdmissionsPage: React.FC = () => {
       />
 
       <Footer />
+
+      <style>{`
+        .react-select__option .patient-opt-name {
+          color: #0f172a;
+          transition: color 0.15s ease;
+        }
+        .react-select__option .patient-opt-phone {
+          color: #64748b;
+          transition: color 0.15s ease;
+        }
+        .react-select__option:hover .patient-opt-name,
+        .react-select__option--is-focused .patient-opt-name,
+        .react-select__option--is-selected .patient-opt-name {
+          color: #ffffff !important;
+        }
+        .react-select__option:hover .patient-opt-phone,
+        .react-select__option--is-focused .patient-opt-phone,
+        .react-select__option--is-selected .patient-opt-phone {
+          color: #ffffff !important;
+          opacity: 0.95 !important;
+        }
+        .react-select__option:hover .patient-opt-phone i,
+        .react-select__option--is-focused .patient-opt-phone i,
+        .react-select__option--is-selected .patient-opt-phone i {
+          color: #ffffff !important;
+        }
+        .react-select__option:hover .badge,
+        .react-select__option--is-focused .badge,
+        .react-select__option--is-selected .badge {
+          background-color: rgba(255, 255, 255, 0.22) !important;
+          color: #ffffff !important;
+          border-color: rgba(255, 255, 255, 0.4) !important;
+        }
+        .react-select__option:hover .badge i,
+        .react-select__option--is-focused .badge i,
+        .react-select__option--is-selected .badge i {
+          color: #ffffff !important;
+        }
+      `}</style>
     </div>
   );
 };

@@ -203,12 +203,14 @@ const AppointmentFormPage = ({ mode = "create", isModal = false, onSuccess, onCa
         setDownloadingBlankPad(false);
         return;
       }
+
       el.style.display = "block";
+
       const opt = {
         margin: 0,
         filename: `Prescription-Blank-Pad-${apptData.appointmentCode || "Pad"}.pdf`,
         image: { type: "jpeg" as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0, windowY: 0 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
         pagebreak: { mode: ["avoid-all"] as const },
       };
@@ -1652,39 +1654,21 @@ Powered by DocYori`;
         </div>
       </div>
 
-      {/* Printable Prescription Pad (blank pad) - completely offscreen on screen */}
-      {printAppointmentData && (
-        <div
-          id="print-prescription-pad"
-          style={{
-            display: "none",
-            position: "fixed",
-            left: "-9999px",
-            top: "0px",
-            width: "210mm",
-            minHeight: "297mm",
-            background: "#ffffff",
-            zIndex: -9999,
-            pointerEvents: "none",
-          }}
-        >
+      {/* Printable Prescription Pad (blank pad) */}
+      <div
+        id="print-prescription-pad"
+        style={{
+          display: "none",
+          width: "210mm",
+          minHeight: "297mm",
+          background: "#ffffff",
+        }}
+      >
+        {printAppointmentData && (
           <PrescriptionPad appointment={printAppointmentData} prescription={null} />
-        </div>
-      )}
+        )}
+      </div>
       <style>{`
-        @media screen {
-          #print-prescription-pad {
-            position: fixed !important;
-            left: -9999px !important;
-            top: 0 !important;
-            width: 210mm !important;
-            min-height: 297mm !important;
-            background: #ffffff !important;
-            z-index: -9999 !important;
-            pointer-events: none !important;
-            overflow: hidden !important;
-          }
-        }
         @media print {
           @page { size: A4; margin: 0; }
           body * { visibility: hidden !important; }

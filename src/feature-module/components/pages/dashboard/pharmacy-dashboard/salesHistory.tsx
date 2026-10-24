@@ -194,17 +194,55 @@ const SalesHistory = () => {
       title: "Status",
       dataIndex: "Status",
       render: (text: string) => {
-        const isPaid = text === "Paid";
-        return isPaid ? (
-          <span className="badge border badge-soft-success border-success text-success px-2 py-1 fs-12 fw-medium d-inline-flex align-items-center">
-            {text}
-          </span>
-        ) : (
+        const s = (text || "").toLowerCase().trim();
+        const isPaid = s === "paid";
+        const isPartial = s === "partial" || s === "partially paid";
+
+        if (isPaid) {
+          return (
+            <span
+              className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+              style={{
+                backgroundColor: "#e6f8ef",
+                color: "#198754",
+                fontWeight: 600,
+                fontSize: "12px",
+              }}
+            >
+              <i className="ti ti-circle-check fs-14" />
+              Paid
+            </span>
+          );
+        }
+
+        if (isPartial) {
+          return (
+            <span
+              className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+              style={{
+                backgroundColor: "#fff3cd",
+                color: "#fd7e14",
+                fontWeight: 600,
+                fontSize: "12px",
+              }}
+            >
+              <i className="ti ti-clock fs-14" />
+              Partial
+            </span>
+          );
+        }
+
+        return (
           <span
-            className="badge border badge-soft-danger border-danger text-danger px-2 py-1 fs-12 fw-medium d-inline-flex align-items-center"
-            style={{ color: "#dc2626", borderColor: "#dc2626", backgroundColor: "rgba(220, 38, 38, 0.1)" }}
+            className="badge px-3 py-2 rounded-pill d-inline-flex align-items-center gap-1"
+            style={{
+              backgroundColor: "#fdeded",
+              color: "#dc3545",
+              fontWeight: 600,
+              fontSize: "12px",
+            }}
           >
-            <i className="ti ti-x me-1 fs-12" />
+            <i className="ti ti-circle-x fs-14" />
             {text || "Unpaid"}
           </span>
         );

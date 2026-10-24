@@ -252,17 +252,6 @@ const IpdInpatientsPage: React.FC = () => {
           >
             <i className="ti ti-file-invoice fs-18" />
           </button>
-          <button
-            type="button"
-            className="bg-transparent border-0 text-primary p-1"
-            title="Raise IPD Charge & Add Invoice"
-            onClick={() => {
-              setSelectedChargeAdmissionId(record.key);
-              setShowRaiseModal(true);
-            }}
-          >
-            <i className="ti ti-plus fs-18" />
-          </button>
         </div>
       ),
     },
